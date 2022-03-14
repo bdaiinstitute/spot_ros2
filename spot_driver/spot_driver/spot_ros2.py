@@ -45,11 +45,15 @@ from .spot_wrapper import SpotWrapper
 import logging
 import threading
 
+import signal
+import sys
+
 class SpotROS():
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
     def __init__(self):
         self.spot_wrapper = None
+        self.node = None
 
         self.callbacks = {}
         """Dictionary listing what callback to use for what data task"""
@@ -230,15 +234,13 @@ class SpotROS():
             self.populate_camera_static_transforms(data[0])
             self.populate_camera_static_transforms(data[1])
 
-    def handle_claim(self, resp):
+    def handle_claim(self, request, response):
         """ROS service handler for the claim service"""
-        print(type(resp))
         #resp = self.spot_wrapper.claim()
-        resp.success = True
-        resp.message = "hallo"
-        print(resp.success)
-        return resp
-        #return TriggerResponse(resp[0], resp[1])
+        response.success = True
+        response.message = "hallo"
+        print(response)
+        return response
 
     def handle_release(self, req):
         """ROS service handler for the release service"""
@@ -423,7 +425,7 @@ class SpotROS():
 
     def handle_navigate_to_feedback(self):
         """Thread function to send navigate_to feedback"""
-        while not rclpy.is_shutdown() and self.run_navigate_to:
+        while rclpy.ok() and self.run_navigate_to:
             localization_state = self.spot_wrapper._graph_nav_client.get_localization_state()
             if localization_state.localization.waypoint_id:
                 self.navigate_as.publish_feedback(NavigateToFeedback(localization_state.localization.waypoint_id))
@@ -478,11 +480,56 @@ class SpotROS():
             self.camera_static_transforms.append(static_tf)
             self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
 
-    def shutdown(self):
-        rclpy.loginfo("Shutting down ROS driver for Spot")
+    def shutdown(self, sig, frame):
+        self.node.get_logger().info("Shutting down ROS driver for Spot")
         self.spot_wrapper.sit()
-        rclpy.Rate(0.25).sleep()
+        self.node_rate.sleep()
         self.spot_wrapper.disconnect()
+
+    def step(self):
+        """ Update spot sensors """
+        self.node.get_logger().info("Step/Update")
+        while rclpy.ok():
+            # spot_ros.spot_wrapper.updateTasks() ############## testing with Robot
+            # feedback_msg = Feedback()
+            # feedback_msg.standing = spot_ros.spot_wrapper.is_standing
+            # feedback_msg.sitting = spot_ros.spot_wrapper.is_sitting
+            # feedback_msg.moving = spot_ros.spot_wrapper.is_moving
+            # id = spot_ros.spot_wrapper.id
+            # try:
+            #     feedback_msg.serial_number = id.serial_number
+            #     feedback_msg.species = id.species
+            #     feedback_msg.version = id.version
+            #     feedback_msg.nickname = id.nickname
+            #     feedback_msg.computer_serial_number = id.computer_serial_number
+            # except:
+            #     pass
+            # spot_ros.feedback_pub.publish(feedback_msg)
+            # mobility_params_msg = MobilityParams()
+            # try:
+            #     mobility_params = spot_ros.spot_wrapper.get_mobility_params()
+            #     mobility_params_msg.body_control.position.x = \
+            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.x
+            #     mobility_params_msg.body_control.position.y = \
+            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.y
+            #     mobility_params_msg.body_control.position.z = \
+            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.z
+            #     mobility_params_msg.body_control.orientation.x = \
+            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.x
+            #     mobility_params_msg.body_control.orientation.y = \
+            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.y
+            #     mobility_params_msg.body_control.orientation.z = \
+            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.z
+            #     mobility_params_msg.body_control.orientation.w = \
+            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.w
+            #     mobility_params_msg.locomotion_hint = mobility_params.locomotion_hint
+            #     mobility_params_msg.stair_hint = mobility_params.stair_hint
+            # except Exception as e:
+            #     node.get_logger().error('Error:{}'.format(e))
+            #     pass
+            # spot_ros.mobility_params_pub.publish(mobility_params_msg)
+            # rate.sleep()
+            pass
 
 def main(args = None):
     print('Hi from spot_driver.')
@@ -491,7 +538,10 @@ def main(args = None):
     """Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.  Holds lease from wrapper and updates all async tasks at the ROS rate"""
     
     node = rclpy.create_node('spot_ros2')
+
+    spot_ros.node = node
     rate = node.create_rate(50)
+    spot_ros.node_rate = rate
 
     # spot_ros.yaml
     spot_ros.rates = {}
@@ -552,10 +602,9 @@ def main(args = None):
     spot_ros.logger = logging.getLogger('rosout')
     node.get_logger().info("Starting ROS driver for Spot")
     ############## testing with Robot
-    spot_ros.spot_wrapper = SpotWrapper(spot_ros.username.value, spot_ros.password.value, spot_ros.hostname.value, spot_ros.logger, spot_ros.estop_timeout.value, spot_ros.rates, spot_ros.callbacks)
-    #spot_ros.spot_wrapper = spot_wrapper
+    # spot_ros.spot_wrapper = SpotWrapper(spot_ros.username.value, spot_ros.password.value, spot_ros.hostname.value, spot_ros.logger, spot_ros.estop_timeout.value, spot_ros.rates, spot_ros.callbacks)
+    # spot_ros.spot_wrapper = spot_wrapper
     if  1:#spot_ros.spot_wrapper.is_valid:
-        node.get_logger().info("Publisher")
         # Images #
         spot_ros.back_image_pub = node.create_publisher(Image, 'camera/back/image', 10)
         spot_ros.frontleft_image_pub = node.create_publisher(Image, 'camera/frontleft/image', 10)
@@ -605,7 +654,6 @@ def main(args = None):
         node.create_subscription(Twist, 'cmd_vel', spot_ros.cmdVelCallback, 10)
         node.create_subscription(Pose, 'body_pose', spot_ros.bodyPoseCallback, 10)
         node.create_service(Trigger, 'claim', spot_ros.handle_claim)
-        spot_ros.handle_claim(Trigger.Response)
         node.create_service(Trigger, 'release', spot_ros.handle_release)       
         node.create_service(Trigger, "stop", spot_ros.handle_stop)
         node.create_service(Trigger, "self_right", spot_ros.handle_self_right)
@@ -613,9 +661,6 @@ def main(args = None):
         node.create_service(Trigger, "stand", spot_ros.handle_stand)
         node.create_service(Trigger, "power_on", spot_ros.handle_power_on)
         node.create_service(Trigger, "power_off", spot_ros.handle_safe_power_off)
-
-        node.get_logger().info("Subscriber") 
-        
         node.create_service(Trigger,"estop/hard", spot_ros.handle_estop_hard)
         node.create_service(Trigger,"estop/gentle", spot_ros.handle_estop_soft)
         node.create_service(Trigger,"estop/release", spot_ros.handle_estop_disengage)
@@ -646,47 +691,16 @@ def main(args = None):
                 spot_ros.spot_wrapper.power_on()
                 if spot_ros.auto_stand.value:
                     spot_ros.spot_wrapper.stand()
+        sys.stdout.flush()
+        update_thraed = threading.Thread(target = spot_ros.step, args = ())
+        update_thraed.start()
+        signal.signal(signal.SIGTERM, spot_ros.shutdown)
 
-        while rclpy.ok():
-            spot_ros.spot_wrapper.updateTasks() ############## testing with Robot
-            feedback_msg = Feedback()
-            feedback_msg.standing = spot_ros.spot_wrapper.is_standing
-            feedback_msg.sitting = spot_ros.spot_wrapper.is_sitting
-            feedback_msg.moving = spot_ros.spot_wrapper.is_moving
-            id = spot_ros.spot_wrapper.id
-            try:
-                feedback_msg.serial_number = id.serial_number
-                feedback_msg.species = id.species
-                feedback_msg.version = id.version
-                feedback_msg.nickname = id.nickname
-                feedback_msg.computer_serial_number = id.computer_serial_number
-            except:
-                pass
-            spot_ros.feedback_pub.publish(feedback_msg)
-            mobility_params_msg = MobilityParams()
-            try:
-                mobility_params = spot_ros.spot_wrapper.get_mobility_params()
-                mobility_params_msg.body_control.position.x = \
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.x
-                mobility_params_msg.body_control.position.y = \
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.y
-                mobility_params_msg.body_control.position.z = \
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.z
-                mobility_params_msg.body_control.orientation.x = \
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.x
-                mobility_params_msg.body_control.orientation.y = \
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.y
-                mobility_params_msg.body_control.orientation.z = \
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.z
-                mobility_params_msg.body_control.orientation.w = \
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.w
-                mobility_params_msg.locomotion_hint = mobility_params.locomotion_hint
-                mobility_params_msg.stair_hint = mobility_params.stair_hint
-            except Exception as e:
-                node.get_logger().error('Error:{}'.format(e))
-                pass
-            spot_ros.mobility_params_pub.publish(mobility_params_msg)
-            rate.sleep()
+        rclpy.spin(node)
+        node.get_logger().info("Shutdown")
+        ## Spot shutdown handle; disconnect spot
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':
