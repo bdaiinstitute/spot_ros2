@@ -6,6 +6,7 @@ import os
 def generate_launch_description():
     pkg_share = launch_ros.substitutions.FindPackageShare(package='spot_description').find('spot_description')
     default_model_path = os.path.join(pkg_share, 'urdf/spot.urdf.xacro')
+    default_rviz2_path = os.path.join(pkg_share, 'rviz/viz_spot.rviz')
     #default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
 
     robot_state_publisher_node = launch_ros.actions.Node(
@@ -30,7 +31,7 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
-        arguments=['-d'],
+        arguments=['-d' + default_rviz2_path],
     )
 
     return launch.LaunchDescription([
@@ -38,8 +39,8 @@ def generate_launch_description():
                                             description='Flag to enable joint_state_publisher_gui'),
         launch.actions.DeclareLaunchArgument(name='model', default_value=default_model_path,
                                             description='Absolute path to robot urdf file'),
-        # launch.actions.DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path,
-        #                                     description='Absolute path to rviz config file'),
+        launch.actions.DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz2_path,
+                                            description='Absolute path to rviz config file'),
         joint_state_publisher_node,
         joint_state_publisher_gui_node,
         robot_state_publisher_node,
