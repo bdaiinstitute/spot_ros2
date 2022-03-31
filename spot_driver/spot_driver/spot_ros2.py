@@ -1,9 +1,11 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionServer
+from rclpy.time import Time
+from rclpy.duration import Duration
 
 from std_srvs.srv import Trigger, SetBool
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Header
 from tf2_msgs.msg import TFMessage
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import Image, CameraInfo
@@ -129,7 +131,8 @@ class SpotROS():
         if metrics:
             metrics_msg = Metrics()
             local_time = self.spot_wrapper.robotToLocalTime(metrics.timestamp)
-            metrics_msg.header.stamp = rclpy.Time(local_time.seconds, local_time.nanos)
+            local_ros_time = Time(local_time.seconds, local_time.nanos)
+            metrics_msg.header.stamp = local_ros_time.to_msg()
 
             for metric in metrics.metrics:
                 if metric.label == "distance":
@@ -137,10 +140,13 @@ class SpotROS():
                 if metric.label == "gait cycles":
                     metrics_msg.gait_cycles = metric.int_value
                 if metric.label == "time moving":
-                    metrics_msg.time_moving = rclpy.Time(metric.duration.seconds, metric.duration.nanos)
+                    #metrics_msg.time_moving = Time(metric.duration.seconds, metric.duration.nanos)
+                    duration = Duration(metric.duration.seconds, metric.duration.nanos)
+                    metrics_msg.time_moving = duration.to_msg()
                 if metric.label == "electric power":
-                    metrics_msg.electric_power = rclpy.Time(metric.duration.seconds, metric.duration.nanos)
-
+                    #metrics_msg.electric_power = Time(metric.duration.seconds, metric.duration.nanos)
+                    duration = Duration(metric.duration.seconds, metric.duration.nanos)
+                    metrics_msg.electric_power = duration.to_msg()
             self.metrics_pub.publish(metrics_msg)
 
     def LeaseCB(self, results):
@@ -474,7 +480,7 @@ class SpotROS():
 
             transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
             local_time = self.spot_wrapper.robotToLocalTime(image_data.shot.acquisition_time)
-            tf_time = rclpy.Time(local_time.seconds, local_time.nanos)
+            tf_time = Time(local_time.seconds, local_time.nanos)
             static_tf = populateTransformStamped(tf_time, transform.parent_frame_name, frame_name,
                                                  transform.parent_tform_child)
             self.camera_static_transforms.append(static_tf)
