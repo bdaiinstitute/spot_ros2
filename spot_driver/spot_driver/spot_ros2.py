@@ -616,7 +616,7 @@ def main(args = None):
     spot_ros.logger = logging.getLogger('rosout')
     node.get_logger().info("Starting ROS driver for Spot")
     ############## testing with Robot
-    spot_ros.spot_wrapper = SpotWrapper(username, password, hostname, spot_ros.logger, spot_ros.estop_timeout.value, spot_ros.rates, spot_ros.callbacks)
+    spot_ros.spot_wrapper = SpotWrapper(spot_ros.username, spot_ros.password, spot_ros.hostname, spot_ros.logger, spot_ros.estop_timeout.value, spot_ros.rates, spot_ros.callbacks)
     # spot_ros.spot_wrapper = spot_wrapper
     if  spot_ros.spot_wrapper.is_valid:
         # Images #
