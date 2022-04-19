@@ -22,7 +22,10 @@ from bosdyn.client import frame_helpers
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 
+### Release
 from . import graph_nav_util
+### Debug
+# import graph_nav_util
 
 import bosdyn.api.robot_state_pb2 as robot_state_proto
 from bosdyn.api import basic_command_pb2
@@ -282,7 +285,6 @@ class SpotWrapper():
             self._current_annotation_name_to_wp_id = dict()
 
             # Async Tasks
-            print('RATES CRASH')
             self._async_task_list = []
             self._robot_state_task = AsyncRobotState(self._robot_state_client, self._logger, max(0.0, self._rates.get("robot_state", 0.0)), self._callbacks.get("robot_state", lambda:None))
             self._robot_metrics_task = AsyncMetrics(self._robot_state_client, self._logger, max(0.0, self._rates.get("metrics", 0.0)), self._callbacks.get("metrics", lambda:None))
