@@ -1,8 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionServer
-from rclpy.time import Time
-from rclpy.duration import Duration
+import builtin_interfaces.msg
+from builtin_interfaces.msg import Time, Duration
 
 from std_srvs.srv import Trigger, SetBool
 from std_msgs.msg import Bool, Header
@@ -41,8 +41,13 @@ from spot_msgs.srv import SetLocomotion
 from spot_msgs.srv import ClearBehaviorFault
 from spot_msgs.srv import SetVelocity
 
+#####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
+# Release
 from .ros_helpers import *
 from .spot_wrapper import SpotWrapper
+### Debug
+# from ros_helpers import *
+# from spot_wrapper import SpotWrapper
 
 import logging
 import threading
@@ -131,8 +136,7 @@ class SpotROS():
         if metrics:
             metrics_msg = Metrics()
             local_time = self.spot_wrapper.robotToLocalTime(metrics.timestamp)
-            local_ros_time = Time(local_time.seconds, local_time.nanos)
-            metrics_msg.header.stamp = local_ros_time.to_msg()
+            metrics_msg.header.stamp = Time(sec= local_time.seconds, nanosec = local_time.nanos)
 
             for metric in metrics.metrics:
                 if metric.label == "distance":
@@ -141,11 +145,11 @@ class SpotROS():
                     metrics_msg.gait_cycles = metric.int_value
                 if metric.label == "time moving":
                     #metrics_msg.time_moving = Time(metric.duration.seconds, metric.duration.nanos)
-                    duration = Duration(metric.duration.seconds, metric.duration.nanos)
-                    metrics_msg.time_moving = duration.to_msg()
+                    duration = Time(sec = metric.duration.seconds, nanosec = metric.duration.nanos)
+                    metrics_msg.time_moving = duration
                 if metric.label == "electric power":
                     #metrics_msg.electric_power = Time(metric.duration.seconds, metric.duration.nanos)
-                    duration = Duration(metric.duration.seconds, metric.duration.nanos)
+                    duration = Time(metric.duration.seconds, metric.duration.nanos)
                     metrics_msg.electric_power = duration.to_msg()
             self.metrics_pub.publish(metrics_msg)
 
@@ -242,7 +246,7 @@ class SpotROS():
 
     def handle_claim(self, request, response):
         """ROS service handler for the claim service"""
-        #resp = self.spot_wrapper.claim()
+        resp = self.spot_wrapper.claim()
         response.success = True
         response.message = "hallo"
         print(response)
@@ -299,7 +303,7 @@ class SpotROS():
         resp = self.spot_wrapper.disengageEStop()
         return TriggerResponse(resp[0], resp[1])
 
-    def handle_clear_behavior_fault(self, req):
+    def handle_clear_behavior_fault(self, req, resp):
         """ROS service handler for clearing behavior faults"""
         resp = self.spot_wrapper.clear_behavior_fault(req.id)
         return ClearBehaviorFaultResponse(resp[0], resp[1])
@@ -496,46 +500,46 @@ class SpotROS():
         """ Update spot sensors """
         self.node.get_logger().info("Step/Update")
         while rclpy.ok():
-            # spot_ros.spot_wrapper.updateTasks() ############## testing with Robot
-            # feedback_msg = Feedback()
-            # feedback_msg.standing = spot_ros.spot_wrapper.is_standing
-            # feedback_msg.sitting = spot_ros.spot_wrapper.is_sitting
-            # feedback_msg.moving = spot_ros.spot_wrapper.is_moving
-            # id = spot_ros.spot_wrapper.id
-            # try:
-            #     feedback_msg.serial_number = id.serial_number
-            #     feedback_msg.species = id.species
-            #     feedback_msg.version = id.version
-            #     feedback_msg.nickname = id.nickname
-            #     feedback_msg.computer_serial_number = id.computer_serial_number
-            # except:
-            #     pass
-            # spot_ros.feedback_pub.publish(feedback_msg)
-            # mobility_params_msg = MobilityParams()
-            # try:
-            #     mobility_params = spot_ros.spot_wrapper.get_mobility_params()
-            #     mobility_params_msg.body_control.position.x = \
-            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.x
-            #     mobility_params_msg.body_control.position.y = \
-            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.y
-            #     mobility_params_msg.body_control.position.z = \
-            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.z
-            #     mobility_params_msg.body_control.orientation.x = \
-            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.x
-            #     mobility_params_msg.body_control.orientation.y = \
-            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.y
-            #     mobility_params_msg.body_control.orientation.z = \
-            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.z
-            #     mobility_params_msg.body_control.orientation.w = \
-            #             mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.w
-            #     mobility_params_msg.locomotion_hint = mobility_params.locomotion_hint
-            #     mobility_params_msg.stair_hint = mobility_params.stair_hint
-            # except Exception as e:
-            #     node.get_logger().error('Error:{}'.format(e))
-            #     pass
-            # spot_ros.mobility_params_pub.publish(mobility_params_msg)
-            # rate.sleep()
-            pass
+            self.spot_wrapper.updateTasks() ############## testing with Robot
+            #self.node.get_logger().info("UPDATE TASKS")
+            feedback_msg = Feedback()
+            feedback_msg.standing = self.spot_wrapper.is_standing
+            feedback_msg.sitting = self.spot_wrapper.is_sitting
+            feedback_msg.moving = self.spot_wrapper.is_moving
+            id = self.spot_wrapper.id
+            try:
+                feedback_msg.serial_number = id.serial_number
+                feedback_msg.species = id.species
+                feedback_msg.version = id.version
+                feedback_msg.nickname = id.nickname
+                feedback_msg.computer_serial_number = id.computer_serial_number
+            except:
+                pass
+            self.feedback_pub.publish(feedback_msg)
+            mobility_params_msg = MobilityParams()
+            try:
+                mobility_params = self.spot_wrapper.get_mobility_params()
+                mobility_params_msg.body_control.position.x = \
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.x
+                mobility_params_msg.body_control.position.y = \
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.y
+                mobility_params_msg.body_control.position.z = \
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.z
+                mobility_params_msg.body_control.orientation.x = \
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.x
+                mobility_params_msg.body_control.orientation.y = \
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.y
+                mobility_params_msg.body_control.orientation.z = \
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.z
+                mobility_params_msg.body_control.orientation.w = \
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.w
+                mobility_params_msg.locomotion_hint = mobility_params.locomotion_hint
+                mobility_params_msg.stair_hint = mobility_params.stair_hint
+            except Exception as e:
+                self.node.get_logger().error('Error:{}'.format(e))
+                pass
+            self.mobility_params_pub.publish(mobility_params_msg)
+            self.node_rate.sleep()
 
 def main(args = None):
     print('Hi from spot_driver.')
@@ -581,9 +585,13 @@ def main(args = None):
     spot_ros.username = node.get_parameter('username')
     spot_ros.password = node.get_parameter('password')
     spot_ros.hostname = node.get_parameter('hostname')
-    
-    print("login: "+spot_ros.username.value+" "+spot_ros.password.value+" "+spot_ros.hostname.value)
-    print("login and rates params loaded")
+
+    # New vars for spot login; ros params not working in debug
+    hostname = "10.0.0.3"
+    username = "admin"
+    password = "cjck5eaph39s"
+    print("login: "+str(username)+" "+str(password)+" "+str(hostname))
+
     spot_ros.camera_static_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(node)
     # Static transform broadcaster is super simple and just a latched publisher. Every time we add a new static
     # transform we must republish all static transforms from this source, otherwise the tree will be incomplete.
@@ -599,7 +607,7 @@ def main(args = None):
     spot_ros.tf_name_raw_kinematic = 'odom'
     spot_ros.tf_name_vision_odom = node.declare_parameter('tf_name_vision_odom', 'vision')
     spot_ros.tf_name_raw_vision = 'vision'
-    print(spot_ros.mode_parent_odom_tf.value)
+
     if spot_ros.mode_parent_odom_tf.value != spot_ros.tf_name_raw_kinematic and spot_ros.mode_parent_odom_tf.value != spot_ros.tf_name_raw_vision:
         node.get_logger().error('rosparam \'mode_parent_odom_tf\' should be \'odom\' or \'vision\'.')
         return
@@ -608,57 +616,57 @@ def main(args = None):
     spot_ros.logger = logging.getLogger('rosout')
     node.get_logger().info("Starting ROS driver for Spot")
     ############## testing with Robot
-    # spot_ros.spot_wrapper = SpotWrapper(spot_ros.username.value, spot_ros.password.value, spot_ros.hostname.value, spot_ros.logger, spot_ros.estop_timeout.value, spot_ros.rates, spot_ros.callbacks)
+    spot_ros.spot_wrapper = SpotWrapper(username, password, hostname, spot_ros.logger, spot_ros.estop_timeout.value, spot_ros.rates, spot_ros.callbacks)
     # spot_ros.spot_wrapper = spot_wrapper
-    if  1:#spot_ros.spot_wrapper.is_valid:
+    if  spot_ros.spot_wrapper.is_valid:
         # Images #
-        spot_ros.back_image_pub = node.create_publisher(Image, 'camera/back/image', 10)
-        spot_ros.frontleft_image_pub = node.create_publisher(Image, 'camera/frontleft/image', 10)
-        spot_ros.frontright_image_pub = node.create_publisher(Image, 'camera/frontright/image', 10)
-        spot_ros.left_image_pub = node.create_publisher(Image, 'camera/left/image', 10)
-        spot_ros.right_image_pub = node.create_publisher(Image, 'camera/right/image', 10)
+        spot_ros.back_image_pub = node.create_publisher(Image, 'camera/back/image', 1)
+        spot_ros.frontleft_image_pub = node.create_publisher(Image, 'camera/frontleft/image', 1)
+        spot_ros.frontright_image_pub = node.create_publisher(Image, 'camera/frontright/image', 1)
+        spot_ros.left_image_pub = node.create_publisher(Image, 'camera/left/image', 1)
+        spot_ros.right_image_pub = node.create_publisher(Image, 'camera/right/image', 1)
         # Depth #
-        spot_ros.back_depth_pub = node.create_publisher(Image, 'depth/back/image', 10)
-        spot_ros.frontleft_depth_pub = node.create_publisher(Image, 'depth/frontleft/image', 10)
-        spot_ros.frontright_depth_pub = node.create_publisher(Image, 'depth/frontright/image', 10)
-        spot_ros.left_depth_pub = node.create_publisher(Image, 'depth/left/image', 10)
-        spot_ros.right_depth_pub = node.create_publisher(Image, 'depth/right/image', 10)
+        spot_ros.back_depth_pub = node.create_publisher(Image, 'depth/back/image', 1)
+        spot_ros.frontleft_depth_pub = node.create_publisher(Image, 'depth/frontleft/image', 1)
+        spot_ros.frontright_depth_pub = node.create_publisher(Image, 'depth/frontright/image', 1)
+        spot_ros.left_depth_pub = node.create_publisher(Image, 'depth/left/image', 1)
+        spot_ros.right_depth_pub = node.create_publisher(Image, 'depth/right/image', 1)
 
         # Image Camera Info #
-        spot_ros.back_image_info_pub = node.create_publisher(CameraInfo, 'camera/back/camera_info', 10)
-        spot_ros.frontleft_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontleft/camera_info', 10)
-        spot_ros.frontright_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontright/camera_info', 10)
-        spot_ros.left_image_info_pub = node.create_publisher(CameraInfo, 'camera/left/camera_info', 10)
-        spot_ros.right_image_info_pub = node.create_publisher(CameraInfo, 'camera/right/camera_info', 10)
+        spot_ros.back_image_info_pub = node.create_publisher(CameraInfo, 'camera/back/camera_info', 1)
+        spot_ros.frontleft_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontleft/camera_info', 1)
+        spot_ros.frontright_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontright/camera_info', 1)
+        spot_ros.left_image_info_pub = node.create_publisher(CameraInfo, 'camera/left/camera_info', 1)
+        spot_ros.right_image_info_pub = node.create_publisher(CameraInfo, 'camera/right/camera_info', 1)
         # Depth Camera Info #
-        spot_ros.back_depth_info_pub = node.create_publisher(CameraInfo,'depth/back/camera_info', 10)
-        spot_ros.frontleft_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontleft/camera_info', 10)
-        spot_ros.frontright_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontright/camera_info', 10)
-        spot_ros.left_depth_info_pub = node.create_publisher(CameraInfo, 'depth/left/camera_info', 10)
-        spot_ros.right_depth_info_pub = node.create_publisher(CameraInfo, 'depth/right/camera_info', 10)
+        spot_ros.back_depth_info_pub = node.create_publisher(CameraInfo,'depth/back/camera_info', 1)
+        spot_ros.frontleft_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontleft/camera_info', 1)
+        spot_ros.frontright_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontright/camera_info', 1)
+        spot_ros.left_depth_info_pub = node.create_publisher(CameraInfo, 'depth/left/camera_info', 1)
+        spot_ros.right_depth_info_pub = node.create_publisher(CameraInfo, 'depth/right/camera_info', 1)
 
         # Status Publishers #
-        spot_ros.joint_state_pub = node.create_publisher(JointState, 'joint_states', 10)
+        spot_ros.joint_state_pub = node.create_publisher(JointState, 'joint_states', 1)
         """Defining a TF publisher manually because of conflicts between Python3 and tf"""
-        spot_ros.tf_pub = node.create_publisher(TFMessage,'tf', 10)
-        spot_ros.metrics_pub = node.create_publisher(Metrics, 'status/metrics', 10)
-        spot_ros.lease_pub = node.create_publisher(LeaseArray, 'status/leases', 10)
-        spot_ros.odom_twist_pub = node.create_publisher(TwistWithCovarianceStamped, 'odometry/twist', 10)
-        spot_ros.odom_pub = node.create_publisher(Odometry, 'odometry', 10)
-        spot_ros.feet_pub = node.create_publisher(FootStateArray, 'status/feet', 10)
-        spot_ros.estop_pub = node.create_publisher(EStopStateArray, 'status/estop', 10)
-        spot_ros.wifi_pub = node.create_publisher(WiFiState, 'status/wifi', 10)
-        spot_ros.power_pub = node.create_publisher(PowerState, 'status/power_state', 10)
-        spot_ros.battery_pub = node.create_publisher(BatteryStateArray, 'status/battery_states', 10)
-        spot_ros.behavior_faults_pub = node.create_publisher(BehaviorFaultState, 'status/behavior_faults', 10)
-        spot_ros.system_faults_pub = node.create_publisher(SystemFaultState, 'status/system_faults', 10)
+        spot_ros.tf_pub = node.create_publisher(TFMessage,'tf', 1)
+        spot_ros.metrics_pub = node.create_publisher(Metrics, 'status/metrics', 1)
+        spot_ros.lease_pub = node.create_publisher(LeaseArray, 'status/leases', 1)
+        spot_ros.odom_twist_pub = node.create_publisher(TwistWithCovarianceStamped, 'odometry/twist', 1)
+        spot_ros.odom_pub = node.create_publisher(Odometry, 'odometry', 1)
+        spot_ros.feet_pub = node.create_publisher(FootStateArray, 'status/feet', 1)
+        spot_ros.estop_pub = node.create_publisher(EStopStateArray, 'status/estop', 1)
+        spot_ros.wifi_pub = node.create_publisher(WiFiState, 'status/wifi', 1)
+        spot_ros.power_pub = node.create_publisher(PowerState, 'status/power_state', 1)
+        spot_ros.battery_pub = node.create_publisher(BatteryStateArray, 'status/battery_states', 1)
+        spot_ros.behavior_faults_pub = node.create_publisher(BehaviorFaultState, 'status/behavior_faults', 1)
+        spot_ros.system_faults_pub = node.create_publisher(SystemFaultState, 'status/system_faults', 1)
 
-        spot_ros.feedback_pub = node.create_publisher(Feedback, 'status/feedback', 10)
+        spot_ros.feedback_pub = node.create_publisher(Feedback, 'status/feedback', 1)
 
-        spot_ros.mobility_params_pub = node.create_publisher(MobilityParams, 'status/mobility_params', 10)
+        spot_ros.mobility_params_pub = node.create_publisher(MobilityParams, 'status/mobility_params', 1)
 
-        node.create_subscription(Twist, 'cmd_vel', spot_ros.cmdVelCallback, 10)
-        node.create_subscription(Pose, 'body_pose', spot_ros.bodyPoseCallback, 10)
+        node.create_subscription(Twist, 'cmd_vel', spot_ros.cmdVelCallback, 1)
+        node.create_subscription(Pose, 'body_pose', spot_ros.bodyPoseCallback, 1)
         node.create_service(Trigger, 'claim', spot_ros.handle_claim)
         node.create_service(Trigger, 'release', spot_ros.handle_release)       
         node.create_service(Trigger, "stop", spot_ros.handle_stop)
@@ -686,7 +694,7 @@ def main(args = None):
         
         # Register Shutdown Handle
         # rclpy.on_shutdown(spot_ros.shutdown) ############## Shutdown Handle
-        print(str(spot_ros.auto_claim.value)+" "+str(spot_ros.auto_power_on.value)+" "+str(spot_ros.auto_stand.value))
+        #print(str(spot_ros.auto_claim.value)+" "+str(spot_ros.auto_power_on.value)+" "+str(spot_ros.auto_stand.value))
         #spot_ros.auto_claim = rclpy.get_param('~auto_claim', )
         #spot_ros.auto_power_on = rclpy.get_param('~auto_power_on', False)
         #spot_ros.auto_stand = rclpy.get_param('~auto_stand', False)
