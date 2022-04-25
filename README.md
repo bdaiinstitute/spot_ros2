@@ -36,19 +36,12 @@ Since I didn't find where Clearpath spin inside the ROS1 driver, i decided to pr
 
 # Current error messages
 
-.. |pic1| image:: https://fh-aachen.sciebo.de/s/VG7ZnE83ysFwF9h/download
-   :width: 45%
+![](https://fh-aachen.sciebo.de/s/VG7ZnE83ysFwF9h/download)
 
-.. |pic2| image:: https://fh-aachen.sciebo.de/s/GAiqn2oLmLznwc6/download
-   :width: 45%
+![](https://fh-aachen.sciebo.de/s/GAiqn2oLmLznwc6/download)
 
-.. |pic3| image:: https://fh-aachen.sciebo.de/s/1mIsHaYS3wnzv3E/download
-   :width: 45%
+![](https://fh-aachen.sciebo.de/s/1mIsHaYS3wnzv3E/download)
 
-.. |pic4| image:: https://fh-aachen.sciebo.de/s/JkP1fcI9bXsI8pS/download
-   :width: 45%
+![](https://fh-aachen.sciebo.de/s/JkP1fcI9bXsI8pS/download)
 
-.. |pic5| image:: https://fh-aachen.sciebo.de/s/XOwl9QyHqC6hTzb/download
-   :width: 45%
-
-|pic1| |pic2| |pic3| |pic4| |pic5|
+![](https://fh-aachen.sciebo.de/s/XOwl9QyHqC6hTzb/download)
