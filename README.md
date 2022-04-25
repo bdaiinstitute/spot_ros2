@@ -2,6 +2,7 @@
 
 <img src="spot.jpeg" width="350">
 
+The spot_ros2 packages is currently not working.
 This package is supposed to be an interface between ROS2 and the boston api for the spot. The [ROS1 driver](https://github.com/clearpathrobotics/spot_ros) from Clearpath is used as a template for the development.
 
 ## Prerequisites
@@ -34,8 +35,7 @@ The **step()** function is now called by thread.
 The reason is, normally at the end of the **main()** the created ROS node has to **spin()** to update the messages on the topics. The **spin()** function blocks the execution.
 Since I didn't find where Clearpath spin inside the ROS1 driver, i decided to provide this while loop via a new function with threading.
 
-# Current error messages
-
+# Known issues
 ![](https://fh-aachen.sciebo.de/s/VG7ZnE83ysFwF9h/download)
 
 ![](https://fh-aachen.sciebo.de/s/GAiqn2oLmLznwc6/download)
