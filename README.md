@@ -2,7 +2,7 @@
 
 <img src="spot.jpeg" width="350">
 
-This package is supposed to be an interface between ROS2 and the boston api for the spot. The `ROS1 driver <https://github.com/clearpathrobotics/spot_ros>`_ from Clearpath is used as a template for the spot.
+This package is supposed to be an interface between ROS2 and the boston api for the spot. The [ROS1 driver](https://github.com/clearpathrobotics/spot_ros) from Clearpath is used as a template for the spot.
 
 ## Prerequisites
     - Tested for ubuntu 20.04
