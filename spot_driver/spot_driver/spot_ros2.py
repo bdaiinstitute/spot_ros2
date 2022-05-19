@@ -246,89 +246,94 @@ class SpotROS():
 
     def handle_claim(self, request, response):
         """ROS service handler for the claim service"""
-        resp = self.spot_wrapper.claim()
-        response.success = True
-        response.message = "hallo"
-        print(response)
+        response.success, response.message = self.spot_wrapper.claim()
         return response
 
-    def handle_release(self, req):
+    def handle_release(self, request, response):
         """ROS service handler for the release service"""
-        resp = self.spot_wrapper.release()
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.release()
+        return response
 
-    def handle_stop(self, req):
+    def handle_stop(self, request, response):
         """ROS service handler for the stop service"""
-        resp = self.spot_wrapper.stop()
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.stop()
+        return response
 
-    def handle_self_right(self, req):
+    def handle_self_right(self, request, response):
         """ROS service handler for the self-right service"""
-        resp = self.spot_wrapper.self_right()
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.self_right()
+        return response
 
-    def handle_sit(self, req):
+    def handle_sit(self, request, response):
         """ROS service handler for the sit service"""
-        resp = self.spot_wrapper.sit()
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.sit()
+        return response
 
-    def handle_stand(self, req):
+    def handle_stand(self, request, response):
         """ROS service handler for the stand service"""
-        resp = self.spot_wrapper.stand()
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.stand()
+        return response
 
-    def handle_power_on(self, req):
+    def handle_power_on(self, request, response):
         """ROS service handler for the power-on service"""
-        resp = self.spot_wrapper.power_on()
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.power_on()
+        return response
 
-    def handle_safe_power_off(self, req):
+    def handle_safe_power_off(self, request, response):
         """ROS service handler for the safe-power-off service"""
-        resp = self.spot_wrapper.safe_power_off()
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.safe_power_off()
+        return response
 
-    def handle_estop_hard(self, req):
+    def handle_estop_hard(self, request, response):
         """ROS service handler to hard-eStop the robot.  The robot will immediately cut power to the motors"""
-        resp = self.spot_wrapper.assertEStop(True)
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.assertEStop(True)
+        return response
 
-    def handle_estop_soft(self, req):
+    def handle_estop_soft(self, request, response):
         """ROS service handler to soft-eStop the robot.  The robot will try to settle on the ground before cutting
         power to the motors """
-        resp = self.spot_wrapper.assertEStop(False)
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.assertEStop(False)
+        return response
 
-    def handle_estop_disengage(self, req):
+    def handle_estop_disengage(self, request, response):
         """ROS service handler to disengage the eStop on the robot."""
-        resp = self.spot_wrapper.disengageEStop()
-        return TriggerResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.disengageEStop()
+        return response
 
-    def handle_clear_behavior_fault(self, req, resp):
+    def handle_clear_behavior_fault(self, request, response):
         """ROS service handler for clearing behavior faults"""
-        resp = self.spot_wrapper.clear_behavior_fault(req.id)
-        return ClearBehaviorFaultResponse(resp[0], resp[1])
+        response.success, response.message = self.spot_wrapper.clear_behavior_fault(request.id)
+        return response
 
-    def handle_stair_mode(self, req):
+    def handle_stair_mode(self, request, response):
         """ROS service handler to set a stair mode to the robot."""
         try:
             mobility_params = self.spot_wrapper.get_mobility_params()
-            mobility_params.stair_hint = req.data
+            mobility_params.stair_hint = request.data
             self.spot_wrapper.set_mobility_params( mobility_params )
-            return SetBoolResponse(True, 'Success')
+            response.success = True
+            response.message = 'Success'
+            return response
         except Exception as e:
-            return SetBoolResponse(False, 'Error:{}'.format(e))
+            response.success = False
+            response.message = 'Error:{}'.format(e)
+            return response
 
-    def handle_locomotion_mode(self, req):
+    def handle_locomotion_mode(self, request, response):
         """ROS service handler to set locomotion mode"""
         try:
             mobility_params = self.spot_wrapper.get_mobility_params()
-            mobility_params.locomotion_hint = req.locomotion_mode
+            mobility_params.locomotion_hint = request.locomotion_mode
             self.spot_wrapper.set_mobility_params( mobility_params )
-            return SetLocomotionResponse(True, 'Success')
+            response.success = True
+            response.message = 'Success'
+            return response
         except Exception as e:
-            return SetLocomotionResponse(False, 'Error:{}'.format(e))
+            response.success = False
+            response.message = 'Error:{}'.format(e)
+            return response
 
-    def handle_max_vel(self, req):
+    def handle_max_vel(self, request, response):
         """
         Handle a max_velocity service call. This will modify the mobility params to have a limit on the maximum
         velocity that the robot can move during motion commmands. This affects trajectory commands and velocity
@@ -339,13 +344,17 @@ class SpotROS():
         """
         try:
             mobility_params = self.spot_wrapper.get_mobility_params()
-            mobility_params.vel_limit.CopyFrom(SE2VelocityLimit(max_vel=math_helpers.SE2Velocity(req.velocity_limit.linear.x,
-                                                                                                 req.velocity_limit.linear.y,
-                                                                                                 req.velocity_limit.angular.z).to_proto()))
+            mobility_params.vel_limit.CopyFrom(SE2VelocityLimit(max_vel=math_helpers.SE2Velocity(request.velocity_limit.linear.x,
+                                                                                                 request.velocity_limit.linear.y,
+                                                                                                 request.velocity_limit.angular.z).to_proto()))
             self.spot_wrapper.set_mobility_params(mobility_params)
-            return SetVelocityResponse(True, 'Success')
+            response.success = True
+            response.message = 'Success'
+            return request
         except Exception as e:
-            return SetVelocityResponse(False, 'Error:{}'.format(e))
+            response.success = False
+            response.message = 'Error:{}'.format(e)
+            return response
 
     def handle_trajectory(self, req):
         """ROS actionserver execution handler to handle receiving a request to move to a location"""
@@ -428,10 +437,10 @@ class SpotROS():
         mobility_params.body_control.CopyFrom(body_control)
         self.spot_wrapper.set_mobility_params(mobility_params)
 
-    def handle_list_graph(self, upload_path):
+    def handle_list_graph(self, request, response):
         """ROS service handler for listing graph_nav waypoint_ids"""
-        resp = self.spot_wrapper.list_graph(upload_path)
-        return ListGraphResponse(resp)
+        response.waypoints_id = self.spot_wrapper.list_graph(request.upload_path)
+        return response
 
     def handle_navigate_to_feedback(self):
         """Thread function to send navigate_to feedback"""
