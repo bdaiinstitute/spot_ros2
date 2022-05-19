@@ -41,44 +41,6 @@ friendly_joint_names["hr.hx"] = "rear_right_hip_x"
 friendly_joint_names["hr.hy"] = "rear_right_hip_y"
 friendly_joint_names["hr.kn"] = "rear_right_knee"
 
-class DefaultCameraInfo(CameraInfo):
-    """Blank class extending CameraInfo ROS topic that defaults most parameters"""
-    def __init__(self):
-        super().__init__()
-        self.distortion_model = "plumb_bob"
-
-        self.D.append(0)
-        self.D.append(0)
-        self.D.append(0)
-        self.D.append(0)
-        self.D.append(0)
-
-        self.K[1] = 0
-        self.K[3] = 0
-        self.K[6] = 0
-        self.K[7] = 0
-        self.K[8] = 1
-
-        self.R[0] = 1
-        self.R[1] = 0
-        self.R[2] = 0
-        self.R[3] = 0
-        self.R[4] = 1
-        self.R[5] = 0
-        self.R[6] = 0
-        self.R[7] = 0
-        self.R[8] = 1
-
-        self.P[1] = 0
-        self.P[3] = 0
-        self.P[4] = 0
-        self.P[7] = 0
-        self.P[8] = 0
-        self.P[9] = 0
-        self.P[10] = 1
-        self.P[11] = 0
-
-
 def populateTransformStamped(time, parent_frame, child_frame, transform):
     """Populates a TransformStamped message
     Args:
@@ -103,6 +65,44 @@ def populateTransformStamped(time, parent_frame, child_frame, transform):
     new_tf.transform.rotation.w = transform.rotation.w
 
     return new_tf
+
+def createDefaulCameraInfo():
+
+    camera_info_msg = CameraInfo()
+    camera_info_msg.distortion_model = "plumb_bob"
+
+    camera_info_msg.d.append(0)
+    camera_info_msg.d.append(0)
+    camera_info_msg.d.append(0)
+    camera_info_msg.d.append(0)
+    camera_info_msg.d.append(0)
+
+    camera_info_msg.k[1] = 0
+    camera_info_msg.k[3] = 0
+    camera_info_msg.k[6] = 0
+    camera_info_msg.k[7] = 0
+    camera_info_msg.k[8] = 1
+
+    camera_info_msg.r[0] = 1
+    camera_info_msg.r[1] = 0
+    camera_info_msg.r[2] = 0
+    camera_info_msg.r[3] = 0
+    camera_info_msg.r[4] = 1
+    camera_info_msg.r[5] = 0
+    camera_info_msg.r[6] = 0
+    camera_info_msg.r[7] = 0
+    camera_info_msg.r[8] = 1
+
+    camera_info_msg.p[1] = 0
+    camera_info_msg.p[3] = 0
+    camera_info_msg.p[4] = 0
+    camera_info_msg.p[7] = 0
+    camera_info_msg.p[8] = 0
+    camera_info_msg.p[9] = 0
+    camera_info_msg.p[10] = 1
+    camera_info_msg.p[11] = 0
+
+    return camera_info_msg
 
 def getImageMsg(data, spot_wrapper):
     """Takes the imag and  camera data and populates the necessary ROS messages
@@ -159,22 +159,23 @@ def getImageMsg(data, spot_wrapper):
             image_msg.step = 2 * data.shot.image.cols
             image_msg.data = data.shot.image.data
 
-    camera_info_msg = DefaultCameraInfo()
+    camera_info_msg = createDefaulCameraInfo(camera_info_msg)
+
     local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
     camera_info_msg.header.stamp = Time(local_time.seconds, local_time.nanos)
     camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
     camera_info_msg.height = data.shot.image.rows
     camera_info_msg.width = data.shot.image.cols
 
-    camera_info_msg.K[0] = data.source.pinhole.intrinsics.focal_length.x
-    camera_info_msg.K[2] = data.source.pinhole.intrinsics.principal_point.x
-    camera_info_msg.K[4] = data.source.pinhole.intrinsics.focal_length.y
-    camera_info_msg.K[5] = data.source.pinhole.intrinsics.principal_point.y
+    camera_info_msg.k[0] = data.source.pinhole.intrinsics.focal_length.x
+    camera_info_msg.k[2] = data.source.pinhole.intrinsics.principal_point.x
+    camera_info_msg.k[4] = data.source.pinhole.intrinsics.focal_length.y
+    camera_info_msg.k[5] = data.source.pinhole.intrinsics.principal_point.y
 
-    camera_info_msg.P[0] = data.source.pinhole.intrinsics.focal_length.x
-    camera_info_msg.P[2] = data.source.pinhole.intrinsics.principal_point.x
-    camera_info_msg.P[5] = data.source.pinhole.intrinsics.focal_length.y
-    camera_info_msg.P[6] = data.source.pinhole.intrinsics.principal_point.y
+    camera_info_msg.p[0] = data.source.pinhole.intrinsics.focal_length.x
+    camera_info_msg.p[2] = data.source.pinhole.intrinsics.principal_point.x
+    camera_info_msg.p[5] = data.source.pinhole.intrinsics.focal_length.y
+    camera_info_msg.p[6] = data.source.pinhole.intrinsics.principal_point.y
 
     return image_msg, camera_info_msg
 
