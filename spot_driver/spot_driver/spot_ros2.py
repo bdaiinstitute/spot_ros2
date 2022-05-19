@@ -136,7 +136,7 @@ class SpotROS():
         if metrics:
             metrics_msg = Metrics()
             local_time = self.spot_wrapper.robotToLocalTime(metrics.timestamp)
-            metrics_msg.header.stamp = Time(sec= local_time.seconds, nanosec = local_time.nanos)
+            metrics_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
 
             for metric in metrics.metrics:
                 if metric.label == "distance":
@@ -145,12 +145,12 @@ class SpotROS():
                     metrics_msg.gait_cycles = metric.int_value
                 if metric.label == "time moving":
                     #metrics_msg.time_moving = Time(metric.duration.seconds, metric.duration.nanos)
-                    duration = Time(sec = metric.duration.seconds, nanosec = metric.duration.nanos)
+                    duration = Duration(sec = metric.duration.seconds, nanosec = metric.duration.nanos)
                     metrics_msg.time_moving = duration
                 if metric.label == "electric power":
                     #metrics_msg.electric_power = Time(metric.duration.seconds, metric.duration.nanos)
-                    duration = Time(metric.duration.seconds, metric.duration.nanos)
-                    metrics_msg.electric_power = duration.to_msg()
+                    duration = Duration(sec = metric.duration.seconds, nanosec = metric.duration.nanos)
+                    metrics_msg.electric_power = duration
             self.metrics_pub.publish(metrics_msg)
 
     def LeaseCB(self, results):
@@ -484,7 +484,7 @@ class SpotROS():
 
             transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
             local_time = self.spot_wrapper.robotToLocalTime(image_data.shot.acquisition_time)
-            tf_time = Time(local_time.seconds, local_time.nanos)
+            tf_time = Time(sec = local_time.seconds, nanosec = local_time.nanos)
             static_tf = populateTransformStamped(tf_time, transform.parent_frame_name, frame_name,
                                                  transform.parent_tform_child)
             self.camera_static_transforms.append(static_tf)

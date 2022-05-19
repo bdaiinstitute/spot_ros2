@@ -162,7 +162,7 @@ def getImageMsg(data, spot_wrapper):
     camera_info_msg = createDefaulCameraInfo(camera_info_msg)
 
     local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
-    camera_info_msg.header.stamp = Time(local_time.seconds, local_time.nanos)
+    camera_info_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
     camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
     camera_info_msg.height = data.shot.image.rows
     camera_info_msg.width = data.shot.image.cols
@@ -369,11 +369,11 @@ def GetPowerStatesFromState(state, spot_wrapper):
     """
     power_state_msg = PowerState()
     local_time = spot_wrapper.robotToLocalTime(state.power_state.timestamp)
-    power_state_msg.header.stamp = Time(local_time.seconds, local_time.nanos)
+    power_state_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
     power_state_msg.motor_power_state = state.power_state.motor_power_state
     power_state_msg.shore_power_state = state.power_state.shore_power_state
     power_state_msg.locomotion_charge_percentage = state.power_state.locomotion_charge_percentage.value
-    power_state_msg.locomotion_estimated_runtime = Time(state.power_state.locomotion_estimated_runtime.seconds, state.power_state.locomotion_estimated_runtime.nanos)
+    power_state_msg.locomotion_estimated_runtime = Duration(sec = state.power_state.locomotion_estimated_runtime.seconds, nanosec = state.power_state.locomotion_estimated_runtime.nanos)
     return power_state_msg
 
 def getBehaviorFaults(behavior_faults, spot_wrapper):
@@ -411,8 +411,8 @@ def getSystemFaults(system_faults, spot_wrapper):
         new_fault = SystemFault()
         new_fault.name = fault.name
         local_time = spot_wrapper.robotToLocalTime(fault.onset_timestamp)
-        new_fault.header.stamp = Time(local_time.seconds, local_time.nanos)
-        new_fault.duration = Time(fault.duration.seconds, fault.duration.nanos)
+        new_fault.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+        new_fault.duration = Duration(sec = fault.duration.seconds, nanosec = fault.duration.nanos)
         new_fault.code = fault.code
         new_fault.uid = fault.uid
         new_fault.error_message = fault.error_message
