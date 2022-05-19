@@ -587,10 +587,6 @@ def main(args = None):
     spot_ros.hostname = node.get_parameter('hostname')
 
     # New vars for spot login; ros params not working in debug
-    hostname = "10.0.0.3"
-    username = "admin"
-    password = "cjck5eaph39s"
-    print("login: "+str(username)+" "+str(password)+" "+str(hostname))
 
     spot_ros.camera_static_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(node)
     # Static transform broadcaster is super simple and just a latched publisher. Every time we add a new static
