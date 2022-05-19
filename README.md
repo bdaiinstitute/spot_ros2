@@ -18,7 +18,7 @@ The ros actions have not yet been ported and the `cmd_vel` topic also were not y
     colcon build --symlink-install
 
 ## Launch
-The spot login data hostname, username and password must be specified in the `config/spot_login.yaml` in the spot_driver package.
+The spot login data hostname, username and password must be specified in the `config/spot_login.yaml` of the spot_driver package.
 
 ### Model
     ros2 launch spot_description description.launch.py
