@@ -422,7 +422,7 @@ def getBehaviorFaults(behavior_faults, spot_wrapper):
         new_fault = BehaviorFault()
         new_fault.behavior_fault_id = fault.behavior_fault_id
         local_time = spot_wrapper.robotToLocalTime(fault.onset_timestamp)
-        new_fault.header.stamp = Time(local_time.seconds, local_time.nanos)
+        new_fault.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
         new_fault.cause = fault.cause
         new_fault.status = fault.status
         faults.append(new_fault)
