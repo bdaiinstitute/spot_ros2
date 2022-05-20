@@ -1,8 +1,13 @@
 # Spot ROS2 Driver
 This is a ROS 2 implemantion of the [ROS1 driver](https://github.com/clearpathrobotics/spot_ros) from Clearpath.
-## Issues
 All ROS services are ported, but only the services: claim, power_on, stand and sit were tested.
-The ros actions have not yet been ported and the `cmd_vel` topic also were not yet tested.
+The `/cmd_vel` topic also works and you can send commands to the spot via e.g. rqt_publisher.
+This project is still WIP.
+
+## Issues
+The ros actions have not yet been ported. The RobotModel is not visible in rviz so far.
+DepthCloud is not visible in rviz2 either, because DepthCloud has not been ported for rviz2 yet.
+The `spot_viz` package is also missing.
 
 <img src="spot.jpeg" width="350">
 
