@@ -159,8 +159,40 @@ def getImageMsg(data, spot_wrapper):
             image_msg.step = 2 * data.shot.image.cols
             image_msg.data = data.shot.image.data
 
-    camera_info_msg = createDefaulCameraInfo(camera_info_msg)
+    #camera_info_msg = createDefaulCameraInfo(camera_info_msg)
+    camera_info_msg = CameraInfo()
+    camera_info_msg.distortion_model = "plumb_bob"
 
+    camera_info_msg.d.append(0)
+    camera_info_msg.d.append(0)
+    camera_info_msg.d.append(0)
+    camera_info_msg.d.append(0)
+    camera_info_msg.d.append(0)
+
+    camera_info_msg.k[1] = 0
+    camera_info_msg.k[3] = 0
+    camera_info_msg.k[6] = 0
+    camera_info_msg.k[7] = 0
+    camera_info_msg.k[8] = 1
+
+    camera_info_msg.r[0] = 1
+    camera_info_msg.r[1] = 0
+    camera_info_msg.r[2] = 0
+    camera_info_msg.r[3] = 0
+    camera_info_msg.r[4] = 1
+    camera_info_msg.r[5] = 0
+    camera_info_msg.r[6] = 0
+    camera_info_msg.r[7] = 0
+    camera_info_msg.r[8] = 1
+
+    camera_info_msg.p[1] = 0
+    camera_info_msg.p[3] = 0
+    camera_info_msg.p[4] = 0
+    camera_info_msg.p[7] = 0
+    camera_info_msg.p[8] = 0
+    camera_info_msg.p[9] = 0
+    camera_info_msg.p[10] = 1
+    camera_info_msg.p[11] = 0
     local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
     camera_info_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
     camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
