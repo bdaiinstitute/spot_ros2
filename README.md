@@ -22,6 +22,11 @@ The `spot_viz` package is also missing.
     git clone https://github.com/MASKOR/Spot-ROS2.git src/
     colcon build --symlink-install
 
+### Install depth image proc
+Since `DepthCloud` is not yet ported for rviz2 , we can use [depth_image_proc](http://wiki.ros.org/depth_image_proc) to visualize the depth information from the cameras as `Pointcloud2`.
+
+    sudo apt install ros-foxy-depth-image-proc
+
 ## Launch
 The spot login data hostname, username and password must be specified in the `config/spot_login.yaml` of the spot_driver package.
 
@@ -30,3 +35,6 @@ The spot login data hostname, username and password must be specified in the `co
 
 ### SpotDriver
     ros2 launch spot_driver spot_driver.launch.py
+
+### Depth image to Pointcloud2
+    ros2 launch spot_driver point_cloud_xyz.launch.py
