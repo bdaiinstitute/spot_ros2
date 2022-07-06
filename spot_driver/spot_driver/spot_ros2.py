@@ -88,6 +88,11 @@ class SpotROS():
             if len(tf_msg.transforms) > 0:
                 self.tf_pub.publish(tf_msg)
 
+            ## Publish GPE frame
+            tf_msg = GetTFFromState(state, self.spot_wrapper,"gpe")
+            if len(tf_msg.transforms) > 0:
+                self.tf_pub.publish(tf_msg)
+
             # Odom Twist #
             twist_odom_msg = GetOdomTwistFromState(state, self.spot_wrapper)
             self.odom_twist_pub.publish(twist_odom_msg)
