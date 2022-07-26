@@ -8,10 +8,16 @@ Panels:
         - /Status1
         - /TF1/Frames1
         - /TF1/Tree1
+        - /PointCloud21
         - /PointCloud21/Status1
+        - /PointCloud22
+        - /PointCloud23
         - /PointCloud23/Topic1
+        - /PointCloud24
+        - /PointCloud25
+        - /RobotModel1/Description Topic1
       Splitter Ratio: 0.5
-    Tree Height: 244
+    Tree Height: 838
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -51,6 +57,12 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        back:
+          Value: true
+        back_fisheye:
+          Value: true
+        base_link:
+          Value: true
         body:
           Value: true
         flat_body:
@@ -61,13 +73,29 @@ Visualization Manager:
           Value: true
         front_left_upper_leg:
           Value: true
+        front_rail:
+          Value: true
         front_right_hip:
           Value: true
         front_right_lower_leg:
           Value: true
         front_right_upper_leg:
           Value: true
+        frontleft:
+          Value: true
+        frontleft_fisheye:
+          Value: true
+        frontright:
+          Value: true
+        frontright_fisheye:
+          Value: true
         gpe:
+          Value: true
+        head:
+          Value: true
+        left:
+          Value: true
+        left_fisheye:
           Value: true
         odom:
           Value: true
@@ -77,11 +105,17 @@ Visualization Manager:
           Value: true
         rear_left_upper_leg:
           Value: true
+        rear_rail:
+          Value: true
         rear_right_hip:
           Value: true
         rear_right_lower_leg:
           Value: true
         rear_right_upper_leg:
+          Value: true
+        right:
+          Value: true
+        right_fisheye:
           Value: true
         vision:
           Value: true
@@ -92,15 +126,35 @@ Visualization Manager:
       Show Names: true
       Tree:
         body:
+          base_link:
+            {}
           flat_body:
             {}
           front_left_hip:
             front_left_upper_leg:
               front_left_lower_leg:
                 {}
+          front_rail:
+            {}
           front_right_hip:
             front_right_upper_leg:
               front_right_lower_leg:
+                {}
+          head:
+            back:
+              back_fisheye:
+                {}
+            frontleft:
+              frontleft_fisheye:
+                {}
+            frontright:
+              frontright_fisheye:
+                {}
+            left:
+              left_fisheye:
+                {}
+            right:
+              right_fisheye:
                 {}
           odom:
             gpe:
@@ -109,6 +163,8 @@ Visualization Manager:
             rear_left_upper_leg:
               rear_left_lower_leg:
                 {}
+          rear_rail:
+            {}
           rear_right_hip:
             rear_right_upper_leg:
               rear_right_lower_leg:
@@ -120,14 +176,14 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 2.5975310802459717
+        Min Value: 0.10826981067657471
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: AxisColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -153,14 +209,14 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 2.89227294921875
+        Min Value: 0.05450552701950073
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: AxisColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -169,7 +225,7 @@ Visualization Manager:
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
-      Position Transformer: ""
+      Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.009999999776482582
@@ -186,14 +242,14 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 1.1303489208221436
+        Min Value: 0.11880606412887573
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: AxisColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -202,7 +258,7 @@ Visualization Manager:
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
-      Position Transformer: ""
+      Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.009999999776482582
@@ -219,14 +275,14 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 2.317868709564209
+        Min Value: -0.1885446310043335
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: AxisColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -235,7 +291,7 @@ Visualization Manager:
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
-      Position Transformer: ""
+      Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.009999999776482582
@@ -252,8 +308,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 11.611348152160645
-        Min Value: 1.2415390014648438
+        Max Value: 3.0432052612304688
+        Min Value: -0.07985210418701172
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -283,7 +339,7 @@ Visualization Manager:
       Use rainbow: true
       Value: true
     - Class: rviz_default_plugins/Image
-      Enabled: true
+      Enabled: false
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -295,9 +351,9 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /camera/back/image
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/Image
-      Enabled: true
+      Enabled: false
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -309,7 +365,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /camera/frontleft/image
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/Image
       Enabled: false
       Max Value: 1
@@ -339,7 +395,7 @@ Visualization Manager:
         Value: /camera/left/image
       Value: false
     - Class: rviz_default_plugins/Image
-      Enabled: false
+      Enabled: true
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -351,7 +407,107 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /camera/right/image
-      Value: false
+      Value: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        body:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        front_left_hip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        front_left_lower_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        front_left_upper_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        front_rail:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        front_right_hip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        front_right_lower_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        front_right_upper_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_left_hip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_left_lower_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_left_upper_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_rail:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        rear_right_hip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_right_lower_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_right_upper_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -395,41 +551,41 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.138237714767456
+      Distance: 8.265164375305176
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.00653352914378047
-        Y: 0.9578824639320374
-        Z: 0.8038828372955322
+        X: -0.12614010274410248
+        Y: 0.3625524938106537
+        Z: 0.6435370445251465
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.810397744178772
+      Pitch: 0.3803982734680176
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.24536043405532837
+      Yaw: 3.9285404682159424
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1016
+  Height: 1403
   Hide Left Dock: false
   Hide Right Dock: false
   Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000002a60000039efc0200000017fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000001ac000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d006100670065000000003d000003820000000000000000fb0000000a0049006d00610067006500000003c5000000160000000000000000fb0000000a0049006d006100670065000000022f000000810000000000000000fb0000000a0049006d0061006700650100000177000000c80000000000000000fb0000000a0049006d006100670065000000032a000000cc0000000000000000fb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000000a0049006d00610067006500000001c3000000ae0000000000000000fb0000000a0049006d0061006700650000000221000000da0000000000000000fb0000000a0049006d00610067006500000002bb000001200000000000000000fb0000000a0049006d00610067006501000001ef000000ec0000002800fffffffb0000000a0049006d00610067006501000002e1000000fa0000002800fffffffb0000000c00430061006d0065007200610000000311000000ca0000000000000000fb0000000a0049006d00610067006500000002f0000000eb0000002800fffffffb0000000a0049006d0061006700650000000317000000c40000002800fffffffb0000000a0049006d006100670065000000033f0000009c0000002800ffffff000000010000010f0000039efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d0000039e000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d006501000000000000045000000000000000000000048c0000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000026200000521fc0200000017fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000003fe000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d006100670065000000003d000003820000002800fffffffb0000000a0049006d00610067006500000003c5000000160000002800fffffffb0000000a0049006d006100670065000000022f000000810000002800fffffffb0000000a0049006d00610067006501000004410000011d0000002800fffffffb0000000a0049006d006100670065000000032a000000cc0000002800fffffffb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000000a0049006d00610067006500000001c3000000ae0000000000000000fb0000000a0049006d0061006700650000000221000000da0000000000000000fb0000000a0049006d00610067006500000002bb000001200000000000000000fb0000000a0049006d00610067006501000001ef000000ec0000000000000000fb0000000a0049006d00610067006501000002e1000000fa0000000000000000fb0000000c00430061006d0065007200610000000311000000ca0000000000000000fb0000000a0049006d00610067006500000002f0000000eb0000000000000000fb0000000a0049006d0061006700650000000317000000c40000000000000000fb0000000a0049006d006100670065000000033f0000009c0000000000000000000000010000010f0000039efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d0000039e000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000007980000052100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Tool Properties:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1848
-  X: 72
-  Y: 27
+  Width: 2560
+  X: 1920
+  Y: 0
