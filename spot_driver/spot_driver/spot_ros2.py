@@ -350,7 +350,7 @@ class SpotROS():
             self.spot_wrapper.set_mobility_params(mobility_params)
             response.success = True
             response.message = 'Success'
-            return request
+            return response
         except Exception as e:
             response.success = False
             response.message = 'Error:{}'.format(e)
