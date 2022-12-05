@@ -448,14 +448,14 @@ class SpotROS():
 
                 feedback = Trajectory.Feedback()
                 if self.spot_wrapper.at_goal:
-                    self.node.get_logger().error("SUCCESS")
+                    # self.node.get_logger().error("SUCCESS")
                     feedback.feedback = "Reached goal"
                     goal_handle.publish_feedback(feedback)
                     result.success = True
                     result.message = ''
                     goal_handle.succeed()                
                 else:
-                    self.node.get_logger().error("FAIL")
+                    # self.node.get_logger().error("FAIL")
                     feedback.feedback = "Failed to reach goal"
                     goal_handle.publish_feedback(feedback)
                     result.success = False
@@ -466,7 +466,7 @@ class SpotROS():
             self.node.get_logger().error(f"Exception: {type(e)} - {e}")
             result.success = False
             result.message = f"Exception: {type(e)} - {e}"
-        self.node.get_logger().error(f"RETURN FROM HANDLE: {result}")
+        # self.node.get_logger().error(f"RETURN FROM HANDLE: {result}")
         return result
 
     def cmdVelCallback(self, data):
