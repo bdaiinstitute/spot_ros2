@@ -1,5 +1,9 @@
+import time
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import ReentrantCallbackGroup
+
 from rclpy.action import ActionServer
 import builtin_interfaces.msg
 from builtin_interfaces.msg import Time, Duration
@@ -350,71 +354,120 @@ class SpotROS():
             self.spot_wrapper.set_mobility_params(mobility_params)
             response.success = True
             response.message = 'Success'
-            return request
+            return response
         except Exception as e:
             response.success = False
             response.message = 'Error:{}'.format(e)
             return response
 
-    def handle_trajectory(self, req):
+    def handle_trajectory(self, goal_handle):
         """ROS actionserver execution handler to handle receiving a request to move to a location"""
-        if req.target_pose.header.frame_id != 'body':
-            self.trajectory_server.set_aborted(TrajectoryResult(False, 'frame_id of target_pose must be \'body\''))
-            return
-        if req.duration.data.to_sec() <= 0:
-            self.trajectory_server.set_aborted(TrajectoryResult(False, 'duration must be larger than 0'))
-            return
+        
+        if goal_handle.request.target_pose.header.frame_id != 'body':
+            goal_handle.abort()
+            result = Trajectory.Result()
+            result.success = False
+            result.message = 'frame_id of target_pose must be \'body\''
+            return result
+        
+        if goal_handle.request.duration.sec <= 0:
+            goal_handle.abort()
+            result = Trajectory.Result()
+            result.success = False
+            result.message = 'duration must be larger than 0'
+            return result
 
-        cmd_duration = rclpy.Duration(req.duration.data.secs, req.duration.data.nsecs)
+        cmd_duration_secs = goal_handle.request.duration.sec*1.0
+                
         resp = self.spot_wrapper.trajectory_cmd(
-                        goal_x=req.target_pose.pose.position.x,
-                        goal_y=req.target_pose.pose.position.y,
+                        goal_x=goal_handle.request.target_pose.pose.position.x,
+                        goal_y=goal_handle.request.target_pose.pose.position.y,
                         goal_heading=math_helpers.Quat(
-                            w=req.target_pose.pose.orientation.w,
-                            x=req.target_pose.pose.orientation.x,
-                            y=req.target_pose.pose.orientation.y,
-                            z=req.target_pose.pose.orientation.z
+                            w=goal_handle.request.target_pose.pose.orientation.w,
+                            x=goal_handle.request.target_pose.pose.orientation.x,
+                            y=goal_handle.request.target_pose.pose.orientation.y,
+                            z=goal_handle.request.target_pose.pose.orientation.z
                             ).to_yaw(),
-                        cmd_duration=cmd_duration.to_sec(),
-                        precise_position=req.precise_positioning,
+                        cmd_duration=cmd_duration_secs,
+                        precise_position=goal_handle.request.precise_positioning,
                         )
+        
+        command_start_time = self.node.get_clock().now()                
 
-        def timeout_cb(trajectory_server, _):
-            trajectory_server.publish_feedback(TrajectoryFeedback("Failed to reach goal, timed out"))
-            trajectory_server.set_aborted(TrajectoryResult(False, "Failed to reach goal, timed out"))
+        # Abort the actionserver if cmd_duration is exceeded - the driver stops but does not provide
+        # feedback toindicate this so we monitor it ourselves
+        # The trajectory command is non-blocking but we need to keep this function up in order to
+        # interrupt if a preempt is requested and to return success if/when the robot reaches the goal.
+        # Also check the is_active to
+        # monitor whether the timeout has already aborted the command
 
-        # Abort the actionserver if cmd_duration is exceeded - the driver stops but does not provide feedback to
-        # indicate this so we monitor it ourselves
-        cmd_timeout = rclpy.Timer(cmd_duration, functools.partial(timeout_cb, self.trajectory_server), oneshot=True)
+        #
+        # Pre-emp missing in port to ROS2 (ros1: self.trajectory_server.is_preempt_requested())
+        #
+        
+        ### rate = rclpy.Rate(10)
 
-        # The trajectory command is non-blocking but we need to keep this function up in order to interrupt if a
-        # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
-        # monitor whether the timeout_cb has already aborted the command
-        rate = rclpy.Rate(10)
-        while not rclpy.is_shutdown() and not self.trajectory_server.is_preempt_requested() and not self.spot_wrapper.at_goal and self.trajectory_server.is_active():
-            if self.spot_wrapper.near_goal:
-                if self.spot_wrapper._last_trajectory_command_precise:
-                    self.trajectory_server.publish_feedback(TrajectoryFeedback("Near goal, performing final adjustments"))
+        try:
+            while rclpy.ok() and not self.spot_wrapper.at_goal and goal_handle.is_active:
+                feedback = Trajectory.Feedback()
+                if self.spot_wrapper.near_goal:
+                    if self.spot_wrapper._last_trajectory_command_precise:
+                        feedback.feedback = "Near goal, performing final adjustments"
+                    else:
+                        feedback.feedback = "Near goal"
                 else:
-                    self.trajectory_server.publish_feedback(TrajectoryFeedback("Near goal"))
-            else:
-                self.trajectory_server.publish_feedback(TrajectoryFeedback("Moving to goal"))
-            rate.sleep()
+                    feedback.feedback = "Moving to goal"
 
-        # If still active after exiting the loop, the command did not time out
-        if self.trajectory_server.is_active():
-            cmd_timeout.shutdown()
-            if self.trajectory_server.is_preempt_requested():
-                self.trajectory_server.publish_feedback(TrajectoryFeedback("Preempted"))
-                self.trajectory_server.set_preempted()
-                self.spot_wrapper.stop()
+                ###rate.sleep()
+                goal_handle.publish_feedback(feedback)
+                time.sleep(0.1)
 
-            if self.spot_wrapper.at_goal:
-                self.trajectory_server.publish_feedback(TrajectoryFeedback("Reached goal"))
-                self.trajectory_server.set_succeeded(TrajectoryResult(resp[0], resp[1]))
-            else:
-                self.trajectory_server.publish_feedback(TrajectoryFeedback("Failed to reach goal"))
-                self.trajectory_server.set_aborted(TrajectoryResult(False, "Failed to reach goal"))
+                # check for timeout
+                com_dur = self.node.get_clock().now() - command_start_time
+
+                if com_dur.nanoseconds/1e9 > (cmd_duration_secs*10.3):
+                    # timeout, quit with failure
+                    self.node.get_logger().error("TIMEOUT")
+                    feedback = Trajectory.Feedback()
+                    feedback.feedback = "Failed to reach goal, timed out"
+                    goal_handle.publish_feedback(feedback)
+                    goal_handle.abort()
+
+            result = Trajectory.Result()
+            result.success = False
+            result.message = "timeout"
+
+            # If still active after exiting the loop, the command did not time out
+            if goal_handle.is_active:        
+                #            if self.trajectory_server.is_preempt_requested():
+                #                self.trajectory_server.publish_feedback(TrajectoryFeedback("Preempted"))
+                #                self.trajectory_server.set_preempted()
+                #                self.spot_wrapper.stop()
+                #                result.success = False
+                #                result.message = 'preempt'
+
+                feedback = Trajectory.Feedback()
+                if self.spot_wrapper.at_goal:
+                    # self.node.get_logger().error("SUCCESS")
+                    feedback.feedback = "Reached goal"
+                    goal_handle.publish_feedback(feedback)
+                    result.success = True
+                    result.message = ''
+                    goal_handle.succeed()                
+                else:
+                    # self.node.get_logger().error("FAIL")
+                    feedback.feedback = "Failed to reach goal"
+                    goal_handle.publish_feedback(feedback)
+                    result.success = False
+                    result.message = 'not at goal'
+                    goal_handle.abort()
+                    
+        except Exception as e:                    
+            self.node.get_logger().error(f"Exception: {type(e)} - {e}")
+            result.success = False
+            result.message = f"Exception: {type(e)} - {e}"
+        # self.node.get_logger().error(f"RETURN FROM HANDLE: {result}")
+        return result
 
     def cmdVelCallback(self, data):
         """Callback for cmd_vel command"""
@@ -507,8 +560,8 @@ class SpotROS():
 
     def step(self):
         """ Update spot sensors """
-        self.node.get_logger().info("Step/Update")
-        while rclpy.ok():
+        ### self.node.get_logger().info("Step/Update")
+        if rclpy.ok():
             self.spot_wrapper.updateTasks() ############## testing with Robot
             #self.node.get_logger().info("UPDATE TASKS")
             feedback_msg = Feedback()
@@ -559,6 +612,8 @@ def main(args = None):
     node = rclpy.create_node('spot_ros2')
 
     spot_ros.node = node
+    spot_ros.group = ReentrantCallbackGroup()
+    
     rate = node.create_rate(50)
     spot_ros.node_rate = rate
 
@@ -670,31 +725,31 @@ def main(args = None):
 
         spot_ros.mobility_params_pub = node.create_publisher(MobilityParams, 'status/mobility_params', 1)
 
-        node.create_subscription(Twist, 'cmd_vel', spot_ros.cmdVelCallback, 1)
-        node.create_subscription(Pose, 'body_pose', spot_ros.bodyPoseCallback, 1)
-        node.create_service(Trigger, 'claim', spot_ros.handle_claim)
-        node.create_service(Trigger, 'release', spot_ros.handle_release)       
-        node.create_service(Trigger, "stop", spot_ros.handle_stop)
-        node.create_service(Trigger, "self_right", spot_ros.handle_self_right)
-        node.create_service(Trigger, "sit", spot_ros.handle_sit)
-        node.create_service(Trigger, "stand", spot_ros.handle_stand)
-        node.create_service(Trigger, "power_on", spot_ros.handle_power_on)
-        node.create_service(Trigger, "power_off", spot_ros.handle_safe_power_off)
-        node.create_service(Trigger,"estop/hard", spot_ros.handle_estop_hard)
-        node.create_service(Trigger,"estop/gentle", spot_ros.handle_estop_soft)
-        node.create_service(Trigger,"estop/release", spot_ros.handle_estop_disengage)
+        node.create_subscription(Twist, 'cmd_vel', spot_ros.cmdVelCallback, 1, callback_group=spot_ros.group)
+        node.create_subscription(Pose, 'body_pose', spot_ros.bodyPoseCallback, 1, callback_group=spot_ros.group)
+        node.create_service(Trigger, 'claim', spot_ros.handle_claim, callback_group=spot_ros.group)
+        node.create_service(Trigger, 'release', spot_ros.handle_release, callback_group=spot_ros.group)       
+        node.create_service(Trigger, "stop", spot_ros.handle_stop, callback_group=spot_ros.group)
+        node.create_service(Trigger, "self_right", spot_ros.handle_self_right, callback_group=spot_ros.group)
+        node.create_service(Trigger, "sit", spot_ros.handle_sit, callback_group=spot_ros.group)
+        node.create_service(Trigger, "stand", spot_ros.handle_stand, callback_group=spot_ros.group)
+        node.create_service(Trigger, "power_on", spot_ros.handle_power_on, callback_group=spot_ros.group)
+        node.create_service(Trigger, "power_off", spot_ros.handle_safe_power_off, callback_group=spot_ros.group)
+        node.create_service(Trigger,"estop/hard", spot_ros.handle_estop_hard, callback_group=spot_ros.group)
+        node.create_service(Trigger,"estop/gentle", spot_ros.handle_estop_soft, callback_group=spot_ros.group)
+        node.create_service(Trigger,"estop/release", spot_ros.handle_estop_disengage, callback_group=spot_ros.group)
 
-        node.create_service(SetBool, "stair_mode", spot_ros.handle_stair_mode)
-        node.create_service(SetLocomotion, "locomotion_mode", spot_ros.handle_locomotion_mode)
-        node.create_service(SetVelocity, "max_velocity", spot_ros.handle_max_vel)
-        node.create_service(ClearBehaviorFault, "clear_behavior_fault", spot_ros.handle_clear_behavior_fault)
+        node.create_service(SetBool, "stair_mode", spot_ros.handle_stair_mode, callback_group=spot_ros.group)
+        node.create_service(SetLocomotion, "locomotion_mode", spot_ros.handle_locomotion_mode, callback_group=spot_ros.group)
+        node.create_service(SetVelocity, "max_velocity", spot_ros.handle_max_vel, callback_group=spot_ros.group)
+        node.create_service(ClearBehaviorFault, "clear_behavior_fault", spot_ros.handle_clear_behavior_fault, callback_group=spot_ros.group)
 
-        node.create_service(ListGraph, "list_graph", spot_ros.handle_list_graph)
+        node.create_service(ListGraph, "list_graph", spot_ros.handle_list_graph, callback_group=spot_ros.group)
         
-        spot_ros.navigate_as = ActionServer(node, NavigateTo, 'navigate_to', spot_ros.handle_navigate_to)
+        spot_ros.navigate_as = ActionServer(node, NavigateTo, 'navigate_to', spot_ros.handle_navigate_to, callback_group=spot_ros.group)
         #spot_ros.navigate_as.start() # As is online
 
-        spot_ros.trajectory_server = ActionServer(node, Trajectory, 'trajectory', spot_ros.handle_trajectory)
+        spot_ros.trajectory_server = ActionServer(node, Trajectory, 'trajectory', spot_ros.handle_trajectory, callback_group=spot_ros.group)
         #spot_ros.trajectory_server.start()
         
         # Register Shutdown Handle
@@ -704,6 +759,11 @@ def main(args = None):
         #spot_ros.auto_power_on = rclpy.get_param('~auto_power_on', False)
         #spot_ros.auto_stand = rclpy.get_param('~auto_stand', False)
 
+        node.create_timer(0.1, spot_ros.step, callback_group=spot_ros.group)
+
+        executor = MultiThreadedExecutor(num_threads=8)
+        executor.add_node(node)
+    
         if spot_ros.auto_claim.value:
             spot_ros.spot_wrapper.claim()
             if spot_ros.auto_power_on.value:
@@ -711,15 +771,24 @@ def main(args = None):
                 if spot_ros.auto_stand.value:
                     spot_ros.spot_wrapper.stand()
         sys.stdout.flush()
-        update_thraed = threading.Thread(target = spot_ros.step, args = ())
-        update_thraed.start()
-        signal.signal(signal.SIGTERM, spot_ros.shutdown)
+        #        update_thraed = threading.Thread(target = spot_ros.step, args = ())
+        #        update_thraed.start()
+        #        signal.signal(signal.SIGTERM, spot_ros.shutdown)
 
-        rclpy.spin(node)
-        node.get_logger().info("Shutdown")
-        ## Spot shutdown handle; disconnect spot
-        node.destroy_node()
+        print(f"Spinning ros2_driver")
+        try:
+            executor.spin()
+        except KeyboardInterrupt:
+            pass
+
+        executor.shutdown()
         rclpy.shutdown()
+        
+        #        rclpy.spin(node)
+        #        node.get_logger().info("Shutdown")
+        #        ## Spot shutdown handle; disconnect spot
+        #        node.destroy_node()
+        #        rclpy.shutdown()
 
 
 if __name__ == '__main__':
