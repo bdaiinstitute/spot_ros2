@@ -492,7 +492,14 @@ class SpotROS():
 
     def handle_list_graph(self, request, response):
         """ROS service handler for listing graph_nav waypoint_ids"""
-        response.waypoints_id = self.spot_wrapper.list_graph(request.upload_path)
+        try:
+            self.node.get_logger().error(f'handle_list_graph: {request}')
+            self.spot_wrapper._clear_graph()
+            self.spot_wrapper._upload_graph_and_snapshots(request.upload_filepath)
+            response.waypoint_ids = self.spot_wrapper.list_graph(request.upload_filepath)
+            self.node.get_logger().error(f'handle_list_graph RESPONSE: {response}')
+        except Exception as e:
+            self.node.get_logger().error('Exception Error:{}'.format(e))
         return response
 
     def handle_navigate_to_feedback(self):
@@ -500,28 +507,37 @@ class SpotROS():
         while rclpy.ok() and self.run_navigate_to:
             localization_state = self.spot_wrapper._graph_nav_client.get_localization_state()
             if localization_state.localization.waypoint_id:
-                self.navigate_as.publish_feedback(NavigateToFeedback(localization_state.localization.waypoint_id))
-            rclpy.Rate(10).sleep()
+                feedback = NavigateTo.Feedback()
+                feedback.waypoint_id = localization_state.localization.waypoint_id
+                self.goal_handle.publish_feedback(feedback)
+            time.sleep(0.1)
+            ## rclpy.Rate(10).sleep()
 
-    def handle_navigate_to(self, msg):
+    def handle_navigate_to(self, goal_handle):
         """ROS service handler to run mission of the robot.  The robot will replay a mission"""
         # create thread to periodically publish feedback
+        self.goal_handle = goal_handle
         feedback_thraed = threading.Thread(target = self.handle_navigate_to_feedback, args = ())
         self.run_navigate_to = True
         feedback_thraed.start()
         # run navigate_to
-        resp = self.spot_wrapper.navigate_to(upload_path = msg.upload_path,
-                                             navigate_to = msg.navigate_to,
-                                             initial_localization_fiducial = msg.initial_localization_fiducial,
-                                             initial_localization_waypoint = msg.initial_localization_waypoint)
+        resp = self.spot_wrapper.navigate_to(upload_path = goal_handle.request.upload_path,
+                                             navigate_to = goal_handle.request.navigate_to,
+                                             initial_localization_fiducial = goal_handle.request.initial_localization_fiducial,
+                                             initial_localization_waypoint = goal_handle.request.initial_localization_waypoint)
         self.run_navigate_to = False
         feedback_thraed.join()
 
+        result = NavigateTo.Result()
+        result.success = resp[0]
+        result.message = resp[1]
         # check status
         if resp[0]:
-            self.navigate_as.set_succeeded(NavigateToResult(resp[0], resp[1]))
+            goal_handle.succeed()
         else:
-            self.navigate_as.set_aborted(NavigateToResult(resp[0], resp[1]))
+            goal_handle.abort()            
+
+        return result
 
     def populate_camera_static_transforms(self, image_data):
         """Check data received from one of the image tasks and use the transform snapshot to extract the camera frame
