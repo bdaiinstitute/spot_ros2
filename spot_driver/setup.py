@@ -25,7 +25,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'spot_ros2 = spot_driver.spot_ros2:main'
+            'spot_ros2 = spot_driver.spot_ros2:main',
+            'command_spot = spot_driver.command_spot_driver:main',
         ],
     },
 )
