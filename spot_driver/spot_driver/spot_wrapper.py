@@ -526,6 +526,13 @@ class SpotWrapper():
             self._last_stand_command = response[2]
         return response[0], response[1]
 
+    def rollover(self):
+        if self._is_sitting:
+            response = self._robot_command(
+                RobotCommandBuilder.battery_change_pose_command(1)) # 1: Rightside
+            return response[0], response[1]
+        return False, 'Call /sit first'
+
     def safe_power_off(self):
         """Stop the robot's motion and sit if possible.  Once sitting, disable motor power."""
         response = self._robot_command(RobotCommandBuilder.safe_power_off_command())
