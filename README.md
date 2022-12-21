@@ -15,18 +15,8 @@
 </p>
 
 # Overview
-This is a ROS 2 implementation of the [ROS1 driver](https://github.com/clearpathrobotics/spot_ros) from Clearpath Robotics.
-
-All ROS services are ported, but only the services: claim, power_on, stand and sit were tested.
-
-The `/cmd_vel` topic also works and you can send commands to the spot via e.g. rqt_publisher.
-
-This project is still a WIP.
-
-## Issues
-The ros actions have not yet been ported. The RobotModel is not visible in rviz so far.
-DepthCloud is not visible in rviz2 either, because DepthCloud has not been ported for rviz2 yet.
-The `spot_viz` package is also missing.
+This is a ROS2 package for BostonDynamics' Spot. The package contains all necessary topics, services and actions to teleoperate or navigate Spot.
+This package is derived of this [ROS1 package](https://github.com/heuristicus/spot_ros).
 
 ## Prerequisites
     - Tested for Ubuntu 20.04 + Foxy
@@ -56,6 +46,11 @@ The spot login data hostname, username and password must be specified in the `co
 ### Depth image to Pointcloud2
     ros2 launch spot_driver point_cloud_xyz.launch.py
 
+### Example Node
+The `command_spot_driver` node contains service and action clients. To send a trajectory goal execute:
+
+    ros2 run spot_driver command_spot --ros-args -p command:=trajectory
+
 ## License
 
 MIT license - parts of the code developed specifically for ROS2.
@@ -63,12 +58,14 @@ BSD3 license - parts of the code derived from the Clearpath Robotics ROS1 driver
 
 ## Contributors
 
-This project is a collaboration between the Mobile Autonomous Systems & Cognitive Robotics Institute (MASKOR) at FH Aachen and the Boston Dynamics AI Institute.
+This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and the [Boston Dynamics AI Institute](https://theaiinstitute.com/).
 
 MASKOR contributors:
 
 * Maximillian Kirsch
-* Simon Roder
+* Shubham Pawar
+* Christoph Gollok
+* Stefan Schiffer
 * Alexander Ferrein
 
 Boston Dynamics AI Institute contributors:
@@ -77,3 +74,7 @@ Boston Dynamics AI Institute contributors:
 * Daniel Gonzalez
 * David Surovik
 * Jiuguang Wang
+
+[Linköping University](https://liu.se/en/organisation/liu/ida) contributors:
+
+* Tommy Persson
