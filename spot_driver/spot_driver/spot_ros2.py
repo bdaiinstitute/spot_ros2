@@ -278,6 +278,11 @@ class SpotROS():
         response.success, response.message = self.spot_wrapper.stand()
         return response
 
+    def handle_rollover(self, request, response):
+        """ROS service handler for the rollover service"""
+        response.success, response.message = self.spot_wrapper.rollover()
+        return response
+
     def handle_power_on(self, request, response):
         """ROS service handler for the power-on service"""
         response.success, response.message = self.spot_wrapper.power_on()
@@ -749,6 +754,7 @@ def main(args = None):
         node.create_service(Trigger, "self_right", spot_ros.handle_self_right, callback_group=spot_ros.group)
         node.create_service(Trigger, "sit", spot_ros.handle_sit, callback_group=spot_ros.group)
         node.create_service(Trigger, "stand", spot_ros.handle_stand, callback_group=spot_ros.group)
+        node.create_service(Trigger, "rollover", spot_ros.handle_rollover, callback_group=spot_ros.group)
         node.create_service(Trigger, "power_on", spot_ros.handle_power_on, callback_group=spot_ros.group)
         node.create_service(Trigger, "power_off", spot_ros.handle_safe_power_off, callback_group=spot_ros.group)
         node.create_service(Trigger,"estop/hard", spot_ros.handle_estop_hard, callback_group=spot_ros.group)
