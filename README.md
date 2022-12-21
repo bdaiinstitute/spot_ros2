@@ -34,15 +34,15 @@ The `spot_viz` package is also missing.
 
 ## Install
     pip3 install bosdyn-client bosdyn-mission bosdyn-api bosdyn-core
-    sudo apt install ros-foxy-joint-state-publisher-gui
-    cd path/to/ros2/ws
+    sudo apt install ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-tf-transformations ros-$ROS_DISTRO-xacro
+    cd <path/to/ros2/ws>
     git clone https://github.com/MASKOR/Spot-ROS2.git src/
     colcon build --symlink-install
 
 ### Install depth image proc
 Since `DepthCloud` is not yet ported for rviz2 , we can use [depth_image_proc](http://wiki.ros.org/depth_image_proc) to visualize the depth information from the cameras as `Pointcloud2`.
 
-    sudo apt install ros-foxy-depth-image-proc
+    sudo apt install ros-$ROS_DISTRO-depth-image-proc
 
 ## Launch
 The spot login data hostname, username and password must be specified in the `config/spot_login.yaml` of the spot_driver package.
