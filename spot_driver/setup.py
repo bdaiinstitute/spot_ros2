@@ -30,8 +30,4 @@ setup(
             'spot_commander = spot_driver.spot_commander:main',
         ],
     },
-    scripts = [
-        'scripts/estop_nogui.sh',
-        'scripts/estop_gui.sh',
-    ],
 )
