@@ -1138,13 +1138,9 @@ def main(args=None):
             while spot_ros.spot_wrapper.is_estopped():
                 if not printed:
                     print('\033[93mWaiting for estop to be released.  Make sure you have an active estop.'
-                          '  Common estops are:'
-                          '\n\t * Tablet: Acquire cut motor power authority by using the dropdown menu from the power '
-                          'icon.'
-                          '\n\t * Computer gui: ros2 run spot_driver estop_gui.sh <Spot name>'
-                          '\n\t * Computer no gui: ros2 run spot_driver estop_nogui.sh <Spot name>'
-                          '\nNext time you can also launch the driver and gui estop together with:'
-                          '\n\t /bdai/scripts/run_spot_and_estop.sh <Spot name>\033[0m',
+                          '  You can acquire an estop on the tablet by choosing "Acquire Cut Motor Power Authority"'
+                          ' in the dropdown menu from the power icon.  (This will not power the motors or take the'
+                          ' lease.)\033[0m',
                           flush=True)
                     printed = True
                 time.sleep(0.5)
