@@ -321,12 +321,12 @@ def GetOdomFromState(state, spot_wrapper, use_vision=True):
     local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
     odom_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     if use_vision == True:
-        odom_msg.header.frame_id = self.spot_wrapper.robot_prefix + 'vision'
+        odom_msg.header.frame_id = spot_wrapper.frame_prefix + 'vision'
         tform_body = get_vision_tform_body(state.kinematic_state.transforms_snapshot)
     else:
-        odom_msg.header.frame_id = self.spot_wrapper.robot_prefix + 'odom'
+        odom_msg.header.frame_id = spot_wrapper.frame_prefix + 'odom'
         tform_body = get_odom_tform_body(state.kinematic_state.transforms_snapshot)
-    odom_msg.child_frame_id = prefix + 'body'
+    odom_msg.child_frame_id = spot_wrapper.frame_prefix + 'body'
     pose_odom_msg = PoseWithCovariance()
     pose_odom_msg.pose.position.x = tform_body.position.x
     pose_odom_msg.pose.position.y = tform_body.position.y
