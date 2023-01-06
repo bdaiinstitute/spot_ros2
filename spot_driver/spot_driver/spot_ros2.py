@@ -1,4 +1,7 @@
+import os
 import time
+import traceback
+
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
@@ -18,15 +21,19 @@ from geometry_msgs.msg import TwistWithCovarianceStamped, Twist, Pose
 from nav_msgs.msg import Odometry
 
 
-from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
-from bosdyn.api import geometry_pb2, trajectory_pb2
+from bosdyn.api import geometry_pb2, trajectory_pb2, robot_command_pb2, world_object_pb2
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
+from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client import math_helpers
 import functools
 import bosdyn.geometry
 import tf2_ros
 
+import spot_driver.conversions as conv
+from spot_driver.single_goal_action_server import SingleGoalActionServer
 
+from bosdyn_msgs.msg import RobotCommandFeedback
+from bosdyn_msgs.msg import RobotState
 from spot_msgs.msg import Metrics
 from spot_msgs.msg import LeaseArray, LeaseResource
 from spot_msgs.msg import FootState, FootStateArray
@@ -39,8 +46,10 @@ from spot_msgs.msg import BatteryState, BatteryStateArray
 from spot_msgs.msg import Feedback
 from spot_msgs.msg import MobilityParams
 from spot_msgs.action import NavigateTo
+from spot_msgs.action import RobotCommand
 from spot_msgs.action import Trajectory
 from spot_msgs.srv import ListGraph
+from spot_msgs.srv import ListWorldObjects
 from spot_msgs.srv import SetLocomotion
 from spot_msgs.srv import ClearBehaviorFault
 from spot_msgs.srv import SetVelocity
@@ -49,6 +58,7 @@ from spot_msgs.srv import SetVelocity
 # Release
 from .ros_helpers import *
 from .spot_wrapper import SpotWrapper
+
 ### Debug
 # from ros_helpers import *
 # from spot_wrapper import SpotWrapper
@@ -58,6 +68,30 @@ import threading
 
 import signal
 import sys
+
+MAX_DURATION = 1e6
+MOCK_HOSTNAME = "Mock_spot"
+
+
+class WaitForGoal(object):
+    def __init__(self, clock, time, callback=None):
+        self._at_goal = False
+        self._callback = callback
+        self._clock = clock
+        self._time = rclpy.time.Duration(seconds=time)
+        self._thread = threading.Thread(target=self._run)
+        self._thread.start()
+
+    @property
+    def at_goal(self):
+        return self._at_goal
+
+    def _run(self):
+        start_time = self._clock.now()
+        while self._clock.now() - start_time < self._time:
+            time.sleep(0.05)
+        self._at_goal = True
+
 
 class SpotROS():
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
@@ -71,6 +105,7 @@ class SpotROS():
         self.callbacks["robot_state"] = self.RobotStateCB
         self.callbacks["metrics"] = self.MetricsCB
         self.callbacks["lease"] = self.LeaseCB
+        self.callbacks["world_objects"] = self.WorldObjectsCB
         self.callbacks["front_image"] = self.FrontImageCB
         self.callbacks["side_image"] = self.SideImageCB
         self.callbacks["rear_image"] = self.RearImageCB
@@ -90,14 +125,14 @@ class SpotROS():
             ## TF ##
             tf_msg = GetTFFromState(state, self.spot_wrapper, self.mode_parent_odom_tf)
             if len(tf_msg.transforms) > 0:
-                self.tf_pub.publish(tf_msg)
+                self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
 
             # Odom Twist #
             twist_odom_msg = GetOdomTwistFromState(state, self.spot_wrapper)
             self.odom_twist_pub.publish(twist_odom_msg)
 
             # Odom #
-            if self.mode_parent_odom_tf == 'vision':
+            if self.mode_parent_odom_tf == self.spot_wrapper.frame_prefix + 'vision':
                 odom_msg = GetOdomFromState(state, self.spot_wrapper, use_vision=True)
             else:
                 odom_msg = GetOdomFromState(state, self.spot_wrapper, use_vision=False)
@@ -140,7 +175,7 @@ class SpotROS():
         if metrics:
             metrics_msg = Metrics()
             local_time = self.spot_wrapper.robotToLocalTime(metrics.timestamp)
-            metrics_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+            metrics_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
 
             for metric in metrics.metrics:
                 if metric.label == "distance":
@@ -148,12 +183,12 @@ class SpotROS():
                 if metric.label == "gait cycles":
                     metrics_msg.gait_cycles = metric.int_value
                 if metric.label == "time moving":
-                    #metrics_msg.time_moving = Time(metric.duration.seconds, metric.duration.nanos)
-                    duration = Duration(sec = metric.duration.seconds, nanosec = metric.duration.nanos)
+                    # metrics_msg.time_moving = Time(metric.duration.seconds, metric.duration.nanos)
+                    duration = Duration(sec=metric.duration.seconds, nanosec=metric.duration.nanos)
                     metrics_msg.time_moving = duration
                 if metric.label == "electric power":
-                    #metrics_msg.electric_power = Time(metric.duration.seconds, metric.duration.nanos)
-                    duration = Duration(sec = metric.duration.seconds, nanosec = metric.duration.nanos)
+                    # metrics_msg.electric_power = Time(metric.duration.seconds, metric.duration.nanos)
+                    duration = Duration(sec=metric.duration.seconds, nanosec=metric.duration.nanos)
                     metrics_msg.electric_power = duration
             self.metrics_pub.publish(metrics_msg)
 
@@ -180,6 +215,15 @@ class SpotROS():
                 lease_array_msg.resources.append(new_resource)
 
             self.lease_pub.publish(lease_array_msg)
+
+    def WorldObjectsCB(self, results):
+        world_objects = self.spot_wrapper.world_objects
+        if world_objects:
+            ## TF ##
+            tf_msg = GetTFFromWorldObjects(world_objects.world_objects, self.spot_wrapper,
+                                           self.mode_parent_odom_tf.value)
+            if len(tf_msg.transforms) > 0:
+                self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
 
     def FrontImageCB(self, results):
         """Callback for when the Spot Wrapper gets new front image data.
@@ -247,6 +291,14 @@ class SpotROS():
 
             self.populate_camera_static_transforms(data[0])
             self.populate_camera_static_transforms(data[1])
+
+    def service_wrapper(self, name, handler, request, response):
+        if self.spot_wrapper is None:
+            self.node.get_logger().info(
+                'Mock mode: service ' + name + ' successfully called with request ' + str(request))
+            response.success = True
+            return response
+        return handler(request, response)
 
     def handle_claim(self, request, response):
         """ROS service handler for the claim service"""
@@ -319,7 +371,7 @@ class SpotROS():
         try:
             mobility_params = self.spot_wrapper.get_mobility_params()
             mobility_params.stair_hint = request.data
-            self.spot_wrapper.set_mobility_params( mobility_params )
+            self.spot_wrapper.set_mobility_params(mobility_params)
             response.success = True
             response.message = 'Success'
             return response
@@ -333,7 +385,7 @@ class SpotROS():
         try:
             mobility_params = self.spot_wrapper.get_mobility_params()
             mobility_params.locomotion_hint = request.locomotion_mode
-            self.spot_wrapper.set_mobility_params( mobility_params )
+            self.spot_wrapper.set_mobility_params(mobility_params)
             response.success = True
             response.message = 'Success'
             return response
@@ -353,9 +405,10 @@ class SpotROS():
         """
         try:
             mobility_params = self.spot_wrapper.get_mobility_params()
-            mobility_params.vel_limit.CopyFrom(SE2VelocityLimit(max_vel=math_helpers.SE2Velocity(request.velocity_limit.linear.x,
-                                                                                                 request.velocity_limit.linear.y,
-                                                                                                 request.velocity_limit.angular.z).to_proto()))
+            mobility_params.vel_limit.CopyFrom(
+                SE2VelocityLimit(max_vel=math_helpers.SE2Velocity(request.velocity_limit.linear.x,
+                                                                  request.velocity_limit.linear.y,
+                                                                  request.velocity_limit.angular.z).to_proto()))
             self.spot_wrapper.set_mobility_params(mobility_params)
             response.success = True
             response.message = 'Success'
@@ -364,6 +417,251 @@ class SpotROS():
             response.success = False
             response.message = 'Error:{}'.format(e)
             return response
+
+    # -1 = failed, 0 = in progress, 1 = succeeded
+    def _goal_complete(self, feedback):
+        if not feedback:
+            return False
+        if feedback.command.command_choice == feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
+            if (feedback.command.full_body_feedback.status.value !=
+                    feedback.command.full_body_feedback.status.STATUS_PROCESSING):
+                return False
+            if (feedback.command.full_body_feedback.feedback.feedback_choice ==
+                    feedback.command.full_body_feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET):
+                return True
+            elif (feedback.command.full_body_feedback.feedback.feedback_choice ==
+                  feedback.command.full_body_feedback.feedback.FEEDBACK_FREEZE_FEEDBACK_SET):
+                return True
+            elif (feedback.command.full_body_feedback.feedback.feedback_choice ==
+                  feedback.command.full_body_feedback.feedback.FEEDBACK_SELFRIGHT_FEEDBACK_SET):
+                return (feedback.command.full_body_feedback.feedback.selfright_feedback.status.value ==
+                        feedback.command.full_body_feedback.feedback.selfright_feedback.status.STATUS_COMPLETED)
+            elif (feedback.command.full_body_feedback.feedback.feedback_choice ==
+                  feedback.command.full_body_feedback.feedback.FEEDBACK_SAFE_POWER_OFF_FEEDBACK_SET):
+                return (feedback.command.full_body_feedback.feedback.safe_power_off_feedback.status.value ==
+                        feedback.command.full_body_feedback.feedback.safe_power_off_feedback.status.STATUS_POWERED_OFF)
+            elif (feedback.command.full_body_feedback.feedback.feedback_choice ==
+                  feedback.command.full_body_feedback.feedback.FEEDBACK_BATTERY_CHANGE_POSE_FEEDBACK_SET):
+                if (feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value ==
+                        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.STATUS_COMPLETED):
+                    return True
+                if (feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value ==
+                        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.STATUS_FAILED):
+                    return -1
+                return False
+            elif (feedback.command.full_body_feedback.feedback.feedback_choice ==
+                  feedback.command.full_body_feedback.feedback.FEEDBACK_PAYLOAD_ESTIMATION_FEEDBACK_SET):
+                if (feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value ==
+                        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.STATUS_COMPLETED):
+                    return True
+                if (feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value ==
+                        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.STATUS_SMALL_MASS):
+                    return True
+                if (feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value ==
+                        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.STATUS_ERROR):
+                    return -1
+                return False
+            elif (feedback.command.full_body_feedback.feedback.feedback_choice ==
+                  feedback.command.full_body_feedback.feedback.FEEDBACK_CONSTRAINED_MANIPULATION_FEEDBACK_SET):
+                if (feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.value ==
+                        feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.
+                                STATUS_RUNNING):
+                    return False
+                return -1
+            else:
+                return False
+        if feedback.command.command_choice == feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET:
+            # TODO ADD ARM STUFF
+            if (feedback.command.synchronized_feedback.mobility_command_feedback.status.value !=
+                    feedback.command.synchronized_feedback.mobility_command_feedback.status.STATUS_PROCESSING):
+                return False
+            if (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice ==
+                    feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                            FEEDBACK_SE2_TRAJECTORY_FEEDBACK_SET):
+                return (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                        se2_trajectory_feedback.status.value ==
+                        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                        se2_trajectory_feedback.status.STATUS_AT_GOAL)
+            elif (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice ==
+                  feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                          FEEDBACK_SE2_VELOCITY_FEEDBACK_SET):
+                return True
+            elif (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice ==
+                  feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                          FEEDBACK_SIT_FEEDBACK_SET):
+                return (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                        sit_feedback.status.value ==
+                        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                        sit_feedback.status.STATUS_IS_SITTING)
+            elif (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice ==
+                  feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                          FEEDBACK_STAND_FEEDBACK_SET):
+                return (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                        stand_feedback.status.value ==
+                        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                        stand_feedback.status.STATUS_IS_STANDING)
+            elif (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice ==
+                  feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                          FEEDBACK_STANCE_FEEDBACK_SET):
+                if (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                        stance_feedback.status.value ==
+                        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                                stance_feedback.status.STATUS_STANCED):
+                    return True
+                if (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                        stance_feedback.status.value ==
+                        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                                stance_feedback.status.STATUS_TOO_FAR_AWAY):
+                    return -1
+                return False
+            elif (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice ==
+                  feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                          FEEDBACK_STOP_FEEDBACK_SET):
+                return True
+            elif (feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice ==
+                  feedback.command.synchronized_feedback.mobility_command_feedback.feedback.
+                          FEEDBACK_FOLLOW_ARM_FEEDBACK_SET):
+                return True
+            else:
+                return False
+        return False
+
+    def _get_robot_command_feedback(self, goal_id):
+        feedback = RobotCommandFeedback()
+        if goal_id is None:
+            feedback.command.command_choice = feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET
+            feedback.command.synchronized_feedback.mobility_command_feedback.status.value = \
+                feedback.command.synchronized_feedback.mobility_command_feedback.status.STATUS_PROCESSING
+            feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = \
+                feedback.command.synchronized_feedback.mobility_command_feedback.feedback. \
+                    FEEDBACK_SE2_TRAJECTORY_FEEDBACK_SET
+            if self._wait_for_goal.at_goal:
+                feedback.command.synchronized_feedback.mobility_command_feedback.feedback.se2_trajectory_feedback. \
+                    status.value = feedback.command.synchronized_feedback.mobility_command_feedback.feedback. \
+                    se2_trajectory_feedback.status.STATUS_AT_GOAL
+            else:
+                feedback.command.synchronized_feedback.mobility_command_feedback.feedback.se2_trajectory_feedback. \
+                    status.value = feedback.command.synchronized_feedback.mobility_command_feedback.feedback. \
+                    se2_trajectory_feedback.status.STATUS_GOING_TO_GOAL
+        else:
+            conv.convert_proto_to_bosdyn_msgs_robot_command_feedback(
+                self.spot_wrapper.get_robot_command_feedback(goal_id).feedback, feedback)
+        return feedback
+
+    def handle_robot_command(self, goal_handle):
+        ros_command = goal_handle.request.command
+        proto_command = robot_command_pb2.RobotCommand()
+        conv.convert_bosdyn_msgs_robot_command_to_proto(ros_command, proto_command)
+        self._wait_for_goal = None
+        if not self.spot_wrapper:
+            self._wait_for_goal = WaitForGoal(self.node.get_clock(), 2.0)
+            goal_id = None
+        else:
+            success, err_msg, goal_id = self.spot_wrapper.robot_command(proto_command)
+            if not success:
+                raise Exception(err_msg)
+
+        self.node.get_logger().info('Robot now executing goal ' + str(goal_id))
+        # The command is non-blocking but we need to keep this function up in order to interrupt if a
+        # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
+        # monitor whether the timeout_cb has already aborted the command
+        feedback = None
+        while (rclpy.ok() and not goal_handle.is_cancel_requested and
+               not self._goal_complete(feedback) and goal_handle.is_active):
+            feedback = self._get_robot_command_feedback(goal_id)
+            feedback_msg = RobotCommand.Feedback(feedback=feedback)
+            goal_handle.publish_feedback(feedback_msg)
+            time.sleep(0.1)  # don't use rate here because we're already in a single thread
+
+        # publish a final feedback
+        result = RobotCommand.Result()
+        if feedback is not None:
+            goal_handle.publish_feedback(feedback_msg)
+            result.result = feedback
+        result.success = self._goal_complete(feedback) == True
+
+        if goal_handle.is_cancel_requested:
+            result.success = False
+            result.message = "Cancelled"
+            goal_handle.abort()
+        elif not goal_handle.is_active:
+            result.success = False
+            result.message = "Cancelled"
+            # Don't abort because that's already happened
+        elif result.success:
+            result.message = "Successfully completed command"
+            goal_handle.succeed()
+        else:
+            result.message = "Failed to complete command"
+            goal_handle.abort()
+        self._wait_for_goal = False
+        if not self.spot_wrapper:
+            self.node.get_logger().info("Returning action result " + str(result))
+        return result
+
+    def handle_trajectory(self, req):
+        """ROS actionserver execution handler to handle receiving a request to move to a location"""
+        if not self.spot_wrapper:
+            self.node.get_logger().info('Mock mode: got handle trajectory request: ' + str(req))
+            return
+        if req.target_pose.header.frame_id != 'body':
+            self.trajectory_server.set_aborted(TrajectoryResult(False, 'frame_id of target_pose must be \'body\''))
+            return
+        if req.duration.data.to_sec() <= 0:
+            self.trajectory_server.set_aborted(TrajectoryResult(False, 'duration must be larger than 0'))
+            return
+
+        cmd_duration = rclpy.Duration(req.duration.data.secs, req.duration.data.nsecs)
+        resp = self.spot_wrapper.trajectory_cmd(
+            goal_x=req.target_pose.pose.position.x,
+            goal_y=req.target_pose.pose.position.y,
+            goal_heading=math_helpers.Quat(
+                w=req.target_pose.pose.orientation.w,
+                x=req.target_pose.pose.orientation.x,
+                y=req.target_pose.pose.orientation.y,
+                z=req.target_pose.pose.orientation.z
+            ).to_yaw(),
+            cmd_duration=cmd_duration.to_sec(),
+            precise_position=req.precise_positioning,
+        )
+
+        def timeout_cb(trajectory_server, _):
+            trajectory_server.publish_feedback(TrajectoryFeedback("Failed to reach goal, timed out"))
+            trajectory_server.set_aborted(TrajectoryResult(False, "Failed to reach goal, timed out"))
+
+        # Abort the actionserver if cmd_duration is exceeded - the driver stops but does not provide feedback to
+        # indicate this so we monitor it ourselves
+        cmd_timeout = rclpy.Timer(cmd_duration, functools.partial(timeout_cb, self.trajectory_server), oneshot=True)
+
+        # The trajectory command is non-blocking but we need to keep this function up in order to interrupt if a
+        # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
+        # monitor whether the timeout_cb has already aborted the command
+        rate = rclpy.Rate(10)
+        while not rclpy.is_shutdown() and not self.trajectory_server.is_preempt_requested() and not self.spot_wrapper.at_goal and self.trajectory_server.is_active():
+            if self.spot_wrapper.near_goal:
+                if self.spot_wrapper._last_trajectory_command_precise:
+                    self.trajectory_server.publish_feedback(
+                        TrajectoryFeedback("Near goal, performing final adjustments"))
+                else:
+                    self.trajectory_server.publish_feedback(TrajectoryFeedback("Near goal"))
+            else:
+                self.trajectory_server.publish_feedback(TrajectoryFeedback("Moving to goal"))
+            rate.sleep()
+
+        # If still active after exiting the loop, the command did not time out
+        if self.trajectory_server.is_active():
+            cmd_timeout.shutdown()
+            if self.trajectory_server.is_preempt_requested():
+                self.trajectory_server.publish_feedback(TrajectoryFeedback("Preempted"))
+                self.trajectory_server.set_preempted()
+                self.spot_wrapper.stop()
+
+            if self.spot_wrapper.at_goal:
+                self.trajectory_server.publish_feedback(TrajectoryFeedback("Reached goal"))
+                self.trajectory_server.set_succeeded(TrajectoryResult(resp[0], resp[1]))
+            else:
+                self.trajectory_server.publish_feedback(TrajectoryFeedback("Failed to reach goal"))
+                self.trajectory_server.set_aborted(TrajectoryResult(False, "Failed to reach goal"))
 
     def handle_trajectory(self, goal_handle):
         """ROS actionserver execution handler to handle receiving a request to move to a location"""
@@ -476,10 +774,16 @@ class SpotROS():
 
     def cmdVelCallback(self, data):
         """Callback for cmd_vel command"""
+        if not self.spot_wrapper:
+            self.node.get_logger().info('Mock mode, received command vel ' + str(data))
+            return
         self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z)
 
     def bodyPoseCallback(self, data):
         """Callback for cmd_vel command"""
+        if not self.spot_wrapper:
+            self.node.get_logger().info('Mock mode, received command vel ' + str(data))
+            return
         q = Quaternion()
         q.x = data.orientation.x
         q.y = data.orientation.y
@@ -505,6 +809,33 @@ class SpotROS():
             self.node.get_logger().error(f'handle_list_graph RESPONSE: {response}')
         except Exception as e:
             self.node.get_logger().error('Exception Error:{}'.format(e))
+        return response
+
+    def handle_list_world_objects(self, request, response):
+        # For some reason exceptions in service callbacks don't print which makes debugging difficult!
+        try:
+            return self._handle_list_world_objects(request, response)
+        except Exception as e:
+            print('In handling list world objects, exception was', traceback.print_exception(e), flush=True)
+
+    def _handle_list_world_objects(self, request, response):
+        object_types = [ot.value for ot in request.request.object_type]
+        time_start_point = None
+        if request.request.timestamp_filter_is_set:
+            time_start_point = request.request.timestamp_filter.sec + \
+                               float(request.request.timestamp_filter.nanosec) / 1e9
+        if not self.spot_wrapper:
+            print('Mock return for', object_types, 'after time', time_start_point, flush=True)
+            # return a fake list
+            proto_response = world_object_pb2.ListWorldObjectResponse()
+            world_object = proto_response.world_objects.add()
+            world_object.name = 'my_fiducial_3'
+            world_object.apriltag_properties.tag_id = 3
+            world_object.apriltag_properties.frame_name_fiducial = 'fiducial_3'
+            world_object.apriltag_properties.frame_name_fiducial_filtered = 'filtered_fiducial_3'
+        else:
+            proto_response = self.spot_wrapper.list_world_objects(object_types, time_start_point)
+        conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
         return response
 
     def handle_navigate_to_feedback(self):
@@ -555,21 +886,28 @@ class SpotROS():
         # We exclude the odometry frames from static transforms since they are not static. We can ignore the body
         # frame because it is a child of odom or vision depending on the mode_parent_odom_tf, and will be published
         # by the non-static transform publishing that is done by the state callback
-        excluded_frames = [self.tf_name_vision_odom, self.tf_name_kinematic_odom, "body"]
+        frame_prefix = MOCK_HOSTNAME + '/'
+        if self.spot_wrapper is not None:
+            frame_prefix = self.spot_wrapper.frame_prefix
+        excluded_frames = [self.tf_name_vision_odom.value, self.tf_name_kinematic_odom.value,
+                           frame_prefix + "body"]
+        excluded_frames = [f[f.rfind('/') + 1:] for f in excluded_frames]
         for frame_name in image_data.shot.transforms_snapshot.child_to_parent_edge_map:
             if frame_name in excluded_frames:
                 continue
-            parent_frame = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name).parent_frame_name
-            existing_transforms = [(transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms]
-            if (parent_frame, frame_name) in existing_transforms:
+            parent_frame = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(
+                frame_name).parent_frame_name
+            existing_transforms = [(transform.header.frame_id, transform.child_frame_id) for transform in
+                                   self.camera_static_transforms]
+            if (frame_prefix + parent_frame, frame_prefix + frame_name) in existing_transforms:
                 # We already extracted this transform
                 continue
 
             transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
             local_time = self.spot_wrapper.robotToLocalTime(image_data.shot.acquisition_time)
-            tf_time = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+            tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
             static_tf = populateTransformStamped(tf_time, transform.parent_frame_name, frame_name,
-                                                 transform.parent_tform_child)
+                                                 transform.parent_tform_child, frame_prefix)
             self.camera_static_transforms.append(static_tf)
             self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
 
@@ -586,18 +924,19 @@ class SpotROS():
             self.spot_wrapper.updateTasks() ############## testing with Robot
             #self.node.get_logger().info("UPDATE TASKS")
             feedback_msg = Feedback()
-            feedback_msg.standing = self.spot_wrapper.is_standing
-            feedback_msg.sitting = self.spot_wrapper.is_sitting
-            feedback_msg.moving = self.spot_wrapper.is_moving
-            id = self.spot_wrapper.id
-            try:
-                feedback_msg.serial_number = id.serial_number
-                feedback_msg.species = id.species
-                feedback_msg.version = id.version
-                feedback_msg.nickname = id.nickname
-                feedback_msg.computer_serial_number = id.computer_serial_number
-            except:
-                pass
+            if self.spot_wrapper:
+                feedback_msg.standing = self.spot_wrapper.is_standing
+                feedback_msg.sitting = self.spot_wrapper.is_sitting
+                feedback_msg.moving = self.spot_wrapper.is_moving
+                id = self.spot_wrapper.id
+                try:
+                    feedback_msg.serial_number = id.serial_number
+                    feedback_msg.species = id.species
+                    feedback_msg.version = id.version
+                    feedback_msg.nickname = id.nickname
+                    feedback_msg.computer_serial_number = id.computer_serial_number
+                except:
+                    pass
             self.feedback_pub.publish(feedback_msg)
             mobility_params_msg = MobilityParams()
             try:
@@ -624,25 +963,25 @@ class SpotROS():
             self.mobility_params_pub.publish(mobility_params_msg)
             self.node_rate.sleep()
 
-def main(args = None):
+def main(args=None):
     print('Hi from spot_driver.')
     spot_ros = SpotROS()
     rclpy.init(args=args)
     """Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.  Holds lease from wrapper and updates all async tasks at the ROS rate"""
-    
+
     node = rclpy.create_node('spot_ros2')
 
     spot_ros.node = node
     spot_ros.group = ReentrantCallbackGroup()
-    
-    rate = node.create_rate(50)
+    rate = node.create_rate(100)
     spot_ros.node_rate = rate
 
     # spot_ros.yaml
     spot_ros.rates = {}
-    spot_ros.rates['robot_state'] = 20.0
+    spot_ros.rates['robot_state'] = 50.0
     spot_ros.rates['metrics'] = 0.04
     spot_ros.rates['lease'] = 1.0
+    spot_ros.rates['world_objects'] = 20.0
     spot_ros.rates['front_image'] = 10.0
     spot_ros.rates['side_image'] = 10.0
     spot_ros.rates['rear_image'] = 10.0
@@ -654,11 +993,6 @@ def main(args = None):
     node.declare_parameter('deadzone')
     node.declare_parameter('estop_timeout')
 
-    # spot_login.yaml
-    node.declare_parameter('username')
-    node.declare_parameter('password')
-    node.declare_parameter('hostname')
-    
     spot_ros.auto_claim = node.get_parameter('auto_claim')
     spot_ros.auto_power_on = node.get_parameter('auto_power_on')
     spot_ros.auto_stand = node.get_parameter('auto_stand')
@@ -666,12 +1000,10 @@ def main(args = None):
     spot_ros.motion_deadzone = node.get_parameter('deadzone')
     spot_ros.estop_timeout = node.get_parameter('estop_timeout')
 
-
-    spot_ros.username = node.get_parameter('username')
-    spot_ros.password = node.get_parameter('password')
-    spot_ros.hostname = node.get_parameter('hostname')
-
-    # New vars for spot login; ros params not working in debug
+    spot_ros.username = os.environ.get("BOSDYN_CLIENT_USERNAME")
+    spot_ros.password = os.environ.get("BOSDYN_CLIENT_PASSWORD")
+    spot_ros.name = os.environ.get("SPOT_NAME")
+    spot_ros.ip = os.environ.get("SPOT_IP")
 
     spot_ros.camera_static_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(node)
     # Static transform broadcaster is super simple and just a latched publisher. Every time we add a new static
@@ -683,23 +1015,39 @@ def main(args = None):
     # Spot has 2 types of odometries: 'odom' and 'vision'
     # The former one is kinematic odometry and the second one is a combined odometry of vision and kinematics
     # These params enables to change which odometry frame is a parent of body frame and to change tf names of each odometry frames.
-    spot_ros.mode_parent_odom_tf = node.declare_parameter('mode_parent_odom_tf', 'odom') # 'vision' or 'odom'
-    spot_ros.tf_name_kinematic_odom = node.declare_parameter('tf_name_kinematic_odom', 'odom')
-    spot_ros.tf_name_raw_kinematic = 'odom'
-    spot_ros.tf_name_vision_odom = node.declare_parameter('tf_name_vision_odom', 'vision')
-    spot_ros.tf_name_raw_vision = 'vision'
+    frame_prefix = ''
+    if spot_ros.name is not None:
+        frame_prefix = spot_ros.name + '/'
+    spot_ros.mode_parent_odom_tf = node.declare_parameter('mode_parent_odom_tf',
+                                                          frame_prefix + 'odom') # 'vision' or 'odom'
+    spot_ros.tf_name_kinematic_odom = node.declare_parameter('tf_name_kinematic_odom',
+                                                             frame_prefix + 'odom')
+    spot_ros.tf_name_raw_kinematic = frame_prefix + 'odom'
+    spot_ros.tf_name_vision_odom = node.declare_parameter('tf_name_vision_odom', frame_prefix + 'vision')
+    spot_ros.tf_name_raw_vision = frame_prefix + 'vision'
 
     if spot_ros.mode_parent_odom_tf.value != spot_ros.tf_name_raw_kinematic and spot_ros.mode_parent_odom_tf.value != spot_ros.tf_name_raw_vision:
-        node.get_logger().error('rosparam \'mode_parent_odom_tf\' should be \'odom\' or \'vision\'.')
+        node.get_logger().error('rosparam "mode_parent_odom_tf" should be "' + frame_prefix + 'odom" or '
+                                + frame_prefix + '"vision".')
         return
 
     # logger
     spot_ros.logger = logging.getLogger('rosout')
-    node.get_logger().info("Starting ROS driver for Spot")
+    name_str = ''
+    if spot_ros.name is not None:
+        name_str = ' for ' + spot_ros.name
+    node.get_logger().info("Starting ROS driver for Spot" + name_str)
     ############## testing with Robot
-    spot_ros.spot_wrapper = SpotWrapper(spot_ros.username.value, spot_ros.password.value, spot_ros.hostname.value, spot_ros.logger, spot_ros.estop_timeout.value, spot_ros.rates, spot_ros.callbacks)
+    if spot_ros.name != MOCK_HOSTNAME:
+        spot_ros.spot_wrapper = SpotWrapper(spot_ros.username, spot_ros.password, spot_ros.ip, spot_ros.name,
+                                            spot_ros.logger, spot_ros.estop_timeout.value, spot_ros.rates,
+                                            spot_ros.callbacks)
+        if not spot_ros.spot_wrapper.is_valid:
+            return
+    else:
+        spot_ros.spot_wrapper = None
     # spot_ros.spot_wrapper = spot_wrapper
-    if  spot_ros.spot_wrapper.is_valid:
+    if spot_ros.spot_wrapper is None or spot_ros.spot_wrapper.is_valid:
         # Images #
         spot_ros.back_image_pub = node.create_publisher(Image, 'camera/back/image', 1)
         spot_ros.frontleft_image_pub = node.create_publisher(Image, 'camera/frontleft/image', 1)
@@ -720,7 +1068,7 @@ def main(args = None):
         spot_ros.left_image_info_pub = node.create_publisher(CameraInfo, 'camera/left/camera_info', 1)
         spot_ros.right_image_info_pub = node.create_publisher(CameraInfo, 'camera/right/camera_info', 1)
         # Depth Camera Info #
-        spot_ros.back_depth_info_pub = node.create_publisher(CameraInfo,'depth/back/camera_info', 1)
+        spot_ros.back_depth_info_pub = node.create_publisher(CameraInfo, 'depth/back/camera_info', 1)
         spot_ros.frontleft_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontleft/camera_info', 1)
         spot_ros.frontright_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontright/camera_info', 1)
         spot_ros.left_depth_info_pub = node.create_publisher(CameraInfo, 'depth/left/camera_info', 1)
@@ -728,8 +1076,7 @@ def main(args = None):
 
         # Status Publishers #
         spot_ros.joint_state_pub = node.create_publisher(JointState, 'joint_states', 1)
-        """Defining a TF publisher manually because of conflicts between Python3 and tf"""
-        spot_ros.tf_pub = node.create_publisher(TFMessage,'tf', 1)
+        spot_ros.dynamic_broadcaster = tf2_ros.TransformBroadcaster(node)
         spot_ros.metrics_pub = node.create_publisher(Metrics, 'status/metrics', 1)
         spot_ros.lease_pub = node.create_publisher(LeaseArray, 'status/leases', 1)
         spot_ros.odom_twist_pub = node.create_publisher(TwistWithCovarianceStamped, 'odometry/twist', 1)
@@ -748,54 +1095,137 @@ def main(args = None):
 
         node.create_subscription(Twist, 'cmd_vel', spot_ros.cmdVelCallback, 1, callback_group=spot_ros.group)
         node.create_subscription(Pose, 'body_pose', spot_ros.bodyPoseCallback, 1, callback_group=spot_ros.group)
-        node.create_service(Trigger, 'claim', spot_ros.handle_claim, callback_group=spot_ros.group)
-        node.create_service(Trigger, 'release', spot_ros.handle_release, callback_group=spot_ros.group)       
-        node.create_service(Trigger, "stop", spot_ros.handle_stop, callback_group=spot_ros.group)
-        node.create_service(Trigger, "self_right", spot_ros.handle_self_right, callback_group=spot_ros.group)
-        node.create_service(Trigger, "sit", spot_ros.handle_sit, callback_group=spot_ros.group)
-        node.create_service(Trigger, "stand", spot_ros.handle_stand, callback_group=spot_ros.group)
-        node.create_service(Trigger, "rollover", spot_ros.handle_rollover, callback_group=spot_ros.group)
-        node.create_service(Trigger, "power_on", spot_ros.handle_power_on, callback_group=spot_ros.group)
-        node.create_service(Trigger, "power_off", spot_ros.handle_safe_power_off, callback_group=spot_ros.group)
-        node.create_service(Trigger,"estop/hard", spot_ros.handle_estop_hard, callback_group=spot_ros.group)
-        node.create_service(Trigger,"estop/gentle", spot_ros.handle_estop_soft, callback_group=spot_ros.group)
-        node.create_service(Trigger,"estop/release", spot_ros.handle_estop_disengage, callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, 'claim',
+            lambda request, response: spot_ros.service_wrapper('claim', spot_ros.handle_claim, request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, 'release',
+            lambda request, response: spot_ros.service_wrapper('release', spot_ros.handle_release, request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "stop",
+            lambda request, response: spot_ros.service_wrapper('stop', spot_ros.handle_stop, request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "self_right",
+            lambda request, response: spot_ros.service_wrapper('self_right', spot_ros.handle_self_right,
+                                                               request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "sit",
+            lambda request, response: spot_ros.service_wrapper('sit', spot_ros.handle_sit, request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "stand",
+            lambda request, response: spot_ros.service_wrapper('stand', spot_ros.handle_stand, request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "rollover",
+            lambda request, response: spot_ros.service_wrapper('rollover', spot_ros.handle_rollover, request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "power_on",
+            lambda request, response: spot_ros.service_wrapper('power_on', spot_ros.handle_power_on, request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "power_off",
+            lambda request, response: spot_ros.service_wrapper('power_off', spot_ros.handle_safe_power_off,
+                                                               request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "estop/hard",
+            lambda request, response: spot_ros.service_wrapper('estop/hard', spot_ros.handle_estop_hard,
+                                                               request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "estop/gentle",
+            lambda request, response: spot_ros.service_wrapper('estop/gentle', spot_ros.handle_estop_soft,
+                                                               request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            Trigger, "estop/release",
+            lambda request, response: spot_ros.service_wrapper('etop/release', spot_ros.handle_estop_disengage,
+                                                               request, response),
+            callback_group=spot_ros.group)
 
-        node.create_service(SetBool, "stair_mode", spot_ros.handle_stair_mode, callback_group=spot_ros.group)
-        node.create_service(SetLocomotion, "locomotion_mode", spot_ros.handle_locomotion_mode, callback_group=spot_ros.group)
-        node.create_service(SetVelocity, "max_velocity", spot_ros.handle_max_vel, callback_group=spot_ros.group)
-        node.create_service(ClearBehaviorFault, "clear_behavior_fault", spot_ros.handle_clear_behavior_fault, callback_group=spot_ros.group)
+        node.create_service(
+            SetBool, "stair_mode",
+            lambda request, response: spot_ros.service_wrapper('stair_mode', spot_ros.handle_stair_mode,
+                                                               request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            SetLocomotion, "locomotion_mode",
+            lambda request, response: spot_ros.service_wrapper('locomotion_mode', spot_ros.handle_locomotion_mode,
+                                                               request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            SetVelocity, "max_velocity",
+            lambda request, response: spot_ros.service_wrapper('max_velocity', spot_ros.handle_max_vel,
+                                                               request, response),
+            callback_group=spot_ros.group)
+        node.create_service(
+            ClearBehaviorFault, "clear_behavior_fault",
+            lambda request, response: spot_ros.service_wrapper('clear_behavior_fault',
+                                                               spot_ros.handle_clear_behavior_fault,
+                                                               request, response),
+            callback_group=spot_ros.group)
 
-        node.create_service(ListGraph, "list_graph", spot_ros.handle_list_graph, callback_group=spot_ros.group)
-        
-        spot_ros.navigate_as = ActionServer(node, NavigateTo, 'navigate_to', spot_ros.handle_navigate_to, callback_group=spot_ros.group)
-        #spot_ros.navigate_as.start() # As is online
+        node.create_service(
+            ListGraph, "list_graph",
+            lambda request, response: spot_ros.service_wrapper('list_graph', spot_ros.handle_list_graph,
+                                                               request, response),
+            callback_group=spot_ros.group)
 
-        spot_ros.trajectory_server = ActionServer(node, Trajectory, 'trajectory', spot_ros.handle_trajectory, callback_group=spot_ros.group)
-        #spot_ros.trajectory_server.start()
-        
+        # This doesn't use the service wrapper because it's not a trigger and we want different mock reponses
+        node.create_service(
+            ListWorldObjects, "list_world_objects", spot_ros.handle_list_world_objects)
+
+        spot_ros.navigate_as = ActionServer(node, NavigateTo, 'navigate_to', spot_ros.handle_navigate_to,
+                                            callback_group=spot_ros.group)
+        # spot_ros.navigate_as.start() # As is online
+
+        spot_ros.trajectory_server = ActionServer(node, Trajectory, 'trajectory', spot_ros.handle_trajectory,
+                                                  callback_group=spot_ros.group)
+        # spot_ros.trajectory_server.start()
+
+        spot_ros.robot_command_server = SingleGoalActionServer(node, RobotCommand, 'robot_command',
+                                                               spot_ros.handle_robot_command,
+                                                               callback_group=spot_ros.group)
+
         # Register Shutdown Handle
         # rclpy.on_shutdown(spot_ros.shutdown) ############## Shutdown Handle
-        #print(str(spot_ros.auto_claim.value)+" "+str(spot_ros.auto_power_on.value)+" "+str(spot_ros.auto_stand.value))
-        #spot_ros.auto_claim = rclpy.get_param('~auto_claim', )
-        #spot_ros.auto_power_on = rclpy.get_param('~auto_power_on', False)
-        #spot_ros.auto_stand = rclpy.get_param('~auto_stand', False)
+
+        # Wait for an estop to be connected
+        if spot_ros.spot_wrapper:
+            printed = False
+            while spot_ros.spot_wrapper.is_estopped():
+                if not printed:
+                    print('\033[93mWaiting for estop to be released.  Make sure you have an active estop.'
+                          '  Common estops are:'
+                          '\n\t * Tablet: Acquire cut motor power authority by using the dropdown menu from the power '
+                          'icon.'
+                          '\n\t * Computer gui: ros2 run spot_driver estop_gui.sh <Spot name>'
+                          '\n\t * Computer no gui: ros2 run spot_driver estop_nogui.sh <Spot name>'
+                          '\nNext time you can also launch the driver and gui estop together with:'
+                          '\n\t /bdai/scripts/run_spot_and_estop.sh <Spot name>\033[0m',
+                          flush=True)
+                    printed = True
+                time.sleep(0.5)
 
         node.create_timer(0.1, spot_ros.step, callback_group=spot_ros.group)
 
         executor = MultiThreadedExecutor(num_threads=8)
         executor.add_node(node)
-    
-        if spot_ros.auto_claim.value:
+
+        if spot_ros.spot_wrapper is not None and spot_ros.auto_claim.value:
             spot_ros.spot_wrapper.claim()
             if spot_ros.auto_power_on.value:
                 spot_ros.spot_wrapper.power_on()
                 if spot_ros.auto_stand.value:
                     spot_ros.spot_wrapper.stand()
+
         sys.stdout.flush()
-        #        update_thraed = threading.Thread(target = spot_ros.step, args = ())
-        #        update_thraed.start()
-        #        signal.signal(signal.SIGTERM, spot_ros.shutdown)
 
         print(f"Spinning ros2_driver")
         try:
@@ -805,12 +1235,6 @@ def main(args = None):
 
         executor.shutdown()
         rclpy.shutdown()
-        
-        #        rclpy.spin(node)
-        #        node.get_logger().info("Shutdown")
-        #        ## Spot shutdown handle; disconnect spot
-        #        node.destroy_node()
-        #        rclpy.shutdown()
 
 
 if __name__ == '__main__':

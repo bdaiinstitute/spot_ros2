@@ -1,4 +1,4 @@
-spot_ros2:
+/**:
   ros__parameters:
     rates:
       robot_state: 20.0

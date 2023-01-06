@@ -1,5 +1,6 @@
-import time
 import math
+import time
+import traceback
 
 from bosdyn.client import create_standard_sdk, ResponseError, RpcError
 from bosdyn.client.async_tasks import AsyncPeriodicQuery, AsyncTasks
@@ -20,7 +21,10 @@ from bosdyn.client.estop import EstopClient, EstopEndpoint, EstopKeepAlive
 from bosdyn.client import power
 from bosdyn.client import frame_helpers
 from bosdyn.client import math_helpers
+from bosdyn.client.world_object import WorldObjectClient
 from bosdyn.client.exceptions import InternalServerError
+
+MAX_COMMAND_DURATION = 1e5
 
 ### Release
 from . import graph_nav_util
@@ -204,15 +208,42 @@ class AsyncIdle(AsyncPeriodicQuery):
 
         self._spot_wrapper._is_moving = is_moving
 
-        if self._spot_wrapper.is_standing and not self._spot_wrapper.is_moving:
-            self._spot_wrapper.stand(False)
+        #if self._spot_wrapper.is_standing and not self._spot_wrapper.is_moving:
+        #    self._logger.warn("Sending stand command")
+        #    self._spot_wrapper.stand(False)
+
+class AsyncWorldObjects(AsyncPeriodicQuery):
+    """Class to get world objects.  list_world_objects_async query sent to the robot at every tick.  Callback registered to defined callback function.
+
+        Attributes:
+            client: The Client to a service on the robot
+            logger: Logger object
+            rate: Rate (Hz) to trigger the query
+            callback: Callback function to call when the results of the query are available
+    """
+    def __init__(self, client, logger, rate, callback):
+        super(AsyncWorldObjects, self).__init__("world-objects", client, logger, period_sec=1.0/max(rate, 1.0))
+        self._callback = None
+        if rate > 0.0:
+            self._callback = callback
+
+    def _start_query(self):
+        if self._callback:
+            callback_future = self._client.list_world_objects_async()
+            callback_future.add_done_callback(self._callback)
+            return callback_future
 
 class SpotWrapper():
     """Generic wrapper class to encompass release 1.1.4 API features as well as maintaining leases automatically"""
-    def __init__(self, username, password, hostname, logger, estop_timeout=9.0, rates = {}, callbacks = {}):
+    def __init__(self, username, password, hostname, robot_name, logger, estop_timeout=9.0,
+                 rates = {}, callbacks = {}):
         self._username = username
         self._password = password
         self._hostname = hostname
+        self._robot_name = robot_name
+        self._frame_prefix = ''
+        if robot_name is not None:
+            self._frame_prefix = robot_name + '/'
         self._logger = logger
         self._rates = rates
         self._callbacks = callbacks
@@ -226,11 +257,13 @@ class SpotWrapper():
         self._is_moving = False
         self._at_goal = False
         self._near_goal = False
+        self._last_robot_command_feedback = False
         self._last_stand_command = None
         self._last_sit_command = None
         self._last_trajectory_command = None
         self._last_trajectory_command_precise = None
         self._last_velocity_command_time = None
+        self._last_robot_command = None
 
         self._front_image_requests = []
         for source in front_image_sources:
@@ -261,10 +294,14 @@ class SpotWrapper():
             self._valid = False
             return
 
+        self._logger.info("Establishing time sync with robot - this could take some time.")
+        self._robot.time_sync.wait_for_sync()
+
         if self._robot:
             # Clients
             try:
                 self._robot_state_client = self._robot.ensure_client(RobotStateClient.default_service_name)
+                self._world_objects_client = self._robot.ensure_client(WorldObjectClient.default_service_name)
                 self._robot_command_client = self._robot.ensure_client(RobotCommandClient.default_service_name)
                 self._graph_nav_client = self._robot.ensure_client(GraphNavClient.default_service_name)
                 self._power_client = self._robot.ensure_client(PowerClient.default_service_name)
@@ -285,22 +322,31 @@ class SpotWrapper():
             self._current_annotation_name_to_wp_id = dict()
 
             # Async Tasks
-            self._async_task_list = []
-            self._robot_state_task = AsyncRobotState(self._robot_state_client, self._logger, max(0.0, self._rates.get("robot_state", 0.0)), self._callbacks.get("robot_state", lambda:None))
-            self._robot_metrics_task = AsyncMetrics(self._robot_state_client, self._logger, max(0.0, self._rates.get("metrics", 0.0)), self._callbacks.get("metrics", lambda:None))
-            self._lease_task = AsyncLease(self._lease_client, self._logger, max(0.0, self._rates.get("lease", 0.0)), self._callbacks.get("lease", lambda:None))
-            self._front_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("front_image", 0.0)), self._callbacks.get("front_image", lambda:None), self._front_image_requests)
-            self._side_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("side_image", 0.0)), self._callbacks.get("side_image", lambda:None), self._side_image_requests)
-            self._rear_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("rear_image", 0.0)), self._callbacks.get("rear_image", lambda:None), self._rear_image_requests)
+            self._robot_state_task = AsyncRobotState(self._robot_state_client, self._logger, max(0.0, self._rates.get("robot_state", 0.0)), self._callbacks.get("robot_state", None))
+            self._robot_metrics_task = AsyncMetrics(self._robot_state_client, self._logger, max(0.0, self._rates.get("metrics", 0.0)), self._callbacks.get("metrics", None))
+            self._lease_task = AsyncLease(self._lease_client, self._logger, max(0.0, self._rates.get("lease", 0.0)), self._callbacks.get("lease", None))
+            self._front_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("front_image", 0.0)), self._callbacks.get("front_image", None), self._front_image_requests)
+            self._side_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("side_image", 0.0)), self._callbacks.get("side_image", None), self._side_image_requests)
+            self._rear_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("rear_image", 0.0)), self._callbacks.get("rear_image", None), self._rear_image_requests)
             self._idle_task = AsyncIdle(self._robot_command_client, self._logger, 10.0, self)
+            self._world_objects_task = AsyncWorldObjects(self._world_objects_client, self._logger, 10.0,
+                                                         self._callbacks.get("world_objects", None))
 
             self._estop_endpoint = None
 
             self._async_tasks = AsyncTasks(
-                [self._robot_state_task, self._robot_metrics_task, self._lease_task, self._front_image_task, self._side_image_task, self._rear_image_task, self._idle_task])
+                [self._robot_state_task, self._robot_metrics_task, self._lease_task, self._front_image_task, self._side_image_task, self._rear_image_task, self._idle_task, self._world_objects_task])
 
             self._robot_id = None
             self._lease = None
+
+    @property
+    def robot_name(self):
+        return self._robot_name
+
+    @property
+    def frame_prefix(self):
+        return self._frame_prefix
 
     @property
     def logger(self):
@@ -331,6 +377,11 @@ class SpotWrapper():
     def lease(self):
         """Return latest proto from the _lease_task"""
         return self._lease_task.proto
+
+    @property
+    def world_objects(self):
+        """Return most recent proto from _world_objects_task"""
+        return self._world_objects_task.proto
 
     @property
     def front_images(self):
@@ -369,6 +420,9 @@ class SpotWrapper():
     @property
     def at_goal(self):
         return self._at_goal
+
+    def is_estopped(self, timeout=None):
+        return self._robot.is_estopped(timeout=timeout)
 
     @property
     def time_skew(self):
@@ -411,10 +465,12 @@ class SpotWrapper():
         try:
             self._robot_id = self._robot.get_id()
             self.getLease()
-            self.resetEStop()
             return True, "Success"
         except (ResponseError, RpcError) as err:
             self._logger.error("Failed to initialize robot communication: %s", err)
+            return False, str(err)
+        except Exception as err:
+            print(traceback.format_exc(), flush=True)
             return False, str(err)
 
     def updateTasks(self):
@@ -464,7 +520,7 @@ class SpotWrapper():
 
     def getLease(self):
         """Get a lease for the robot and keep the lease alive automatically."""
-        self._lease = self._lease_client.acquire()
+        self._lease = self._lease_client.take()
         self._lease_keepalive = LeaseKeepAlive(self._lease_client)
 
     def releaseLease(self):
@@ -501,32 +557,48 @@ class SpotWrapper():
             id = self._robot_command_client.robot_command(lease=None, command=command_proto, end_time_secs=end_time_secs, timesync_endpoint=timesync_endpoint)
             return True, "Success", id
         except Exception as e:
+            self._logger.error("Unable to execute robot command, exception was" + str(e))
             return False, str(e), None
 
     def stop(self):
         """Stop the robot's motion."""
+        response = self.claim()
+        if not response[0]:
+            return response
         response = self._robot_command(RobotCommandBuilder.stop_command())
         return response[0], response[1]
 
     def self_right(self):
         """Have the robot self-right itself."""
+        response = self.power_on()
+        if not response[0]:
+            return response
         response = self._robot_command(RobotCommandBuilder.selfright_command())
         return response[0], response[1]
 
     def sit(self):
         """Stop the robot's motion and sit down if able."""
+        response = self.power_on()
+        if not response[0]:
+            return response
         response = self._robot_command(RobotCommandBuilder.synchro_sit_command())
         self._last_sit_command = response[2]
         return response[0], response[1]
 
     def stand(self, monitor_command=True):
         """If the e-stop is enabled, and the motor power is enabled, stand the robot up."""
+        response = self.power_on()
+        if not response[0]:
+            return response
         response = self._robot_command(RobotCommandBuilder.synchro_stand_command(params=self._mobility_params))
         if monitor_command:
             self._last_stand_command = response[2]
         return response[0], response[1]
 
     def rollover(self):
+        response = self.power_on()
+        if not response[0]:
+            return response
         if self._is_sitting:
             response = self._robot_command(
                 RobotCommandBuilder.battery_change_pose_command(1)) # 1: Rightside
@@ -535,6 +607,9 @@ class SpotWrapper():
 
     def safe_power_off(self):
         """Stop the robot's motion and sit if possible.  Once sitting, disable motor power."""
+        response = self.claim()
+        if not response[0]:
+            return response
         response = self._robot_command(RobotCommandBuilder.safe_power_off_command())
         return response[0], response[1]
 
@@ -548,11 +623,10 @@ class SpotWrapper():
 
     def power_on(self):
         """Enble the motor power if e-stop is enabled."""
-        try:
-            power.power_on(self._power_client)
-            return True, "Success"
-        except Exception as e:
-            return False, str(e)
+        self._logger.info('Powering on')
+        self.claim()
+        self._robot.power_on()
+        return True, "Success"
 
     def set_mobility_params(self, mobility_params):
         """Set Params for mobility and movement
@@ -566,6 +640,10 @@ class SpotWrapper():
         """Get mobility params
         """
         return self._mobility_params
+
+    def list_world_objects(self, object_types, time_start_point):
+        return self._world_objects_client.list_world_objects(object_types, time_start_point)
+
 
     def velocity_cmd(self, v_x, v_y, v_rot, cmd_duration=0.125):
         """Send a velocity motion command to the robot.
@@ -583,7 +661,8 @@ class SpotWrapper():
         self._last_velocity_command_time = end_time
         return response[0], response[1]
 
-    def trajectory_cmd(self, goal_x, goal_y, goal_heading, cmd_duration, frame_name='odom', precise_position=False):
+    def trajectory_cmd(self, goal_x, goal_y, goal_heading, cmd_duration, frame_name='odom', precise_position=False,
+                       mobility_params=None):
         """Send a trajectory motion command to the robot.
 
         Args:
@@ -596,6 +675,8 @@ class SpotWrapper():
             true, the robot must complete its final positioning before it will be considered to have successfully
             reached the goal.
         """
+        if mobility_params is None:
+            mobility_params = self._mobility_params
         self._at_goal = False
         self._near_goal = False
         self._last_trajectory_command_precise = precise_position
@@ -612,7 +693,7 @@ class SpotWrapper():
                                 goal_y=vision_tform_goal.y,
                                 goal_heading=vision_tform_goal.rot.to_yaw(),
                                 frame_name=frame_helpers.VISION_FRAME_NAME,
-                                params=self._mobility_params),
+                                params=mobility_params),
                             end_time_secs=end_time
                             )
         elif frame_name == 'odom':
@@ -626,7 +707,7 @@ class SpotWrapper():
                                 goal_y=odom_tform_goal.y,
                                 goal_heading=odom_tform_goal.rot.to_yaw(),
                                 frame_name=frame_helpers.ODOM_FRAME_NAME,
-                                params=self._mobility_params),
+                                params=mobility_params),
                             end_time_secs=end_time
                             )
         else:
@@ -634,6 +715,13 @@ class SpotWrapper():
         if response[0]:
             self._last_trajectory_command = response[2]
         return response[0], response[1]
+
+    def robot_command(self, robot_command):
+        end_time = time.time() + MAX_COMMAND_DURATION
+        return self._robot_command(robot_command, end_time_secs=end_time, timesync_endpoint=self._robot.time_sync.endpoint)
+
+    def get_robot_command_feedback(self, cmd_id):
+        return self._robot_command_client.robot_command_feedback(cmd_id)
 
     def list_graph(self, upload_path):
         """List waypoint ids of garph_nav

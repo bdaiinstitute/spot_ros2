@@ -1,3 +1,4 @@
+import traceback
 import rclpy
 from builtin_interfaces.msg import Time, Duration
 
@@ -23,8 +24,12 @@ from spot_msgs.msg import BatteryState, BatteryStateArray
 
 from bosdyn.api import image_pb2
 from bosdyn.client.math_helpers import SE3Pose
-from bosdyn.client.frame_helpers import get_odom_tform_body, get_vision_tform_body
+from bosdyn.client.frame_helpers import get_odom_tform_body, get_vision_tform_body, get_a_tform_b
 
+try:
+    from conversions import ros_transform_to_se3_pose
+except ModuleNotFoundError:
+    from .conversions import ros_transform_to_se3_pose
 
 friendly_joint_names = {}
 """Dictionary for mapping BD joint names to more friendly names"""
@@ -41,7 +46,8 @@ friendly_joint_names["hr.hx"] = "rear_right_hip_x"
 friendly_joint_names["hr.hy"] = "rear_right_hip_y"
 friendly_joint_names["hr.kn"] = "rear_right_knee"
 
-def populateTransformStamped(time, parent_frame, child_frame, transform):
+
+def populateTransformStamped(time, parent_frame, child_frame, transform, frame_prefix):
     """Populates a TransformStamped message
     Args:
         time: The time of the transform
@@ -55,14 +61,28 @@ def populateTransformStamped(time, parent_frame, child_frame, transform):
     new_tf = TransformStamped()
     new_tf.header.stamp = time
     new_tf.header.frame_id = parent_frame
+    if '/' not in parent_frame:
+        new_tf.header.frame_id = frame_prefix + parent_frame
     new_tf.child_frame_id = child_frame
-    new_tf.transform.translation.x = transform.position.x
-    new_tf.transform.translation.y = transform.position.y
-    new_tf.transform.translation.z = transform.position.z
-    new_tf.transform.rotation.x = transform.rotation.x
-    new_tf.transform.rotation.y = transform.rotation.y
-    new_tf.transform.rotation.z = transform.rotation.z
-    new_tf.transform.rotation.w = transform.rotation.w
+    if '/' not in child_frame:
+        new_tf.child_frame_id = frame_prefix + child_frame
+    try:
+        [x, y, z, rx, ry, rz, rw] = [
+            transform.position.x, transform.position.y, transform.position.z, transform.rotation.x,
+            transform.rotation.y, transform.rotation.z, transform.rotation.w
+        ]
+    except AttributeError:
+        [x, y, z, rx, ry, rz, rw] = [
+            transform.x, transform.y, transform.z, transform.rot.x, transform.rot.y,
+            transform.rot.z, transform.rot.w
+        ]
+    new_tf.transform.translation.x = x
+    new_tf.transform.translation.y = y
+    new_tf.transform.translation.z = z
+    new_tf.transform.rotation.x = rx
+    new_tf.transform.rotation.y = ry
+    new_tf.transform.rotation.z = rz
+    new_tf.transform.rotation.w = rw
 
     return new_tf
 
@@ -116,7 +136,7 @@ def getImageMsg(data, spot_wrapper):
     """
     image_msg = Image()
     local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
-    image_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+    image_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     image_msg.header.frame_id = data.shot.frame_name_image_sensor
     image_msg.height = data.shot.image.rows
     image_msg.width = data.shot.image.cols
@@ -194,7 +214,7 @@ def getImageMsg(data, spot_wrapper):
     camera_info_msg.p[10] = 1
     camera_info_msg.p[11] = 0
     local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
-    camera_info_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+    camera_info_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
     camera_info_msg.height = data.shot.image.rows
     camera_info_msg.width = data.shot.image.cols
@@ -221,7 +241,7 @@ def GetJointStatesFromState(state, spot_wrapper):
     """
     joint_state = JointState()
     local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
-    joint_state.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+    joint_state.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     for joint in state.kinematic_state.joint_states:
         joint_state.name.append(friendly_joint_names.get(joint.name, "ERROR"))
         joint_state.position.append(joint.position.value)
@@ -242,7 +262,7 @@ def GetEStopStateFromState(state, spot_wrapper):
     for estop in state.estop_states:
         estop_msg = EStopState()
         local_time = spot_wrapper.robotToLocalTime(estop.timestamp)
-        estop_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+        estop_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
         estop_msg.name = estop.name
         estop_msg.type = estop.type
         estop_msg.state = estop.state
@@ -280,7 +300,7 @@ def GetOdomTwistFromState(state, spot_wrapper):
     """
     twist_odom_msg = TwistWithCovarianceStamped()
     local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
-    twist_odom_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+    twist_odom_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     twist_odom_msg.twist.twist.linear.x = state.kinematic_state.velocity_of_body_in_odom.linear.x
     twist_odom_msg.twist.twist.linear.y = state.kinematic_state.velocity_of_body_in_odom.linear.y
     twist_odom_msg.twist.twist.linear.z = state.kinematic_state.velocity_of_body_in_odom.linear.z
@@ -299,14 +319,14 @@ def GetOdomFromState(state, spot_wrapper, use_vision=True):
     """
     odom_msg = Odometry()
     local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
-    odom_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+    odom_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     if use_vision == True:
-        odom_msg.header.frame_id = 'vision'
+        odom_msg.header.frame_id = self.spot_wrapper.robot_prefix + 'vision'
         tform_body = get_vision_tform_body(state.kinematic_state.transforms_snapshot)
     else:
-        odom_msg.header.frame_id = 'odom'
+        odom_msg.header.frame_id = self.spot_wrapper.robot_prefix + 'odom'
         tform_body = get_odom_tform_body(state.kinematic_state.transforms_snapshot)
-    odom_msg.child_frame_id = 'body'
+    odom_msg.child_frame_id = prefix + 'body'
     pose_odom_msg = PoseWithCovariance()
     pose_odom_msg.pose.position.x = tform_body.position.x
     pose_odom_msg.pose.position.y = tform_body.position.y
@@ -349,21 +369,69 @@ def GetTFFromState(state, spot_wrapper, inverse_target_frame):
     tf_msg = TFMessage()
 
     for frame_name in state.kinematic_state.transforms_snapshot.child_to_parent_edge_map:
-        if state.kinematic_state.transforms_snapshot.child_to_parent_edge_map.get(frame_name).parent_frame_name:
+        if state.kinematic_state.transforms_snapshot.child_to_parent_edge_map.get(
+                frame_name).parent_frame_name:
             try:
-                transform = state.kinematic_state.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
-                local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
-                tf_time = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+                transform = state.kinematic_state.transforms_snapshot.child_to_parent_edge_map.get(
+                    frame_name)
+                local_time = spot_wrapper.robotToLocalTime(
+                    state.kinematic_state.acquisition_timestamp)
+                tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
                 if inverse_target_frame == frame_name:
                     geo_tform_inversed = SE3Pose.from_obj(transform.parent_tform_child).inverse()
-                    new_tf = populateTransformStamped(tf_time, frame_name, transform.parent_frame_name, geo_tform_inversed)
+                    new_tf = populateTransformStamped(tf_time,
+                                                      frame_name,
+                                                      transform.parent_frame_name,
+                                                      geo_tform_inversed,
+                                                      spot_wrapper.frame_prefix)
                 else:
-                    new_tf = populateTransformStamped(tf_time, transform.parent_frame_name, frame_name, transform.parent_tform_child)
+                    new_tf = populateTransformStamped(tf_time,
+                                                      transform.parent_frame_name,
+                                                      frame_name,
+                                                      transform.parent_tform_child,
+                                                      spot_wrapper.frame_prefix)
                 tf_msg.transforms.append(new_tf)
             except Exception as e:
                 spot_wrapper.logger.error('Error: {}'.format(e))
 
     return tf_msg
+
+
+def GetFrameNamesAssociatedWithObject(world_object):
+    possible_frame_names = [
+        world_object.apriltag_properties.frame_name_fiducial,
+        world_object.apriltag_properties.frame_name_fiducial_filtered,
+        world_object.dock_properties.frame_name_dock,
+        world_object.image_properties.frame_name_image_coordinates
+    ]
+    frame_names = [name for name in possible_frame_names if name]
+    for drawable in world_object.drawable_properties:
+        frame_names.append(drawable.frame_name_drawable)
+
+    return frame_names
+
+
+def GetTFFromWorldObjects(world_objects, spot_wrapper, parent_frame):
+    tf_msg = TFMessage()
+    for world_object in world_objects:
+        frames = GetFrameNamesAssociatedWithObject(world_object)
+        for frame in frames:
+            try:
+                spot_parent_frame = parent_frame[parent_frame.rfind('/') + 1:]
+                transform = get_a_tform_b(world_object.transforms_snapshot, spot_parent_frame,
+                                          frame)
+                local_time = spot_wrapper.robotToLocalTime(world_object.acquisition_time)
+                tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
+                new_tf = populateTransformStamped(tf_time,
+                                                  parent_frame,
+                                                  frame,
+                                                  transform,
+                                                  spot_wrapper.frame_prefix)
+                tf_msg.transforms.append(new_tf)
+            except Exception as e:
+                spot_wrapper.logger.error('Error: {}'.format(e))
+    return tf_msg
+
 
 def GetBatteryStatesFromState(state, spot_wrapper):
     """Maps battery state data from robot state proto to ROS BatteryStateArray message
@@ -377,11 +445,12 @@ def GetBatteryStatesFromState(state, spot_wrapper):
     for battery in state.battery_states:
         battery_msg = BatteryState()
         local_time = spot_wrapper.robotToLocalTime(battery.timestamp)
-        battery_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+        battery_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
 
         battery_msg.identifier = battery.identifier
         battery_msg.charge_percentage = battery.charge_percentage.value
-        battery_msg.estimated_runtime = Duration(sec = battery.estimated_runtime.seconds, nanosec = battery.estimated_runtime.nanos)
+        battery_msg.estimated_runtime = Duration(sec=battery.estimated_runtime.seconds,
+                                                 nanosec=battery.estimated_runtime.nanos)
         battery_msg.current = battery.current.value
         battery_msg.voltage = battery.voltage.value
         for temp in battery.temperatures:
@@ -401,11 +470,13 @@ def GetPowerStatesFromState(state, spot_wrapper):
     """
     power_state_msg = PowerState()
     local_time = spot_wrapper.robotToLocalTime(state.power_state.timestamp)
-    power_state_msg.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+    power_state_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     power_state_msg.motor_power_state = state.power_state.motor_power_state
     power_state_msg.shore_power_state = state.power_state.shore_power_state
     power_state_msg.locomotion_charge_percentage = state.power_state.locomotion_charge_percentage.value
-    power_state_msg.locomotion_estimated_runtime = Duration(sec = state.power_state.locomotion_estimated_runtime.seconds, nanosec = state.power_state.locomotion_estimated_runtime.nanos)
+    power_state_msg.locomotion_estimated_runtime = Duration(
+        sec=state.power_state.locomotion_estimated_runtime.seconds,
+        nanosec=state.power_state.locomotion_estimated_runtime.nanos)
     return power_state_msg
 
 def getBehaviorFaults(behavior_faults, spot_wrapper):
@@ -422,7 +493,7 @@ def getBehaviorFaults(behavior_faults, spot_wrapper):
         new_fault = BehaviorFault()
         new_fault.behavior_fault_id = fault.behavior_fault_id
         local_time = spot_wrapper.robotToLocalTime(fault.onset_timestamp)
-        new_fault.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
+        new_fault.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
         new_fault.cause = fault.cause
         new_fault.status = fault.status
         faults.append(new_fault)
@@ -443,8 +514,8 @@ def getSystemFaults(system_faults, spot_wrapper):
         new_fault = SystemFault()
         new_fault.name = fault.name
         local_time = spot_wrapper.robotToLocalTime(fault.onset_timestamp)
-        new_fault.header.stamp = Time(sec = local_time.seconds, nanosec = local_time.nanos)
-        new_fault.duration = Duration(sec = fault.duration.seconds, nanosec = fault.duration.nanos)
+        new_fault.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
+        new_fault.duration = Duration(sec=fault.duration.seconds, nanosec=fault.duration.nanos)
         new_fault.code = fault.code
         new_fault.uid = fault.uid
         new_fault.error_message = fault.error_message
@@ -467,7 +538,8 @@ def GetSystemFaultsFromState(state, spot_wrapper):
     """
     system_fault_state_msg = SystemFaultState()
     system_fault_state_msg.faults = getSystemFaults(state.system_fault_state.faults, spot_wrapper)
-    system_fault_state_msg.historical_faults = getSystemFaults(state.system_fault_state.historical_faults, spot_wrapper)
+    system_fault_state_msg.historical_faults = getSystemFaults(
+        state.system_fault_state.historical_faults, spot_wrapper)
     return system_fault_state_msg
 
 def getBehaviorFaultsFromState(state, spot_wrapper):
@@ -479,5 +551,15 @@ def getBehaviorFaultsFromState(state, spot_wrapper):
         BehaviorFaultState message
     """
     behavior_fault_state_msg = BehaviorFaultState()
-    behavior_fault_state_msg.faults = getBehaviorFaults(state.behavior_fault_state.faults, spot_wrapper)
+    behavior_fault_state_msg.faults = getBehaviorFaults(state.behavior_fault_state.faults,
+                                                        spot_wrapper)
     return behavior_fault_state_msg
+
+def lookup_a_tform_b(tf_buffer, frame_a, frame_b, time=None, timeout=None):
+    if time is None:
+        time = rclpy.time.Time()
+    if timeout is None:
+        timeout = rclpy.time.Duration()
+    else:
+        timeout = rclpy.time.Duration(seconds=timeout)
+    return ros_transform_to_se3_pose(tf_buffer.lookup_transform(frame_a, frame_b, time=time, timeout=timeout).transform)

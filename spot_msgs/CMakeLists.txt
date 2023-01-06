@@ -50,12 +50,14 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PowerState.msg"
   "msg/SystemFaultState.msg"
   "srv/ListGraph.srv"
+  "srv/ListWorldObjects.srv"
   "srv/SetLocomotion.srv"
   "srv/SetVelocity.srv"
   "srv/ClearBehaviorFault.srv"
   "action/NavigateTo.action"
+  "action/RobotCommand.action"
   "action/Trajectory.action"
-  DEPENDENCIES geometry_msgs builtin_interfaces common_interfaces std_msgs sensor_msgs
+  DEPENDENCIES bosdyn_msgs builtin_interfaces common_interfaces geometry_msgs std_msgs sensor_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)
