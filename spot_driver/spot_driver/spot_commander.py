@@ -1,4 +1,5 @@
 import rclpy
+from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 
@@ -6,19 +7,18 @@ TRIGGER_SERVICES = ['claim', 'release', 'stop', 'self_right', 'sit', 'stand', 'p
                     'power_off', 'estop/hard', 'estop/gentle', 'estop/release']
 
 
-class SpotCommander(object):
+class SpotCommander(Node):
 
-    def __init__(self, node):
-        self._node = node
+    def __init__(self, namespace):
+        super().__init__('spot_commander', namespace=namespace)
+        self._executor = SingleThreadedExecutor()
+        self._executor.add_node(self)
         self._command_map = {}
         for service in TRIGGER_SERVICES:
-            self._command_map[service] = node.create_client(Trigger, service)
+            self._command_map[service] = self.create_client(Trigger, service)
             self.get_logger().info('Waiting for service ' + str(service))
             self._command_map[service].wait_for_service()
             self.get_logger().info('Found service ' + str(service))
-
-    def get_logger(self):
-        return self._node.get_logger()
 
     def command(self, command):
         try:
@@ -27,9 +27,8 @@ class SpotCommander(object):
             err = 'No command ' + str(command)
             self.get_logger().error(err)
             return Trigger.Response(success=False, message=err)
-        rclpy.spin_until_future_complete(self._node, self._future)
+        self._executor.spin_until_future_complete(self._future)
         return self._future.result()
-
 
 def main():
     rclpy.init()
@@ -40,8 +39,7 @@ def main():
                         help="Name of the robot if the ROS driver is inside that namespace")
     args = parser.parse_args()
 
-    node = Node('spot_commander', namespace=args.robot)
-    commander = SpotCommander(node)
+    commander = SpotCommander(args.robot)
 
     while rclpy.ok():
         cmd = input('Please enter a command:\n' + ' '.join(TRIGGER_SERVICES) + '\n> ')
