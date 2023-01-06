@@ -11,10 +11,13 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 
 class SingleGoalActionServer(object):
 
-    def __init__(self, node, action_type, action_topic, execute_callback):
+    def __init__(self, node, action_type, action_topic, execute_callback, callback_group=None):
         self._node = node
         self._goal_handle = None
         self._goal_lock = threading.Lock()
+        self._callback_group = callback_group
+        if self._callback_group is None:
+            self._callback_group = ReentrantCallbackGroup()
         self._action_server = ActionServer(
             node,
             action_type,
@@ -23,7 +26,7 @@ class SingleGoalActionServer(object):
             goal_callback=self.goal_callback,
             handle_accepted_callback=self.handle_accepted_callback,
             cancel_callback=self.cancel_callback,
-            callback_group=ReentrantCallbackGroup())
+            callback_group=self._callback_group)
 
     def get_logger(self):
         return self._node.get_logger()

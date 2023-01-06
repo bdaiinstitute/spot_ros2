@@ -99,6 +99,7 @@ class SpotROS():
     def __init__(self):
         self.spot_wrapper = None
         self.node = None
+        self._printed_once = False
 
         self.callbacks = {}
         """Dictionary listing what callback to use for what data task"""
@@ -855,6 +856,9 @@ class SpotROS():
 
     def step(self):
         """ Update spot sensors """
+        if not self._printed_once:
+            self.node.get_logger().info("Driver successfully started!")
+            self._printed_once = True
         ### self.node.get_logger().info("Step/Update")
         if rclpy.ok():
             self.spot_wrapper.updateTasks() ############## testing with Robot
@@ -1144,6 +1148,7 @@ def main(args=None):
                           flush=True)
                     printed = True
                 time.sleep(0.5)
+        print('Found estop!', flush=True)
 
         node.create_timer(0.1, spot_ros.step, callback_group=spot_ros.group)
 

@@ -12,7 +12,8 @@ def generate_launch_description():
     frame_prefix = LaunchConfiguration('frame_prefix')
 
     frame_prefix_arg = DeclareLaunchArgument('frame_prefix',
-                                             description='Frame prefix for robot state publisher, must include /')
+                                             description='Frame prefix for robot state publisher, must include /',
+                                             default_value='')
 
     pkg_share = FindPackageShare('spot_description').find('spot_description')
     urdf_dir = os.path.join(pkg_share, 'urdf')
