@@ -398,7 +398,7 @@ class SpotROS():
     def handle_max_vel(self, request, response):
         """
         Handle a max_velocity service call. This will modify the mobility params to have a limit on the maximum
-        velocity that the robot can move during motion commmands. This affects trajectory commands and velocity
+        velocity that the robot can move during motion commands. This affects trajectory commands and velocity
         commands
         Args:
             req: SetVelocityRequest containing requested maximum velocity
@@ -634,7 +634,7 @@ class SpotROS():
         
         command_start_time = self.node.get_clock().now()                
 
-        # Abort the actionserver if cmd_duration is exceeded - the driver stops but does not provide
+        # Abort the action server if cmd_duration is exceeded - the driver stops but does not provide
         # feedback toindicate this so we monitor it ourselves
         # The trajectory command is non-blocking but we need to keep this function up in order to
         # interrupt if a preempt is requested and to return success if/when the robot reaches the goal.
@@ -790,16 +790,16 @@ class SpotROS():
         """ROS service handler to run mission of the robot.  The robot will replay a mission"""
         # create thread to periodically publish feedback
         self.goal_handle = goal_handle
-        feedback_thraed = threading.Thread(target = self.handle_navigate_to_feedback, args = ())
+        feedback_thread = threading.Thread(target = self.handle_navigate_to_feedback, args = ())
         self.run_navigate_to = True
-        feedback_thraed.start()
+        feedback_thread.start()
         # run navigate_to
         resp = self.spot_wrapper.navigate_to(upload_path = goal_handle.request.upload_path,
                                              navigate_to = goal_handle.request.navigate_to,
                                              initial_localization_fiducial = goal_handle.request.initial_localization_fiducial,
                                              initial_localization_waypoint = goal_handle.request.initial_localization_waypoint)
         self.run_navigate_to = False
-        feedback_thraed.join()
+        feedback_thread.join()
 
         result = NavigateTo.Result()
         result.success = resp[0]
@@ -1085,7 +1085,7 @@ def main(args=None):
             callback_group=spot_ros.group)
         node.create_service(
             Trigger, "estop/release",
-            lambda request, response: spot_ros.service_wrapper('etop/release', spot_ros.handle_estop_disengage,
+            lambda request, response: spot_ros.service_wrapper('estop/release', spot_ros.handle_estop_disengage,
                                                                request, response),
             callback_group=spot_ros.group)
 
@@ -1117,7 +1117,7 @@ def main(args=None):
                                                                request, response),
             callback_group=spot_ros.group)
 
-        # This doesn't use the service wrapper because it's not a trigger and we want different mock reponses
+        # This doesn't use the service wrapper because it's not a trigger and we want different mock responses
         node.create_service(
             ListWorldObjects, "list_world_objects", spot_ros.handle_list_world_objects)
 
