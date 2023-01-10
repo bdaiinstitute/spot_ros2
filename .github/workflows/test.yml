@@ -12,5 +12,7 @@ jobs:
       image: ghcr.io/bdaiinstitute/bdaii_ros2_humble:main
     steps:
     - name: Build and run tests
+      working-directory: spot_driver
       run: |
+        source /opt/ros/humble/setup.bash
         colcon build --symlink-install
