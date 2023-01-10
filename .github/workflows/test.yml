@@ -1,0 +1,16 @@
+name: Test spot_ros2
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/bdaiinstitute/bdaii_ros2_humble:main
+    steps:
+    - name: Build and run tests
+      run: |
+        colcon build --symlink-install
