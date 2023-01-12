@@ -1,4 +1,4 @@
-name: Test spot_ros2
+name: Build and test spot_ros2
 on:
   pull_request:
   push:
