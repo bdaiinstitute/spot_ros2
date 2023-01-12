@@ -11,7 +11,7 @@ jobs:
     container:
       image: ghcr.io/bdaiinstitute/bdaii_ros2_humble:main
     steps:
+    - uses: actions/checkout@v3
     - name: Build and run tests
       run: |
-        source /opt/ros/humble/setup.bash
         colcon build --symlink-install
