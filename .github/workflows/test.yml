@@ -1,4 +1,4 @@
-name: Build and test spot_ros2
+name: Test spot_ros2
 on:
   pull_request:
   push:
@@ -6,29 +6,35 @@ on:
       - main
 
 jobs:
-  build_bdaii_jammy_humble:
+  build_jammy_humble:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
     container:
       image: ghcr.io/bdaiinstitute/bdaii_ros2_humble:main
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.ghcr_token }}
     steps:
     - uses: actions/checkout@v3
     - name: Build and run tests
       run: |
         source /opt/ros/humble/setup.bash
         colcon build --symlink-install
-  build_external_jammy_humble:
+  build_focal_foxy:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
     container:
-      image: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:spot_ros2_docker
+      image: ghcr.io/bdaiinstitute/bdaii_ros2_foxy:main
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.ghcr_token }}
     steps:
     - uses: actions/checkout@v3
     - name: Build and run tests
       run: |
-        source /opt/ros/humble/setup.bash
+        source /opt/ros/foxy/setup.bash
         colcon build --symlink-install
