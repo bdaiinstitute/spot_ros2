@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build_and_test:
+  build_jammy_humble:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -17,6 +17,18 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build and run tests
       run: |
-
         source /opt/ros/humble/setup.bash
+        colcon build --symlink-install
+  build_focal_foxy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: ghcr.io/bdaiinstitute/bdaii_ros2_foxy:main
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build and run tests
+      run: |
+        source /opt/ros/foxy/setup.bash
         colcon build --symlink-install
