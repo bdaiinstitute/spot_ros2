@@ -940,10 +940,11 @@ def main(args=None):
     spot_ros.motion_deadzone = node.get_parameter('deadzone')
     spot_ros.estop_timeout = node.get_parameter('estop_timeout')
 
-    spot_ros.username = os.environ.get("BOSDYN_CLIENT_USERNAME")
-    spot_ros.password = os.environ.get("BOSDYN_CLIENT_PASSWORD")
-    spot_ros.name = os.environ.get("SPOT_NAME")
-    spot_ros.ip = os.environ.get("SPOT_IP")
+    spot_ros.username = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", node, "username")
+    spot_ros.password = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", node, "password")
+    spot_ros.name = get_from_env_and_fall_back_to_param("SPOT_NAME", node, "name", default='spot')
+    spot_ros.ip = get_from_env_and_fall_back_to_param("SPOT_IP", node, "hostname")
+
 
     spot_ros.camera_static_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(node)
     # Static transform broadcaster is super simple and just a latched publisher. Every time we add a new static

@@ -1,3 +1,4 @@
+import os
 import traceback
 import rclpy
 from builtin_interfaces.msg import Time, Duration
@@ -554,6 +555,13 @@ def getBehaviorFaultsFromState(state, spot_wrapper):
     behavior_fault_state_msg.faults = getBehaviorFaults(state.behavior_fault_state.faults,
                                                         spot_wrapper)
     return behavior_fault_state_msg
+
+def get_from_env_and_fall_back_to_param(env_name, node, param_name):
+    val = os.environ.get(env_name)
+    if val is None:
+        node.declare_parameter(param_name)
+        val = node.get_parameter(param_name)
+    return val
 
 def lookup_a_tform_b(tf_buffer, frame_a, frame_b, time=None, timeout=None):
     if time is None:
