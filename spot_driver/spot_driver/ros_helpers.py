@@ -556,11 +556,11 @@ def getBehaviorFaultsFromState(state, spot_wrapper):
                                                         spot_wrapper)
     return behavior_fault_state_msg
 
-def get_from_env_and_fall_back_to_param(env_name, node, param_name):
+def get_from_env_and_fall_back_to_param(env_name, node, param_name, default_value):
     val = os.environ.get(env_name)
     if val is None:
-        node.declare_parameter(param_name)
-        val = node.get_parameter(param_name)
+        node.declare_parameter(param_name, default_value)
+        val = node.get_parameter(param_name).value
     return val
 
 def lookup_a_tform_b(tf_buffer, frame_a, frame_b, time=None, timeout=None):

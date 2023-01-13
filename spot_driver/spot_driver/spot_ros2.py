@@ -602,14 +602,14 @@ class SpotROS():
 
     def handle_trajectory(self, goal_handle):
         """ROS actionserver execution handler to handle receiving a request to move to a location"""
-        
+
         if goal_handle.request.target_pose.header.frame_id != 'body':
             goal_handle.abort()
             result = Trajectory.Result()
             result.success = False
             result.message = 'frame_id of target_pose must be \'body\''
             return result
-        
+
         if goal_handle.request.duration.sec <= 0:
             goal_handle.abort()
             result = Trajectory.Result()
@@ -618,7 +618,7 @@ class SpotROS():
             return result
 
         cmd_duration_secs = goal_handle.request.duration.sec*1.0
-                
+
         resp = self.spot_wrapper.trajectory_cmd(
                         goal_x=goal_handle.request.target_pose.pose.position.x,
                         goal_y=goal_handle.request.target_pose.pose.position.y,
@@ -631,8 +631,8 @@ class SpotROS():
                         cmd_duration=cmd_duration_secs,
                         precise_position=goal_handle.request.precise_positioning,
                         )
-        
-        command_start_time = self.node.get_clock().now()                
+
+        command_start_time = self.node.get_clock().now()
 
         # Abort the action server if cmd_duration is exceeded - the driver stops but does not provide
         # feedback toindicate this so we monitor it ourselves
@@ -644,7 +644,7 @@ class SpotROS():
         #
         # Pre-emp missing in port to ROS2 (ros1: self.trajectory_server.is_preempt_requested())
         #
-        
+
         ### rate = rclpy.Rate(10)
 
         try:
@@ -678,7 +678,7 @@ class SpotROS():
             result.message = "timeout"
 
             # If still active after exiting the loop, the command did not time out
-            if goal_handle.is_active:        
+            if goal_handle.is_active:
                 #            if self.trajectory_server.is_preempt_requested():
                 #                self.trajectory_server.publish_feedback(TrajectoryFeedback("Preempted"))
                 #                self.trajectory_server.set_preempted()
@@ -693,7 +693,7 @@ class SpotROS():
                     goal_handle.publish_feedback(feedback)
                     result.success = True
                     result.message = ''
-                    goal_handle.succeed()                
+                    goal_handle.succeed()
                 else:
                     # self.node.get_logger().error("FAIL")
                     feedback.feedback = "Failed to reach goal"
@@ -701,8 +701,8 @@ class SpotROS():
                     result.success = False
                     result.message = 'not at goal'
                     goal_handle.abort()
-                    
-        except Exception as e:                    
+
+        except Exception as e:
             self.node.get_logger().error(f"Exception: {type(e)} - {e}")
             result.success = False
             result.message = f"Exception: {type(e)} - {e}"
@@ -808,7 +808,7 @@ class SpotROS():
         if resp[0]:
             goal_handle.succeed()
         else:
-            goal_handle.abort()            
+            goal_handle.abort()
 
         return result
 
@@ -926,24 +926,28 @@ def main(args=None):
     spot_ros.rates['side_image'] = 10.0
     spot_ros.rates['rear_image'] = 10.0
 
-    node.declare_parameter('auto_claim')
-    node.declare_parameter('auto_power_on')
-    node.declare_parameter('auto_stand')
+    node.declare_parameter('auto_claim', False)
+    node.declare_parameter('auto_power_on', False)
+    node.declare_parameter('auto_stand', False)
 
-    node.declare_parameter('deadzone')
-    node.declare_parameter('estop_timeout')
+    node.declare_parameter('deadzone', 0.05)
+    node.declare_parameter('estop_timeout', 9.0)
+    node.declare_parameter('start_estop', False)
 
     spot_ros.auto_claim = node.get_parameter('auto_claim')
     spot_ros.auto_power_on = node.get_parameter('auto_power_on')
     spot_ros.auto_stand = node.get_parameter('auto_stand')
+    spot_ros.start_estop = node.get_parameter('start_estop')
 
     spot_ros.motion_deadzone = node.get_parameter('deadzone')
     spot_ros.estop_timeout = node.get_parameter('estop_timeout')
 
-    spot_ros.username = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", node, "username")
-    spot_ros.password = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", node, "password")
-    spot_ros.name = get_from_env_and_fall_back_to_param("SPOT_NAME", node, "name", default='spot')
-    spot_ros.ip = get_from_env_and_fall_back_to_param("SPOT_IP", node, "hostname")
+    spot_ros.username = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", node, "username", "user")
+    spot_ros.password = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", node, "password", "password")
+    spot_ros.name = get_from_env_and_fall_back_to_param("SPOT_NAME", node, "name", "")
+    if not spot_ros.name:
+        spot_ros.name = None
+    spot_ros.ip = get_from_env_and_fall_back_to_param("SPOT_IP", node, "hostname", "10.0.0.3")
 
 
     spot_ros.camera_static_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(node)
@@ -981,8 +985,8 @@ def main(args=None):
     ############## testing with Robot
     if spot_ros.name != MOCK_HOSTNAME:
         spot_ros.spot_wrapper = SpotWrapper(spot_ros.username, spot_ros.password, spot_ros.ip, spot_ros.name,
-                                            spot_ros.logger, spot_ros.estop_timeout.value, spot_ros.rates,
-                                            spot_ros.callbacks)
+                                            spot_ros.logger, spot_ros.start_estop.value, spot_ros.estop_timeout.value,
+                                            spot_ros.rates, spot_ros.callbacks)
         if not spot_ros.spot_wrapper.is_valid:
             return
     else:
@@ -1138,7 +1142,7 @@ def main(args=None):
         # rclpy.on_shutdown(spot_ros.shutdown) ############## Shutdown Handle
 
         # Wait for an estop to be connected
-        if spot_ros.spot_wrapper:
+        if spot_ros.spot_wrapper and not spot_ros.start_estop.value:
             printed = False
             while spot_ros.spot_wrapper.is_estopped():
                 if not printed:
@@ -1149,7 +1153,7 @@ def main(args=None):
                           flush=True)
                     printed = True
                 time.sleep(0.5)
-        print('Found estop!', flush=True)
+            print('Found estop!', flush=True)
 
         node.create_timer(0.1, spot_ros.step, callback_group=spot_ros.group)
 

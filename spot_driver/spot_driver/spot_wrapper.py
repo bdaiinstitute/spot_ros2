@@ -17,7 +17,7 @@ from bosdyn.api import image_pb2
 from bosdyn.api.graph_nav import graph_nav_pb2
 from bosdyn.api.graph_nav import map_pb2
 from bosdyn.api.graph_nav import nav_pb2
-from bosdyn.client.estop import EstopClient, EstopEndpoint, EstopKeepAlive
+from bosdyn.client.estop import EstopClient, EstopEndpoint, EstopKeepAlive, MotorsOnError
 from bosdyn.client import power
 from bosdyn.client import frame_helpers
 from bosdyn.client import math_helpers
@@ -208,10 +208,6 @@ class AsyncIdle(AsyncPeriodicQuery):
 
         self._spot_wrapper._is_moving = is_moving
 
-        #if self._spot_wrapper.is_standing and not self._spot_wrapper.is_moving:
-        #    self._logger.warn("Sending stand command")
-        #    self._spot_wrapper.stand(False)
-
 class AsyncWorldObjects(AsyncPeriodicQuery):
     """Class to get world objects.  list_world_objects_async query sent to the robot at every tick.  Callback registered to defined callback function.
 
@@ -235,8 +231,8 @@ class AsyncWorldObjects(AsyncPeriodicQuery):
 
 class SpotWrapper():
     """Generic wrapper class to encompass release 1.1.4 API features as well as maintaining leases automatically"""
-    def __init__(self, username, password, hostname, robot_name, logger, estop_timeout=9.0,
-                 rates = {}, callbacks = {}):
+    def __init__(self, username, password, hostname, robot_name, logger, start_estop, estop_timeout=9.0,
+                 rates = None, callbacks = None):
         self._username = username
         self._password = password
         self._hostname = hostname
@@ -246,8 +242,13 @@ class SpotWrapper():
             self._frame_prefix = robot_name + '/'
         self._logger = logger
         self._rates = rates
+        if rates is None:
+            self._rates = {}
         self._callbacks = callbacks
+        if callbacks is None:
+            self._callbacks = {}
         self._estop_timeout = estop_timeout
+        self._start_estop = start_estop
         self._keep_alive = True
         self._valid = True
 
@@ -570,7 +571,7 @@ class SpotWrapper():
 
     def self_right(self):
         """Have the robot self-right itself."""
-        response = self.power_on()
+        response = self.power_on(allow_already_powered=True)
         if not response[0]:
             return response
         response = self._robot_command(RobotCommandBuilder.selfright_command())
@@ -578,7 +579,7 @@ class SpotWrapper():
 
     def sit(self):
         """Stop the robot's motion and sit down if able."""
-        response = self.power_on()
+        response = self.power_on(allow_already_powered=True)
         if not response[0]:
             return response
         response = self._robot_command(RobotCommandBuilder.synchro_sit_command())
@@ -587,7 +588,7 @@ class SpotWrapper():
 
     def stand(self, monitor_command=True):
         """If the e-stop is enabled, and the motor power is enabled, stand the robot up."""
-        response = self.power_on()
+        response = self.power_on(allow_already_powered=True)
         if not response[0]:
             return response
         response = self._robot_command(RobotCommandBuilder.synchro_stand_command(params=self._mobility_params))
@@ -596,7 +597,7 @@ class SpotWrapper():
         return response[0], response[1]
 
     def rollover(self):
-        response = self.power_on()
+        response = self.power_on(allow_already_powered=True)
         if not response[0]:
             return response
         if self._is_sitting:
@@ -621,11 +622,20 @@ class SpotWrapper():
         except Exception as e:
             return False, str(e), None
 
-    def power_on(self):
+    def power_on(self, allow_already_powered=False):
         """Enble the motor power if e-stop is enabled."""
         self._logger.info('Powering on')
         self.claim()
-        self._robot.power_on()
+        if self._start_estop:
+            try:
+                self.resetEStop()
+            except MotorsOnError as e:
+                if not allow_already_powered:
+                    return False, str(e)
+        try:
+            self._robot.power_on()
+        except Exception as e:
+            return False, str(e)
         return True, "Success"
 
     def set_mobility_params(self, mobility_params):

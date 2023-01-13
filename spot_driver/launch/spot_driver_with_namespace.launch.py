@@ -12,6 +12,11 @@ def generate_launch_description():
 
     spot_name_arg = DeclareLaunchArgument('spot_name', description='Name of spot')
 
+    config_file = LaunchConfiguration('config_file')
+    config_file_arg = DeclareLaunchArgument('config_file',
+                                            description='Path to configuration file for the driver.')
+
+
     spot_driver = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
@@ -21,6 +26,7 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'frame_prefix': PathJoinSubstitution([spot_name, '']),
+            'config_file': config_file
         }.items()
     )
 
@@ -33,5 +39,6 @@ def generate_launch_description():
 
     return launch.LaunchDescription([
         spot_name_arg,
+        config_file_arg,
         spot_driver_with_namespace,
     ])
