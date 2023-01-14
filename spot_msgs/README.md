@@ -25,20 +25,20 @@ Bloom won't create a package that depends on something `rosdep` can't find.  Unt
 2.  Change `rosdep/base.yaml` to just list an empty target for `bosdyn_msgs`:
 
 ```bash
-    bosdyn_msgs:
-        ubuntu: []
+bosdyn_msgs:
+  ubuntu: []
 ```
 3.  Add a file `/etc/ros/rosdep/sources.list.d/8-local.list` with the entry:
 
 ```bash
-    yaml file:///<absolute path to base.yaml>
+yaml file:///<absolute path to base.yaml>
 ```
 
 4.  Run `rosdep update` and make sure it can resolve the `bosdyn_msgs` key:
 
 ```bash
-    rosdep update
-    rosdep resolve bosdyn_msgs
+rosdep update
+rosdep resolve bosdyn_msgs
 ```
 
 ### Get ready
