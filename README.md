@@ -57,6 +57,13 @@ The `command_spot_driver` node contains service and action clients. To send a tr
 
     ros2 run spot_driver command_spot --ros-args -p command:=trajectory
 
+## Multiple Robots
+If you want to use multiple robots, use the `spot_driver_with_namespace` launch file:
+
+   ros2 launch spot_driver_with_namespace.py spot_name:=<spot name> config_file:=<path to your ROS config file>
+
+This will launch all nodes in the `spot_name` namespace and use `spot_name/` as the prefix for all frames.
+
 ## License
 
 MIT license - parts of the code developed specifically for ROS2.
