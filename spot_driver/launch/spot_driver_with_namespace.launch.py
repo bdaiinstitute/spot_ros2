@@ -1,11 +1,10 @@
 import launch
-from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
-from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
-from launch.launch_context import LaunchContext
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import PushRosNamespace
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+import launch_ros
+import os
 from launch_ros.substitutions import FindPackageShare
-
+import xacro
 
 def generate_launch_description():
     spot_name = LaunchConfiguration('spot_name')
@@ -17,28 +16,33 @@ def generate_launch_description():
                                             description='Path to configuration file for the driver.')
 
 
-    spot_driver = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('spot_driver'),
-                'launch/spot_driver.launch.py'
-            ])
-        ]),
-        launch_arguments={
-            'frame_prefix': PathJoinSubstitution([spot_name, '']),
-            'config_file': config_file
-        }.items()
+    pkg_share = FindPackageShare('spot_description').find('spot_description')
+    urdf_dir = os.path.join(pkg_share, 'urdf')
+    xacro_file = os.path.join(urdf_dir, 'spot.urdf.xacro')
+    doc = xacro.process_file(xacro_file)
+    robot_desc = doc.toprettyxml(indent='  ')
+
+    driver_params = {'spot_name': spot_name}
+    spot_driver_node = launch_ros.actions.Node(
+        package='spot_driver',
+        executable='spot_ros2',
+        name='spot_ros2',
+        output='screen',
+        namespace=spot_name,
+        parameters=[config_file, driver_params]
     )
 
-    spot_driver_with_namespace = GroupAction(
-        actions=[
-            PushRosNamespace(spot_name),
-            spot_driver,
-        ]
-    )
+    params = {'robot_description': robot_desc, 'frame_prefix': PathJoinSubstitution([spot_name, ''])}
+    robot_state_publisher = launch_ros.actions.Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        output='screen',
+        namespace=spot_name,
+        parameters=[params])
 
     return launch.LaunchDescription([
         spot_name_arg,
         config_file_arg,
-        spot_driver_with_namespace,
+        spot_driver_node,
+        robot_state_publisher,
     ])

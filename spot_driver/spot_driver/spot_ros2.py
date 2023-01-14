@@ -933,22 +933,25 @@ def main(args=None):
     node.declare_parameter('deadzone', 0.05)
     node.declare_parameter('estop_timeout', 9.0)
     node.declare_parameter('start_estop', False)
+    node.declare_parameter('spot_name', '')
 
     spot_ros.auto_claim = node.get_parameter('auto_claim')
     spot_ros.auto_power_on = node.get_parameter('auto_power_on')
     spot_ros.auto_stand = node.get_parameter('auto_stand')
     spot_ros.start_estop = node.get_parameter('start_estop')
 
+    # This is only done from parameter because it should be passed by the launch file
+    spot_ros.name = node.get_parameter('spot_name').value
+    if not spot_ros.name:
+        spot_ros.name = None
+
+
     spot_ros.motion_deadzone = node.get_parameter('deadzone')
     spot_ros.estop_timeout = node.get_parameter('estop_timeout')
 
     spot_ros.username = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", node, "username", "user")
     spot_ros.password = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", node, "password", "password")
-    spot_ros.name = get_from_env_and_fall_back_to_param("SPOT_NAME", node, "name", "")
-    if not spot_ros.name:
-        spot_ros.name = None
     spot_ros.ip = get_from_env_and_fall_back_to_param("SPOT_IP", node, "hostname", "10.0.0.3")
-
 
     spot_ros.camera_static_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(node)
     # Static transform broadcaster is super simple and just a latched publisher. Every time we add a new static

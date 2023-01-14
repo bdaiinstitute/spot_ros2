@@ -1,0 +1,20 @@
+# This is an example configuration file for Spot.  It is not used!
+
+/**:
+  ros__parameters:
+    rates:
+      robot_state: 20.0
+      metrics: 0.04
+      lease: 1.0
+      front_image: 10.0
+      side_image: 10.0
+      rear_image: 10.0
+    auto_claim: False
+    auto_power_on: False
+    auto_stand: False
+    deadzone: 0.05
+    estop_timeout: 9.0
+    username: "user"
+    password: "password"
+    hostname: "10.0.0.3"
+    start_estop: False

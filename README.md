@@ -25,6 +25,12 @@ This package is derived of this [ROS1 package](https://github.com/heuristicus/sp
 ## Install
     pip3 install bosdyn-client bosdyn-mission bosdyn-api bosdyn-core
     sudo apt install ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-tf-transformations ros-$ROS_DISTRO-xacro
+    wget -q -O /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v0.0.0-humble/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb
+    sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb
+    rm /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb
+    wget -q -O /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/spot_ros2/releases/download/spot_msgs-v0.0-0/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
+    sudo dpkg -i /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
+    rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
     cd <path/to/ros2/ws>
     git clone https://github.com/MASKOR/Spot-ROS2.git src/
     colcon build --symlink-install
@@ -35,13 +41,13 @@ Since `DepthCloud` is not yet ported for rviz2 , we can use [depth_image_proc](h
     sudo apt install ros-$ROS_DISTRO-depth-image-proc
 
 ## Launch
-The spot login data hostname, username and password must be specified in the `config/spot_login.yaml` of the spot_driver package.
+The spot login data hostname, username and password can either be specified as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
 ### Model
     ros2 launch spot_description description.launch.py
 
 ### SpotDriver
-    ros2 launch spot_driver spot_driver.launch.py
+    ros2 launch spot_driver spot_driver.launch.py config_file:=<path to your ROS config file>
 
 ### Depth image to Pointcloud2
     ros2 launch spot_driver point_cloud_xyz.launch.py
