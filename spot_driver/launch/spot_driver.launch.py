@@ -12,11 +12,6 @@ def generate_launch_description():
     config_file_arg = DeclareLaunchArgument('config_file',
                                             description='Path to configuration file for the driver.')
 
-    frame_prefix = LaunchConfiguration('frame_prefix')
-
-    frame_prefix_arg = DeclareLaunchArgument('frame_prefix',
-                                             description='Frame prefix for robot state publisher, must include /',
-                                             default_value='')
 
     pkg_share = FindPackageShare('spot_description').find('spot_description')
     urdf_dir = os.path.join(pkg_share, 'urdf')
@@ -32,7 +27,7 @@ def generate_launch_description():
         parameters=[config_file]
     )
 
-    params = {'robot_description': robot_desc, 'frame_prefix': frame_prefix}
+    params = {'robot_description': robot_desc}
     robot_state_publisher = launch_ros.actions.Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -41,7 +36,6 @@ def generate_launch_description():
 
     return launch.LaunchDescription([
         config_file_arg,
-        frame_prefix_arg,
         spot_driver_node,
         robot_state_publisher,
     ])
