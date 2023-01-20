@@ -1,4 +1,6 @@
-spot_ros2:
+# This is an example configuration file for Spot.  It is not used!
+
+/**:
   ros__parameters:
     rates:
       robot_state: 20.0
@@ -12,3 +14,7 @@ spot_ros2:
     auto_stand: False
     deadzone: 0.05
     estop_timeout: 9.0
+    username: "user"
+    password: "password"
+    hostname: "10.0.0.3"
+    start_estop: False

@@ -1,5 +1,0 @@
-spot_ros2:
-  ros__parameters:
-    username: "admin"
-    password: "password"
-    hostname: "10.0.0.3"
