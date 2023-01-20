@@ -14,11 +14,111 @@ def convert_any_proto_to_bosdyn_msgs_mobility_params(proto, ros_msg):
     proto.Unpack(raw_proto)
     convert_proto_to_bosdyn_msgs_mobility_params(raw_proto, ros_msg)
 
+def convert_proto_to_serialized_bosdyn_msgs_dict_param_spec(proto, ros_msg):
+    import rclpy.serialization
+    from bosdyn_msgs.msg import DictParamSpec
+    full_msg = DictParamSpec()
+    convert_proto_to_bosdyn_msgs_dict_param_spec(proto, full_msg)
+    ros_msg.serialized_msg = list(rclpy.serialization.serialize_message(full_msg))
+
+def convert_serialized_bosdyn_msgs_dict_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    import rclpy.serialization
+    from bosdyn_msgs.msg import DictParamSpec
+    full_msg = rclpy.serialization.deserialize_message(bytes(ros_msg.serialized_msg), DictParamSpec)
+    convert_bosdyn_msgs_dict_param_spec_to_proto(full_msg, proto)
+
+def convert_proto_to_serialized_bosdyn_msgs_custom_param_spec(proto, ros_msg):
+    import rclpy.serialization
+    from bosdyn_msgs.msg import CustomParamSpec
+    full_msg = CustomParamSpec()
+    convert_proto_to_bosdyn_msgs_custom_param_spec(proto, full_msg)
+    ros_msg.serialized_msg = list(rclpy.serialization.serialize_message(full_msg))
+
+def convert_serialized_bosdyn_msgs_custom_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    import rclpy.serialization
+    from bosdyn_msgs.msg import CustomParamSpec
+    full_msg = rclpy.serialization.deserialize_message(bytes(ros_msg.serialized_msg), CustomParamSpec)
+    convert_bosdyn_msgs_custom_param_spec_to_proto(full_msg, proto)
+
+def convert_proto_to_serialized_bosdyn_msgs_dict_param(proto, ros_msg):
+    import rclpy.serialization
+    from bosdyn_msgs.msg import DictParam
+    full_msg = DictParam()
+    convert_proto_to_bosdyn_msgs_dict_param(proto, full_msg)
+    ros_msg.serialized_msg = list(rclpy.serialization.serialize_message(full_msg))
+
+def convert_serialized_bosdyn_msgs_dict_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    import rclpy.serialization
+    from bosdyn_msgs.msg import DictParam
+    full_msg = rclpy.serialization.deserialize_message(bytes(ros_msg.serialized_msg), DictParam)
+    convert_bosdyn_msgs_dict_param_to_proto(full_msg, proto)
+
+def convert_proto_to_serialized_bosdyn_msgs_custom_param(proto, ros_msg):
+    import rclpy.serialization
+    from bosdyn_msgs.msg import CustomParam
+    full_msg = CustomParam()
+    convert_proto_to_bosdyn_msgs_custom_param(proto, full_msg)
+    ros_msg.serialized_msg = list(rclpy.serialization.serialize_message(full_msg))
+
+def convert_serialized_bosdyn_msgs_custom_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    import rclpy.serialization
+    from bosdyn_msgs.msg import CustomParam
+    full_msg = rclpy.serialization.deserialize_message(bytes(ros_msg.serialized_msg), CustomParam)
+    convert_bosdyn_msgs_custom_param_to_proto(full_msg, proto)
+
+def convert_proto_to_serialized_bosdyn_msgs_resource_tree(proto, ros_msg):
+    import rclpy.serialization
+    from bosdyn_msgs.msg import ResourceTree
+    full_msg = ResourceTree()
+    convert_proto_to_bosdyn_msgs_resource_tree(proto, full_msg)
+    ros_msg.serialized_msg = list(rclpy.serialization.serialize_message(full_msg))
+
+def convert_serialized_bosdyn_msgs_resource_tree_to_proto(ros_msg, proto):
+    proto.Clear()
+    import rclpy.serialization
+    from bosdyn_msgs.msg import ResourceTree
+    full_msg = rclpy.serialization.deserialize_message(bytes(ros_msg.serialized_msg), ResourceTree)
+    convert_bosdyn_msgs_resource_tree_to_proto(full_msg, proto)
+
+def convert_proto_to_serialized_bosdyn_msgs_node_info(proto, ros_msg):
+    import rclpy.serialization
+    from bosdyn_msgs.msg import NodeInfo
+    full_msg = NodeInfo()
+    convert_proto_to_bosdyn_msgs_node_info(proto, full_msg)
+    ros_msg.serialized_msg = list(rclpy.serialization.serialize_message(full_msg))
+
+def convert_serialized_bosdyn_msgs_node_info_to_proto(ros_msg, proto):
+    proto.Clear()
+    import rclpy.serialization
+    from bosdyn_msgs.msg import NodeInfo
+    full_msg = rclpy.serialization.deserialize_message(bytes(ros_msg.serialized_msg), NodeInfo)
+    convert_bosdyn_msgs_node_info_to_proto(full_msg, proto)
+
+def convert_proto_to_serialized_bosdyn_msgs_action_wrapper_gripper_camera_params(proto, ros_msg):
+    import rclpy.serialization
+    from bosdyn_msgs.msg import ActionWrapperGripperCameraParams
+    full_msg = ActionWrapperGripperCameraParams()
+    convert_proto_to_bosdyn_msgs_action_wrapper_gripper_camera_params(proto, full_msg)
+    ros_msg.serialized_msg = list(rclpy.serialization.serialize_message(full_msg))
+
+def convert_serialized_bosdyn_msgs_action_wrapper_gripper_camera_params_to_proto(ros_msg, proto):
+    proto.Clear()
+    import rclpy.serialization
+    from bosdyn_msgs.msg import ActionWrapperGripperCameraParams
+    full_msg = rclpy.serialization.deserialize_message(bytes(ros_msg.serialized_msg), ActionWrapperGripperCameraParams)
+    convert_bosdyn_msgs_action_wrapper_gripper_camera_params_to_proto(full_msg, proto)
+
 def convert_proto_to_bosdyn_msgs_world_object(proto, ros_msg):
     ros_msg.id = proto.id
     ros_msg.name = proto.name
     convert_proto_to_builtin_interfaces_time(proto.acquisition_time, ros_msg.acquisition_time)
     ros_msg.acquisition_time_is_set = proto.HasField("acquisition_time")
+    convert_proto_to_builtin_interfaces_duration(proto.object_lifetime, ros_msg.object_lifetime)
+    ros_msg.object_lifetime_is_set = proto.HasField("object_lifetime")
     from bosdyn_msgs.msg import DrawableProperties
     ros_msg.drawable_properties = []
     for _item in proto.drawable_properties:
@@ -26,6 +126,8 @@ def convert_proto_to_bosdyn_msgs_world_object(proto, ros_msg):
         convert_proto_to_bosdyn_msgs_drawable_properties(_item, ros_msg.drawable_properties[-1])
     convert_proto_to_bosdyn_msgs_april_tag_properties(proto.apriltag_properties, ros_msg.apriltag_properties)
     ros_msg.apriltag_properties_is_set = proto.HasField("apriltag_properties")
+    convert_proto_to_bosdyn_msgs_no_go_region_properties(proto.nogo_region_properties, ros_msg.nogo_region_properties)
+    ros_msg.nogo_region_properties_is_set = proto.HasField("nogo_region_properties")
     convert_proto_to_bosdyn_msgs_image_properties(proto.image_properties, ros_msg.image_properties)
     ros_msg.image_properties_is_set = proto.HasField("image_properties")
     convert_proto_to_bosdyn_msgs_dock_properties(proto.dock_properties, ros_msg.dock_properties)
@@ -41,11 +143,15 @@ def convert_bosdyn_msgs_world_object_to_proto(ros_msg, proto):
     proto.name = ros_msg.name
     if ros_msg.acquisition_time_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.acquisition_time, proto.acquisition_time)
+    if ros_msg.object_lifetime_is_set:
+        convert_builtin_interfaces_duration_to_proto(ros_msg.object_lifetime, proto.object_lifetime)
     del proto.drawable_properties[:]
     for _item in ros_msg.drawable_properties:
         convert_bosdyn_msgs_drawable_properties_to_proto(_item, proto.drawable_properties.add())
     if ros_msg.apriltag_properties_is_set:
         convert_bosdyn_msgs_april_tag_properties_to_proto(ros_msg.apriltag_properties, proto.apriltag_properties)
+    if ros_msg.nogo_region_properties_is_set:
+        convert_bosdyn_msgs_no_go_region_properties_to_proto(ros_msg.nogo_region_properties, proto.nogo_region_properties)
     if ros_msg.image_properties_is_set:
         convert_bosdyn_msgs_image_properties_to_proto(ros_msg.image_properties, proto.image_properties)
     if ros_msg.dock_properties_is_set:
@@ -131,6 +237,29 @@ def convert_bosdyn_msgs_mutate_world_object_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
     proto.status = ros_msg.status.value
     proto.mutated_object_id = ros_msg.mutated_object_id
+
+def convert_proto_to_bosdyn_msgs_no_go_region_properties_one_of_region(proto, ros_msg):
+    if proto.HasField("box"):
+        ros_msg.region_choice = ros_msg.REGION_BOX_SET
+        convert_proto_to_bosdyn_msgs_box2_with_frame(proto.box, ros_msg.box)
+
+def convert_bosdyn_msgs_no_go_region_properties_one_of_region_to_proto(ros_msg, proto):
+    proto.ClearField("region")
+    if ros_msg.region_choice == ros_msg.REGION_BOX_SET:
+        convert_bosdyn_msgs_box2_with_frame_to_proto(ros_msg.box, proto.box)
+
+def convert_proto_to_bosdyn_msgs_no_go_region_properties(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_no_go_region_properties_one_of_region(proto, ros_msg.region)
+    ros_msg.disable_foot_obstacle_generation = proto.disable_foot_obstacle_generation
+    ros_msg.disable_body_obstacle_generation = proto.disable_body_obstacle_generation
+    ros_msg.disable_foot_obstacle_inflation = proto.disable_foot_obstacle_inflation
+
+def convert_bosdyn_msgs_no_go_region_properties_to_proto(ros_msg, proto):
+    proto.Clear()
+    convert_bosdyn_msgs_no_go_region_properties_one_of_region_to_proto(ros_msg.region, proto)
+    proto.disable_foot_obstacle_generation = ros_msg.disable_foot_obstacle_generation
+    proto.disable_body_obstacle_generation = ros_msg.disable_body_obstacle_generation
+    proto.disable_foot_obstacle_inflation = ros_msg.disable_foot_obstacle_inflation
 
 def convert_proto_to_bosdyn_msgs_image_properties_one_of_image_data(proto, ros_msg):
     if proto.HasField("coordinates"):
@@ -738,27 +867,47 @@ def convert_bosdyn_msgs_list_available_models_request_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_list_available_models_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
-    ros_msg.available_models = []
-    for _item in proto.available_models:
-        ros_msg.available_models.append(_item)
-    from bosdyn_msgs.msg import ModelLabels
-    ros_msg.labels = []
-    for _item in proto.labels:
-        ros_msg.labels.append(ModelLabels())
-        convert_proto_to_bosdyn_msgs_model_labels(_item, ros_msg.labels[-1])
+    convert_proto_to_bosdyn_msgs_available_models(proto.models, ros_msg.models)
+    ros_msg.models_is_set = proto.HasField("models")
     ros_msg.status.value = proto.status
 
 def convert_bosdyn_msgs_list_available_models_response_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
-    del proto.available_models[:]
-    for _item in ros_msg.available_models:
-        proto.available_models.add(_item)
-    del proto.labels[:]
-    for _item in ros_msg.labels:
-        convert_bosdyn_msgs_model_labels_to_proto(_item, proto.labels.add())
+    if ros_msg.models_is_set:
+        convert_bosdyn_msgs_available_models_to_proto(ros_msg.models, proto.models)
     proto.status = ros_msg.status.value
+
+def convert_proto_to_bosdyn_msgs_available_models(proto, ros_msg):
+    from bosdyn_msgs.msg import ModelData
+    ros_msg.data = []
+    for _item in proto.data:
+        ros_msg.data.append(ModelData())
+        convert_proto_to_bosdyn_msgs_model_data(_item, ros_msg.data[-1])
+
+def convert_bosdyn_msgs_available_models_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.data[:]
+    for _item in ros_msg.data:
+        convert_bosdyn_msgs_model_data_to_proto(_item, proto.data.add())
+
+def convert_proto_to_bosdyn_msgs_model_data(proto, ros_msg):
+    ros_msg.model_name = proto.model_name
+    ros_msg.available_labels = []
+    for _item in proto.available_labels:
+        ros_msg.available_labels.append(_item)
+    convert_proto_to_bosdyn_msgs_dict_param_spec(proto.custom_params, ros_msg.custom_params)
+    ros_msg.custom_params_is_set = proto.HasField("custom_params")
+
+def convert_bosdyn_msgs_model_data_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.model_name = ros_msg.model_name
+    del proto.available_labels[:]
+    for _item in ros_msg.available_labels:
+        proto.available_labels.add(_item)
+    if ros_msg.custom_params_is_set:
+        convert_bosdyn_msgs_dict_param_spec_to_proto(ros_msg.custom_params, proto.custom_params)
 
 def convert_proto_to_bosdyn_msgs_model_labels(proto, ros_msg):
     ros_msg.model_name = proto.model_name
@@ -814,6 +963,23 @@ def convert_bosdyn_msgs_image_source_and_service_to_proto(ros_msg, proto):
     convert_bosdyn_msgs_image_source_and_service_one_of_request_data_to_proto(ros_msg.request_data, proto)
     proto.image_service = ros_msg.image_service
 
+def convert_proto_to_bosdyn_msgs_output_data(proto, ros_msg):
+    from bosdyn_msgs.msg import WorldObject
+    ros_msg.object_in_image = []
+    for _item in proto.object_in_image:
+        ros_msg.object_in_image.append(WorldObject())
+        convert_proto_to_bosdyn_msgs_world_object(_item, ros_msg.object_in_image[-1])
+    convert_proto_to_bosdyn_msgs_alert_data(proto.alert_data, ros_msg.alert_data)
+    ros_msg.alert_data_is_set = proto.HasField("alert_data")
+
+def convert_bosdyn_msgs_output_data_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.object_in_image[:]
+    for _item in ros_msg.object_in_image:
+        convert_bosdyn_msgs_world_object_to_proto(_item, proto.object_in_image.add())
+    if ros_msg.alert_data_is_set:
+        convert_bosdyn_msgs_alert_data_to_proto(ros_msg.alert_data, proto.alert_data)
+
 def convert_proto_to_bosdyn_msgs_network_compute_input_data_one_of_input(proto, ros_msg):
     if proto.HasField("image_source_and_service"):
         ros_msg.input_choice = ros_msg.INPUT_IMAGE_SOURCE_AND_SERVICE_SET
@@ -834,6 +1000,13 @@ def convert_proto_to_bosdyn_msgs_network_compute_input_data(proto, ros_msg):
     ros_msg.model_name = proto.model_name
     ros_msg.min_confidence = proto.min_confidence
     ros_msg.rotate_image.value = proto.rotate_image
+    from bosdyn_msgs.msg import Image
+    ros_msg.reference_images = []
+    for _item in proto.reference_images:
+        ros_msg.reference_images.append(Image())
+        convert_proto_to_bosdyn_msgs_image(_item, ros_msg.reference_images[-1])
+    convert_proto_to_bosdyn_msgs_dict_param(proto.custom_params, ros_msg.custom_params)
+    ros_msg.custom_params_is_set = proto.HasField("custom_params")
 
 def convert_bosdyn_msgs_network_compute_input_data_to_proto(ros_msg, proto):
     proto.Clear()
@@ -841,6 +1014,11 @@ def convert_bosdyn_msgs_network_compute_input_data_to_proto(ros_msg, proto):
     proto.model_name = ros_msg.model_name
     proto.min_confidence = ros_msg.min_confidence
     proto.rotate_image = ros_msg.rotate_image.value
+    del proto.reference_images[:]
+    for _item in ros_msg.reference_images:
+        convert_bosdyn_msgs_image_to_proto(_item, proto.reference_images.add())
+    if ros_msg.custom_params_is_set:
+        convert_bosdyn_msgs_dict_param_to_proto(ros_msg.custom_params, proto.custom_params)
 
 def convert_proto_to_bosdyn_msgs_network_compute_server_configuration(proto, ros_msg):
     ros_msg.service_name = proto.service_name
@@ -882,6 +1060,8 @@ def convert_proto_to_bosdyn_msgs_network_compute_response(proto, ros_msg):
     ros_msg.image_response_is_set = proto.HasField("image_response")
     ros_msg.image_rotation_angle = proto.image_rotation_angle
     ros_msg.status.value = proto.status
+    convert_proto_to_bosdyn_msgs_custom_param_error(proto.custom_param_error, ros_msg.custom_param_error)
+    ros_msg.custom_param_error_is_set = proto.HasField("custom_param_error")
     convert_proto_to_bosdyn_msgs_alert_data(proto.alert_data, ros_msg.alert_data)
     ros_msg.alert_data_is_set = proto.HasField("alert_data")
     from bosdyn_msgs.msg import KeyStringValueBosdynMsgsOutputImage
@@ -890,6 +1070,12 @@ def convert_proto_to_bosdyn_msgs_network_compute_response(proto, ros_msg):
         ros_msg.output_images.append(KeyStringValueBosdynMsgsOutputImage())
         ros_msg.output_images[-1].key = _item
         convert_proto_to_bosdyn_msgs_output_image(proto.output_images[_item], ros_msg.output_images[-1].value)
+    from bosdyn_msgs.msg import KeyStringValueBosdynMsgsOutputData
+    ros_msg.roi_output_data = []
+    for _item in proto.roi_output_data:
+        ros_msg.roi_output_data.append(KeyStringValueBosdynMsgsOutputData())
+        ros_msg.roi_output_data[-1].key = _item
+        convert_proto_to_bosdyn_msgs_output_data(proto.roi_output_data[_item], ros_msg.roi_output_data[-1].value)
 
 def convert_bosdyn_msgs_network_compute_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -902,11 +1088,44 @@ def convert_bosdyn_msgs_network_compute_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_image_response_to_proto(ros_msg.image_response, proto.image_response)
     proto.image_rotation_angle = ros_msg.image_rotation_angle
     proto.status = ros_msg.status.value
+    if ros_msg.custom_param_error_is_set:
+        convert_bosdyn_msgs_custom_param_error_to_proto(ros_msg.custom_param_error, proto.custom_param_error)
     if ros_msg.alert_data_is_set:
         convert_bosdyn_msgs_alert_data_to_proto(ros_msg.alert_data, proto.alert_data)
-    del proto.output_images[:]
     for _item in ros_msg.output_images:
-        convert_bosdyn_msgs_output_image_to_proto(ros_msg.output_images[_item], proto.output_images[_item])
+        convert_bosdyn_msgs_output_image_to_proto(_item.value, proto.output_images[_item.key])
+    for _item in ros_msg.roi_output_data:
+        convert_bosdyn_msgs_output_data_to_proto(_item.value, proto.roi_output_data[_item.key])
+
+def convert_proto_to_bosdyn_msgs_rectangle_i(proto, ros_msg):
+    ros_msg.x = proto.x
+    ros_msg.y = proto.y
+    ros_msg.width = proto.width
+    ros_msg.height = proto.height
+
+def convert_bosdyn_msgs_rectangle_i_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.x = ros_msg.x
+    proto.y = ros_msg.y
+    proto.width = ros_msg.width
+    proto.height = ros_msg.height
+
+def convert_proto_to_bosdyn_msgs_area_i_one_of_geometry(proto, ros_msg):
+    if proto.HasField("rectangle"):
+        ros_msg.geometry_choice = ros_msg.GEOMETRY_RECTANGLE_SET
+        convert_proto_to_bosdyn_msgs_rectangle_i(proto.rectangle, ros_msg.rectangle)
+
+def convert_bosdyn_msgs_area_i_one_of_geometry_to_proto(ros_msg, proto):
+    proto.ClearField("geometry")
+    if ros_msg.geometry_choice == ros_msg.GEOMETRY_RECTANGLE_SET:
+        convert_bosdyn_msgs_rectangle_i_to_proto(ros_msg.rectangle, proto.rectangle)
+
+def convert_proto_to_bosdyn_msgs_area_i(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_area_i_one_of_geometry(proto, ros_msg.geometry)
+
+def convert_bosdyn_msgs_area_i_to_proto(ros_msg, proto):
+    proto.Clear()
+    convert_bosdyn_msgs_area_i_one_of_geometry_to_proto(ros_msg.geometry, proto)
 
 def convert_proto_to_bosdyn_msgs_raycast_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -1037,11 +1256,13 @@ def convert_bosdyn_msgs_store_image_request_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_store_image_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
+    ros_msg.id = proto.id
 
 def convert_bosdyn_msgs_store_image_response_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    proto.id = ros_msg.id
 
 def convert_proto_to_bosdyn_msgs_store_metadata_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -1063,11 +1284,13 @@ def convert_bosdyn_msgs_store_metadata_request_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_store_metadata_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
+    ros_msg.id = proto.id
 
 def convert_bosdyn_msgs_store_metadata_response_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    proto.id = ros_msg.id
 
 def convert_proto_to_bosdyn_msgs_store_alert_data_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -1089,11 +1312,13 @@ def convert_bosdyn_msgs_store_alert_data_request_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_store_alert_data_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
+    ros_msg.id = proto.id
 
 def convert_bosdyn_msgs_store_alert_data_response_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    proto.id = ros_msg.id
 
 def convert_proto_to_bosdyn_msgs_store_data_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -1115,11 +1340,13 @@ def convert_bosdyn_msgs_store_data_request_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_store_data_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
+    ros_msg.id = proto.id
 
 def convert_bosdyn_msgs_store_data_response_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    proto.id = ros_msg.id
 
 def convert_proto_to_bosdyn_msgs_list_capture_actions_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -1525,9 +1752,8 @@ def convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto, ros_msg):
 
 def convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg, proto):
     proto.Clear()
-    del proto.child_to_parent_edge_map[:]
     for _item in ros_msg.child_to_parent_edge_map:
-        convert_bosdyn_msgs_frame_tree_snapshot_parent_edge_to_proto(ros_msg.child_to_parent_edge_map[_item], proto.child_to_parent_edge_map[_item])
+        convert_bosdyn_msgs_frame_tree_snapshot_parent_edge_to_proto(_item.value, proto.child_to_parent_edge_map[_item.key])
 
 def convert_proto_to_bosdyn_msgs_box2(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_vec2(proto.size, ros_msg.size)
@@ -2295,9 +2521,8 @@ def convert_proto_to_bosdyn_msgs_stance(proto, ros_msg):
 def convert_bosdyn_msgs_stance_to_proto(ros_msg, proto):
     proto.Clear()
     proto.se2_frame_name = ros_msg.se2_frame_name
-    del proto.foot_positions[:]
     for _item in ros_msg.foot_positions:
-        convert_bosdyn_msgs_vec2_to_proto(ros_msg.foot_positions[_item], proto.foot_positions[_item])
+        convert_bosdyn_msgs_vec2_to_proto(_item.value, proto.foot_positions[_item.key])
     proto.accuracy = ros_msg.accuracy
 
 def convert_proto_to_bosdyn_msgs_follow_arm_command_request(proto, ros_msg):
@@ -2343,6 +2568,21 @@ def convert_bosdyn_msgs_constrained_manipulation_command_request_one_of_task_spe
     if ros_msg.task_speed_choice == ros_msg.TASK_SPEED_ROTATIONAL_SPEED_SET:
         proto.rotational_speed = ros_msg.rotational_speed
 
+def convert_proto_to_bosdyn_msgs_constrained_manipulation_command_request_one_of_task_target_position(proto, ros_msg):
+    if proto.HasField("target_linear_position"):
+        ros_msg.task_target_position_choice = ros_msg.TASK_TARGET_POSITION_TARGET_LINEAR_POSITION_SET
+        ros_msg.target_linear_position = proto.target_linear_position
+    if proto.HasField("target_angle"):
+        ros_msg.task_target_position_choice = ros_msg.TASK_TARGET_POSITION_TARGET_ANGLE_SET
+        ros_msg.target_angle = proto.target_angle
+
+def convert_bosdyn_msgs_constrained_manipulation_command_request_one_of_task_target_position_to_proto(ros_msg, proto):
+    proto.ClearField("task_target_position")
+    if ros_msg.task_target_position_choice == ros_msg.TASK_TARGET_POSITION_TARGET_LINEAR_POSITION_SET:
+        proto.target_linear_position = ros_msg.target_linear_position
+    if ros_msg.task_target_position_choice == ros_msg.TASK_TARGET_POSITION_TARGET_ANGLE_SET:
+        proto.target_angle = ros_msg.target_angle
+
 def convert_proto_to_bosdyn_msgs_constrained_manipulation_command_request(proto, ros_msg):
     ros_msg.frame_name = proto.frame_name
     convert_proto_to_geometry_msgs_wrench(proto.init_wrench_direction_in_frame_name, ros_msg.init_wrench_direction_in_frame_name)
@@ -2357,6 +2597,12 @@ def convert_proto_to_bosdyn_msgs_constrained_manipulation_command_request(proto,
     ros_msg.end_time_is_set = proto.HasField("end_time")
     ros_msg.enable_robot_locomotion = proto.enable_robot_locomotion.value
     ros_msg.enable_robot_locomotion_is_set = proto.HasField("enable_robot_locomotion")
+    ros_msg.control_mode.value = proto.control_mode
+    convert_proto_to_bosdyn_msgs_constrained_manipulation_command_request_one_of_task_target_position(proto, ros_msg.task_target_position)
+    ros_msg.accel_limit = proto.accel_limit.value
+    ros_msg.accel_limit_is_set = proto.HasField("accel_limit")
+    ros_msg.reset_estimator = proto.reset_estimator.value
+    ros_msg.reset_estimator_is_set = proto.HasField("reset_estimator")
 
 def convert_bosdyn_msgs_constrained_manipulation_command_request_to_proto(ros_msg, proto):
     proto.Clear()
@@ -2373,17 +2619,27 @@ def convert_bosdyn_msgs_constrained_manipulation_command_request_to_proto(ros_ms
         convert_builtin_interfaces_time_to_proto(ros_msg.end_time, proto.end_time)
     if ros_msg.enable_robot_locomotion_is_set:
         convert_bool_to_proto(ros_msg.enable_robot_locomotion, proto.enable_robot_locomotion)
+    proto.control_mode = ros_msg.control_mode.value
+    convert_bosdyn_msgs_constrained_manipulation_command_request_one_of_task_target_position_to_proto(ros_msg.task_target_position, proto)
+    if ros_msg.accel_limit_is_set:
+        convert_float64_to_proto(ros_msg.accel_limit, proto.accel_limit)
+    if ros_msg.reset_estimator_is_set:
+        convert_bool_to_proto(ros_msg.reset_estimator, proto.reset_estimator)
 
 def convert_proto_to_bosdyn_msgs_constrained_manipulation_command_feedback(proto, ros_msg):
     ros_msg.status.value = proto.status
     convert_proto_to_geometry_msgs_wrench(proto.desired_wrench_odom_frame, ros_msg.desired_wrench_odom_frame)
     ros_msg.desired_wrench_odom_frame_is_set = proto.HasField("desired_wrench_odom_frame")
+    ros_msg.estimation_activated = proto.estimation_activated.value
+    ros_msg.estimation_activated_is_set = proto.HasField("estimation_activated")
 
 def convert_bosdyn_msgs_constrained_manipulation_command_feedback_to_proto(ros_msg, proto):
     proto.Clear()
     proto.status = ros_msg.status.value
     if ros_msg.desired_wrench_odom_frame_is_set:
         convert_geometry_msgs_wrench_to_proto(ros_msg.desired_wrench_odom_frame, proto.desired_wrench_odom_frame)
+    if ros_msg.estimation_activated_is_set:
+        convert_bool_to_proto(ros_msg.estimation_activated, proto.estimation_activated)
 
 def convert_bosdyn_msgs_constrained_manipulation_command_to_proto(ros_msg, proto):
     proto.Clear()
@@ -2635,9 +2891,8 @@ def convert_bosdyn_msgs_system_fault_state_to_proto(ros_msg, proto):
     del proto.historical_faults[:]
     for _item in ros_msg.historical_faults:
         convert_bosdyn_msgs_system_fault_to_proto(_item, proto.historical_faults.add())
-    del proto.aggregated[:]
     for _item in ros_msg.aggregated:
-        convert_bosdyn_msgs_system_fault_severity_to_proto(ros_msg.aggregated[_item], proto.aggregated[_item])
+        convert_bosdyn_msgs_system_fault_severity_to_proto(_item.value, proto.aggregated[_item.key])
 
 def convert_proto_to_bosdyn_msgs_system_fault(proto, ros_msg):
     ros_msg.name = proto.name
@@ -2934,9 +3189,8 @@ def convert_bosdyn_msgs_service_fault_state_to_proto(ros_msg, proto):
     del proto.historical_faults[:]
     for _item in ros_msg.historical_faults:
         convert_bosdyn_msgs_service_fault_to_proto(_item, proto.historical_faults.add())
-    del proto.aggregated[:]
     for _item in ros_msg.aggregated:
-        convert_bosdyn_msgs_service_fault_severity_to_proto(ros_msg.aggregated[_item], proto.aggregated[_item])
+        convert_bosdyn_msgs_service_fault_severity_to_proto(_item.value, proto.aggregated[_item.key])
 
 def convert_proto_to_bosdyn_msgs_terrain_state(proto, ros_msg):
     ros_msg.is_unsafe_to_sit = proto.is_unsafe_to_sit
@@ -3938,12 +4192,16 @@ def convert_proto_to_bosdyn_msgs_capture_parameters(proto, ros_msg):
     convert_proto_to_builtin_interfaces_duration(proto.exposure_duration, ros_msg.exposure_duration)
     ros_msg.exposure_duration_is_set = proto.HasField("exposure_duration")
     ros_msg.gain = proto.gain
+    convert_proto_to_bosdyn_msgs_dict_param(proto.custom_params, ros_msg.custom_params)
+    ros_msg.custom_params_is_set = proto.HasField("custom_params")
 
 def convert_bosdyn_msgs_capture_parameters_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.exposure_duration_is_set:
         convert_builtin_interfaces_duration_to_proto(ros_msg.exposure_duration, proto.exposure_duration)
     proto.gain = ros_msg.gain
+    if ros_msg.custom_params_is_set:
+        convert_bosdyn_msgs_dict_param_to_proto(ros_msg.custom_params, proto.custom_params)
 
 def convert_proto_to_bosdyn_msgs_image_capture(proto, ros_msg):
     convert_proto_to_builtin_interfaces_time(proto.acquisition_time, ros_msg.acquisition_time)
@@ -4017,6 +4275,8 @@ def convert_proto_to_bosdyn_msgs_image_source(proto, ros_msg):
     for _item in proto.image_formats:
         ros_msg.image_formats.append(ImageFormat())
         ros_msg.image_formats[-1].value = _item
+    convert_proto_to_bosdyn_msgs_dict_param_spec(proto.custom_params, ros_msg.custom_params)
+    ros_msg.custom_params_is_set = proto.HasField("custom_params")
 
 def convert_bosdyn_msgs_image_source_to_proto(ros_msg, proto):
     proto.Clear()
@@ -4032,6 +4292,8 @@ def convert_bosdyn_msgs_image_source_to_proto(ros_msg, proto):
     del proto.image_formats[:]
     for _item in ros_msg.image_formats:
         proto.image_formats.add(_item.value)
+    if ros_msg.custom_params_is_set:
+        convert_bosdyn_msgs_dict_param_spec_to_proto(ros_msg.custom_params, proto.custom_params)
 
 def convert_proto_to_bosdyn_msgs_list_image_sources_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -4065,6 +4327,8 @@ def convert_proto_to_bosdyn_msgs_image_request(proto, ros_msg):
     ros_msg.image_format.value = proto.image_format
     ros_msg.resize_ratio = proto.resize_ratio
     ros_msg.pixel_format.value = proto.pixel_format
+    convert_proto_to_bosdyn_msgs_dict_param(proto.custom_params, ros_msg.custom_params)
+    ros_msg.custom_params_is_set = proto.HasField("custom_params")
 
 def convert_bosdyn_msgs_image_request_to_proto(ros_msg, proto):
     proto.Clear()
@@ -4073,6 +4337,8 @@ def convert_bosdyn_msgs_image_request_to_proto(ros_msg, proto):
     proto.image_format = ros_msg.image_format.value
     proto.resize_ratio = ros_msg.resize_ratio
     proto.pixel_format = ros_msg.pixel_format.value
+    if ros_msg.custom_params_is_set:
+        convert_bosdyn_msgs_dict_param_to_proto(ros_msg.custom_params, proto.custom_params)
 
 def convert_proto_to_bosdyn_msgs_get_image_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -4097,6 +4363,8 @@ def convert_proto_to_bosdyn_msgs_image_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_image_source(proto.source, ros_msg.source)
     ros_msg.source_is_set = proto.HasField("source")
     ros_msg.status.value = proto.status
+    convert_proto_to_bosdyn_msgs_custom_param_error(proto.custom_param_error, ros_msg.custom_param_error)
+    ros_msg.custom_param_error_is_set = proto.HasField("custom_param_error")
 
 def convert_bosdyn_msgs_image_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -4105,6 +4373,8 @@ def convert_bosdyn_msgs_image_response_to_proto(ros_msg, proto):
     if ros_msg.source_is_set:
         convert_bosdyn_msgs_image_source_to_proto(ros_msg.source, proto.source)
     proto.status = ros_msg.status.value
+    if ros_msg.custom_param_error_is_set:
+        convert_bosdyn_msgs_custom_param_error_to_proto(ros_msg.custom_param_error, proto.custom_param_error)
 
 def convert_proto_to_bosdyn_msgs_get_image_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
@@ -4644,6 +4914,13 @@ def convert_proto_to_bosdyn_msgs_clear_behavior_fault_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_lease_use_result(proto.lease_use_result, ros_msg.lease_use_result)
     ros_msg.lease_use_result_is_set = proto.HasField("lease_use_result")
     ros_msg.status.value = proto.status
+    convert_proto_to_bosdyn_msgs_behavior_fault(proto.behavior_fault, ros_msg.behavior_fault)
+    ros_msg.behavior_fault_is_set = proto.HasField("behavior_fault")
+    from bosdyn_msgs.msg import SystemFault
+    ros_msg.blocking_system_faults = []
+    for _item in proto.blocking_system_faults:
+        ros_msg.blocking_system_faults.append(SystemFault())
+        convert_proto_to_bosdyn_msgs_system_fault(_item, ros_msg.blocking_system_faults[-1])
 
 def convert_bosdyn_msgs_clear_behavior_fault_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -4652,6 +4929,11 @@ def convert_bosdyn_msgs_clear_behavior_fault_response_to_proto(ros_msg, proto):
     if ros_msg.lease_use_result_is_set:
         convert_bosdyn_msgs_lease_use_result_to_proto(ros_msg.lease_use_result, proto.lease_use_result)
     proto.status = ros_msg.status.value
+    if ros_msg.behavior_fault_is_set:
+        convert_bosdyn_msgs_behavior_fault_to_proto(ros_msg.behavior_fault, proto.behavior_fault)
+    del proto.blocking_system_faults[:]
+    for _item in ros_msg.blocking_system_faults:
+        convert_bosdyn_msgs_system_fault_to_proto(_item, proto.blocking_system_faults.add())
 
 def convert_proto_to_bosdyn_msgs_gripper_camera_param_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -4766,6 +5048,33 @@ def convert_bosdyn_msgs_roi_parameters_to_proto(ros_msg, proto):
     if ros_msg.roi_percentage_in_image_is_set:
         convert_bosdyn_msgs_vec2_to_proto(ros_msg.roi_percentage_in_image, proto.roi_percentage_in_image)
     proto.window_size = ros_msg.window_size.value
+
+def convert_proto_to_bosdyn_msgs_units_one_of_units(proto, ros_msg):
+    if proto.HasField("name"):
+        ros_msg.units_choice = ros_msg.UNITS_NAME_SET
+        ros_msg.name = proto.name
+    if proto.HasField("temp"):
+        ros_msg.units_choice = ros_msg.UNITS_TEMP_SET
+        ros_msg.temp.value = proto.temp
+    if proto.HasField("press"):
+        ros_msg.units_choice = ros_msg.UNITS_PRESS_SET
+        ros_msg.press.value = proto.press
+
+def convert_bosdyn_msgs_units_one_of_units_to_proto(ros_msg, proto):
+    proto.ClearField("units")
+    if ros_msg.units_choice == ros_msg.UNITS_NAME_SET:
+        proto.name = ros_msg.name
+    if ros_msg.units_choice == ros_msg.UNITS_TEMP_SET:
+        proto.temp = ros_msg.temp.value
+    if ros_msg.units_choice == ros_msg.UNITS_PRESS_SET:
+        proto.press = ros_msg.press.value
+
+def convert_proto_to_bosdyn_msgs_units(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_units_one_of_units(proto, ros_msg.units)
+
+def convert_bosdyn_msgs_units_to_proto(ros_msg, proto):
+    proto.Clear()
+    convert_bosdyn_msgs_units_one_of_units_to_proto(ros_msg.units, proto)
 
 def convert_proto_to_bosdyn_msgs_add_log_annotation_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -6202,18 +6511,18 @@ def convert_bosdyn_msgs_lease_to_proto(ros_msg, proto):
 
 def convert_proto_to_bosdyn_msgs_resource_tree(proto, ros_msg):
     ros_msg.resource = proto.resource
-    from bosdyn_msgs.msg import ResourceTree
+    from bosdyn_msgs.msg import SerializedMessage
     ros_msg.sub_resources = []
     for _item in proto.sub_resources:
-        ros_msg.sub_resources.append(ResourceTree())
-        convert_proto_to_bosdyn_msgs_resource_tree(_item, ros_msg.sub_resources[-1])
+        ros_msg.sub_resources.append(SerializedMessage())
+        convert_proto_to_serialized_bosdyn_msgs_resource_tree(_item, ros_msg.sub_resources[-1])
 
 def convert_bosdyn_msgs_resource_tree_to_proto(ros_msg, proto):
     proto.Clear()
     proto.resource = ros_msg.resource
     del proto.sub_resources[:]
     for _item in ros_msg.sub_resources:
-        convert_bosdyn_msgs_resource_tree_to_proto(_item, proto.sub_resources.add())
+        convert_serialized_bosdyn_msgs_resource_tree_to_proto(_item, proto.sub_resources.add())
 
 def convert_proto_to_bosdyn_msgs_lease_owner(proto, ros_msg):
     ros_msg.client_name = proto.client_name
@@ -6356,8 +6665,7 @@ def convert_proto_to_bosdyn_msgs_lease_resource(proto, ros_msg):
     ros_msg.lease_is_set = proto.HasField("lease")
     convert_proto_to_bosdyn_msgs_lease_owner(proto.lease_owner, ros_msg.lease_owner)
     ros_msg.lease_owner_is_set = proto.HasField("lease_owner")
-    convert_proto_to_builtin_interfaces_time(proto.stale_time, ros_msg.stale_time)
-    ros_msg.stale_time_is_set = proto.HasField("stale_time")
+    ros_msg.is_stale = proto.is_stale
 
 def convert_bosdyn_msgs_lease_resource_to_proto(ros_msg, proto):
     proto.Clear()
@@ -6366,8 +6674,7 @@ def convert_bosdyn_msgs_lease_resource_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_lease_to_proto(ros_msg.lease, proto.lease)
     if ros_msg.lease_owner_is_set:
         convert_bosdyn_msgs_lease_owner_to_proto(ros_msg.lease_owner, proto.lease_owner)
-    if ros_msg.stale_time_is_set:
-        convert_builtin_interfaces_time_to_proto(ros_msg.stale_time, proto.stale_time)
+    proto.is_stale = ros_msg.is_stale
 
 def convert_proto_to_bosdyn_msgs_list_leases_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
@@ -6724,7 +7031,6 @@ def convert_bosdyn_msgs_get_feature_enabled_response_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
-    del proto.feature_enabled[:]
     for _item in ros_msg.feature_enabled:
         proto.feature_enabled[_item.key] = _item.value
 
@@ -7177,6 +7483,8 @@ def convert_proto_to_bosdyn_msgs_data_acquisition_capability(proto, ros_msg):
     ros_msg.description = proto.description
     ros_msg.channel_name = proto.channel_name
     ros_msg.service_name = proto.service_name
+    convert_proto_to_bosdyn_msgs_dict_param_spec(proto.custom_params, ros_msg.custom_params)
+    ros_msg.custom_params_is_set = proto.HasField("custom_params")
 
 def convert_bosdyn_msgs_data_acquisition_capability_to_proto(ros_msg, proto):
     proto.Clear()
@@ -7184,6 +7492,8 @@ def convert_bosdyn_msgs_data_acquisition_capability_to_proto(ros_msg, proto):
     proto.description = ros_msg.description
     proto.channel_name = ros_msg.channel_name
     proto.service_name = ros_msg.service_name
+    if ros_msg.custom_params_is_set:
+        convert_bosdyn_msgs_dict_param_spec_to_proto(ros_msg.custom_params, proto.custom_params)
 
 def convert_proto_to_bosdyn_msgs_image_acquisition_capability(proto, ros_msg):
     ros_msg.service_name = proto.service_name
@@ -7209,25 +7519,15 @@ def convert_bosdyn_msgs_image_acquisition_capability_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_network_compute_capability(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_network_compute_server_configuration(proto.server_config, ros_msg.server_config)
     ros_msg.server_config_is_set = proto.HasField("server_config")
-    ros_msg.available_models = []
-    for _item in proto.available_models:
-        ros_msg.available_models.append(_item)
-    from bosdyn_msgs.msg import ModelLabels
-    ros_msg.labels = []
-    for _item in proto.labels:
-        ros_msg.labels.append(ModelLabels())
-        convert_proto_to_bosdyn_msgs_model_labels(_item, ros_msg.labels[-1])
+    convert_proto_to_bosdyn_msgs_available_models(proto.models, ros_msg.models)
+    ros_msg.models_is_set = proto.HasField("models")
 
 def convert_bosdyn_msgs_network_compute_capability_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.server_config_is_set:
         convert_bosdyn_msgs_network_compute_server_configuration_to_proto(ros_msg.server_config, proto.server_config)
-    del proto.available_models[:]
-    for _item in ros_msg.available_models:
-        proto.available_models.add(_item)
-    del proto.labels[:]
-    for _item in ros_msg.labels:
-        convert_bosdyn_msgs_model_labels_to_proto(_item, proto.labels.add())
+    if ros_msg.models_is_set:
+        convert_bosdyn_msgs_available_models_to_proto(ros_msg.models, proto.models)
 
 def convert_proto_to_bosdyn_msgs_acquisition_capability_list(proto, ros_msg):
     from bosdyn_msgs.msg import DataAcquisitionCapability
@@ -7276,6 +7576,7 @@ def convert_proto_to_bosdyn_msgs_data_identifier(proto, ros_msg):
     ros_msg.action_id_is_set = proto.HasField("action_id")
     ros_msg.channel = proto.channel
     ros_msg.data_name = proto.data_name
+    ros_msg.id = proto.id
 
 def convert_bosdyn_msgs_data_identifier_to_proto(ros_msg, proto):
     proto.Clear()
@@ -7283,6 +7584,7 @@ def convert_bosdyn_msgs_data_identifier_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_capture_action_id_to_proto(ros_msg.action_id, proto.action_id)
     proto.channel = ros_msg.channel
     proto.data_name = ros_msg.data_name
+    proto.id = ros_msg.id
 
 def convert_bosdyn_msgs_metadata_to_proto(ros_msg, proto):
     proto.Clear()
@@ -7326,10 +7628,14 @@ def convert_bosdyn_msgs_image_source_capture_to_proto(ros_msg, proto):
 
 def convert_proto_to_bosdyn_msgs_data_capture(proto, ros_msg):
     ros_msg.name = proto.name
+    convert_proto_to_bosdyn_msgs_dict_param(proto.custom_params, ros_msg.custom_params)
+    ros_msg.custom_params_is_set = proto.HasField("custom_params")
 
 def convert_bosdyn_msgs_data_capture_to_proto(ros_msg, proto):
     proto.Clear()
     proto.name = ros_msg.name
+    if ros_msg.custom_params_is_set:
+        convert_bosdyn_msgs_dict_param_to_proto(ros_msg.custom_params, proto.custom_params)
 
 def convert_proto_to_bosdyn_msgs_network_compute_capture(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_network_compute_input_data(proto.input_data, ros_msg.input_data)
@@ -7482,6 +7788,8 @@ def convert_proto_to_bosdyn_msgs_acquire_plugin_data_response(proto, ros_msg):
     ros_msg.request_id = proto.request_id
     convert_proto_to_builtin_interfaces_time(proto.timeout_deadline, ros_msg.timeout_deadline)
     ros_msg.timeout_deadline_is_set = proto.HasField("timeout_deadline")
+    convert_proto_to_bosdyn_msgs_custom_param_error(proto.custom_param_error, ros_msg.custom_param_error)
+    ros_msg.custom_param_error_is_set = proto.HasField("custom_param_error")
 
 def convert_bosdyn_msgs_acquire_plugin_data_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -7491,6 +7799,8 @@ def convert_bosdyn_msgs_acquire_plugin_data_response_to_proto(ros_msg, proto):
     proto.request_id = ros_msg.request_id
     if ros_msg.timeout_deadline_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.timeout_deadline, proto.timeout_deadline)
+    if ros_msg.custom_param_error_is_set:
+        convert_bosdyn_msgs_custom_param_error_to_proto(ros_msg.custom_param_error, proto.custom_param_error)
 
 def convert_proto_to_bosdyn_msgs_get_status_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -7590,6 +7900,331 @@ def convert_bosdyn_msgs_cancel_acquisition_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
     proto.status = ros_msg.status.value
 
+def convert_proto_to_bosdyn_msgs_custom_param_spec_one_of_spec(proto, ros_msg):
+    if proto.HasField("dict_spec"):
+        ros_msg.spec_choice = ros_msg.SPEC_DICT_SPEC_SET
+        convert_proto_to_serialized_bosdyn_msgs_dict_param_spec(proto.dict_spec, ros_msg.dict_spec)
+    if proto.HasField("list_spec"):
+        ros_msg.spec_choice = ros_msg.SPEC_LIST_SPEC_SET
+        convert_proto_to_bosdyn_msgs_list_param_spec(proto.list_spec, ros_msg.list_spec)
+    if proto.HasField("int_spec"):
+        ros_msg.spec_choice = ros_msg.SPEC_INT_SPEC_SET
+        convert_proto_to_bosdyn_msgs_int64_param_spec(proto.int_spec, ros_msg.int_spec)
+    if proto.HasField("double_spec"):
+        ros_msg.spec_choice = ros_msg.SPEC_DOUBLE_SPEC_SET
+        convert_proto_to_bosdyn_msgs_double_param_spec(proto.double_spec, ros_msg.double_spec)
+    if proto.HasField("string_spec"):
+        ros_msg.spec_choice = ros_msg.SPEC_STRING_SPEC_SET
+        convert_proto_to_bosdyn_msgs_string_param_spec(proto.string_spec, ros_msg.string_spec)
+    if proto.HasField("roi_spec"):
+        ros_msg.spec_choice = ros_msg.SPEC_ROI_SPEC_SET
+        convert_proto_to_bosdyn_msgs_region_of_interest_param_spec(proto.roi_spec, ros_msg.roi_spec)
+    if proto.HasField("bool_spec"):
+        ros_msg.spec_choice = ros_msg.SPEC_BOOL_SPEC_SET
+        convert_proto_to_bosdyn_msgs_bool_param_spec(proto.bool_spec, ros_msg.bool_spec)
+
+def convert_bosdyn_msgs_custom_param_spec_one_of_spec_to_proto(ros_msg, proto):
+    proto.ClearField("spec")
+    if ros_msg.spec_choice == ros_msg.SPEC_DICT_SPEC_SET:
+        convert_serialized_bosdyn_msgs_dict_param_spec_to_proto(ros_msg.dict_spec, proto.dict_spec)
+    if ros_msg.spec_choice == ros_msg.SPEC_LIST_SPEC_SET:
+        convert_bosdyn_msgs_list_param_spec_to_proto(ros_msg.list_spec, proto.list_spec)
+    if ros_msg.spec_choice == ros_msg.SPEC_INT_SPEC_SET:
+        convert_bosdyn_msgs_int64_param_spec_to_proto(ros_msg.int_spec, proto.int_spec)
+    if ros_msg.spec_choice == ros_msg.SPEC_DOUBLE_SPEC_SET:
+        convert_bosdyn_msgs_double_param_spec_to_proto(ros_msg.double_spec, proto.double_spec)
+    if ros_msg.spec_choice == ros_msg.SPEC_STRING_SPEC_SET:
+        convert_bosdyn_msgs_string_param_spec_to_proto(ros_msg.string_spec, proto.string_spec)
+    if ros_msg.spec_choice == ros_msg.SPEC_ROI_SPEC_SET:
+        convert_bosdyn_msgs_region_of_interest_param_spec_to_proto(ros_msg.roi_spec, proto.roi_spec)
+    if ros_msg.spec_choice == ros_msg.SPEC_BOOL_SPEC_SET:
+        convert_bosdyn_msgs_bool_param_spec_to_proto(ros_msg.bool_spec, proto.bool_spec)
+
+def convert_proto_to_bosdyn_msgs_custom_param_spec(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_custom_param_spec_one_of_spec(proto, ros_msg.spec)
+    ros_msg.required = proto.required
+    ros_msg.display_name = proto.display_name
+    ros_msg.display_order = proto.display_order
+
+def convert_bosdyn_msgs_custom_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    convert_bosdyn_msgs_custom_param_spec_one_of_spec_to_proto(ros_msg.spec, proto)
+    proto.required = ros_msg.required
+    proto.display_name = ros_msg.display_name
+    proto.display_order = ros_msg.display_order
+
+def convert_proto_to_bosdyn_msgs_custom_param_one_of_value(proto, ros_msg):
+    if proto.HasField("dict_value"):
+        ros_msg.value_choice = ros_msg.VALUE_DICT_VALUE_SET
+        convert_proto_to_serialized_bosdyn_msgs_dict_param(proto.dict_value, ros_msg.dict_value)
+    if proto.HasField("list_value"):
+        ros_msg.value_choice = ros_msg.VALUE_LIST_VALUE_SET
+        convert_proto_to_bosdyn_msgs_list_param(proto.list_value, ros_msg.list_value)
+    if proto.HasField("int_value"):
+        ros_msg.value_choice = ros_msg.VALUE_INT_VALUE_SET
+        convert_proto_to_bosdyn_msgs_int64_param(proto.int_value, ros_msg.int_value)
+    if proto.HasField("double_value"):
+        ros_msg.value_choice = ros_msg.VALUE_DOUBLE_VALUE_SET
+        convert_proto_to_bosdyn_msgs_double_param(proto.double_value, ros_msg.double_value)
+    if proto.HasField("string_value"):
+        ros_msg.value_choice = ros_msg.VALUE_STRING_VALUE_SET
+        convert_proto_to_bosdyn_msgs_string_param(proto.string_value, ros_msg.string_value)
+    if proto.HasField("roi_value"):
+        ros_msg.value_choice = ros_msg.VALUE_ROI_VALUE_SET
+        convert_proto_to_bosdyn_msgs_region_of_interest_param(proto.roi_value, ros_msg.roi_value)
+    if proto.HasField("bool_value"):
+        ros_msg.value_choice = ros_msg.VALUE_BOOL_VALUE_SET
+        convert_proto_to_bosdyn_msgs_bool_param(proto.bool_value, ros_msg.bool_value)
+
+def convert_bosdyn_msgs_custom_param_one_of_value_to_proto(ros_msg, proto):
+    proto.ClearField("value")
+    if ros_msg.value_choice == ros_msg.VALUE_DICT_VALUE_SET:
+        convert_serialized_bosdyn_msgs_dict_param_to_proto(ros_msg.dict_value, proto.dict_value)
+    if ros_msg.value_choice == ros_msg.VALUE_LIST_VALUE_SET:
+        convert_bosdyn_msgs_list_param_to_proto(ros_msg.list_value, proto.list_value)
+    if ros_msg.value_choice == ros_msg.VALUE_INT_VALUE_SET:
+        convert_bosdyn_msgs_int64_param_to_proto(ros_msg.int_value, proto.int_value)
+    if ros_msg.value_choice == ros_msg.VALUE_DOUBLE_VALUE_SET:
+        convert_bosdyn_msgs_double_param_to_proto(ros_msg.double_value, proto.double_value)
+    if ros_msg.value_choice == ros_msg.VALUE_STRING_VALUE_SET:
+        convert_bosdyn_msgs_string_param_to_proto(ros_msg.string_value, proto.string_value)
+    if ros_msg.value_choice == ros_msg.VALUE_ROI_VALUE_SET:
+        convert_bosdyn_msgs_region_of_interest_param_to_proto(ros_msg.roi_value, proto.roi_value)
+    if ros_msg.value_choice == ros_msg.VALUE_BOOL_VALUE_SET:
+        convert_bosdyn_msgs_bool_param_to_proto(ros_msg.bool_value, proto.bool_value)
+
+def convert_proto_to_bosdyn_msgs_custom_param(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_custom_param_one_of_value(proto, ros_msg.value)
+
+def convert_bosdyn_msgs_custom_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    convert_bosdyn_msgs_custom_param_one_of_value_to_proto(ros_msg.value, proto)
+
+def convert_proto_to_bosdyn_msgs_custom_param_collection(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_dict_param_spec(proto.specs, ros_msg.specs)
+    ros_msg.specs_is_set = proto.HasField("specs")
+    convert_proto_to_bosdyn_msgs_dict_param(proto.values, ros_msg.values)
+    ros_msg.values_is_set = proto.HasField("values")
+
+def convert_bosdyn_msgs_custom_param_collection_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.specs_is_set:
+        convert_bosdyn_msgs_dict_param_spec_to_proto(ros_msg.specs, proto.specs)
+    if ros_msg.values_is_set:
+        convert_bosdyn_msgs_dict_param_to_proto(ros_msg.values, proto.values)
+
+def convert_proto_to_bosdyn_msgs_dict_param_spec(proto, ros_msg):
+    from bosdyn_msgs.msg import KeyStringValueBosdynMsgsCustomParamSpec
+    ros_msg.specs = []
+    for _item in proto.specs:
+        ros_msg.specs.append(KeyStringValueBosdynMsgsCustomParamSpec())
+        ros_msg.specs[-1].key = _item
+        convert_proto_to_bosdyn_msgs_custom_param_spec(proto.specs[_item], ros_msg.specs[-1].value)
+
+def convert_bosdyn_msgs_dict_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    for _item in ros_msg.specs:
+        convert_bosdyn_msgs_custom_param_spec_to_proto(_item.value, proto.specs[_item.key])
+
+def convert_proto_to_bosdyn_msgs_dict_param(proto, ros_msg):
+    from bosdyn_msgs.msg import KeyStringValueBosdynMsgsCustomParam
+    ros_msg.values = []
+    for _item in proto.values:
+        ros_msg.values.append(KeyStringValueBosdynMsgsCustomParam())
+        ros_msg.values[-1].key = _item
+        convert_proto_to_bosdyn_msgs_custom_param(proto.values[_item], ros_msg.values[-1].value)
+
+def convert_bosdyn_msgs_dict_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    for _item in ros_msg.values:
+        convert_bosdyn_msgs_custom_param_to_proto(_item.value, proto.values[_item.key])
+
+def convert_proto_to_bosdyn_msgs_list_param_spec(proto, ros_msg):
+    convert_proto_to_serialized_bosdyn_msgs_custom_param_spec(proto.element_spec, ros_msg.element_spec)
+    ros_msg.element_spec_is_set = proto.HasField("element_spec")
+    convert_proto_to_bosdyn_msgs_int64_param_min_max(proto.number_of_values, ros_msg.number_of_values)
+    ros_msg.number_of_values_is_set = proto.HasField("number_of_values")
+
+def convert_bosdyn_msgs_list_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.element_spec_is_set:
+        convert_serialized_bosdyn_msgs_custom_param_spec_to_proto(ros_msg.element_spec, proto.element_spec)
+    if ros_msg.number_of_values_is_set:
+        convert_bosdyn_msgs_int64_param_min_max_to_proto(ros_msg.number_of_values, proto.number_of_values)
+
+def convert_proto_to_bosdyn_msgs_list_param(proto, ros_msg):
+    from bosdyn_msgs.msg import SerializedMessage
+    ros_msg.values = []
+    for _item in proto.values:
+        ros_msg.values.append(SerializedMessage())
+        convert_proto_to_serialized_bosdyn_msgs_custom_param(_item, ros_msg.values[-1])
+
+def convert_bosdyn_msgs_list_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.values[:]
+    for _item in ros_msg.values:
+        convert_serialized_bosdyn_msgs_custom_param_to_proto(_item, proto.values.add())
+
+def convert_proto_to_bosdyn_msgs_int64_param_min_max(proto, ros_msg):
+    ros_msg.min_value = proto.min_value.value
+    ros_msg.min_value_is_set = proto.HasField("min_value")
+    ros_msg.max_value = proto.max_value.value
+    ros_msg.max_value_is_set = proto.HasField("max_value")
+
+def convert_bosdyn_msgs_int64_param_min_max_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.min_value_is_set:
+        convert_int64_to_proto(ros_msg.min_value, proto.min_value)
+    if ros_msg.max_value_is_set:
+        convert_int64_to_proto(ros_msg.max_value, proto.max_value)
+
+def convert_proto_to_bosdyn_msgs_int64_param_spec(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_int64_param_min_max(proto.min_max, ros_msg.min_max)
+    ros_msg.min_max_is_set = proto.HasField("min_max")
+    ros_msg.default_value = proto.default_value.value
+    ros_msg.default_value_is_set = proto.HasField("default_value")
+    convert_proto_to_bosdyn_msgs_units(proto.units, ros_msg.units)
+    ros_msg.units_is_set = proto.HasField("units")
+
+def convert_bosdyn_msgs_int64_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.min_max_is_set:
+        convert_bosdyn_msgs_int64_param_min_max_to_proto(ros_msg.min_max, proto.min_max)
+    if ros_msg.default_value_is_set:
+        convert_int64_to_proto(ros_msg.default_value, proto.default_value)
+    if ros_msg.units_is_set:
+        convert_bosdyn_msgs_units_to_proto(ros_msg.units, proto.units)
+
+def convert_proto_to_bosdyn_msgs_int64_param(proto, ros_msg):
+    ros_msg.value = proto.value
+
+def convert_bosdyn_msgs_int64_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.value = ros_msg.value
+
+def convert_proto_to_bosdyn_msgs_double_param_min_max(proto, ros_msg):
+    ros_msg.min_value = proto.min_value.value
+    ros_msg.min_value_is_set = proto.HasField("min_value")
+    ros_msg.max_value = proto.max_value.value
+    ros_msg.max_value_is_set = proto.HasField("max_value")
+
+def convert_bosdyn_msgs_double_param_min_max_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.min_value_is_set:
+        convert_float64_to_proto(ros_msg.min_value, proto.min_value)
+    if ros_msg.max_value_is_set:
+        convert_float64_to_proto(ros_msg.max_value, proto.max_value)
+
+def convert_proto_to_bosdyn_msgs_double_param_spec(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_double_param_min_max(proto.min_max, ros_msg.min_max)
+    ros_msg.min_max_is_set = proto.HasField("min_max")
+    ros_msg.default_value = proto.default_value.value
+    ros_msg.default_value_is_set = proto.HasField("default_value")
+    convert_proto_to_bosdyn_msgs_units(proto.units, ros_msg.units)
+    ros_msg.units_is_set = proto.HasField("units")
+
+def convert_bosdyn_msgs_double_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.min_max_is_set:
+        convert_bosdyn_msgs_double_param_min_max_to_proto(ros_msg.min_max, proto.min_max)
+    if ros_msg.default_value_is_set:
+        convert_float64_to_proto(ros_msg.default_value, proto.default_value)
+    if ros_msg.units_is_set:
+        convert_bosdyn_msgs_units_to_proto(ros_msg.units, proto.units)
+
+def convert_proto_to_bosdyn_msgs_double_param(proto, ros_msg):
+    ros_msg.value = proto.value
+
+def convert_bosdyn_msgs_double_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.value = ros_msg.value
+
+def convert_proto_to_bosdyn_msgs_string_param_spec(proto, ros_msg):
+    ros_msg.options = []
+    for _item in proto.options:
+        ros_msg.options.append(_item)
+    ros_msg.editable = proto.editable
+    ros_msg.default_value = proto.default_value
+
+def convert_bosdyn_msgs_string_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.options[:]
+    for _item in ros_msg.options:
+        proto.options.add(_item)
+    proto.editable = ros_msg.editable
+    proto.default_value = ros_msg.default_value
+
+def convert_proto_to_bosdyn_msgs_string_param(proto, ros_msg):
+    ros_msg.value = proto.value
+
+def convert_bosdyn_msgs_string_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.value = ros_msg.value
+
+def convert_proto_to_bosdyn_msgs_bool_param_spec(proto, ros_msg):
+    ros_msg.default_value = proto.default_value.value
+    ros_msg.default_value_is_set = proto.HasField("default_value")
+
+def convert_bosdyn_msgs_bool_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.default_value_is_set:
+        convert_bool_to_proto(ros_msg.default_value, proto.default_value)
+
+def convert_proto_to_bosdyn_msgs_bool_param(proto, ros_msg):
+    ros_msg.value = proto.value
+
+def convert_bosdyn_msgs_bool_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.value = ros_msg.value
+
+def convert_proto_to_bosdyn_msgs_region_of_interest_param_service_and_source(proto, ros_msg):
+    ros_msg.service = proto.service
+    ros_msg.source = proto.source
+
+def convert_bosdyn_msgs_region_of_interest_param_service_and_source_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.service = ros_msg.service
+    proto.source = ros_msg.source
+
+def convert_proto_to_bosdyn_msgs_region_of_interest_param_spec(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_region_of_interest_param_service_and_source(proto.service_and_source, ros_msg.service_and_source)
+    ros_msg.service_and_source_is_set = proto.HasField("service_and_source")
+    convert_proto_to_bosdyn_msgs_area_i(proto.default_area, ros_msg.default_area)
+    ros_msg.default_area_is_set = proto.HasField("default_area")
+    ros_msg.allows_rectangle = proto.allows_rectangle
+
+def convert_bosdyn_msgs_region_of_interest_param_spec_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.service_and_source_is_set:
+        convert_bosdyn_msgs_region_of_interest_param_service_and_source_to_proto(ros_msg.service_and_source, proto.service_and_source)
+    if ros_msg.default_area_is_set:
+        convert_bosdyn_msgs_area_i_to_proto(ros_msg.default_area, proto.default_area)
+    proto.allows_rectangle = ros_msg.allows_rectangle
+
+def convert_proto_to_bosdyn_msgs_region_of_interest_param(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_area_i(proto.area, ros_msg.area)
+    ros_msg.area_is_set = proto.HasField("area")
+
+def convert_bosdyn_msgs_region_of_interest_param_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.area_is_set:
+        convert_bosdyn_msgs_area_i_to_proto(ros_msg.area, proto.area)
+
+def convert_proto_to_bosdyn_msgs_custom_param_error(proto, ros_msg):
+    ros_msg.status.value = proto.status
+    from bosdyn_msgs.msg import KeyStringValueString
+    ros_msg.param_errors = []
+    for _item in proto.param_errors:
+        ros_msg.param_errors.append(KeyStringValueString())
+        ros_msg.param_errors[-1].key = _item
+        ros_msg.param_errors[-1].value = proto.param_errors[_item]
+
+def convert_bosdyn_msgs_custom_param_error_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.status = ros_msg.status.value
+    for _item in ros_msg.param_errors:
+        proto.param_errors[_item.key] = _item.value
+
 def convert_proto_to_bosdyn_msgs_descriptor_block_one_of_descriptor_type(proto, ros_msg):
     if proto.HasField("file_descriptor"):
         ros_msg.descriptor_type_choice = ros_msg.DESCRIPTORTYPE_FILE_DESCRIPTOR_SET
@@ -7655,7 +8290,6 @@ def convert_bosdyn_msgs_file_format_descriptor_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.version_is_set:
         convert_bosdyn_msgs_file_format_version_to_proto(ros_msg.version, proto.version)
-    del proto.annotations[:]
     for _item in ros_msg.annotations:
         proto.annotations[_item.key] = _item.value
     proto.checksum_type = ros_msg.checksum_type.value
@@ -7716,7 +8350,6 @@ def convert_bosdyn_msgs_series_descriptor_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_series_identifier_to_proto(ros_msg.series_identifier, proto.series_identifier)
     proto.identifier_hash = ros_msg.identifier_hash
     convert_bosdyn_msgs_series_descriptor_one_of_data_type_to_proto(ros_msg.data_type, proto)
-    del proto.annotations[:]
     for _item in ros_msg.annotations:
         proto.annotations[_item.key] = _item.value
     del proto.additional_index_names[:]
@@ -7758,7 +8391,6 @@ def convert_proto_to_bosdyn_msgs_struct_type_descriptor(proto, ros_msg):
 
 def convert_bosdyn_msgs_struct_type_descriptor_to_proto(ros_msg, proto):
     proto.Clear()
-    del proto.key_to_series_identifier_hash[:]
     for _item in ros_msg.key_to_series_identifier_hash:
         proto.key_to_series_identifier_hash[_item.key] = _item.value
 
@@ -7835,7 +8467,6 @@ def convert_proto_to_bosdyn_msgs_series_identifier(proto, ros_msg):
 def convert_bosdyn_msgs_series_identifier_to_proto(ros_msg, proto):
     proto.Clear()
     proto.series_type = ros_msg.series_type
-    del proto.spec[:]
     for _item in ros_msg.spec:
         proto.spec[_item.key] = _item.value
 
@@ -7915,20 +8546,38 @@ def convert_bosdyn_msgs_get_configuration_response_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_start_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
+    from bosdyn_msgs.msg import Lease
+    ros_msg.leases = []
+    for _item in proto.leases:
+        ros_msg.leases.append(Lease())
+        convert_proto_to_bosdyn_msgs_lease(_item, ros_msg.leases[-1])
+    convert_proto_to_bosdyn_msgs_params(proto.params, ros_msg.params)
+    ros_msg.params_is_set = proto.HasField("params")
 
 def convert_bosdyn_msgs_start_request_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
+    del proto.leases[:]
+    for _item in ros_msg.leases:
+        convert_bosdyn_msgs_lease_to_proto(_item, proto.leases.add())
+    if ros_msg.params_is_set:
+        convert_bosdyn_msgs_params_to_proto(ros_msg.params, proto.params)
 
 def convert_proto_to_bosdyn_msgs_start_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
+    ros_msg.status.value = proto.status
+    convert_proto_to_bosdyn_msgs_params(proto.invalid_params, ros_msg.invalid_params)
+    ros_msg.invalid_params_is_set = proto.HasField("invalid_params")
 
 def convert_bosdyn_msgs_start_response_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    proto.status = ros_msg.status.value
+    if ros_msg.invalid_params_is_set:
+        convert_bosdyn_msgs_params_to_proto(ros_msg.invalid_params, proto.invalid_params)
 
 def convert_proto_to_bosdyn_msgs_area_callback_error_one_of_response_error(proto, ros_msg):
     if proto.HasField("begin_callback"):
@@ -7979,12 +8628,16 @@ def convert_proto_to_bosdyn_msgs_area_callback_information(proto, ros_msg):
     ros_msg.required_lease_resources = []
     for _item in proto.required_lease_resources:
         ros_msg.required_lease_resources.append(_item)
+    convert_proto_to_bosdyn_msgs_dict_param_spec(proto.custom_params, ros_msg.custom_params)
+    ros_msg.custom_params_is_set = proto.HasField("custom_params")
 
 def convert_bosdyn_msgs_area_callback_information_to_proto(ros_msg, proto):
     proto.Clear()
     del proto.required_lease_resources[:]
     for _item in ros_msg.required_lease_resources:
         proto.required_lease_resources.add(_item)
+    if ros_msg.custom_params_is_set:
+        convert_bosdyn_msgs_dict_param_spec_to_proto(ros_msg.custom_params, proto.custom_params)
 
 def convert_proto_to_bosdyn_msgs_area_callback_information_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
@@ -8019,6 +8672,10 @@ def convert_proto_to_bosdyn_msgs_begin_callback_request(proto, ros_msg):
     ros_msg.region_info_is_set = proto.HasField("region_info")
     convert_proto_to_builtin_interfaces_time(proto.end_time, ros_msg.end_time)
     ros_msg.end_time_is_set = proto.HasField("end_time")
+    convert_proto_to_bosdyn_msgs_area_callback_data(proto.recorded_data, ros_msg.recorded_data)
+    ros_msg.recorded_data_is_set = proto.HasField("recorded_data")
+    convert_proto_to_bosdyn_msgs_dict_param(proto.custom_params, ros_msg.custom_params)
+    ros_msg.custom_params_is_set = proto.HasField("custom_params")
 
 def convert_bosdyn_msgs_begin_callback_request_to_proto(ros_msg, proto):
     proto.Clear()
@@ -8028,12 +8685,18 @@ def convert_bosdyn_msgs_begin_callback_request_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_region_information_to_proto(ros_msg.region_info, proto.region_info)
     if ros_msg.end_time_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.end_time, proto.end_time)
+    if ros_msg.recorded_data_is_set:
+        convert_bosdyn_msgs_area_callback_data_to_proto(ros_msg.recorded_data, proto.recorded_data)
+    if ros_msg.custom_params_is_set:
+        convert_bosdyn_msgs_dict_param_to_proto(ros_msg.custom_params, proto.custom_params)
 
 def convert_proto_to_bosdyn_msgs_begin_callback_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
     ros_msg.status.value = proto.status
     ros_msg.command_id = proto.command_id
+    convert_proto_to_bosdyn_msgs_custom_param_error(proto.custom_param_error, ros_msg.custom_param_error)
+    ros_msg.custom_param_error_is_set = proto.HasField("custom_param_error")
 
 def convert_bosdyn_msgs_begin_callback_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -8041,6 +8704,8 @@ def convert_bosdyn_msgs_begin_callback_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
     proto.status = ros_msg.status.value
     proto.command_id = ros_msg.command_id
+    if ros_msg.custom_param_error_is_set:
+        convert_bosdyn_msgs_custom_param_error_to_proto(ros_msg.custom_param_error, proto.custom_param_error)
 
 def convert_proto_to_bosdyn_msgs_begin_control_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -8117,6 +8782,13 @@ def convert_bosdyn_msgs_update_callback_response_one_of_response_to_proto(ros_ms
     if ros_msg.response_choice == ros_msg.RESPONSE_COMPLETE_SET:
         convert_bosdyn_msgs_update_callback_response_complete_to_proto(ros_msg.complete, proto.complete)
 
+def convert_proto_to_bosdyn_msgs_update_callback_response_update_localization(proto, ros_msg):
+    ros_msg.change.value = proto.change
+
+def convert_bosdyn_msgs_update_callback_response_update_localization_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.change = ros_msg.change.value
+
 def convert_proto_to_bosdyn_msgs_update_callback_response_nav_policy(proto, ros_msg):
     ros_msg.at_start.value = proto.at_start
     ros_msg.at_end.value = proto.at_end
@@ -8149,6 +8821,8 @@ def convert_proto_to_bosdyn_msgs_update_callback_response(proto, ros_msg):
     ros_msg.header_is_set = proto.HasField("header")
     ros_msg.status.value = proto.status
     convert_proto_to_bosdyn_msgs_update_callback_response_one_of_response(proto, ros_msg.response)
+    convert_proto_to_bosdyn_msgs_update_callback_response_update_localization(proto.localization, ros_msg.localization)
+    ros_msg.localization_is_set = proto.HasField("localization")
 
 def convert_bosdyn_msgs_update_callback_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -8156,6 +8830,8 @@ def convert_bosdyn_msgs_update_callback_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
     proto.status = ros_msg.status.value
     convert_bosdyn_msgs_update_callback_response_one_of_response_to_proto(ros_msg.response, proto)
+    if ros_msg.localization_is_set:
+        convert_bosdyn_msgs_update_callback_response_update_localization_to_proto(ros_msg.localization, proto.localization)
 
 def convert_proto_to_bosdyn_msgs_end_callback_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -8221,6 +8897,19 @@ def convert_bosdyn_msgs_waypoint_annotations_localize_region_to_proto(ros_msg, p
     proto.state = ros_msg.state.value
     convert_bosdyn_msgs_waypoint_annotations_localize_region_one_of_region_to_proto(ros_msg.region, proto)
 
+def convert_proto_to_bosdyn_msgs_waypoint_annotations_loop_closure_settings(proto, ros_msg):
+    ros_msg.disable_loop_closure = proto.disable_loop_closure
+    ros_msg.disable_collision_check = proto.disable_collision_check
+    ros_msg.max_edge_length = proto.max_edge_length
+    ros_msg.max_odometry_path_length = proto.max_odometry_path_length
+
+def convert_bosdyn_msgs_waypoint_annotations_loop_closure_settings_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.disable_loop_closure = ros_msg.disable_loop_closure
+    proto.disable_collision_check = ros_msg.disable_collision_check
+    proto.max_edge_length = ros_msg.max_edge_length
+    proto.max_odometry_path_length = ros_msg.max_odometry_path_length
+
 def convert_proto_to_bosdyn_msgs_waypoint_annotations(proto, ros_msg):
     ros_msg.name = proto.name
     convert_proto_to_builtin_interfaces_time(proto.creation_time, ros_msg.creation_time)
@@ -8233,6 +8922,8 @@ def convert_proto_to_bosdyn_msgs_waypoint_annotations(proto, ros_msg):
     ros_msg.waypoint_source_is_set = proto.HasField("waypoint_source")
     convert_proto_to_bosdyn_msgs_client_metadata(proto.client_metadata, ros_msg.client_metadata)
     ros_msg.client_metadata_is_set = proto.HasField("client_metadata")
+    convert_proto_to_bosdyn_msgs_waypoint_annotations_loop_closure_settings(proto.loop_closure_settings, ros_msg.loop_closure_settings)
+    ros_msg.loop_closure_settings_is_set = proto.HasField("loop_closure_settings")
 
 def convert_bosdyn_msgs_waypoint_annotations_to_proto(ros_msg, proto):
     proto.Clear()
@@ -8247,6 +8938,8 @@ def convert_bosdyn_msgs_waypoint_annotations_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_waypoint_waypoint_source_to_proto(ros_msg.waypoint_source, proto.waypoint_source)
     if ros_msg.client_metadata_is_set:
         convert_bosdyn_msgs_client_metadata_to_proto(ros_msg.client_metadata, proto.client_metadata)
+    if ros_msg.loop_closure_settings_is_set:
+        convert_bosdyn_msgs_waypoint_annotations_loop_closure_settings_to_proto(ros_msg.loop_closure_settings, proto.loop_closure_settings)
 
 def convert_proto_to_bosdyn_msgs_waypoint(proto, ros_msg):
     ros_msg.id = proto.id
@@ -8408,9 +9101,8 @@ def convert_bosdyn_msgs_edge_annotations_to_proto(ros_msg, proto):
     proto.disable_alternate_route_finding = ros_msg.disable_alternate_route_finding
     proto.path_following_mode = ros_msg.path_following_mode.value
     proto.disable_directed_exploration = ros_msg.disable_directed_exploration
-    del proto.area_callbacks[:]
     for _item in ros_msg.area_callbacks:
-        convert_bosdyn_msgs_area_callback_region_to_proto(ros_msg.area_callbacks[_item], proto.area_callbacks[_item])
+        convert_bosdyn_msgs_area_callback_region_to_proto(_item.value, proto.area_callbacks[_item.key])
     proto.ground_clutter_mode = ros_msg.ground_clutter_mode.value
 
 def convert_proto_to_bosdyn_msgs_edge(proto, ros_msg):
@@ -8481,9 +9173,8 @@ def convert_bosdyn_msgs_edge_snapshot_to_proto(ros_msg, proto):
     del proto.stances[:]
     for _item in ros_msg.stances:
         convert_bosdyn_msgs_edge_snapshot_stance_to_proto(_item, proto.stances.add())
-    del proto.area_callbacks[:]
     for _item in ros_msg.area_callbacks:
-        convert_bosdyn_msgs_area_callback_data_to_proto(ros_msg.area_callbacks[_item], proto.area_callbacks[_item])
+        convert_bosdyn_msgs_area_callback_data_to_proto(_item.value, proto.area_callbacks[_item.key])
 
 def convert_proto_to_bosdyn_msgs_anchor(proto, ros_msg):
     ros_msg.id = proto.id
@@ -8531,14 +9222,15 @@ def convert_bosdyn_msgs_anchoring_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_area_callback_region(proto, ros_msg):
     ros_msg.service_name = proto.service_name
     ros_msg.description = proto.description
+    convert_proto_to_bosdyn_msgs_area_callback_data(proto.recorded_data, ros_msg.recorded_data)
+    ros_msg.recorded_data_is_set = proto.HasField("recorded_data")
 
 def convert_bosdyn_msgs_area_callback_region_to_proto(ros_msg, proto):
     proto.Clear()
     proto.service_name = ros_msg.service_name
     proto.description = ros_msg.description
-
-def convert_bosdyn_msgs_area_callback_data_to_proto(ros_msg, proto):
-    proto.Clear()
+    if ros_msg.recorded_data_is_set:
+        convert_bosdyn_msgs_area_callback_data_to_proto(ros_msg.recorded_data, proto.recorded_data)
 
 def convert_proto_to_bosdyn_msgs_graph(proto, ros_msg):
     from bosdyn_msgs.msg import Waypoint
@@ -8565,6 +9257,9 @@ def convert_bosdyn_msgs_graph_to_proto(ros_msg, proto):
     if ros_msg.anchoring_is_set:
         convert_bosdyn_msgs_anchoring_to_proto(ros_msg.anchoring, proto.anchoring)
 
+def convert_bosdyn_msgs_area_callback_data_to_proto(ros_msg, proto):
+    proto.Clear()
+
 def convert_proto_to_bosdyn_msgs_process_topology_request_icp_params(proto, ros_msg):
     ros_msg.icp_iters = proto.icp_iters.value
     ros_msg.icp_iters_is_set = proto.HasField("icp_iters")
@@ -8589,6 +9284,8 @@ def convert_proto_to_bosdyn_msgs_process_topology_request_odometry_loop_closure_
     ros_msg.max_loop_closure_edge_length_is_set = proto.HasField("max_loop_closure_edge_length")
     ros_msg.num_extra_loop_closure_iterations = proto.num_extra_loop_closure_iterations.value
     ros_msg.num_extra_loop_closure_iterations_is_set = proto.HasField("num_extra_loop_closure_iterations")
+    ros_msg.prune_edges = proto.prune_edges.value
+    ros_msg.prune_edges_is_set = proto.HasField("prune_edges")
 
 def convert_bosdyn_msgs_process_topology_request_odometry_loop_closure_params_to_proto(ros_msg, proto):
     proto.Clear()
@@ -8602,6 +9299,8 @@ def convert_bosdyn_msgs_process_topology_request_odometry_loop_closure_params_to
         convert_float64_to_proto(ros_msg.max_loop_closure_edge_length, proto.max_loop_closure_edge_length)
     if ros_msg.num_extra_loop_closure_iterations_is_set:
         convert_int32_to_proto(ros_msg.num_extra_loop_closure_iterations, proto.num_extra_loop_closure_iterations)
+    if ros_msg.prune_edges_is_set:
+        convert_bool_to_proto(ros_msg.prune_edges, proto.prune_edges)
 
 def convert_proto_to_bosdyn_msgs_process_topology_request_fiducial_loop_closure_params(proto, ros_msg):
     ros_msg.min_loop_closure_path_length = proto.min_loop_closure_path_length.value
@@ -8612,6 +9311,8 @@ def convert_proto_to_bosdyn_msgs_process_topology_request_fiducial_loop_closure_
     ros_msg.max_fiducial_distance_is_set = proto.HasField("max_fiducial_distance")
     ros_msg.max_loop_closure_height_change = proto.max_loop_closure_height_change.value
     ros_msg.max_loop_closure_height_change_is_set = proto.HasField("max_loop_closure_height_change")
+    ros_msg.prune_edges = proto.prune_edges.value
+    ros_msg.prune_edges_is_set = proto.HasField("prune_edges")
 
 def convert_bosdyn_msgs_process_topology_request_fiducial_loop_closure_params_to_proto(ros_msg, proto):
     proto.Clear()
@@ -8623,6 +9324,8 @@ def convert_bosdyn_msgs_process_topology_request_fiducial_loop_closure_params_to
         convert_float64_to_proto(ros_msg.max_fiducial_distance, proto.max_fiducial_distance)
     if ros_msg.max_loop_closure_height_change_is_set:
         convert_float64_to_proto(ros_msg.max_loop_closure_height_change, proto.max_loop_closure_height_change)
+    if ros_msg.prune_edges_is_set:
+        convert_bool_to_proto(ros_msg.prune_edges, proto.prune_edges)
 
 def convert_proto_to_bosdyn_msgs_process_topology_request_collision_checking_params(proto, ros_msg):
     ros_msg.check_edges_for_collision = proto.check_edges_for_collision.value
@@ -8946,6 +9649,11 @@ def convert_proto_to_bosdyn_msgs_process_anchoring_response(proto, ros_msg):
     ros_msg.invalid_hints = []
     for _item in proto.invalid_hints:
         ros_msg.invalid_hints.append(_item)
+    from bosdyn_msgs.msg import EdgeId
+    ros_msg.inconsistent_edges = []
+    for _item in proto.inconsistent_edges:
+        ros_msg.inconsistent_edges.append(EdgeId())
+        convert_proto_to_bosdyn_msgs_edge_id(_item, ros_msg.inconsistent_edges[-1])
 
 def convert_bosdyn_msgs_process_anchoring_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -8977,6 +9685,9 @@ def convert_bosdyn_msgs_process_anchoring_response_to_proto(ros_msg, proto):
     del proto.invalid_hints[:]
     for _item in ros_msg.invalid_hints:
         proto.invalid_hints.add(_item)
+    del proto.inconsistent_edges[:]
+    for _item in ros_msg.inconsistent_edges:
+        convert_bosdyn_msgs_edge_id_to_proto(_item, proto.inconsistent_edges.add())
 
 def convert_proto_to_bosdyn_msgs_recording_environment(proto, ros_msg):
     ros_msg.name_prefix = proto.name_prefix
@@ -9375,6 +10086,7 @@ def convert_proto_to_bosdyn_msgs_set_localization_response(proto, ros_msg):
     ros_msg.impaired_state_is_set = proto.HasField("impaired_state")
     convert_proto_to_bosdyn_msgs_sensor_compatibility_status(proto.sensor_status, ros_msg.sensor_status)
     ros_msg.sensor_status_is_set = proto.HasField("sensor_status")
+    ros_msg.quality_check_result.value = proto.quality_check_result
 
 def convert_bosdyn_msgs_set_localization_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -9392,6 +10104,7 @@ def convert_bosdyn_msgs_set_localization_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_robot_impaired_state_to_proto(ros_msg.impaired_state, proto.impaired_state)
     if ros_msg.sensor_status_is_set:
         convert_bosdyn_msgs_sensor_compatibility_status_to_proto(ros_msg.sensor_status, proto.sensor_status)
+    proto.quality_check_result = ros_msg.quality_check_result.value
 
 def convert_bosdyn_msgs_route_gen_params_to_proto(ros_msg, proto):
     proto.Clear()
@@ -9425,6 +10138,25 @@ def convert_bosdyn_msgs_travel_params_to_proto(ros_msg, proto):
         convert_builtin_interfaces_duration_to_proto(ros_msg.blocked_path_wait_time, proto.blocked_path_wait_time)
     proto.ground_clutter_mode = ros_msg.ground_clutter_mode.value
 
+def convert_proto_to_bosdyn_msgs_modify_navigation_response(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+    from bosdyn_msgs.msg import LeaseUseResult
+    ros_msg.lease_use_results = []
+    for _item in proto.lease_use_results:
+        ros_msg.lease_use_results.append(LeaseUseResult())
+        convert_proto_to_bosdyn_msgs_lease_use_result(_item, ros_msg.lease_use_results[-1])
+    ros_msg.status.value = proto.status
+
+def convert_bosdyn_msgs_modify_navigation_response_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    del proto.lease_use_results[:]
+    for _item in ros_msg.lease_use_results:
+        convert_bosdyn_msgs_lease_use_result_to_proto(_item, proto.lease_use_results.add())
+    proto.status = ros_msg.status.value
+
 def convert_proto_to_bosdyn_msgs_navigate_to_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
@@ -9444,6 +10176,7 @@ def convert_proto_to_bosdyn_msgs_navigate_to_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_se2_pose(proto.destination_waypoint_tform_body_goal, ros_msg.destination_waypoint_tform_body_goal)
     ros_msg.destination_waypoint_tform_body_goal_is_set = proto.HasField("destination_waypoint_tform_body_goal")
     ros_msg.command_id = proto.command_id
+    ros_msg.route_blocked_behavior.value = proto.route_blocked_behavior
 
 def convert_bosdyn_msgs_navigate_to_request_to_proto(ros_msg, proto):
     proto.Clear()
@@ -9463,6 +10196,7 @@ def convert_bosdyn_msgs_navigate_to_request_to_proto(ros_msg, proto):
     if ros_msg.destination_waypoint_tform_body_goal_is_set:
         convert_bosdyn_msgs_se2_pose_to_proto(ros_msg.destination_waypoint_tform_body_goal, proto.destination_waypoint_tform_body_goal)
     proto.command_id = ros_msg.command_id
+    proto.route_blocked_behavior = ros_msg.route_blocked_behavior.value
 
 def convert_proto_to_bosdyn_msgs_navigate_to_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
@@ -9727,9 +10461,8 @@ def convert_bosdyn_msgs_navigation_feedback_response_to_proto(ros_msg, proto):
     proto.status = ros_msg.status.value
     if ros_msg.impaired_state_is_set:
         convert_bosdyn_msgs_robot_impaired_state_to_proto(ros_msg.impaired_state, proto.impaired_state)
-    del proto.area_callback_errors[:]
     for _item in ros_msg.area_callback_errors:
-        convert_bosdyn_msgs_area_callback_error_to_proto(ros_msg.area_callback_errors[_item], proto.area_callback_errors[_item])
+        convert_bosdyn_msgs_area_callback_error_to_proto(_item.value, proto.area_callback_errors[_item.key])
     if ros_msg.remaining_route_is_set:
         convert_bosdyn_msgs_route_to_proto(ros_msg.remaining_route, proto.remaining_route)
     proto.command_id = ros_msg.command_id
@@ -9737,9 +10470,8 @@ def convert_bosdyn_msgs_navigation_feedback_response_to_proto(ros_msg, proto):
         convert_geometry_msgs_pose_to_proto(ros_msg.last_ko_tform_goal, proto.last_ko_tform_goal)
     proto.body_movement_status = ros_msg.body_movement_status.value
     proto.path_following_mode = ros_msg.path_following_mode.value
-    del proto.active_region_information[:]
     for _item in ros_msg.active_region_information:
-        convert_bosdyn_msgs_navigation_feedback_response_active_region_information_to_proto(ros_msg.active_region_information[_item], proto.active_region_information[_item])
+        convert_bosdyn_msgs_navigation_feedback_response_active_region_information_to_proto(_item.value, proto.active_region_information[_item.key])
     proto.route_following_status = ros_msg.route_following_status.value
     proto.blockage_status = ros_msg.blockage_status.value
 
@@ -10266,6 +10998,8 @@ def convert_proto_to_bosdyn_msgs_establish_session_request(proto, ros_msg):
     for _item in proto.inputs:
         ros_msg.inputs.append(VariableDeclaration())
         convert_proto_to_bosdyn_msgs_variable_declaration(_item, ros_msg.inputs[-1])
+    convert_proto_to_bosdyn_msgs_custom_param(proto.params, ros_msg.params)
+    ros_msg.params_is_set = proto.HasField("params")
 
 def convert_bosdyn_msgs_establish_session_request_to_proto(ros_msg, proto):
     proto.Clear()
@@ -10277,6 +11011,8 @@ def convert_bosdyn_msgs_establish_session_request_to_proto(ros_msg, proto):
     del proto.inputs[:]
     for _item in ros_msg.inputs:
         convert_bosdyn_msgs_variable_declaration_to_proto(_item, proto.inputs.add())
+    if ros_msg.params_is_set:
+        convert_bosdyn_msgs_custom_param_to_proto(ros_msg.params, proto.params)
 
 def convert_proto_to_bosdyn_msgs_establish_session_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
@@ -10296,6 +11032,8 @@ def convert_proto_to_bosdyn_msgs_establish_session_response(proto, ros_msg):
     for _item in proto.missing_inputs:
         ros_msg.missing_inputs.append(VariableDeclaration())
         convert_proto_to_bosdyn_msgs_variable_declaration(_item, ros_msg.missing_inputs[-1])
+    convert_proto_to_bosdyn_msgs_custom_param_error(proto.params_error, ros_msg.params_error)
+    ros_msg.params_error_is_set = proto.HasField("params_error")
 
 def convert_bosdyn_msgs_establish_session_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -10312,6 +11050,8 @@ def convert_bosdyn_msgs_establish_session_response_to_proto(ros_msg, proto):
     del proto.missing_inputs[:]
     for _item in ros_msg.missing_inputs:
         convert_bosdyn_msgs_variable_declaration_to_proto(_item, proto.missing_inputs.add())
+    if ros_msg.params_error_is_set:
+        convert_bosdyn_msgs_custom_param_error_to_proto(ros_msg.params_error, proto.params_error)
 
 def convert_proto_to_bosdyn_msgs_tick_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -10516,9 +11256,8 @@ def convert_bosdyn_msgs_switch_to_proto(ros_msg, proto):
     if ros_msg.pivot_value_is_set:
         convert_bosdyn_msgs_value_to_proto(ros_msg.pivot_value, proto.pivot_value)
     proto.always_restart = ros_msg.always_restart
-    del proto.int_children[:]
     for _item in ros_msg.int_children:
-        convert_bosdyn_msgs_node_to_proto(ros_msg.int_children[_item], proto.int_children[_item])
+        convert_bosdyn_msgs_node_to_proto(_item.value, proto.int_children[_item.key])
     if ros_msg.default_child_is_set:
         convert_bosdyn_msgs_node_to_proto(ros_msg.default_child, proto.default_child)
 
@@ -10574,6 +11313,7 @@ def convert_proto_to_bosdyn_msgs_simple_parallel(proto, ros_msg):
     ros_msg.primary_is_set = proto.HasField("primary")
     convert_proto_to_bosdyn_msgs_node(proto.secondary, ros_msg.secondary)
     ros_msg.secondary_is_set = proto.HasField("secondary")
+    ros_msg.run_secondary_node_once = proto.run_secondary_node_once
 
 def convert_bosdyn_msgs_simple_parallel_to_proto(ros_msg, proto):
     proto.Clear()
@@ -10581,6 +11321,22 @@ def convert_bosdyn_msgs_simple_parallel_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_node_to_proto(ros_msg.primary, proto.primary)
     if ros_msg.secondary_is_set:
         convert_bosdyn_msgs_node_to_proto(ros_msg.secondary, proto.secondary)
+    proto.run_secondary_node_once = ros_msg.run_secondary_node_once
+
+def convert_proto_to_bosdyn_msgs_parallel_and(proto, ros_msg):
+    from bosdyn_msgs.msg import Node
+    ros_msg.children = []
+    for _item in proto.children:
+        ros_msg.children.append(Node())
+        convert_proto_to_bosdyn_msgs_node(_item, ros_msg.children[-1])
+    ros_msg.finish_every_node = proto.finish_every_node
+
+def convert_bosdyn_msgs_parallel_and_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.children[:]
+    for _item in ros_msg.children:
+        convert_bosdyn_msgs_node_to_proto(_item, proto.children.add())
+    proto.finish_every_node = ros_msg.finish_every_node
 
 def convert_proto_to_bosdyn_msgs_condition_operand_one_of_type(proto, ros_msg):
     if proto.HasField("var"):
@@ -10685,6 +11441,7 @@ def convert_proto_to_bosdyn_msgs_bosdyn_navigate_to(proto, ros_msg):
     ros_msg.travel_params_is_set = proto.HasField("travel_params")
     ros_msg.navigation_feedback_response_blackboard_key = proto.navigation_feedback_response_blackboard_key
     ros_msg.navigate_to_response_blackboard_key = proto.navigate_to_response_blackboard_key
+    ros_msg.route_blocked_behavior.value = proto.route_blocked_behavior
 
 def convert_bosdyn_msgs_bosdyn_navigate_to_to_proto(ros_msg, proto):
     proto.Clear()
@@ -10697,6 +11454,7 @@ def convert_bosdyn_msgs_bosdyn_navigate_to_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_travel_params_to_proto(ros_msg.travel_params, proto.travel_params)
     proto.navigation_feedback_response_blackboard_key = ros_msg.navigation_feedback_response_blackboard_key
     proto.navigate_to_response_blackboard_key = ros_msg.navigate_to_response_blackboard_key
+    proto.route_blocked_behavior = ros_msg.route_blocked_behavior.value
 
 def convert_proto_to_bosdyn_msgs_bosdyn_navigate_route(proto, ros_msg):
     ros_msg.service_name = proto.service_name
@@ -10745,6 +11503,8 @@ def convert_proto_to_bosdyn_msgs_bosdyn_graph_nav_localize(proto, ros_msg):
     ros_msg.host = proto.host
     convert_proto_to_bosdyn_msgs_set_localization_request(proto.localization_request, ros_msg.localization_request)
     ros_msg.localization_request_is_set = proto.HasField("localization_request")
+    ros_msg.allow_bad_quality = proto.allow_bad_quality
+    ros_msg.response_bb_key = proto.response_bb_key
 
 def convert_bosdyn_msgs_bosdyn_graph_nav_localize_to_proto(ros_msg, proto):
     proto.Clear()
@@ -10752,6 +11512,8 @@ def convert_bosdyn_msgs_bosdyn_graph_nav_localize_to_proto(ros_msg, proto):
     proto.host = ros_msg.host
     if ros_msg.localization_request_is_set:
         convert_bosdyn_msgs_set_localization_request_to_proto(ros_msg.localization_request, proto.localization_request)
+    proto.allow_bad_quality = ros_msg.allow_bad_quality
+    proto.response_bb_key = ros_msg.response_bb_key
 
 def convert_proto_to_bosdyn_msgs_bosdyn_record_event(proto, ros_msg):
     ros_msg.service_name = proto.service_name
@@ -10773,9 +11535,8 @@ def convert_bosdyn_msgs_bosdyn_record_event_to_proto(ros_msg, proto):
     if ros_msg.event_is_set:
         convert_bosdyn_msgs_event_to_proto(ros_msg.event, proto.event)
     proto.succeed_early = ros_msg.succeed_early
-    del proto.additional_parameters[:]
     for _item in ros_msg.additional_parameters:
-        convert_bosdyn_msgs_value_to_proto(ros_msg.additional_parameters[_item], proto.additional_parameters[_item])
+        convert_bosdyn_msgs_value_to_proto(_item.value, proto.additional_parameters[_item.key])
 
 def convert_proto_to_bosdyn_msgs_remote_grpc(proto, ros_msg):
     ros_msg.host = proto.host
@@ -10833,6 +11594,7 @@ def convert_proto_to_bosdyn_msgs_prompt(proto, ros_msg):
     ros_msg.child_is_set = proto.HasField("child")
     ros_msg.for_autonomous_processing = proto.for_autonomous_processing
     ros_msg.severity.value = proto.severity
+    ros_msg.question_name_in_blackboard = proto.question_name_in_blackboard
 
 def convert_bosdyn_msgs_prompt_to_proto(ros_msg, proto):
     proto.Clear()
@@ -10846,6 +11608,7 @@ def convert_bosdyn_msgs_prompt_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_node_to_proto(ros_msg.child, proto.child)
     proto.for_autonomous_processing = ros_msg.for_autonomous_processing
     proto.severity = ros_msg.severity.value
+    proto.question_name_in_blackboard = ros_msg.question_name_in_blackboard
 
 def convert_proto_to_bosdyn_msgs_bosdyn_gripper_camera_params_state(proto, ros_msg):
     ros_msg.service_name = proto.service_name
@@ -10949,7 +11712,6 @@ def convert_bosdyn_msgs_spot_cam_led_to_proto(ros_msg, proto):
     proto.Clear()
     proto.service_name = ros_msg.service_name
     proto.host = ros_msg.host
-    del proto.brightnesses[:]
     for _item in ros_msg.brightnesses:
         proto.brightnesses[_item.key] = _item.value
 
@@ -10979,11 +11741,21 @@ def convert_bosdyn_msgs_dock_to_proto(ros_msg, proto):
     proto.docking_command_feedback_response_blackboard_key = ros_msg.docking_command_feedback_response_blackboard_key
     proto.docking_command_response_blackboard_key = ros_msg.docking_command_response_blackboard_key
 
+def convert_proto_to_bosdyn_msgs_store_metadata_one_of_data(proto, ros_msg):
+    if proto.HasField("metadata_name"):
+        ros_msg.data_choice = ros_msg.DATA_METADATA_NAME_SET
+        ros_msg.metadata_name = proto.metadata_name
+
+def convert_bosdyn_msgs_store_metadata_one_of_data_to_proto(ros_msg, proto):
+    proto.ClearField("data")
+    if ros_msg.data_choice == ros_msg.DATA_METADATA_NAME_SET:
+        proto.metadata_name = ros_msg.metadata_name
+
 def convert_proto_to_bosdyn_msgs_store_metadata(proto, ros_msg):
     ros_msg.service_name = proto.service_name
     ros_msg.host = proto.host
     ros_msg.acquire_data_request_name = proto.acquire_data_request_name
-    ros_msg.metadata_name = proto.metadata_name
+    convert_proto_to_bosdyn_msgs_store_metadata_one_of_data(proto, ros_msg.data)
     ros_msg.metadata_channel = proto.metadata_channel
 
 def convert_bosdyn_msgs_store_metadata_to_proto(ros_msg, proto):
@@ -10991,7 +11763,7 @@ def convert_bosdyn_msgs_store_metadata_to_proto(ros_msg, proto):
     proto.service_name = ros_msg.service_name
     proto.host = ros_msg.host
     proto.acquire_data_request_name = ros_msg.acquire_data_request_name
-    proto.metadata_name = ros_msg.metadata_name
+    convert_bosdyn_msgs_store_metadata_one_of_data_to_proto(ros_msg.data, proto)
     proto.metadata_channel = ros_msg.metadata_channel
 
 def convert_proto_to_bosdyn_msgs_data_acquisition(proto, ros_msg):
@@ -11002,6 +11774,8 @@ def convert_proto_to_bosdyn_msgs_data_acquisition(proto, ros_msg):
     ros_msg.completion_behavior.value = proto.completion_behavior
     ros_msg.group_name_format = proto.group_name_format
     ros_msg.request_name_in_blackboard = proto.request_name_in_blackboard
+    ros_msg.action_name_format = proto.action_name_format
+    ros_msg.disable_cancel_on_pause_or_stop = proto.disable_cancel_on_pause_or_stop
 
 def convert_bosdyn_msgs_data_acquisition_to_proto(ros_msg, proto):
     proto.Clear()
@@ -11012,6 +11786,8 @@ def convert_bosdyn_msgs_data_acquisition_to_proto(ros_msg, proto):
     proto.completion_behavior = ros_msg.completion_behavior.value
     proto.group_name_format = ros_msg.group_name_format
     proto.request_name_in_blackboard = ros_msg.request_name_in_blackboard
+    proto.action_name_format = ros_msg.action_name_format
+    proto.disable_cancel_on_pause_or_stop = ros_msg.disable_cancel_on_pause_or_stop
 
 def convert_proto_to_bosdyn_msgs_retain_lease(proto, ros_msg):
     ros_msg.service_name = proto.service_name
@@ -11084,6 +11860,25 @@ def convert_bosdyn_msgs_restart_when_paused_to_proto(ros_msg, proto):
     if ros_msg.child_is_set:
         convert_bosdyn_msgs_node_to_proto(ros_msg.child, proto.child)
 
+def convert_proto_to_bosdyn_msgs_data_acquisition_on_interruption(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_node(proto.child, ros_msg.child)
+    ros_msg.child_is_set = proto.HasField("child")
+    convert_proto_to_bosdyn_msgs_data_acquisition(proto.request_when_interrupted, ros_msg.request_when_interrupted)
+    ros_msg.request_when_interrupted_is_set = proto.HasField("request_when_interrupted")
+    ros_msg.keys = []
+    for _item in proto.keys:
+        ros_msg.keys.append(_item)
+
+def convert_bosdyn_msgs_data_acquisition_on_interruption_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.child_is_set:
+        convert_bosdyn_msgs_node_to_proto(ros_msg.child, proto.child)
+    if ros_msg.request_when_interrupted_is_set:
+        convert_bosdyn_msgs_data_acquisition_to_proto(ros_msg.request_when_interrupted, proto.request_when_interrupted)
+    del proto.keys[:]
+    for _item in ros_msg.keys:
+        proto.keys.add(_item)
+
 def convert_proto_to_bosdyn_msgs_clear_behavior_faults(proto, ros_msg):
     ros_msg.service_name = proto.service_name
     ros_msg.host = proto.host
@@ -11155,16 +11950,33 @@ def convert_bosdyn_msgs_state_answered_question_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_question_to_proto(ros_msg.question, proto.question)
     proto.accepted_answer_code = ros_msg.accepted_answer_code
 
+def convert_proto_to_bosdyn_msgs_state_node_states_at_tick_node_state_blackboard_state(proto, ros_msg):
+    from bosdyn_msgs.msg import KeyValue
+    ros_msg.variables = []
+    for _item in proto.variables:
+        ros_msg.variables.append(KeyValue())
+        convert_proto_to_bosdyn_msgs_key_value(_item, ros_msg.variables[-1])
+
+def convert_bosdyn_msgs_state_node_states_at_tick_node_state_blackboard_state_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.variables[:]
+    for _item in ros_msg.variables:
+        convert_bosdyn_msgs_key_value_to_proto(_item, proto.variables.add())
+
 def convert_proto_to_bosdyn_msgs_state_node_states_at_tick_node_state(proto, ros_msg):
     ros_msg.result.value = proto.result
     ros_msg.error = proto.error
     ros_msg.id = proto.id
+    convert_proto_to_bosdyn_msgs_state_node_states_at_tick_node_state_blackboard_state(proto.blackboard, ros_msg.blackboard)
+    ros_msg.blackboard_is_set = proto.HasField("blackboard")
 
 def convert_bosdyn_msgs_state_node_states_at_tick_node_state_to_proto(ros_msg, proto):
     proto.Clear()
     proto.result = ros_msg.result.value
     proto.error = ros_msg.error
     proto.id = ros_msg.id
+    if ros_msg.blackboard_is_set:
+        convert_bosdyn_msgs_state_node_states_at_tick_node_state_blackboard_state_to_proto(ros_msg.blackboard, proto.blackboard)
 
 def convert_proto_to_bosdyn_msgs_state_node_states_at_tick(proto, ros_msg):
     ros_msg.tick_counter = proto.tick_counter
@@ -11285,11 +12097,11 @@ def convert_proto_to_bosdyn_msgs_node_info(proto, ros_msg):
     ros_msg.name = proto.name
     convert_proto_to_bosdyn_msgs_user_data(proto.user_data, ros_msg.user_data)
     ros_msg.user_data_is_set = proto.HasField("user_data")
-    from bosdyn_msgs.msg import NodeInfo
+    from bosdyn_msgs.msg import SerializedMessage
     ros_msg.children = []
     for _item in proto.children:
-        ros_msg.children.append(NodeInfo())
-        convert_proto_to_bosdyn_msgs_node_info(_item, ros_msg.children[-1])
+        ros_msg.children.append(SerializedMessage())
+        convert_proto_to_serialized_bosdyn_msgs_node_info(_item, ros_msg.children[-1])
 
 def convert_bosdyn_msgs_node_info_to_proto(ros_msg, proto):
     proto.Clear()
@@ -11299,7 +12111,7 @@ def convert_bosdyn_msgs_node_info_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_user_data_to_proto(ros_msg.user_data, proto.user_data)
     del proto.children[:]
     for _item in ros_msg.children:
-        convert_bosdyn_msgs_node_info_to_proto(_item, proto.children.add())
+        convert_serialized_bosdyn_msgs_node_info_to_proto(_item, proto.children.add())
 
 def convert_proto_to_bosdyn_msgs_failed_node(proto, ros_msg):
     ros_msg.name = proto.name
@@ -11751,20 +12563,16 @@ def convert_bosdyn_msgs_spot_check_feedback_response_to_proto(ros_msg, proto):
     proto.state = ros_msg.state.value
     proto.last_command = ros_msg.last_command.value
     proto.error = ros_msg.error.value
-    del proto.camera_results[:]
     for _item in ros_msg.camera_results:
-        convert_bosdyn_msgs_depth_plane_spot_check_result_to_proto(ros_msg.camera_results[_item], proto.camera_results[_item])
-    del proto.load_cell_results[:]
+        convert_bosdyn_msgs_depth_plane_spot_check_result_to_proto(_item.value, proto.camera_results[_item.key])
     for _item in ros_msg.load_cell_results:
-        convert_bosdyn_msgs_load_cell_spot_check_result_to_proto(ros_msg.load_cell_results[_item], proto.load_cell_results[_item])
-    del proto.kinematic_cal_results[:]
+        convert_bosdyn_msgs_load_cell_spot_check_result_to_proto(_item.value, proto.load_cell_results[_item.key])
     for _item in ros_msg.kinematic_cal_results:
-        convert_bosdyn_msgs_joint_kinematic_check_result_to_proto(ros_msg.kinematic_cal_results[_item], proto.kinematic_cal_results[_item])
+        convert_bosdyn_msgs_joint_kinematic_check_result_to_proto(_item.value, proto.kinematic_cal_results[_item.key])
     if ros_msg.payload_result_is_set:
         convert_bosdyn_msgs_payload_check_result_to_proto(ros_msg.payload_result, proto.payload_result)
-    del proto.hip_range_of_motion_results[:]
     for _item in ros_msg.hip_range_of_motion_results:
-        convert_bosdyn_msgs_hip_range_of_motion_result_to_proto(ros_msg.hip_range_of_motion_results[_item], proto.hip_range_of_motion_results[_item])
+        convert_bosdyn_msgs_hip_range_of_motion_result_to_proto(_item.value, proto.hip_range_of_motion_results[_item.key])
     proto.progress = ros_msg.progress
     if ros_msg.last_cal_timestamp_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.last_cal_timestamp, proto.last_cal_timestamp)
@@ -11946,6 +12754,9 @@ def convert_proto_to_bosdyn_msgs_body_control_params_one_of_param(proto, ros_msg
     if proto.HasField("body_assist_for_manipulation"):
         ros_msg.param_choice = ros_msg.PARAM_BODY_ASSIST_FOR_MANIPULATION_SET
         convert_proto_to_bosdyn_msgs_body_control_params_body_assist_for_manipulation(proto.body_assist_for_manipulation, ros_msg.body_assist_for_manipulation)
+    if proto.HasField("body_pose"):
+        ros_msg.param_choice = ros_msg.PARAM_BODY_POSE_SET
+        convert_proto_to_bosdyn_msgs_body_control_params_body_pose(proto.body_pose, ros_msg.body_pose)
 
 def convert_bosdyn_msgs_body_control_params_one_of_param_to_proto(ros_msg, proto):
     proto.ClearField("param")
@@ -11953,6 +12764,8 @@ def convert_bosdyn_msgs_body_control_params_one_of_param_to_proto(ros_msg, proto
         convert_bosdyn_msgs_se3_trajectory_to_proto(ros_msg.base_offset_rt_footprint, proto.base_offset_rt_footprint)
     if ros_msg.param_choice == ros_msg.PARAM_BODY_ASSIST_FOR_MANIPULATION_SET:
         convert_bosdyn_msgs_body_control_params_body_assist_for_manipulation_to_proto(ros_msg.body_assist_for_manipulation, proto.body_assist_for_manipulation)
+    if ros_msg.param_choice == ros_msg.PARAM_BODY_POSE_SET:
+        convert_bosdyn_msgs_body_control_params_body_pose_to_proto(ros_msg.body_pose, proto.body_pose)
 
 def convert_proto_to_bosdyn_msgs_body_control_params_body_assist_for_manipulation(proto, ros_msg):
     ros_msg.enable_body_yaw_assist = proto.enable_body_yaw_assist
@@ -11962,6 +12775,17 @@ def convert_bosdyn_msgs_body_control_params_body_assist_for_manipulation_to_prot
     proto.Clear()
     proto.enable_body_yaw_assist = ros_msg.enable_body_yaw_assist
     proto.enable_hip_height_assist = ros_msg.enable_hip_height_assist
+
+def convert_proto_to_bosdyn_msgs_body_control_params_body_pose(proto, ros_msg):
+    ros_msg.root_frame_name = proto.root_frame_name
+    convert_proto_to_bosdyn_msgs_se3_trajectory(proto.base_offset_rt_root, ros_msg.base_offset_rt_root)
+    ros_msg.base_offset_rt_root_is_set = proto.HasField("base_offset_rt_root")
+
+def convert_bosdyn_msgs_body_control_params_body_pose_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.root_frame_name = ros_msg.root_frame_name
+    if ros_msg.base_offset_rt_root_is_set:
+        convert_bosdyn_msgs_se3_trajectory_to_proto(ros_msg.base_offset_rt_root, proto.base_offset_rt_root)
 
 def convert_proto_to_bosdyn_msgs_body_control_params(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_body_control_params_one_of_param(proto, ros_msg.param)
@@ -12012,6 +12836,19 @@ def convert_bosdyn_msgs_body_external_force_params_to_proto(ros_msg, proto):
     proto.frame_name = ros_msg.frame_name
     if ros_msg.external_force_override_is_set:
         convert_geometry_msgs_vector3_to_proto(ros_msg.external_force_override, proto.external_force_override)
+
+def convert_proto_to_bosdyn_msgs_area_callback_door_config(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_door_command_request(proto.forward_command, ros_msg.forward_command)
+    ros_msg.forward_command_is_set = proto.HasField("forward_command")
+    convert_proto_to_bosdyn_msgs_door_command_request(proto.reverse_command, ros_msg.reverse_command)
+    ros_msg.reverse_command_is_set = proto.HasField("reverse_command")
+
+def convert_bosdyn_msgs_area_callback_door_config_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.forward_command_is_set:
+        convert_bosdyn_msgs_door_command_request_to_proto(ros_msg.forward_command, proto.forward_command)
+    if ros_msg.reverse_command_is_set:
+        convert_bosdyn_msgs_door_command_request_to_proto(ros_msg.reverse_command, proto.reverse_command)
 
 def convert_proto_to_bosdyn_msgs_open_door_command_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -12714,7 +13551,6 @@ def convert_bosdyn_msgs_set_led_brightness_request_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
-    del proto.brightnesses[:]
     for _item in ros_msg.brightnesses:
         proto.brightnesses[_item.key] = _item.value
 
@@ -12822,6 +13658,28 @@ def convert_proto_to_bosdyn_msgs_play_sound_response(proto, ros_msg):
     ros_msg.header_is_set = proto.HasField("header")
 
 def convert_bosdyn_msgs_play_sound_response_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+
+def convert_proto_to_bosdyn_msgs_stop_sound_request(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+    convert_proto_to_bosdyn_msgs_sound(proto.sound, ros_msg.sound)
+    ros_msg.sound_is_set = proto.HasField("sound")
+
+def convert_bosdyn_msgs_stop_sound_request_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
+    if ros_msg.sound_is_set:
+        convert_bosdyn_msgs_sound_to_proto(ros_msg.sound, proto.sound)
+
+def convert_proto_to_bosdyn_msgs_stop_sound_response(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+
+def convert_bosdyn_msgs_stop_sound_response_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
@@ -13021,16 +13879,57 @@ def convert_bosdyn_msgs_get_ssl_cert_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
     proto.certificate = ros_msg.certificate
 
+def convert_proto_to_bosdyn_msgs_ice_server_auth_params_oauth_pair(proto, ros_msg):
+    ros_msg.mac_key = proto.MACKey
+    ros_msg.access_token = proto.AccessToken
+
+def convert_bosdyn_msgs_ice_server_auth_params_oauth_pair_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.MACKey = ros_msg.mac_key
+    proto.AccessToken = ros_msg.access_token
+
+def convert_proto_to_bosdyn_msgs_ice_server_auth_params_one_of_credential(proto, ros_msg):
+    if proto.HasField("oauth"):
+        ros_msg.credential_choice = ros_msg.CREDENTIAL_OAUTH_SET
+        convert_proto_to_bosdyn_msgs_ice_server_auth_params_oauth_pair(proto.oauth, ros_msg.oauth)
+    if proto.HasField("password"):
+        ros_msg.credential_choice = ros_msg.CREDENTIAL_PASSWORD_SET
+        ros_msg.password = proto.password.value
+
+def convert_bosdyn_msgs_ice_server_auth_params_one_of_credential_to_proto(ros_msg, proto):
+    proto.ClearField("credential")
+    if ros_msg.credential_choice == ros_msg.CREDENTIAL_OAUTH_SET:
+        convert_bosdyn_msgs_ice_server_auth_params_oauth_pair_to_proto(ros_msg.oauth, proto.oauth)
+    if ros_msg.credential_choice == ros_msg.CREDENTIAL_PASSWORD_SET:
+        convert_string_to_proto(ros_msg.password, proto.password)
+
+def convert_proto_to_bosdyn_msgs_ice_server_auth_params(proto, ros_msg):
+    ros_msg.username = proto.username.value
+    ros_msg.username_is_set = proto.HasField("username")
+    convert_proto_to_bosdyn_msgs_ice_server_auth_params_one_of_credential(proto, ros_msg.credential)
+
+def convert_bosdyn_msgs_ice_server_auth_params_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.username_is_set:
+        convert_string_to_proto(ros_msg.username, proto.username)
+    convert_bosdyn_msgs_ice_server_auth_params_one_of_credential_to_proto(ros_msg.credential, proto)
+
 def convert_proto_to_bosdyn_msgs_ice_server(proto, ros_msg):
     ros_msg.type.value = proto.type
     ros_msg.address = proto.address
     ros_msg.port = proto.port
+    ros_msg.transport.value = proto.transport
+    convert_proto_to_bosdyn_msgs_ice_server_auth_params(proto.auth, ros_msg.auth)
+    ros_msg.auth_is_set = proto.HasField("auth")
 
 def convert_bosdyn_msgs_ice_server_to_proto(ros_msg, proto):
     proto.Clear()
     proto.type = ros_msg.type.value
     proto.address = ros_msg.address
     proto.port = ros_msg.port
+    proto.transport = ros_msg.transport.value
+    if ros_msg.auth_is_set:
+        convert_bosdyn_msgs_ice_server_auth_params_to_proto(ros_msg.auth, proto.auth)
 
 def convert_proto_to_bosdyn_msgs_get_ice_configuration_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -13383,16 +14282,48 @@ def convert_bosdyn_msgs_ir_meter_overlay_normalized_coordinates_to_proto(ros_msg
     proto.x = ros_msg.x
     proto.y = ros_msg.y
 
+def convert_proto_to_bosdyn_msgs_ir_meter_overlay_temp_unit(proto, ros_msg):
+    ros_msg.value.value = proto.value
+
+def convert_bosdyn_msgs_ir_meter_overlay_temp_unit_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.value = ros_msg.value.value
+
+def convert_proto_to_bosdyn_msgs_ir_meter_overlay_delta_pair(proto, ros_msg):
+    ros_msg.a = proto.a
+    ros_msg.b = proto.b
+
+def convert_bosdyn_msgs_ir_meter_overlay_delta_pair_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.a = ros_msg.a
+    proto.b = ros_msg.b
+
 def convert_proto_to_bosdyn_msgs_ir_meter_overlay(proto, ros_msg):
     ros_msg.enable = proto.enable
-    convert_proto_to_bosdyn_msgs_ir_meter_overlay_normalized_coordinates(proto.coords, ros_msg.coords)
-    ros_msg.coords_is_set = proto.HasField("coords")
+    from bosdyn_msgs.msg import NormalizedCoordinates
+    ros_msg.meter = []
+    for _item in proto.meter:
+        ros_msg.meter.append(NormalizedCoordinates())
+        convert_proto_to_bosdyn_msgs_ir_meter_overlay_normalized_coordinates(_item, ros_msg.meter[-1])
+    convert_proto_to_bosdyn_msgs_ir_meter_overlay_temp_unit(proto.unit, ros_msg.unit)
+    ros_msg.unit_is_set = proto.HasField("unit")
+    from bosdyn_msgs.msg import DeltaPair
+    ros_msg.delta = []
+    for _item in proto.delta:
+        ros_msg.delta.append(DeltaPair())
+        convert_proto_to_bosdyn_msgs_ir_meter_overlay_delta_pair(_item, ros_msg.delta[-1])
 
 def convert_bosdyn_msgs_ir_meter_overlay_to_proto(ros_msg, proto):
     proto.Clear()
     proto.enable = ros_msg.enable
-    if ros_msg.coords_is_set:
-        convert_bosdyn_msgs_ir_meter_overlay_normalized_coordinates_to_proto(ros_msg.coords, proto.coords)
+    del proto.meter[:]
+    for _item in ros_msg.meter:
+        convert_bosdyn_msgs_ir_meter_overlay_normalized_coordinates_to_proto(_item, proto.meter.add())
+    if ros_msg.unit_is_set:
+        convert_bosdyn_msgs_ir_meter_overlay_temp_unit_to_proto(ros_msg.unit, proto.unit)
+    del proto.delta[:]
+    for _item in ros_msg.delta:
+        convert_bosdyn_msgs_ir_meter_overlay_delta_pair_to_proto(_item, proto.delta.add())
 
 def convert_proto_to_bosdyn_msgs_set_ir_meter_overlay_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -13415,6 +14346,28 @@ def convert_bosdyn_msgs_set_ir_meter_overlay_response_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+
+def convert_proto_to_bosdyn_msgs_get_ir_meter_overlay_request(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+
+def convert_bosdyn_msgs_get_ir_meter_overlay_request_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
+
+def convert_proto_to_bosdyn_msgs_get_ir_meter_overlay_response(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+    convert_proto_to_bosdyn_msgs_ir_meter_overlay(proto.overlay, ros_msg.overlay)
+    ros_msg.overlay_is_set = proto.HasField("overlay")
+
+def convert_bosdyn_msgs_get_ir_meter_overlay_response_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    if ros_msg.overlay_is_set:
+        convert_bosdyn_msgs_ir_meter_overlay_to_proto(ros_msg.overlay, proto.overlay)
 
 def convert_proto_to_bosdyn_msgs_ptz_description_limits(proto, ros_msg):
     ros_msg.min = proto.min.value
@@ -13638,6 +14591,65 @@ def convert_bosdyn_msgs_initialize_lens_response_to_proto(ros_msg, proto):
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
 
+def convert_proto_to_bosdyn_msgs_ptz_focus_state(proto, ros_msg):
+    ros_msg.mode.value = proto.mode
+    ros_msg.focus_position = proto.focus_position.value
+    ros_msg.focus_position_is_set = proto.HasField("focus_position")
+    ros_msg.approx_distance = proto.approx_distance.value
+    ros_msg.approx_distance_is_set = proto.HasField("approx_distance")
+
+def convert_bosdyn_msgs_ptz_focus_state_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.mode = ros_msg.mode.value
+    if ros_msg.focus_position_is_set:
+        convert_int32_to_proto(ros_msg.focus_position, proto.focus_position)
+    if ros_msg.approx_distance_is_set:
+        convert_float32_to_proto(ros_msg.approx_distance, proto.approx_distance)
+
+def convert_proto_to_bosdyn_msgs_set_ptz_focus_state_request(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+    convert_proto_to_bosdyn_msgs_ptz_focus_state(proto.focus_state, ros_msg.focus_state)
+    ros_msg.focus_state_is_set = proto.HasField("focus_state")
+
+def convert_bosdyn_msgs_set_ptz_focus_state_request_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
+    if ros_msg.focus_state_is_set:
+        convert_bosdyn_msgs_ptz_focus_state_to_proto(ros_msg.focus_state, proto.focus_state)
+
+def convert_proto_to_bosdyn_msgs_set_ptz_focus_state_response(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+
+def convert_bosdyn_msgs_set_ptz_focus_state_response_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+
+def convert_proto_to_bosdyn_msgs_get_ptz_focus_state_request(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+
+def convert_bosdyn_msgs_get_ptz_focus_state_request_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
+
+def convert_proto_to_bosdyn_msgs_get_ptz_focus_state_response(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+    convert_proto_to_bosdyn_msgs_ptz_focus_state(proto.focus_state, ros_msg.focus_state)
+    ros_msg.focus_state_is_set = proto.HasField("focus_state")
+
+def convert_bosdyn_msgs_get_ptz_focus_state_response_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    if ros_msg.focus_state_is_set:
+        convert_bosdyn_msgs_ptz_focus_state_to_proto(ros_msg.focus_state, proto.focus_state)
+
 def convert_proto_to_bosdyn_msgs_stream_params_awb_mode(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_stream_params_awb_mode_enum(proto.awb, ros_msg.awb)
     ros_msg.awb_is_set = proto.HasField("awb")
@@ -13646,6 +14658,51 @@ def convert_bosdyn_msgs_stream_params_awb_mode_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.awb_is_set:
         convert_bosdyn_msgs_stream_params_awb_mode_enum_to_proto(ros_msg.awb, proto.awb)
+
+def convert_bosdyn_msgs_stream_params_auto_exposure_to_proto(ros_msg, proto):
+    proto.Clear()
+
+def convert_proto_to_bosdyn_msgs_stream_params_sync_auto_exposure(proto, ros_msg):
+    ros_msg.brightness_target = proto.brightness_target.value
+    ros_msg.brightness_target_is_set = proto.HasField("brightness_target")
+
+def convert_bosdyn_msgs_stream_params_sync_auto_exposure_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.brightness_target_is_set:
+        convert_int32_to_proto(ros_msg.brightness_target, proto.brightness_target)
+
+def convert_proto_to_bosdyn_msgs_stream_params_manual_exposure(proto, ros_msg):
+    convert_proto_to_builtin_interfaces_duration(proto.exposure, ros_msg.exposure)
+    ros_msg.exposure_is_set = proto.HasField("exposure")
+    ros_msg.gain = proto.gain.value
+    ros_msg.gain_is_set = proto.HasField("gain")
+
+def convert_bosdyn_msgs_stream_params_manual_exposure_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.exposure_is_set:
+        convert_builtin_interfaces_duration_to_proto(ros_msg.exposure, proto.exposure)
+    if ros_msg.gain_is_set:
+        convert_float32_to_proto(ros_msg.gain, proto.gain)
+
+def convert_proto_to_bosdyn_msgs_stream_params_one_of_exposure(proto, ros_msg):
+    if proto.HasField("auto_exposure"):
+        ros_msg.exposure_choice = ros_msg.EXPOSURE_AUTO_EXPOSURE_SET
+        convert_proto_to_bosdyn_msgs_stream_params_auto_exposure(proto.auto_exposure, ros_msg.auto_exposure)
+    if proto.HasField("sync_exposure"):
+        ros_msg.exposure_choice = ros_msg.EXPOSURE_SYNC_EXPOSURE_SET
+        convert_proto_to_bosdyn_msgs_stream_params_sync_auto_exposure(proto.sync_exposure, ros_msg.sync_exposure)
+    if proto.HasField("manual_exposure"):
+        ros_msg.exposure_choice = ros_msg.EXPOSURE_MANUAL_EXPOSURE_SET
+        convert_proto_to_bosdyn_msgs_stream_params_manual_exposure(proto.manual_exposure, ros_msg.manual_exposure)
+
+def convert_bosdyn_msgs_stream_params_one_of_exposure_to_proto(ros_msg, proto):
+    proto.ClearField("exposure")
+    if ros_msg.exposure_choice == ros_msg.EXPOSURE_AUTO_EXPOSURE_SET:
+        convert_bosdyn_msgs_stream_params_auto_exposure_to_proto(ros_msg.auto_exposure, proto.auto_exposure)
+    if ros_msg.exposure_choice == ros_msg.EXPOSURE_SYNC_EXPOSURE_SET:
+        convert_bosdyn_msgs_stream_params_sync_auto_exposure_to_proto(ros_msg.sync_exposure, proto.sync_exposure)
+    if ros_msg.exposure_choice == ros_msg.EXPOSURE_MANUAL_EXPOSURE_SET:
+        convert_bosdyn_msgs_stream_params_manual_exposure_to_proto(ros_msg.manual_exposure, proto.manual_exposure)
 
 def convert_proto_to_bosdyn_msgs_stream_params(proto, ros_msg):
     ros_msg.targetbitrate = proto.targetbitrate.value
@@ -13656,6 +14713,7 @@ def convert_proto_to_bosdyn_msgs_stream_params(proto, ros_msg):
     ros_msg.idrinterval_is_set = proto.HasField("idrinterval")
     convert_proto_to_bosdyn_msgs_stream_params_awb_mode(proto.awb, ros_msg.awb)
     ros_msg.awb_is_set = proto.HasField("awb")
+    convert_proto_to_bosdyn_msgs_stream_params_one_of_exposure(proto, ros_msg.exposure)
 
 def convert_bosdyn_msgs_stream_params_to_proto(ros_msg, proto):
     proto.Clear()
@@ -13667,6 +14725,7 @@ def convert_bosdyn_msgs_stream_params_to_proto(ros_msg, proto):
         convert_int64_to_proto(ros_msg.idrinterval, proto.idrinterval)
     if ros_msg.awb_is_set:
         convert_bosdyn_msgs_stream_params_awb_mode_to_proto(ros_msg.awb, proto.awb)
+    convert_bosdyn_msgs_stream_params_one_of_exposure_to_proto(ros_msg.exposure, proto)
 
 def convert_proto_to_bosdyn_msgs_get_stream_params_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -13735,6 +14794,206 @@ def convert_bosdyn_msgs_enable_congestion_control_response_to_proto(ros_msg, pro
     proto.Clear()
     if ros_msg.header_is_set:
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+
+def convert_proto_to_bosdyn_msgs_policy(proto, ros_msg):
+    ros_msg.name = proto.name
+    from bosdyn_msgs.msg import ActionAfter
+    ros_msg.actions = []
+    for _item in proto.actions:
+        ros_msg.actions.append(ActionAfter())
+        convert_proto_to_bosdyn_msgs_action_after(_item, ros_msg.actions[-1])
+    from bosdyn_msgs.msg import Lease
+    ros_msg.associated_leases = []
+    for _item in proto.associated_leases:
+        ros_msg.associated_leases.append(Lease())
+        convert_proto_to_bosdyn_msgs_lease(_item, ros_msg.associated_leases[-1])
+    ros_msg.user_id = proto.user_id
+
+def convert_bosdyn_msgs_policy_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.name = ros_msg.name
+    del proto.actions[:]
+    for _item in ros_msg.actions:
+        convert_bosdyn_msgs_action_after_to_proto(_item, proto.actions.add())
+    del proto.associated_leases[:]
+    for _item in ros_msg.associated_leases:
+        convert_bosdyn_msgs_lease_to_proto(_item, proto.associated_leases.add())
+    proto.user_id = ros_msg.user_id
+
+def convert_proto_to_bosdyn_msgs_action_after_record_event(proto, ros_msg):
+    from bosdyn_msgs.msg import Event
+    ros_msg.events = []
+    for _item in proto.events:
+        ros_msg.events.append(Event())
+        convert_proto_to_bosdyn_msgs_event(_item, ros_msg.events[-1])
+
+def convert_bosdyn_msgs_action_after_record_event_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.events[:]
+    for _item in ros_msg.events:
+        convert_bosdyn_msgs_event_to_proto(_item, proto.events.add())
+
+def convert_proto_to_bosdyn_msgs_action_after_auto_return(proto, ros_msg):
+    from bosdyn_msgs.msg import Lease
+    ros_msg.leases = []
+    for _item in proto.leases:
+        ros_msg.leases.append(Lease())
+        convert_proto_to_bosdyn_msgs_lease(_item, ros_msg.leases[-1])
+    convert_proto_to_bosdyn_msgs_params(proto.params, ros_msg.params)
+    ros_msg.params_is_set = proto.HasField("params")
+
+def convert_bosdyn_msgs_action_after_auto_return_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.leases[:]
+    for _item in ros_msg.leases:
+        convert_bosdyn_msgs_lease_to_proto(_item, proto.leases.add())
+    if ros_msg.params_is_set:
+        convert_bosdyn_msgs_params_to_proto(ros_msg.params, proto.params)
+
+def convert_bosdyn_msgs_action_after_controlled_motors_off_to_proto(ros_msg, proto):
+    proto.Clear()
+
+def convert_bosdyn_msgs_action_after_immediate_robot_off_to_proto(ros_msg, proto):
+    proto.Clear()
+
+def convert_proto_to_bosdyn_msgs_action_after_lease_stale(proto, ros_msg):
+    from bosdyn_msgs.msg import Lease
+    ros_msg.leases = []
+    for _item in proto.leases:
+        ros_msg.leases.append(Lease())
+        convert_proto_to_bosdyn_msgs_lease(_item, ros_msg.leases[-1])
+
+def convert_bosdyn_msgs_action_after_lease_stale_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.leases[:]
+    for _item in ros_msg.leases:
+        convert_bosdyn_msgs_lease_to_proto(_item, proto.leases.add())
+
+def convert_proto_to_bosdyn_msgs_action_after_one_of_action(proto, ros_msg):
+    if proto.HasField("record_event"):
+        ros_msg.action_choice = ros_msg.ACTION_RECORD_EVENT_SET
+        convert_proto_to_bosdyn_msgs_action_after_record_event(proto.record_event, ros_msg.record_event)
+    if proto.HasField("auto_return"):
+        ros_msg.action_choice = ros_msg.ACTION_AUTO_RETURN_SET
+        convert_proto_to_bosdyn_msgs_action_after_auto_return(proto.auto_return, ros_msg.auto_return)
+    if proto.HasField("controlled_motors_off"):
+        ros_msg.action_choice = ros_msg.ACTION_CONTROLLED_MOTORS_OFF_SET
+        convert_proto_to_bosdyn_msgs_action_after_controlled_motors_off(proto.controlled_motors_off, ros_msg.controlled_motors_off)
+    if proto.HasField("immediate_robot_off"):
+        ros_msg.action_choice = ros_msg.ACTION_IMMEDIATE_ROBOT_OFF_SET
+        convert_proto_to_bosdyn_msgs_action_after_immediate_robot_off(proto.immediate_robot_off, ros_msg.immediate_robot_off)
+    if proto.HasField("lease_stale"):
+        ros_msg.action_choice = ros_msg.ACTION_LEASE_STALE_SET
+        convert_proto_to_bosdyn_msgs_action_after_lease_stale(proto.lease_stale, ros_msg.lease_stale)
+
+def convert_bosdyn_msgs_action_after_one_of_action_to_proto(ros_msg, proto):
+    proto.ClearField("action")
+    if ros_msg.action_choice == ros_msg.ACTION_RECORD_EVENT_SET:
+        convert_bosdyn_msgs_action_after_record_event_to_proto(ros_msg.record_event, proto.record_event)
+    if ros_msg.action_choice == ros_msg.ACTION_AUTO_RETURN_SET:
+        convert_bosdyn_msgs_action_after_auto_return_to_proto(ros_msg.auto_return, proto.auto_return)
+    if ros_msg.action_choice == ros_msg.ACTION_CONTROLLED_MOTORS_OFF_SET:
+        convert_bosdyn_msgs_action_after_controlled_motors_off_to_proto(ros_msg.controlled_motors_off, proto.controlled_motors_off)
+    if ros_msg.action_choice == ros_msg.ACTION_IMMEDIATE_ROBOT_OFF_SET:
+        convert_bosdyn_msgs_action_after_immediate_robot_off_to_proto(ros_msg.immediate_robot_off, proto.immediate_robot_off)
+    if ros_msg.action_choice == ros_msg.ACTION_LEASE_STALE_SET:
+        convert_bosdyn_msgs_action_after_lease_stale_to_proto(ros_msg.lease_stale, proto.lease_stale)
+
+def convert_proto_to_bosdyn_msgs_action_after(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_action_after_one_of_action(proto, ros_msg.action)
+    convert_proto_to_builtin_interfaces_duration(proto.after, ros_msg.after)
+    ros_msg.after_is_set = proto.HasField("after")
+
+def convert_bosdyn_msgs_action_after_to_proto(ros_msg, proto):
+    proto.Clear()
+    convert_bosdyn_msgs_action_after_one_of_action_to_proto(ros_msg.action, proto)
+    if ros_msg.after_is_set:
+        convert_builtin_interfaces_duration_to_proto(ros_msg.after, proto.after)
+
+def convert_proto_to_bosdyn_msgs_modify_policy_request(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+    convert_proto_to_bosdyn_msgs_policy(proto.to_add, ros_msg.to_add)
+    ros_msg.to_add_is_set = proto.HasField("to_add")
+    ros_msg.policy_ids_to_remove = []
+    for _item in proto.policy_ids_to_remove:
+        ros_msg.policy_ids_to_remove.append(_item)
+
+def convert_bosdyn_msgs_modify_policy_request_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
+    if ros_msg.to_add_is_set:
+        convert_bosdyn_msgs_policy_to_proto(ros_msg.to_add, proto.to_add)
+    del proto.policy_ids_to_remove[:]
+    for _item in ros_msg.policy_ids_to_remove:
+        proto.policy_ids_to_remove.add(_item)
+
+def convert_proto_to_bosdyn_msgs_modify_policy_response(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+    ros_msg.status.value = proto.status
+    convert_proto_to_bosdyn_msgs_live_policy(proto.added_policy, ros_msg.added_policy)
+    ros_msg.added_policy_is_set = proto.HasField("added_policy")
+    from bosdyn_msgs.msg import LivePolicy
+    ros_msg.removed_policies = []
+    for _item in proto.removed_policies:
+        ros_msg.removed_policies.append(LivePolicy())
+        convert_proto_to_bosdyn_msgs_live_policy(_item, ros_msg.removed_policies[-1])
+
+def convert_bosdyn_msgs_modify_policy_response_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    proto.status = ros_msg.status.value
+    if ros_msg.added_policy_is_set:
+        convert_bosdyn_msgs_live_policy_to_proto(ros_msg.added_policy, proto.added_policy)
+    del proto.removed_policies[:]
+    for _item in ros_msg.removed_policies:
+        convert_bosdyn_msgs_live_policy_to_proto(_item, proto.removed_policies.add())
+
+def convert_proto_to_bosdyn_msgs_check_in_request(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+    ros_msg.policy_id = proto.policy_id
+
+def convert_bosdyn_msgs_check_in_request_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
+    proto.policy_id = ros_msg.policy_id
+
+def convert_proto_to_bosdyn_msgs_check_in_response(proto, ros_msg):
+    convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
+    ros_msg.header_is_set = proto.HasField("header")
+    convert_proto_to_builtin_interfaces_time(proto.last_checkin, ros_msg.last_checkin)
+    ros_msg.last_checkin_is_set = proto.HasField("last_checkin")
+    ros_msg.status.value = proto.status
+
+def convert_bosdyn_msgs_check_in_response_to_proto(ros_msg, proto):
+    proto.Clear()
+    if ros_msg.header_is_set:
+        convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
+    if ros_msg.last_checkin_is_set:
+        convert_builtin_interfaces_time_to_proto(ros_msg.last_checkin, proto.last_checkin)
+    proto.status = ros_msg.status.value
+
+def convert_proto_to_bosdyn_msgs_live_policy(proto, ros_msg):
+    ros_msg.policy_id = proto.policy_id
+    convert_proto_to_bosdyn_msgs_policy(proto.policy, ros_msg.policy)
+    ros_msg.policy_is_set = proto.HasField("policy")
+    convert_proto_to_builtin_interfaces_time(proto.last_checkin, ros_msg.last_checkin)
+    ros_msg.last_checkin_is_set = proto.HasField("last_checkin")
+    ros_msg.client_name = proto.client_name
+
+def convert_bosdyn_msgs_live_policy_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.policy_id = ros_msg.policy_id
+    if ros_msg.policy_is_set:
+        convert_bosdyn_msgs_policy_to_proto(ros_msg.policy, proto.policy)
+    if ros_msg.last_checkin_is_set:
+        convert_builtin_interfaces_time_to_proto(ros_msg.last_checkin, proto.last_checkin)
+    proto.client_name = ros_msg.client_name
 
 def convert_proto_to_bosdyn_msgs_failed_element(proto, ros_msg):
     ros_msg.errors = []
@@ -13822,9 +15081,8 @@ def convert_bosdyn_msgs_compile_autowalk_response_to_proto(ros_msg, proto):
     del proto.element_identifiers[:]
     for _item in ros_msg.element_identifiers:
         convert_bosdyn_msgs_element_identifiers_to_proto(_item, proto.element_identifiers.add())
-    del proto.failed_elements[:]
     for _item in ros_msg.failed_elements:
-        convert_bosdyn_msgs_failed_element_to_proto(ros_msg.failed_elements[_item], proto.failed_elements[_item])
+        convert_bosdyn_msgs_failed_element_to_proto(_item.value, proto.failed_elements[_item.key])
     if ros_msg.docking_node_is_set:
         convert_bosdyn_msgs_node_identifier_to_proto(ros_msg.docking_node, proto.docking_node)
     if ros_msg.loop_node_is_set:
@@ -13898,9 +15156,8 @@ def convert_bosdyn_msgs_load_autowalk_response_to_proto(ros_msg, proto):
     del proto.element_identifiers[:]
     for _item in ros_msg.element_identifiers:
         convert_bosdyn_msgs_element_identifiers_to_proto(_item, proto.element_identifiers.add())
-    del proto.failed_elements[:]
     for _item in ros_msg.failed_elements:
-        convert_bosdyn_msgs_failed_element_to_proto(ros_msg.failed_elements[_item], proto.failed_elements[_item])
+        convert_bosdyn_msgs_failed_element_to_proto(_item.value, proto.failed_elements[_item.key])
     proto.mission_id = ros_msg.mission_id
     if ros_msg.docking_node_is_set:
         convert_bosdyn_msgs_node_identifier_to_proto(ros_msg.docking_node, proto.docking_node)
@@ -13924,6 +15181,7 @@ def convert_proto_to_bosdyn_msgs_walk(proto, ros_msg):
     for _item in proto.docks:
         ros_msg.docks.append(Dock())
         convert_proto_to_bosdyn_msgs_dock(_item, ros_msg.docks[-1])
+    ros_msg.id = proto.id
 
 def convert_bosdyn_msgs_walk_to_proto(ros_msg, proto):
     proto.Clear()
@@ -13939,6 +15197,7 @@ def convert_bosdyn_msgs_walk_to_proto(ros_msg, proto):
     del proto.docks[:]
     for _item in ros_msg.docks:
         convert_bosdyn_msgs_dock_to_proto(_item, proto.docks.add())
+    proto.id = ros_msg.id
 
 def convert_proto_to_bosdyn_msgs_global_parameters(proto, ros_msg):
     ros_msg.group_name = proto.group_name
@@ -13949,6 +15208,7 @@ def convert_proto_to_bosdyn_msgs_global_parameters(proto, ros_msg):
     for _item in proto.post_mission_callbacks:
         ros_msg.post_mission_callbacks.append(ActionRemoteGrpc())
         convert_proto_to_bosdyn_msgs_action_remote_grpc(_item, ros_msg.post_mission_callbacks[-1])
+    ros_msg.skip_actions = proto.skip_actions
 
 def convert_bosdyn_msgs_global_parameters_to_proto(ros_msg, proto):
     proto.Clear()
@@ -13958,6 +15218,7 @@ def convert_bosdyn_msgs_global_parameters_to_proto(ros_msg, proto):
     del proto.post_mission_callbacks[:]
     for _item in ros_msg.post_mission_callbacks:
         convert_bosdyn_msgs_action_remote_grpc_to_proto(_item, proto.post_mission_callbacks.add())
+    proto.skip_actions = ros_msg.skip_actions
 
 def convert_proto_to_bosdyn_msgs_playback_mode_once(proto, ros_msg):
     ros_msg.skip_docking_after_completion = proto.skip_docking_after_completion
@@ -14022,6 +15283,9 @@ def convert_proto_to_bosdyn_msgs_element(proto, ros_msg):
     ros_msg.is_skipped = proto.is_skipped
     convert_proto_to_bosdyn_msgs_battery_monitor(proto.battery_monitor, ros_msg.battery_monitor)
     ros_msg.battery_monitor_is_set = proto.HasField("battery_monitor")
+    convert_proto_to_builtin_interfaces_duration(proto.action_duration, ros_msg.action_duration)
+    ros_msg.action_duration_is_set = proto.HasField("action_duration")
+    ros_msg.id = proto.id
 
 def convert_bosdyn_msgs_element_to_proto(ros_msg, proto):
     proto.Clear()
@@ -14039,6 +15303,9 @@ def convert_bosdyn_msgs_element_to_proto(ros_msg, proto):
     proto.is_skipped = ros_msg.is_skipped
     if ros_msg.battery_monitor_is_set:
         convert_bosdyn_msgs_battery_monitor_to_proto(ros_msg.battery_monitor, proto.battery_monitor)
+    if ros_msg.action_duration_is_set:
+        convert_builtin_interfaces_duration_to_proto(ros_msg.action_duration, proto.action_duration)
+    proto.id = ros_msg.id
 
 def convert_proto_to_bosdyn_msgs_target_relocalize(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_set_localization_request(proto.set_localization_request, ros_msg.set_localization_request)
@@ -14112,12 +15379,16 @@ def convert_proto_to_bosdyn_msgs_action_data_acquisition(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_acquire_data_request(proto.acquire_data_request, ros_msg.acquire_data_request)
     ros_msg.acquire_data_request_is_set = proto.HasField("acquire_data_request")
     ros_msg.completion_behavior.value = proto.completion_behavior
+    convert_proto_to_bosdyn_msgs_acquisition_capability_list(proto.last_known_capabilities, ros_msg.last_known_capabilities)
+    ros_msg.last_known_capabilities_is_set = proto.HasField("last_known_capabilities")
 
 def convert_bosdyn_msgs_action_data_acquisition_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.acquire_data_request_is_set:
         convert_bosdyn_msgs_acquire_data_request_to_proto(ros_msg.acquire_data_request, proto.acquire_data_request)
     proto.completion_behavior = ros_msg.completion_behavior.value
+    if ros_msg.last_known_capabilities_is_set:
+        convert_bosdyn_msgs_acquisition_capability_list_to_proto(ros_msg.last_known_capabilities, proto.last_known_capabilities)
 
 def convert_proto_to_bosdyn_msgs_action_remote_grpc(proto, ros_msg):
     ros_msg.service_name = proto.service_name
@@ -14131,6 +15402,8 @@ def convert_proto_to_bosdyn_msgs_action_remote_grpc(proto, ros_msg):
     for _item in proto.inputs:
         ros_msg.inputs.append(KeyValue())
         convert_proto_to_bosdyn_msgs_key_value(_item, ros_msg.inputs[-1])
+    convert_proto_to_bosdyn_msgs_custom_param_collection(proto.parameters, ros_msg.parameters)
+    ros_msg.parameters_is_set = proto.HasField("parameters")
 
 def convert_bosdyn_msgs_action_remote_grpc_to_proto(ros_msg, proto):
     proto.Clear()
@@ -14143,6 +15416,8 @@ def convert_bosdyn_msgs_action_remote_grpc_to_proto(ros_msg, proto):
     del proto.inputs[:]
     for _item in ros_msg.inputs:
         convert_bosdyn_msgs_key_value_to_proto(_item, proto.inputs.add())
+    if ros_msg.parameters_is_set:
+        convert_bosdyn_msgs_custom_param_collection_to_proto(ros_msg.parameters, proto.parameters)
 
 def convert_proto_to_bosdyn_msgs_action_one_of_action(proto, ros_msg):
     if proto.HasField("sleep"):
@@ -14198,7 +15473,6 @@ def convert_proto_to_bosdyn_msgs_action_wrapper_spot_cam_led(proto, ros_msg):
 
 def convert_bosdyn_msgs_action_wrapper_spot_cam_led_to_proto(ros_msg, proto):
     proto.Clear()
-    del proto.brightnesses[:]
     for _item in ros_msg.brightnesses:
         proto.brightnesses[_item.key] = _item.value
 
@@ -14210,6 +15484,54 @@ def convert_bosdyn_msgs_action_wrapper_spot_cam_ptz_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.ptz_position_is_set:
         convert_bosdyn_msgs_ptz_position_to_proto(ros_msg.ptz_position, proto.ptz_position)
+
+def convert_proto_to_bosdyn_msgs_action_wrapper_spot_cam_alignment_alignment_one_of_reference(proto, ros_msg):
+    if proto.HasField("scene_object_id"):
+        ros_msg.reference_choice = ros_msg.REFERENCE_SCENE_OBJECT_ID_SET
+        ros_msg.scene_object_id = proto.scene_object_id
+
+def convert_bosdyn_msgs_action_wrapper_spot_cam_alignment_alignment_one_of_reference_to_proto(ros_msg, proto):
+    proto.ClearField("reference")
+    if ros_msg.reference_choice == ros_msg.REFERENCE_SCENE_OBJECT_ID_SET:
+        proto.scene_object_id = ros_msg.scene_object_id
+
+def convert_proto_to_bosdyn_msgs_action_wrapper_spot_cam_alignment_alignment(proto, ros_msg):
+    ros_msg.zoom = proto.zoom
+    ros_msg.sensor_id = proto.sensor_id
+    convert_proto_to_bosdyn_msgs_action_wrapper_spot_cam_alignment_alignment_one_of_reference(proto, ros_msg.reference)
+    ros_msg.is_skipped = proto.is_skipped
+
+def convert_bosdyn_msgs_action_wrapper_spot_cam_alignment_alignment_to_proto(ros_msg, proto):
+    proto.Clear()
+    proto.zoom = ros_msg.zoom
+    proto.sensor_id = ros_msg.sensor_id
+    convert_bosdyn_msgs_action_wrapper_spot_cam_alignment_alignment_one_of_reference_to_proto(ros_msg.reference, proto)
+    proto.is_skipped = ros_msg.is_skipped
+
+def convert_proto_to_bosdyn_msgs_action_wrapper_spot_cam_alignment(proto, ros_msg):
+    from bosdyn_msgs.msg import Alignment
+    ros_msg.alignments = []
+    for _item in proto.alignments:
+        ros_msg.alignments.append(Alignment())
+        convert_proto_to_bosdyn_msgs_action_wrapper_spot_cam_alignment_alignment(_item, ros_msg.alignments[-1])
+    convert_proto_to_geometry_msgs_pose(proto.target_tform_sensor, ros_msg.target_tform_sensor)
+    ros_msg.target_tform_sensor_is_set = proto.HasField("target_tform_sensor")
+    ros_msg.final_zoom = proto.final_zoom
+    ros_msg.target_sensor_ids = []
+    for _item in proto.target_sensor_ids:
+        ros_msg.target_sensor_ids.append(_item)
+
+def convert_bosdyn_msgs_action_wrapper_spot_cam_alignment_to_proto(ros_msg, proto):
+    proto.Clear()
+    del proto.alignments[:]
+    for _item in ros_msg.alignments:
+        convert_bosdyn_msgs_action_wrapper_spot_cam_alignment_alignment_to_proto(_item, proto.alignments.add())
+    if ros_msg.target_tform_sensor_is_set:
+        convert_geometry_msgs_pose_to_proto(ros_msg.target_tform_sensor, proto.target_tform_sensor)
+    proto.final_zoom = ros_msg.final_zoom
+    del proto.target_sensor_ids[:]
+    for _item in ros_msg.target_sensor_ids:
+        proto.target_sensor_ids.add(_item)
 
 def convert_proto_to_bosdyn_msgs_action_wrapper_arm_sensor_pointing(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_arm_joint_trajectory(proto.joint_trajectory, ros_msg.joint_trajectory)
@@ -14267,6 +15589,8 @@ def convert_proto_to_bosdyn_msgs_action_wrapper(proto, ros_msg):
     ros_msg.spot_cam_ptz_is_set = proto.HasField("spot_cam_ptz")
     convert_proto_to_bosdyn_msgs_action_wrapper_arm_sensor_pointing(proto.arm_sensor_pointing, ros_msg.arm_sensor_pointing)
     ros_msg.arm_sensor_pointing_is_set = proto.HasField("arm_sensor_pointing")
+    convert_proto_to_bosdyn_msgs_action_wrapper_spot_cam_alignment(proto.spot_cam_alignment, ros_msg.spot_cam_alignment)
+    ros_msg.spot_cam_alignment_is_set = proto.HasField("spot_cam_alignment")
     convert_proto_to_bosdyn_msgs_action_wrapper_gripper_camera_params(proto.gripper_camera_params, ros_msg.gripper_camera_params)
     ros_msg.gripper_camera_params_is_set = proto.HasField("gripper_camera_params")
     convert_proto_to_bosdyn_msgs_action_wrapper_gripper_command(proto.gripper_command, ros_msg.gripper_command)
@@ -14284,6 +15608,8 @@ def convert_bosdyn_msgs_action_wrapper_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_action_wrapper_spot_cam_ptz_to_proto(ros_msg.spot_cam_ptz, proto.spot_cam_ptz)
     if ros_msg.arm_sensor_pointing_is_set:
         convert_bosdyn_msgs_action_wrapper_arm_sensor_pointing_to_proto(ros_msg.arm_sensor_pointing, proto.arm_sensor_pointing)
+    if ros_msg.spot_cam_alignment_is_set:
+        convert_bosdyn_msgs_action_wrapper_spot_cam_alignment_to_proto(ros_msg.spot_cam_alignment, proto.spot_cam_alignment)
     if ros_msg.gripper_camera_params_is_set:
         convert_bosdyn_msgs_action_wrapper_gripper_camera_params_to_proto(ros_msg.gripper_camera_params, proto.gripper_camera_params)
     if ros_msg.gripper_command_is_set:
