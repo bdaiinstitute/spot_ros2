@@ -484,6 +484,16 @@ class SpotROS():
                 return IN_PROGRESS
 
         elif feedback.command.command_choice == feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET:
+            # The idea here is that a synchronized command can have arm, mobility, and/or gripper
+            # sub-commands in it.  The total command isn't done until all sub-commands are satisfied.
+            # So if any one of the sub-commands is still in progress, it short-circuits out as
+            # IN_PROGRESS.  And if it makes it to the bottom of the function, then all components
+            # must be satisfied, and it returns SUCCESS.
+            # One corner case to know about is that the commands that don't provide feedback, such
+            # as a velocity command will return SUCCESS.  This allows you to use them more effectively
+            # with other commands.  For example if you wanted to move the arm with some velocity
+            # while the mobility is going to some SE2 trajectory then that will work.
+
             sync_feedback = feedback.command.synchronized_feedback
             if sync_feedback.arm_command_feedback_is_set == True:
                 arm_feedback =  sync_feedback.arm_command_feedback
@@ -677,7 +687,7 @@ class SpotROS():
         command_start_time = self.node.get_clock().now()
 
         # Abort the action server if cmd_duration is exceeded - the driver stops but does not provide
-        # feedback toindicate this so we monitor it ourselves
+        # feedback to indicate this so we monitor it ourselves
         # The trajectory command is non-blocking but we need to keep this function up in order to
         # interrupt if a preempt is requested and to return success if/when the robot reaches the goal.
         # Also check the is_active to
