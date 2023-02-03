@@ -570,14 +570,14 @@ def lookup_a_tform_b(tf_buffer, frame_a, frame_b, transform_time=None, timeout=N
     if transform_time is None:
         transform_time = rclpy.time.Time()
     if timeout is None:
-        timeout = rclpy.time.Duration()
+        timeout_py = rclpy.time.Duration()
     else:
-        timeout = rclpy.time.Duration(seconds=timeout)
+        timeout_py = rclpy.time.Duration(seconds=timeout)
     start_time = time.time()
     while True:
         try:
             return ros_transform_to_se3_pose(tf_buffer.lookup_transform(frame_a, frame_b, time=transform_time,
-                                                                        timeout=timeout).transform)
+                                                                        timeout=timeout_py).transform)
         except tf2.TransformException as e:
             now = time.time()
             if timeout is None or now - start_time > timeout:
