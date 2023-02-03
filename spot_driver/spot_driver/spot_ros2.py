@@ -72,11 +72,6 @@ import sys
 MAX_DURATION = 1e6
 MOCK_HOSTNAME = "Mock_spot"
 
-COLOR_END    = '\33[0m'
-COLOR_RED    = '\33[31m'
-COLOR_GREEN  = '\33[32m'
-COLOR_YELLOW = '\33[33m'
-
 
 class WaitForGoal(object):
     def __init__(self, clock, time, callback=None):
@@ -431,7 +426,7 @@ class SpotROS():
         SUCCESS = True
 
         if not feedback:
-            print(COLOR_RED + 'ERROR: no feedback' + COLOR_END)
+            self.node.get_logger().error('ERROR: no feedback')
             return IN_PROGRESS
 
         if feedback.command.command_choice == feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
@@ -496,9 +491,12 @@ class SpotROS():
 
             sync_feedback = feedback.command.synchronized_feedback
             if sync_feedback.arm_command_feedback_is_set == True:
-                arm_feedback =  sync_feedback.arm_command_feedback
-                if (arm_feedback.status.value != arm_feedback.status.STATUS_PROCESSING):
-                    return IN_PROGRESS
+                arm_feedback = sync_feedback.arm_command_feedback
+                if (arm_feedback.status.value == arm_feedback.status.STATUS_COMMAND_OVERRIDDEN
+                    or arm_feedback.status.value == arm_feedback.status.STATUS_COMMAND_TIMED_OUT
+                    or arm_feedback.status.value == arm_feedback.status.STATUS_ROBOT_FROZEN
+                    or arm_feedback.status.value == arm_feedback.status.STATUS_INCOMPATIBLE_HARDWARE):
+                    return FAILED
                 if (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_CARTESIAN_FEEDBACK_SET):
                     if (arm_feedback.feedback.arm_cartesian_feedback.status.value != arm_feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_COMPLETE):
                         return IN_PROGRESS
@@ -509,38 +507,37 @@ class SpotROS():
                     if (arm_feedback.feedback.named_arm_position_feedback.status.value != arm_feedback.feedback.named_arm_position_feedback.STATUS_COMPLETE):
                         return IN_PROGRESS
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_VELOCITY_FEEDBACK_SET):
-                    # ArmVelocityCommand provides no feedback
-                    print(COLOR_YELLOW + 'WARNING: ArmVelocityCommand provides no feedback' + COLOR_END)
-                    pass
+                    self.node.get_logger().warn('WARNING: ArmVelocityCommand provides no feedback')
+                    pass # May return SUCCESS below
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_GAZE_FEEDBACK_SET):
                     if (arm_feedback.feedback.arm_gaze_feedback.status.value != arm_feedback.feedback.arm_gaze_feedback.STATUS_TRAJECTORY_COMPLETE):
                         return IN_PROGRESS
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_STOP_FEEDBACK_SET):
-                    # Stop command provides no feedback
-                    print(COLOR_YELLOW + 'WARNING: Stop command provides no feedback' + COLOR_END)
-                    pass
+                    self.node.get_logger().warn('WARNING: Stop command provides no feedback')
+                    pass # May return SUCCESS below
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_DRAG_FEEDBACK_SET):
                     if (arm_feedback.feedback.arm_drag_feedback.status.value != arm_feedback.feedback.arm_drag_feedback.STATUS_DRAGGING):
                         return FAILED
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET):
-                    # ArmImpedanceCommand provides no feedback
-                    print(COLOR_YELLOW + 'WARNING: ArmImpedanceCommand provides no feedback' + COLOR_END)
-                    pass
+                    self.node.get_logger().warn('WARNING: ArmImpedanceCommand provides no feedback')
+                    pass # May return SUCCESS below
                 else:
-                    print(COLOR_RED + 'ERROR: unknown arm command type' + COLOR_END)
+                    self.node.get_logger().error('ERROR: unknown arm command type')
                     return IN_PROGRESS
 
             if sync_feedback.mobility_command_feedback_is_set == True:
-                mob_feedback =  sync_feedback.mobility_command_feedback
-                if (mob_feedback.status.value != mob_feedback.status.STATUS_PROCESSING):
-                    return IN_PROGRESS
+                mob_feedback = sync_feedback.mobility_command_feedback
+                if (mob_feedback.status.value == mob_feedback.status.STATUS_COMMAND_OVERRIDDEN
+                    or mob_feedback.status.value == mob_feedback.status.STATUS_COMMAND_TIMED_OUT
+                    or mob_feedback.status.value == mob_feedback.status.STATUS_ROBOT_FROZEN
+                    or mob_feedback.status.value == mob_feedback.status.STATUS_INCOMPATIBLE_HARDWARE):
+                    return FAILED
                 if (mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_SE2_TRAJECTORY_FEEDBACK_SET):
                     if (mob_feedback.feedback.se2_trajectory_feedback.status.value != mob_feedback.feedback.se2_trajectory_feedback.status.STATUS_AT_GOAL):
                         return IN_PROGRESS
                 elif (mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_SE2_VELOCITY_FEEDBACK_SET):
-                    # Planar velocity commands provide no feedback.
-                    print(COLOR_YELLOW + 'WARNING: Planar velocity commands provide no feedback' + COLOR_END)
-                    pass
+                    self.node.get_logger().warn('WARNING: Planar velocity commands provide no feedback')
+                    pass # May return SUCCESS below
                 elif (mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_SIT_FEEDBACK_SET):
                     if (mob_feedback.feedback.sit_feedback.status.value != mob_feedback.feedback.sit_feedback.status.STATUS_IS_SITTING):
                         return IN_PROGRESS
@@ -553,30 +550,33 @@ class SpotROS():
                     if (mob_feedback.feedback.stance_feedback.status.value != mob_feedback.feedback.stance_feedback.status.STATUS_STANCED):
                         return IN_PROGRESS
                 elif (mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET):
-                    print(COLOR_YELLOW + 'WARNING: Stop command provides no feedback' + COLOR_END)
-                    pass
+                    self.node.get_logger().warn('WARNING: Stop command provides no feedback')
+                    pass # May return SUCCESS below
                 elif (mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_FOLLOW_ARM_FEEDBACK_SET):
-                    print(COLOR_YELLOW + 'WARNING: FollowArmCommand provides no feedback' + COLOR_END)
-                    pass
+                    self.node.get_logger().warn('WARNING: FollowArmCommand provides no feedback')
+                    pass # May return SUCCESS below
                 else:
-                    print(COLOR_RED + 'ERROR: unknown mobility command type' + COLOR_END)
+                    self.node.get_logger().error('ERROR: unknown mobility command type')
                     return IN_PROGRESS
 
             if sync_feedback.gripper_command_feedback_is_set == True:
                 grip_feedback = sync_feedback.gripper_command_feedback
-                if (grip_feedback.status.value != grip_feedback.status.STATUS_PROCESSING):
-                    return IN_PROGRESS
+                if (grip_feedback.status.value == grip_feedback.status.STATUS_COMMAND_OVERRIDDEN
+                    or grip_feedback.status.value == grip_feedback.status.STATUS_COMMAND_TIMED_OUT
+                    or grip_feedback.status.value == grip_feedback.status.STATUS_ROBOT_FROZEN
+                    or grip_feedback.status.value == grip_feedback.status.STATUS_INCOMPATIBLE_HARDWARE):
+                    return FAILED
                 if (grip_feedback.command.command_choice == grip_feedback.command.COMMAND_CLAW_GRIPPER_FEEDBACK_SET):
                     if (grip_feedback.command.claw_gripper_feedback.status.value != grip_feedback.command.claw_gripper_feedback.status.STATUS_AT_GOAL):
                         return IN_PROGRESS
                 else:
-                    print(COLOR_RED + 'ERROR: unknown gripper command type' + COLOR_END)
+                    self.node.get_logger().error('ERROR: unknown gripper command type')
                     return IN_PROGRESS
 
             return SUCCESS
 
         else:
-            print(COLOR_RED + 'ERROR: unknown robot command type' + COLOR_END)
+            self.node.get_logger().error('ERROR: unknown robot command type')
             return IN_PROGRESS
 
     def _get_robot_command_feedback(self, goal_id):
@@ -956,7 +956,14 @@ class SpotROS():
             self.node_rate.sleep()
 
 def main(args=None):
+
+    COLOR_END    = '\33[0m'
+    COLOR_RED    = '\33[31m'
+    COLOR_GREEN  = '\33[32m'
+    COLOR_YELLOW = '\33[33m'
+
     print(COLOR_GREEN + 'Hi from spot_driver.' + COLOR_END)
+
     spot_ros = SpotROS()
     rclpy.init(args=args)
     """Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.  Holds lease from wrapper and updates all async tasks at the ROS rate"""
