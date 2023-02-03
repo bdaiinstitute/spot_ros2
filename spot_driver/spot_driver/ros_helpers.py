@@ -1,10 +1,12 @@
 import os
+import time
 import traceback
 import rclpy
 from builtin_interfaces.msg import Time, Duration
 
 from std_msgs.msg import Empty
 from tf2_msgs.msg import TFMessage
+import tf2_py as tf2
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import Image, CameraInfo
 from sensor_msgs.msg import JointState
@@ -563,6 +565,7 @@ def get_from_env_and_fall_back_to_param(env_name, node, param_name, default_valu
         val = node.get_parameter(param_name).value
     return val
 
+# Timeout only works if you use spin_thread when creating your tf_listener!
 def lookup_a_tform_b(tf_buffer, frame_a, frame_b, time=None, timeout=None):
     if time is None:
         time = rclpy.time.Time()
@@ -570,4 +573,15 @@ def lookup_a_tform_b(tf_buffer, frame_a, frame_b, time=None, timeout=None):
         timeout = rclpy.time.Duration()
     else:
         timeout = rclpy.time.Duration(seconds=timeout)
-    return ros_transform_to_se3_pose(tf_buffer.lookup_transform(frame_a, frame_b, time=time, timeout=timeout).transform)
+    start_time = time.time()
+    if timeout is not None:
+        duration = timeout.sec + timeout.nanosec / 1e9
+    while True:
+        try:
+            return ros_transform_to_se3_pose(tf_buffer.lookup_transform(frame_a, frame_b, time=time,
+                                                                        timeout=timeout).transform)
+        except tf2.TransformException as e:
+            now = time.time()
+            if timeout is None or now - start_time > duration:
+                raise e
+            time.sleep(0.01)
