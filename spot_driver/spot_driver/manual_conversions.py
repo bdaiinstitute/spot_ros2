@@ -1,5 +1,5 @@
 from bosdyn.client.math_helpers import SE3Pose, Quat
-from geometry_msgs.msg import Point, Pose2D, Pose, Quaternion  # Note: Pose2D is deprecated
+from geometry_msgs.msg import Point, Pose2D, Pose, Quaternion, Transform, Vector3  # Note: Pose2D is deprecated
 
 
 # ROS <-> BOSDYN MATH
@@ -21,6 +21,11 @@ def se3_pose_to_ros_pose(se3_pose):
     return Pose(position=Point(x=float(se3_pose.x), y=float(se3_pose.y), z=float(se3_pose.z)),
                 orientation=Quaternion(w=float(se3_pose.rot.w), x=float(se3_pose.rot.x), y=float(se3_pose.rot.y),
                                        z=float(se3_pose.rot.z)))
+
+def se3_pose_to_ros_transform(se3_pose):
+    return Transform(translation=Vector3(x=float(se3_pose.x), y=float(se3_pose.y), z=float(se3_pose.z)), 
+                     rotation=Quaternion(w=float(se3_pose.rot.w), x=float(se3_pose.rot.x), y=float(se3_pose.rot.y),
+                                         z=float(se3_pose.rot.z)))
 
 # ROS <-> PROTO
 
