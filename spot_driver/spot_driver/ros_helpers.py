@@ -6,7 +6,7 @@ from builtin_interfaces.msg import Time, Duration
 
 from std_msgs.msg import Empty
 from tf2_msgs.msg import TFMessage
-import tf2_py as tf2
+import tf2
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import Image, CameraInfo
 from sensor_msgs.msg import JointState
