@@ -565,7 +565,8 @@ def get_from_env_and_fall_back_to_param(env_name, node, param_name, default_valu
         val = node.get_parameter(param_name).value
     return val
 
-# Timeout only works if you use spin_thread when creating your tf_listener!
+# Timeout only works if your tf_listener is being updated in a separate thread from which this is called!
+# You can do that by creating a multi-threaded executor.
 def lookup_a_tform_b(tf_buffer, frame_a, frame_b, transform_time=None, timeout=None):
     if transform_time is None:
         transform_time = rclpy.time.Time()
