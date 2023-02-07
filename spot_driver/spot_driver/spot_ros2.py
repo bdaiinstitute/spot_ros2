@@ -426,7 +426,7 @@ class SpotROS():
         SUCCESS = True
 
         if not feedback:
-            self.node.get_logger().error('ERROR: no feedback')
+            # NOTE: it can take an iteration for the feedback to get set.
             return IN_PROGRESS
 
         if feedback.command.command_choice == feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
@@ -504,19 +504,19 @@ class SpotROS():
                     if (arm_feedback.feedback.arm_joint_move_feedback.status.value != arm_feedback.feedback.arm_joint_move_feedback.status.STATUS_COMPLETE):
                         return IN_PROGRESS
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_NAMED_ARM_POSITION_FEEDBACK_SET):
-                    if (arm_feedback.feedback.named_arm_position_feedback.status.value != arm_feedback.feedback.named_arm_position_feedback.STATUS_COMPLETE):
+                    if (arm_feedback.feedback.named_arm_position_feedback.status.value != arm_feedback.feedback.named_arm_position_feedback.status.STATUS_COMPLETE):
                         return IN_PROGRESS
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_VELOCITY_FEEDBACK_SET):
                     self.node.get_logger().warn('WARNING: ArmVelocityCommand provides no feedback')
                     pass # May return SUCCESS below
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_GAZE_FEEDBACK_SET):
-                    if (arm_feedback.feedback.arm_gaze_feedback.status.value != arm_feedback.feedback.arm_gaze_feedback.STATUS_TRAJECTORY_COMPLETE):
+                    if (arm_feedback.feedback.arm_gaze_feedback.status.value != arm_feedback.feedback.arm_gaze_feedback.status.STATUS_TRAJECTORY_COMPLETE):
                         return IN_PROGRESS
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_STOP_FEEDBACK_SET):
                     self.node.get_logger().warn('WARNING: Stop command provides no feedback')
                     pass # May return SUCCESS below
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_DRAG_FEEDBACK_SET):
-                    if (arm_feedback.feedback.arm_drag_feedback.status.value != arm_feedback.feedback.arm_drag_feedback.STATUS_DRAGGING):
+                    if (arm_feedback.feedback.arm_drag_feedback.status.value != arm_feedback.feedback.arm_drag_feedback.status.STATUS_DRAGGING):
                         return FAILED
                 elif (arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET):
                     self.node.get_logger().warn('WARNING: ArmImpedanceCommand provides no feedback')
