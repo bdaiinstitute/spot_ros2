@@ -296,7 +296,7 @@ class SpotWrapper():
             return
 
         self._logger.info("Establishing time sync with robot - this could take some time.")
-        self._robot.time_sync.wait_for_sync()
+        self._robot.time_sync.wait_for_sync(10.0)
 
         if self._robot:
             # Clients
