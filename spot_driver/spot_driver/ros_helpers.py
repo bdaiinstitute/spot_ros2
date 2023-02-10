@@ -127,7 +127,7 @@ def createDefaulCameraInfo():
 
     return camera_info_msg
 
-def getImageMsg(data, spot_wrapper):
+def getImageMsg(data, spot_wrapper, frame_prefix=''):
     """Takes the imag and  camera data and populates the necessary ROS messages
     Args:
         data: Image proto
@@ -140,7 +140,7 @@ def getImageMsg(data, spot_wrapper):
     image_msg = Image()
     local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
     image_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-    image_msg.header.frame_id = data.shot.frame_name_image_sensor
+    image_msg.header.frame_id = frame_prefix + data.shot.frame_name_image_sensor
     image_msg.height = data.shot.image.rows
     image_msg.width = data.shot.image.cols
 

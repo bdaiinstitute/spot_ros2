@@ -233,16 +233,16 @@ class SpotROS():
         """
         data = self.spot_wrapper.front_images
         if data:
-            image_msg0, camera_info_msg0 = getImageMsg(data[0], self.spot_wrapper)
+            image_msg0, camera_info_msg0 = getImageMsg(data[0], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.frontleft_image_pub.publish(image_msg0)
             self.frontleft_image_info_pub.publish(camera_info_msg0)
-            image_msg1, camera_info_msg1 = getImageMsg(data[1], self.spot_wrapper)
+            image_msg1, camera_info_msg1 = getImageMsg(data[1], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.frontright_image_pub.publish(image_msg1)
             self.frontright_image_info_pub.publish(camera_info_msg1)
-            image_msg2, camera_info_msg2 = getImageMsg(data[2], self.spot_wrapper)
+            image_msg2, camera_info_msg2 = getImageMsg(data[2], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.frontleft_depth_pub.publish(image_msg2)
             self.frontleft_depth_info_pub.publish(camera_info_msg2)
-            image_msg3, camera_info_msg3 = getImageMsg(data[3], self.spot_wrapper)
+            image_msg3, camera_info_msg3 = getImageMsg(data[3], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.frontright_depth_pub.publish(image_msg3)
             self.frontright_depth_info_pub.publish(camera_info_msg3)
 
@@ -258,16 +258,16 @@ class SpotROS():
         """
         data = self.spot_wrapper.side_images
         if data:
-            image_msg0, camera_info_msg0 = getImageMsg(data[0], self.spot_wrapper)
+            image_msg0, camera_info_msg0 = getImageMsg(data[0], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.left_image_pub.publish(image_msg0)
             self.left_image_info_pub.publish(camera_info_msg0)
-            image_msg1, camera_info_msg1 = getImageMsg(data[1], self.spot_wrapper)
+            image_msg1, camera_info_msg1 = getImageMsg(data[1], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.right_image_pub.publish(image_msg1)
             self.right_image_info_pub.publish(camera_info_msg1)
-            image_msg2, camera_info_msg2 = getImageMsg(data[2], self.spot_wrapper)
+            image_msg2, camera_info_msg2 = getImageMsg(data[2], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.left_depth_pub.publish(image_msg2)
             self.left_depth_info_pub.publish(camera_info_msg2)
-            image_msg3, camera_info_msg3 = getImageMsg(data[3], self.spot_wrapper)
+            image_msg3, camera_info_msg3 = getImageMsg(data[3], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.right_depth_pub.publish(image_msg3)
             self.right_depth_info_pub.publish(camera_info_msg3)
 
@@ -283,10 +283,10 @@ class SpotROS():
         """
         data = self.spot_wrapper.rear_images
         if data:
-            mage_msg0, camera_info_msg0 = getImageMsg(data[0], self.spot_wrapper)
+            mage_msg0, camera_info_msg0 = getImageMsg(data[0], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.back_image_pub.publish(mage_msg0)
             self.back_image_info_pub.publish(camera_info_msg0)
-            mage_msg1, camera_info_msg1 = getImageMsg(data[1], self.spot_wrapper)
+            mage_msg1, camera_info_msg1 = getImageMsg(data[1], self.spot_wrapper, frame_prefix=self.frame_prefix)
             self.back_depth_pub.publish(mage_msg1)
             self.back_depth_info_pub.publish(camera_info_msg1)
 
@@ -1025,6 +1025,7 @@ def main(args=None):
     frame_prefix = ''
     if spot_ros.name is not None:
         frame_prefix = spot_ros.name + '/'
+    spot_ros.frame_prefix = frame_prefix
     spot_ros.mode_parent_odom_tf = node.declare_parameter('mode_parent_odom_tf',
                                                           frame_prefix + 'odom') # 'vision' or 'odom'
     spot_ros.tf_name_kinematic_odom = node.declare_parameter('tf_name_kinematic_odom',
