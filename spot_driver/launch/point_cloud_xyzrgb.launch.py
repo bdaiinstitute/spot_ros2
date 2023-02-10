@@ -38,7 +38,7 @@ from launch import LaunchDescription
 import launch_ros.actions
 import launch_ros.descriptions
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, TextSubstitution, PathJoinSubstitution
 
 
 def generate_launch_description():
