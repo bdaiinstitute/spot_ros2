@@ -35,11 +35,14 @@ import bosdyn.api.robot_state_pb2 as robot_state_proto
 from bosdyn.api import basic_command_pb2
 from google.protobuf.timestamp_pb2 import Timestamp
 
-front_image_sources = ['frontleft_fisheye_image', 'frontright_fisheye_image', 'frontleft_depth', 'frontright_depth']
+front_image_sources_rgb = ['frontleft_fisheye_image', 'frontright_fisheye_image']
+front_image_sources_depth = ['frontleft_depth', 'frontright_depth']
 """List of image sources for front image periodic query"""
-side_image_sources = ['left_fisheye_image', 'right_fisheye_image', 'left_depth', 'right_depth']
+side_image_sources_rgb = ['left_fisheye_image', 'right_fisheye_image']
+side_image_sources_depth = ['left_depth', 'right_depth']
 """List of image sources for side image periodic query"""
-rear_image_sources = ['back_fisheye_image', 'back_depth']
+rear_image_sources_rgb = ['back_fisheye_image']
+rear_image_sources_depth = ['back_depth']
 """List of image sources for rear image periodic query"""
 
 class AsyncRobotState(AsyncPeriodicQuery):
@@ -267,16 +270,34 @@ class SpotWrapper():
         self._last_robot_command = None
 
         self._front_image_requests = []
-        for source in front_image_sources:
-            self._front_image_requests.append(build_image_request(source, image_format=image_pb2.Image.FORMAT_RAW))
-
         self._side_image_requests = []
-        for source in side_image_sources:
-            self._side_image_requests.append(build_image_request(source, image_format=image_pb2.Image.FORMAT_RAW))
-
         self._rear_image_requests = []
-        for source in rear_image_sources:
-            self._rear_image_requests.append(build_image_request(source, image_format=image_pb2.Image.FORMAT_RAW))
+
+        # RGB
+        for source in front_image_sources_rgb:
+            self._front_image_requests.append(build_image_request(
+                source, image_format=image_pb2.Image.FORMAT_RAW, pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8))
+
+        for source in side_image_sources_rgb:
+            self._side_image_requests.append(build_image_request(
+                source, image_format=image_pb2.Image.FORMAT_RAW, pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8))
+
+        for source in rear_image_sources_rgb:
+            self._rear_image_requests.append(build_image_request(
+                source, image_format=image_pb2.Image.FORMAT_RAW, pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8))
+
+        # Depth
+        for source in front_image_sources_depth:
+            self._side_image_requests.append(build_image_request(
+                source, image_format=image_pb2.Image.FORMAT_RAW, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16))
+
+        for source in side_image_sources_depth:
+            self._rear_image_requests.append(build_image_request(
+                source, image_format=image_pb2.Image.FORMAT_RAW, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16))
+
+        for source in rear_image_sources_depth:
+            self._rear_image_requests.append(build_image_request(
+                source, image_format=image_pb2.Image.FORMAT_RAW, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16))
 
         try:
             self._sdk = create_standard_sdk('ros_spot')
