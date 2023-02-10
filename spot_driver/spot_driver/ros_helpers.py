@@ -565,21 +565,22 @@ def get_from_env_and_fall_back_to_param(env_name, node, param_name, default_valu
         val = node.get_parameter(param_name).value
     return val
 
-# Timeout only works if your tf_listener is being updated in a separate thread from which this is called!
-# You can do that by creating a multi-threaded executor.
-def lookup_a_tform_b(tf_buffer, frame_a, frame_b, transform_time=None, timeout=None):
+# Timeout only works if your tf listener updates in a separate thread!
+def lookup_a_tform_b(tf_buffer, frame_a, frame_b, transform_time=None, timeout=None, wait_for_frames=False):
     if transform_time is None:
         transform_time = rclpy.time.Time()
-    if timeout is None:
+    if timeout is None or not wait_for_frames:
         timeout_py = rclpy.time.Duration()
     else:
         timeout_py = rclpy.time.Duration(seconds=timeout)
     start_time = time.time()
-    while True:
+    while rclpy.ok():
         try:
             return ros_transform_to_se3_pose(tf_buffer.lookup_transform(frame_a, frame_b, time=transform_time,
                                                                         timeout=timeout_py).transform)
-        except tf2.TransformException as e:
+        except tf2.ExtrapolationException as e:
+            if 'future' not in str(e):
+                raise e  # Waiting won't help with this
             now = time.time()
             if timeout is None or now - start_time > timeout:
                 raise e
