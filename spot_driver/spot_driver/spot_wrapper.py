@@ -288,11 +288,11 @@ class SpotWrapper():
 
         # Depth
         for source in front_image_sources_depth:
-            self._side_image_requests.append(build_image_request(
+            self._front_image_requests.append(build_image_request(
                 source, image_format=image_pb2.Image.FORMAT_RAW, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16))
 
         for source in side_image_sources_depth:
-            self._rear_image_requests.append(build_image_request(
+            self._side_image_requests.append(build_image_request(
                 source, image_format=image_pb2.Image.FORMAT_RAW, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16))
 
         for source in rear_image_sources_depth:
