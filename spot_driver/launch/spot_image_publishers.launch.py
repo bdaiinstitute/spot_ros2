@@ -6,13 +6,6 @@ from launch.substitutions import LaunchConfiguration
 import launch_ros
 
 
-# camera_sources = ["frontleft", "frontright", "left", "right", "back"]
-# camera_types = ["camera", "depth", "depth_registered"]
-
-camera_sources = ["frontleft"]
-camera_types = ["camera"]
-
-
 def generate_launch_description():
     spot_name = LaunchConfiguration('spot_name')
     spot_name_arg = DeclareLaunchArgument('spot_name', description='Name of spot')
@@ -27,7 +20,7 @@ def generate_launch_description():
     nodes = [spot_name_arg, image_publish_rate_arg]
     camera_node = launch_ros.actions.Node(
         package="spot_driver",
-        executable="publish_camera",
+        executable="spot_publish_cameras",
         name=f"image_publisher",
         output="screen",
         namespace=spot_name,

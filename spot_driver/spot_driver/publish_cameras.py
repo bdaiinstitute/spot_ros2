@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 
 import rclpy
 from sensor_msgs.msg import CameraInfo, Image
@@ -127,7 +128,7 @@ class SpotImagePublisher(rclpy.node.Node):
         self._camera_info_publishers = {}
         camera_sources = ["frontleft", "frontright", "left", "right", "back"]
         # camera_types = ["camera", "depth", "depth_registered"]
-        camera_types = ["camera"]
+        camera_types = ["camera", "depth"]
         for camera_source in camera_sources:
             for camera_type in camera_types:
                 if camera_type == "camera":
@@ -136,6 +137,7 @@ class SpotImagePublisher(rclpy.node.Node):
                     pixel_format = image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
                 bosdyn_camera_source = translate_ros_camera_name_to_bosdyn(camera_source, camera_type)
                 image_request = build_image_request(bosdyn_camera_source, pixel_format=pixel_format)
+                print(bosdyn_camera_source)
                 self._image_requests.append(image_request)
 
                 self._camera_info_publishers[bosdyn_camera_source] = self.create_publisher(
@@ -284,7 +286,10 @@ class SpotImagePublisher(rclpy.node.Node):
         return image_msg, camera_info_msg
 
     def publish_image(self):
+        start_time = time.time()
         image_responses = self._image_client.get_image(self._image_requests)
+        time1 = time.time()
+        # print(f"Time taken to get responses is {time1-start_time}s")
         if len(image_responses) == 0:
             self.get_logger().info("No images received")
             return
@@ -293,6 +298,9 @@ class SpotImagePublisher(rclpy.node.Node):
             image_msg, camera_info_msg = self.bosdyn_data_to_image_and_camera_info_msgs(image_response)
             self._image_publishers[image_response.source.name].publish(image_msg)
             self._camera_info_publishers[image_response.source.name].publish(camera_info_msg)
+        time2 = time.time()
+        # print(f"Time taken to publish responses is {time2-time1}s")
+        # print(f"Overall time taken is {time2-start_time}")
 
 
 def main() -> None:

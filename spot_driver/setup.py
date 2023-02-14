@@ -27,7 +27,7 @@ setup(
         'console_scripts': [
             'spot_ros2 = spot_driver.spot_ros2:main',
             'command_spot = spot_driver.command_spot_driver:main',
-            'publish_camera = spot_driver.publish_camera:main',
+            'spot_publish_cameras = spot_driver.publish_cameras:main',
         ],
     },
 )
