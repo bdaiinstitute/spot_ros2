@@ -10,7 +10,7 @@ For the arm, we use the following mass values:
 
 To get these inertial properties, use the following method:
 
-    BdaiSim.import_inertia_tensor = False
+    BdaiWorld.import_inertia_tensor = False
 
     sh_mass = 2.596  # shoulder mass
     fa_mass = 1.450  # Forearm mass
