@@ -74,12 +74,7 @@ def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str):
 
 class SpotImagePublisher(rclpy.node.Node):
     def __init__(self):
-        # super().__init__(f"{self._spot_name}_{self._camera_source}_{self._camera_type}_image_publisher")
         super().__init__(f"spot_image_publisher")
-        self.declare_parameter("camera_source", "")
-        self._camera_source = self.get_parameter("camera_source").value
-        self.declare_parameter("camera_type", "")
-        self._camera_type = self.get_parameter("camera_type").value
         self.declare_parameter('spot_name', '')
         self._spot_name = self.get_parameter('spot_name').value
 
@@ -118,39 +113,42 @@ class SpotImagePublisher(rclpy.node.Node):
         self.declare_parameter("image_publish_rate", 10)
         self._image_publish_rate = self.get_parameter("image_publish_rate").value
 
-        self._topic_prefix = self._frame_prefix = ''
+        self.declare_parameter("camera_type", "")
+        self._camera_type = self.get_parameter("camera_type").value
+        if self._camera_type not in ["camera", "depth", "depth_registered"]:
+            raise ValueError(f"camera_source must be in [\"camera\", \"depth\", \"depth_registered\"], "
+                             f"received {self._camera_type} instead")
+
+        self._frame_prefix = ''
         if self._spot_name != "":
-            self._topic_prefix = self._frame_prefix = f"{self._spot_name}/"
+            self._frame_prefix = f"{self._spot_name}/"
 
         # TODO: Add Hand
         self._image_requests = []
         self._image_publishers = {}
         self._camera_info_publishers = {}
         camera_sources = ["frontleft", "frontright", "left", "right", "back"]
-        # camera_types = ["camera", "depth", "depth_registered"]
-        camera_types = ["camera", "depth"]
         for camera_source in camera_sources:
-            for camera_type in camera_types:
-                if camera_type == "camera":
-                    pixel_format = image_pb2.Image.PIXEL_FORMAT_RGB_U8
-                else:
-                    pixel_format = image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
-                bosdyn_camera_source = translate_ros_camera_name_to_bosdyn(camera_source, camera_type)
-                image_request = build_image_request(bosdyn_camera_source, pixel_format=pixel_format)
-                print(bosdyn_camera_source)
-                self._image_requests.append(image_request)
+            if self._camera_type == "camera":
+                pixel_format = image_pb2.Image.PIXEL_FORMAT_RGB_U8
+            else:
+                pixel_format = image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
+            bosdyn_camera_source = translate_ros_camera_name_to_bosdyn(camera_source, self._camera_type)
+            image_request = build_image_request(bosdyn_camera_source, pixel_format=pixel_format)
+            print(bosdyn_camera_source)
+            self._image_requests.append(image_request)
 
-                self._camera_info_publishers[bosdyn_camera_source] = self.create_publisher(
-                    CameraInfo,
-                    f"{camera_type}/{camera_source}/camera_info",
-                    10,
-                )
+            self._camera_info_publishers[bosdyn_camera_source] = self.create_publisher(
+                CameraInfo,
+                f"{self._camera_type}/{camera_source}/camera_info",
+                10,
+            )
 
-                self._image_publishers[bosdyn_camera_source] = self.create_publisher(
-                    Image,
-                    f"{camera_type}/{camera_source}/image",
-                    10,
-                )
+            self._image_publishers[bosdyn_camera_source] = self.create_publisher(
+                Image,
+                f"{self._camera_type}/{camera_source}/image",
+                10,
+            )
 
         self._image_publisher_timer = self.create_timer(1/self._image_publish_rate, self.publish_image)
 
@@ -299,8 +297,8 @@ class SpotImagePublisher(rclpy.node.Node):
             self._image_publishers[image_response.source.name].publish(image_msg)
             self._camera_info_publishers[image_response.source.name].publish(camera_info_msg)
         time2 = time.time()
-        # print(f"Time taken to publish responses is {time2-time1}s")
-        # print(f"Overall time taken is {time2-start_time}")
+        print(f"Time taken to publish responses is {time2-time1}s")
+        print(f"Overall time taken is {time2-start_time}")
 
 
 def main() -> None:

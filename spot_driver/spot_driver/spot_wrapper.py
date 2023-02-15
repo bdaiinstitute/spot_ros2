@@ -35,18 +35,6 @@ import bosdyn.api.robot_state_pb2 as robot_state_proto
 from bosdyn.api import basic_command_pb2
 from google.protobuf.timestamp_pb2 import Timestamp
 
-front_image_sources_rgb = ['frontleft_fisheye_image', 'frontright_fisheye_image']
-# front_image_sources_depth = ['frontleft_depth', 'frontright_depth', 'frontleft_depth_in_visual_frame', 'frontright_depth_in_visual_frame']
-front_image_sources_depth = ['frontleft_depth', 'frontright_depth']
-"""List of image sources for front image periodic query"""
-side_image_sources_rgb = ['left_fisheye_image', 'right_fisheye_image']
-# side_image_sources_depth = ['left_depth', 'right_depth', 'right_depth_in_visual_frame', 'left_depth_in_visual_frame']
-side_image_sources_depth = ['left_depth', 'right_depth']
-"""List of image sources for side image periodic query"""
-rear_image_sources_rgb = ['back_fisheye_image']
-# rear_image_sources_depth = ['back_depth', 'back_depth_in_visual_frame']
-rear_image_sources_depth = ['back_depth']
-"""List of image sources for rear image periodic query"""
 
 class AsyncRobotState(AsyncPeriodicQuery):
     """Class to get robot state at regular intervals.  get_robot_state_async query sent to the robot at every tick.  Callback registered to defined callback function.
@@ -272,36 +260,6 @@ class SpotWrapper():
         self._last_velocity_command_time = None
         self._last_robot_command = None
 
-        self._front_image_requests = []
-        self._side_image_requests = []
-        self._rear_image_requests = []
-
-        # RGB
-        for source in front_image_sources_rgb:
-            self._front_image_requests.append(build_image_request(
-                source, image_format=image_pb2.Image.FORMAT_RAW)) #, pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8))
-
-        for source in side_image_sources_rgb:
-            self._side_image_requests.append(build_image_request(
-                source, image_format=image_pb2.Image.FORMAT_RAW)) #, pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8))
-
-        for source in rear_image_sources_rgb:
-            self._rear_image_requests.append(build_image_request(
-                source, image_format=image_pb2.Image.FORMAT_RAW)) #, pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8))
-
-        # Depth
-        for source in front_image_sources_depth:
-            self._front_image_requests.append(build_image_request(
-                source, image_format=image_pb2.Image.FORMAT_RAW)) #, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16))
-
-        for source in side_image_sources_depth:
-            self._side_image_requests.append(build_image_request(
-                source, image_format=image_pb2.Image.FORMAT_RAW)) #, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16))
-
-        for source in rear_image_sources_depth:
-            self._rear_image_requests.append(build_image_request(
-                source, image_format=image_pb2.Image.FORMAT_RAW)) #, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16))
-
         try:
             self._sdk = create_standard_sdk('ros_spot')
         except Exception as e:
@@ -350,17 +308,19 @@ class SpotWrapper():
             self._robot_state_task = AsyncRobotState(self._robot_state_client, self._logger, max(0.0, self._rates.get("robot_state", 0.0)), self._callbacks.get("robot_state", None))
             self._robot_metrics_task = AsyncMetrics(self._robot_state_client, self._logger, max(0.0, self._rates.get("metrics", 0.0)), self._callbacks.get("metrics", None))
             self._lease_task = AsyncLease(self._lease_client, self._logger, max(0.0, self._rates.get("lease", 0.0)), self._callbacks.get("lease", None))
-            self._front_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("front_image", 0.0)), self._callbacks.get("front_image", None), self._front_image_requests)
-            self._side_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("side_image", 0.0)), self._callbacks.get("side_image", None), self._side_image_requests)
-            self._rear_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("rear_image", 0.0)), self._callbacks.get("rear_image", None), self._rear_image_requests)
             self._idle_task = AsyncIdle(self._robot_command_client, self._logger, 10.0, self)
             self._world_objects_task = AsyncWorldObjects(self._world_objects_client, self._logger, 10.0,
                                                          self._callbacks.get("world_objects", None))
 
             self._estop_endpoint = None
 
-            self._async_tasks = AsyncTasks(
-                [self._robot_state_task, self._robot_metrics_task, self._lease_task, self._front_image_task, self._side_image_task, self._rear_image_task, self._idle_task, self._world_objects_task])
+            self._async_tasks = AsyncTasks([
+                self._robot_state_task,
+                self._robot_metrics_task,
+                self._lease_task,
+                self._idle_task,
+                self._world_objects_task,
+            ])
 
             self._robot_id = None
             self._lease = None
