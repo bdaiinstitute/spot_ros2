@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <param name="robot_description" command="xacro '$(find spot_description)/urdf/spot_with_arm.urdf.xacro'" />
+
+    <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find spot_description)/rviz/urdf_viz.rviz" />
+    
+    <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" output="screen" 
+        args="-urdf -param robot_description" />
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen"/>
+          
+</launch>
