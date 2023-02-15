@@ -3,31 +3,49 @@
     <link name="body">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/body.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/body.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/body_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/body_collision.stl" />
             </geometry>
         </collision>
     </link>
 
-    <link name="base_link"/>
+    <link name="base_link">
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.00192414 0.00131838 0.00063246"/>
+            <mass value="30.689437866210938"/>
+            <inertia ixx="0.18470187485218048" ixy="-0.0010424249339848757" ixz="0.016710679978132248" iyy="1.7260644435882568" iyz="-0.0006984919309616089" izz="1.7602781057357788"/>
+        </inertial>
+    </link>
     <joint name="base_link_joint" type="fixed">
         <origin xyz="0 0 0" rpy="0 0 0" />
         <parent link="body" />
         <child link="base_link" />
     </joint>
 
-    <link name="front_rail"/>
+    <link name="front_rail">
+        <inertial>
+            <origin rpy="0. 0. 0." xyz="0. 0. 0."/>
+            <mass value="1.0e-6"/>
+            <inertia ixx="1.0e-9" ixy="0.0" ixz="0.0" iyy="1.0e-9" iyz="0.0" izz="1.0e-9"/>
+        </inertial>
+    </link>
     <joint name="front_rail_joint" type="fixed">
         <origin xyz="0.223 0 0.0805" rpy="0 0 0" />
         <parent link="body" />
         <child link="front_rail" />
     </joint>
 
-    <link name="rear_rail"/>
+    <link name="rear_rail">
+        <inertial>
+            <origin rpy="0. 0. 0." xyz="0. 0. 0."/>
+            <mass value="1.0e-6"/>
+            <inertia ixx="1.0e-9" ixy="0.0" ixz="0.0" iyy="1.0e-9" iyz="0.0" izz="1.0e-9"/>
+        </inertial>
+    </link>
     <joint name="rear_rail_joint" type="fixed">
         <origin xyz="-0.223 0 0.0805" rpy="0 0 0" />
         <parent link="body" />
@@ -37,14 +55,19 @@
     <link name="front_left_hip">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_left_hip.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/front_left_hip.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_left_hip_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/front_left_hip_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="-0.02228133  0.01223229 -0.00013698"/>
+            <mass value="1.4118226766586304"/>
+            <inertia ixx="0.002230902900919318" ixy="-0.00024908874183893204" ixz="-1.0821946489159018e-05" iyy="0.0032821425702422857" iyz="1.2908072676509619e-05" izz="0.0035330711398273706"/>
+        </inertial>
     </link>
     <joint name="front_left_hip_x" type="revolute">
         <origin xyz="0.29785 0.05500 0.00000" rpy="0 0 0" />
@@ -56,14 +79,19 @@
     <link name="front_left_upper_leg">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_left_upper_leg.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/front_left_upper_leg.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_left_upper_leg_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/front_left_upper_leg_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.00579826 -0.00155725 -0.11736281"/>
+            <mass value="4.5664448738098145"/>
+            <inertia ixx="0.06118762493133545" ixy="-6.980347097851336e-05" ixz="0.0025271624326705933" iyy="0.05970980226993561" iyz="0.0020649367943406105" izz="0.008818766102194786"/>
+        </inertial>
     </link>
     <joint name="front_left_hip_y" type="revolute">
         <origin xyz="0.0 0.110945 0.0" rpy="0 0 0" />
@@ -75,14 +103,19 @@
     <link name="front_left_lower_leg">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_left_lower_leg.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/front_left_lower_leg.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_left_lower_leg_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/front_left_lower_leg_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.00122378  0.00153545 -0.18036975"/>
+            <mass value="1.6851935386657715"/>
+            <inertia ixx="0.021835200488567352" ixy="-9.323281119577587e-06" ixz="0.0001474980526836589" iyy="0.0221591517329216" iyz="-3.458634819253348e-05" izz="0.0011837183265015483"/>
+        </inertial>
     </link>
     <joint name="front_left_knee" type="revolute">
         <origin xyz="0.025 0.000 -0.3205" rpy="0 0 0" />
@@ -94,14 +127,19 @@
     <link name="front_right_hip">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_right_hip.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/front_right_hip.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_right_hip_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/front_right_hip_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="-0.02265939 -0.01222293 -0.00025806"/>
+            <mass value="1.4104852676391602"/>
+            <inertia ixx="0.002241714159026742" ixy="0.0002604306791909039" ixz="-5.935402441537008e-06" iyy="0.0032587547320872545" iyz="-7.373964763246477e-06" izz="0.003521676640957594"/>
+        </inertial>
     </link>
     <joint name="front_right_hip_x" type="revolute">
         <origin xyz="0.29785 -0.05500 0.00000" rpy="0 0 0" />
@@ -113,14 +151,19 @@
     <link name="front_right_upper_leg">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_right_upper_leg.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/front_right_upper_leg.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_right_upper_leg_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/front_right_upper_leg_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.00574215  0.00151489 -0.1176383"/>
+            <mass value="4.534761428833008"/>
+            <inertia ixx="0.06084978207945824" ixy="0.00016782207239884883" ixz="0.002611876232549548" iyy="0.05935850366950035" iyz="-0.0019535261671990156" izz="0.008716627024114132"/>
+        </inertial>
     </link>
     <joint name="front_right_hip_y" type="revolute">
         <origin xyz="0.0 -0.110945 0.0" rpy="0 0 0" />
@@ -132,14 +175,19 @@
     <link name="front_right_lower_leg">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_right_lower_leg.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/front_right_lower_leg.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/front_right_lower_leg_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/front_right_lower_leg_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.00159384 -0.00239605 -0.18014717"/>
+            <mass value="1.6578948497772217"/>
+            <inertia ixx="0.021659644320607185" ixy="-5.41498047823552e-06" ixz="0.00012902059825137258" iyy="0.02198193594813347" iyz="0.00011968409671681002" izz="0.0011500123655423522"/>
+        </inertial>
     </link>
     <joint name="front_right_knee" type="revolute">
         <origin xyz="0.025 0.000 -0.3205" rpy="0 0 0" />
@@ -151,14 +199,19 @@
     <link name="rear_left_hip">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_left_hip.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/rear_left_hip.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_left_hip_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/rear_left_hip_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.02251509  0.01207632 -0.00010392"/>
+            <mass value="1.4201561212539673"/>
+            <inertia ixx="0.0022622011601924896" ixy="0.00024073614622466266" ixz="1.9728562620002776e-05" iyy="0.0033044079318642616" iyz="5.893074558116496e-06" izz="0.003563372418284416"/>
+        </inertial>
     </link>
     <joint name="rear_left_hip_x" type="revolute">
         <origin xyz="-0.29785 0.05500 0.00000" rpy="0 0 0" />
@@ -170,14 +223,19 @@
     <link name="rear_left_upper_leg">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_left_upper_leg.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/rear_left_upper_leg.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_left_upper_leg_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/rear_left_upper_leg_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.00521431 -0.00158592 -0.11710322"/>
+            <mass value="4.536705493927002"/>
+            <inertia ixx="0.06095878407359123" ixy="-8.738194446777925e-05" ixz="0.002448485465720296" iyy="0.05945170670747757" iyz="0.0017479292582720518" izz="0.008690832182765007"/>
+        </inertial>
     </link>
     <joint name="rear_left_hip_y" type="revolute">
         <origin xyz="0.0 0.110945 0.0" rpy="0 0 0" />
@@ -189,14 +247,19 @@
     <link name="rear_left_lower_leg">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_left_lower_leg.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/rear_left_lower_leg.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_left_lower_leg_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/rear_left_lower_leg_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.00093319  0.00145674 -0.17991927"/>
+            <mass value="1.6818592548370361"/>
+            <inertia ixx="0.02180398255586624" ixy="-5.7460838434053585e-06" ixz="0.00012676010373979807" iyy="0.022132718935608864" iyz="-1.6608482837909833e-05" izz="0.001179960323497653"/>
+        </inertial>
     </link>
     <joint name="rear_left_knee" type="revolute">
         <origin xyz="0.025 0.000 -0.3205" rpy="0 0 0" />
@@ -208,14 +271,19 @@
     <link name="rear_right_hip">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_right_hip.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/rear_right_hip.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_right_hip_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/rear_right_hip_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="2.2480870e-02 -1.2067979e-02 -9.2436501e-05"/>
+            <mass value="1.4211853742599487"/>
+            <inertia ixx="0.002264411421492696" ixy="-0.00023975687508936971" ixz="1.755120320012793e-05" iyy="0.003309530671685934" iyz="-5.547248292714357e-06" izz="0.0035681931767612696"/>
+        </inertial>
     </link>
     <joint name="rear_right_hip_x" type="revolute">
         <origin xyz="-0.29785 -0.05500 0.00000" rpy="0 0 0" />
@@ -227,14 +295,19 @@
     <link name="rear_right_upper_leg">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_right_upper_leg.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/rear_right_upper_leg.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_right_upper_leg_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/rear_right_upper_leg_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.00564834  0.00171534 -0.117723"/>
+            <mass value="4.532190322875977"/>
+            <inertia ixx="0.060795851051807404" ixy="0.00013766760821454227" ixz="0.0027449424378573895" iyy="0.05932316929101944" iyz="-0.0018466990441083908" izz="0.008713570423424244"/>
+        </inertial>
     </link>
     <joint name="rear_right_hip_y" type="revolute">
         <origin xyz="0.0 -0.110945 0.0" rpy="0 0 0" />
@@ -246,14 +319,19 @@
     <link name="rear_right_lower_leg">
         <visual>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_right_lower_leg.dae" />
+                <mesh filename="package://spot_description/meshes/base/visual/rear_right_lower_leg.dae" />
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="package://spot_description/meshes/rear_right_lower_leg_collision.stl" />
+                <mesh filename="package://spot_description/meshes/base/collision/rear_right_lower_leg_collision.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <origin rpy="0.0 0.0 0.0" xyz="0.00123708 -0.00190588 -0.18145134"/>
+            <mass value="1.682421326637268"/>
+            <inertia ixx="0.02176680974662304" ixy="1.009165498544462e-05" ixz="0.00013806326023768634" iyy="0.022093402221798897" iyz="-4.056539182784036e-05" izz="0.0011830450966954231"/>
+        </inertial>
     </link>
     <joint name="rear_right_knee" type="revolute">
         <origin xyz="0.025 0.000 -0.3205" rpy="0 0 0" />
