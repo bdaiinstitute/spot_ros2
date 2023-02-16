@@ -16,15 +16,6 @@ from spot_driver.ros_helpers import get_from_env_and_fall_back_to_param
 import rclpy.node
 
 
-ROTATION_ANGLE = {
-    'back_fisheye_image': 0,
-    'frontleft_fisheye_image': -78,
-    'frontright_fisheye_image': -102,
-    'left_fisheye_image': 0,
-    'right_fisheye_image': 180
-}
-
-
 def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str):
     if camera_source == "back":
         if camera_type == "camera":

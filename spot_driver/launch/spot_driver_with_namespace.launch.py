@@ -1,7 +1,5 @@
 import launch
-from ament_index_python import get_package_share_directory
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 import launch_ros
 import os
@@ -43,23 +41,12 @@ def generate_launch_description():
         default_value="false",
     )
 
-    # include another launch file
-    spot_image_publishers_launch_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('spot_driver'),
-                'launch/spot_image_publishers.launch.py'
-            )
-        ),
-        launch_arguments=[
-            ("spot_name", spot_name),
-            ("publish_rgb", publish_rgb),
-            ("publish_depth", publish_depth),
-            ("publish_depth_registered", publish_depth_registered),
-        ],
-    )
-
-    driver_params = {'spot_name': spot_name}
+    driver_params = {
+        'spot_name': spot_name,
+        'publish_rgb': publish_rgb,
+        'publish_depth': publish_depth,
+        'publish_depth_registered': publish_depth_registered,
+    }
     spot_driver_node = launch_ros.actions.Node(
         package='spot_driver',
         executable='spot_ros2',
@@ -78,7 +65,6 @@ def generate_launch_description():
         parameters=[params])
 
     return launch.LaunchDescription([
-        spot_image_publishers_launch_include,
         publish_rgb_arg,
         publish_depth_arg,
         publish_depth_registered_arg,
