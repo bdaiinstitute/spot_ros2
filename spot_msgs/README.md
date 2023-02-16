@@ -21,7 +21,7 @@ sudo apt-get install fakeroot
 
 ### Deal with rosdep
 Bloom won't create a package that depends on something `rosdep` can't find.  Until `bosdyn_msgs` is distributed, we need to trick `rosdep` into thinking it exists:
-1.  Fork `https://github.com/ros/rosdistro`
+1.  Clone `https://github.com/ros/rosdistro`
 2.  Change `rosdep/base.yaml` to just list an empty target for `bosdyn_msgs`:
 
 ```bash
