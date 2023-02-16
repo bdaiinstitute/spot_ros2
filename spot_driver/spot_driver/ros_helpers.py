@@ -1,9 +1,6 @@
 import os
 import time
 import traceback
-
-import cv2
-
 import rclpy
 from builtin_interfaces.msg import Time, Duration
 
@@ -156,7 +153,7 @@ def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spo
         image_msg.encoding = "rgb8"
         image_msg.is_bigendian = True
         image_msg.step = 3 * data.shot.image.cols
-        image_msg.data = cv2.imdecode(data.shot.image.data, -1)
+        image_msg.data = data.shot.image.data
 
     # Uncompressed.  Requires pixel_format.
     if data.shot.image.format == image_pb2.Image.FORMAT_RAW:
@@ -172,7 +169,7 @@ def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spo
             image_msg.encoding = "rgb8"
             image_msg.is_bigendian = True
             image_msg.step = 3 * data.shot.image.cols
-            image_msg.data = cv2.imdecode(data.shot.image.data, -1)
+            image_msg.data = data.shot.image.data
 
         # Four bytes per pixel.
         if data.shot.image.pixel_format == image_pb2.Image.PIXEL_FORMAT_RGBA_U8:
