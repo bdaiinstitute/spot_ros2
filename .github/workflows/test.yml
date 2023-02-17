@@ -12,7 +12,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: ghcr.io/bdaiinstitute/bdaii_ros2_humble:main
+      image: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
     steps:
     - uses: actions/checkout@v3
     - name: Build and run tests
