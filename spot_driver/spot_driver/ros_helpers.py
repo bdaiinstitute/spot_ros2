@@ -1,6 +1,5 @@
 import os
 import time
-import traceback
 import rclpy
 from builtin_interfaces.msg import Time, Duration
 

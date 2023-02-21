@@ -34,7 +34,7 @@ def generate_launch_description():
         default_value="true",
     )
 
-    publish_depth_registered = LaunchConfiguration("publish_depth_registered", default="true")
+    publish_depth_registered = LaunchConfiguration("publish_depth_registered", default="false")
     publish_depth_registered_arg = DeclareLaunchArgument(
         "publish_depth_registered",
         description="Start publishing all depth_registered channels on Spot cameras",

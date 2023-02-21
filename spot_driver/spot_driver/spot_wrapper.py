@@ -4,6 +4,8 @@ import traceback
 from collections import namedtuple
 from typing import Optional
 
+import cv2
+import numpy as np
 from bosdyn.client import create_standard_sdk, ResponseError, RpcError
 from bosdyn.client.async_tasks import AsyncPeriodicQuery, AsyncTasks
 
@@ -298,19 +300,22 @@ class SpotWrapper:
         self._camera_image_requests = []
         for camera_source in CAMERA_IMAGE_SOURCES:
             self._camera_image_requests.append(build_image_request(
-                camera_source, pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8, quality_percent=50
+                camera_source,
+                image_format=image_pb2.Image.FORMAT_JPEG,
+                pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8,
+                quality_percent=50,
             ))
 
         self._depth_image_requests = []
         for camera_source in DEPTH_IMAGE_SOURCES:
             self._depth_image_requests.append(build_image_request(
-                camera_source, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16, quality_percent=50
+                camera_source, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
             ))
 
         self._depth_registered_image_requests = []
         for camera_source in DEPTH_REGISTERED_IMAGE_SOURCES:
             self._depth_registered_image_requests.append(build_image_request(
-                camera_source, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16, quality_percent=50
+                camera_source, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
             ))
 
         try:
