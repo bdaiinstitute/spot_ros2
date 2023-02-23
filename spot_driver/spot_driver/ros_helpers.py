@@ -140,7 +140,7 @@ def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spo
             * CameraInfo: message to define the state and config of the camera that took the image
     """
     image_msg = Image()
-    local_time = spot_wrapper.robot_to_local_time(data.shot.acquisition_time)
+    local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
     image_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     image_msg.header.frame_id = spot_wrapper.frame_prefix + data.shot.frame_name_image_sensor
     image_msg.height = data.shot.image.rows
@@ -218,7 +218,7 @@ def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spo
     camera_info_msg.p[9] = 0
     camera_info_msg.p[10] = 1
     camera_info_msg.p[11] = 0
-    local_time = spot_wrapper.robot_to_local_time(data.shot.acquisition_time)
+    local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
     camera_info_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
     camera_info_msg.height = data.shot.image.rows
@@ -246,7 +246,7 @@ def GetJointStatesFromState(state, spot_wrapper):
         JointState message
     """
     joint_state = JointState()
-    local_time = spot_wrapper.robot_to_local_time(state.kinematic_state.acquisition_timestamp)
+    local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
     joint_state.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     for joint in state.kinematic_state.joint_states:
         joint_state.name.append(friendly_joint_names.get(joint.name, "ERROR"))
@@ -267,7 +267,7 @@ def GetEStopStateFromState(state, spot_wrapper):
     estop_array_msg = EStopStateArray()
     for estop in state.estop_states:
         estop_msg = EStopState()
-        local_time = spot_wrapper.robot_to_local_time(estop.timestamp)
+        local_time = spot_wrapper.robotToLocalTime(estop.timestamp)
         estop_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
         estop_msg.name = estop.name
         estop_msg.type = estop.type
@@ -305,7 +305,7 @@ def GetOdomTwistFromState(state, spot_wrapper):
         TwistWithCovarianceStamped message
     """
     twist_odom_msg = TwistWithCovarianceStamped()
-    local_time = spot_wrapper.robot_to_local_time(state.kinematic_state.acquisition_timestamp)
+    local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
     twist_odom_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     twist_odom_msg.twist.twist.linear.x = state.kinematic_state.velocity_of_body_in_odom.linear.x
     twist_odom_msg.twist.twist.linear.y = state.kinematic_state.velocity_of_body_in_odom.linear.y
@@ -324,7 +324,7 @@ def GetOdomFromState(state, spot_wrapper, use_vision=True):
         Odometry message
     """
     odom_msg = Odometry()
-    local_time = spot_wrapper.robot_to_local_time(state.kinematic_state.acquisition_timestamp)
+    local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
     odom_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     if use_vision == True:
         odom_msg.header.frame_id = spot_wrapper.frame_prefix + 'vision'
@@ -380,7 +380,7 @@ def GetTFFromState(state, spot_wrapper, inverse_target_frame):
             try:
                 transform = state.kinematic_state.transforms_snapshot.child_to_parent_edge_map.get(
                     frame_name)
-                local_time = spot_wrapper.robot_to_local_time(
+                local_time = spot_wrapper.robotToLocalTime(
                     state.kinematic_state.acquisition_timestamp)
                 tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
                 if inverse_target_frame == frame_name:
@@ -426,7 +426,7 @@ def GetTFFromWorldObjects(world_objects, spot_wrapper, parent_frame):
                 spot_parent_frame = parent_frame[parent_frame.rfind('/') + 1:]
                 transform = get_a_tform_b(world_object.transforms_snapshot, spot_parent_frame,
                                           frame)
-                local_time = spot_wrapper.robot_to_local_time(world_object.acquisition_time)
+                local_time = spot_wrapper.robotToLocalTime(world_object.acquisition_time)
                 tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
                 new_tf = populateTransformStamped(tf_time,
                                                   parent_frame,
@@ -450,7 +450,7 @@ def GetBatteryStatesFromState(state, spot_wrapper):
     battery_states_array_msg = BatteryStateArray()
     for battery in state.battery_states:
         battery_msg = BatteryState()
-        local_time = spot_wrapper.robot_to_local_time(battery.timestamp)
+        local_time = spot_wrapper.robotToLocalTime(battery.timestamp)
         battery_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
 
         battery_msg.identifier = battery.identifier
@@ -475,7 +475,7 @@ def GetPowerStatesFromState(state, spot_wrapper):
         PowerState message
     """
     power_state_msg = PowerState()
-    local_time = spot_wrapper.robot_to_local_time(state.power_state.timestamp)
+    local_time = spot_wrapper.robotToLocalTime(state.power_state.timestamp)
     power_state_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     power_state_msg.motor_power_state = state.power_state.motor_power_state
     power_state_msg.shore_power_state = state.power_state.shore_power_state
@@ -498,7 +498,7 @@ def getBehaviorFaults(behavior_faults, spot_wrapper):
     for fault in behavior_faults:
         new_fault = BehaviorFault()
         new_fault.behavior_fault_id = fault.behavior_fault_id
-        local_time = spot_wrapper.robot_to_local_time(fault.onset_timestamp)
+        local_time = spot_wrapper.robotToLocalTime(fault.onset_timestamp)
         new_fault.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
         new_fault.cause = fault.cause
         new_fault.status = fault.status
@@ -519,7 +519,7 @@ def getSystemFaults(system_faults, spot_wrapper):
     for fault in system_faults:
         new_fault = SystemFault()
         new_fault.name = fault.name
-        local_time = spot_wrapper.robot_to_local_time(fault.onset_timestamp)
+        local_time = spot_wrapper.robotToLocalTime(fault.onset_timestamp)
         new_fault.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
         new_fault.duration = Duration(sec=fault.duration.seconds, nanosec=fault.duration.nanos)
         new_fault.code = fault.code

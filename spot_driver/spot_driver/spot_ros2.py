@@ -157,7 +157,7 @@ class SpotROS:
         metrics = self.spot_wrapper.metrics
         if metrics:
             metrics_msg = Metrics()
-            local_time = self.spot_wrapper.robot_to_local_time(metrics.timestamp)
+            local_time = self.spot_wrapper.robotToLocalTime(metrics.timestamp)
             metrics_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
 
             for metric in metrics.metrics:
@@ -916,7 +916,7 @@ class SpotROS:
                 continue
 
             transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
-            local_time = self.spot_wrapper.robot_to_local_time(image_data.shot.acquisition_time)
+            local_time = self.spot_wrapper.robotToLocalTime(image_data.shot.acquisition_time)
             tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
             static_tf = populateTransformStamped(tf_time, transform.parent_frame_name, frame_name,
                                                  transform.parent_tform_child, frame_prefix)

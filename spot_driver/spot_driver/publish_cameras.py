@@ -143,7 +143,7 @@ class SpotImagePublisher(rclpy.node.Node):
 
         self._image_publisher_timer = self.create_timer(1/self._image_publish_rate, self.publish_image)
 
-    def robot_to_local_time(self, timestamp):
+    def robotToLocalTime(self, timestamp):
         """Takes a timestamp and an estimated skew and return seconds and nano seconds in local time
 
         Args:
@@ -178,7 +178,7 @@ class SpotImagePublisher(rclpy.node.Node):
                 * CameraInfo: message to define the state and config of the camera that took the image
         """
         image_msg = Image()
-        local_time = self.robot_to_local_time(data.shot.acquisition_time)
+        local_time = self.robotToLocalTime(data.shot.acquisition_time)
         image_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
         image_msg.header.frame_id = self._frame_prefix + data.shot.frame_name_image_sensor
         image_msg.height = data.shot.image.rows
@@ -256,7 +256,7 @@ class SpotImagePublisher(rclpy.node.Node):
         camera_info_msg.p[9] = 0
         camera_info_msg.p[10] = 1
         camera_info_msg.p[11] = 0
-        local_time = self.robot_to_local_time(data.shot.acquisition_time)
+        local_time = self.robotToLocalTime(data.shot.acquisition_time)
         camera_info_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
         camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
         camera_info_msg.height = data.shot.image.rows

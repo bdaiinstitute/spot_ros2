@@ -484,7 +484,7 @@ class SpotWrapper:
         """
         self._mobility_params = RobotCommandBuilder.mobility_params()
 
-    def robot_to_local_time(self, timestamp):
+    def robotToLocalTime(self, timestamp):
         """Takes a timestamp and an estimated skew and return seconds and nano seconds in local time
 
         Args:
