@@ -57,7 +57,7 @@ To get the plain URDF files, use the following commands in the package root:
 rosrun xacro xacro -o ./urdf/out/spot.urdf ./urdf/spot_simple.urdf.xacro
 
 # for simple spot_with_arm
-rosrun xacro xacro -o ./urdf/out/spot_with_arm.urdf.urdf ./urdf/spot_with_arm.urdf.urdf.xacro
+rosrun xacro xacro -o ./urdf/out/spot_with_arm.urdf ./urdf/spot_with_arm.urdf.xacro
 ```
 
 To visualize and inspect the joint range, use the following command:
