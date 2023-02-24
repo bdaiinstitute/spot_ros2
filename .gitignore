@@ -1,2 +1,5 @@
 *.pyc
 *.pyo
+*.orig
+.vscode
+*/urdf/out*
