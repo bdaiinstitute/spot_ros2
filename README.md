@@ -87,6 +87,7 @@ Boston Dynamics AI Institute contributors:
 * Daniel Gonzalez
 * David Surovik
 * Jiuguang Wang
+* David Watkins
 
 [Linköping University](https://liu.se/en/organisation/liu/ida) contributors:
 

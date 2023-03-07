@@ -99,15 +99,24 @@ def generate_launch_description():
             package='rclcpp_components',
             executable='component_container',
             composable_node_descriptions=[
+                launch_ros.descriptions.ComposableNode(
+                    package='depth_image_proc',
+                    plugin='depth_image_proc::PointCloudXyzrgbNode',
+                    name='point_cloud_xyzrgb_node',
+                    remappings=[('rgb/camera_info', '/camera/color/camera_info'),
+                                ('rgb/image_rect_color', '/camera/color/image_raw'),
+                                ('depth_registered/image_rect', '/camera/aligned_depth_to_color/image_raw'),
+                                ('points', '/camera/depth_registered/points')]
+                ),
                 # Driver itself
                 launch_ros.descriptions.ComposableNode(
                     package='depth_image_proc',
                     plugin='depth_image_proc::PointCloudXyzNode',
                     name='point_cloud_xyz_back',
                     remappings=[
-                        ('image_rect', PathJoinSubstitution([spot_name, "depth/back/image"])),
-                        ('camera_info', PathJoinSubstitution([spot_name, "depth/back/camera_info"])),
-                        ('image', PathJoinSubstitution([spot_name, "depth/back/image"])),
+                        ('rgb/camera_info', PathJoinSubstitution([spot_name, "depth/back/image"])),
+                        ('rgb/image_rect_color', PathJoinSubstitution([spot_name, "depth/back/camera_info"])),
+                        ('depth_registered/image_rect', PathJoinSubstitution([spot_name, "depth/back/image"])),
                         ('points', PathJoinSubstitution([spot_name, "depth/back/points"]))
                     ]
                 ),

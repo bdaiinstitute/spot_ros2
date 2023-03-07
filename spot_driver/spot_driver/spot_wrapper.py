@@ -1,10 +1,13 @@
 import math
 import time
 import traceback
+from collections import namedtuple
+from typing import Optional
 
+import cv2
+import numpy as np
 from bosdyn.client import create_standard_sdk, ResponseError, RpcError
 from bosdyn.client.async_tasks import AsyncPeriodicQuery, AsyncTasks
-from bosdyn.geometry import EulerZXY
 
 from bosdyn.client.robot_state import RobotStateClient
 from bosdyn.client.robot_command import RobotCommandClient, RobotCommandBuilder
@@ -12,17 +15,15 @@ from bosdyn.client.graph_nav import GraphNavClient
 from bosdyn.client.frame_helpers import get_odom_tform_body
 from bosdyn.client.power import safe_power_off, PowerClient, power_on
 from bosdyn.client.lease import LeaseClient, LeaseKeepAlive
-from bosdyn.client.image import ImageClient, build_image_request
+from bosdyn.client.image import ImageClient, build_image_request, UnsupportedPixelFormatRequestedError
 from bosdyn.api import image_pb2
 from bosdyn.api.graph_nav import graph_nav_pb2
 from bosdyn.api.graph_nav import map_pb2
 from bosdyn.api.graph_nav import nav_pb2
 from bosdyn.client.estop import EstopClient, EstopEndpoint, EstopKeepAlive, MotorsOnError
-from bosdyn.client import power
 from bosdyn.client import frame_helpers
 from bosdyn.client import math_helpers
 from bosdyn.client.world_object import WorldObjectClient
-from bosdyn.client.exceptions import InternalServerError
 
 MAX_COMMAND_DURATION = 1e5
 
@@ -31,16 +32,33 @@ from . import graph_nav_util
 ### Debug
 # import graph_nav_util
 
-import bosdyn.api.robot_state_pb2 as robot_state_proto
 from bosdyn.api import basic_command_pb2
 from google.protobuf.timestamp_pb2 import Timestamp
 
-front_image_sources = ['frontleft_fisheye_image', 'frontright_fisheye_image', 'frontleft_depth', 'frontright_depth']
-"""List of image sources for front image periodic query"""
-side_image_sources = ['left_fisheye_image', 'right_fisheye_image', 'left_depth', 'right_depth']
-"""List of image sources for side image periodic query"""
-rear_image_sources = ['back_fisheye_image', 'back_depth']
-"""List of image sources for rear image periodic query"""
+# TODO: Missing Hand images
+CAMERA_IMAGE_SOURCES = [
+    "frontleft_fisheye_image",
+    "frontright_fisheye_image",
+    "left_fisheye_image",
+    "right_fisheye_image",
+    "back_fisheye_image"
+]
+DEPTH_IMAGE_SOURCES = [
+    "frontleft_depth",
+    "frontright_depth",
+    "left_depth",
+    "right_depth",
+    "back_depth",
+]
+DEPTH_REGISTERED_IMAGE_SOURCES = [
+    "frontleft_depth_in_visual_frame",
+    "frontright_depth_in_visual_frame",
+    "right_depth_in_visual_frame",
+    "left_depth_in_visual_frame",
+    "back_depth_in_visual_frame",
+]
+ImageBundle = namedtuple("ImageBundle", ["frontleft", "frontright", "left", "right", "back"])
+
 
 class AsyncRobotState(AsyncPeriodicQuery):
     """Class to get robot state at regular intervals.  get_robot_state_async query sent to the robot at every tick.  Callback registered to defined callback function.
@@ -51,9 +69,10 @@ class AsyncRobotState(AsyncPeriodicQuery):
             rate: Rate (Hz) to trigger the query
             callback: Callback function to call when the results of the query are available
     """
+
     def __init__(self, client, logger, rate, callback):
         super(AsyncRobotState, self).__init__("robot-state", client, logger,
-                                           period_sec=1.0/max(rate, 1.0))
+                                              period_sec=1.0 / max(rate, 1.0))
         self._callback = None
         if rate > 0.0:
             self._callback = callback
@@ -64,6 +83,7 @@ class AsyncRobotState(AsyncPeriodicQuery):
             callback_future.add_done_callback(self._callback)
             return callback_future
 
+
 class AsyncMetrics(AsyncPeriodicQuery):
     """Class to get robot metrics at regular intervals.  get_robot_metrics_async query sent to the robot at every tick.  Callback registered to defined callback function.
 
@@ -73,9 +93,10 @@ class AsyncMetrics(AsyncPeriodicQuery):
             rate: Rate (Hz) to trigger the query
             callback: Callback function to call when the results of the query are available
     """
+
     def __init__(self, client, logger, rate, callback):
         super(AsyncMetrics, self).__init__("robot-metrics", client, logger,
-                                           period_sec=1.0/max(rate, 1.0))
+                                           period_sec=1.0 / max(rate, 1.0))
         self._callback = None
         if rate > 0.0:
             self._callback = callback
@@ -86,6 +107,7 @@ class AsyncMetrics(AsyncPeriodicQuery):
             callback_future.add_done_callback(self._callback)
             return callback_future
 
+
 class AsyncLease(AsyncPeriodicQuery):
     """Class to get lease state at regular intervals.  list_leases_async query sent to the robot at every tick.  Callback registered to defined callback function.
 
@@ -95,9 +117,10 @@ class AsyncLease(AsyncPeriodicQuery):
             rate: Rate (Hz) to trigger the query
             callback: Callback function to call when the results of the query are available
     """
+
     def __init__(self, client, logger, rate, callback):
         super(AsyncLease, self).__init__("lease", client, logger,
-                                           period_sec=1.0/max(rate, 1.0))
+                                         period_sec=1.0 / max(rate, 1.0))
         self._callback = None
         if rate > 0.0:
             self._callback = callback
@@ -108,6 +131,7 @@ class AsyncLease(AsyncPeriodicQuery):
             callback_future.add_done_callback(self._callback)
             return callback_future
 
+
 class AsyncImageService(AsyncPeriodicQuery):
     """Class to get images at regular intervals.  get_image_from_sources_async query sent to the robot at every tick.  Callback registered to defined callback function.
 
@@ -117,9 +141,10 @@ class AsyncImageService(AsyncPeriodicQuery):
             rate: Rate (Hz) to trigger the query
             callback: Callback function to call when the results of the query are available
     """
+
     def __init__(self, client, logger, rate, callback, image_requests):
         super(AsyncImageService, self).__init__("robot_image_service", client, logger,
-                                           period_sec=1.0/max(rate, 1.0))
+                                                period_sec=1.0 / max(rate, 1.0))
         self._callback = None
         if rate > 0.0:
             self._callback = callback
@@ -131,6 +156,7 @@ class AsyncImageService(AsyncPeriodicQuery):
             callback_future.add_done_callback(self._callback)
             return callback_future
 
+
 class AsyncIdle(AsyncPeriodicQuery):
     """Class to check if the robot is moving, and if not, command a stand with the set mobility parameters
 
@@ -140,9 +166,10 @@ class AsyncIdle(AsyncPeriodicQuery):
             rate: Rate (Hz) to trigger the query
             spot_wrapper: A handle to the wrapper library
     """
+
     def __init__(self, client, logger, rate, spot_wrapper):
         super(AsyncIdle, self).__init__("idle", client, logger,
-                                           period_sec=1.0/rate)
+                                        period_sec=1.0 / rate)
 
         self._spot_wrapper = spot_wrapper
 
@@ -190,8 +217,8 @@ class AsyncIdle(AsyncPeriodicQuery):
                 # STATUS_AT_GOAL always means that the robot reached the goal. If the trajectory command did not
                 # request precise positioning, then STATUS_NEAR_GOAL also counts as reaching the goal
                 if status == basic_command_pb2.SE2TrajectoryCommand.Feedback.STATUS_AT_GOAL or \
-                    (status == basic_command_pb2.SE2TrajectoryCommand.Feedback.STATUS_NEAR_GOAL and
-                     not self._spot_wrapper._last_trajectory_command_precise):
+                        (status == basic_command_pb2.SE2TrajectoryCommand.Feedback.STATUS_NEAR_GOAL and
+                         not self._spot_wrapper._last_trajectory_command_precise):
                     self._spot_wrapper._at_goal = True
                     # Clear the command once at the goal
                     self._spot_wrapper._last_trajectory_command = None
@@ -208,6 +235,7 @@ class AsyncIdle(AsyncPeriodicQuery):
 
         self._spot_wrapper._is_moving = is_moving
 
+
 class AsyncWorldObjects(AsyncPeriodicQuery):
     """Class to get world objects.  list_world_objects_async query sent to the robot at every tick.  Callback registered to defined callback function.
 
@@ -217,8 +245,9 @@ class AsyncWorldObjects(AsyncPeriodicQuery):
             rate: Rate (Hz) to trigger the query
             callback: Callback function to call when the results of the query are available
     """
+
     def __init__(self, client, logger, rate, callback):
-        super(AsyncWorldObjects, self).__init__("world-objects", client, logger, period_sec=1.0/max(rate, 1.0))
+        super(AsyncWorldObjects, self).__init__("world-objects", client, logger, period_sec=1.0 / max(rate, 1.0))
         self._callback = None
         if rate > 0.0:
             self._callback = callback
@@ -229,10 +258,12 @@ class AsyncWorldObjects(AsyncPeriodicQuery):
             callback_future.add_done_callback(self._callback)
             return callback_future
 
-class SpotWrapper():
+
+class SpotWrapper:
     """Generic wrapper class to encompass release 1.1.4 API features as well as maintaining leases automatically"""
+
     def __init__(self, username, password, hostname, robot_name, logger, start_estop, estop_timeout=9.0,
-                 rates = None, callbacks = None):
+                 rates=None, callbacks=None):
         self._username = username
         self._password = password
         self._hostname = hostname
@@ -266,17 +297,26 @@ class SpotWrapper():
         self._last_velocity_command_time = None
         self._last_robot_command = None
 
-        self._front_image_requests = []
-        for source in front_image_sources:
-            self._front_image_requests.append(build_image_request(source, image_format=image_pb2.Image.FORMAT_RAW))
+        self._camera_image_requests = []
+        for camera_source in CAMERA_IMAGE_SOURCES:
+            self._camera_image_requests.append(build_image_request(
+                camera_source,
+                image_format=image_pb2.Image.FORMAT_JPEG,
+                pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8,
+                quality_percent=50,
+            ))
 
-        self._side_image_requests = []
-        for source in side_image_sources:
-            self._side_image_requests.append(build_image_request(source, image_format=image_pb2.Image.FORMAT_RAW))
+        self._depth_image_requests = []
+        for camera_source in DEPTH_IMAGE_SOURCES:
+            self._depth_image_requests.append(build_image_request(
+                camera_source, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
+            ))
 
-        self._rear_image_requests = []
-        for source in rear_image_sources:
-            self._rear_image_requests.append(build_image_request(source, image_format=image_pb2.Image.FORMAT_RAW))
+        self._depth_registered_image_requests = []
+        for camera_source in DEPTH_REGISTERED_IMAGE_SOURCES:
+            self._depth_registered_image_requests.append(build_image_request(
+                camera_source, pixel_format=image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
+            ))
 
         try:
             self._sdk = create_standard_sdk('ros_spot')
@@ -317,26 +357,33 @@ class SpotWrapper():
 
             # Store the most recent knowledge of the state of the robot based on rpc calls.
             self._current_graph = None
-            self._current_edges = dict()  #maps to_waypoint to list(from_waypoint)
+            self._current_edges = dict()  # maps to_waypoint to list(from_waypoint)
             self._current_waypoint_snapshots = dict()  # maps id to waypoint snapshot
             self._current_edge_snapshots = dict()  # maps id to edge snapshot
             self._current_annotation_name_to_wp_id = dict()
 
             # Async Tasks
-            self._robot_state_task = AsyncRobotState(self._robot_state_client, self._logger, max(0.0, self._rates.get("robot_state", 0.0)), self._callbacks.get("robot_state", None))
-            self._robot_metrics_task = AsyncMetrics(self._robot_state_client, self._logger, max(0.0, self._rates.get("metrics", 0.0)), self._callbacks.get("metrics", None))
-            self._lease_task = AsyncLease(self._lease_client, self._logger, max(0.0, self._rates.get("lease", 0.0)), self._callbacks.get("lease", None))
-            self._front_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("front_image", 0.0)), self._callbacks.get("front_image", None), self._front_image_requests)
-            self._side_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("side_image", 0.0)), self._callbacks.get("side_image", None), self._side_image_requests)
-            self._rear_image_task = AsyncImageService(self._image_client, self._logger, max(0.0, self._rates.get("rear_image", 0.0)), self._callbacks.get("rear_image", None), self._rear_image_requests)
+            self._robot_state_task = AsyncRobotState(self._robot_state_client, self._logger,
+                                                     max(0.0, self._rates.get("robot_state", 0.0)),
+                                                     self._callbacks.get("robot_state", None))
+            self._robot_metrics_task = AsyncMetrics(self._robot_state_client, self._logger,
+                                                    max(0.0, self._rates.get("metrics", 0.0)),
+                                                    self._callbacks.get("metrics", None))
+            self._lease_task = AsyncLease(self._lease_client, self._logger, max(0.0, self._rates.get("lease", 0.0)),
+                                          self._callbacks.get("lease", None))
             self._idle_task = AsyncIdle(self._robot_command_client, self._logger, 10.0, self)
             self._world_objects_task = AsyncWorldObjects(self._world_objects_client, self._logger, 10.0,
                                                          self._callbacks.get("world_objects", None))
 
             self._estop_endpoint = None
 
-            self._async_tasks = AsyncTasks(
-                [self._robot_state_task, self._robot_metrics_task, self._lease_task, self._front_image_task, self._side_image_task, self._rear_image_task, self._idle_task, self._world_objects_task])
+            self._async_tasks = AsyncTasks([
+                self._robot_state_task,
+                self._robot_metrics_task,
+                self._lease_task,
+                self._idle_task,
+                self._world_objects_task,
+            ])
 
             self._robot_id = None
             self._lease = None
@@ -511,7 +558,6 @@ class SpotWrapper():
         except:
             return False, "Error"
 
-
     def releaseEStop(self):
         """Stop eStop keepalive"""
         if self._estop_keepalive:
@@ -555,7 +601,9 @@ class SpotWrapper():
             timesync_endpoint: (optional) Time sync endpoint
         """
         try:
-            id = self._robot_command_client.robot_command(lease=None, command=command_proto, end_time_secs=end_time_secs, timesync_endpoint=timesync_endpoint)
+            id = self._robot_command_client.robot_command(lease=None, command=command_proto,
+                                                          end_time_secs=end_time_secs,
+                                                          timesync_endpoint=timesync_endpoint)
             return True, "Success", id
         except Exception as e:
             self._logger.error("Unable to execute robot command, exception was" + str(e))
@@ -602,7 +650,7 @@ class SpotWrapper():
             return response
         if self._is_sitting:
             response = self._robot_command(
-                RobotCommandBuilder.battery_change_pose_command(1)) # 1: Rightside
+                RobotCommandBuilder.battery_change_pose_command(1))  # 1: Rightside
             return response[0], response[1]
         return False, 'Call /sit first'
 
@@ -654,7 +702,6 @@ class SpotWrapper():
     def list_world_objects(self, object_types, time_start_point):
         return self._world_objects_client.list_world_objects(object_types, time_start_point)
 
-
     def velocity_cmd(self, v_x, v_y, v_rot, cmd_duration=0.125):
         """Send a velocity motion command to the robot.
 
@@ -664,10 +711,10 @@ class SpotWrapper():
             v_rot: Angular velocity around the Z axis in radians
             cmd_duration: (optional) Time-to-live for the command in seconds.  Default is 125ms (assuming 10Hz command rate).
         """
-        end_time=time.time() + cmd_duration
+        end_time = time.time() + cmd_duration
         response = self._robot_command(RobotCommandBuilder.synchro_velocity_command(
-                                      v_x=v_x, v_y=v_y, v_rot=v_rot, params=self._mobility_params),
-                                      end_time_secs=end_time, timesync_endpoint=self._robot.time_sync.endpoint)
+            v_x=v_x, v_y=v_y, v_rot=v_rot, params=self._mobility_params),
+            end_time_secs=end_time, timesync_endpoint=self._robot.time_sync.endpoint)
         self._last_velocity_command_time = end_time
         return response[0], response[1]
 
@@ -691,35 +738,37 @@ class SpotWrapper():
         self._near_goal = False
         self._last_trajectory_command_precise = precise_position
         self._logger.info("got command duration of {}".format(cmd_duration))
-        end_time=time.time() + cmd_duration
+        end_time = time.time() + cmd_duration
         if frame_name == 'vision':
             vision_tform_body = frame_helpers.get_vision_tform_body(
-                    self._robot_state_client.get_robot_state().kinematic_state.transforms_snapshot)
-            body_tform_goal = math_helpers.SE3Pose(x=goal_x, y=goal_y, z=0, rot=math_helpers.Quat.from_yaw(goal_heading))
+                self._robot_state_client.get_robot_state().kinematic_state.transforms_snapshot)
+            body_tform_goal = math_helpers.SE3Pose(x=goal_x, y=goal_y, z=0,
+                                                   rot=math_helpers.Quat.from_yaw(goal_heading))
             vision_tform_goal = vision_tform_body * body_tform_goal
             response = self._robot_command(
-                            RobotCommandBuilder.synchro_se2_trajectory_point_command(
-                                goal_x=vision_tform_goal.x,
-                                goal_y=vision_tform_goal.y,
-                                goal_heading=vision_tform_goal.rot.to_yaw(),
-                                frame_name=frame_helpers.VISION_FRAME_NAME,
-                                params=mobility_params),
-                            end_time_secs=end_time
-                            )
+                RobotCommandBuilder.synchro_se2_trajectory_point_command(
+                    goal_x=vision_tform_goal.x,
+                    goal_y=vision_tform_goal.y,
+                    goal_heading=vision_tform_goal.rot.to_yaw(),
+                    frame_name=frame_helpers.VISION_FRAME_NAME,
+                    params=mobility_params),
+                end_time_secs=end_time
+            )
         elif frame_name == 'odom':
             odom_tform_body = frame_helpers.get_odom_tform_body(
-                    self._robot_state_client.get_robot_state().kinematic_state.transforms_snapshot)
-            body_tform_goal = math_helpers.SE3Pose(x=goal_x, y=goal_y, z=0, rot=math_helpers.Quat.from_yaw(goal_heading))
+                self._robot_state_client.get_robot_state().kinematic_state.transforms_snapshot)
+            body_tform_goal = math_helpers.SE3Pose(x=goal_x, y=goal_y, z=0,
+                                                   rot=math_helpers.Quat.from_yaw(goal_heading))
             odom_tform_goal = odom_tform_body * body_tform_goal
             response = self._robot_command(
-                            RobotCommandBuilder.synchro_se2_trajectory_point_command(
-                                goal_x=odom_tform_goal.x,
-                                goal_y=odom_tform_goal.y,
-                                goal_heading=odom_tform_goal.rot.to_yaw(),
-                                frame_name=frame_helpers.ODOM_FRAME_NAME,
-                                params=mobility_params),
-                            end_time_secs=end_time
-                            )
+                RobotCommandBuilder.synchro_se2_trajectory_point_command(
+                    goal_x=odom_tform_goal.x,
+                    goal_y=odom_tform_goal.y,
+                    goal_heading=odom_tform_goal.rot.to_yaw(),
+                    frame_name=frame_helpers.ODOM_FRAME_NAME,
+                    params=mobility_params),
+                end_time_secs=end_time
+            )
         else:
             raise ValueError('frame_name must be \'vision\' or \'odom\'')
         if response[0]:
@@ -728,7 +777,8 @@ class SpotWrapper():
 
     def robot_command(self, robot_command):
         end_time = time.time() + MAX_COMMAND_DURATION
-        return self._robot_command(robot_command, end_time_secs=end_time, timesync_endpoint=self._robot.time_sync.endpoint)
+        return self._robot_command(robot_command, end_time_secs=end_time,
+                                   timesync_endpoint=self._robot.time_sync.endpoint)
 
     def get_robot_command_feedback(self, cmd_id):
         return self._robot_command_client.robot_command_feedback(cmd_id)
@@ -740,7 +790,7 @@ class SpotWrapper():
         """
         ids, eds = self._list_graph_waypoint_and_edge_ids()
         # skip waypoint_ for v2.2.1, skip waypiont for < v2.2
-        return [v for k, v in sorted(ids.items(), key=lambda id : int(id[0].replace('waypoint_','')))]
+        return [v for k, v in sorted(ids.items(), key=lambda id: int(id[0].replace('waypoint_', '')))]
 
     def navigate_to(self, upload_path,
                     navigate_to,
@@ -824,8 +874,8 @@ class SpotWrapper():
         self._graph_nav_client.set_localization(
             initial_guess_localization=localization,
             # It's hard to get the pose perfect, search +/-20 deg and +/-20cm (0.2m).
-            max_distance = 0.2,
-            max_yaw = 20.0 * math.pi / 180.0,
+            max_distance=0.2,
+            max_yaw=20.0 * math.pi / 180.0,
             fiducial_init=graph_nav_pb2.SetLocalizationRequest.FIDUCIAL_INIT_NO_FIDUCIAL,
             ko_tform_body=current_odom_tform_body)
 
@@ -845,7 +895,6 @@ class SpotWrapper():
         self._current_annotation_name_to_wp_id, self._current_edges = graph_nav_util.update_waypoints_and_edges(
             graph, localization_id, self._logger)
         return self._current_annotation_name_to_wp_id, self._current_edges
-
 
     def _upload_graph_and_snapshots(self, upload_filepath):
         """Upload the graph and snapshots to the robot."""
@@ -890,8 +939,8 @@ class SpotWrapper():
         if not localization_state.localization.waypoint_id:
             # The robot is not localized to the newly uploaded graph.
             self._logger.info(
-                   "Upload complete! The robot is currently not localized to the map; please localize", \
-                   "the robot using commands (2) or (3) before attempting a navigation command.")
+                "Upload complete! The robot is currently not localized to the map; please localize", \
+                "the robot using commands (2) or (3) before attempting a navigation command.")
 
     def _navigate_to(self, *args):
         """Navigate to a specific waypoint."""
@@ -1026,7 +1075,7 @@ class SpotWrapper():
             motors_on = False
             while not motors_on:
                 future = self._robot_state_client.get_robot_state_async()
-                state_response = future.result(timeout=10) # 10 second timeout for waiting for the state response.
+                state_response = future.result(timeout=10)  # 10 second timeout for waiting for the state response.
                 if state_response.power_state.motor_power_state == robot_state_pb2.PowerState.STATE_ON:
                     motors_on = True
                 else:
@@ -1083,3 +1132,60 @@ class SpotWrapper():
                     # This edge matches the pair of waypoints! Add it the edge list and continue.
                     return map_pb2.Edge.Id(from_waypoint=waypoint1, to_waypoint=waypoint2)
         return None
+
+    def get_frontleft_rgb_image(self):
+        try:
+            return self._image_client.get_image([build_image_request(
+                "frontleft_fisheye_image", pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8, quality_percent=50)])[0]
+        except UnsupportedPixelFormatRequestedError as e:
+            return None
+
+    def get_frontright_rgb_image(self):
+        try:
+            return self._image_client.get_image([build_image_request(
+                "frontright_fisheye_image", pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8, quality_percent=50)])[0]
+        except UnsupportedPixelFormatRequestedError as e:
+            return None
+
+    def get_left_rgb_image(self):
+        try:
+            return self._image_client.get_image([build_image_request(
+                "left_fisheye_image", pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8, quality_percent=50)])[0]
+        except UnsupportedPixelFormatRequestedError as e:
+            return None
+
+    def get_right_rgb_image(self):
+        try:
+            return self._image_client.get_image([build_image_request(
+                "right_fisheye_image", pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8, quality_percent=50)])[0]
+        except UnsupportedPixelFormatRequestedError as e:
+            return None
+
+    def get_back_rgb_image(self):
+        try:
+            return self._image_client.get_image([build_image_request(
+                "back_fisheye_image", pixel_format=image_pb2.Image.PIXEL_FORMAT_RGB_U8, quality_percent=50)])[0]
+        except UnsupportedPixelFormatRequestedError as e:
+            return None
+
+    def get_images(self, image_requests: list[image_pb2.ImageRequest]) -> Optional[ImageBundle]:
+        try:
+            image_responses = self._image_client.get_image(image_requests)
+        except UnsupportedPixelFormatRequestedError as e:
+            return None
+        return ImageBundle(
+            frontleft=image_responses[0],
+            frontright=image_responses[1],
+            left=image_responses[2],
+            right=image_responses[3],
+            back=image_responses[4],
+        )
+
+    def get_camera_images(self) -> ImageBundle:
+        return self.get_images(self._camera_image_requests)
+
+    def get_depth_images(self) -> ImageBundle:
+        return self.get_images(self._depth_image_requests)
+
+    def get_depth_registered_images(self) -> ImageBundle:
+        return self.get_images(self._depth_registered_image_requests)

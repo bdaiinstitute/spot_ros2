@@ -1,6 +1,5 @@
 import os
 import time
-import traceback
 import rclpy
 from builtin_interfaces.msg import Time, Duration
 
@@ -28,6 +27,8 @@ from spot_msgs.msg import BatteryState, BatteryStateArray
 from bosdyn.api import image_pb2
 from bosdyn.client.math_helpers import SE3Pose
 from bosdyn.client.frame_helpers import get_odom_tform_body, get_vision_tform_body, get_a_tform_b
+
+from .spot_wrapper import SpotWrapper
 
 try:
     from conversions import ros_transform_to_se3_pose
@@ -89,8 +90,8 @@ def populateTransformStamped(time, parent_frame, child_frame, transform, frame_p
 
     return new_tf
 
-def createDefaulCameraInfo():
 
+def createDefaulCameraInfo():
     camera_info_msg = CameraInfo()
     camera_info_msg.distortion_model = "plumb_bob"
 
@@ -127,11 +128,12 @@ def createDefaulCameraInfo():
 
     return camera_info_msg
 
-def getImageMsg(data, spot_wrapper):
-    """Takes the imag and  camera data and populates the necessary ROS messages
+
+def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spot_wrapper: SpotWrapper):
+    """Takes the image and camera data and populates the necessary ROS messages
     Args:
+        spot_wrapper: SpotWrapper
         data: Image proto
-        spot_wrapper: A SpotWrapper object
     Returns:
         (tuple):
             * Image: message of the image captured
@@ -140,7 +142,7 @@ def getImageMsg(data, spot_wrapper):
     image_msg = Image()
     local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
     image_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-    image_msg.header.frame_id = data.shot.frame_name_image_sensor
+    image_msg.header.frame_id = spot_wrapper.frame_prefix + data.shot.frame_name_image_sensor
     image_msg.height = data.shot.image.rows
     image_msg.width = data.shot.image.cols
 
@@ -182,7 +184,7 @@ def getImageMsg(data, spot_wrapper):
             image_msg.step = 2 * data.shot.image.cols
             image_msg.data = data.shot.image.data
 
-    #camera_info_msg = createDefaulCameraInfo(camera_info_msg)
+    # camera_info_msg = createDefaulCameraInfo(camera_info_msg)
     camera_info_msg = CameraInfo()
     camera_info_msg.distortion_model = "plumb_bob"
 
@@ -233,6 +235,7 @@ def getImageMsg(data, spot_wrapper):
     camera_info_msg.p[6] = data.source.pinhole.intrinsics.principal_point.y
 
     return image_msg, camera_info_msg
+
 
 def GetJointStatesFromState(state, spot_wrapper):
     """Maps joint state data from robot state proto to ROS JointState message
@@ -565,21 +568,22 @@ def get_from_env_and_fall_back_to_param(env_name, node, param_name, default_valu
         val = node.get_parameter(param_name).value
     return val
 
-# Timeout only works if your tf_listener is being updated in a separate thread from which this is called!
-# You can do that by creating a multi-threaded executor.
-def lookup_a_tform_b(tf_buffer, frame_a, frame_b, transform_time=None, timeout=None):
+# Timeout only works if your tf listener updates in a separate thread!
+def lookup_a_tform_b(tf_buffer, frame_a, frame_b, transform_time=None, timeout=None, wait_for_frames=False):
     if transform_time is None:
         transform_time = rclpy.time.Time()
-    if timeout is None:
+    if timeout is None or not wait_for_frames:
         timeout_py = rclpy.time.Duration()
     else:
         timeout_py = rclpy.time.Duration(seconds=timeout)
     start_time = time.time()
-    while True:
+    while rclpy.ok():
         try:
             return ros_transform_to_se3_pose(tf_buffer.lookup_transform(frame_a, frame_b, time=transform_time,
                                                                         timeout=timeout_py).transform)
-        except tf2.TransformException as e:
+        except tf2.ExtrapolationException as e:
+            if 'future' not in str(e):
+                raise e  # Waiting won't help with this
             now = time.time()
             if timeout is None or now - start_time > timeout:
                 raise e

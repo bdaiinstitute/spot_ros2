@@ -1,32 +1,17 @@
-import os
-import time
-import traceback
-
-import rclpy
-from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
-from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
 
 from rclpy.action import ActionServer
-import builtin_interfaces.msg
-from builtin_interfaces.msg import Time, Duration
 
 from std_srvs.srv import Trigger, SetBool
-from std_msgs.msg import Bool, Header
-from tf2_msgs.msg import TFMessage
-from geometry_msgs.msg import TransformStamped
-from sensor_msgs.msg import Image, CameraInfo
-from sensor_msgs.msg import JointState
-from geometry_msgs.msg import TwistWithCovarianceStamped, Twist, Pose
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Twist, Pose
 
 
 from bosdyn.api import geometry_pb2, trajectory_pb2, robot_command_pb2, world_object_pb2
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client import math_helpers
-import functools
-import bosdyn.geometry
+from google.protobuf.timestamp_pb2 import Timestamp
 import tf2_ros
 
 import spot_driver.conversions as conv
@@ -93,7 +78,7 @@ class WaitForGoal(object):
         self._at_goal = True
 
 
-class SpotROS():
+class SpotROS:
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
     def __init__(self):
@@ -107,9 +92,6 @@ class SpotROS():
         self.callbacks["metrics"] = self.MetricsCB
         self.callbacks["lease"] = self.LeaseCB
         self.callbacks["world_objects"] = self.WorldObjectsCB
-        self.callbacks["front_image"] = self.FrontImageCB
-        self.callbacks["side_image"] = self.SideImageCB
-        self.callbacks["rear_image"] = self.RearImageCB
 
     def RobotStateCB(self, results):
         """Callback for when the Spot Wrapper gets new robot state data.
@@ -226,72 +208,113 @@ class SpotROS():
             if len(tf_msg.transforms) > 0:
                 self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
 
-    def FrontImageCB(self, results):
-        """Callback for when the Spot Wrapper gets new front image data.
-        Args:
-            results: FutureWrapper object of AsyncPeriodicQuery callback
-        """
-        data = self.spot_wrapper.front_images
-        if data:
-            image_msg0, camera_info_msg0 = getImageMsg(data[0], self.spot_wrapper)
-            self.frontleft_image_pub.publish(image_msg0)
-            self.frontleft_image_info_pub.publish(camera_info_msg0)
-            image_msg1, camera_info_msg1 = getImageMsg(data[1], self.spot_wrapper)
-            self.frontright_image_pub.publish(image_msg1)
-            self.frontright_image_info_pub.publish(camera_info_msg1)
-            image_msg2, camera_info_msg2 = getImageMsg(data[2], self.spot_wrapper)
-            self.frontleft_depth_pub.publish(image_msg2)
-            self.frontleft_depth_info_pub.publish(camera_info_msg2)
-            image_msg3, camera_info_msg3 = getImageMsg(data[3], self.spot_wrapper)
-            self.frontright_depth_pub.publish(image_msg3)
-            self.frontright_depth_info_pub.publish(camera_info_msg3)
+    def publish_camera_images_callback(self):
+        image_bundle = self.spot_wrapper.get_camera_images()
+        frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.frontleft, self.spot_wrapper
+        )
+        frontright_image_msg, frontright_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.frontright, self.spot_wrapper
+        )
+        left_image_msg, left_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.left, self.spot_wrapper
+        )
+        right_image_msg, right_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.right, self.spot_wrapper
+        )
+        back_image_msg, back_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.back, self.spot_wrapper
+        )
 
-            self.populate_camera_static_transforms(data[0])
-            self.populate_camera_static_transforms(data[1])
-            self.populate_camera_static_transforms(data[2])
-            self.populate_camera_static_transforms(data[3])
+        self.frontleft_image_pub.publish(frontleft_image_msg)
+        self.frontright_image_pub.publish(frontright_image_msg)
+        self.left_image_pub.publish(left_image_msg)
+        self.right_image_pub.publish(right_image_msg)
+        self.back_image_pub.publish(back_image_msg)
 
-    def SideImageCB(self, results):
-        """Callback for when the Spot Wrapper gets new side image data.
-        Args:
-            results: FutureWrapper object of AsyncPeriodicQuery callback
-        """
-        data = self.spot_wrapper.side_images
-        if data:
-            image_msg0, camera_info_msg0 = getImageMsg(data[0], self.spot_wrapper)
-            self.left_image_pub.publish(image_msg0)
-            self.left_image_info_pub.publish(camera_info_msg0)
-            image_msg1, camera_info_msg1 = getImageMsg(data[1], self.spot_wrapper)
-            self.right_image_pub.publish(image_msg1)
-            self.right_image_info_pub.publish(camera_info_msg1)
-            image_msg2, camera_info_msg2 = getImageMsg(data[2], self.spot_wrapper)
-            self.left_depth_pub.publish(image_msg2)
-            self.left_depth_info_pub.publish(camera_info_msg2)
-            image_msg3, camera_info_msg3 = getImageMsg(data[3], self.spot_wrapper)
-            self.right_depth_pub.publish(image_msg3)
-            self.right_depth_info_pub.publish(camera_info_msg3)
+        self.frontleft_image_info_pub.publish(frontleft_camera_info)
+        self.frontright_image_info_pub.publish(frontright_camera_info)
+        self.left_image_info_pub.publish(left_camera_info)
+        self.right_image_info_pub.publish(right_camera_info)
+        self.back_image_info_pub.publish(back_camera_info)
 
-            self.populate_camera_static_transforms(data[0])
-            self.populate_camera_static_transforms(data[1])
-            self.populate_camera_static_transforms(data[2])
-            self.populate_camera_static_transforms(data[3])
+        self.populate_camera_static_transforms(image_bundle.frontleft)
+        self.populate_camera_static_transforms(image_bundle.frontright)
+        self.populate_camera_static_transforms(image_bundle.left)
+        self.populate_camera_static_transforms(image_bundle.right)
+        self.populate_camera_static_transforms(image_bundle.back)
 
-    def RearImageCB(self, results):
-        """Callback for when the Spot Wrapper gets new rear image data.
-        Args:
-            results: FutureWrapper object of AsyncPeriodicQuery callback
-        """
-        data = self.spot_wrapper.rear_images
-        if data:
-            mage_msg0, camera_info_msg0 = getImageMsg(data[0], self.spot_wrapper)
-            self.back_image_pub.publish(mage_msg0)
-            self.back_image_info_pub.publish(camera_info_msg0)
-            mage_msg1, camera_info_msg1 = getImageMsg(data[1], self.spot_wrapper)
-            self.back_depth_pub.publish(mage_msg1)
-            self.back_depth_info_pub.publish(camera_info_msg1)
+    def publish_depth_images_callback(self):
+        image_bundle = self.spot_wrapper.get_depth_images()
+        frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.frontleft, self.spot_wrapper
+        )
+        frontright_image_msg, frontright_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.frontright, self.spot_wrapper
+        )
+        left_image_msg, left_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.left, self.spot_wrapper
+        )
+        right_image_msg, right_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.right, self.spot_wrapper
+        )
+        back_image_msg, back_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.back, self.spot_wrapper
+        )
 
-            self.populate_camera_static_transforms(data[0])
-            self.populate_camera_static_transforms(data[1])
+        self.frontleft_depth_pub.publish(frontleft_image_msg)
+        self.frontright_depth_pub.publish(frontright_image_msg)
+        self.left_depth_pub.publish(left_image_msg)
+        self.right_depth_pub.publish(right_image_msg)
+        self.back_depth_pub.publish(back_image_msg)
+
+        self.frontleft_depth_info_pub.publish(frontleft_camera_info)
+        self.frontright_depth_info_pub.publish(frontright_camera_info)
+        self.left_depth_info_pub.publish(left_camera_info)
+        self.right_depth_info_pub.publish(right_camera_info)
+        self.back_depth_info_pub.publish(back_camera_info)
+
+        self.populate_camera_static_transforms(image_bundle.frontleft)
+        self.populate_camera_static_transforms(image_bundle.frontright)
+        self.populate_camera_static_transforms(image_bundle.left)
+        self.populate_camera_static_transforms(image_bundle.right)
+        self.populate_camera_static_transforms(image_bundle.back)
+
+    def publish_depth_registered_images_callback(self):
+        image_bundle = self.spot_wrapper.get_depth_registered_images()
+        frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.frontleft, self.spot_wrapper
+        )
+        frontright_image_msg, frontright_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.frontright, self.spot_wrapper
+        )
+        left_image_msg, left_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.left, self.spot_wrapper
+        )
+        right_image_msg, right_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.right, self.spot_wrapper
+        )
+        back_image_msg, back_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+            image_bundle.back, self.spot_wrapper
+        )
+
+        self.frontleft_depth_registered_pub.publish(frontleft_image_msg)
+        self.frontright_depth_registered_pub.publish(frontright_image_msg)
+        self.left_depth_registered_pub.publish(left_image_msg)
+        self.right_depth_registered_pub.publish(right_image_msg)
+        self.back_depth_registered_pub.publish(back_image_msg)
+
+        self.frontleft_depth_registered_info_pub.publish(frontleft_camera_info)
+        self.frontright_depth_registered_info_pub.publish(frontright_camera_info)
+        self.left_depth_registered_info_pub.publish(left_camera_info)
+        self.right_depth_registered_info_pub.publish(right_camera_info)
+        self.back_depth_registered_info_pub.publish(back_camera_info)
+
+        self.populate_camera_static_transforms(image_bundle.frontleft)
+        self.populate_camera_static_transforms(image_bundle.frontright)
+        self.populate_camera_static_transforms(image_bundle.left)
+        self.populate_camera_static_transforms(image_bundle.right)
+        self.populate_camera_static_transforms(image_bundle.back)
 
     def service_wrapper(self, name, handler, request, response):
         if self.spot_wrapper is None:
@@ -955,8 +978,8 @@ class SpotROS():
             self.mobility_params_pub.publish(mobility_params_msg)
             self.node_rate.sleep()
 
-def main(args=None):
 
+def main(args=None):
     COLOR_END    = '\33[0m'
     COLOR_RED    = '\33[31m'
     COLOR_GREEN  = '\33[32m'
@@ -966,12 +989,18 @@ def main(args=None):
 
     spot_ros = SpotROS()
     rclpy.init(args=args)
-    """Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.  Holds lease from wrapper and updates all async tasks at the ROS rate"""
+    """
+    Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.  Holds lease from wrapper
+     and updates all async tasks at the ROS rate
+    """
 
     node = rclpy.create_node('spot_ros2')
 
     spot_ros.node = node
     spot_ros.group = ReentrantCallbackGroup()
+    spot_ros.rgb_callback_group = MutuallyExclusiveCallbackGroup()
+    spot_ros.depth_callback_group = MutuallyExclusiveCallbackGroup()
+    spot_ros.depth_registered_callback_group = MutuallyExclusiveCallbackGroup()
     rate = node.create_rate(100)
     spot_ros.node_rate = rate
 
@@ -992,6 +1021,9 @@ def main(args=None):
     node.declare_parameter('deadzone', 0.05)
     node.declare_parameter('estop_timeout', 9.0)
     node.declare_parameter('start_estop', False)
+    node.declare_parameter('publish_rgb', True)
+    node.declare_parameter('publish_depth', True)
+    node.declare_parameter('publish_depth_registered', False)
     node.declare_parameter('spot_name', '')
 
     spot_ros.auto_claim = node.get_parameter('auto_claim')
@@ -999,11 +1031,14 @@ def main(args=None):
     spot_ros.auto_stand = node.get_parameter('auto_stand')
     spot_ros.start_estop = node.get_parameter('start_estop')
 
+    spot_ros.publish_rgb = node.get_parameter('publish_rgb')
+    spot_ros.publish_depth = node.get_parameter('publish_depth')
+    spot_ros.publish_depth_registered = node.get_parameter('publish_depth_registered')
+
     # This is only done from parameter because it should be passed by the launch file
     spot_ros.name = node.get_parameter('spot_name').value
     if not spot_ros.name:
         spot_ros.name = None
-
 
     spot_ros.motion_deadzone = node.get_parameter('deadzone')
     spot_ros.estop_timeout = node.get_parameter('estop_timeout')
@@ -1025,6 +1060,7 @@ def main(args=None):
     frame_prefix = ''
     if spot_ros.name is not None:
         frame_prefix = spot_ros.name + '/'
+    spot_ros.frame_prefix = frame_prefix
     spot_ros.mode_parent_odom_tf = node.declare_parameter('mode_parent_odom_tf',
                                                           frame_prefix + 'odom') # 'vision' or 'odom'
     spot_ros.tf_name_kinematic_odom = node.declare_parameter('tf_name_kinematic_odom',
@@ -1055,31 +1091,70 @@ def main(args=None):
         spot_ros.spot_wrapper = None
     # spot_ros.spot_wrapper = spot_wrapper
     if spot_ros.spot_wrapper is None or spot_ros.spot_wrapper.is_valid:
-        # Images #
-        spot_ros.back_image_pub = node.create_publisher(Image, 'camera/back/image', 1)
-        spot_ros.frontleft_image_pub = node.create_publisher(Image, 'camera/frontleft/image', 1)
-        spot_ros.frontright_image_pub = node.create_publisher(Image, 'camera/frontright/image', 1)
-        spot_ros.left_image_pub = node.create_publisher(Image, 'camera/left/image', 1)
-        spot_ros.right_image_pub = node.create_publisher(Image, 'camera/right/image', 1)
-        # Depth #
-        spot_ros.back_depth_pub = node.create_publisher(Image, 'depth/back/image', 1)
-        spot_ros.frontleft_depth_pub = node.create_publisher(Image, 'depth/frontleft/image', 1)
-        spot_ros.frontright_depth_pub = node.create_publisher(Image, 'depth/frontright/image', 1)
-        spot_ros.left_depth_pub = node.create_publisher(Image, 'depth/left/image', 1)
-        spot_ros.right_depth_pub = node.create_publisher(Image, 'depth/right/image', 1)
+        if spot_ros.publish_rgb.value:
+            # Images #
+            spot_ros.back_image_pub = node.create_publisher(Image, 'camera/back/image', 1)
+            spot_ros.frontleft_image_pub = node.create_publisher(Image, 'camera/frontleft/image', 1)
+            spot_ros.frontright_image_pub = node.create_publisher(Image, 'camera/frontright/image', 1)
+            spot_ros.left_image_pub = node.create_publisher(Image, 'camera/left/image', 1)
+            spot_ros.right_image_pub = node.create_publisher(Image, 'camera/right/image', 1)
+            # Image Camera Info #
+            spot_ros.back_image_info_pub = node.create_publisher(CameraInfo, 'camera/back/camera_info', 1)
+            spot_ros.frontleft_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontleft/camera_info', 1)
+            spot_ros.frontright_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontright/camera_info', 1)
+            spot_ros.left_image_info_pub = node.create_publisher(CameraInfo, 'camera/left/camera_info', 1)
+            spot_ros.right_image_info_pub = node.create_publisher(CameraInfo, 'camera/right/camera_info', 1)
 
-        # Image Camera Info #
-        spot_ros.back_image_info_pub = node.create_publisher(CameraInfo, 'camera/back/camera_info', 1)
-        spot_ros.frontleft_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontleft/camera_info', 1)
-        spot_ros.frontright_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontright/camera_info', 1)
-        spot_ros.left_image_info_pub = node.create_publisher(CameraInfo, 'camera/left/camera_info', 1)
-        spot_ros.right_image_info_pub = node.create_publisher(CameraInfo, 'camera/right/camera_info', 1)
-        # Depth Camera Info #
-        spot_ros.back_depth_info_pub = node.create_publisher(CameraInfo, 'depth/back/camera_info', 1)
-        spot_ros.frontleft_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontleft/camera_info', 1)
-        spot_ros.frontright_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontright/camera_info', 1)
-        spot_ros.left_depth_info_pub = node.create_publisher(CameraInfo, 'depth/left/camera_info', 1)
-        spot_ros.right_depth_info_pub = node.create_publisher(CameraInfo, 'depth/right/camera_info', 1)
+            node.create_timer(
+                1 / spot_ros.rates['front_image'],
+                spot_ros.publish_camera_images_callback,
+                callback_group=spot_ros.rgb_callback_group,
+            )
+
+        if spot_ros.publish_depth.value:
+            # Depth #
+            spot_ros.back_depth_pub = node.create_publisher(Image, 'depth/back/image', 1)
+            spot_ros.frontleft_depth_pub = node.create_publisher(Image, 'depth/frontleft/image', 1)
+            spot_ros.frontright_depth_pub = node.create_publisher(Image, 'depth/frontright/image', 1)
+            spot_ros.left_depth_pub = node.create_publisher(Image, 'depth/left/image', 1)
+            spot_ros.right_depth_pub = node.create_publisher(Image, 'depth/right/image', 1)
+            # Depth Camera Info #
+            spot_ros.back_depth_info_pub = node.create_publisher(CameraInfo, 'depth/back/camera_info', 1)
+            spot_ros.frontleft_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontleft/camera_info', 1)
+            spot_ros.frontright_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontright/camera_info', 1)
+            spot_ros.left_depth_info_pub = node.create_publisher(CameraInfo, 'depth/left/camera_info', 1)
+            spot_ros.right_depth_info_pub = node.create_publisher(CameraInfo, 'depth/right/camera_info', 1)
+
+            node.create_timer(
+                1 / spot_ros.rates['front_image'],
+                spot_ros.publish_depth_images_callback,
+                callback_group=spot_ros.depth_callback_group,
+            )
+
+        if spot_ros.publish_depth_registered.value:
+            # Depth Registered #
+            spot_ros.back_depth_registered_pub = node.create_publisher(Image, 'depth_registered/back/image', 1)
+            spot_ros.frontleft_depth_registered_pub = node.create_publisher(Image, 'depth_registered/frontleft/image', 1)
+            spot_ros.frontright_depth_registered_pub = node.create_publisher(Image, 'depth_registered/frontright/image', 1)
+            spot_ros.left_depth_registered_pub = node.create_publisher(Image, 'depth_registered/left/image', 1)
+            spot_ros.right_depth_registered_pub = node.create_publisher(Image, 'depth_registered/right/image', 1)
+            # Depth Registered Camera Info #
+            spot_ros.back_depth_registered_info_pub = \
+                node.create_publisher(CameraInfo, 'depth_registered/back/camera_info', 1)
+            spot_ros.frontleft_depth_registered_info_pub = \
+                node.create_publisher(CameraInfo, 'depth_registered/frontleft/camera_info', 1)
+            spot_ros.frontright_depth_registered_info_pub = \
+                node.create_publisher(CameraInfo, 'depth_registered/frontright/camera_info', 1)
+            spot_ros.left_depth_registered_info_pub = \
+                node.create_publisher(CameraInfo, 'depth_registered/left/camera_info', 1)
+            spot_ros.right_depth_registered_info_pub = \
+                node.create_publisher(CameraInfo, 'depth_registered/right/camera_info', 1)
+
+            node.create_timer(
+                1 / spot_ros.rates['front_image'],
+                spot_ros.publish_depth_registered_images_callback,
+                callback_group=spot_ros.depth_registered_callback_group,
+            )
 
         # Status Publishers #
         spot_ros.joint_state_pub = node.create_publisher(JointState, 'joint_states', 1)
