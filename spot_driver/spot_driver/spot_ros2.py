@@ -43,6 +43,7 @@ from spot_msgs.srv import SetVelocity
 # Release
 from .ros_helpers import *
 from .spot_wrapper import SpotWrapper
+from .spot_sim import SpotSim
 
 ### Debug
 # from ros_helpers import *
@@ -346,10 +347,12 @@ class SpotROS:
 
     def handle_sit(self, request, response):
         """ROS service handler for the sit service"""
+        self.node.get_logger().info("calling sit")
         response.success, response.message = self.spot_wrapper.sit()
         return response
 
     def handle_stand(self, request, response):
+        self.node.get_logger().info("calling stand")
         """ROS service handler for the stand service"""
         response.success, response.message = self.spot_wrapper.stand()
         return response
@@ -1088,7 +1091,14 @@ def main(args=None):
         if not spot_ros.spot_wrapper.is_valid:
             return
     else:
-        spot_ros.spot_wrapper = None
+        node.get_logger().info("Starting ROS driver for Spot Sim")
+        spot_ros.spot_wrapper = SpotSim(spot_ros.username, spot_ros.password, spot_ros.ip, spot_ros.name,
+                                        node.get_logger(), spot_ros.start_estop.value, spot_ros.estop_timeout.value,
+                                        spot_ros.rates, spot_ros.callbacks)
+        
+        if not spot_ros.spot_wrapper.is_valid:
+            node.get_logger().info("invalid spot wrapper")
+            return
     # spot_ros.spot_wrapper = spot_wrapper
     if spot_ros.spot_wrapper is None or spot_ros.spot_wrapper.is_valid:
         if spot_ros.publish_rgb.value:
