@@ -9,6 +9,7 @@ import numpy as np
 from bosdyn.client import create_standard_sdk, ResponseError, RpcError
 from bosdyn.client.async_tasks import AsyncPeriodicQuery, AsyncTasks
 
+
 from bosdyn.client.robot_state import RobotStateClient
 from bosdyn.client.robot_command import RobotCommandClient, RobotCommandBuilder
 from bosdyn.client.graph_nav import GraphNavClient
@@ -27,8 +28,10 @@ from bosdyn.client.world_object import WorldObjectClient
 
 from bosdyn.api import robot_id_pb2
 from bosdyn.api import robot_state_pb2
+from bosdyn.api import geometry_pb2
 
 from google.protobuf import duration_pb2
+
 
 MAX_COMMAND_DURATION = 1e5
 
@@ -93,9 +96,13 @@ class AsyncRobotState():
     def __init__(self, logger, rate, callback):
         self._period_sec = 1.0 / max(rate, 1.0)
         self._callback = callback
+        self._logger = logger
 
     def update(self):
-        self._callback()  
+        try:
+            self._callback(None)
+        except Exception as e:
+            self._logger.info("exception from callback " + str(e))  
 
 # class AsyncMetrics(AsyncPeriodicQuery):
 #     """Class to get robot metrics at regular intervals.  get_robot_metrics_async query sent to the robot at every tick.  Callback registered to defined callback function.
@@ -432,7 +439,32 @@ class SpotSim:
     @property
     def robot_state(self):
         """Return latest proto from the _robot_state_task"""
-        return robot_state_pb2.RobotStateResponse
+        
+        #Response = robot_state_pb2.RobotStateResponse()
+
+        try:
+            state = robot_state_pb2.RobotState()
+
+            #needed TFs to validate tree. 
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['body']
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['vision'].parent_frame_name = 'body'
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['odom'].parent_frame_name = 'body'
+
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['body'].parent_tform_child.rotation.w = 1
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['vision'].parent_tform_child.rotation.w = 1
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['odom'].parent_tform_child.rotation.w = 1
+
+            #need these for arm
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['flat_body'].parent_frame_name = 'body'
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['hand'].parent_frame_name = 'flat_body'
+
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['flat_body'].parent_tform_child.rotation.w = 1
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['hand'].parent_tform_child.rotation.w = 1
+        
+            return state
+
+        except Exception as e:
+            self._logger.info("error making snapshot " + str(e))  
         
     @property
     def metrics(self):
@@ -626,7 +658,7 @@ class SpotSim:
             timesync_endpoint: (optional) Time sync endpoint
         """
         
-        elf.logger.info("spotSim _robot_command")
+        self.logger.info("spotSim _robot_command")
         try:
             return True, "Success", 0
         except Exception as e:
