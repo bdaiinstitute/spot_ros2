@@ -28,7 +28,7 @@ from bosdyn.api import image_pb2
 from bosdyn.client.math_helpers import SE3Pose
 from bosdyn.client.frame_helpers import get_odom_tform_body, get_vision_tform_body, get_a_tform_b
 
-from .spot_wrapper import SpotWrapper
+from spot_wrapper.wrapper import SpotWrapper
 
 try:
     from conversions import ros_transform_to_se3_pose

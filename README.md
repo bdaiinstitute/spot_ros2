@@ -35,6 +35,16 @@ This package is derived of this [ROS1 package](https://github.com/heuristicus/sp
     git clone https://github.com/MASKOR/Spot-ROS2.git src/
     colcon build --symlink-install
 
+To install the spot wrapper
+
+```
+cd src/spot_ros2
+git submodule init
+git submodule update
+
+pip3 install -e spot_wrapper
+```
+
 ### Install depth image proc
 Since `DepthCloud` is not yet ported for rviz2 , we can use [depth_image_proc](http://wiki.ros.org/depth_image_proc) to visualize the depth information from the cameras as `Pointcloud2`.
 
