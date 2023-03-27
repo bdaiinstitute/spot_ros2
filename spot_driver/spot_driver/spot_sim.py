@@ -29,6 +29,9 @@ from bosdyn.client.world_object import WorldObjectClient
 from bosdyn.api import robot_id_pb2
 from bosdyn.api import robot_state_pb2
 from bosdyn.api import geometry_pb2
+from bosdyn.api import robot_command_pb2
+from bosdyn.api import synchronized_command_pb2
+from bosdyn.api import arm_command_pb2
 
 from google.protobuf import duration_pb2
 
@@ -824,11 +827,15 @@ class SpotSim:
 
     def robot_command(self, robot_command):
         end_time = time.time() + MAX_COMMAND_DURATION
-        return self._robot_command(robot_command, end_time_secs=end_time,
-                                   timesync_endpoint=self._robot.time_sync.endpoint)
+        return self._robot_command(robot_command, end_time_secs=end_time)
 
     def get_robot_command_feedback(self, cmd_id):
-        return self._robot_command_client.robot_command_feedback(cmd_id)
+        complete = arm_command_pb2.ArmCartesianCommand.Feedback.Status.STATUS_TRAJECTORY_COMPLETE
+        feedbackResponse = robot_command_pb2.RobotCommandFeedbackResponse()
+        armFeedback = feedbackResponse.feedback.synchronized_feedback.arm_command_feedback
+        armFeedback.arm_cartesian_feedback.status = complete
+        
+        return feedbackResponse
 
     def list_graph(self, upload_path):
         """List waypoint ids of garph_nav
