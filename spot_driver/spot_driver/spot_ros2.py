@@ -1019,6 +1019,7 @@ def main(args=None):
 
     node.declare_parameter('use_take_lease', True)
     node.declare_parameter('get_lease_on_action', True)
+    node.declare_parameter('continually_try_stand', False)
 
     node.declare_parameter('deadzone', 0.05)
     node.declare_parameter('estop_timeout', 9.0)
@@ -1035,6 +1036,7 @@ def main(args=None):
 
     spot_ros.use_take_lease = node.get_parameter('use_take_lease')
     spot_ros.get_lease_on_action = node.get_parameter('get_lease_on_action')
+    spot_ros.continually_try_stand = node.get_parameter('continually_try_stand')
 
     spot_ros.publish_rgb = node.get_parameter('publish_rgb')
     spot_ros.publish_depth = node.get_parameter('publish_depth')
@@ -1089,7 +1091,8 @@ def main(args=None):
     if spot_ros.name != MOCK_HOSTNAME:
         spot_ros.spot_wrapper = SpotWrapper(spot_ros.username, spot_ros.password, spot_ros.ip, spot_ros.name,
                                             spot_ros.logger, spot_ros.start_estop.value, spot_ros.estop_timeout.value,
-                                            spot_ros.rates, spot_ros.callbacks, spot_ros.use_take_lease, spot_ros.get_lease_on_action)
+                                            spot_ros.rates, spot_ros.callbacks, spot_ros.use_take_lease,
+                                            spot_ros.get_lease_on_action, spot_ros.continually_try_stand)
         if not spot_ros.spot_wrapper.is_valid:
             return
     else:
