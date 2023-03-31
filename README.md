@@ -32,7 +32,9 @@ Then run the install script:
     cd <path to spot_ros2>
     ./install_spot_ros2.sh
     cd <ros2 ws>
+    source /opt/ros/humble/setup.bash
     colcon build --symlink-install
+    source install/local_setup.bash
 
 ### Install depth image proc
 Since `DepthCloud` is not yet ported for rviz2 , we can use [depth_image_proc](http://wiki.ros.org/depth_image_proc) to visualize the depth information from the cameras as `Pointcloud2`.
@@ -55,7 +57,7 @@ The spot login data hostname, username and password can either be specified as R
     ros2 launch spot_description description.launch.py
 
 ### SpotDriver
-    ros2 launch spot_driver spot_driver.launch.py config_file:=<path to your ROS config file>
+    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>]
 
 ### Depth image to Pointcloud2
     ros2 launch spot_driver point_cloud_xyz.launch.py

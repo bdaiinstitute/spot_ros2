@@ -8,8 +8,9 @@ import xacro
 
 
 def generate_launch_description():
-    config_file = LaunchConfiguration('config_file')
-    config_file_arg = DeclareLaunchArgument('config_file', description='Path to configuration file for the driver.')
+    config_file = LaunchConfiguration('config_file', default='')
+    config_file_arg = DeclareLaunchArgument('config_file', description='Path to configuration file for the driver.',
+                                            default_value='')
 
     pkg_share = FindPackageShare('spot_description').find('spot_description')
     urdf_dir = os.path.join(pkg_share, 'urdf')
