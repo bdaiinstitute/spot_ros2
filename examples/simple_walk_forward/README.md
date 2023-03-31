@@ -1,5 +1,5 @@
 ## Running the Example
-1.  Position the robot with 4m of clear space in front of it
+1.  Position the robot with 2m of clear space in front of it (it's going to walk 1m forward)
 2.  Make sure you've built and sourced your workspace:
     ```bash
     cd <ros2 workspace>
@@ -10,12 +10,14 @@
 
 3.  Define the environment variables `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP` appropriately for your robot.
 3.  Start the driver:
-
-    ros2 launch spot_driver spot_driver.launch.py
+```bash
+ros2 launch spot_driver spot_driver.launch.py
+```
 
 4.  Run the example:
-
-    ros2 run simple_walk_forward walk_forward
+```bash
+ros2 run simple_walk_forward walk_forward
+```
 
 The robot should walk forward.
 
@@ -26,10 +28,10 @@ Because ROS generally requires persistent things like publishers and subscribers
 ```python
 class WalkForward(Node):
     def __init__(self, options):
-        super().__init__('walk_forward', namespace=options.robot)
+        super().__init__('walk_forward')
 ```
 
-We first set up “TF”, which helps us transform between robot frames:
+We first set up ROS's [TF](https://docs.ros.org/en/humble/Tutorials/Intermediate/Tf2/Tf2-Main.html), which helps us transform between robot frames:
 ```python
          self._tf_listener = TFListenerWrapper('walk_forward_tf', wait_for_transform = [BODY_FRAME_NAME,
                                                                                         VISION_FRAME_NAME])
@@ -38,12 +40,12 @@ We use a wrapper that supports synchronous operation around ROS2’s asynchronou
 
 In order to perform small actions with the robot we use the SpotCommander class.  This is a wrapper some service clients that talk to services offered by the spot driver.
 ```python
-        self._robot = SpotCommander(options.robot)
+        self._robot = SpotCommander()
 ```
 
 Finally we want to be able to command Spot to do things.  We do this via a wrapper around the action client that talks to an action server running in the Spot driver:
 ```python
-        self._robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command', namespace=options.robot)
+        self._robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command')
 ```
 The wrapper we use here automatically waits for the action server to become available during construction.  It also offers the send_goal_and_wait function we’ll use later without the risk of deadlock.  Before we can walk around, we need to claim the robot’s lease, power it on, and stand it up.  We can do all of these via the spot commander:
 ```python

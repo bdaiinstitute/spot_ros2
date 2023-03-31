@@ -24,17 +24,19 @@ This package is derived of this [ROS1 package](https://github.com/heuristicus/sp
 
 ## Install
 In your ROS2 workspace `src` directory, clone the repo:
-
-    git clone https://github.com/bdaiinstitute/spot_ros2.git
+```bash
+git clone https://github.com/bdaiinstitute/spot_ros2.git
+```
 
 Then run the install script:
-
-    cd <path to spot_ros2>
-    ./install_spot_ros2.sh
-    cd <ros2 ws>
-    source /opt/ros/humble/setup.bash
-    colcon build --symlink-install
-    source install/local_setup.bash
+```bash
+cd <path to spot_ros2>
+./install_spot_ros2.sh
+cd <ros2 ws>
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+source install/local_setup.bash
+```
 
 ### Install depth image proc
 Since `DepthCloud` is not yet ported for rviz2 , we can use [depth_image_proc](http://wiki.ros.org/depth_image_proc) to visualize the depth information from the cameras as `Pointcloud2`.
@@ -50,6 +52,10 @@ Since `DepthCloud` is not yet ported for rviz2 , we can use [depth_image_proc](h
 ### Install bosdyn_msgs from source
 The `bosdyn_msgs` package is installed as a debian package as part of the `install_spot_ros2` script because it's very large.  It can be checked out from source [here](https://github.com/bdaiinstitute/bosdyn_msgs) and then built as a normal ROS2 package if that is preferred (compilation takes about 15 minutes).
 
+## Example Code
+See the [examples](https://github.com/bdaiinstitute/spot_ros2/tree/main/examples/) for some examples of using the ROS2 driver.
+
+
 ## Launch
 The spot login data hostname, username and password can either be specified as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
@@ -62,10 +68,11 @@ The spot login data hostname, username and password can either be specified as R
 ### Depth image to Pointcloud2
     ros2 launch spot_driver point_cloud_xyz.launch.py
 
-### Example Node
+### Command Line Example Node
 The `command_spot_driver` node contains service and action clients. To send a trajectory goal execute:
 
     ros2 run spot_driver command_spot --ros-args -p command:=trajectory
+
 
 ### Multiple Robots
 If you want to use multiple robots, use the `spot_driver_with_namespace` launch file:
