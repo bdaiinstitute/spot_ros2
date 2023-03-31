@@ -1,11 +1,12 @@
 ## Running the Example
 1.  Position the robot with 4m of clear space in front of it
 2.  Make sure you've built and sourced your workspace:
-
+    ```bash
     cd <ros2 workspace>
     colcon build --symlink-install
     source /opt/ros/humble/setup.bash
     source ./install/local_setup.bash
+    ```
 
 3.  Define the environment variables `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP` appropriately for your robot.
 3.  Start the driver:
