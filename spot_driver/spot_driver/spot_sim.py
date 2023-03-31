@@ -35,6 +35,8 @@ from bosdyn.api import arm_command_pb2
 
 from google.protobuf import duration_pb2
 
+from .conversions import *
+
 
 MAX_COMMAND_DURATION = 1e5
 
@@ -47,6 +49,7 @@ from bosdyn.api import basic_command_pb2
 from google.protobuf.timestamp_pb2 import Timestamp
 
 # TODO: Missing Hand images
+# TODO: Duplicated in spot_Wrapper/spot_Sim create common deffinitions file. 
 CAMERA_IMAGE_SOURCES = [
     "frontleft_fisheye_image",
     "frontright_fisheye_image",
@@ -652,7 +655,7 @@ class SpotSim:
         # self.releaseLease()
         self.releaseEStop()
 
-    def _robot_command(self, command_proto, end_time_secs=None, timesync_endpoint=None):
+    def _robot_command(self, command_proto:robot_command_pb2.RobotCommand, end_time_secs=None, timesync_endpoint=None):
         """Generic blocking function for sending commands to robots.
 
         Args:
@@ -661,6 +664,17 @@ class SpotSim:
             timesync_endpoint: (optional) Time sync endpoint
         """
         
+        if command_proto.WhichOneof("command") == "synchronized_command":
+
+            sync_command = command_proto.synchronized_command
+            if sync_command.HasField("arm_command"):
+                arm_command = sync_command.arm_command
+                if arm_command.WhichOneof("command") == "arm_joint_move_command":
+                    from bosdyn_msgs.msg import ArmJointMoveCommandRequest
+                    msg = ArmJointMoveCommandRequest()
+                    convert_proto_to_bosdyn_msgs_arm_joint_move_command_request(arm_command.arm_joint_move_command, msg)
+                    
+
         self.logger.info("spotSim _robot_command")
         try:
             return True, "Success", 0
