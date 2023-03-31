@@ -24,8 +24,11 @@ This package is derived of this [ROS1 package](https://github.com/heuristicus/sp
 
 ## Install
 In your ROS2 workspace `src` directory, clone the repo:
+
     git clone https://github.com/bdaiinstitute/spot_ros2.git
+
 Then run the install script:
+
     cd <path to spot_ros2>
     ./install_spot_ros2.sh
     cd <ros2 ws>
