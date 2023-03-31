@@ -23,22 +23,27 @@ This package is derived of this [ROS1 package](https://github.com/heuristicus/sp
     - Tested for Ubuntu 22.04 + Humble
 
 ## Install
-    pip3 install bosdyn-client bosdyn-mission bosdyn-api bosdyn-core
-    sudo apt install ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-tf-transformations ros-$ROS_DISTRO-xacro
-    wget -q -O /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v0.0.0-humble/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb
-    sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb
-    rm /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb
-    wget -q -O /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/spot_ros2/releases/download/spot_msgs-v0.0-0/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
-    sudo dpkg -i /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
-    rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
-    cd <path/to/ros2/ws>
-    git clone https://github.com/MASKOR/Spot-ROS2.git src/
+In your ROS2 workspace `src` directory, clone the repo:
+    git clone https://github.com/bdaiinstitute/spot_ros2.git
+Then run the install script:
+    cd <path to spot_ros2>
+    ./install_spot_ros2.sh
+    cd <ros2 ws>
     colcon build --symlink-install
 
 ### Install depth image proc
 Since `DepthCloud` is not yet ported for rviz2 , we can use [depth_image_proc](http://wiki.ros.org/depth_image_proc) to visualize the depth information from the cameras as `Pointcloud2`.
 
     sudo apt install ros-$ROS_DISTRO-depth-image-proc
+
+### Install spot_msgs as a deb package
+`spot_msgs` are normally compiled as part of this repository.  If you would prefer to install them as a debian package, follow the steps below:
+    wget -q -O /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/spot_ros2/releases/download/spot_msgs-v0.0-0/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
+    sudo dpkg -i /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
+    rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
+
+### Install bosdyn_msgs from source
+The `bosdyn_msgs` package is installed as a debian package as part of the `install_spot_ros2` script because it's very large.  It can be checked out from source [here](https://github.com/bdaiinstitute/bosdyn_msgs) and then built as a normal ROS2 package if that is preferred (compilation takes about 15 minutes).
 
 ## Launch
 The spot login data hostname, username and password can either be specified as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
