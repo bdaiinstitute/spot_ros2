@@ -1,4 +1,4 @@
-This is a simple example of using ROS2 to move the arm up and down and opening and closing the gripper.
+This is a simple example of using ROS2 to make the robot walk 1m forward.
 
 ## Running the Example
 1.  Position the robot with 2m of clear space in front of it either sitting or standing (it's going to walk 1m forward)
