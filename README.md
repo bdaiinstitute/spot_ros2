@@ -70,9 +70,11 @@ This will launch all nodes in the `spot_name` namespace and use `spot_name/` as 
 
 ### Install spot_msgs as a deb package
 `spot_msgs` are normally compiled as part of this repository.  If you would prefer to install them as a debian package, follow the steps below:
-    wget -q -O /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/spot_ros2/releases/download/spot_msgs-v0.0-0/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
-    sudo dpkg -i /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
-    rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
+```bash
+wget -q -O /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/spot_ros2/releases/download/spot_msgs-v0.0-0/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
+sudo dpkg -i /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
+rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
+```
 
 ### Install bosdyn_msgs from source
 The `bosdyn_msgs` package is installed as a debian package as part of the `install_spot_ros2` script because it's very large.  It can be checked out from source [here](https://github.com/bdaiinstitute/bosdyn_msgs) and then built as a normal ROS2 package if that is preferred (compilation takes about 15 minutes).
