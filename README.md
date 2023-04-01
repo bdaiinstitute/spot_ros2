@@ -39,7 +39,7 @@ source install/local_setup.bash
 ```
 
 ## Example Code
-See the [examples](https://github.com/bdaiinstitute/spot_ros2/tree/main/examples/) for some examples of using the ROS2 driver.
+See the [examples](examples/) for some examples of using the ROS2 driver.
 
 
 ## Launch
