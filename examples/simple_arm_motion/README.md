@@ -1,4 +1,32 @@
-## BD Simple Arm Motion in ROS2
+This is a simple example of using ROS2 to make the robot walk 1m forward.
+
+## Running the Example
+
+1.  Position the robot with 1m of clear space around it either sitting or standing (it will move its arm up and down)
+2.  Make sure you've built and sourced your workspace:
+    ```bash
+    cd <ros2 workspace>
+    colcon build --symlink-install
+    source /opt/ros/humble/setup.bash
+    source ./install/local_setup.bash
+    ```
+
+3.  Define the environment variables `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP` appropriately for your robot.
+
+4.  Start the driver:
+```bash
+ros2 launch spot_driver spot_driver.launch.py
+```
+
+5.  Run the example:
+```bash
+ros2 run simple_arm_motion arm_simple
+```
+
+The robot should move its arm up and down.
+
+
+## Converting Direct API Calls to ROS2
 
 While the driver provides plenty of helper services and topics, direct Spot API calls can also usually be replaced with ROS2 calls simply by converting the protobuf into a ROS message and using the `robot_command` action.  This example shows how to update [BD Simple Arm Motion](https://dev.bostondynamics.com/python/examples/arm_simple/readme) to use ROS2.  The same concepts can be applied to any code that uses the `RobotCommand` protobuf.
 
@@ -221,7 +249,7 @@ If you want to ensure you only communicate with the robot via the ROS2 driver (w
 ```
 This gives us four components, which we'll use in many ROS2 programs:
 * A node: [ROS2 nodes](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html) handle publishing and subscribing on ROS2 topics.
-* A TF listener: This handles computing transforms.  As we'll see later, it can be used in place of Spot API `RobotStateClient` to get information about where frames on the robot are.  For more information about ROS2 TF see [here](https://docs.ros.org/en/humble/Tutorials/Intermediate/Tf2/Tf2-Main.html).  For more information about the TF wrapper and how we use it in these examples, see the `simple_walk_forward` example.
+* A TF listener: This handles computing transforms.  As we'll see later, it can be used in place of Spot API `RobotStateClient` to get information about where frames on the robot are.  For more information about ROS2 TF see [here](https://docs.ros.org/en/humble/Tutorials/Intermediate/Tf2/Tf2-Main.html).  For more information about the TF wrapper and how we use it in these examples, see the [simple_walk_forward example](../simple_walk_forward/).
 * A spot commander: This is a wrapper around service clients that call the spot driver to do simple things like get the lease and stand.  This is used in place of calls like `blocking_stand`.
 * A robot command action client: This is the ROS2 action client that sends goals to the ROS2 action server (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)).  This is used in place of the Spot API `RobotCommandClient`.  We use a wrapper around the built in ROS2 action client that allows us to wait for the goal to return without risk of deadlock.
 

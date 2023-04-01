@@ -1,5 +1,7 @@
+This is a simple example of using ROS2 to move the arm up and down and opening and closing the gripper.
+
 ## Running the Example
-1.  Position the robot with 2m of clear space in front of it (it's going to walk 1m forward)
+1.  Position the robot with 2m of clear space in front of it either sitting or standing (it's going to walk 1m forward)
 2.  Make sure you've built and sourced your workspace:
     ```bash
     cd <ros2 workspace>
@@ -9,12 +11,13 @@
     ```
 
 3.  Define the environment variables `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP` appropriately for your robot.
-3.  Start the driver:
+
+4.  Start the driver:
 ```bash
 ros2 launch spot_driver spot_driver.launch.py
 ```
 
-4.  Run the example:
+5.  Run the example:
 ```bash
 ros2 run simple_walk_forward walk_forward
 ```

@@ -41,7 +41,6 @@ source install/local_setup.bash
 ## Example Code
 See the [examples](examples/) for some examples of using the ROS2 driver.
 
-
 ## Launch
 The spot login data hostname, username and password can either be specified as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
