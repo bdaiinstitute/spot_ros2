@@ -28,7 +28,7 @@ The robot should walk forward.
 
 Now let's go through [the code](simple_walk_forward/walk_forward.py) and see what's happening.
 
-Because ROS generally requires persistent things like publishers and subscribers, it’s often useful to have a class around everything.  A ROS Node is an object that can interact with ROS topics so our classes usually inherit from Node or contain a node:
+Because ROS generally requires persistent things like publishers and subscribers, it’s often useful to have a class around everything.  A [ROS Node](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html) is an object that can interact with [ROS topics](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Topics/Understanding-ROS2-Topics.html) so our classes usually inherit from Node or contain a node:
 ```python
 class WalkForward(Node):
     def __init__(self, options):
@@ -40,7 +40,7 @@ We first set up ROS's [TF](https://docs.ros.org/en/humble/Tutorials/Intermediate
          self._tf_listener = TFListenerWrapper('walk_forward_tf', wait_for_transform = [BODY_FRAME_NAME,
                                                                                         VISION_FRAME_NAME])
 ```
-We use a wrapper that supports synchronous operation around ROS2’s asynchronous TF implementation (ROS2 code [here](https://github.com/ros2/rclpy/tree/humble)).  Passing it the body and vision frame names causes the wrapper to wait until it sees those frames.  This lets us make sure the robot is started and TF is working before proceeeding.
+We use a [wrapper](../utilities/utilities/tf_listener_wrapper.py) that supports synchronous operation around ROS2’s asynchronous TF implementation (ROS2 code [here](https://github.com/ros2/rclpy/tree/humble)).  Passing it the body and vision frame names causes the wrapper to wait until it sees those frames.  This lets us make sure the robot is started and TF is working before proceeeding.
 
 In order to perform small actions with the robot we use the SpotCommander class.  This wraps some service clients that talk to services offered by the spot driver.
 ```python
