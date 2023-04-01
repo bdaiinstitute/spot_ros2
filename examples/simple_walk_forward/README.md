@@ -26,8 +26,9 @@ The robot should walk forward.
 
 ## Understanding the Code
 
-Because ROS generally requires persistent things like publishers and subscribers, it’s often useful to have a class around everything.  A ROS Node is an object that can interact with ROS topics so our classes usually inherit from Node or contain a node.
+Now let's go through [the code](simple_walk_forward/walk_forward.py) and see what's happening.
 
+Because ROS generally requires persistent things like publishers and subscribers, it’s often useful to have a class around everything.  A ROS Node is an object that can interact with ROS topics so our classes usually inherit from Node or contain a node:
 ```python
 class WalkForward(Node):
     def __init__(self, options):
@@ -41,7 +42,7 @@ We first set up ROS's [TF](https://docs.ros.org/en/humble/Tutorials/Intermediate
 ```
 We use a wrapper that supports synchronous operation around ROS2’s asynchronous TF implementation (ROS2 code [here](https://github.com/ros2/rclpy/tree/humble)).  Passing it the body and vision frame names causes the wrapper to wait until it sees those frames.  This lets us make sure the robot is started and TF is working before proceeeding.
 
-In order to perform small actions with the robot we use the SpotCommander class.  This is a wrapper some service clients that talk to services offered by the spot driver.
+In order to perform small actions with the robot we use the SpotCommander class.  This wraps some service clients that talk to services offered by the spot driver.
 ```python
         self._robot = SpotCommander()
 ```
@@ -50,7 +51,7 @@ Finally we want to be able to command Spot to do things.  We do this via a wrapp
 ```python
         self._robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command')
 ```
-The wrapper we use here automatically waits for the action server to become available during construction.  It also offers the send_goal_and_wait function we’ll use later without the risk of deadlock.  Before we can walk around, we need to claim the robot’s lease, power it on, and stand it up.  We can do all of these via the spot commander:
+The wrapper we use here automatically waits for the action server to become available during construction.  It also offers the `send_goal_and_wait` function that we’ll use later.  Before we can walk around, we need to claim the robot’s lease, power it on, and stand it up.  We can do all of these via the spot commander:
 ```python
     def initialize_robot(self):
         self.get_logger().info('Claiming robot')
