@@ -19,7 +19,7 @@ from utilities.tf_listener_wrapper import TFListenerWrapper
 
 
 def hello_arm():
-    # Get basic ROS utilities and block until robot is stood up
+    # Set up basic ROS2 utilities for communicating with the driver
     node = Node('arm_simple')
     tf_listener = TFListenerWrapper('arm_simple_tf', wait_for_transform = [ODOM_FRAME_NAME,
                                                                            GRAV_ALIGNED_BODY_FRAME_NAME])

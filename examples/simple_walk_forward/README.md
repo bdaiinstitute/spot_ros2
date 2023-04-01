@@ -43,7 +43,7 @@ In order to perform small actions with the robot we use the SpotCommander class.
         self._robot = SpotCommander()
 ```
 
-Finally we want to be able to command Spot to do things.  We do this via a wrapper around the action client that talks to an action server running in the Spot driver:
+Finally we want to be able to command Spot to do things.  We do this via a wrapper around the action client that talks to an action server running in the Spot driver (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)):
 ```python
         self._robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command')
 ```
