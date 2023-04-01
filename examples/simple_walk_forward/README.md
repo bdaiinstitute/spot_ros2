@@ -40,18 +40,20 @@ We first set up ROS's [TF](https://docs.ros.org/en/humble/Tutorials/Intermediate
          self._tf_listener = TFListenerWrapper('walk_forward_tf', wait_for_transform = [BODY_FRAME_NAME,
                                                                                         VISION_FRAME_NAME])
 ```
-We use a [wrapper](../utilities/utilities/tf_listener_wrapper.py) that supports synchronous operation around ROS2’s asynchronous TF implementation (ROS2 code [here](https://github.com/ros2/rclpy/tree/humble)).  Passing it the body and vision frame names causes the wrapper to wait until it sees those frames.  This lets us make sure the robot is started and TF is working before proceeeding.
+We use a [wrapper](../utilities/utilities/tf_listener_wrapper.py) that supports synchronous operation around ROS2’s asynchronous [TF implementation](https://github.com/ros2/rclpy/tree/humble)).  Passing it the body and vision frame names causes the wrapper to wait until it sees those frames.  This lets us make sure the robot is started and TF is working before proceeeding.
 
-In order to perform small actions with the robot we use the SpotCommander class.  This wraps some service clients that talk to services offered by the spot driver.
+In order to perform small actions with the robot we use the [SpotCommander class](../utilities/utilities/spot_commander.py).  This wraps some service clients that talk to services offered by the spot driver.
 ```python
         self._robot = SpotCommander()
 ```
 
-Finally we want to be able to command Spot to do things.  We do this via a wrapper around the action client that talks to an action server running in the Spot driver (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)):
+Finally we want to be able to command Spot to do things.  We do this via a [wrapper](../utilities/utilities/action_client_wrapper.py) around the action client that talks to an action server running in the Spot driver (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)):
 ```python
         self._robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command')
 ```
-The wrapper we use here automatically waits for the action server to become available during construction.  It also offers the `send_goal_and_wait` function that we’ll use later.  Before we can walk around, we need to claim the robot’s lease, power it on, and stand it up.  We can do all of these via the spot commander:
+The wrapper we use here automatically waits for the action server to become available during construction.  It also offers the `send_goal_and_wait` function that we’ll use later.
+
+Before we can walk around, we need to claim the robot’s lease, power it on, and stand it up.  We can do all of these via the spot commander:
 ```python
     def initialize_robot(self):
         self.get_logger().info('Claiming robot')
@@ -84,7 +86,7 @@ def walk_forward_with_world_frame_goal(self):
                                                            BODY_FRAME_NAME).get_closest_se2_transform()
         world_t_goal = world_t_robot * ROBOT_T_GOAL
 ```
-Goals need to be sent in a static world frame (at least in v3.3…) but we have an offset in the body frame.  Therefore, we first look up the robot’s current position in the world using TF.  We then multiply by the offset we want in the robot frame.  Note that vision is Spot’s name for the static world frame it updates using visual odometry.  See [here](https://dev.bostondynamics.com/docs/concepts/geometry_and_frames) for more about Spot’s frames.
+Goals need to be sent in a static world frame (at least in v3.3…) but we have an offset in the body frame.  Therefore, we first look up the robot’s current position in the world using TF.  We then multiply by the offset we want in the robot frame.  Note that "vision" is Spot’s name for the static world frame it updates using visual odometry.  See [here](https://dev.bostondynamics.com/docs/concepts/geometry_and_frames) for more about Spot’s frames.
 
 Now we construct a goal to send to the Spot driver:
 ```python
@@ -100,4 +102,4 @@ Finally we send the goal to the Spot driver:
 ```python
         self._robot_command_client.send_goal_and_wait(action_goal)
 ```
-Note that send_goal_and_wait is a function we added to the ActionClientWrapper we use.
+Note that `send_goal_and_wait` is a function of our [ActionClientWrapper](../utilities/utilities/action_client_wrapper.py) and not a built in ROS2 function.
