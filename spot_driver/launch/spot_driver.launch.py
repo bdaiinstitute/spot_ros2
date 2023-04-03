@@ -38,10 +38,18 @@ def generate_launch_description():
         default_value="false",
     )
 
+    hostname = LaunchConfiguration("hostname")
+    hostname_arg = DeclareLaunchArgument(
+        "hostname",
+        description="The IP address of the spot. This value is overriden by the SPOT_IP environment variable",
+        default_value="10.0.0.3",
+    )
+
     driver_params = {
         'publish_rgb': publish_rgb,
         'publish_depth': publish_depth,
-        'publish_depth_registered': publish_depth_registered
+        'publish_depth_registered': publish_depth_registered,
+        'hostname': hostname,
     }
     spot_driver_node = launch_ros.actions.Node(
         package='spot_driver',
@@ -62,6 +70,7 @@ def generate_launch_description():
         publish_rgb_arg,
         publish_depth_arg,
         publish_depth_registered_arg,
+        hostname_arg,
         config_file_arg,
         spot_driver_node,
         robot_state_publisher,
