@@ -31,12 +31,19 @@ from bosdyn.api import robot_state_pb2
 from bosdyn.api import geometry_pb2
 from bosdyn.api import robot_command_pb2
 from bosdyn.api import synchronized_command_pb2
-from bosdyn.api import arm_command_pb2
+#from bosdyn.api import arm_command_pb2
+import bosdyn.api.arm_command_pb2 as arm_command_pb2
 
 from google.protobuf import duration_pb2
 
 from .conversions import *
 
+import rclpy
+from std_msgs.msg import String
+
+from rclpy.qos import QoSProfile
+from bosdyn_msgs.msg import ArmJointMoveCommandRequest
+from bosdyn_msgs.msg import ArmJointMoveCommandFeedback
 
 MAX_COMMAND_DURATION = 1e5
 
@@ -72,7 +79,6 @@ DEPTH_REGISTERED_IMAGE_SOURCES = [
     "back_depth_in_visual_frame",
 ]
 ImageBundle = namedtuple("ImageBundle", ["frontleft", "frontright", "left", "right", "back"])
-
 
 # class AsyncRobotState(AsyncPeriodicQuery):
 # #     """Class to get robot state at regular intervals.  get_robot_state_async query sent to the robot at every tick.  Callback registered to defined callback function.
@@ -285,11 +291,36 @@ class AsyncRobotState():
 #             return callback_future
 
 
+class SimConnection:
+
+    def __init__(self, node) -> None:
+        self.node = node
+
+        self.latest_feedback = {}
+        self.current_command_id = 0
+
+        qos = QoSProfile(depth=1)
+        self.publisher = self.node.create_publisher(ArmJointMoveCommandRequest, 'ArmJointMoveCommandRequest', qos)
+        self.subscriber = self.node.create_subscription(ArmJointMoveCommandFeedback, 'ArmJointMoveCommandFeedback', self._receive_feedback , qos)
+
+    def sendCommand(self, msg):
+        cmd = self.current_command_id 
+        self.publisher.publish(msg)
+        return cmd
+
+    def _receive_feedback(self, msg):
+        self.node.get_logger().info("status = " + str(msg.status))
+        self.latest_feedback[self.current_command_id] = msg
+
+
+        
+
 class SpotSim:
     """Generic wrapper class to encompass release 1.1.4 API features as well as maintaining leases automatically"""
 
-    def __init__(self, username, password, hostname, robot_name, logger, start_estop, estop_timeout=9.0,
+    def __init__(self, username, password, hostname, robot_name, node, logger, start_estop, estop_timeout=9.0,
                  rates=None, callbacks=None):
+               
         self._username = username
         self._password = password
         self._hostname = hostname
@@ -297,6 +328,10 @@ class SpotSim:
         self._frame_prefix = ''
         if robot_name is not None:
             self._frame_prefix = robot_name + '/'
+        
+        
+        self._sim_connection = SimConnection(node)
+        
         self._logger = logger
         self._rates = rates
         if rates is None:
@@ -655,7 +690,7 @@ class SpotSim:
         # self.releaseLease()
         self.releaseEStop()
 
-    def _robot_command(self, command_proto:robot_command_pb2.RobotCommand, end_time_secs=None, timesync_endpoint=None):
+    def _robot_command(self, command_proto, end_time_secs=None, timesync_endpoint=None):
         """Generic blocking function for sending commands to robots.
 
         Args:
@@ -663,21 +698,23 @@ class SpotSim:
             end_time_secs: (optional) Time-to-live for the command in seconds
             timesync_endpoint: (optional) Time sync endpoint
         """
-        
+        cmd = 0;
+
         if command_proto.WhichOneof("command") == "synchronized_command":
 
             sync_command = command_proto.synchronized_command
             if sync_command.HasField("arm_command"):
                 arm_command = sync_command.arm_command
                 if arm_command.WhichOneof("command") == "arm_joint_move_command":
-                    from bosdyn_msgs.msg import ArmJointMoveCommandRequest
                     msg = ArmJointMoveCommandRequest()
+                    self.logger.info("proto: " + str(arm_command.arm_joint_move_command))
                     convert_proto_to_bosdyn_msgs_arm_joint_move_command_request(arm_command.arm_joint_move_command, msg)
+                    self._sim_connection.sendCommand(msg)
                     
 
         self.logger.info("spotSim _robot_command")
         try:
-            return True, "Success", 0
+            return True, "Success", cmd
         except Exception as e:
             self._logger.error("Unable to execute robot command, exception was" + str(e))
             return False, str(e), None
@@ -844,10 +881,19 @@ class SpotSim:
         return self._robot_command(robot_command, end_time_secs=end_time)
 
     def get_robot_command_feedback(self, cmd_id):
-        complete = arm_command_pb2.ArmCartesianCommand.Feedback.Status.STATUS_TRAJECTORY_COMPLETE
+        
         feedbackResponse = robot_command_pb2.RobotCommandFeedbackResponse()
         armFeedback = feedbackResponse.feedback.synchronized_feedback.arm_command_feedback
-        armFeedback.arm_cartesian_feedback.status = complete
+        
+        if cmd_id in self._sim_connection.latest_feedback:
+            msg = self._sim_connection.latest_feedback[cmd_id]
+            proto = armFeedback.arm_joint_move_feedback
+            #feedback = arm_command_pb2.ArmCommand.Feedback(arm_joint_move_feedback = msg)
+            convert_bosdyn_msgs_arm_joint_move_command_feedback_to_proto(msg, proto)
+            
+        else:
+            in_progress = arm_command_pb2.ArmCartesianCommand.Feedback.Status.STATUS_IN_PROGRESS
+            armFeedback.arm_cartesian_feedback.status = in_progress
         
         return feedbackResponse
 

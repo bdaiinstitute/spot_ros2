@@ -1093,7 +1093,7 @@ def main(args=None):
     else:
         node.get_logger().info("Starting ROS driver for Spot Sim")
         spot_ros.spot_wrapper = SpotSim(spot_ros.username, spot_ros.password, spot_ros.ip, spot_ros.name,
-                                        node.get_logger(), spot_ros.start_estop.value, spot_ros.estop_timeout.value,
+                                        node, node.get_logger(), spot_ros.start_estop.value, spot_ros.estop_timeout.value,
                                         spot_ros.rates, spot_ros.callbacks)
         
         if not spot_ros.spot_wrapper.is_valid:
