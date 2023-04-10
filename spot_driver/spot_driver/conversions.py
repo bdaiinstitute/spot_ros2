@@ -120,7 +120,7 @@ def convert_bosdyn_msgs_list_world_object_request_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
     del proto.object_type[:]
     for _item in ros_msg.object_type:
-        proto.object_type.add(_item.value)
+        proto.object_type.append(_item.value)
     if ros_msg.timestamp_filter_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.timestamp_filter, proto.timestamp_filter)
 
@@ -854,7 +854,7 @@ def convert_bosdyn_msgs_list_available_models_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
     del proto.available_models[:]
     for _item in ros_msg.available_models:
-        proto.available_models.add(_item)
+        proto.available_models.append(_item)
     del proto.labels[:]
     for _item in ros_msg.labels:
         convert_bosdyn_msgs_model_labels_to_proto(_item, proto.labels.add())
@@ -871,7 +871,7 @@ def convert_bosdyn_msgs_model_labels_to_proto(ros_msg, proto):
     proto.model_name = ros_msg.model_name
     del proto.available_labels[:]
     for _item in ros_msg.available_labels:
-        proto.available_labels.add(_item)
+        proto.available_labels.append(_item)
 
 def convert_proto_to_bosdyn_msgs_network_compute_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -1048,7 +1048,7 @@ def convert_bosdyn_msgs_raycast_request_to_proto(ros_msg, proto):
     proto.min_intersection_distance = ros_msg.min_intersection_distance
     del proto.intersection_types[:]
     for _item in ros_msg.intersection_types:
-        proto.intersection_types.add(_item.value)
+        proto.intersection_types.append(_item.value)
 
 def convert_proto_to_bosdyn_msgs_ray_intersection_type(proto, ros_msg):
     pass
@@ -1736,7 +1736,7 @@ def convert_bosdyn_msgs_matrix_to_proto(ros_msg, proto):
     proto.cols = ros_msg.cols
     del proto.values[:]
     for _item in ros_msg.values:
-        proto.values.add(_item)
+        proto.values.append(_item)
 
 def convert_proto_to_bosdyn_msgs_matrixf(proto, ros_msg):
     ros_msg.rows = proto.rows
@@ -1751,7 +1751,7 @@ def convert_bosdyn_msgs_matrixf_to_proto(ros_msg, proto):
     proto.cols = ros_msg.cols
     del proto.values[:]
     for _item in ros_msg.values:
-        proto.values.add(_item)
+        proto.values.append(_item)
 
 def convert_proto_to_bosdyn_msgs_matrix_int64(proto, ros_msg):
     ros_msg.rows = proto.rows
@@ -1766,7 +1766,7 @@ def convert_bosdyn_msgs_matrix_int64_to_proto(ros_msg, proto):
     proto.cols = ros_msg.cols
     del proto.values[:]
     for _item in ros_msg.values:
-        proto.values.add(_item)
+        proto.values.append(_item)
 
 def convert_proto_to_bosdyn_msgs_matrix_int32(proto, ros_msg):
     ros_msg.rows = proto.rows
@@ -1781,7 +1781,7 @@ def convert_bosdyn_msgs_matrix_int32_to_proto(ros_msg, proto):
     proto.cols = ros_msg.cols
     del proto.values[:]
     for _item in ros_msg.values:
-        proto.values.add(_item)
+        proto.values.append(_item)
 
 def convert_proto_to_bosdyn_msgs_vector(proto, ros_msg):
     ros_msg.values = []
@@ -1792,7 +1792,7 @@ def convert_bosdyn_msgs_vector_to_proto(ros_msg, proto):
     proto.Clear()
     del proto.values[:]
     for _item in ros_msg.values:
-        proto.values.add(_item)
+        proto.values.append(_item)
 
 def convert_proto_to_bosdyn_msgs_se3_covariance(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_matrix(proto.matrix, ros_msg.matrix)
@@ -3034,7 +3034,7 @@ def convert_bosdyn_msgs_system_fault_to_proto(ros_msg, proto):
     proto.error_message = ros_msg.error_message
     del proto.attributes[:]
     for _item in ros_msg.attributes:
-        proto.attributes.add(_item)
+        proto.attributes.append(_item)
     proto.severity = ros_msg.severity.value
 
 def convert_proto_to_bosdyn_msgs_e_stop_state_type(proto, ros_msg):
@@ -3104,7 +3104,7 @@ def convert_bosdyn_msgs_battery_state_to_proto(ros_msg, proto):
         convert_float64_to_proto(ros_msg.voltage, proto.voltage)
     del proto.temperatures[:]
     for _item in ros_msg.temperatures:
-        proto.temperatures.add(_item)
+        proto.temperatures.append(_item)
     proto.status = ros_msg.status.value
 
 def convert_proto_to_bosdyn_msgs_kinematic_state(proto, ros_msg):
@@ -4374,7 +4374,7 @@ def convert_bosdyn_msgs_delete_data_pages_request_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_time_range_to_proto(ros_msg.time_range, proto.time_range)
     del proto.page_ids[:]
     for _item in ros_msg.page_ids:
-        proto.page_ids.add(_item)
+        proto.page_ids.append(_item)
 
 def convert_proto_to_bosdyn_msgs_delete_page_status_status(proto, ros_msg):
     pass
@@ -4537,10 +4537,10 @@ def convert_bosdyn_msgs_image_source_to_proto(ros_msg, proto):
     proto.image_type = ros_msg.image_type.value
     del proto.pixel_formats[:]
     for _item in ros_msg.pixel_formats:
-        proto.pixel_formats.add(_item.value)
+        proto.pixel_formats.append(_item.value)
     del proto.image_formats[:]
     for _item in ros_msg.image_formats:
-        proto.image_formats.add(_item.value)
+        proto.image_formats.append(_item.value)
 
 def convert_proto_to_bosdyn_msgs_list_image_sources_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -4941,7 +4941,7 @@ def convert_bosdyn_msgs_payload_to_proto(ros_msg, proto):
     proto.description = ros_msg.description
     del proto.label_prefix[:]
     for _item in ros_msg.label_prefix:
-        proto.label_prefix.add(_item)
+        proto.label_prefix.append(_item)
     proto.is_authorized = ros_msg.is_authorized
     proto.is_enabled = ros_msg.is_enabled
     proto.is_noncompute_payload = ros_msg.is_noncompute_payload
@@ -4981,7 +4981,7 @@ def convert_bosdyn_msgs_payload_preset_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_payload_mass_volume_properties_to_proto(ros_msg.mass_volume_properties, proto.mass_volume_properties)
     del proto.label_prefix[:]
     for _item in ros_msg.label_prefix:
-        proto.label_prefix.add(_item)
+        proto.label_prefix.append(_item)
 
 def convert_proto_to_bosdyn_msgs_payload_mass_volume_properties(proto, ros_msg):
     ros_msg.total_mass = proto.total_mass
@@ -5045,10 +5045,10 @@ def convert_bosdyn_msgs_joint_limits_to_proto(ros_msg, proto):
     proto.label = ros_msg.label
     del proto.hy[:]
     for _item in ros_msg.hy:
-        proto.hy.add(_item)
+        proto.hy.append(_item)
     del proto.hx[:]
     for _item in ros_msg.hx:
-        proto.hx.add(_item)
+        proto.hx.append(_item)
 
 def convert_proto_to_bosdyn_msgs_list_payloads_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -6927,7 +6927,7 @@ def convert_bosdyn_msgs_service_fault_to_proto(ros_msg, proto):
     proto.error_message = ros_msg.error_message
     del proto.attributes[:]
     for _item in ros_msg.attributes:
-        proto.attributes.add(_item)
+        proto.attributes.append(_item)
     proto.severity = ros_msg.severity.value
     if ros_msg.onset_timestamp_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.onset_timestamp, proto.onset_timestamp)
@@ -7014,10 +7014,10 @@ def convert_bosdyn_msgs_lease_to_proto(ros_msg, proto):
     proto.epoch = ros_msg.epoch
     del proto.sequence[:]
     for _item in ros_msg.sequence:
-        proto.sequence.add(_item)
+        proto.sequence.append(_item)
     del proto.client_names[:]
     for _item in ros_msg.client_names:
-        proto.client_names.add(_item)
+        proto.client_names.append(_item)
 
 def convert_proto_to_bosdyn_msgs_resource_tree(proto, ros_msg):
     ros_msg.resource = proto.resource
@@ -7325,7 +7325,7 @@ def convert_bosdyn_msgs_local_grid_to_proto(ros_msg, proto):
     proto.data = ros_msg.data
     del proto.rle_counts[:]
     for _item in ros_msg.rle_counts:
-        proto.rle_counts.add(_item)
+        proto.rle_counts.append(_item)
     proto.cell_value_scale = ros_msg.cell_value_scale
     proto.cell_value_offset = ros_msg.cell_value_offset
 
@@ -7541,7 +7541,7 @@ def convert_bosdyn_msgs_license_info_to_proto(ros_msg, proto):
         convert_builtin_interfaces_time_to_proto(ros_msg.not_valid_after, proto.not_valid_after)
     del proto.licensed_features[:]
     for _item in ros_msg.licensed_features:
-        proto.licensed_features.add(_item)
+        proto.licensed_features.append(_item)
 
 def convert_proto_to_bosdyn_msgs_get_license_info_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -7578,7 +7578,7 @@ def convert_bosdyn_msgs_get_feature_enabled_request_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_request_header_to_proto(ros_msg.header, proto.header)
     del proto.feature_codes[:]
     for _item in ros_msg.feature_codes:
-        proto.feature_codes.add(_item)
+        proto.feature_codes.append(_item)
 
 def convert_proto_to_bosdyn_msgs_get_feature_enabled_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
@@ -8109,7 +8109,7 @@ def convert_bosdyn_msgs_image_acquisition_capability_to_proto(ros_msg, proto):
     proto.service_name = ros_msg.service_name
     del proto.image_source_names[:]
     for _item in ros_msg.image_source_names:
-        proto.image_source_names.add(_item)
+        proto.image_source_names.append(_item)
     del proto.image_sources[:]
     for _item in ros_msg.image_sources:
         convert_bosdyn_msgs_image_source_to_proto(_item, proto.image_sources.add())
@@ -8132,7 +8132,7 @@ def convert_bosdyn_msgs_network_compute_capability_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_network_compute_server_configuration_to_proto(ros_msg.server_config, proto.server_config)
     del proto.available_models[:]
     for _item in ros_msg.available_models:
-        proto.available_models.add(_item)
+        proto.available_models.append(_item)
     del proto.labels[:]
     for _item in ros_msg.labels:
         convert_bosdyn_msgs_model_labels_to_proto(_item, proto.labels.add())
@@ -8584,7 +8584,7 @@ def convert_bosdyn_msgs_data_descriptor_to_proto(ros_msg, proto):
         convert_builtin_interfaces_time_to_proto(ros_msg.timestamp, proto.timestamp)
     del proto.additional_indexes[:]
     for _item in ros_msg.additional_indexes:
-        proto.additional_indexes.add(_item)
+        proto.additional_indexes.append(_item)
 
 def convert_proto_to_bosdyn_msgs_file_format_descriptor_check_sum_type(proto, ros_msg):
     pass
@@ -8672,7 +8672,7 @@ def convert_bosdyn_msgs_series_descriptor_to_proto(ros_msg, proto):
         proto.annotations[_item.key] = _item.value
     del proto.additional_index_names[:]
     for _item in ros_msg.additional_index_names:
-        proto.additional_index_names.add(_item)
+        proto.additional_index_names.append(_item)
     proto.description = ros_msg.description
 
 def convert_proto_to_bosdyn_msgs_message_type_descriptor(proto, ros_msg):
@@ -8697,7 +8697,7 @@ def convert_bosdyn_msgs_pod_type_descriptor_to_proto(ros_msg, proto):
     proto.pod_type = ros_msg.pod_type.value
     del proto.dimension[:]
     for _item in ros_msg.dimension:
-        proto.dimension.add(_item)
+        proto.dimension.append(_item)
 
 def convert_proto_to_bosdyn_msgs_struct_type_descriptor(proto, ros_msg):
     from bosdyn_msgs.msg import KeyStringValueUint64
@@ -8738,10 +8738,10 @@ def convert_bosdyn_msgs_file_index_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_series_identifier_to_proto(_item, proto.series_identifiers.add())
     del proto.series_block_index_offsets[:]
     for _item in ros_msg.series_block_index_offsets:
-        proto.series_block_index_offsets.add(_item)
+        proto.series_block_index_offsets.append(_item)
     del proto.series_identifier_hashes[:]
     for _item in ros_msg.series_identifier_hashes:
-        proto.series_identifier_hashes.add(_item)
+        proto.series_identifier_hashes.append(_item)
 
 def convert_proto_to_bosdyn_msgs_series_block_index_block_entry(proto, ros_msg):
     convert_proto_to_builtin_interfaces_time(proto.timestamp, ros_msg.timestamp)
@@ -8758,7 +8758,7 @@ def convert_bosdyn_msgs_series_block_index_block_entry_to_proto(ros_msg, proto):
     proto.file_offset = ros_msg.file_offset
     del proto.additional_indexes[:]
     for _item in ros_msg.additional_indexes:
-        proto.additional_indexes.add(_item)
+        proto.additional_indexes.append(_item)
 
 def convert_proto_to_bosdyn_msgs_series_block_index(proto, ros_msg):
     ros_msg.series_index = proto.series_index
@@ -8951,7 +8951,7 @@ def convert_bosdyn_msgs_area_callback_information_to_proto(ros_msg, proto):
     proto.Clear()
     del proto.required_lease_resources[:]
     for _item in ros_msg.required_lease_resources:
-        proto.required_lease_resources.add(_item)
+        proto.required_lease_resources.append(_item)
 
 def convert_proto_to_bosdyn_msgs_area_callback_information_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
@@ -9769,10 +9769,10 @@ def convert_bosdyn_msgs_process_topology_response_to_proto(ros_msg, proto):
     proto.map_on_server_was_modified = ros_msg.map_on_server_was_modified
     del proto.missing_snapshot_ids[:]
     for _item in ros_msg.missing_snapshot_ids:
-        proto.missing_snapshot_ids.add(_item)
+        proto.missing_snapshot_ids.append(_item)
     del proto.missing_waypoint_ids[:]
     for _item in ros_msg.missing_waypoint_ids:
-        proto.missing_waypoint_ids.add(_item)
+        proto.missing_waypoint_ids.append(_item)
     proto.timed_out = ros_msg.timed_out
 
 def convert_proto_to_bosdyn_msgs_pose_bounds(proto, ros_msg):
@@ -10033,13 +10033,13 @@ def convert_bosdyn_msgs_process_anchoring_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_world_object_anchor_hint_to_proto(_item, proto.violated_object_constraints.add())
     del proto.missing_snapshot_ids[:]
     for _item in ros_msg.missing_snapshot_ids:
-        proto.missing_snapshot_ids.add(_item)
+        proto.missing_snapshot_ids.append(_item)
     del proto.missing_waypoint_ids[:]
     for _item in ros_msg.missing_waypoint_ids:
-        proto.missing_waypoint_ids.add(_item)
+        proto.missing_waypoint_ids.append(_item)
     del proto.invalid_hints[:]
     for _item in ros_msg.invalid_hints:
-        proto.invalid_hints.add(_item)
+        proto.invalid_hints.append(_item)
 
 def convert_proto_to_bosdyn_msgs_recording_environment(proto, ros_msg):
     ros_msg.name_prefix = proto.name_prefix
@@ -10107,7 +10107,7 @@ def convert_bosdyn_msgs_start_recording_request_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_recording_environment_to_proto(ros_msg.recording_environment, proto.recording_environment)
     del proto.require_fiducials[:]
     for _item in ros_msg.require_fiducials:
-        proto.require_fiducials.add(_item)
+        proto.require_fiducials.append(_item)
 
 def convert_proto_to_bosdyn_msgs_start_recording_response_status(proto, ros_msg):
     pass
@@ -10144,10 +10144,10 @@ def convert_bosdyn_msgs_start_recording_response_to_proto(ros_msg, proto):
     proto.status = ros_msg.status.value
     del proto.missing_fiducials[:]
     for _item in ros_msg.missing_fiducials:
-        proto.missing_fiducials.add(_item)
+        proto.missing_fiducials.append(_item)
     del proto.bad_pose_fiducials[:]
     for _item in ros_msg.bad_pose_fiducials:
-        proto.bad_pose_fiducials.add(_item)
+        proto.bad_pose_fiducials.append(_item)
     proto.license_status = ros_msg.license_status.value
     if ros_msg.impaired_state_is_set:
         convert_bosdyn_msgs_robot_impaired_state_to_proto(ros_msg.impaired_state, proto.impaired_state)
@@ -10216,7 +10216,7 @@ def convert_bosdyn_msgs_create_waypoint_request_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_lease_to_proto(ros_msg.lease, proto.lease)
     del proto.require_fiducials[:]
     for _item in ros_msg.require_fiducials:
-        proto.require_fiducials.add(_item)
+        proto.require_fiducials.append(_item)
     del proto.world_objects[:]
     for _item in ros_msg.world_objects:
         convert_bosdyn_msgs_world_object_to_proto(_item, proto.world_objects.add())
@@ -10258,10 +10258,10 @@ def convert_bosdyn_msgs_create_waypoint_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_lease_use_result_to_proto(ros_msg.lease_use_result, proto.lease_use_result)
     del proto.missing_fiducials[:]
     for _item in ros_msg.missing_fiducials:
-        proto.missing_fiducials.add(_item)
+        proto.missing_fiducials.append(_item)
     del proto.bad_pose_fiducials[:]
     for _item in ros_msg.bad_pose_fiducials:
-        proto.bad_pose_fiducials.add(_item)
+        proto.bad_pose_fiducials.append(_item)
     proto.license_status = ros_msg.license_status.value
 
 def convert_proto_to_bosdyn_msgs_create_edge_request(proto, ros_msg):
@@ -10364,7 +10364,7 @@ def convert_bosdyn_msgs_route_to_proto(ros_msg, proto):
     proto.Clear()
     del proto.waypoint_id[:]
     for _item in ros_msg.waypoint_id:
-        proto.waypoint_id.add(_item)
+        proto.waypoint_id.append(_item)
     del proto.edge_id[:]
     for _item in ros_msg.edge_id:
         convert_bosdyn_msgs_edge_id_to_proto(_item, proto.edge_id.add())
@@ -10621,7 +10621,7 @@ def convert_bosdyn_msgs_navigate_to_response_to_proto(ros_msg, proto):
     proto.command_id = ros_msg.command_id
     del proto.error_waypoint_ids[:]
     for _item in ros_msg.error_waypoint_ids:
-        proto.error_waypoint_ids.add(_item)
+        proto.error_waypoint_ids.append(_item)
     if ros_msg.area_callback_error_is_set:
         convert_bosdyn_msgs_area_callback_service_error_to_proto(ros_msg.area_callback_error, proto.area_callback_error)
 
@@ -10737,7 +10737,7 @@ def convert_bosdyn_msgs_navigate_route_response_to_proto(ros_msg, proto):
     proto.command_id = ros_msg.command_id
     del proto.error_waypoint_ids[:]
     for _item in ros_msg.error_waypoint_ids:
-        proto.error_waypoint_ids.add(_item)
+        proto.error_waypoint_ids.append(_item)
     del proto.error_edge_ids[:]
     for _item in ros_msg.error_edge_ids:
         convert_bosdyn_msgs_edge_id_to_proto(_item, proto.error_edge_ids.add())
@@ -10822,7 +10822,7 @@ def convert_bosdyn_msgs_navigate_to_anchor_response_to_proto(ros_msg, proto):
     proto.command_id = ros_msg.command_id
     del proto.error_waypoint_ids[:]
     for _item in ros_msg.error_waypoint_ids:
-        proto.error_waypoint_ids.add(_item)
+        proto.error_waypoint_ids.append(_item)
     if ros_msg.area_callback_error_is_set:
         convert_bosdyn_msgs_area_callback_service_error_to_proto(ros_msg.area_callback_error, proto.area_callback_error)
 
@@ -11087,16 +11087,16 @@ def convert_bosdyn_msgs_upload_graph_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_lease_use_result_to_proto(ros_msg.lease_use_result, proto.lease_use_result)
     del proto.loaded_waypoint_snapshot_ids[:]
     for _item in ros_msg.loaded_waypoint_snapshot_ids:
-        proto.loaded_waypoint_snapshot_ids.add(_item)
+        proto.loaded_waypoint_snapshot_ids.append(_item)
     del proto.unknown_waypoint_snapshot_ids[:]
     for _item in ros_msg.unknown_waypoint_snapshot_ids:
-        proto.unknown_waypoint_snapshot_ids.add(_item)
+        proto.unknown_waypoint_snapshot_ids.append(_item)
     del proto.loaded_edge_snapshot_ids[:]
     for _item in ros_msg.loaded_edge_snapshot_ids:
-        proto.loaded_edge_snapshot_ids.add(_item)
+        proto.loaded_edge_snapshot_ids.append(_item)
     del proto.unknown_edge_snapshot_ids[:]
     for _item in ros_msg.unknown_edge_snapshot_ids:
-        proto.unknown_edge_snapshot_ids.add(_item)
+        proto.unknown_edge_snapshot_ids.append(_item)
     proto.license_status = ros_msg.license_status.value
     if ros_msg.sensor_status_is_set:
         convert_bosdyn_msgs_sensor_compatibility_status_to_proto(ros_msg.sensor_status, proto.sensor_status)
@@ -11280,7 +11280,7 @@ def convert_bosdyn_msgs_area_callback_service_error_to_proto(ros_msg, proto):
     proto.Clear()
     del proto.missing_services[:]
     for _item in ros_msg.missing_services:
-        proto.missing_services.add(_item)
+        proto.missing_services.append(_item)
 
 def convert_proto_to_bosdyn_msgs_validate_graph_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -11561,7 +11561,7 @@ def convert_bosdyn_msgs_establish_session_response_to_proto(ros_msg, proto):
     proto.session_id = ros_msg.session_id
     del proto.missing_lease_resources[:]
     for _item in ros_msg.missing_lease_resources:
-        proto.missing_lease_resources.add(_item)
+        proto.missing_lease_resources.append(_item)
     del proto.lease_use_results[:]
     for _item in ros_msg.lease_use_results:
         convert_bosdyn_msgs_lease_use_result_to_proto(_item, proto.lease_use_results.add())
@@ -11628,7 +11628,7 @@ def convert_bosdyn_msgs_tick_response_to_proto(ros_msg, proto):
     proto.status = ros_msg.status.value
     del proto.missing_lease_resources[:]
     for _item in ros_msg.missing_lease_resources:
-        proto.missing_lease_resources.add(_item)
+        proto.missing_lease_resources.append(_item)
     del proto.lease_use_results[:]
     for _item in ros_msg.lease_use_results:
         convert_bosdyn_msgs_lease_use_result_to_proto(_item, proto.lease_use_results.add())
@@ -12081,7 +12081,7 @@ def convert_bosdyn_msgs_remote_grpc_to_proto(ros_msg, proto):
     proto.timeout = ros_msg.timeout
     del proto.lease_resources[:]
     for _item in ros_msg.lease_resources:
-        proto.lease_resources.add(_item)
+        proto.lease_resources.append(_item)
     del proto.inputs[:]
     for _item in ros_msg.inputs:
         convert_bosdyn_msgs_key_value_to_proto(_item, proto.inputs.add())
@@ -13248,10 +13248,10 @@ def convert_bosdyn_msgs_hip_range_of_motion_result_to_proto(ros_msg, proto):
     proto.error = ros_msg.error.value
     del proto.hx[:]
     for _item in ros_msg.hx:
-        proto.hx.add(_item)
+        proto.hx.append(_item)
     del proto.hy[:]
     for _item in ros_msg.hy:
-        proto.hy.add(_item)
+        proto.hy.append(_item)
 
 def convert_proto_to_bosdyn_msgs_camera_calibration_command_request_command(proto, ros_msg):
     pass
@@ -14196,7 +14196,7 @@ def convert_bosdyn_msgs_get_led_brightness_response_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
     del proto.brightnesses[:]
     for _item in ros_msg.brightnesses:
-        proto.brightnesses.add(_item)
+        proto.brightnesses.append(_item)
 
 def convert_proto_to_bosdyn_msgs_set_led_brightness_request(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_request_header(proto.header, ros_msg.header)
@@ -15267,10 +15267,10 @@ def convert_bosdyn_msgs_failed_element_to_proto(ros_msg, proto):
     proto.Clear()
     del proto.errors[:]
     for _item in ros_msg.errors:
-        proto.errors.add(_item)
+        proto.errors.append(_item)
     del proto.warnings[:]
     for _item in ros_msg.warnings:
-        proto.warnings.add(_item)
+        proto.warnings.append(_item)
 
 def convert_proto_to_bosdyn_msgs_node_identifier(proto, ros_msg):
     ros_msg.node_id = proto.node_id
@@ -15671,7 +15671,7 @@ def convert_bosdyn_msgs_action_remote_grpc_to_proto(ros_msg, proto):
         convert_builtin_interfaces_duration_to_proto(ros_msg.rpc_timeout, proto.rpc_timeout)
     del proto.lease_resources[:]
     for _item in ros_msg.lease_resources:
-        proto.lease_resources.add(_item)
+        proto.lease_resources.append(_item)
     del proto.inputs[:]
     for _item in ros_msg.inputs:
         convert_bosdyn_msgs_key_value_to_proto(_item, proto.inputs.add())
