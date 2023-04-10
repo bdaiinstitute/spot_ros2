@@ -94,4 +94,4 @@ def convert_proto_to_geometry_msgs_wrench(proto, ros_msg):
     convert_proto_to_geometry_msgs_vector3(proto.torque, ros_msg.torque)
 
 def convert_float64_to_proto(ros_msg, proto):
-    proto = ros_msg
+    proto.value = ros_msg
