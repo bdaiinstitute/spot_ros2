@@ -48,7 +48,7 @@ from bosdyn_msgs.msg import ArmJointMoveCommandFeedback
 MAX_COMMAND_DURATION = 1e5
 
 ### Release
-from . import graph_nav_util
+#from . import graph_nav_util
 ### Debug
 # import graph_nav_util
 
@@ -501,6 +501,9 @@ class SpotSim:
 
             state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['flat_body'].parent_tform_child.rotation.w = 1
             state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['hand'].parent_tform_child.rotation.w = 1
+
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['gpe'].parent_frame_name = 'body'
+            state.kinematic_state.transforms_snapshot.child_to_parent_edge_map['gpe'].parent_tform_child.rotation.w = 1
         
             return state
 
