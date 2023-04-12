@@ -27,6 +27,12 @@ In your ROS2 workspace `src` directory, clone the repo:
 ```bash
 git clone https://github.com/bdaiinstitute/spot_ros2.git
 ```
+and initialize and install the submodules
+```bash
+cd spot_ros2
+git submodule init
+git submodule update
+```
 
 Then run the install script:
 ```bash

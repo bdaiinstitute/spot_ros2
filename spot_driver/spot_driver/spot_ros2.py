@@ -42,11 +42,10 @@ from spot_msgs.srv import SetVelocity
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
 from .ros_helpers import *
-from .spot_wrapper import SpotWrapper
+from spot_wrapper.wrapper import SpotWrapper
 
 ### Debug
 # from ros_helpers import *
-# from spot_wrapper import SpotWrapper
 
 import logging
 import threading
@@ -82,7 +81,7 @@ class SpotROS:
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
     def __init__(self):
-        self.spot_wrapper = None
+        self.spot_wrapper: SpotWrapper = None
         self.node = None
         self._printed_once = False
 
@@ -356,7 +355,7 @@ class SpotROS:
 
     def handle_rollover(self, request, response):
         """ROS service handler for the rollover service"""
-        response.success, response.message = self.spot_wrapper.rollover()
+        response.success, response.message = self.spot_wrapper.battery_change_pose()
         return response
 
     def handle_power_on(self, request, response):
@@ -1018,6 +1017,10 @@ def main(args=None):
     node.declare_parameter('auto_power_on', False)
     node.declare_parameter('auto_stand', False)
 
+    node.declare_parameter('use_take_lease', True)
+    node.declare_parameter('get_lease_on_action', True)
+    node.declare_parameter('continually_try_stand', False)
+
     node.declare_parameter('deadzone', 0.05)
     node.declare_parameter('estop_timeout', 9.0)
     node.declare_parameter('start_estop', False)
@@ -1030,6 +1033,10 @@ def main(args=None):
     spot_ros.auto_power_on = node.get_parameter('auto_power_on')
     spot_ros.auto_stand = node.get_parameter('auto_stand')
     spot_ros.start_estop = node.get_parameter('start_estop')
+
+    spot_ros.use_take_lease = node.get_parameter('use_take_lease')
+    spot_ros.get_lease_on_action = node.get_parameter('get_lease_on_action')
+    spot_ros.continually_try_stand = node.get_parameter('continually_try_stand')
 
     spot_ros.publish_rgb = node.get_parameter('publish_rgb')
     spot_ros.publish_depth = node.get_parameter('publish_depth')
@@ -1084,7 +1091,8 @@ def main(args=None):
     if spot_ros.name != MOCK_HOSTNAME:
         spot_ros.spot_wrapper = SpotWrapper(spot_ros.username, spot_ros.password, spot_ros.ip, spot_ros.name,
                                             spot_ros.logger, spot_ros.start_estop.value, spot_ros.estop_timeout.value,
-                                            spot_ros.rates, spot_ros.callbacks)
+                                            spot_ros.rates, spot_ros.callbacks, spot_ros.use_take_lease,
+                                            spot_ros.get_lease_on_action, spot_ros.continually_try_stand)
         if not spot_ros.spot_wrapper.is_valid:
             return
     else:
