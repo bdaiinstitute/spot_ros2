@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [ "main" ]
     paths:
-      - ".devcontainer/**"
+      - "devcontainer/**"
 
 env:
   # Use docker.io for Docker Hub if empty
