@@ -1,15 +1,10 @@
-# Copyright [2023] Boston Dynamics AI Institute, Inc.
-
-name: Test bdai
+name: Test spot_ros2
 on:
   pull_request:
   push:
     branches:
       - main
-  schedule:
-    - cron: '0 5 * * *' # run at 5:00 AM UTC
-  registry_package:
-    types: [published]
+
 jobs:
   build_jammy_humble:
     runs-on: ubuntu-latest
@@ -17,46 +12,10 @@ jobs:
       run:
         shell: bash
     container:
-      image: ghcr.io/bdaiinstitute/bdaii_ros2_humble:main
+      image: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
     steps:
     - uses: actions/checkout@v3
-    - name: Build
-      working-directory: ws
+    - name: Build and run tests
       run: |
         source /opt/ros/humble/setup.bash
         colcon build --symlink-install
-    - name: Test
-      run: |
-        python -m pip install pytest
-        python -m pip install pytest-cov
-        python -m pytest --cov=./ --cov-report=xml test/test_dope_data_converter.py
-    - name: Build follow-the-leader
-      working-directory: projects/follow_the_leader/ws
-      env:
-        PA_TOKEN: ${{ secrets.PAT_SECRET }}
-      run: |
-        git clone "https://"$PA_TOKEN"@github.com/bdaiinstitute/Deep_Object_Pose.git" src/external/Deep_Object_Pose
-        git clone https://github.com/ros2/ros1_bridge.git src/external/ros1_bridge
-        git clone https://github.com/bdaiinstitute/spot_ros2.git src/external/spot_ros2
-        source /opt/ros/humble/setup.bash
-        colcon build --symlink-install
-    - name: Test follow-the-leader
-      working-directory: projects/follow_the_leader/ws
-      run: |
-        source /opt/ros/humble/setup.bash
-        source ../../../ws/install/setup.bash
-        source install/setup.bash
-        colcon test --packages-select follow_the_leader_ros --python-testing pytest --pytest-with-coverage --event-handlers console_direct+
-        colcon test-result --all --verbose
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: ./coverage/reports/
-        env_vars: OS,PYTHON
-        fail_ci_if_error: true
-        files: ./coverage.xml,./projects/follow_the_leader/ws/build/follow_the_leader_ros/coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        path_to_write_report: ./coverage/codecov_report.txt
-        verbose: true
