@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - ".github/workflows/**"
-      - "docker/ros/**"
   pull_request:
     branches: [ "main" ]
 
