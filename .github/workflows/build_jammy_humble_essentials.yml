@@ -12,7 +12,6 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ghcr.io/bdaiinstitute/bdaii_ros2_humble_essentials
 
-
 jobs:
   build:
 
