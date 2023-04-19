@@ -42,6 +42,15 @@ RUN apt-get update -q && \
     ros-${ROS_DISTRO}-interactive-markers && \
     rm -rf /var/lib/apt/lists/*
 
+# Python packages.
+RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
+    && pip install --root-user-action=ignore --no-cache-dir --default-timeout=900 \
+    numpy \
+    bosdyn-client==3.2.1.post1 \
+    bosdyn-mission==3.2.1.post1 \
+    bosdyn-api==3.2.1.post1 \
+    bosdyn-core==3.2.1.post1
+
 # Install bosdyn_msgs package
 RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v0.0.1-humble/ros-humble-bosdyn-msgs_0.0.1-0jammy_amd64.deb --output /tmp/ros-humble-bosdyn-msgs_0.0.1-0jammy_amd64.deb --silent \
   && dpkg -i /tmp/ros-humble-bosdyn-msgs_0.0.1-0jammy_amd64.deb \
