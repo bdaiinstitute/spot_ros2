@@ -51,35 +51,11 @@ RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v0.0
 # Install packages inside the new environment
 RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
     && pip install --root-user-action=ignore --no-cache-dir --default-timeout=900 \
-    ipywidgets==8.0.4 \
-    jupyterlab==3.5.2 \
-    matplotlib==3.6.3 \
-    nltk==3.8.1 \
-    notebook==6.5.2 \
     numpy==1.24.1 \
-    pandas==1.5.3 \
-    Pillow==9.4.0 \
-    plotly==5.12.0 \
-    PyYAML==6.0 \
-    scipy==1.10.0 \
-    scikit-image==0.19.3 \
-    scikit-learn==1.2.0 \
-    seaborn==0.12.2 \
     bosdyn-client==3.2.1.post1 \
     bosdyn-mission==3.2.1.post1 \
     bosdyn-api==3.2.1.post1 \
-    bosdyn-core==3.2.1.post1 \
-    inflection==0.5.1 \
-    empy==3.3.4 \
-    lark==1.1.5 \
-    gitman==3.3.2 \
-    ipython==8.8.0 \
-    bloom==0.11.2 \
-    colcon-clean==0.2.0 \
-    transforms3d==0.4.1 \
-    shapely==2.0.0 \
-    pyrr==0.10.3 \
-    tqdm==4.64.1 && \
+    bosdyn-core==3.2.1.post1  && \
     pip cache purge
 
 # ROS doesn't recognize the docker shells as terminals so force colored output
