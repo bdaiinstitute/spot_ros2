@@ -95,6 +95,7 @@ Boston Dynamics AI Institute contributors:
 
 * Jenny Barry
 * Daniel Gonzalez
+* Tao Pang
 * David Surovik
 * Jiuguang Wang
 * David Watkins
