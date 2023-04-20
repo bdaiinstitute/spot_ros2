@@ -49,6 +49,7 @@ from spot_wrapper.wrapper import SpotWrapper
 
 import logging
 import threading
+import traceback
 
 import signal
 import sys
@@ -208,7 +209,7 @@ class SpotROS:
                 self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
 
     def publish_camera_images_callback(self):
-        image_bundle = self.spot_wrapper.get_camera_images()
+        image_bundle = self.spot_wrapper.spot_images.get_camera_images()
         frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
             image_bundle.frontleft, self.spot_wrapper
         )
@@ -244,7 +245,7 @@ class SpotROS:
         self.populate_camera_static_transforms(image_bundle.back)
 
     def publish_depth_images_callback(self):
-        image_bundle = self.spot_wrapper.get_depth_images()
+        image_bundle = self.spot_wrapper.spot_images.get_depth_images()
         frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
             image_bundle.frontleft, self.spot_wrapper
         )
@@ -280,7 +281,7 @@ class SpotROS:
         self.populate_camera_static_transforms(image_bundle.back)
 
     def publish_depth_registered_images_callback(self):
-        image_bundle = self.spot_wrapper.get_depth_registered_images()
+        image_bundle = self.spot_wrapper.spot_images.get_depth_registered_images()
         frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
             image_bundle.frontleft, self.spot_wrapper
         )
@@ -814,9 +815,9 @@ class SpotROS:
         """ROS service handler for listing graph_nav waypoint_ids"""
         try:
             self.node.get_logger().error(f'handle_list_graph: {request}')
-            self.spot_wrapper._clear_graph()
-            self.spot_wrapper._upload_graph_and_snapshots(request.upload_filepath)
-            response.waypoint_ids = self.spot_wrapper.list_graph(request.upload_filepath)
+            self.spot_wrapper.spot_graph_nav._clear_graph()
+            self.spot_wrapper.spot_graph_nav._upload_graph_and_snapshots(request.upload_filepath)
+            response.waypoint_ids = self.spot_wrapper.spot_graph_nav.list_graph(request.upload_filepath)
             self.node.get_logger().error(f'handle_list_graph RESPONSE: {response}')
         except Exception as e:
             self.node.get_logger().error('Exception Error:{}'.format(e))
@@ -845,7 +846,7 @@ class SpotROS:
             world_object.apriltag_properties.frame_name_fiducial = 'fiducial_3'
             world_object.apriltag_properties.frame_name_fiducial_filtered = 'filtered_fiducial_3'
         else:
-            proto_response = self.spot_wrapper.list_world_objects(object_types, time_start_point)
+            proto_response = self.spot_wrapper.spot_world_objects.list_world_objects(object_types, time_start_point)
         conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
         return response
 
@@ -867,11 +868,13 @@ class SpotROS:
         feedback_thread = threading.Thread(target = self.handle_navigate_to_feedback, args = ())
         self.run_navigate_to = True
         feedback_thread.start()
+        # initialize localization
+        resp = self.spot_wrapper.spot_graph_nav.navigate_initial_localization(upload_path = goal_handle.request.upload_path,
+                                                                              initial_localization_fiducial = goal_handle.request.initial_localization_fiducial,
+                                                                              initial_localization_waypoint = goal_handle.request.initial_localization_waypoint)
+
         # run navigate_to
-        resp = self.spot_wrapper.navigate_to(upload_path = goal_handle.request.upload_path,
-                                             navigate_to = goal_handle.request.navigate_to,
-                                             initial_localization_fiducial = goal_handle.request.initial_localization_fiducial,
-                                             initial_localization_waypoint = goal_handle.request.initial_localization_waypoint)
+        resp = self.spot_wrapper.spot_graph_nav.navigate_to_existing_waypoint(waypoint_id = goal_handle.request.navigate_to)
         self.run_navigate_to = False
         feedback_thread.join()
 
