@@ -27,6 +27,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     python3-colcon-mixin \
     python3-pytest-cov \
     python3-rosdep \
+    libpython3-dev \
     python3-vcstool && \
     rm -rf /var/lib/apt/lists/*
 
@@ -46,6 +47,16 @@ RUN apt-get update -q && \
 RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v0.0.1-humble/ros-humble-bosdyn-msgs_0.0.1-0jammy_amd64.deb --output /tmp/ros-humble-bosdyn-msgs_0.0.1-0jammy_amd64.deb --silent \
   && dpkg -i /tmp/ros-humble-bosdyn-msgs_0.0.1-0jammy_amd64.deb \
   && rm /tmp/ros-humble-bosdyn-msgs_0.0.1-0jammy_amd64.deb
+
+# Install packages inside the new environment
+RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
+    && pip install --root-user-action=ignore --no-cache-dir --default-timeout=900 \
+    numpy==1.24.1 \
+    bosdyn-client==3.2.1.post1 \
+    bosdyn-mission==3.2.1.post1 \
+    bosdyn-api==3.2.1.post1 \
+    bosdyn-core==3.2.1.post1  && \
+    pip cache purge
 
 # ROS doesn't recognize the docker shells as terminals so force colored output
 ENV RCUTILS_COLORIZED_OUTPUT=1

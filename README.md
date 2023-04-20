@@ -8,8 +8,8 @@
     <a href="https://www.python.org/">
         <img src="https://img.shields.io/badge/built%20with-Python3-red.svg" />
     </a>
-    <a href="https://github.com/jiuguangw/Agenoria/actions">
-    <img src="https://github.com/jiuguangw/Agenoria/actions/workflows/test.yml/badge.svg">
+    <a href="https://github.com/bdaiinstitute/spot_ros2/actions">
+    <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/test.yml/badge.svg">
     </a>
   </p>
 </p>
