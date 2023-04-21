@@ -1,11 +1,14 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
+import cv2
 import os
 import sys
 import time
+import numpy as np
+from cv_bridge import CvBridge
 
 import rclpy
-from sensor_msgs.msg import CameraInfo, Image
+from sensor_msgs.msg import CameraInfo, CompressedImage, Image
 import bosdyn.client
 import bosdyn.client.util
 from bosdyn.api import image_pb2
@@ -75,6 +78,7 @@ class SpotImagePublisher(rclpy.node.Node):
 
         self.declare_parameter("image_service", ImageClient.default_service_name)
         self._image_service = self.get_parameter("image_service").value
+        self._cv_bridge = CvBridge()
 
         try:
             self._sdk = bosdyn.client.create_standard_sdk('image_publisher')
@@ -114,11 +118,12 @@ class SpotImagePublisher(rclpy.node.Node):
         if self._spot_name != "":
             self._frame_prefix = f"{self._spot_name}/"
 
-        # TODO: Add Hand
         self._image_requests = []
         self._image_publishers = {}
         self._camera_info_publishers = {}
         camera_sources = ["frontleft", "frontright", "left", "right", "back"]
+        if robot.has_arm():
+            camera_sources.append("hand")
         for camera_source in camera_sources:
             if self._camera_type == "camera":
                 pixel_format = image_pb2.Image.PIXEL_FORMAT_RGB_U8
@@ -168,32 +173,36 @@ class SpotImagePublisher(rclpy.node.Node):
 
         return rtime
 
-    def bosdyn_data_to_image_and_camera_info_msgs(self, data):
-        """Takes the image and camera data and populates the necessary ROS messages
-        Args:
-            data: Image proto
-        Returns:
-            (tuple):
-                * Image: message of the image captured
-                * CameraInfo: message to define the state and config of the camera that took the image
-        """
-        image_msg = Image()
+    def _create_compressed_image_msg(self, data: image_pb2.ImageResponse) -> CompressedImage:
+        image_msg = CompressedImage()
         local_time = self.robotToLocalTime(data.shot.acquisition_time)
         image_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
         image_msg.header.frame_id = self._frame_prefix + data.shot.frame_name_image_sensor
-        image_msg.height = data.shot.image.rows
-        image_msg.width = data.shot.image.cols
+        image_msg.format = "jpeg"
+        image_msg.data = data.shot.image.data
+        return image_msg
 
-        # Color/greyscale formats.
+    def _create_image_msg(self, data: image_pb2.ImageResponse) -> Image:
+        image_msg = None
+        local_time = self.robotToLocalTime(data.shot.acquisition_time)
+        stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
+        frame_id = self.frame_prefix + data.shot.frame_name_image_sensor
+
         # JPEG format
         if data.shot.image.format == image_pb2.Image.FORMAT_JPEG:
-            image_msg.encoding = "rgb8"
-            image_msg.is_bigendian = True
-            image_msg.step = 3 * data.shot.image.cols
-            image_msg.data = data.shot.image.data
+            cv2_image = cv2.imdecode(np.frombuffer(data.shot.image.data, dtype=np.uint8), -1)
+            image_msg = self._cv_bridge.cv2_to_imgmsg(cv2_image, encoding='passthrough')
+            image_msg.header.stamp = stamp
+            image_msg.header.frame_id = frame_id
 
         # Uncompressed.  Requires pixel_format.
         if data.shot.image.format == image_pb2.Image.FORMAT_RAW:
+            image_msg = Image()
+            image_msg.header.stamp = stamp
+            image_msg.header.frame_id = frame_id
+            image_msg.height = data.shot.image.rows
+            image_msg.width = data.shot.image.cols
+
             # One byte per pixel.
             if data.shot.image.pixel_format == image_pb2.Image.PIXEL_FORMAT_GREYSCALE_U8:
                 image_msg.encoding = "mono8"
@@ -221,6 +230,18 @@ class SpotImagePublisher(rclpy.node.Node):
                 image_msg.is_bigendian = False
                 image_msg.step = 2 * data.shot.image.cols
                 image_msg.data = data.shot.image.data
+        return image_msg
+
+    def bosdyn_data_to_image_and_camera_info_msgs(self, data: image_pb2.ImageResponse) -> Tuple[Image | CompressedImage, CameraInfo]:
+        """Takes the image and camera data and populates the necessary ROS messages
+        Args:
+            data: Image proto
+        Returns:
+            (tuple):
+                * Image: message of the image captured
+                * CameraInfo: message to define the state and config of the camera that took the image
+        """
+        image_msg = self._create_image_msg(data)
 
         # camera_info_msg = createDefaulCameraInfo(camera_info_msg)
         camera_info_msg = CameraInfo()
