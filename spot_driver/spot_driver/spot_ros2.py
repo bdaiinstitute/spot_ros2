@@ -243,6 +243,14 @@ class SpotROS:
         self.populate_camera_static_transforms(image_bundle.right)
         self.populate_camera_static_transforms(image_bundle.back)
 
+        if self.spot_wrapper.has_arm():
+            hand_image_msg, hand_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+                image_bundle.hand, self.spot_wrapper
+            )
+            self.hand_image_pub.publish(hand_image_msg)
+            self.hand_image_info_pub.publish(hand_camera_info)
+            self.populate_camera_static_transforms(image_bundle.hand)
+
     def publish_depth_images_callback(self):
         image_bundle = self.spot_wrapper.get_depth_images()
         frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
@@ -279,6 +287,14 @@ class SpotROS:
         self.populate_camera_static_transforms(image_bundle.right)
         self.populate_camera_static_transforms(image_bundle.back)
 
+        if self.spot_wrapper.has_arm():
+            hand_image_msg, hand_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+                image_bundle.hand, self.spot_wrapper
+            )
+            self.hand_depth_pub.publish(hand_image_msg)
+            self.hand_depth_info_pub.publish(hand_camera_info)
+            self.populate_camera_static_transforms(image_bundle.hand)
+
     def publish_depth_registered_images_callback(self):
         image_bundle = self.spot_wrapper.get_depth_registered_images()
         frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
@@ -314,6 +330,14 @@ class SpotROS:
         self.populate_camera_static_transforms(image_bundle.left)
         self.populate_camera_static_transforms(image_bundle.right)
         self.populate_camera_static_transforms(image_bundle.back)
+
+        if self.spot_wrapper.has_arm():
+            hand_image_msg, hand_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+                image_bundle.hand, self.spot_wrapper
+            )
+            self.hand_depth_registered_pub.publish(hand_image_msg)
+            self.hand_depth_registered_info_pub.publish(hand_camera_info)
+            self.populate_camera_static_transforms(image_bundle.hand)
 
     def service_wrapper(self, name, handler, request, response):
         if self.spot_wrapper is None:
@@ -1099,6 +1123,9 @@ def main(args=None):
         spot_ros.spot_wrapper = None
     # spot_ros.spot_wrapper = spot_wrapper
     if spot_ros.spot_wrapper is None or spot_ros.spot_wrapper.is_valid:
+        has_arm = False
+        if spot_ros.spot_wrapper is not None:
+            has_arm = spot_ros.spot_wrapper.has_arm()
         if spot_ros.publish_rgb.value:
             # Images #
             spot_ros.back_image_pub = node.create_publisher(Image, 'camera/back/image', 1)
@@ -1106,12 +1133,16 @@ def main(args=None):
             spot_ros.frontright_image_pub = node.create_publisher(Image, 'camera/frontright/image', 1)
             spot_ros.left_image_pub = node.create_publisher(Image, 'camera/left/image', 1)
             spot_ros.right_image_pub = node.create_publisher(Image, 'camera/right/image', 1)
+            if has_arm:
+                spot_ros.hand_image_pub = node.create_publisher(Image, 'camera/hand/image', 1)
             # Image Camera Info #
             spot_ros.back_image_info_pub = node.create_publisher(CameraInfo, 'camera/back/camera_info', 1)
             spot_ros.frontleft_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontleft/camera_info', 1)
             spot_ros.frontright_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontright/camera_info', 1)
             spot_ros.left_image_info_pub = node.create_publisher(CameraInfo, 'camera/left/camera_info', 1)
             spot_ros.right_image_info_pub = node.create_publisher(CameraInfo, 'camera/right/camera_info', 1)
+            if has_arm:
+                spot_ros.has_image_info_pub = node.create_publisher(CameraInfo, 'camera/hand/camera_info', 1)
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
@@ -1126,12 +1157,16 @@ def main(args=None):
             spot_ros.frontright_depth_pub = node.create_publisher(Image, 'depth/frontright/image', 1)
             spot_ros.left_depth_pub = node.create_publisher(Image, 'depth/left/image', 1)
             spot_ros.right_depth_pub = node.create_publisher(Image, 'depth/right/image', 1)
+            if has_arm:
+                spot_ros.hand_depth_pub = node.create_publisher(Image, 'depth/hand/image', 1)
             # Depth Camera Info #
             spot_ros.back_depth_info_pub = node.create_publisher(CameraInfo, 'depth/back/camera_info', 1)
             spot_ros.frontleft_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontleft/camera_info', 1)
             spot_ros.frontright_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontright/camera_info', 1)
             spot_ros.left_depth_info_pub = node.create_publisher(CameraInfo, 'depth/left/camera_info', 1)
             spot_ros.right_depth_info_pub = node.create_publisher(CameraInfo, 'depth/right/camera_info', 1)
+            if has_arm:
+                spot_ros.hand_depth_info_pub = node.create_publisher(CameraInfo, 'depth/hand/camera_info', 1)
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
@@ -1146,6 +1181,8 @@ def main(args=None):
             spot_ros.frontright_depth_registered_pub = node.create_publisher(Image, 'depth_registered/frontright/image', 1)
             spot_ros.left_depth_registered_pub = node.create_publisher(Image, 'depth_registered/left/image', 1)
             spot_ros.right_depth_registered_pub = node.create_publisher(Image, 'depth_registered/right/image', 1)
+            if has_arm:
+                spot_ros.hand_depth_registered_pub = node.create_publisher(Image, 'depth_registered/hand/image', 1)
             # Depth Registered Camera Info #
             spot_ros.back_depth_registered_info_pub = \
                 node.create_publisher(CameraInfo, 'depth_registered/back/camera_info', 1)
@@ -1157,6 +1194,9 @@ def main(args=None):
                 node.create_publisher(CameraInfo, 'depth_registered/left/camera_info', 1)
             spot_ros.right_depth_registered_info_pub = \
                 node.create_publisher(CameraInfo, 'depth_registered/right/camera_info', 1)
+            if has_arm:
+                spot_ros.hand_depth_registered_info_pub = \
+                    node.create_publisher(CameraInfo, 'depth_registered/hand/camera_info', 1)
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
