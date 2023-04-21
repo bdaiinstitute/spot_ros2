@@ -1209,6 +1209,11 @@ def main(args=None):
                 callback_group=spot_ros.depth_registered_callback_group,
             )
 
+        if has_arm:
+            node.declare_parameter("has_arm", True)
+        else:
+            node.declare_parameter("has_arm", False)
+
         # Status Publishers #
         spot_ros.joint_state_pub = node.create_publisher(JointState, 'joint_states', 1)
         spot_ros.dynamic_broadcaster = tf2_ros.TransformBroadcaster(node)
