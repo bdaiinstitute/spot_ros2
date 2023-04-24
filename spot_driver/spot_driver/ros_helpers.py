@@ -1,13 +1,17 @@
+import cv2
 import os
 import time
+from typing import Tuple
 import rclpy
+import numpy as np
 from builtin_interfaces.msg import Time, Duration
+from cv_bridge import CvBridge
 
 from std_msgs.msg import Empty
 from tf2_msgs.msg import TFMessage
 import tf2_py as tf2
 from geometry_msgs.msg import TransformStamped
-from sensor_msgs.msg import Image, CameraInfo
+from sensor_msgs.msg import CompressedImage, Image, CameraInfo
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseWithCovariance
 from geometry_msgs.msg import TwistWithCovariance
@@ -49,6 +53,7 @@ friendly_joint_names["hl.kn"] = "rear_left_knee"
 friendly_joint_names["hr.hx"] = "rear_right_hip_x"
 friendly_joint_names["hr.hy"] = "rear_right_hip_y"
 friendly_joint_names["hr.kn"] = "rear_right_knee"
+cv_bridge = CvBridge()
 
 
 def populateTransformStamped(time, parent_frame, child_frame, transform, frame_prefix):
@@ -129,33 +134,37 @@ def createDefaulCameraInfo():
     return camera_info_msg
 
 
-def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spot_wrapper: SpotWrapper):
-    """Takes the image and camera data and populates the necessary ROS messages
-    Args:
-        spot_wrapper: SpotWrapper
-        data: Image proto
-    Returns:
-        (tuple):
-            * Image: message of the image captured
-            * CameraInfo: message to define the state and config of the camera that took the image
-    """
-    image_msg = Image()
+def _create_compressed_image_msg(data: image_pb2.ImageResponse, spot_wrapper: SpotWrapper) -> CompressedImage:
+    image_msg = CompressedImage()
     local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
     image_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     image_msg.header.frame_id = spot_wrapper.frame_prefix + data.shot.frame_name_image_sensor
-    image_msg.height = data.shot.image.rows
-    image_msg.width = data.shot.image.cols
+    image_msg.format = "jpeg"
+    image_msg.data = data.shot.image.data
+    return image_msg
 
-    # Color/greyscale formats.
+
+def _create_image_msg(data: image_pb2.ImageResponse, spot_wrapper: SpotWrapper) -> Image:
+    image_msg = None
+    local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
+    stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
+    frame_id = spot_wrapper.frame_prefix + data.shot.frame_name_image_sensor
+
     # JPEG format
     if data.shot.image.format == image_pb2.Image.FORMAT_JPEG:
-        image_msg.encoding = "rgb8"
-        image_msg.is_bigendian = True
-        image_msg.step = 3 * data.shot.image.cols
-        image_msg.data = data.shot.image.data
+        cv2_image = cv2.imdecode(np.frombuffer(data.shot.image.data, dtype=np.uint8), -1)
+        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding='passthrough')
+        image_msg.header.stamp = stamp
+        image_msg.header.frame_id = frame_id
 
     # Uncompressed.  Requires pixel_format.
-    if data.shot.image.format == image_pb2.Image.FORMAT_RAW:
+    elif data.shot.image.format == image_pb2.Image.FORMAT_RAW:
+        image_msg = Image()
+        image_msg.header.stamp = stamp
+        image_msg.header.frame_id = frame_id
+        image_msg.height = data.shot.image.rows
+        image_msg.width = data.shot.image.cols
+
         # One byte per pixel.
         if data.shot.image.pixel_format == image_pb2.Image.PIXEL_FORMAT_GREYSCALE_U8:
             image_msg.encoding = "mono8"
@@ -183,6 +192,20 @@ def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spo
             image_msg.is_bigendian = False
             image_msg.step = 2 * data.shot.image.cols
             image_msg.data = data.shot.image.data
+    return image_msg
+
+
+def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spot_wrapper: SpotWrapper) -> Tuple[Image | CompressedImage, CameraInfo]:
+    """Takes the image and camera data and populates the necessary ROS messages
+    Args:
+        spot_wrapper: SpotWrapper
+        data: Image proto
+    Returns:
+        (tuple):
+            * Image: message of the image captured
+            * CameraInfo: message to define the state and config of the camera that took the image
+    """
+    image_msg = _create_image_msg(data, spot_wrapper)
 
     # camera_info_msg = createDefaulCameraInfo(camera_info_msg)
     camera_info_msg = CameraInfo()
