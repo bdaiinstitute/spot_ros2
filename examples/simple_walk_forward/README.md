@@ -40,14 +40,14 @@ We first set up ROS's [TF](https://docs.ros.org/en/humble/Tutorials/Intermediate
          self._tf_listener = TFListenerWrapper('walk_forward_tf', wait_for_transform = [BODY_FRAME_NAME,
                                                                                         VISION_FRAME_NAME])
 ```
-We use a [wrapper](../utilities/utilities/tf_listener_wrapper.py) that supports synchronous operation around ROS2’s asynchronous [TF implementation](https://github.com/ros2/rclpy/tree/humble).  Passing it the body and vision frame names causes the wrapper to wait until it sees those frames.  This lets us make sure the robot is started and TF is working before proceeeding.
+We use a [wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/tf_listener_wrapper.py) that supports synchronous operation around ROS2’s asynchronous [TF implementation](https://github.com/ros2/rclpy/tree/humble).  Passing it the body and vision frame names causes the wrapper to wait until it sees those frames.  This lets us make sure the robot is started and TF is working before proceeeding.
 
 In order to perform small actions with the robot we use the [SpotCommander class](../utilities/utilities/spot_commander.py).  This wraps some service clients that talk to services offered by the spot driver.
 ```python
         self._robot = SpotCommander()
 ```
 
-Finally we want to be able to command Spot to do things.  We do this via a [wrapper](../utilities/utilities/action_client_wrapper.py) around the action client that talks to an action server running in the Spot driver (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)):
+Finally we want to be able to command Spot to do things.  We do this via a [wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/action_client.py) around the action client that talks to an action server running in the Spot driver (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)):
 ```python
         self._robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command')
 ```
@@ -102,4 +102,4 @@ Finally we send the goal to the Spot driver:
 ```python
         self._robot_command_client.send_goal_and_wait(action_goal)
 ```
-Note that `send_goal_and_wait` is a function of our [ActionClientWrapper](../utilities/utilities/action_client_wrapper.py) and not a built in ROS2 function.
+Note that `send_goal_and_wait` is a function of our [ActionClientWrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/action_client.py) and not a built in ROS2 function.
