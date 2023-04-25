@@ -42,9 +42,9 @@ We first set up ROS's [TF](https://docs.ros.org/en/humble/Tutorials/Intermediate
 ```
 We use a [wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/tf_listener_wrapper.py) that supports synchronous operation around ROS2’s asynchronous [TF implementation](https://github.com/ros2/rclpy/tree/humble).  Passing it the body and vision frame names causes the wrapper to wait until it sees those frames.  This lets us make sure the robot is started and TF is working before proceeeding.
 
-In order to perform small actions with the robot we use the [SpotCommander class](../utilities/utilities/spot_commander.py).  This wraps some service clients that talk to services offered by the spot driver.
+In order to perform small actions with the robot we use the [SimpleSpotCommander class](../utilities/utilities/simple_spot_commander.py).  This wraps some service clients that talk to services offered by the spot driver.
 ```python
-        self._robot = SpotCommander()
+        self._robot = SimpleSpotCommander()
 ```
 
 Finally we want to be able to command Spot to do things.  We do this via a [wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/action_client.py) around the action client that talks to an action server running in the Spot driver (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)):

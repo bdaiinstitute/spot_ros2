@@ -51,7 +51,7 @@ If you want to ensure you only communicate with the robot via the ROS2 driver (w
     tf_listener = TFListenerWrapper('arm_simple_tf', wait_for_transform = [ODOM_FRAME_NAME,
                                                                            GRAV_ALIGNED_BODY_FRAME_NAME])
 
-    robot = SpotCommander()
+    robot = SimpleSpotCommander()
     robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command')
 ```
 This gives us four components, which we'll use in many ROS2 programs:
