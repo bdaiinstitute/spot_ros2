@@ -11,7 +11,7 @@ TRIGGER_SERVICES = [
 ]
 
 
-class SpotCommander(Node):
+class SimpleSpotCommander(Node):
 
     def __init__(self, namespace=None):
         super().__init__('spot_commander', namespace=namespace)

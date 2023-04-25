@@ -13,8 +13,8 @@ import spot_driver.conversions as conv
 
 import rclpy
 from rclpy.node import Node
-from utilities.action_client_wrapper import ActionClientWrapper
-from utilities.spot_commander import SpotCommander
+from bdai_ros2_utilities.action_client_wrapper import ActionClientWrapper
+from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
 
@@ -24,7 +24,7 @@ def hello_arm():
     tf_listener = TFListenerWrapper('arm_simple_tf', wait_for_transform = [ODOM_FRAME_NAME,
                                                                            GRAV_ALIGNED_BODY_FRAME_NAME])
 
-    robot = SpotCommander()
+    robot = SimpleSpotCommander()
     robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command')
 
     # Claim robot

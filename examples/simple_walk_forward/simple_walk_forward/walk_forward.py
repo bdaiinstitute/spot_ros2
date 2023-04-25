@@ -10,8 +10,8 @@ from spot_msgs.action import RobotCommand
 import spot_driver.conversions as conv
 
 import rclpy
-from utilities.action_client_wrapper import ActionClientWrapper
-from utilities.spot_commander import SpotCommander
+from bdai_ros2_wrappers.action_client_wrapper import ActionClientWrapper
+from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
 # Where we want the robot to walk to relative to itself
@@ -23,7 +23,7 @@ class WalkForward(Node):
 
         self._tf_listener = TFListenerWrapper('walk_forward_tf', wait_for_transform = [BODY_FRAME_NAME,
                                                                                        VISION_FRAME_NAME])
-        self._robot = SpotCommander()
+        self._robot = SimpleSpotCommander()
         self._robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command')
 
 
