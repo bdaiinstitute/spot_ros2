@@ -124,7 +124,7 @@ The commands are built the same way after this, but we change how we send them. 
         # Wait until the arm arrives at the goal.
         block_until_arm_arrives_with_prints(robot, command_client, cmd_id)
 ```
-In ROS2, we convert the created protobuf to a ROS2 action goal and we use the action client `send_goal_and_wait` function to replace the `block_until_arm_arrives_with_prints` function (we do not get the printing, but we could echo the action feedback topic or use the non-blocking `send_goal_async` if we wanted to do that):
+In ROS2, we convert the created protobuf to a ROS2 action goal and we use the action client wrapper `send_goal_and_wait` function to replace the `block_until_arm_arrives_with_prints` function (we do not get the printing, but we could echo the action feedback topic or use the non-blocking `send_goal_async` if we wanted to do that):
 ```python
     # Convert to a ROS message
     action_goal = RobotCommand.Goal()
