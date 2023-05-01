@@ -210,19 +210,19 @@ class SpotROS:
     def publish_camera_images_callback(self):
         image_bundle = self.spot_wrapper.get_camera_images()
         frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.frontleft, self.spot_wrapper
+            image_bundle.frontleft, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         frontright_image_msg, frontright_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.frontright, self.spot_wrapper
+            image_bundle.frontright, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         left_image_msg, left_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.left, self.spot_wrapper
+            image_bundle.left, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         right_image_msg, right_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.right, self.spot_wrapper
+            image_bundle.right, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         back_image_msg, back_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.back, self.spot_wrapper
+            image_bundle.back, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
 
         self.frontleft_image_pub.publish(frontleft_image_msg)
@@ -245,7 +245,7 @@ class SpotROS:
 
         if self.spot_wrapper.has_arm():
             hand_image_msg, hand_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-                image_bundle.hand, self.spot_wrapper
+                image_bundle.hand, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
             )
             self.hand_image_pub.publish(hand_image_msg)
             self.hand_image_info_pub.publish(hand_camera_info)
@@ -254,19 +254,19 @@ class SpotROS:
     def publish_depth_images_callback(self):
         image_bundle = self.spot_wrapper.get_depth_images()
         frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.frontleft, self.spot_wrapper
+            image_bundle.frontleft, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         frontright_image_msg, frontright_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.frontright, self.spot_wrapper
+            image_bundle.frontright, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         left_image_msg, left_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.left, self.spot_wrapper
+            image_bundle.left, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         right_image_msg, right_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.right, self.spot_wrapper
+            image_bundle.right, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         back_image_msg, back_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.back, self.spot_wrapper
+            image_bundle.back, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
 
         self.frontleft_depth_pub.publish(frontleft_image_msg)
@@ -289,7 +289,7 @@ class SpotROS:
 
         if self.spot_wrapper.has_arm():
             hand_image_msg, hand_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-                image_bundle.hand, self.spot_wrapper
+                image_bundle.hand, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
             )
             self.hand_depth_pub.publish(hand_image_msg)
             self.hand_depth_info_pub.publish(hand_camera_info)
@@ -298,19 +298,19 @@ class SpotROS:
     def publish_depth_registered_images_callback(self):
         image_bundle = self.spot_wrapper.get_depth_registered_images()
         frontleft_image_msg, frontleft_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.frontleft, self.spot_wrapper
+            image_bundle.frontleft, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         frontright_image_msg, frontright_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.frontright, self.spot_wrapper
+            image_bundle.frontright, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         left_image_msg, left_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.left, self.spot_wrapper
+            image_bundle.left, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         right_image_msg, right_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.right, self.spot_wrapper
+            image_bundle.right, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
         back_image_msg, back_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-            image_bundle.back, self.spot_wrapper
+            image_bundle.back, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
         )
 
         self.frontleft_depth_registered_pub.publish(frontleft_image_msg)
@@ -333,7 +333,7 @@ class SpotROS:
 
         if self.spot_wrapper.has_arm():
             hand_image_msg, hand_camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-                image_bundle.hand, self.spot_wrapper
+                image_bundle.hand, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
             )
             self.hand_depth_registered_pub.publish(hand_image_msg)
             self.hand_depth_registered_info_pub.publish(hand_camera_info)
