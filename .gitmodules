@@ -1,6 +1,6 @@
 [submodule "spot_wrapper"]
 	path = spot_wrapper
-	url = git@github.com:bdaiinstitute/spot_wrapper
+	url = https://github.com/bdaiinstitute/spot_wrapper.git
 [submodule "ros_utilities"]
 	path = ros_utilities
 	url = https://github.com/bdaiinstitute/ros_utilities.git
