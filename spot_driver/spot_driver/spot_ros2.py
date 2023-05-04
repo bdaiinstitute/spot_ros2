@@ -1209,7 +1209,7 @@ def main(args=None):
                 callback_group=spot_ros.depth_registered_callback_group,
             )
 
-            node.declare_parameter("has_arm", has_arm)
+        node.declare_parameter("has_arm", has_arm)
 
         # Status Publishers #
         spot_ros.joint_state_pub = node.create_publisher(JointState, 'joint_states', 1)
