@@ -41,12 +41,6 @@ def generate_launch_description():
         default_value="false",
     )
 
-    driver_params = {
-        'spot_name': spot_name,
-        'publish_rgb': publish_rgb,
-        'publish_depth': publish_depth,
-        'publish_depth_registered': publish_depth_registered,
-    }
     spot_driver_node = launch_ros.actions.Node(
         package='spot_driver',
         executable='spot_ros2',
