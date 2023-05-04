@@ -49,7 +49,7 @@ def generate_launch_description():
         executable='spot_ros2',
         name='spot_ros2',
         output='screen',
-        parameters=[config_file, driver_params]
+        parameters=[config_file]
     )
 
     params = {'robot_description': robot_desc}
