@@ -47,7 +47,7 @@ def generate_launch_description():
         name='spot_ros2',
         output='screen',
         namespace=spot_name,
-        parameters=[config_file]
+        parameters=[config_file, {'spot_name': spot_name}]
     )
 
     params = {'robot_description': robot_desc, 'frame_prefix': PathJoinSubstitution([spot_name, ''])}
