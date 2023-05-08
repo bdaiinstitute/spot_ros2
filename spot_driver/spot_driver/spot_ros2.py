@@ -1132,7 +1132,7 @@ def main(args=None):
         if spot_ros.publish_rgb.value:
             for camera_name in spot_ros.cameras_used:
                 setattr(spot_ros, f"{camera_name}_image_pub", node.create_publisher(Image, f"camera/{camera_name}/image", 1))
-                setattr(spot_ros, f"{camera_name}_image_info_pub", node.create_publisher(Image, f"camera/{camera_name}/camera_info", 1))
+                setattr(spot_ros, f"{camera_name}_image_info_pub", node.create_publisher(CameraInfo, f"camera/{camera_name}/camera_info", 1))
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
@@ -1141,23 +1141,9 @@ def main(args=None):
             )
 
         if spot_ros.publish_depth.value:
-            # Depth #
-            spot_ros.back_depth_pub = node.create_publisher(Image, 'depth/back/image', 1)
-            spot_ros.frontleft_depth_pub = node.create_publisher(Image, 'depth/frontleft/image', 1)
-            spot_ros.frontright_depth_pub = node.create_publisher(Image, 'depth/frontright/image', 1)
-            spot_ros.left_depth_pub = node.create_publisher(Image, 'depth/left/image', 1)
-            spot_ros.right_depth_pub = node.create_publisher(Image, 'depth/right/image', 1)
-            # Depth Camera Info #
-            spot_ros.back_depth_info_pub = node.create_publisher(CameraInfo, 'depth/back/camera_info', 1)
-            spot_ros.frontleft_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontleft/camera_info', 1)
-            spot_ros.frontright_depth_info_pub = node.create_publisher(CameraInfo, 'depth/frontright/camera_info', 1)
-            spot_ros.left_depth_info_pub = node.create_publisher(CameraInfo, 'depth/left/camera_info', 1)
-            spot_ros.right_depth_info_pub = node.create_publisher(CameraInfo, 'depth/right/camera_info', 1)
-
-            # Hand Depth Camera #
-            if has_arm:
-                spot_ros.hand_depth_pub = node.create_publisher(Image, 'depth/hand/image', 1)
-                spot_ros.hand_depth_info_pub = node.create_publisher(CameraInfo, 'depth/hand/camera_info', 1)
+            for camera_name in spot_ros.cameras_used:
+                setattr(spot_ros, f"{camera_name}_depth_pub", node.create_publisher(Image, f"depth/{camera_image}/image", 1))
+                setattr(spot_ros, f"{camera_name}_depth_info_pub", node.create_publisher(CameraInfo, f"depth/{camera_image}/camera_info", 1))
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
@@ -1166,30 +1152,9 @@ def main(args=None):
             )
 
         if spot_ros.publish_depth_registered.value:
-            # Depth Registered #
-            spot_ros.back_depth_registered_pub = node.create_publisher(Image, 'depth_registered/back/image', 1)
-            spot_ros.frontleft_depth_registered_pub = node.create_publisher(Image, 'depth_registered/frontleft/image', 1)
-            spot_ros.frontright_depth_registered_pub = node.create_publisher(Image, 'depth_registered/frontright/image', 1)
-            spot_ros.left_depth_registered_pub = node.create_publisher(Image, 'depth_registered/left/image', 1)
-            spot_ros.right_depth_registered_pub = node.create_publisher(Image, 'depth_registered/right/image', 1)
-
-            # Depth Registered Camera Info #
-            spot_ros.back_depth_registered_info_pub = \
-                node.create_publisher(CameraInfo, 'depth_registered/back/camera_info', 1)
-            spot_ros.frontleft_depth_registered_info_pub = \
-                node.create_publisher(CameraInfo, 'depth_registered/frontleft/camera_info', 1)
-            spot_ros.frontright_depth_registered_info_pub = \
-                node.create_publisher(CameraInfo, 'depth_registered/frontright/camera_info', 1)
-            spot_ros.left_depth_registered_info_pub = \
-                node.create_publisher(CameraInfo, 'depth_registered/left/camera_info', 1)
-            spot_ros.right_depth_registered_info_pub = \
-                node.create_publisher(CameraInfo, 'depth_registered/right/camera_info', 1)
-
-            # Hand Depth Registered #
-            if has_arm:
-                spot_ros.hand_depth_registered_pub = node.create_publisher(Image, 'depth_registered/hand/image', 1)
-                spot_ros.hand_depth_registered_info_pub = \
-                    node.create_publisher(CameraInfo, 'depth_registered/hand/camera_info', 1)
+            for camera_name in spot_ros.cameras_used:
+                setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(Image, f"depth_registered/{camera_image}/image", 1))
+                setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(CameraInfo, f"depth_registered/{camera_image}/camera_info", 1))
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
