@@ -1051,6 +1051,7 @@ def main(args=None):
     node.declare_parameter('publish_rgb', True)
     node.declare_parameter('publish_depth', True)
     node.declare_parameter('publish_depth_registered', False)
+    node.declare_parameter('cameras_used', ["frontleft", "frontright", "left", "right", "back"])
     node.declare_parameter('spot_name', '')
 
     spot_ros.auto_claim = node.get_parameter('auto_claim')
@@ -1065,6 +1066,7 @@ def main(args=None):
     spot_ros.publish_rgb = node.get_parameter('publish_rgb')
     spot_ros.publish_depth = node.get_parameter('publish_depth')
     spot_ros.publish_depth_registered = node.get_parameter('publish_depth_registered')
+    spot_ros.cameras_used = node.get_parameter('cameras_used')
 
     # This is only done from parameter because it should be passed by the launch file
     spot_ros.name = node.get_parameter('spot_name').value
@@ -1127,19 +1129,9 @@ def main(args=None):
         if spot_ros.spot_wrapper is not None:
             has_arm = spot_ros.spot_wrapper.has_arm()
         if spot_ros.publish_rgb.value:
-            # Images #
-            spot_ros.back_image_pub = node.create_publisher(Image, 'camera/back/image', 1)
-            spot_ros.frontleft_image_pub = node.create_publisher(Image, 'camera/frontleft/image', 1)
-            spot_ros.frontright_image_pub = node.create_publisher(Image, 'camera/frontright/image', 1)
-            spot_ros.left_image_pub = node.create_publisher(Image, 'camera/left/image', 1)
-            spot_ros.right_image_pub = node.create_publisher(Image, 'camera/right/image', 1)
-
-            # Image Camera Info #
-            spot_ros.back_image_info_pub = node.create_publisher(CameraInfo, 'camera/back/camera_info', 1)
-            spot_ros.frontleft_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontleft/camera_info', 1)
-            spot_ros.frontright_image_info_pub = node.create_publisher(CameraInfo, 'camera/frontright/camera_info', 1)
-            spot_ros.left_image_info_pub = node.create_publisher(CameraInfo, 'camera/left/camera_info', 1)
-            spot_ros.right_image_info_pub = node.create_publisher(CameraInfo, 'camera/right/camera_info', 1)
+            for camera_name in spot_ros.cameras_used:
+                setattr(spot_ros, f"{camera_name}_image_pub", node.create_publisher(Image, f"camera/{camera_name}/image", 1))
+                setattr(spot_ros, f"{camera_name}_image_info_pub", node.create_publisher(Image, f"camera/{camera_name}/camera_info", 1))
 
             # Hand Camera #
             if has_arm:
