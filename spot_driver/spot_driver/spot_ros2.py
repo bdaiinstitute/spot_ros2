@@ -209,7 +209,7 @@ class SpotROS:
 
     def publish_camera_images_callback(self):
         result = self.spot_wrapper.get_images_by_cameras(
-            [(camera_name, ['visual']) for camera_name in self.cameras_used])
+            [(camera_name, ['visual']) for camera_name in self.cameras_used.value])
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix)
@@ -221,7 +221,7 @@ class SpotROS:
 
     def publish_depth_images_callback(self):
         result = self.spot_wrapper.get_images_by_cameras(
-            [(camera_name, ['depth']) for camera_name in self.cameras_used])
+            [(camera_name, ['depth']) for camera_name in self.cameras_used.value])
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix)
@@ -233,7 +233,7 @@ class SpotROS:
 
     def publish_depth_registered_images_callback(self):
         result = self.spot_wrapper.get_images_by_cameras(
-            [(camera_name, ['depth_registered']) for camera_name in self.cameras_used])
+            [(camera_name, ['depth_registered']) for camera_name in self.cameras_used.value])
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix)
@@ -1034,7 +1034,7 @@ def main(args=None):
         spot_ros.cameras_used = node.get_parameter('cameras_used')
 
         if spot_ros.publish_rgb.value:
-            for camera_name in spot_ros.cameras_used:
+            for camera_name in spot_ros.cameras_used.value:
                 setattr(spot_ros, f"{camera_name}_image_pub", node.create_publisher(Image, f"camera/{camera_name}/image", 1))
                 setattr(spot_ros, f"{camera_name}_image_info_pub", node.create_publisher(CameraInfo, f"camera/{camera_name}/camera_info", 1))
 
@@ -1045,9 +1045,9 @@ def main(args=None):
             )
 
         if spot_ros.publish_depth.value:
-            for camera_name in spot_ros.cameras_used:
-                setattr(spot_ros, f"{camera_name}_depth_pub", node.create_publisher(Image, f"depth/{camera_image}/image", 1))
-                setattr(spot_ros, f"{camera_name}_depth_info_pub", node.create_publisher(CameraInfo, f"depth/{camera_image}/camera_info", 1))
+            for camera_name in spot_ros.cameras_used.value:
+                setattr(spot_ros, f"{camera_name}_depth_pub", node.create_publisher(Image, f"depth/{camera_name}/image", 1))
+                setattr(spot_ros, f"{camera_name}_depth_info_pub", node.create_publisher(CameraInfo, f"depth/{camera_name}/camera_info", 1))
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
@@ -1056,9 +1056,9 @@ def main(args=None):
             )
 
         if spot_ros.publish_depth_registered.value:
-            for camera_name in spot_ros.cameras_used:
-                setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(Image, f"depth_registered/{camera_image}/image", 1))
-                setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(CameraInfo, f"depth_registered/{camera_image}/camera_info", 1))
+            for camera_name in spot_ros.cameras_used.value:
+                setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(Image, f"depth_registered/{camera_name}/image", 1))
+                setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(CameraInfo, f"depth_registered/{camera_name}/camera_info", 1))
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
