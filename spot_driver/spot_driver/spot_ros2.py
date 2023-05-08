@@ -1051,7 +1051,6 @@ def main(args=None):
     node.declare_parameter('publish_rgb', True)
     node.declare_parameter('publish_depth', True)
     node.declare_parameter('publish_depth_registered', False)
-    node.declare_parameter('cameras_used', ["frontleft", "frontright", "left", "right", "back"])
     node.declare_parameter('spot_name', '')
 
     spot_ros.auto_claim = node.get_parameter('auto_claim')
@@ -1066,7 +1065,6 @@ def main(args=None):
     spot_ros.publish_rgb = node.get_parameter('publish_rgb')
     spot_ros.publish_depth = node.get_parameter('publish_depth')
     spot_ros.publish_depth_registered = node.get_parameter('publish_depth_registered')
-    spot_ros.cameras_used = node.get_parameter('cameras_used')
 
     # This is only done from parameter because it should be passed by the launch file
     spot_ros.name = node.get_parameter('spot_name').value
@@ -1114,29 +1112,27 @@ def main(args=None):
         name_str = ' for ' + spot_ros.name
     node.get_logger().info("Starting ROS driver for Spot" + name_str)
     ############## testing with Robot
-    if spot_ros.name != MOCK_HOSTNAME:
+    if spot_ros.name == MOCK_HOSTNAME:
+        spot_ros.spot_wrapper = None
+    else:
         spot_ros.spot_wrapper = SpotWrapper(spot_ros.username, spot_ros.password, spot_ros.ip, spot_ros.name,
                                             spot_ros.logger, spot_ros.start_estop.value, spot_ros.estop_timeout.value,
                                             spot_ros.rates, spot_ros.callbacks, spot_ros.use_take_lease,
                                             spot_ros.get_lease_on_action, spot_ros.continually_try_stand)
         if not spot_ros.spot_wrapper.is_valid:
             return
-    else:
-        spot_ros.spot_wrapper = None
-    # spot_ros.spot_wrapper = spot_wrapper
-    if spot_ros.spot_wrapper is None or spot_ros.spot_wrapper.is_valid:
-        has_arm = False
-        if spot_ros.spot_wrapper is not None:
-            has_arm = spot_ros.spot_wrapper.has_arm()
+
+        all_cameras = ["frontleft", "frontright", "left", "right", "back"]
+        has_arm = spot_ros.spot_wrapper.has_arm()
+        if has_arm:
+            all_cameras.append("hand")
+        node.declare_parameter('cameras_used', all_cameras)
+        spot_ros.cameras_used = node.get_parameter('cameras_used')
+
         if spot_ros.publish_rgb.value:
             for camera_name in spot_ros.cameras_used:
                 setattr(spot_ros, f"{camera_name}_image_pub", node.create_publisher(Image, f"camera/{camera_name}/image", 1))
                 setattr(spot_ros, f"{camera_name}_image_info_pub", node.create_publisher(Image, f"camera/{camera_name}/camera_info", 1))
-
-            # Hand Camera #
-            if has_arm:
-                spot_ros.hand_image_pub = node.create_publisher(Image, 'camera/hand/image', 1)
-                spot_ros.hand_image_info_pub = node.create_publisher(CameraInfo, 'camera/hand/camera_info', 1)
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
