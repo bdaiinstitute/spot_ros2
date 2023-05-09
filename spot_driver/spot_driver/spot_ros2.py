@@ -42,7 +42,7 @@ from spot_msgs.srv import SetVelocity
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
 from .ros_helpers import *
-from spot_wrapper.wrapper import SpotWrapper, CameraSource, ImageType
+from spot_wrapper.wrapper import SpotWrapper, CameraSource
 
 ### Debug
 # from ros_helpers import *
@@ -209,7 +209,7 @@ class SpotROS:
 
     def publish_camera_images_callback(self):
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, [ImageType.visual]) for camera_name in self.cameras_used.value])
+            [CameraSource(camera_name, ['visual']) for camera_name in self.cameras_used.value])
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix)
@@ -221,7 +221,7 @@ class SpotROS:
 
     def publish_depth_images_callback(self):
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, [ImageType.depth]) for camera_name in self.cameras_used.value])
+            [CameraSource(camera_name, ['depth']) for camera_name in self.cameras_used.value])
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix)
@@ -233,7 +233,7 @@ class SpotROS:
 
     def publish_depth_registered_images_callback(self):
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, [ImageType.depth]) for camera_name in self.cameras_used.value])
+            [CameraSource(camera_name, ['depth_registered']) for camera_name in self.cameras_used.value])
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix)
