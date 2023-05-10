@@ -1,7 +1,7 @@
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
-
 from rclpy.action import ActionServer
+from rclpy.impl import rcutils_logger
 
 from std_srvs.srv import Trigger, SetBool
 from geometry_msgs.msg import Twist, Pose
@@ -1010,7 +1010,7 @@ def main(args=None):
         return
 
     # logger
-    spot_ros.logger = logging.getLogger('rosout')
+    spot_ros.wrapper_logger = rcutils_logger.RcutilsLogger(name="spot_wrapper")
     name_str = ''
     if spot_ros.name is not None:
         name_str = ' for ' + spot_ros.name
@@ -1020,7 +1020,7 @@ def main(args=None):
         spot_ros.spot_wrapper = None
     else:
         spot_ros.spot_wrapper = SpotWrapper(spot_ros.username, spot_ros.password, spot_ros.ip, spot_ros.name,
-                                            spot_ros.logger, spot_ros.start_estop.value, spot_ros.estop_timeout.value,
+                                            spot_ros.wrapper_logger, spot_ros.start_estop.value, spot_ros.estop_timeout.value,
                                             spot_ros.rates, spot_ros.callbacks, spot_ros.use_take_lease,
                                             spot_ros.get_lease_on_action, spot_ros.continually_try_stand)
         if not spot_ros.spot_wrapper.is_valid:
