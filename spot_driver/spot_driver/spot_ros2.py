@@ -1010,7 +1010,7 @@ def main(args=None):
         return
 
     # logger
-    spot_ros.wrapper_logger = rcutils_logger.RcutilsLogger(name="spot_wrapper")
+    spot_ros.wrapper_logger = rcutils_logger.RcutilsLogger(name=f"{spot_ros.name}.spot_wrapper")
     name_str = ''
     if spot_ros.name is not None:
         name_str = ' for ' + spot_ros.name
