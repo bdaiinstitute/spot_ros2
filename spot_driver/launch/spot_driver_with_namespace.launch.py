@@ -20,40 +20,13 @@ def generate_launch_description():
     doc = xacro.process_file(xacro_file)
     robot_desc = doc.toprettyxml(indent='  ')
 
-    publish_rgb = LaunchConfiguration("publish_rgb", default="true")
-    publish_rgb_arg = DeclareLaunchArgument(
-        "publish_rgb",
-        description="Start publishing all RGB channels on Spot cameras",
-        default_value="true",
-    )
-
-    publish_depth = LaunchConfiguration("publish_depth", default="true")
-    publish_depth_arg = DeclareLaunchArgument(
-        "publish_depth",
-        description="Start publishing all depth channels on Spot cameras",
-        default_value="true",
-    )
-
-    publish_depth_registered = LaunchConfiguration("publish_depth_registered", default="false")
-    publish_depth_registered_arg = DeclareLaunchArgument(
-        "publish_depth_registered",
-        description="Start publishing all depth_registered channels on Spot cameras",
-        default_value="false",
-    )
-
-    driver_params = {
-        'spot_name': spot_name,
-        'publish_rgb': publish_rgb,
-        'publish_depth': publish_depth,
-        'publish_depth_registered': publish_depth_registered,
-    }
     spot_driver_node = launch_ros.actions.Node(
         package='spot_driver',
         executable='spot_ros2',
         name='spot_ros2',
         output='screen',
         namespace=spot_name,
-        parameters=[config_file, driver_params]
+        parameters=[config_file, {'spot_name': spot_name}]
     )
 
     params = {'robot_description': robot_desc, 'frame_prefix': PathJoinSubstitution([spot_name, ''])}
@@ -65,9 +38,6 @@ def generate_launch_description():
         parameters=[params])
 
     return launch.LaunchDescription([
-        publish_rgb_arg,
-        publish_depth_arg,
-        publish_depth_registered_arg,
         spot_name_arg,
         config_file_arg,
         spot_driver_node,
