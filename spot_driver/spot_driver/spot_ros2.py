@@ -1009,8 +1009,12 @@ def main(args=None):
                                 + frame_prefix + '"vision".')
         return
 
-    # logger
-    spot_ros.wrapper_logger = rcutils_logger.RcutilsLogger(name="spot_wrapper")
+    # logger for spot wrapper
+    name_with_dot = ''
+    if spot_ros.name is not None:
+        name_with_dot = spot_ros.name + "."
+    spot_ros.wrapper_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_wrapper")
+
     name_str = ''
     if spot_ros.name is not None:
         name_str = ' for ' + spot_ros.name
