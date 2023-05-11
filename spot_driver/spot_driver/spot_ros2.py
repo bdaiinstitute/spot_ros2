@@ -38,6 +38,7 @@ from spot_msgs.srv import ListWorldObjects
 from spot_msgs.srv import SetLocomotion
 from spot_msgs.srv import ClearBehaviorFault
 from spot_msgs.srv import SetVelocity
+from spot_msgs.srv import GraphNavUploadGraph
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -52,6 +53,7 @@ import threading
 
 import signal
 import sys
+import traceback
 
 MAX_DURATION = 1e6
 MOCK_HOSTNAME = "Mock_spot"
@@ -738,6 +740,17 @@ class SpotROS:
         mobility_params.body_control.CopyFrom(body_control)
         self.spot_wrapper.set_mobility_params(mobility_params)
 
+    def handle_graph_nav_upload_graph(self, request, response):
+        try:
+            self.node.get_logger().info(f"Uploading GraphNav map: {request.upload_filepath}")
+            self.spot_wrapper._upload_graph_and_snapshots(request.upload_filepath)
+            self.node.get_logger().info(f"Uploaded")
+            response.success = True
+            response.message = "Success"
+        except Exception as e:
+            self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+        return response
+
     def handle_list_graph(self, request, response):
         """ROS service handler for listing graph_nav waypoint_ids"""
         try:
@@ -1174,6 +1187,10 @@ def main(args=None):
         # This doesn't use the service wrapper because it's not a trigger and we want different mock responses
         node.create_service(
             ListWorldObjects, "list_world_objects", spot_ros.handle_list_world_objects)
+
+        node.create_service(
+            GraphNavUploadGraph, "graph_nav_upload_graph", spot_ros.handle_graph_nav_upload_graph,
+            callback_group=spot_ros.group)
 
         spot_ros.navigate_as = ActionServer(node, NavigateTo, 'navigate_to', spot_ros.handle_navigate_to,
                                             callback_group=spot_ros.group)

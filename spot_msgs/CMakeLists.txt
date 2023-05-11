@@ -55,6 +55,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetLocomotion.srv"
   "srv/SetVelocity.srv"
   "srv/ClearBehaviorFault.srv"
+  "srv/GraphNavUploadGraph.srv"
   "action/NavigateTo.action"
   "action/RobotCommand.action"
   "action/Trajectory.action"
