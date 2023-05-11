@@ -748,7 +748,9 @@ class SpotROS:
             response.success = True
             response.message = "Success"
         except Exception as e:
-            self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            self.node.get_logger().error(f"Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Error:{e}"
         return response
 
     def handle_list_graph(self, request, response):
