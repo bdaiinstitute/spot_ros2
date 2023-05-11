@@ -58,6 +58,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/NavigateTo.action"
   "action/RobotCommand.action"
   "action/Trajectory.action"
+  "action/Manipulation.action"
   DEPENDENCIES bosdyn_msgs builtin_interfaces common_interfaces geometry_msgs std_msgs sensor_msgs
 )
 
