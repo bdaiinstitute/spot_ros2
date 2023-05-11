@@ -33,6 +33,7 @@ from spot_msgs.msg import MobilityParams
 from spot_msgs.action import NavigateTo
 from spot_msgs.action import RobotCommand
 from spot_msgs.action import Trajectory
+from spot_msgs.action import Manipulation
 from spot_msgs.srv import ListGraph
 from spot_msgs.srv import ListWorldObjects
 from spot_msgs.srv import SetLocomotion
@@ -698,6 +699,13 @@ class SpotROS:
             self.node.get_logger().info("Returning action result " + str(result))
         return result
 
+    def handle_manipulation(self, goal_handle):
+        self.node.get_logger().debug("I'm a function that handles request to the manipulation api!")
+        result = Manipulation.Result()
+        result.success = True
+        result.message = "I'm a message from the manipulation action!"
+        return result
+
     def handle_trajectory(self, goal_handle):
         """ROS actionserver execution handler to handle receiving a request to move to a location"""
 
@@ -1329,6 +1337,10 @@ def main(args=None):
         spot_ros.robot_command_server = SingleGoalActionServer(node, RobotCommand, 'robot_command',
                                                                spot_ros.handle_robot_command,
                                                                callback_group=spot_ros.group)
+
+        spot_ros.manipulation_server = SingleGoalActionServer(node, Manipulation, 'manipulation',
+                                                              spot_ros.handle_manipulation,
+                                                              callback_group=spot_ros.group)
 
         # Register Shutdown Handle
         # rclpy.on_shutdown(spot_ros.shutdown) ############## Shutdown Handle
