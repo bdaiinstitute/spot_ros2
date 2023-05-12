@@ -1338,7 +1338,7 @@ def main(args=None):
                                                                spot_ros.handle_robot_command,
                                                                callback_group=spot_ros.group)
 
-        spot_ros.manipulation_server = SingleGoalActionServer(node, Manipulation, 'manipulation',
+        spot_ros.manipulation_server = ActionServer(node, Manipulation, 'manipulation',
                                                               spot_ros.handle_manipulation,
                                                               callback_group=spot_ros.group)
 
