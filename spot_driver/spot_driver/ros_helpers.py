@@ -13,7 +13,7 @@ import tf2_py as tf2
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import CompressedImage, Image, CameraInfo
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import PoseWithCovariance
+from geometry_msgs.msg import PoseWithCovariance, PoseStamped
 from geometry_msgs.msg import TwistWithCovariance
 from geometry_msgs.msg import TwistWithCovarianceStamped
 from nav_msgs.msg import Odometry
@@ -29,6 +29,8 @@ from spot_msgs.msg import SystemFault, SystemFaultState
 from spot_msgs.msg import BatteryState, BatteryStateArray
 
 from bosdyn.api import image_pb2
+from bosdyn.api.graph_nav import (graph_nav_pb2, graph_nav_service_pb2,
+                                  graph_nav_service_pb2_grpc, map_pb2, nav_pb2)
 from bosdyn.client.math_helpers import SE3Pose
 from bosdyn.client.frame_helpers import get_odom_tform_body, get_vision_tform_body, get_a_tform_b
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -261,6 +263,121 @@ def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, rob
     camera_info_msg.p[6] = data.source.pinhole.intrinsics.principal_point.y
 
     return image_msg, camera_info_msg
+
+def bosdyn_localization_to_pose_msg(
+        localization: nav_pb2.Localization,
+        robot_to_local_time: Callable[[Timestamp], Timestamp],
+        in_seed_frame: bool = True,
+        seed_frame: str = None,
+        body_frame: str = None,
+        return_tf: bool = True):
+    """Extracts pose from the Localization proto object, and
+    return a PoseStamped message and optionally a TransformStamped message.
+    If 'in_seed_frame' is True, then the pose would be with respect to the seed
+    frame (given by 'seed_frame'). Otherwise, the pose would be with respect to
+    localization.waypoint_id, which is the waypoint the Localization object is
+    relative to.
+
+    The pose will itself define the origin of a frame called 'body_frame'
+
+    Args:
+        localization: the Localization object obtained from e.g. GetLocalizationState RPC.
+        robot_to_local_time: Function to convert the robot time to the local time
+        in_seed_frame: True if the resulting pose should be in seed frame
+        seed_frame: The name of the seed frame in ROS context.
+        body_frame: the origin of a frame defined by the pose; only necessary when 'return_tf' is True
+        return_tf: returns a TransformStamped message as well
+    Returns:
+        if return_tf is True:
+           (PoseStamped, TransformStamped)
+        else:
+            PoseStamped
+    """
+    if not localization.waypoint_id:
+        # the robot is not yet localized
+        return None
+    if in_seed_frame and seed_frame is None:
+        raise ValueError("seed_frame must not be None if in_seed_frame is True")
+    if return_tf and body_frame is None:
+        raise ValueError("body_frame must not be None if return_tf is True; Constructing"
+                         "a TransformStamped message requires knowing body_frame.")
+
+    local_time = robot_to_local_time(localization.timestamp)
+    local_stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
+    if in_seed_frame:
+        seed_t_body = localization.seed_tform_body
+        pose_msg = bosdyn_pose_to_msg(seed_t_body, seed_frame, local_stamp)
+        if return_tf:
+            tf_msg = bosdyn_pose_to_tf(seed_t_body, seed_frame, body_frame, local_stamp)
+    else:
+        waypoint_t_body = localization.waypoint_tform_body
+        waypoint_frame = localization.waypoint_id
+        pose_msg = bosdyn_pose_to_msg(waypoint_t_body, waypoint_frame, local_stamp)
+        if return_tf:
+            tf_msg = bosdyn_pose_to_tf(seed_t_body, waypoint_frame, body_frame, local_stamp)
+    if return_tf:
+        return pose_msg, tf_msg
+    else:
+        return pose_msg
+
+
+def bosdyn_pose_to_msg(frame_t_pose: SE3Pose,
+                       frame: str,
+                       local_stamp: rclpy.time.Time = None):
+    """A helper function that converts an SE3Pose object into a ROS PoseStamped
+    message.  Note that the user is expected to pass in the local timestamp for
+    the resulting message.
+
+    Args:
+        frame_t_pose: SE3Pose in frame 'frame'
+        frame: the name of the frame the pose is with respect to
+        robot_stamp: google.protobuf.Timestamp associated with the pose
+        robot_to_local_time: Function to convert the robot time to the local time
+    Returns:
+        PoseStamped message: google.protobuf.Timestamp
+
+    """
+    pose_stamped = geometry_msgs.msg.PoseStamped()
+    pose_stamped.header.stamp = local_stamp
+    pose_stamped.header.frame_id = frame
+    pose_stamped.pose.position.x = frame_t_pose.position.x
+    pose_stamped.pose.position.y = frame_t_pose.position.y
+    pose_stamped.pose.position.z = frame_t_pose.position.z
+    pose_stamped.pose.orientation.x = frame_t_pose.rotation.x
+    pose_stamped.pose.orientation.y = frame_t_pose.rotation.y
+    pose_stamped.pose.orientation.z = frame_t_pose.rotation.z
+    pose_stamped.pose.orientation.w = frame_t_pose.rotation.w
+    return pose_stamped
+
+def bosdyn_pose_to_tf(frame_t_pose: SE3Pose,
+                      frame: str,
+                      child_frame: str,
+                      local_stamp: rclpy.time.Time = None):
+    """A helper function that converts an SE3Pose object into a
+    ROS TransformStamped object. The transform would be between
+    frame->child_frame.  Note that the user is expected
+    to pass in the local timestamp for the returned message.
+
+    Args:
+        frame_t_pose: SE3Pose in frame 'frame'
+        frame: the name of the frame this transform is with respect to
+        child_frame: the name of the frame whose origin is defined by the given pose
+        local_stamp: the local timestamp for the returned message.
+    Returns:
+        TransformStamped message
+    """
+    tfmsg = geometry_msgs.msg.TransformStamped()
+    tfmsg.header.stamp = rospy.local_stamp
+    tfmsg.header.frame_id = frame
+    tfmsg.child_frame_id = child_frame
+    tfmsg.transform.translation.x = frame_t_pose.position.x
+    tfmsg.transform.translation.y = frame_t_pose.position.y
+    tfmsg.transform.translation.z = frame_t_pose.position.z
+    tfmsg.transform.rotation.x = frame_t_pose.rotation.x
+    tfmsg.transform.rotation.y = frame_t_pose.rotation.y
+    tfmsg.transform.rotation.z = frame_t_pose.rotation.z
+    tfmsg.transform.rotation.w = frame_t_pose.rotation.w
+    return tfmsg
 
 
 def GetJointStatesFromState(state, spot_wrapper):
