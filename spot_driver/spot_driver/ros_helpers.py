@@ -308,15 +308,15 @@ def bosdyn_localization_to_pose_msg(
         seed_t_body_proto = localization.seed_tform_body
         pose_msg = bosdyn_pose_to_msg(seed_t_body_proto, seed_frame, local_stamp)
         if return_tf:
-            tf_msg = bosdyn_pose_to_tf(seed_t_body, seed_frame, body_frame, local_stamp)
+            trans_msg = bosdyn_pose_to_tf(seed_t_body, seed_frame, body_frame, local_stamp)
     else:
         waypoint_frame = localization.waypoint_id
         waypoint_t_body_proto = localization.waypoint_tform_body
         pose_msg = bosdyn_pose_to_msg(waypoint_t_body_proto, waypoint_frame, local_stamp)
         if return_tf:
-            tf_msg = bosdyn_pose_to_tf(waypoint_t_body_proto, waypoint_frame, body_frame, local_stamp)
+            trans_msg = bosdyn_pose_to_tf(waypoint_t_body_proto, waypoint_frame, body_frame, local_stamp)
     if return_tf:
-        return pose_msg, tf_msg
+        return pose_msg, trans_msg
     else:
         return pose_msg
 
