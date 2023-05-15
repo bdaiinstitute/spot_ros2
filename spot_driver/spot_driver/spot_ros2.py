@@ -6,7 +6,6 @@ from rclpy.impl import rcutils_logger
 from std_srvs.srv import Trigger, SetBool
 from geometry_msgs.msg import Twist, Pose, PoseStamped
 
-
 from bosdyn.api import geometry_pb2, trajectory_pb2, robot_command_pb2, world_object_pb2
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
@@ -38,7 +37,7 @@ from spot_msgs.srv import ListWorldObjects
 from spot_msgs.srv import SetLocomotion
 from spot_msgs.srv import ClearBehaviorFault
 from spot_msgs.srv import SetVelocity
-from spot_msgs.srv import GraphNavUploadGraph
+from spot_msgs.srv import GraphNavUploadGraph, GraphNavSetLocalization, GraphNavGetLocalizationPose
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -755,6 +754,49 @@ class SpotROS:
         mobility_params.body_control.CopyFrom(body_control)
         self.spot_wrapper.set_mobility_params(mobility_params)
 
+    def handle_graph_nav_get_localization_pose(self, request, response):
+        try:
+            state = self.spot_wrapper._graph_nav_client.get_localization_state()
+            if not state.localization.waypoint_id:
+                response.success = False
+                response.message = "The robot is currently not localized to the map; Please localize."
+                self.node.get_logger().warning(response.message)
+                return response
+            else:
+                seed_t_body_msg = bosdyn_localization_to_pose_msg(
+                    state.localization,
+                    self.spot_wrapper.robotToLocalTime,
+                    in_seed_frame=True,
+                    seed_frame=self.graph_nav_seed_frame,
+                    body_frame=self.tf_name_graph_nav_body,
+                    return_tf=False)
+                response.success = True
+                response.message = "Success"
+                response.pose = seed_t_body_msg
+        except Exception as e:
+            self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+        return response
+
+    def handle_graph_nav_set_localization(self, request, response):
+        try:
+            if request.method == "fiducial":
+                self.spot_wrapper._graph_nav_client.set_initial_localization_fiducial()
+                response.success = True
+                response.message = "Success"
+            elif request.method == "waypoint":
+                self.spot_wrapper._graph_nav_client.set_initial_localization_waypoint([request.waypoint_id])
+                response.success = True
+                response.message = "Success"
+            else:
+                response.success = False
+                response.message = f"Invalid localization method {request.method}."\
+                    "Must be 'fiducial' or 'waypoint'"
+                raise Exception(response.message)
+        except Exception as e:
+            self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+        return response
+
+
     def handle_graph_nav_upload_graph(self, request, response):
         try:
             self.node.get_logger().info(f"Uploading GraphNav map: {request.upload_filepath}")
@@ -1234,6 +1276,13 @@ def main(args=None):
             GraphNavUploadGraph, "graph_nav_upload_graph", spot_ros.handle_graph_nav_upload_graph,
             callback_group=spot_ros.group)
 
+        node.create_service(
+            GraphNavGetLocalizationPose, "graph_nav_get_localization_pose", spot_ros.handle_graph_nav_get_localization_pose,
+            callback_group=spot_ros.group)
+
+        node.create_service(
+            GraphNavSetLocalization, "graph_nav_set_localization", spot_ros.handle_graph_nav_set_localization,
+            callback_group=spot_ros.group)
 
         spot_ros.navigate_as = ActionServer(node, NavigateTo, 'navigate_to', spot_ros.handle_navigate_to,
                                             callback_group=spot_ros.group)
