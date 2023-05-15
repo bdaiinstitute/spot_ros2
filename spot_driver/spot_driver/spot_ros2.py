@@ -775,16 +775,18 @@ class SpotROS:
                 response.pose = seed_t_body_msg
         except Exception as e:
             self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+        if response.success:
+            self.node.get_logger().info(f"GraphNav localization pose received")
         return response
 
     def handle_graph_nav_set_localization(self, request, response):
         try:
             if request.method == "fiducial":
-                self.spot_wrapper._graph_nav_client.set_initial_localization_fiducial()
+                self.spot_wrapper._set_initial_localization_fiducial()
                 response.success = True
                 response.message = "Success"
             elif request.method == "waypoint":
-                self.spot_wrapper._graph_nav_client.set_initial_localization_waypoint([request.waypoint_id])
+                self.spot_wrapper._set_initial_localization_waypoint([request.waypoint_id])
                 response.success = True
                 response.message = "Success"
             else:
@@ -794,6 +796,8 @@ class SpotROS:
                 raise Exception(response.message)
         except Exception as e:
             self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+        if response.success:
+            self.node.get_logger().info(f"Successfully set GraphNav localization. Method: {request.method}")
         return response
 
 
