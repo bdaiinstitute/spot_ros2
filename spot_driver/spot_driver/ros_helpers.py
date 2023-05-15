@@ -337,7 +337,7 @@ def bosdyn_pose_to_msg(frame_t_pose: SE3Pose,
         PoseStamped message: google.protobuf.Timestamp
 
     """
-    pose_stamped = geometry_msgs.msg.PoseStamped()
+    pose_stamped = PoseStamped()
     pose_stamped.header.stamp = local_stamp
     pose_stamped.header.frame_id = frame
     pose_stamped.pose.position.x = frame_t_pose.position.x
@@ -366,7 +366,7 @@ def bosdyn_pose_to_tf(frame_t_pose: SE3Pose,
     Returns:
         TransformStamped message
     """
-    tfmsg = geometry_msgs.msg.TransformStamped()
+    tfmsg = TransformStamped()
     tfmsg.header.stamp = rospy.local_stamp
     tfmsg.header.frame_id = frame
     tfmsg.child_frame_id = child_frame

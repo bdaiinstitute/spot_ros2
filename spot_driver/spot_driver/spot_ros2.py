@@ -775,6 +775,8 @@ class SpotROS:
                 response.pose = seed_t_body_msg
         except Exception as e:
             self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Exception Error:{e}"
         if response.success:
             self.node.get_logger().info(f"GraphNav localization pose received")
         return response
@@ -796,6 +798,8 @@ class SpotROS:
                 raise Exception(response.message)
         except Exception as e:
             self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Exception Error:{e}"
         if response.success:
             self.node.get_logger().info(f"Successfully set GraphNav localization. Method: {request.method}")
         return response
@@ -810,6 +814,8 @@ class SpotROS:
             response.message = "Success"
         except Exception as e:
             self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Exception Error:{e}"
         return response
 
     def handle_list_graph(self, request, response):
@@ -1051,6 +1057,7 @@ def main(args=None):
     spot_ros.publish_depth_registered = node.get_parameter('publish_depth_registered')
 
     spot_ros.publish_graph_nav_pose = node.get_parameter('publish_graph_nav_pose')
+    spot_ros.graph_nav_seed_frame = node.get_parameter('graph_nav_seed_frame').value
 
     # This is only done from parameter because it should be passed by the launch file
     spot_ros.name = node.get_parameter('spot_name').value
@@ -1157,7 +1164,6 @@ def main(args=None):
         if spot_ros.publish_graph_nav_pose.value:
             # graph nav pose will be published both on a topic
             # and as a TF transform from graph_nav_map to body.
-            spot_ros.graph_nav_seed_frame = node.get_parameter('graph_nav_seed_frame')
             spot_ros.graph_nav_pose_pub = node.create_publisher(PoseStamped, f"graph_nav/body_pose", 1)
             spot_ros.graph_nav_pose_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(node)
 
