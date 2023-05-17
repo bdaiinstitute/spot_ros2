@@ -1,9 +1,7 @@
-#Goal
-string command
+bosdyn_msgs/ManipulationApiRequest command
 ---
-#Result
+bosdyn_msgs/ManipulationApiFeedbackResponse result
 bool success
 string message
 ---
-#Feedback
-string feedback
+bosdyn_msgs/ManipulationApiFeedbackResponse feedback
