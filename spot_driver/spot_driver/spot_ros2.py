@@ -1062,7 +1062,7 @@ def main(args=None):
         if spot_ros.publish_depth_registered.value:
             for camera_name in spot_ros.cameras_used.value:
                 setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(Image, f"depth_registered/{camera_name}/image", 1))
-                setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(CameraInfo, f"depth_registered/{camera_name}/camera_info", 1))
+                setattr(spot_ros, f"{camera_name}_depth_registered_info_pub", node.create_publisher(CameraInfo, f"depth_registered/{camera_name}/camera_info", 1))
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
