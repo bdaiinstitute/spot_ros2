@@ -20,6 +20,7 @@ from spot_driver.single_goal_action_server import SingleGoalActionServer
 from bosdyn_msgs.msg import RobotCommandFeedback
 from bosdyn_msgs.msg import RobotState
 from bosdyn_msgs.msg import ManipulationApiFeedbackResponse
+from bosdyn.client.exceptions import InternalServerError
 from spot_msgs.msg import Metrics
 from spot_msgs.msg import LeaseArray, LeaseResource
 from spot_msgs.msg import FootState, FootStateArray
@@ -638,7 +639,11 @@ class SpotROS:
             and not goal_complete
             and goal_handle.is_active
         ):
-            feedback = self._get_manipulation_command_feedback(goal_id)
+            try:
+                feedback = self._get_manipulation_command_feedback(goal_id)
+            except InternalServerError as e:
+                self.node.get_logger().error(e)
+
             feedback_msg = Manipulation.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
 
