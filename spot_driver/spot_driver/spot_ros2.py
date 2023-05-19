@@ -631,11 +631,22 @@ class SpotROS:
         # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
         # monitor whether the timeout_cb has already aborted the command
         feedback = None
-        while (rclpy.ok() and not goal_handle.is_cancel_requested and
-               not self._goal_complete(feedback) and goal_handle.is_active):
+        goal_complete = False
+        while (
+            rclpy.ok()
+            and not goal_handle.is_cancel_requested
+            and not goal_complete
+            and goal_handle.is_active
+        ):
             feedback = self._get_manipulation_command_feedback(goal_id)
             feedback_msg = Manipulation.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
+
+            goal_complete = (
+                feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED
+                or feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED
+            )
+
             time.sleep(0.1)  # don't use rate here because we're already in a single thread
 
         # publish a final feedback
