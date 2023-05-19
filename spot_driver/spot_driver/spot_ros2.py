@@ -607,7 +607,7 @@ class SpotROS:
     def _get_manipulation_command_feedback(self, goal_id):
         feedback = ManipulationApiFeedbackResponse()
         conv.convert_proto_to_bosdyn_msgs_manipulation_api_feedback_response(
-            self.spot_wrapper.get_manipulation_command_feedback(goal_id).feedback, feedback)
+            self.spot_wrapper.get_manipulation_command_feedback(goal_id), feedback)
         return feedback
 
     def handle_manipulation_command(self, goal_handle):
