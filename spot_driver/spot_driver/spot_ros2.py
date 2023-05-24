@@ -108,7 +108,7 @@ class SpotROS:
             self.joint_state_pub.publish(joint_state)
 
             ## TF ##
-            tf_msg = GetTFFromState(state, self.spot_wrapper, self.mode_parent_odom_tf)
+            tf_msg = GetTFFromState(state, self.spot_wrapper, self.mode_parent_odom_tf.value)
             if len(tf_msg.transforms) > 0:
                 self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
 
@@ -117,7 +117,7 @@ class SpotROS:
             self.odom_twist_pub.publish(twist_odom_msg)
 
             # Odom #
-            if self.mode_parent_odom_tf == self.spot_wrapper.frame_prefix + 'vision':
+            if self.mode_parent_odom_tf.value == self.spot_wrapper.frame_prefix + 'vision':
                 odom_msg = GetOdomFromState(state, self.spot_wrapper, use_vision=True)
             else:
                 odom_msg = GetOdomFromState(state, self.spot_wrapper, use_vision=False)
