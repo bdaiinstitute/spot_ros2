@@ -1,6 +1,7 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
 import bdai_ros2_wrappers.tf_listener_wrapper as tfl
+from geometry_msgs.msg import Transform
 
 def ros_transform_to_se3_pose(transform: Transform) -> SE3Pose:
     return SE3Pose(transform.translation.x, transform.translation.y, transform.translation.z,

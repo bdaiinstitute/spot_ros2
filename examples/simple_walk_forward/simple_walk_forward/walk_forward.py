@@ -10,7 +10,7 @@ from spot_msgs.action import RobotCommand
 import spot_driver.conversions as conv
 
 import rclpy
-from bdai_ros2_wrappers.action_client_wrapper import ActionClientWrapper
+from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
