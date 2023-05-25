@@ -631,6 +631,21 @@ class SpotROS:
             self.spot_wrapper.get_manipulation_command_feedback(goal_id), feedback)
         return feedback
 
+    def handle_arm_stow(self, request, response):
+        """ROS service handler for the arm_stow service"""
+        response.success, response.message = self.spot_wrapper.arm_stow()
+        return response
+
+    def handle_arm_unstow(self, request, response):
+        """ROS service handler for the arm_unstow service"""
+        response.success, response.message = self.spot_wrapper.arm_unstow()
+        return response
+
+    def handle_arm_carry(self, request, response):
+        """ROS service handler for the arm_carry service"""
+        response.success, response.message = self.spot_wrapper.arm_carry()
+        return response
+
     def handle_manipulation_command(self, goal_handle):
         # Most of the logic here copied from handle_robot_command
         self.node.get_logger().debug("I'm a function that handles request to the manipulation api!")
@@ -1406,6 +1421,19 @@ def main(args=None):
                                                                spot_ros.handle_robot_command,
                                                                callback_group=spot_ros.group)
         if has_arm:
+            node.create_service(
+                Trigger, "arm_stow",
+                lambda request, response: spot_ros.service_wrapper('arm_stow', spot_ros.handle_arm_stow, request, response),
+                callback_group=spot_ros.group)
+            node.create_service(
+                Trigger, "arm_unstow",
+                lambda request, response: spot_ros.service_wrapper('arm_unstow', spot_ros.handle_arm_unstow, request, response),
+                callback_group=spot_ros.group)
+            node.create_service(
+                Trigger, "arm_carry",
+                lambda request, response: spot_ros.service_wrapper('arm_carry', spot_ros.handle_arm_carry, request, response),
+                callback_group=spot_ros.group)
+
             spot_ros.manipulation_server = ActionServer(node, Manipulation, 'manipulation',
                                                               spot_ros.handle_manipulation_command,
                                                               callback_group=spot_ros.group)
