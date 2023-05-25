@@ -212,10 +212,8 @@ class SpotROS:
         try:
             state = self.spot_wrapper._graph_nav_client.get_localization_state()
             if not state.localization.waypoint_id:
-                # The robot is not localized. Attempt to localize by fiducial.
-                # If failed, then return.
-                self.spot_wrapper._set_initial_localization_fiducial()
-                self.node.get_logger().info("Automatically set localization by fiducial")
+                self.node.get_logger().warning("robot is not localized; Please upload graph and localize.")
+                return
 
             seed_t_body_msg, seed_t_body_trans_msg =\
                 bosdyn_localization_to_pose_msg(state.localization,
