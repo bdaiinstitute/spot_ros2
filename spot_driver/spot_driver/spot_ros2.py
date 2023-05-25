@@ -37,7 +37,7 @@ from spot_msgs.srv import ListWorldObjects
 from spot_msgs.srv import SetLocomotion
 from spot_msgs.srv import ClearBehaviorFault
 from spot_msgs.srv import SetVelocity
-from spot_msgs.srv import GraphNavUploadGraph, GraphNavSetLocalization, GraphNavGetLocalizationPose
+from spot_msgs.srv import GraphNavUploadGraph, GraphNavClearGraph, GraphNavSetLocalization, GraphNavGetLocalizationPose
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -810,12 +810,24 @@ class SpotROS:
             self.node.get_logger().info(f"Successfully set GraphNav localization. Method: {request.method}")
         return response
 
-
     def handle_graph_nav_upload_graph(self, request, response):
         try:
             self.node.get_logger().info(f"Uploading GraphNav map: {request.upload_filepath}")
             self.spot_wrapper._upload_graph_and_snapshots(request.upload_filepath)
             self.node.get_logger().info(f"Uploaded")
+            response.success = True
+            response.message = "Success"
+        except Exception as e:
+            self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Exception Error:{e}"
+        return response
+
+    def handle_graph_nav_clear_graph(self, request, response):
+        try:
+            self.node.get_logger().info(f"Clearing graph")
+            self.spot_wrapper._clear_graph()
+            self.node.get_logger().info(f"Cleared")
             response.success = True
             response.message = "Success"
         except Exception as e:
@@ -1289,6 +1301,10 @@ def main(args=None):
 
         node.create_service(
             GraphNavUploadGraph, "graph_nav_upload_graph", spot_ros.handle_graph_nav_upload_graph,
+            callback_group=spot_ros.group)
+
+        node.create_service(
+            GraphNavClearGraph, "graph_nav_clear_graph", spot_ros.handle_graph_nav_clear_graph,
             callback_group=spot_ros.group)
 
         node.create_service(

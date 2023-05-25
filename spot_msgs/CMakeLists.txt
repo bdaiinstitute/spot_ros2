@@ -56,6 +56,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetVelocity.srv"
   "srv/ClearBehaviorFault.srv"
   "srv/GraphNavUploadGraph.srv"
+  "srv/GraphNavClearGraph.srv"
   "srv/GraphNavSetLocalization.srv"
   "srv/GraphNavGetLocalizationPose.srv"
   "action/NavigateTo.action"
