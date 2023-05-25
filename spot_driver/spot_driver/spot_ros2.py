@@ -981,7 +981,6 @@ class SpotROS:
                 self.node.get_logger().error('Error:{}'.format(e))
                 pass
             self.mobility_params_pub.publish(mobility_params_msg)
-            self.node_rate.sleep()
 
 
 def main(args=None):
@@ -1029,6 +1028,7 @@ def main(args=None):
 
     node.declare_parameter('deadzone', 0.05)
     node.declare_parameter('estop_timeout', 9.0)
+    node.declare_parameter('async_tasks_rate', 10)
     node.declare_parameter('start_estop', False)
     node.declare_parameter('publish_rgb', True)
     node.declare_parameter('publish_depth', True)
@@ -1055,6 +1055,7 @@ def main(args=None):
 
     spot_ros.motion_deadzone = node.get_parameter('deadzone')
     spot_ros.estop_timeout = node.get_parameter('estop_timeout')
+    spot_ros.async_tasks_rate = node.get_parameter('async_tasks_rate').value
 
     spot_ros.username = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", node, "username", "user")
     spot_ros.password = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", node, "password", "password")
@@ -1290,7 +1291,7 @@ def main(args=None):
                 time.sleep(0.5)
             print('Found estop!', flush=True)
 
-        node.create_timer(0.1, spot_ros.step, callback_group=spot_ros.group)
+        node.create_timer(1/spot_ros.async_tasks_rate, spot_ros.step, callback_group=spot_ros.group)
 
         executor = MultiThreadedExecutor(num_threads=8)
         executor.add_node(node)
