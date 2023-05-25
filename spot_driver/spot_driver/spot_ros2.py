@@ -208,20 +208,26 @@ class SpotROS:
             if len(tf_msg.transforms) > 0:
                 self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
 
-    def publish_graph_nav_pose(self):
-        state = self.spot_wrapper._graph_nav_client.get_localization_state()
-        if not state.localization.waypoint_id:
-            self.node.get_logger().warning("The robot is currently not localized to the map; Please localize.")
-            return
-        seed_t_body_msg, seed_t_body_trans_msg =\
-            bosdyn_localization_to_pose_msg(state.localization,
-                                            self.spot_wrapper.robotToLocalTime,
-                                            in_seed_frame=True,
-                                            seed_frame=self.graph_nav_seed_frame,
-                                            body_frame=self.tf_name_graph_nav_body,
-                                            return_tf=True)
-        self.graph_nav_pose_pub.publish(seed_t_body_msg)
-        self.graph_nav_pose_transform_broadcaster.sendTransform(seed_t_body_trans_msg)
+    def publish_graph_nav_pose_callback(self):
+        try:
+            state = self.spot_wrapper._graph_nav_client.get_localization_state()
+            if not state.localization.waypoint_id:
+                # The robot is not localized. Attempt to localize by fiducial.
+                # If failed, then return.
+                self.spot_wrapper._set_initial_localization_fiducial()
+                self.node.get_logger().info("Automatically set localization by fiducial")
+
+            seed_t_body_msg, seed_t_body_trans_msg =\
+                bosdyn_localization_to_pose_msg(state.localization,
+                                                self.spot_wrapper.robotToLocalTime,
+                                                in_seed_frame=True,
+                                                seed_frame=self.graph_nav_seed_frame,
+                                                body_frame=self.tf_name_graph_nav_body,
+                                                return_tf=True)
+            self.graph_nav_pose_pub.publish(seed_t_body_msg)
+            self.graph_nav_pose_transform_broadcaster.sendTransform(seed_t_body_trans_msg)
+        except Exception as e:
+            self.node.get_logger().error(f"Exception: {e} \n {traceback.format_exc()}")
 
     def publish_camera_images_callback(self):
         result = self.spot_wrapper.get_images_by_cameras(
@@ -1169,9 +1175,8 @@ def main(args=None):
 
             node.create_timer(
                 1 / spot_ros.rates['graph_nav_pose'],
-                spot_ros.publish_graph_nav_pose,
+                spot_ros.publish_graph_nav_pose_callback,
                 callback_group=spot_ros.graph_nav_callback_group)
-
 
         node.declare_parameter("has_arm", has_arm)
 
