@@ -794,7 +794,7 @@ class SpotROS:
         if not self.spot_wrapper:
             self.node.get_logger().info('Mock mode, received command vel ' + str(data))
             return
-        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z)
+        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z, self.cmd_duration)
 
     def bodyPoseCallback(self, data):
         """Callback for cmd_vel command"""
@@ -1029,6 +1029,7 @@ def main(args=None):
     node.declare_parameter('deadzone', 0.05)
     node.declare_parameter('estop_timeout', 9.0)
     node.declare_parameter('async_tasks_rate', 10)
+    node.declare_parameter('cmd_duration', 0.125)
     node.declare_parameter('start_estop', False)
     node.declare_parameter('publish_rgb', True)
     node.declare_parameter('publish_depth', True)
@@ -1056,6 +1057,7 @@ def main(args=None):
     spot_ros.motion_deadzone = node.get_parameter('deadzone')
     spot_ros.estop_timeout = node.get_parameter('estop_timeout')
     spot_ros.async_tasks_rate = node.get_parameter('async_tasks_rate').value
+    spot_ros.cmd_duration = node.get_parameter('cmd_duration').value
 
     spot_ros.username = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", node, "username", "user")
     spot_ros.password = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", node, "password", "password")
