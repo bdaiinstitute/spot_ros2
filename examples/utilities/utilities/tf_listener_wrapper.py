@@ -2,7 +2,7 @@
 
 import bdai_ros2_wrappers.tf_listener_wrapper as tfl
 from geometry_msgs.msg import Transform
-from bosdyn.client.math_helpers import SE3Pose
+from bosdyn.client.math_helpers import SE3Pose, Quat
 
 def ros_transform_to_se3_pose(transform: Transform) -> SE3Pose:
     return SE3Pose(transform.translation.x, transform.translation.y, transform.translation.z,
