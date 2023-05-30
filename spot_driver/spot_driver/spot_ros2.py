@@ -6,7 +6,7 @@ from rclpy.impl import rcutils_logger
 from std_srvs.srv import Trigger, SetBool
 from geometry_msgs.msg import Twist, Pose, PoseStamped
 
-from bosdyn.api import geometry_pb2, trajectory_pb2, robot_command_pb2, world_object_pb2
+from bosdyn.api import geometry_pb2, trajectory_pb2, robot_command_pb2, world_object_pb2, manipulation_api_pb2
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client import math_helpers
@@ -18,6 +18,8 @@ from spot_driver.single_goal_action_server import SingleGoalActionServer
 
 from bosdyn_msgs.msg import RobotCommandFeedback
 from bosdyn_msgs.msg import RobotState
+from bosdyn_msgs.msg import ManipulationApiFeedbackResponse
+from bosdyn.client.exceptions import InternalServerError
 from spot_msgs.msg import Metrics
 from spot_msgs.msg import LeaseArray, LeaseResource
 from spot_msgs.msg import FootState, FootStateArray
@@ -32,6 +34,7 @@ from spot_msgs.msg import MobilityParams
 from spot_msgs.action import NavigateTo
 from spot_msgs.action import RobotCommand
 from spot_msgs.action import Trajectory
+from spot_msgs.action import Manipulation
 from spot_msgs.srv import ListGraph
 from spot_msgs.srv import ListWorldObjects
 from spot_msgs.srv import SetLocomotion
@@ -622,6 +625,81 @@ class SpotROS:
             self.node.get_logger().info("Returning action result " + str(result))
         return result
 
+    def _get_manipulation_command_feedback(self, goal_id):
+        feedback = ManipulationApiFeedbackResponse()
+        conv.convert_proto_to_bosdyn_msgs_manipulation_api_feedback_response(
+            self.spot_wrapper.get_manipulation_command_feedback(goal_id), feedback)
+        return feedback
+
+    def handle_manipulation_command(self, goal_handle):
+        # Most of the logic here copied from handle_robot_command
+        self.node.get_logger().debug("I'm a function that handles request to the manipulation api!")
+
+        ros_command = goal_handle.request.command
+        proto_command = manipulation_api_pb2.ManipulationApiRequest()
+        conv.convert_bosdyn_msgs_manipulation_api_request_to_proto(ros_command, proto_command)
+        self._wait_for_goal = None
+        if not self.spot_wrapper:
+            self._wait_for_goal = WaitForGoal(self.node.get_clock(), 2.0)
+            goal_id = None
+        else:
+            success, err_msg, goal_id = self.spot_wrapper.manipulation_command(proto_command)
+            if not success:
+                raise Exception(err_msg)
+
+        self.node.get_logger().info('Robot now executing goal ' + str(goal_id))
+        # The command is non-blocking but we need to keep this function up in order to interrupt if a
+        # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
+        # monitor whether the timeout_cb has already aborted the command
+        feedback = None
+        goal_complete = False
+        while (
+            rclpy.ok()
+            and not goal_handle.is_cancel_requested
+            and not goal_complete
+            and goal_handle.is_active
+        ):
+            try:
+                feedback = self._get_manipulation_command_feedback(goal_id)
+            except InternalServerError as e:
+                self.node.get_logger().error(e)
+
+            feedback_msg = Manipulation.Feedback(feedback=feedback)
+            goal_handle.publish_feedback(feedback_msg)
+
+            goal_complete = (
+                feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED
+                or feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED
+            )
+
+            time.sleep(0.1)  # don't use rate here because we're already in a single thread
+
+        # publish a final feedback
+        result = Manipulation.Result()
+        if feedback is not None:
+            goal_handle.publish_feedback(feedback_msg)
+            result.result = feedback
+        result.success = self._goal_complete(feedback) == True
+
+        if goal_handle.is_cancel_requested:
+            result.success = False
+            result.message = "Cancelled"
+            goal_handle.abort()
+        elif not goal_handle.is_active:
+            result.success = False
+            result.message = "Cancelled"
+            # Don't abort because that's already happened
+        elif result.success:
+            result.message = "Successfully completed manipulation"
+            goal_handle.succeed()
+        else:
+            result.message = "Failed to complete manipulation"
+            goal_handle.abort()
+        self._wait_for_goal = False
+        if not self.spot_wrapper:
+            self.node.get_logger().info("Returning action result " + str(result))
+        return result
+
     def handle_trajectory(self, goal_handle):
         """ROS actionserver execution handler to handle receiving a request to move to a location"""
 
@@ -736,7 +814,7 @@ class SpotROS:
         if not self.spot_wrapper:
             self.node.get_logger().info('Mock mode, received command vel ' + str(data))
             return
-        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z)
+        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z, self.cmd_duration)
 
     def bodyPoseCallback(self, data):
         """Callback for cmd_vel command"""
@@ -999,7 +1077,6 @@ class SpotROS:
                 self.node.get_logger().error('Error:{}'.format(e))
                 pass
             self.mobility_params_pub.publish(mobility_params_msg)
-            self.node_rate.sleep()
 
 
 def main(args=None):
@@ -1049,6 +1126,8 @@ def main(args=None):
 
     node.declare_parameter('deadzone', 0.05)
     node.declare_parameter('estop_timeout', 9.0)
+    node.declare_parameter('async_tasks_rate', 10)
+    node.declare_parameter('cmd_duration', 0.125)
     node.declare_parameter('start_estop', False)
     node.declare_parameter('publish_rgb', True)
     node.declare_parameter('publish_depth', True)
@@ -1082,6 +1161,8 @@ def main(args=None):
 
     spot_ros.motion_deadzone = node.get_parameter('deadzone')
     spot_ros.estop_timeout = node.get_parameter('estop_timeout')
+    spot_ros.async_tasks_rate = node.get_parameter('async_tasks_rate').value
+    spot_ros.cmd_duration = node.get_parameter('cmd_duration').value
 
     spot_ros.username = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", node, "username", "user")
     spot_ros.password = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", node, "password", "password")
@@ -1169,7 +1250,7 @@ def main(args=None):
         if spot_ros.publish_depth_registered.value:
             for camera_name in spot_ros.cameras_used.value:
                 setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(Image, f"depth_registered/{camera_name}/image", 1))
-                setattr(spot_ros, f"{camera_name}_depth_registered_pub", node.create_publisher(CameraInfo, f"depth_registered/{camera_name}/camera_info", 1))
+                setattr(spot_ros, f"{camera_name}_depth_registered_info_pub", node.create_publisher(CameraInfo, f"depth_registered/{camera_name}/camera_info", 1))
 
             node.create_timer(
                 1 / spot_ros.rates['front_image'],
@@ -1324,6 +1405,10 @@ def main(args=None):
         spot_ros.robot_command_server = SingleGoalActionServer(node, RobotCommand, 'robot_command',
                                                                spot_ros.handle_robot_command,
                                                                callback_group=spot_ros.group)
+        if has_arm:
+            spot_ros.manipulation_server = ActionServer(node, Manipulation, 'manipulation',
+                                                              spot_ros.handle_manipulation_command,
+                                                              callback_group=spot_ros.group)
 
         # Register Shutdown Handle
         # rclpy.on_shutdown(spot_ros.shutdown) ############## Shutdown Handle
@@ -1342,7 +1427,7 @@ def main(args=None):
                 time.sleep(0.5)
             print('Found estop!', flush=True)
 
-        node.create_timer(0.1, spot_ros.step, callback_group=spot_ros.group)
+        node.create_timer(1/spot_ros.async_tasks_rate, spot_ros.step, callback_group=spot_ros.group)
 
         executor = MultiThreadedExecutor(num_threads=8)
         executor.add_node(node)

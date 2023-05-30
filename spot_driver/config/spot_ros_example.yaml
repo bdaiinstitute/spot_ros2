@@ -18,3 +18,5 @@
     password: "password"
     hostname: "10.0.0.3"
     start_estop: False
+    async_tasks_rate: 10
+    cmd_duration: 0.125 # Increase if spot stutters while walking
