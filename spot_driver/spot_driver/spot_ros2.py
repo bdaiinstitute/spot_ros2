@@ -216,12 +216,12 @@ class SpotROS:
                 return
 
             seed_t_body_msg, seed_t_body_trans_msg =\
-                bosdyn_localization_to_pose_msg(state.localization,
-                                                self.spot_wrapper.robotToLocalTime,
-                                                in_seed_frame=True,
-                                                seed_frame=self.graph_nav_seed_frame,
-                                                body_frame=self.tf_name_graph_nav_body,
-                                                return_tf=True)
+                conv.bosdyn_localization_to_pose_msg(state.localization,
+                                                     self.spot_wrapper.robotToLocalTime,
+                                                     in_seed_frame=True,
+                                                     seed_frame=self.graph_nav_seed_frame,
+                                                     body_frame=self.tf_name_graph_nav_body,
+                                                     return_tf=True)
             self.graph_nav_pose_pub.publish(seed_t_body_msg)
             self.graph_nav_pose_transform_broadcaster.sendTransform(seed_t_body_trans_msg)
         except Exception as e:
@@ -767,7 +767,7 @@ class SpotROS:
                 self.node.get_logger().warning(response.message)
                 return response
             else:
-                seed_t_body_msg = bosdyn_localization_to_pose_msg(
+                seed_t_body_msg = conv.bosdyn_localization_to_pose_msg(
                     state.localization,
                     self.spot_wrapper.robotToLocalTime,
                     in_seed_frame=True,
