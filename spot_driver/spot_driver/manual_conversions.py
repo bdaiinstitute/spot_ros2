@@ -171,7 +171,7 @@ def bosdyn_localization_to_pose_msg(
 
 def bosdyn_pose_to_msg(frame_t_pose: SE3Pose,
                        frame: str,
-                       local_stamp: rclpy.time.Time = None):
+                       local_stamp: Time = None):
     """A helper function that converts an SE3Pose object into a ROS PoseStamped
     message.  Note that the user is expected to pass in the local timestamp for
     the resulting message.
@@ -179,8 +179,7 @@ def bosdyn_pose_to_msg(frame_t_pose: SE3Pose,
     Args:
         frame_t_pose: SE3Pose in frame 'frame'
         frame: the name of the frame the pose is with respect to
-        robot_stamp: google.protobuf.Timestamp associated with the pose
-        robot_to_local_time: Function to convert the robot time to the local time
+        local_stamp: the local timestamp for the returned message.
     Returns:
         PoseStamped message: google.protobuf.Timestamp
 
@@ -201,7 +200,7 @@ def bosdyn_pose_to_msg(frame_t_pose: SE3Pose,
 def bosdyn_pose_to_tf(frame_t_pose: SE3Pose,
                       frame: str,
                       child_frame: str,
-                      local_stamp: rclpy.time.Time = None):
+                      local_stamp: Time = None):
     """A helper function that converts an SE3Pose object into a
     ROS TransformStamped object. The transform would be between
     frame->child_frame.  Note that the user is expected
