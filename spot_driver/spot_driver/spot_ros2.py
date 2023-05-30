@@ -41,6 +41,7 @@ from spot_msgs.srv import ListWorldObjects
 from spot_msgs.srv import SetLocomotion
 from spot_msgs.srv import ClearBehaviorFault
 from spot_msgs.srv import SetVelocity
+from spot_msgs.srv import ExecuteDance
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -323,7 +324,7 @@ class SpotROS:
 
     def handle_execute_dance(self, request, response):
             """ROS service handler for uploading and executing dance"""
-            response.success, response.message = self.spot_wrapper.execute_dance()
+            response.success, response.message = self.spot_wrapper.execute_dance(request.upload_filepath)
             return response
 
     def handle_stair_mode(self, request, response):
@@ -1255,16 +1256,12 @@ def main(args=None):
                                                                spot_ros.handle_clear_behavior_fault,
                                                                request, response),
             callback_group=spot_ros.group)
-        
         node.create_service(
-            Trigger,
-            "execute_dance",
-            lambda request, response: spot_ros.service_wrapper(
-                "execute_dance", spot_ros.handle_execute_dance, request, response
-            ),
-            callback_group=spot_ros.group,
-        )
-
+            ExecuteDance, "execute_dance",
+            lambda request, response: spot_ros.service_wrapper("execute_dance", 
+                                                               spot_ros.handle_execute_dance, 
+                                                               request, response),
+            callback_group=spot_ros.group)
         node.create_service(
             ListGraph, "list_graph",
             lambda request, response: spot_ros.service_wrapper('list_graph', spot_ros.handle_list_graph,
