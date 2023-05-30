@@ -13,7 +13,7 @@ import tf2_py as tf2
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import CompressedImage, Image, CameraInfo
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import PoseWithCovariance
+from geometry_msgs.msg import PoseWithCovariance, PoseStamped
 from geometry_msgs.msg import TwistWithCovariance
 from geometry_msgs.msg import TwistWithCovarianceStamped
 from nav_msgs.msg import Odometry
@@ -29,6 +29,8 @@ from spot_msgs.msg import SystemFault, SystemFaultState
 from spot_msgs.msg import BatteryState, BatteryStateArray
 
 from bosdyn.api import image_pb2
+from bosdyn.api.graph_nav import (graph_nav_pb2, graph_nav_service_pb2,
+                                  graph_nav_service_pb2_grpc, map_pb2, nav_pb2)
 from bosdyn.client.math_helpers import SE3Pose
 from bosdyn.client.frame_helpers import get_odom_tform_body, get_vision_tform_body, get_a_tform_b
 from google.protobuf.timestamp_pb2 import Timestamp
