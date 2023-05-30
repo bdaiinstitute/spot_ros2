@@ -319,6 +319,12 @@ class SpotROS:
         """ROS service handler for clearing behavior faults"""
         response.success, response.message = self.spot_wrapper.clear_behavior_fault(request.id)
         return response
+    
+
+    def handle_execute_dance(self, request, response):
+            """ROS service handler for uploading and executing dance"""
+            response.success, response.message = self.spot_wrapper.execute_dance()
+            return response
 
     def handle_stair_mode(self, request, response):
         """ROS service handler to set a stair mode to the robot."""
@@ -1249,6 +1255,15 @@ def main(args=None):
                                                                spot_ros.handle_clear_behavior_fault,
                                                                request, response),
             callback_group=spot_ros.group)
+        
+        node.create_service(
+            Trigger,
+            "execute_dance",
+            lambda request, response: spot_ros.service_wrapper(
+                "execute_dance", spot_ros.handle_execute_dance, request, response
+            ),
+            callback_group=spot_ros.group,
+        )
 
         node.create_service(
             ListGraph, "list_graph",
