@@ -13,7 +13,7 @@ import tf2_py as tf2
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import CompressedImage, Image, CameraInfo
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import PoseWithCovariance
+from geometry_msgs.msg import PoseWithCovariance, PoseStamped
 from geometry_msgs.msg import TwistWithCovariance
 from geometry_msgs.msg import TwistWithCovarianceStamped
 from nav_msgs.msg import Odometry

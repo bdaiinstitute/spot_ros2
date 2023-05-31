@@ -1,0 +1,4 @@
+# Clears the graph on Spot's GraphNav server
+---
+bool success
+string message
