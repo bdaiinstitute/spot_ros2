@@ -47,6 +47,7 @@ from spot_msgs.srv import GraphNavUploadGraph, GraphNavClearGraph, GraphNavSetLo
 # Release
 from .ros_helpers import *
 from spot_wrapper.wrapper import SpotWrapper, CameraSource
+from spot_wrapper.spot_dancing import SpotDancing
 
 ### Debug
 # from ros_helpers import *
@@ -87,6 +88,7 @@ class SpotROS:
 
     def __init__(self):
         self.spot_wrapper: SpotWrapper = None
+        self.spot_dancing: SpotDancing = None
         self.node = None
         self._printed_once = False
 
@@ -343,7 +345,7 @@ class SpotROS:
     
     def handle_execute_dance(self, request, response):
         """ROS service handler for uploading and executing dance."""
-        response.success, response.message = self.spot_wrapper.execute_dance(request.upload_filepath)
+        response.success, response.message = self.spot_dancing.execute_dance(request.upload_filepath)
         return response 
 
     def handle_stair_mode(self, request, response):
@@ -1214,6 +1216,7 @@ def main(args=None):
         name_str = ' for ' + spot_ros.name
     node.get_logger().info("Starting ROS driver for Spot" + name_str)
     ############## testing with Robot
+
     if spot_ros.name == MOCK_HOSTNAME:
         spot_ros.spot_wrapper = None
     else:
@@ -1223,6 +1226,8 @@ def main(args=None):
                                             spot_ros.get_lease_on_action, spot_ros.continually_try_stand)
         if not spot_ros.spot_wrapper.is_valid:
             return
+        
+        spot_ros.spot_dancing = SpotDancing(spot_ros.ip, spot_ros.name)
 
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
         has_arm = spot_ros.spot_wrapper.has_arm()
