@@ -1227,7 +1227,7 @@ def main(args=None):
         if not spot_ros.spot_wrapper.is_valid:
             return
         
-        spot_ros.spot_dancing = SpotDancing(spot_ros.ip, spot_ros.name)
+        spot_ros.spot_dancing = SpotDancing(spot_ros.ip, spot_ros.name, spot_ros.username, spot_ros.password, spot_ros.wrapper_logger)
 
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
         has_arm = spot_ros.spot_wrapper.has_arm()
