@@ -343,7 +343,7 @@ class SpotROS:
     
     def handle_execute_dance(self, request, response):
         """ROS service handler for uploading and executing dance."""
-        response.success, response.message = self.spot_wrapper._spot_dance.execute_dance(request.upload_filepath)
+        response.success, response.message = self.spot_wrapper.execute_dance(request.upload_filepath)
         return response 
 
     def handle_stair_mode(self, request, response):
