@@ -1,0 +1,4 @@
+---
+bool success 
+str message
+string[] dances

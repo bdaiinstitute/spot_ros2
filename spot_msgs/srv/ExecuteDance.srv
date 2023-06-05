@@ -1,4 +1,4 @@
-string upload_filepath
+string data
 ---
 bool success 
 string message

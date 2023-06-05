@@ -1,0 +1,4 @@
+---
+bool success 
+str moves
+string[] moves
