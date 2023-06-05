@@ -40,6 +40,7 @@ from spot_msgs.srv import ListWorldObjects
 from spot_msgs.srv import SetLocomotion
 from spot_msgs.srv import ClearBehaviorFault
 from spot_msgs.srv import SetVelocity
+from spot_msgs.srv import ExecuteDance
 from spot_msgs.srv import GraphNavUploadGraph, GraphNavClearGraph, GraphNavSetLocalization, GraphNavGetLocalizationPose
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
@@ -339,6 +340,11 @@ class SpotROS:
         """ROS service handler for clearing behavior faults"""
         response.success, response.message = self.spot_wrapper.clear_behavior_fault(request.id)
         return response
+    
+    def handle_execute_dance(self, request, response):
+        """ROS service handler for uploading and executing dance."""
+        response.success, response.message = self.spot_wrapper.execute_dance(request.upload_filepath)
+        return response 
 
     def handle_stair_mode(self, request, response):
         """ROS service handler to set a stair mode to the robot."""
@@ -1208,6 +1214,7 @@ def main(args=None):
         name_str = ' for ' + spot_ros.name
     node.get_logger().info("Starting ROS driver for Spot" + name_str)
     ############## testing with Robot
+
     if spot_ros.name == MOCK_HOSTNAME:
         spot_ros.spot_wrapper = None
     else:
@@ -1217,7 +1224,7 @@ def main(args=None):
                                             spot_ros.get_lease_on_action, spot_ros.continually_try_stand)
         if not spot_ros.spot_wrapper.is_valid:
             return
-
+        
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
         has_arm = spot_ros.spot_wrapper.has_arm()
         if has_arm:
@@ -1367,7 +1374,12 @@ def main(args=None):
                                                                spot_ros.handle_clear_behavior_fault,
                                                                request, response),
             callback_group=spot_ros.group)
-
+        node.create_service(
+            ExecuteDance, "execute_dance",
+            lambda request, response: spot_ros.service_wrapper('execute_dance', 
+                                                               spot_ros.handle_execute_dance, 
+                                                               request, response),
+            callback_group=spot_ros.group)
         node.create_service(
             ListGraph, "list_graph",
             lambda request, response: spot_ros.service_wrapper('list_graph', spot_ros.handle_list_graph,
