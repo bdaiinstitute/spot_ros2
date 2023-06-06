@@ -154,7 +154,7 @@ def _create_image_msg(data: image_pb2.ImageResponse, robot_to_local_time: Callab
     # JPEG format
     if data.shot.image.format == image_pb2.Image.FORMAT_JPEG:
         cv2_image = cv2.imdecode(np.frombuffer(data.shot.image.data, dtype=np.uint8), -1)
-        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding='bgr8')
+        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding='passthrough')
         image_msg.header.stamp = stamp
         image_msg.header.frame_id = frame_id
 
@@ -353,7 +353,7 @@ def GetOdomFromState(state, spot_wrapper, use_vision=True):
     local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
     odom_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     if use_vision == True:
-        odom_msg.header.frame_id = spot_wrapper.frame_prefix + 'vision'
+        odom_msg.header.frame_id = spot_wrapper.frame_prefix + '"vision'
         tform_body = get_vision_tform_body(state.kinematic_state.transforms_snapshot)
     else:
         odom_msg.header.frame_id = spot_wrapper.frame_prefix + 'odom'
@@ -399,6 +399,8 @@ def GetTFFromState(state, spot_wrapper, inverse_target_frame):
         TFMessage message
     """
     tf_msg = TFMessage()
+    # spot_wrapper.logger.info('updating tf stuff')
+    # spot_wrapper.logger.info('Special frame name: {}'.format(inverse_target_frame))
 
     for frame_name in state.kinematic_state.transforms_snapshot.child_to_parent_edge_map:
         if state.kinematic_state.transforms_snapshot.child_to_parent_edge_map.get(
@@ -410,6 +412,7 @@ def GetTFFromState(state, spot_wrapper, inverse_target_frame):
                     state.kinematic_state.acquisition_timestamp)
                 tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
                 if inverse_target_frame == frame_name:
+                    spot_wrapper.logger.info('Publishing transform {} to {}'.format(transform.parent_frame_name, frame_name))
                     geo_tform_inversed = SE3Pose.from_obj(transform.parent_tform_child).inverse()
                     new_tf = populateTransformStamped(tf_time,
                                                       frame_name,
