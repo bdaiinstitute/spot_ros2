@@ -361,7 +361,7 @@ class SpotROS:
 
     def handle_upload_animation(self, request, response):
         """ROS service handler for uploading an animation."""
-        response.success, response.messsage = self.spot_wrapper.upload_animation(request.animation_file_content)
+        response.success, response.message = self.spot_wrapper.upload_animation(request.animation_file_content)
         return response
 
     def handle_stair_mode(self, request, response):
