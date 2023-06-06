@@ -55,6 +55,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetLocomotion.srv"
   "srv/SetVelocity.srv"
   "srv/ExecuteDance.srv"
+  "srv/ListAllDances.srv"
+  "srv/ListAllMoves.srv"
   "srv/ClearBehaviorFault.srv"
   "srv/GraphNavUploadGraph.srv"
   "srv/GraphNavClearGraph.srv"
