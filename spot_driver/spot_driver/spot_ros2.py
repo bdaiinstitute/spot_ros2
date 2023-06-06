@@ -4,8 +4,7 @@ from rclpy.action import ActionServer
 from rclpy.impl import rcutils_logger
 
 from std_srvs.srv import Trigger, SetBool
-from geometry_msgs.msg import Twist, Pose
-
+from geometry_msgs.msg import Twist, Pose, PoseStamped
 
 from bosdyn.api import geometry_pb2, trajectory_pb2, robot_command_pb2, world_object_pb2, manipulation_api_pb2
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
@@ -41,6 +40,8 @@ from spot_msgs.srv import ListWorldObjects
 from spot_msgs.srv import SetLocomotion
 from spot_msgs.srv import ClearBehaviorFault
 from spot_msgs.srv import SetVelocity
+from spot_msgs.srv import ExecuteDance
+from spot_msgs.srv import GraphNavUploadGraph, GraphNavClearGraph, GraphNavSetLocalization, GraphNavGetLocalizationPose
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -55,6 +56,7 @@ import threading
 
 import signal
 import sys
+import traceback
 
 MAX_DURATION = 1e6
 MOCK_HOSTNAME = "Mock_spot"
@@ -210,6 +212,25 @@ class SpotROS:
             if len(tf_msg.transforms) > 0:
                 self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
 
+    def publish_graph_nav_pose_callback(self):
+        try:
+            state = self.spot_wrapper._graph_nav_client.get_localization_state()
+            if not state.localization.waypoint_id:
+                self.node.get_logger().warning("robot is not localized; Please upload graph and localize.")
+                return
+
+            seed_t_body_msg, seed_t_body_trans_msg =\
+                conv.bosdyn_localization_to_pose_msg(state.localization,
+                                                     self.spot_wrapper.robotToLocalTime,
+                                                     in_seed_frame=True,
+                                                     seed_frame=self.graph_nav_seed_frame,
+                                                     body_frame=self.tf_name_graph_nav_body,
+                                                     return_tf=True)
+            self.graph_nav_pose_pub.publish(seed_t_body_msg)
+            self.graph_nav_pose_transform_broadcaster.sendTransform(seed_t_body_trans_msg)
+        except Exception as e:
+            self.node.get_logger().error(f"Exception: {e} \n {traceback.format_exc()}")
+
     def publish_camera_images_callback(self):
         result = self.spot_wrapper.get_images_by_cameras(
             [CameraSource(camera_name, ['visual']) for camera_name in self.cameras_used.value])
@@ -319,6 +340,11 @@ class SpotROS:
         """ROS service handler for clearing behavior faults"""
         response.success, response.message = self.spot_wrapper.clear_behavior_fault(request.id)
         return response
+    
+    def handle_execute_dance(self, request, response):
+        """ROS service handler for uploading and executing dance."""
+        response.success, response.message = self.spot_wrapper.execute_dance(request.upload_filepath)
+        return response 
 
     def handle_stair_mode(self, request, response):
         """ROS service handler to set a stair mode to the robot."""
@@ -794,7 +820,7 @@ class SpotROS:
         if not self.spot_wrapper:
             self.node.get_logger().info('Mock mode, received command vel ' + str(data))
             return
-        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z)
+        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z, self.cmd_duration)
 
     def bodyPoseCallback(self, data):
         """Callback for cmd_vel command"""
@@ -815,6 +841,82 @@ class SpotROS:
         mobility_params = self.spot_wrapper.get_mobility_params()
         mobility_params.body_control.CopyFrom(body_control)
         self.spot_wrapper.set_mobility_params(mobility_params)
+
+    def handle_graph_nav_get_localization_pose(self, request, response):
+        try:
+            state = self.spot_wrapper._graph_nav_client.get_localization_state()
+            if not state.localization.waypoint_id:
+                response.success = False
+                response.message = "The robot is currently not localized to the map; Please localize."
+                self.node.get_logger().warning(response.message)
+                return response
+            else:
+                seed_t_body_msg = conv.bosdyn_localization_to_pose_msg(
+                    state.localization,
+                    self.spot_wrapper.robotToLocalTime,
+                    in_seed_frame=True,
+                    seed_frame=self.graph_nav_seed_frame,
+                    body_frame=self.tf_name_graph_nav_body,
+                    return_tf=False)
+                response.success = True
+                response.message = "Success"
+                response.pose = seed_t_body_msg
+        except Exception as e:
+            self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Exception Error:{e}"
+        if response.success:
+            self.node.get_logger().info(f"GraphNav localization pose received")
+        return response
+
+    def handle_graph_nav_set_localization(self, request, response):
+        try:
+            if request.method == "fiducial":
+                self.spot_wrapper._set_initial_localization_fiducial()
+                response.success = True
+                response.message = "Success"
+            elif request.method == "waypoint":
+                self.spot_wrapper._set_initial_localization_waypoint([request.waypoint_id])
+                response.success = True
+                response.message = "Success"
+            else:
+                response.success = False
+                response.message = f"Invalid localization method {request.method}."\
+                    "Must be 'fiducial' or 'waypoint'"
+                raise Exception(response.message)
+        except Exception as e:
+            self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Exception Error:{e}"
+        if response.success:
+            self.node.get_logger().info(f"Successfully set GraphNav localization. Method: {request.method}")
+        return response
+
+    def handle_graph_nav_upload_graph(self, request, response):
+        try:
+            self.node.get_logger().info(f"Uploading GraphNav map: {request.upload_filepath}")
+            self.spot_wrapper._upload_graph_and_snapshots(request.upload_filepath)
+            self.node.get_logger().info(f"Uploaded")
+            response.success = True
+            response.message = "Success"
+        except Exception as e:
+            self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Exception Error:{e}"
+        return response
+
+    def handle_graph_nav_clear_graph(self, request, response):
+        try:
+            self.node.get_logger().info(f"Clearing graph")
+            self.spot_wrapper._clear_graph()
+            self.node.get_logger().info(f"Cleared")
+            response.success = True
+            response.message = "Success"
+        except Exception as e:
+            self.node.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Exception Error:{e}"
+        return response
 
     def handle_list_graph(self, request, response):
         """ROS service handler for listing graph_nav waypoint_ids"""
@@ -981,7 +1083,6 @@ class SpotROS:
                 self.node.get_logger().error('Error:{}'.format(e))
                 pass
             self.mobility_params_pub.publish(mobility_params_msg)
-            self.node_rate.sleep()
 
 
 def main(args=None):
@@ -1006,6 +1107,7 @@ def main(args=None):
     spot_ros.rgb_callback_group = MutuallyExclusiveCallbackGroup()
     spot_ros.depth_callback_group = MutuallyExclusiveCallbackGroup()
     spot_ros.depth_registered_callback_group = MutuallyExclusiveCallbackGroup()
+    spot_ros.graph_nav_callback_group = MutuallyExclusiveCallbackGroup()
     rate = node.create_rate(100)
     spot_ros.node_rate = rate
 
@@ -1018,6 +1120,7 @@ def main(args=None):
     spot_ros.rates['front_image'] = 10.0
     spot_ros.rates['side_image'] = 10.0
     spot_ros.rates['rear_image'] = 10.0
+    spot_ros.rates['graph_nav_pose'] = 10.0
 
     node.declare_parameter('auto_claim', False)
     node.declare_parameter('auto_power_on', False)
@@ -1029,10 +1132,16 @@ def main(args=None):
 
     node.declare_parameter('deadzone', 0.05)
     node.declare_parameter('estop_timeout', 9.0)
+    node.declare_parameter('async_tasks_rate', 10)
+    node.declare_parameter('cmd_duration', 0.125)
     node.declare_parameter('start_estop', False)
     node.declare_parameter('publish_rgb', True)
     node.declare_parameter('publish_depth', True)
     node.declare_parameter('publish_depth_registered', False)
+
+    node.declare_parameter('publish_graph_nav_pose', False)
+    node.declare_parameter('graph_nav_seed_frame', "graph_nav_map")
+
     node.declare_parameter('spot_name', '')
 
     spot_ros.auto_claim = node.get_parameter('auto_claim')
@@ -1048,6 +1157,9 @@ def main(args=None):
     spot_ros.publish_depth = node.get_parameter('publish_depth')
     spot_ros.publish_depth_registered = node.get_parameter('publish_depth_registered')
 
+    spot_ros.publish_graph_nav_pose = node.get_parameter('publish_graph_nav_pose')
+    spot_ros.graph_nav_seed_frame = node.get_parameter('graph_nav_seed_frame').value
+
     # This is only done from parameter because it should be passed by the launch file
     spot_ros.name = node.get_parameter('spot_name').value
     if not spot_ros.name:
@@ -1055,6 +1167,8 @@ def main(args=None):
 
     spot_ros.motion_deadzone = node.get_parameter('deadzone')
     spot_ros.estop_timeout = node.get_parameter('estop_timeout')
+    spot_ros.async_tasks_rate = node.get_parameter('async_tasks_rate').value
+    spot_ros.cmd_duration = node.get_parameter('cmd_duration').value
 
     spot_ros.username = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", node, "username", "user")
     spot_ros.password = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", node, "password", "password")
@@ -1087,6 +1201,8 @@ def main(args=None):
                                 + frame_prefix + '"vision".')
         return
 
+    spot_ros.tf_name_graph_nav_body = frame_prefix + 'body'
+
     # logger for spot wrapper
     name_with_dot = ''
     if spot_ros.name is not None:
@@ -1098,6 +1214,7 @@ def main(args=None):
         name_str = ' for ' + spot_ros.name
     node.get_logger().info("Starting ROS driver for Spot" + name_str)
     ############## testing with Robot
+
     if spot_ros.name == MOCK_HOSTNAME:
         spot_ros.spot_wrapper = None
     else:
@@ -1107,7 +1224,7 @@ def main(args=None):
                                             spot_ros.get_lease_on_action, spot_ros.continually_try_stand)
         if not spot_ros.spot_wrapper.is_valid:
             return
-
+        
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
         has_arm = spot_ros.spot_wrapper.has_arm()
         if has_arm:
@@ -1147,6 +1264,17 @@ def main(args=None):
                 spot_ros.publish_depth_registered_images_callback,
                 callback_group=spot_ros.depth_registered_callback_group,
             )
+
+        if spot_ros.publish_graph_nav_pose.value:
+            # graph nav pose will be published both on a topic
+            # and as a TF transform from graph_nav_map to body.
+            spot_ros.graph_nav_pose_pub = node.create_publisher(PoseStamped, f"graph_nav/body_pose", 1)
+            spot_ros.graph_nav_pose_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(node)
+
+            node.create_timer(
+                1 / spot_ros.rates['graph_nav_pose'],
+                spot_ros.publish_graph_nav_pose_callback,
+                callback_group=spot_ros.graph_nav_callback_group)
 
         node.declare_parameter("has_arm", has_arm)
 
@@ -1246,7 +1374,12 @@ def main(args=None):
                                                                spot_ros.handle_clear_behavior_fault,
                                                                request, response),
             callback_group=spot_ros.group)
-
+        node.create_service(
+            ExecuteDance, "execute_dance",
+            lambda request, response: spot_ros.service_wrapper('execute_dance', 
+                                                               spot_ros.handle_execute_dance, 
+                                                               request, response),
+            callback_group=spot_ros.group)
         node.create_service(
             ListGraph, "list_graph",
             lambda request, response: spot_ros.service_wrapper('list_graph', spot_ros.handle_list_graph,
@@ -1256,6 +1389,22 @@ def main(args=None):
         # This doesn't use the service wrapper because it's not a trigger and we want different mock responses
         node.create_service(
             ListWorldObjects, "list_world_objects", spot_ros.handle_list_world_objects)
+
+        node.create_service(
+            GraphNavUploadGraph, "graph_nav_upload_graph", spot_ros.handle_graph_nav_upload_graph,
+            callback_group=spot_ros.group)
+
+        node.create_service(
+            GraphNavClearGraph, "graph_nav_clear_graph", spot_ros.handle_graph_nav_clear_graph,
+            callback_group=spot_ros.group)
+
+        node.create_service(
+            GraphNavGetLocalizationPose, "graph_nav_get_localization_pose", spot_ros.handle_graph_nav_get_localization_pose,
+            callback_group=spot_ros.group)
+
+        node.create_service(
+            GraphNavSetLocalization, "graph_nav_set_localization", spot_ros.handle_graph_nav_set_localization,
+            callback_group=spot_ros.group)
 
         spot_ros.navigate_as = ActionServer(node, NavigateTo, 'navigate_to', spot_ros.handle_navigate_to,
                                             callback_group=spot_ros.group)
@@ -1290,7 +1439,7 @@ def main(args=None):
                 time.sleep(0.5)
             print('Found estop!', flush=True)
 
-        node.create_timer(0.1, spot_ros.step, callback_group=spot_ros.group)
+        node.create_timer(1/spot_ros.async_tasks_rate, spot_ros.step, callback_group=spot_ros.group)
 
         executor = MultiThreadedExecutor(num_threads=8)
         executor.add_node(node)
