@@ -5,7 +5,7 @@ import time
 import traceback
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, TypeVar
 
 import builtin_interfaces.msg
 import rclpy
@@ -87,7 +87,7 @@ from .ros_helpers import (
     get_tf_from_state,
     get_tf_from_world_objects,
     get_wifi_from_state,
-    populate_transform_stamped,
+    populate_transform_stamped, get_behavior_faults_from_state,
 )
 
 MAX_DURATION = 1e6
@@ -97,16 +97,22 @@ COLOR_GREEN = "\33[32m"
 COLOR_YELLOW = "\33[33m"
 
 
-@dataclass
-class Request:
-    id: str
-    data: Any
-
-
-@dataclass
-class Response:
-    message: str
-    success: bool
+# @dataclass
+# class Request:
+#     id: str
+#     data: Any
+#
+#
+# @dataclass
+# class Response:
+#     message: str
+#     success: bool
+# The specific Srv is created by the .srv file
+Srv = TypeVar("Srv")
+Srv_Request = TypeVar("Srv_Request")
+Srv_Response = TypeVar("Srv_Response")
+Srv.Request = Srv_Request  # type: ignore
+Srv.Response = Srv_Response  # type: ignore
 
 
 class GoalResponse(Enum):
@@ -588,8 +594,8 @@ class SpotROS(Node):
 
             self.create_timer(1 / self.async_tasks_rate, self.step, callback_group=self.group)
 
-            self.executor = MultiThreadedExecutor(num_threads=8)
-            self.executor.add_node(self)
+            self.mt_executor = MultiThreadedExecutor(num_threads=8)
+            self.mt_executor.add_node(self)
 
             if self.spot_wrapper is not None and self.auto_claim.value:
                 self.spot_wrapper.claim()
@@ -601,11 +607,11 @@ class SpotROS(Node):
     def spin(self) -> None:
         self.get_logger().info("Spinning ros2_driver")
         try:
-            self.executor.spin()
+            self.mt_executor.spin()
         except KeyboardInterrupt:
             pass
 
-        self.executor.shutdown()
+        self.mt_executor.shutdown()
 
     def robot_state_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new robot state data.
@@ -664,7 +670,7 @@ class SpotROS(Node):
             self.system_faults_pub.publish(system_fault_state_msg)
 
             # Behavior Faults #
-            behavior_fault_state_msg = get_system_faults_from_state(state, self.spot_wrapper)
+            behavior_fault_state_msg = get_behavior_faults_from_state(state, self.spot_wrapper)
             self.behavior_faults_pub.publish(behavior_fault_state_msg)
 
     def metrics_callback(self, results: Any) -> None:
@@ -816,15 +822,15 @@ class SpotROS(Node):
             self.populate_camera_static_transforms(image_entry.image_response)
 
     def service_wrapper(
-        self, name: str, handler: Callable[[Request, Response], Response], request: Request, response: Response
-    ) -> Response:
+        self, name: str, handler: Callable[[Srv.Request, Srv.Response], Trigger.Response], request: Srv.Request, response: Srv.Response
+    ) -> Trigger.Response:
         if self.spot_wrapper is None:
             self.get_logger().info(f"Mock mode: service {name} successfully called with request {request}")
             response.success = True
             return response
         return handler(request, response)
 
-    def handle_claim(self, request: Request, response: Response) -> Response:
+    def handle_claim(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the claim service"""
         if self.spot_wrapper is None:
             response.success = False
@@ -833,7 +839,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.claim()
         return response
 
-    def handle_release(self, request: Request, response: Response) -> Response:
+    def handle_release(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the release service"""
         if self.spot_wrapper is None:
             response.success = False
@@ -842,7 +848,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.release()
         return response
 
-    def handle_stop(self, request: Request, response: Response) -> Response:
+    def handle_stop(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the stop service"""
         if self.spot_wrapper is None:
             response.success = False
@@ -851,7 +857,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.stop()
         return response
 
-    def handle_self_right(self, request: Request, response: Response) -> Response:
+    def handle_self_right(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the self-right service"""
         if self.spot_wrapper is None:
             response.success = False
@@ -860,7 +866,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.self_right()
         return response
 
-    def handle_sit(self, request: Request, response: Response) -> Response:
+    def handle_sit(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the sit service"""
         if self.spot_wrapper is None:
             response.success = False
@@ -869,7 +875,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.sit()
         return response
 
-    def handle_stand(self, request: Request, response: Response) -> Response:
+    def handle_stand(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the stand service"""
         if self.spot_wrapper is None:
             response.success = False
@@ -878,7 +884,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.stand()
         return response
 
-    def handle_rollover(self, request: Request, response: Response) -> Response:
+    def handle_rollover(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the rollover service"""
         if self.spot_wrapper is None:
             response.success = False
@@ -887,7 +893,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.battery_change_pose()
         return response
 
-    def handle_power_on(self, request: Request, response: Response) -> Response:
+    def handle_power_on(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the power-on service"""
         if self.spot_wrapper is None:
             response.success = False
@@ -896,7 +902,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.power_on()
         return response
 
-    def handle_safe_power_off(self, request: Request, response: Response) -> Response:
+    def handle_safe_power_off(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the safe-power-off service"""
         if self.spot_wrapper is None:
             response.success = False
@@ -905,7 +911,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.safe_power_off()
         return response
 
-    def handle_estop_hard(self, request: Request, response: Response) -> Response:
+    def handle_estop_hard(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to hard-eStop the robot.  The robot will immediately cut power to the motors"""
         if self.spot_wrapper is None:
             response.success = False
@@ -914,7 +920,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.assertEStop(True)
         return response
 
-    def handle_estop_soft(self, request: Request, response: Response) -> Response:
+    def handle_estop_soft(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to soft-eStop the robot.  The robot will try to settle on the ground before cutting
         power to the motors"""
         if self.spot_wrapper is None:
@@ -924,7 +930,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.assertEStop(False)
         return response
 
-    def handle_estop_disengage(self, request: Request, response: Response) -> Response:
+    def handle_estop_disengage(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to disengage the eStop on the robot."""
         if self.spot_wrapper is None:
             response.success = False
@@ -955,7 +961,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.execute_dance(request.upload_filepath)
         return response
 
-    def handle_stair_mode(self, request: Request, response: Response) -> Response:
+    def handle_stair_mode(self, request: SetBool.Request, response: SetBool.Response) -> SetBool.Response:
         """ROS service handler to set a stair mode to the robot."""
         if self.spot_wrapper is None:
             response.success = False
@@ -1286,7 +1292,7 @@ class SpotROS(Node):
         proto_command = robot_command_pb2.RobotCommand()
         conv.convert_bosdyn_msgs_robot_command_to_proto(ros_command, proto_command)
         self._wait_for_goal = None
-        if not self.spot_wrapper:
+        if self.spot_wrapper is None:
             self._wait_for_goal = WaitForGoal(self.get_clock(), 2.0)
             goal_id = None
         else:
@@ -1295,7 +1301,7 @@ class SpotROS(Node):
                 raise Exception(err_msg)
 
         self.get_logger().info("Robot now executing goal " + str(goal_id))
-        # The command is non-blocking but we need to keep this function up in order to interrupt if a
+        # The command is non-blocking, but we need to keep this function up in order to interrupt if a
         # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
         # monitor whether the timeout_cb has already aborted the command
         feedback = None
@@ -1303,9 +1309,10 @@ class SpotROS(Node):
         while (
             rclpy.ok()
             and not goal_handle.is_cancel_requested
-            and not self._goal_complete(feedback)
+            and self._goal_complete(feedback) == GoalResponse.IN_PROGRESS
             and goal_handle.is_active
         ):
+            print(".")
             feedback = self._get_robot_command_feedback(goal_id)
             feedback_msg = RobotCommand.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
@@ -1316,12 +1323,13 @@ class SpotROS(Node):
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
+
         result.success = self._goal_complete(feedback) == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
             result.message = "Cancelled"
-            goal_handle.abort()
+            goal_handle.canceled()
         elif not goal_handle.is_active:
             result.success = False
             result.message = "Cancelled"
@@ -1362,7 +1370,7 @@ class SpotROS(Node):
                 raise Exception(err_msg)
 
         self.get_logger().info("Robot now executing goal " + str(goal_id))
-        # The command is non-blocking but we need to keep this function up in order to interrupt if a
+        # The command is non-blocking, but we need to keep this function up in order to interrupt if a
         # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
         # monitor whether the timeout_cb has already aborted the command
         feedback: Optional[ManipulationApiFeedbackResponse] = None
@@ -1395,7 +1403,7 @@ class SpotROS(Node):
         if goal_handle.is_cancel_requested:
             result.success = False
             result.message = "Cancelled"
-            goal_handle.abort()
+            goal_handle.canceled()
         elif not goal_handle.is_active:
             result.success = False
             result.message = "Cancelled"
@@ -1454,8 +1462,8 @@ class SpotROS(Node):
         command_start_time = self.get_clock().now()
 
         # Abort the action server if cmd_duration is exceeded - the driver stops but does not provide
-        # feedback to indicate this so we monitor it ourselves
-        # The trajectory command is non-blocking but we need to keep this function up in order to
+        # feedback to indicate this, so we monitor it ourselves
+        # The trajectory command is non-blocking, but we need to keep this function up in order to
         # interrupt if a preempt is requested and to return success if/when the robot reaches the goal.
         # Also check the is_active to
         # monitor whether the timeout has already aborted the command
