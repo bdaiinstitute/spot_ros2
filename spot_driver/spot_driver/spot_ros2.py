@@ -1220,8 +1220,8 @@ def main(args=None):
     else:
         spot_ros.spot_wrapper = SpotWrapper(spot_ros.username, spot_ros.password, spot_ros.ip, spot_ros.name,
                                             spot_ros.wrapper_logger, spot_ros.start_estop.value, spot_ros.estop_timeout.value,
-                                            spot_ros.rates, spot_ros.callbacks, spot_ros.use_take_lease,
-                                            spot_ros.get_lease_on_action, spot_ros.continually_try_stand)
+                                            spot_ros.rates, spot_ros.callbacks, spot_ros.use_take_lease.value,
+                                            spot_ros.get_lease_on_action.value, spot_ros.continually_try_stand.value)
         if not spot_ros.spot_wrapper.is_valid:
             return
         
