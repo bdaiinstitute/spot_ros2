@@ -154,7 +154,7 @@ def _create_image_msg(data: image_pb2.ImageResponse, robot_to_local_time: Callab
     # JPEG format
     if data.shot.image.format == image_pb2.Image.FORMAT_JPEG:
         cv2_image = cv2.imdecode(np.frombuffer(data.shot.image.data, dtype=np.uint8), -1)
-        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding='passthrough')
+        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding='bgr8')
         image_msg.header.stamp = stamp
         image_msg.header.frame_id = frame_id
 
