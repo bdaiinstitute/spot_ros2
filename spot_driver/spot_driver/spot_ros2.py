@@ -356,12 +356,13 @@ class SpotROS:
     
     def handle_list_all_moves(self, request, response):
         """ROS service handler for getting list of already uploaded moves."""
-        response.success, response.message, response.dances = self.spot_wrapper.list_all_moves()
+        response.success, response.message, response.moves = self.spot_wrapper.list_all_moves()
         return response 
 
     def handle_upload_animation(self, request, response):
         """ROS service handler for uploading an animation."""
-        response.success, response.message = self.spot_wrapper.upload_animation(request.animation_file_content)
+        response.success, response.message = self.spot_wrapper.upload_animation(request.animation_name,
+                                                                                request.animation_file_content)
         return response
 
     def handle_stair_mode(self, request, response):
