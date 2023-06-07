@@ -5,7 +5,7 @@ import time
 import traceback
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import builtin_interfaces.msg
 import rclpy
@@ -76,6 +76,7 @@ from spot_wrapper.wrapper import CameraSource, SpotWrapper
 from .ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
     get_battery_states_from_state,
+    get_behavior_faults_from_state,
     get_estop_state_from_state,
     get_feet_from_state,
     get_from_env_and_fall_back_to_param,
@@ -87,7 +88,7 @@ from .ros_helpers import (
     get_tf_from_state,
     get_tf_from_world_objects,
     get_wifi_from_state,
-    populate_transform_stamped, get_behavior_faults_from_state,
+    populate_transform_stamped,
 )
 
 MAX_DURATION = 1e6
@@ -97,22 +98,16 @@ COLOR_GREEN = "\33[32m"
 COLOR_YELLOW = "\33[33m"
 
 
-# @dataclass
-# class Request:
-#     id: str
-#     data: Any
-#
-#
-# @dataclass
-# class Response:
-#     message: str
-#     success: bool
-# The specific Srv is created by the .srv file
-Srv = TypeVar("Srv")
-Srv_Request = TypeVar("Srv_Request")
-Srv_Response = TypeVar("Srv_Response")
-Srv.Request = Srv_Request  # type: ignore
-Srv.Response = Srv_Response  # type: ignore
+@dataclass
+class Request:
+    id: str
+    data: Any
+
+
+@dataclass
+class Response:
+    message: str
+    success: bool
 
 
 class GoalResponse(Enum):
@@ -822,8 +817,12 @@ class SpotROS(Node):
             self.populate_camera_static_transforms(image_entry.image_response)
 
     def service_wrapper(
-        self, name: str, handler: Callable[[Srv.Request, Srv.Response], Trigger.Response], request: Srv.Request, response: Srv.Response
-    ) -> Trigger.Response:
+        self,
+        name: str,
+        handler: Callable[[Request, Response], Response],
+        request: Request,
+        response: Response,
+    ) -> Response:
         if self.spot_wrapper is None:
             self.get_logger().info(f"Mock mode: service {name} successfully called with request {request}")
             response.success = True
