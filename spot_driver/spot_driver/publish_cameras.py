@@ -18,7 +18,7 @@ from spot_driver.ros_helpers import get_from_env_and_fall_back_to_param
 from .ros_helpers import bosdyn_data_to_image_and_camera_info_msgs
 
 
-def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str):
+def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str) -> str:
     if camera_source == "back":
         if camera_type == "camera":
             return "back_fisheye_image"
@@ -66,7 +66,7 @@ def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str):
 
 
 class SpotImagePublisher(rclpy.node.Node):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("spot_image_publisher")
         self.declare_parameter("spot_name", "")
         self._spot_name = self.get_parameter("spot_name").value
@@ -149,7 +149,7 @@ class SpotImagePublisher(rclpy.node.Node):
 
         self._image_publisher_timer = self.create_timer(1 / self._image_publish_rate, self.publish_image)
 
-    def robotToLocalTime(self, timestamp: Timestamp) -> Timestamp:
+    def robot_to_local_time(self, timestamp: Timestamp) -> Timestamp:
         """Takes a timestamp and an estimated skew and return seconds and nanoseconds in local time
 
         Args:
@@ -174,7 +174,7 @@ class SpotImagePublisher(rclpy.node.Node):
 
         return rtime
 
-    def publish_image(self):
+    def publish_image(self) -> None:
         start_time = time.time()
         image_responses = self._image_client.get_image(self._image_requests)
         time1 = time.time()
@@ -185,7 +185,7 @@ class SpotImagePublisher(rclpy.node.Node):
 
         for image_response in image_responses:
             image_msg, camera_info_msg = bosdyn_data_to_image_and_camera_info_msgs(
-                image_response, self.robotToLocalTime, self._frame_prefix
+                image_response, self.robot_to_local_time, self._frame_prefix
             )
             self._image_publishers[image_response.source.name].publish(image_msg)
             self._camera_info_publishers[image_response.source.name].publish(camera_info_msg)
@@ -202,4 +202,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    exit(main())
+    main()

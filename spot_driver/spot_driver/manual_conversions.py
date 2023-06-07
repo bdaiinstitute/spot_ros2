@@ -1,9 +1,11 @@
-from typing import Callable
-
-from bosdyn.api.graph_nav import nav_pb2
-from bosdyn.client.math_helpers import Quat, SE3Pose, SE2Pose
+from typing import Any, Callable, Optional, Tuple, Union
 
 import builtin_interfaces.msg
+import google.protobuf.duration_pb2
+import google.protobuf.timestamp_pb2
+from bosdyn.api import geometry_pb2
+from bosdyn.api.graph_nav import nav_pb2
+from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
 from builtin_interfaces.msg import Time
 from geometry_msgs.msg import (
     Point,
@@ -13,9 +15,10 @@ from geometry_msgs.msg import (
     Quaternion,
     Transform,
     TransformStamped,
+    Twist,
     Vector3,
+    Wrench,
 )
-from google.protobuf.timestamp_pb2 import Timestamp
 
 # ROS <-> BOSDYN MATH
 
@@ -63,94 +66,103 @@ def se3_pose_to_ros_transform(se3_pose: SE3Pose) -> Transform:
 # ROS <-> PROTO
 
 
-def convert_builtin_interfaces_duration_to_proto(ros_duration: builtin_interfaces.msg.Duration, proto_duration):
+def convert_builtin_interfaces_duration_to_proto(
+    ros_duration: builtin_interfaces.msg.Duration, proto_duration: google.protobuf.duration_pb2.Duration
+) -> None:
     proto_duration.seconds = ros_duration.sec
     proto_duration.nanos = ros_duration.nanosec
 
 
-def convert_proto_to_builtin_interfaces_duration(proto, ros_msg):
+def convert_proto_to_builtin_interfaces_duration(
+    proto: google.protobuf.duration_pb2.Duration, ros_msg: builtin_interfaces.msg.Duration
+) -> None:
     ros_msg.sec = proto.seconds
     ros_msg.nanosec = proto.nanos
 
 
-def convert_builtin_interfaces_time_to_proto(ros_time, proto_time):
+def convert_builtin_interfaces_time_to_proto(
+    ros_time: Time, proto_time: google.protobuf.timestamp_pb2.Timestamp
+) -> None:
     proto_time.seconds = ros_time.sec
     proto_time.nanos = ros_time.nanosec
 
 
-def convert_proto_to_builtin_interfaces_time(proto, ros_msg):
+def convert_proto_to_builtin_interfaces_time(proto: google.protobuf.timestamp_pb2.Timestamp, ros_msg: Time) -> None:
     ros_msg.sec = proto.seconds
     ros_msg.nanosec = proto.nanos
 
 
-def convert_geometry_msgs_vector3_to_proto(ros_point, proto_point):
+def convert_geometry_msgs_vector3_to_proto(ros_point: Vector3, proto_point: geometry_pb2.Vec3) -> None:
     proto_point.x = ros_point.x
     proto_point.y = ros_point.y
     proto_point.z = ros_point.z
 
 
-def convert_proto_to_geometry_msgs_vector3(proto, ros_msg):
+def convert_proto_to_geometry_msgs_vector3(proto: geometry_pb2.Vec3, ros_msg: Vector3) -> None:
     ros_msg.x = proto.x
     ros_msg.y = proto.y
     ros_msg.z = proto.z
 
 
-def convert_geometry_msgs_quaternion_to_proto(ros_quat, proto_quat):
+def convert_geometry_msgs_quaternion_to_proto(ros_quat: Quaternion, proto_quat: geometry_pb2.Quaternion) -> None:
     proto_quat.w = ros_quat.w
     proto_quat.x = ros_quat.x
     proto_quat.y = ros_quat.y
     proto_quat.z = ros_quat.z
 
 
-def convert_proto_to_geometry_msgs_quaternion(proto, ros_msg):
+def convert_proto_to_geometry_msgs_quaternion(proto: geometry_pb2.Quaternion, ros_msg: Quaternion) -> None:
     ros_msg.w = proto.w
     ros_msg.x = proto.x
     ros_msg.y = proto.y
     ros_msg.z = proto.z
 
 
-def convert_geometry_msgs_pose_to_proto(ros_pose, proto_pose):
+def convert_geometry_msgs_pose_to_proto(ros_pose: Pose, proto_pose: geometry_pb2.SE3Pose) -> None:
     convert_geometry_msgs_vector3_to_proto(ros_pose.position, proto_pose.position)
     convert_geometry_msgs_quaternion_to_proto(ros_pose.orientation, proto_pose.rotation)
 
 
-def convert_proto_to_geometry_msgs_pose(proto, ros_msg):
+def convert_proto_to_geometry_msgs_pose(proto: geometry_pb2.SE3Pose, ros_msg: Pose) -> None:
     convert_proto_to_geometry_msgs_vector3(proto.position, ros_msg.position)
     convert_proto_to_geometry_msgs_quaternion(proto.rotation, ros_msg.orientation)
 
 
-def convert_geometry_msgs_twist_to_proto(ros_twist, proto_twist):
+# Cannot find twist proto
+def convert_geometry_msgs_twist_to_proto(ros_twist: Twist, proto_twist: Any) -> None:
     convert_geometry_msgs_vector3_to_proto(ros_twist.linear, proto_twist.linear)
     convert_geometry_msgs_vector3_to_proto(ros_twist.angular, proto_twist.angular)
 
 
-def convert_proto_to_geometry_msgs_twist(proto, ros_msg):
+# Cannot find twist proto
+def convert_proto_to_geometry_msgs_twist(proto: Any, ros_msg: Twist) -> None:
     convert_proto_to_geometry_msgs_vector3(proto.linear, ros_msg.linear)
     convert_proto_to_geometry_msgs_vector3(proto.angular, ros_msg.angular)
 
 
-def convert_geometry_msgs_wrench_to_proto(ros_msg, proto):
+def convert_geometry_msgs_wrench_to_proto(ros_msg: Wrench, proto: geometry_pb2.Wrench) -> None:
     convert_geometry_msgs_vector3_to_proto(ros_msg.force, proto.force)
     convert_geometry_msgs_vector3_to_proto(ros_msg.torque, proto.torque)
 
 
-def convert_proto_to_geometry_msgs_wrench(proto, ros_msg):
+def convert_proto_to_geometry_msgs_wrench(proto: geometry_pb2.Wrench, ros_msg: Wrench) -> None:
     convert_proto_to_geometry_msgs_vector3(proto.force, ros_msg.force)
     convert_proto_to_geometry_msgs_vector3(proto.torque, ros_msg.torque)
 
 
-def convert_float64_to_proto(ros_msg, proto):
+# Cannot find float64 proto
+def convert_float64_to_proto(ros_msg: float, proto: Any) -> None:
     proto.value = ros_msg
 
 
 def bosdyn_localization_to_pose_msg(
     localization: nav_pb2.Localization,
-    robot_to_local_time: Callable[[Timestamp], Timestamp],
+    robot_to_local_time: Callable[[google.protobuf.timestamp_pb2.Timestamp], google.protobuf.timestamp_pb2.Timestamp],
     in_seed_frame: bool = True,
-    seed_frame: str = None,
-    body_frame: str = None,
+    seed_frame: Optional[str] = None,
+    body_frame: Optional[str] = None,
     return_tf: bool = True,
-):
+) -> Optional[Union[PoseStamped, Tuple[PoseStamped, TransformStamped]]]:
     """Extracts pose from the Localization proto object, and
     return a PoseStamped message and optionally a TransformStamped message.
     If 'in_seed_frame' is True, then the pose would be with respect to the seed
@@ -203,7 +215,7 @@ def bosdyn_localization_to_pose_msg(
         return pose_msg
 
 
-def bosdyn_pose_to_msg(frame_t_pose: SE3Pose, frame: str, local_stamp: Time = None):
+def bosdyn_pose_to_msg(frame_t_pose: SE3Pose, frame: Optional[str], local_stamp: Optional[Time] = None) -> PoseStamped:
     """A helper function that converts an SE3Pose object into a ROS PoseStamped
     message.  Note that the user is expected to pass in the local timestamp for
     the resulting message.
@@ -229,7 +241,9 @@ def bosdyn_pose_to_msg(frame_t_pose: SE3Pose, frame: str, local_stamp: Time = No
     return pose_stamped
 
 
-def bosdyn_pose_to_tf(frame_t_pose: SE3Pose, frame: str, child_frame: str, local_stamp: Time = None):
+def bosdyn_pose_to_tf(
+    frame_t_pose: SE3Pose, frame: Optional[str], child_frame: Optional[str], local_stamp: Optional[Time] = None
+) -> TransformStamped:
     """A helper function that converts an SE3Pose object into a
     ROS TransformStamped object. The transform would be between
     frame->child_frame.  Note that the user is expected

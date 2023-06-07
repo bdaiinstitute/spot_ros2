@@ -1,13 +1,15 @@
 import os
 import time
-from typing import Callable, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import builtin_interfaces.msg
 import cv2
 import numpy as np
 import rclpy
+import rclpy.time
 import tf2_py as tf2
-from bosdyn.api import image_pb2
+import tf2_ros
+from bosdyn.api import image_pb2, robot_state_pb2, world_object_pb2
 from bosdyn.client.frame_helpers import get_a_tform_b, get_odom_tform_body, get_vision_tform_body
 from bosdyn.client.math_helpers import SE3Pose
 from builtin_interfaces.msg import Duration, Time
@@ -19,6 +21,7 @@ from geometry_msgs.msg import (
 )
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
+from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image, JointState
 from tf2_msgs.msg import TFMessage
 
@@ -36,11 +39,13 @@ from spot_msgs.msg import (  # type: ignore
     SystemFaultState,
     WiFiState,
 )
+from spot_wrapper.wrapper import SpotWrapper
 
 try:
     from conversions import ros_transform_to_se3_pose
 except ModuleNotFoundError:
     from .manual_conversions import ros_transform_to_se3_pose
+
 
 friendly_joint_names = {}
 """Dictionary for mapping BD joint names to more friendly names"""
@@ -59,12 +64,13 @@ friendly_joint_names["hr.kn"] = "rear_right_knee"
 cv_bridge = CvBridge()
 
 
-def populateTransformStamped(
-    time: builtin_interfaces.msg.Time, parent_frame: str, child_frame: str, transform: Transform, frame_prefix
-):
+def populate_transform_stamped(
+    tf_time: builtin_interfaces.msg.Time, parent_frame: str, child_frame: str, transform: SE3Pose, frame_prefix: str
+) -> TransformStamped:
     """Populates a TransformStamped message
     Args:
-        time: The time of the transform
+        frame_prefix: The prefix to add to the frames
+        tf_time: The time of the transform
         parent_frame: The parent frame of the transform
         child_frame: The child_frame_id of the transform
         transform: A transform to copy into a StampedTransform object. Should have position (x,y,z) and rotation (x,
@@ -73,7 +79,7 @@ def populateTransformStamped(
         TransformStamped message
     """
     new_tf = TransformStamped()
-    new_tf.header.stamp = time
+    new_tf.header.stamp = tf_time
     new_tf.header.frame_id = parent_frame
     if "/" not in parent_frame:
         new_tf.header.frame_id = frame_prefix + parent_frame
@@ -111,7 +117,7 @@ def populateTransformStamped(
     return new_tf
 
 
-def createDefaulCameraInfo():
+def create_default_camera_info() -> CameraInfo:
     camera_info_msg = CameraInfo()
     camera_info_msg.distortion_model = "plumb_bob"
 
@@ -230,7 +236,7 @@ def bosdyn_data_to_image_and_camera_info_msgs(
     """
     image_msg = _create_image_msg(data, robot_to_local_time, frame_prefix)
 
-    # camera_info_msg = createDefaulCameraInfo(camera_info_msg)
+    # camera_info_msg = create_default_camera_info(camera_info_msg)
     camera_info_msg = CameraInfo()
     camera_info_msg.distortion_model = "plumb_bob"
 
@@ -283,10 +289,10 @@ def bosdyn_data_to_image_and_camera_info_msgs(
     return image_msg, camera_info_msg
 
 
-def GetJointStatesFromState(state, spot_wrapper):
+def get_joint_states_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> JointState:
     """Maps joint state data from robot state proto to ROS JointState message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         JointState message
@@ -303,10 +309,10 @@ def GetJointStatesFromState(state, spot_wrapper):
     return joint_state
 
 
-def GetEStopStateFromState(state, spot_wrapper):
+def get_estop_state_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> EStopStateArray:
     """Maps eStop state data from robot state proto to ROS EStopArray message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         EStopArray message
@@ -325,10 +331,10 @@ def GetEStopStateFromState(state, spot_wrapper):
     return estop_array_msg
 
 
-def GetFeetFromState(state, spot_wrapper):
+def get_feet_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> FootStateArray:
     """Maps foot position state data from robot state proto to ROS FootStateArray message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         FootStateArray message
@@ -345,10 +351,12 @@ def GetFeetFromState(state, spot_wrapper):
     return foot_array_msg
 
 
-def GetOdomTwistFromState(state, spot_wrapper):
+def get_odom_twist_from_state(
+    state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper
+) -> TwistWithCovarianceStamped:
     """Maps odometry data from robot state proto to ROS TwistWithCovarianceStamped message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         TwistWithCovarianceStamped message
@@ -365,10 +373,13 @@ def GetOdomTwistFromState(state, spot_wrapper):
     return twist_odom_msg
 
 
-def GetOdomFromState(state, spot_wrapper, use_vision=True):
+def get_odom_from_state(
+    state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper, use_vision: bool = True
+) -> Odometry:
     """Maps odometry data from robot state proto to ROS Odometry message
     Args:
-        data: Robot State proto
+        use_vision: Add vision frame, else add odom frame
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         Odometry message
@@ -393,15 +404,15 @@ def GetOdomFromState(state, spot_wrapper, use_vision=True):
     pose_odom_msg.pose.orientation.w = tform_body.rotation.w
 
     odom_msg.pose = pose_odom_msg
-    twist_odom_msg = GetOdomTwistFromState(state, spot_wrapper).twist
+    twist_odom_msg = get_odom_twist_from_state(state, spot_wrapper).twist
     odom_msg.twist = twist_odom_msg
     return odom_msg
 
 
-def GetWifiFromState(state, spot_wrapper):
+def get_wifi_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> WiFiState:
     """Maps wireless state data from robot state proto to ROS WiFiState message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         WiFiState message
@@ -415,10 +426,12 @@ def GetWifiFromState(state, spot_wrapper):
     return wifi_msg
 
 
-def GetTFFromState(state, spot_wrapper, inverse_target_frame):
+def get_tf_from_state(
+    state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper, inverse_target_frame: str
+) -> TFMessage:
     """Maps robot link state data from robot state proto to ROS TFMessage message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
         inverse_target_frame: A frame name to be inversed to a parent frame.
     Returns:
@@ -434,11 +447,11 @@ def GetTFFromState(state, spot_wrapper, inverse_target_frame):
                 tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
                 if inverse_target_frame == frame_name:
                     geo_tform_inversed = SE3Pose.from_obj(transform.parent_tform_child).inverse()
-                    new_tf = populateTransformStamped(
+                    new_tf = populate_transform_stamped(
                         tf_time, frame_name, transform.parent_frame_name, geo_tform_inversed, spot_wrapper.frame_prefix
                     )
                 else:
-                    new_tf = populateTransformStamped(
+                    new_tf = populate_transform_stamped(
                         tf_time,
                         transform.parent_frame_name,
                         frame_name,
@@ -452,7 +465,7 @@ def GetTFFromState(state, spot_wrapper, inverse_target_frame):
     return tf_msg
 
 
-def GetFrameNamesAssociatedWithObject(world_object):
+def get_frame_names_associated_with_object(world_object: world_object_pb2.WorldObject) -> List[str]:
     possible_frame_names = [
         world_object.apriltag_properties.frame_name_fiducial,
         world_object.apriltag_properties.frame_name_fiducial_filtered,
@@ -466,27 +479,29 @@ def GetFrameNamesAssociatedWithObject(world_object):
     return frame_names
 
 
-def GetTFFromWorldObjects(world_objects, spot_wrapper, parent_frame):
+def get_tf_from_world_objects(
+    world_objects: List[world_object_pb2.WorldObject], spot_wrapper: SpotWrapper, parent_frame: str
+) -> TFMessage:
     tf_msg = TFMessage()
     for world_object in world_objects:
-        frames = GetFrameNamesAssociatedWithObject(world_object)
+        frames = get_frame_names_associated_with_object(world_object)
         for frame in frames:
             try:
                 spot_parent_frame = parent_frame[parent_frame.rfind("/") + 1 :]
                 transform = get_a_tform_b(world_object.transforms_snapshot, spot_parent_frame, frame)
                 local_time = spot_wrapper.robotToLocalTime(world_object.acquisition_time)
                 tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-                new_tf = populateTransformStamped(tf_time, parent_frame, frame, transform, spot_wrapper.frame_prefix)
+                new_tf = populate_transform_stamped(tf_time, parent_frame, frame, transform, spot_wrapper.frame_prefix)
                 tf_msg.transforms.append(new_tf)
             except Exception as e:
                 spot_wrapper.logger.error("Error: {}".format(e))
     return tf_msg
 
 
-def GetBatteryStatesFromState(state, spot_wrapper):
+def get_battery_states_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> BatteryStateArray:
     """Maps battery state data from robot state proto to ROS BatteryStateArray message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         BatteryStateArray message
@@ -512,10 +527,10 @@ def GetBatteryStatesFromState(state, spot_wrapper):
     return battery_states_array_msg
 
 
-def GetPowerStatesFromState(state, spot_wrapper):
+def get_power_states_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> PowerState:
     """Maps power state data from robot state proto to ROS PowerState message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         PowerState message
@@ -533,7 +548,7 @@ def GetPowerStatesFromState(state, spot_wrapper):
     return power_state_msg
 
 
-def getBehaviorFaults(behavior_faults, spot_wrapper):
+def get_behavior_faults(behavior_faults: List[BehaviorFault], spot_wrapper: SpotWrapper) -> List[BehaviorFault]:
     """Helper function to strip out behavior faults into a list
     Args:
         behavior_faults: List of BehaviorFaults
@@ -555,10 +570,10 @@ def getBehaviorFaults(behavior_faults, spot_wrapper):
     return faults
 
 
-def getSystemFaults(system_faults, spot_wrapper):
+def get_system_faults(system_faults: List[SystemFault], spot_wrapper: SpotWrapper) -> List[SystemFault]:
     """Helper function to strip out system faults into a list
     Args:
-        systen_faults: List of SystemFaults
+        system_faults: List of SystemFaults
         spot_wrapper: A SpotWrapper object
     Returns:
         List of SystemFault messages
@@ -584,34 +599,38 @@ def getSystemFaults(system_faults, spot_wrapper):
     return faults
 
 
-def GetSystemFaultsFromState(state, spot_wrapper):
+def get_system_faults_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> SystemFaultState:
     """Maps system fault data from robot state proto to ROS SystemFaultState message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         SystemFaultState message
     """
     system_fault_state_msg = SystemFaultState()
-    system_fault_state_msg.faults = getSystemFaults(state.system_fault_state.faults, spot_wrapper)
-    system_fault_state_msg.historical_faults = getSystemFaults(state.system_fault_state.historical_faults, spot_wrapper)
+    system_fault_state_msg.faults = get_system_faults(state.system_fault_state.faults, spot_wrapper)
+    system_fault_state_msg.historical_faults = get_system_faults(
+        state.system_fault_state.historical_faults, spot_wrapper
+    )
     return system_fault_state_msg
 
 
-def getBehaviorFaultsFromState(state, spot_wrapper):
+def get_behavior_faults_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> BehaviorFaultState:
     """Maps behavior fault data from robot state proto to ROS BehaviorFaultState message
     Args:
-        data: Robot State proto
+        state: Robot State proto
         spot_wrapper: A SpotWrapper object
     Returns:
         BehaviorFaultState message
     """
     behavior_fault_state_msg = BehaviorFaultState()
-    behavior_fault_state_msg.faults = getBehaviorFaults(state.behavior_fault_state.faults, spot_wrapper)
+    behavior_fault_state_msg.faults = get_behavior_faults(state.behavior_fault_state.faults, spot_wrapper)
     return behavior_fault_state_msg
 
 
-def get_from_env_and_fall_back_to_param(env_name, node, param_name, default_value):
+def get_from_env_and_fall_back_to_param(
+    env_name: str, node: Node, param_name: str, default_value: str
+) -> Optional[str]:
     val = os.environ.get(env_name)
     if val is None:
         node.declare_parameter(param_name, default_value)
@@ -620,7 +639,14 @@ def get_from_env_and_fall_back_to_param(env_name, node, param_name, default_valu
 
 
 # Timeout only works if your tf listener updates in a separate thread!
-def lookup_a_tform_b(tf_buffer, frame_a, frame_b, transform_time=None, timeout=None, wait_for_frames=False):
+def lookup_a_tform_b(
+    tf_buffer: tf2_ros.Buffer,
+    frame_a: str,
+    frame_b: str,
+    transform_time: Optional[rclpy.time.Time] = None,
+    timeout: Optional[float] = None,
+    wait_for_frames: bool = False,
+) -> Optional[SE3Pose]:
     if transform_time is None:
         transform_time = rclpy.time.Time()
     if timeout is None or not wait_for_frames:
@@ -640,3 +666,4 @@ def lookup_a_tform_b(tf_buffer, frame_a, frame_b, transform_time=None, timeout=N
             if timeout is None or now - start_time > timeout:
                 raise e
             time.sleep(0.01)
+    return None
