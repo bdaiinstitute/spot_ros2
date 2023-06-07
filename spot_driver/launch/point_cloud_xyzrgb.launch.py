@@ -30,23 +30,20 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import os
-
-from ament_index_python.packages import get_package_share_directory
-from launch import LaunchDescription
 
 import launch_ros.actions
 import launch_ros.descriptions
+from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 
-def generate_launch_description():
-    spot_name = LaunchConfiguration('spot_name')
-    spot_name_arg = DeclareLaunchArgument('spot_name', description='Name of spot')
+def generate_launch_description() -> LaunchDescription:
+    spot_name = LaunchConfiguration("spot_name")
+    spot_name_arg = DeclareLaunchArgument("spot_name", description="Name of spot")
 
-    camera = LaunchConfiguration('camera')
-    camera_arg = DeclareLaunchArgument('camera', description='Name of camera')
+    camera = LaunchConfiguration("camera")
+    camera_arg = DeclareLaunchArgument("camera", description="Name of camera")
 
     ld = LaunchDescription(
         [
@@ -54,25 +51,28 @@ def generate_launch_description():
             camera_arg,
             # launch plugin through rclcpp_components container
             launch_ros.actions.ComposableNodeContainer(
-                name=(camera, '_container'),
+                name=(camera, "_container"),
                 namespace=spot_name,
-                package='rclcpp_components',
-                executable='component_container',
+                package="rclcpp_components",
+                executable="component_container",
                 composable_node_descriptions=[
                     # Driver itself
                     launch_ros.descriptions.ComposableNode(
-                        package='depth_image_proc',
-                        plugin='depth_image_proc::PointCloudXyzrgbNode',
-                        name=('point_cloud_xyzrgb_', camera),
+                        package="depth_image_proc",
+                        plugin="depth_image_proc::PointCloudXyzrgbNode",
+                        name=("point_cloud_xyzrgb_", camera),
                         remappings=[
-                            ('rgb/camera_info', PathJoinSubstitution([spot_name, "camera", camera, "camera_info"])),
-                            ('rgb/image_rect_color', PathJoinSubstitution([spot_name, "camera", camera, "image"])),
-                            ('depth_registered/image_rect', PathJoinSubstitution([spot_name, "depth_registered", camera, "image"])),
-                            ('points', PathJoinSubstitution([spot_name, "depth_registered", camera, "points"]))
-                        ]
+                            ("rgb/camera_info", PathJoinSubstitution([spot_name, "camera", camera, "camera_info"])),
+                            ("rgb/image_rect_color", PathJoinSubstitution([spot_name, "camera", camera, "image"])),
+                            (
+                                "depth_registered/image_rect",
+                                PathJoinSubstitution([spot_name, "depth_registered", camera, "image"]),
+                            ),
+                            ("points", PathJoinSubstitution([spot_name, "depth_registered", camera, "points"])),
+                        ],
                     ),
                 ],
-                output='screen',
+                output="screen",
             ),
         ]
     )
