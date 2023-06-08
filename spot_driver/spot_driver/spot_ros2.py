@@ -1,4 +1,4 @@
-from rclpy.executors import MultiThreadedExecutor
+from rclpy.executors import MultiThreadedExecutor, ExternalShutdownException
 from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
 from rclpy.action import ActionServer
 from rclpy.impl import rcutils_logger
@@ -1986,16 +1986,17 @@ def main(args=None):
                 if spot_ros.auto_stand.value:
                     spot_ros.spot_wrapper.stand()
 
-        sys.stdout.flush()
-
         print(f"Spinning ros2_driver")
+        sys.stdout.flush()
         try:
             executor.spin()
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, ExternalShutdownException):
             pass
 
+        executor.remove_node(node)
         executor.shutdown()
-        rclpy.shutdown()
+        node.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == "__main__":
