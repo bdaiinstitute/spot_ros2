@@ -1059,9 +1059,9 @@ class SpotROS(Node):
             response.message = f"Error: {e}"
             return response
 
-    def _goal_complete(self, feedback: Feedback) -> GoalResponse:
+    def _robot_command_goal_complete(self, feedback: RobotCommandFeedback) -> GoalResponse:
         if feedback is None:
-            # NOTE: it can take an iteration for the feedback to get set.
+            # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
 
         if feedback.command.command_choice == feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
@@ -1330,13 +1330,13 @@ class SpotROS(Node):
         # The command is non-blocking, but we need to keep this function up in order to interrupt if a
         # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
         # monitor whether the timeout_cb has already aborted the command
-        feedback = None
-        feedback_msg = None
+        feedback: RobotCommandFeedback = None
+        feedback_msg: RobotCommand.Feedback = None
         while (
-            rclpy.ok()
-            and not goal_handle.is_cancel_requested
-            and self._goal_complete(feedback) == GoalResponse.IN_PROGRESS
-            and goal_handle.is_active
+                rclpy.ok()
+                and not goal_handle.is_cancel_requested
+                and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
+                and goal_handle.is_active
         ):
             feedback = self._get_robot_command_feedback(goal_id)
             feedback_msg = RobotCommand.Feedback(feedback=feedback)
@@ -1349,7 +1349,7 @@ class SpotROS(Node):
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
 
-        result.success = self._goal_complete(feedback) == GoalResponse.SUCCESS
+        result.success = self._robot_command_goal_complete(feedback) == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
@@ -1369,6 +1369,51 @@ class SpotROS(Node):
         if not self.spot_wrapper:
             self.get_logger().info("Returning action result " + str(result))
         return result
+
+    def _manipulation_goal_complete(self, feedback: Optional[ManipulationApiFeedbackResponse]) -> GoalResponse:
+        if feedback is None:
+            # NOTE: it takes an iteration for the feedback to get set.
+            return GoalResponse.IN_PROGRESS
+
+        match feedback.current_state:
+            case manipulation_api_pb2.MANIP_STATE_UNKNOWN:
+                return GoalResponse.FAILED
+            case manipulation_api_pb2.MANIP_STATE_DONE:
+                return GoalResponse.SUCCESS
+            case manipulation_api_pb2.MANIP_STATE_SEARCHING_FOR_GRASP:
+                return GoalResponse.IN_PROGRESS
+            case manipulation_api_pb2.MANIP_STATE_MOVING_TO_GRASP:
+                return GoalResponse.IN_PROGRESS
+            case manipulation_api_pb2.MANIP_STATE_GRASPING_OBJECT:
+                return GoalResponse.IN_PROGRESS
+            case manipulation_api_pb2.MANIP_STATE_PLACING_OBJECT:
+                return GoalResponse.IN_PROGRESS
+            case manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED:
+                return GoalResponse.SUCCESS
+            case manipulation_api_pb2.MANIP_STATE_GRASP_FAILED:
+                return GoalResponse.FAILED
+            case manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
+                return GoalResponse.IN_PROGRESS
+            case manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
+                return GoalResponse.FAILED
+            case manipulation_api_pb2.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
+                return GoalResponse.FAILED
+            case manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
+                return GoalResponse.IN_PROGRESS
+            case manipulation_api_pb2.MANIP_STATE_WALKING_TO_OBJECT:
+                return GoalResponse.IN_PROGRESS
+            case manipulation_api_pb2.MANIP_STATE_ATTEMPTING_RAYCASTING:
+                return GoalResponse.IN_PROGRESS
+            case manipulation_api_pb2.MANIP_STATE_MOVING_TO_PLACE:
+                return GoalResponse.IN_PROGRESS
+            case manipulation_api_pb2.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
+                return GoalResponse.FAILED
+            case manipulation_api_pb2.MANIP_STATE_PLACE_SUCCEEDED:
+                return GoalResponse.SUCCESS
+            case manipulation_api_pb2.MANIP_STATE_PLACE_FAILED:
+                return GoalResponse.FAILED
+            case _:
+                raise Exception("Unknown manipulation state type")
 
     def _get_manipulation_command_feedback(self, goal_id: str) -> ManipulationApiFeedbackResponse:
         feedback = ManipulationApiFeedbackResponse()
@@ -1400,8 +1445,7 @@ class SpotROS(Node):
         # monitor whether the timeout_cb has already aborted the command
         feedback: Optional[ManipulationApiFeedbackResponse] = None
         feedback_msg: Optional[Manipulation.Feedback] = None
-        goal_complete = False
-        while rclpy.ok() and not goal_handle.is_cancel_requested and not goal_complete and goal_handle.is_active:
+        while rclpy.ok() and not goal_handle.is_cancel_requested and self._manipulation_goal_complete(feedback) == GoalResponse.IN_PROGRESS and goal_handle.is_active:
             try:
                 if goal_id is not None:
                     feedback = self._get_manipulation_command_feedback(goal_id)
@@ -1411,11 +1455,6 @@ class SpotROS(Node):
             feedback_msg = Manipulation.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
 
-            goal_complete = feedback is not None and (
-                feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED
-                or feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED
-            )
-
             time.sleep(0.1)  # don't use rate here because we're already in a single thread
 
         # publish a final feedback
@@ -1423,7 +1462,7 @@ class SpotROS(Node):
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
-        result.success = self._goal_complete(feedback) == GoalResponse.SUCCESS
+        result.success = self._manipulation_goal_complete(feedback) == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
