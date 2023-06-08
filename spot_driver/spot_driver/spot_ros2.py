@@ -253,8 +253,8 @@ class SpotROS(Node):
         if self.name is not None:
             frame_prefix = self.name + "/"
         self.frame_prefix: str = frame_prefix
-        self.mode_parent_odom_tf: Parameter = self.declare_parameter(
-            "mode_parent_odom_tf", frame_prefix + "odom"
+        self.preferred_odom_frame: Parameter = self.declare_parameter(
+            "preferred_odom_frame", frame_prefix + "odom"
         )  # 'vision' or 'odom'
         self.tf_name_kinematic_odom: Parameter = self.declare_parameter("tf_name_kinematic_odom", frame_prefix + "odom")
         self.tf_name_raw_kinematic: str = frame_prefix + "odom"
@@ -262,10 +262,10 @@ class SpotROS(Node):
         self.tf_name_raw_vision: str = frame_prefix + "vision"
 
         if (
-            self.mode_parent_odom_tf.value != self.tf_name_raw_kinematic
-            and self.mode_parent_odom_tf.value != self.tf_name_raw_vision
+            self.preferred_odom_frame.value != self.tf_name_raw_kinematic
+            and self.preferred_odom_frame.value != self.tf_name_raw_vision
         ):
-            error_msg = f'rosparam "mode_parent_odom_tf" should be "{frame_prefix}odom" or "{frame_prefix}vision".'
+            error_msg = f'rosparam "preferred_odom_frame" should be "{frame_prefix}odom" or "{frame_prefix}vision".'
             self.get_logger().error(error_msg)
             raise ValueError(error_msg)
 
@@ -625,7 +625,7 @@ class SpotROS(Node):
                 self.joint_state_pub.publish(joint_state)
 
             # TF
-            tf_msg = get_tf_from_state(state, self.spot_wrapper, self.mode_parent_odom_tf.value)
+            tf_msg = get_tf_from_state(state, self.spot_wrapper, self.preferred_odom_frame.value)
             if len(tf_msg.transforms) > 0:
                 self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
 
@@ -634,7 +634,7 @@ class SpotROS(Node):
             self.odom_twist_pub.publish(twist_odom_msg)
 
             # Odom #
-            if self.mode_parent_odom_tf == self.spot_wrapper.frame_prefix + "vision":
+            if self.preferred_odom_frame.value == self.spot_wrapper.frame_prefix + "vision":
                 odom_msg = get_odom_from_state(state, self.spot_wrapper, use_vision=True)
             else:
                 odom_msg = get_odom_from_state(state, self.spot_wrapper, use_vision=False)
@@ -736,7 +736,7 @@ class SpotROS(Node):
         if world_objects:
             # TF
             tf_msg = get_tf_from_world_objects(
-                world_objects.world_objects, self.spot_wrapper, self.mode_parent_odom_tf.value
+                world_objects.world_objects, self.spot_wrapper, self.preferred_odom_frame.value
             )
             if len(tf_msg.transforms) > 0:
                 self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
@@ -1783,7 +1783,7 @@ class SpotROS(Node):
         image_data: Image protobuf data from the wrapper
         """
         # We exclude the odometry frames from static transforms since they are not static. We can ignore the body
-        # frame because it is a child of odom or vision depending on the mode_parent_odom_tf, and will be published
+        # frame because it is a child of odom or vision depending on the preferred_odom_frame, and will be published
         # by the non-static transform publishing that is done by the state callback
         frame_prefix = MOCK_HOSTNAME + "/"
         if self.spot_wrapper is not None:

@@ -445,7 +445,7 @@ def get_tf_from_state(
                 transform = state.kinematic_state.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
                 local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
                 tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-                if inverse_target_frame == frame_name:
+                if inverse_target_frame == spot_wrapper.frame_prefix + frame_name:
                     geo_tform_inversed = SE3Pose.from_obj(transform.parent_tform_child).inverse()
                     new_tf = populate_transform_stamped(
                         tf_time, frame_name, transform.parent_frame_name, geo_tform_inversed, spot_wrapper.frame_prefix
