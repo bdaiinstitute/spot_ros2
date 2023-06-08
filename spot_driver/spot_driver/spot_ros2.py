@@ -296,9 +296,9 @@ class SpotROS(Node):
                 self.estop_timeout.value,
                 self.rates,
                 self.callbacks,
-                self.use_take_lease,
-                self.get_lease_on_action,
-                self.continually_try_stand,
+                self.use_take_lease.value,
+                self.get_lease_on_action.value,
+                self.continually_try_stand.value,
             )
             if not self.spot_wrapper.is_valid:
                 return
