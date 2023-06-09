@@ -1730,9 +1730,9 @@ class SpotROS(Node):
             return response
 
         try:
-            self.node.get_logger().info("Clearing graph")
+            self.get_logger().info("Clearing graph")
             self.spot_wrapper.spot_graph_nav.clear_graph()
-            self.node.get_logger().info("Cleared")
+            self.get_logger().info("Cleared")
             response.success = True
             response.message = "Success"
         except Exception as e:
@@ -1750,7 +1750,7 @@ class SpotROS(Node):
             return response
 
         try:
-            self.node.get_logger().error("handle_list_graph: {request}")
+            self.get_logger().error("handle_list_graph: {request}")
             self.spot_wrapper.spot_graph_nav.clear_graph()
             self.spot_wrapper.spot_graph_nav.upload_graph_and_snapshots(request.upload_filepath)
             response.waypoint_ids = self.spot_wrapper.spot_graph_nav.list_graph(request.upload_filepath)
