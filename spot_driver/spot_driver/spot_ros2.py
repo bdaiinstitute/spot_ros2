@@ -75,6 +75,8 @@ from spot_msgs.srv import (  # type: ignore
     SetLocomotion,
     SetVelocity,
 )
+from spot_wrapper.spot_images import CameraSource
+from spot_wrapper.wrapper import SpotWrapper
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -95,9 +97,6 @@ from .ros_helpers import (
     get_wifi_from_state,
     populate_transform_stamped,
 )
-
-from spot_wrapper.wrapper import SpotWrapper
-from spot_wrapper.spot_images import CameraSource
 
 MAX_DURATION = 1e6
 MOCK_HOSTNAME = "Mock_spot"
