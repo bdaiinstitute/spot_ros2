@@ -1760,7 +1760,7 @@ class SpotROS(Node):
         resp = self.spot_wrapper.spot_graph_nav.navigate_initial_localization(
             upload_path=goal_handle.request.upload_path,
             initial_localization_fiducial=goal_handle.request.initial_localization_fiducial,
-            initial_localization_waypoint=goal_handle.request.initial_localization_waypoint
+            initial_localization_waypoint=goal_handle.request.initial_localization_waypoint,
         )
 
         # Navigate to selected waypoint
