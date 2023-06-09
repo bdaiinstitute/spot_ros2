@@ -1846,7 +1846,7 @@ class SpotROS(Node):
     def populate_camera_static_transforms(self, image_data: image_pb2.Image) -> None:
         """Check data received from one of the image tasks and use the transform snapshot to extract the camera frame
         transforms. This is the transforms from body->frontleft->frontleft_fisheye, for example. These transforms
-        never change, but they may be calibrated slightly differently for each robot so we need to generate the
+        never change, but they may be calibrated slightly differently for each robot, so we need to generate the
         transforms at runtime.
         Args:
         image_data: Image protobuf data from the wrapper
@@ -1960,7 +1960,7 @@ def main(args: Optional[List[str]] = None) -> None:
     if spot_ros.spot_wrapper is not None:
         spot_ros.spot_wrapper.disconnect()
     spot_ros.destroy_node()
-    rclpy.shutdown()
+    rclpy.try_shutdown()
 
 
 if __name__ == "__main__":
