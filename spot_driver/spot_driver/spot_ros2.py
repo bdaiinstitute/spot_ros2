@@ -1338,7 +1338,6 @@ class SpotROS(Node):
             and self._goal_complete(feedback) == GoalResponse.IN_PROGRESS
             and goal_handle.is_active
         ):
-            print(".")
             feedback = self._get_robot_command_feedback(goal_id)
             feedback_msg = RobotCommand.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
