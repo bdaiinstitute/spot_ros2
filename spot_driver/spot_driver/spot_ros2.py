@@ -1333,10 +1333,10 @@ class SpotROS(Node):
         feedback: RobotCommandFeedback = None
         feedback_msg: RobotCommand.Feedback = None
         while (
-                rclpy.ok()
-                and not goal_handle.is_cancel_requested
-                and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
-                and goal_handle.is_active
+            rclpy.ok()
+            and not goal_handle.is_cancel_requested
+            and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
+            and goal_handle.is_active
         ):
             feedback = self._get_robot_command_feedback(goal_id)
             feedback_msg = RobotCommand.Feedback(feedback=feedback)
@@ -1375,45 +1375,44 @@ class SpotROS(Node):
             # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
 
-        match feedback.current_state:
-            case manipulation_api_pb2.MANIP_STATE_UNKNOWN:
-                return GoalResponse.FAILED
-            case manipulation_api_pb2.MANIP_STATE_DONE:
-                return GoalResponse.SUCCESS
-            case manipulation_api_pb2.MANIP_STATE_SEARCHING_FOR_GRASP:
-                return GoalResponse.IN_PROGRESS
-            case manipulation_api_pb2.MANIP_STATE_MOVING_TO_GRASP:
-                return GoalResponse.IN_PROGRESS
-            case manipulation_api_pb2.MANIP_STATE_GRASPING_OBJECT:
-                return GoalResponse.IN_PROGRESS
-            case manipulation_api_pb2.MANIP_STATE_PLACING_OBJECT:
-                return GoalResponse.IN_PROGRESS
-            case manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED:
-                return GoalResponse.SUCCESS
-            case manipulation_api_pb2.MANIP_STATE_GRASP_FAILED:
-                return GoalResponse.FAILED
-            case manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
-                return GoalResponse.IN_PROGRESS
-            case manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
-                return GoalResponse.FAILED
-            case manipulation_api_pb2.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
-                return GoalResponse.FAILED
-            case manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
-                return GoalResponse.IN_PROGRESS
-            case manipulation_api_pb2.MANIP_STATE_WALKING_TO_OBJECT:
-                return GoalResponse.IN_PROGRESS
-            case manipulation_api_pb2.MANIP_STATE_ATTEMPTING_RAYCASTING:
-                return GoalResponse.IN_PROGRESS
-            case manipulation_api_pb2.MANIP_STATE_MOVING_TO_PLACE:
-                return GoalResponse.IN_PROGRESS
-            case manipulation_api_pb2.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
-                return GoalResponse.FAILED
-            case manipulation_api_pb2.MANIP_STATE_PLACE_SUCCEEDED:
-                return GoalResponse.SUCCESS
-            case manipulation_api_pb2.MANIP_STATE_PLACE_FAILED:
-                return GoalResponse.FAILED
-            case _:
-                raise Exception("Unknown manipulation state type")
+        if feedback.current_state == manipulation_api_pb2.MANIP_STATE_UNKNOWN:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_DONE:
+            return GoalResponse.SUCCESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_SEARCHING_FOR_GRASP:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_GRASP:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASPING_OBJECT:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACING_OBJECT:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED:
+            return GoalResponse.SUCCESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_WALKING_TO_OBJECT:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_ATTEMPTING_RAYCASTING:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_PLACE:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_SUCCEEDED:
+            return GoalResponse.SUCCESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED:
+            return GoalResponse.FAILED
+        else:
+            raise Exception("Unknown manipulation state type")
 
     def _get_manipulation_command_feedback(self, goal_id: str) -> ManipulationApiFeedbackResponse:
         feedback = ManipulationApiFeedbackResponse()
@@ -1445,7 +1444,12 @@ class SpotROS(Node):
         # monitor whether the timeout_cb has already aborted the command
         feedback: Optional[ManipulationApiFeedbackResponse] = None
         feedback_msg: Optional[Manipulation.Feedback] = None
-        while rclpy.ok() and not goal_handle.is_cancel_requested and self._manipulation_goal_complete(feedback) == GoalResponse.IN_PROGRESS and goal_handle.is_active:
+        while (
+            rclpy.ok()
+            and not goal_handle.is_cancel_requested
+            and self._manipulation_goal_complete(feedback) == GoalResponse.IN_PROGRESS
+            and goal_handle.is_active
+        ):
             try:
                 if goal_id is not None:
                     feedback = self._get_manipulation_command_feedback(goal_id)
