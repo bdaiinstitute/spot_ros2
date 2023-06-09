@@ -1330,8 +1330,8 @@ class SpotROS(Node):
         # The command is non-blocking, but we need to keep this function up in order to interrupt if a
         # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
         # monitor whether the timeout_cb has already aborted the command
-        feedback: RobotCommandFeedback = None
-        feedback_msg: RobotCommand.Feedback = None
+        feedback: Optional[RobotCommandFeedback] = None
+        feedback_msg: Optional[RobotCommand.Feedback] = None
         while (
             rclpy.ok()
             and not goal_handle.is_cancel_requested
