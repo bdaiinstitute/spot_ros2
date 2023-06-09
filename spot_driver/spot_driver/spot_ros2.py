@@ -84,6 +84,7 @@ from spot_msgs.srv import (  # type: ignore
     UploadAnimation,
     SetVolume,
 )
+from spot_wrapper.cam_wrapper import SpotCamWrapper
 from spot_wrapper.wrapper import CameraSource, SpotWrapper
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
@@ -291,6 +292,7 @@ class SpotROS(Node):
         if self.name is not None:
             name_with_dot = self.name + "."
         self.wrapper_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_wrapper")
+        self.cam_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_cam_wrapper")
 
         name_str = ""
         if self.name is not None:
@@ -300,6 +302,7 @@ class SpotROS(Node):
 
         if self.name == MOCK_HOSTNAME:
             self.spot_wrapper: Optional[SpotWrapper] = None
+            self.cam_wrapper: Optional[SpotCamWrapper] = None
         else:
             self.spot_wrapper = SpotWrapper(
                 self.username,
@@ -317,6 +320,11 @@ class SpotROS(Node):
             )
             if not self.spot_wrapper.is_valid:
                 return
+
+            try:
+                self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
+            except SystemError:
+                self.spot_cam_wrapper = None
 
             all_cameras = ["frontleft", "frontright", "left", "right", "back"]
             has_arm = self.spot_wrapper.has_arm()
