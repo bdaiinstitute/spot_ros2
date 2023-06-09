@@ -1085,7 +1085,7 @@ class SpotROS(Node):
         )
         return response
 
-    def handle_list_sounds(self, request, response):
+    def handle_list_sounds(self, request: ListSounds.Request, response: ListSounds.Response) -> ListSounds.Response:
         """ROS service handler for listing sounds loaded on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
@@ -1103,7 +1103,7 @@ class SpotROS(Node):
             response.message = f'Error: {e}'
             return response
 
-    def handle_load_sound(self, request, response):
+    def handle_load_sound(self, request: LoadSound.Request, response: LoadSound.Response) -> LoadSound.Response:
         """ROS service handler for loading a wav file sound on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
@@ -1120,7 +1120,7 @@ class SpotROS(Node):
             response.message = f'Error: {e}'
             return response
 
-    def handle_play_sound(self, request, response):
+    def handle_play_sound(self, request: PlaySound.Request, response: PlaySound.Response) -> PlaySound.Response:
         """ROS service handler for playing a sound loaded on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
@@ -1137,7 +1137,7 @@ class SpotROS(Node):
             response.message = f'Error: {e}'
             return response
 
-    def handle_delete_sound(self, request, response):
+    def handle_delete_sound(self, request: DeleteSound.Request, response: DeleteSound.Response) -> DeleteSound.Response:
         """ROS service handler for deleting a sound loaded on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
@@ -1154,7 +1154,7 @@ class SpotROS(Node):
             response.message = f'Error: {e}'
             return response
 
-    def handle_get_volume(self, request, response):
+    def handle_get_volume(self, request: GetVolume.Request, response: GetVolume.Response) -> GetVolume.Response:
         """ROS service handler for getting the volume on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
@@ -1171,7 +1171,7 @@ class SpotROS(Node):
             response.message = f'Error: {e}'
             return response
 
-    def handle_set_volume(self, request, response):
+    def handle_set_volume(self, request: SetVolume.Request, response: SetVolume.Response) -> SetVolume.Response:
         """ROS service handler for setting the volume on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
@@ -1188,7 +1188,7 @@ class SpotROS(Node):
             response.message = f'Error: {e}'
             return response
 
-    def handle_stair_mode(self, request, response):
+    def handle_stair_mode(self, request: SetBool.Request, response: SetBool.Response) -> SetBool.Response:
         """ROS service handler to set a stair mode to the robot."""
         if self.spot_wrapper is None:
             response.success = False
