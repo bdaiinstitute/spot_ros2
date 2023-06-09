@@ -65,7 +65,9 @@ from spot_msgs.msg import (  # type: ignore
 )
 from spot_msgs.srv import (  # type: ignore
     ClearBehaviorFault,
+    DeleteSound,
     ExecuteDance,
+    GetVolume,
     GraphNavClearGraph,
     GraphNavGetLocalizationPose,
     GraphNavSetLocalization,
@@ -73,13 +75,16 @@ from spot_msgs.srv import (  # type: ignore
     ListAllDances,
     ListAllMoves,
     ListGraph,
+    ListSounds,
     ListWorldObjects,
+    LoadSound,
+    PlaySound,
     SetLocomotion,
     SetVelocity,
     UploadAnimation,
+    SetVolume,
 )
 from spot_wrapper.wrapper import CameraSource, SpotWrapper
-from spot_wrapper.cam_wrapper import SpotCamWrapper
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -522,6 +527,7 @@ class SpotROS(Node):
                 callback_group=self.group,
             )
             self.create_service(
+<<<<<<< HEAD
                 UploadAnimation,
                 "upload_animation",
                 lambda request, response: self.service_wrapper(
@@ -549,36 +555,45 @@ class SpotROS(Node):
                 lambda request, response:
                     spot_ros.service_wrapper('list_sounds', spot_ros.handle_list_sounds, request, response),
                 callback_group=spot_ros.group
+            self.create_service(
+                ListSounds,
+                "list_sounds",
+                lambda request, response: self.service_wrapper(
+                    "list_sounds", self.handle_list_sounds, request, response
+                ),
+                callback_group=self.group,
             )
             self.create_service(
-                LoadSound, 'load_sound',
-                lambda request, response:
-                    spot_ros.service_wrapper('load_sound', spot_ros.handle_load_sound, request, response),
-                callback_group=spot_ros.group
+                LoadSound,
+                "load_sound",
+                lambda request, response: self.service_wrapper("load_sound", self.handle_load_sound, request, response),
+                callback_group=self.group,
             )
             self.create_service(
-                PlaySound, 'play_sound',
-                lambda request, response:
-                    spot_ros.service_wrapper('play_sound', spot_ros.handle_play_sound, request, response),
-                callback_group=spot_ros.group
+                PlaySound,
+                "play_sound",
+                lambda request, response: self.service_wrapper("play_sound", self.handle_play_sound, request, response),
+                callback_group=self.group,
             )
             self.create_service(
-                DeleteSound, 'delete_sound',
-                lambda request, response:
-                    spot_ros.service_wrapper('delete_sound', spot_ros.handle_delete_sound, request, response),
-                callback_group=spot_ros.group
+                DeleteSound,
+                "delete_sound",
+                lambda request, response: self.service_wrapper(
+                    "delete_sound", self.handle_delete_sound, request, response
+                ),
+                callback_group=self.group,
             )
             self.create_service(
-                GetVolume, 'get_volume',
-                lambda request, response:
-                    spot_ros.service_wrapper('get_volume', spot_ros.handle_get_volume, request, response),
-                callback_group=spot_ros.group
+                GetVolume,
+                "get_volume",
+                lambda request, response: self.service_wrapper("get_volume", self.handle_get_volume, request, response),
+                callback_group=self.group,
             )
             self.create_service(
-                SetVolume, 'set_volume',
-                lambda request, response:
-                    spot_ros.service_wrapper('set_volume', spot_ros.handle_set_volume, request, response),
-                callback_group=spot_ros.group
+                SetVolume,
+                "set_volume",
+                lambda request, response: self.service_wrapper("set_volume", self.handle_set_volume, request, response),
+                callback_group=self.group,
             )
             self.create_service(
                 ListGraph,
@@ -1089,103 +1104,103 @@ class SpotROS(Node):
         """ROS service handler for listing sounds loaded on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
-            response.message = 'Spot CAM has not been initialized'
+            response.message = "Spot CAM has not been initialized"
             return response
 
         try:
             names = self.spot_cam_wrapper.audio.list_sounds()
             response.names = names
             response.success = True
-            response.message = 'Success'
+            response.message = "Success"
             return response
         except Exception as e:
             response.success = False
-            response.message = f'Error: {e}'
+            response.message = f"Error: {e}"
             return response
 
     def handle_load_sound(self, request: LoadSound.Request, response: LoadSound.Response) -> LoadSound.Response:
         """ROS service handler for loading a wav file sound on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
-            response.message = 'Spot CAM has not been initialized'
+            response.message = "Spot CAM has not been initialized"
             return response
 
         try:
             self.spot_cam_wrapper.audio.load_sound(request.wav_path, request.name)
             response.success = True
-            response.message = 'Success'
+            response.message = "Success"
             return response
         except Exception as e:
             response.success = False
-            response.message = f'Error: {e}'
+            response.message = f"Error: {e}"
             return response
 
     def handle_play_sound(self, request: PlaySound.Request, response: PlaySound.Response) -> PlaySound.Response:
         """ROS service handler for playing a sound loaded on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
-            response.message = 'Spot CAM has not been initialized'
+            response.message = "Spot CAM has not been initialized"
             return response
 
         try:
             self.spot_cam_wrapper.audio.play_sound(request.name, request.volume)
             response.success = True
-            response.message = 'Success'
+            response.message = "Success"
             return response
         except Exception as e:
             response.success = False
-            response.message = f'Error: {e}'
+            response.message = f"Error: {e}"
             return response
 
     def handle_delete_sound(self, request: DeleteSound.Request, response: DeleteSound.Response) -> DeleteSound.Response:
         """ROS service handler for deleting a sound loaded on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
-            response.message = 'Spot CAM has not been initialized'
+            response.message = "Spot CAM has not been initialized"
             return response
 
         try:
             self.spot_cam_wrapper.audio.delete_sound(request.name)
             response.success = True
-            response.message = 'Success'
+            response.message = "Success"
             return response
         except Exception as e:
             response.success = False
-            response.message = f'Error: {e}'
+            response.message = f"Error: {e}"
             return response
 
     def handle_get_volume(self, request: GetVolume.Request, response: GetVolume.Response) -> GetVolume.Response:
         """ROS service handler for getting the volume on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
-            response.message = 'Spot CAM has not been initialized'
+            response.message = "Spot CAM has not been initialized"
             return response
 
         try:
             response.volume = self.spot_cam_wrapper.audio.get_volume()
             response.success = True
-            response.message = 'Success'
+            response.message = "Success"
             return response
         except Exception as e:
             response.success = False
-            response.message = f'Error: {e}'
+            response.message = f"Error: {e}"
             return response
 
     def handle_set_volume(self, request: SetVolume.Request, response: SetVolume.Response) -> SetVolume.Response:
         """ROS service handler for setting the volume on Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
-            response.message = 'Spot CAM has not been initialized'
+            response.message = "Spot CAM has not been initialized"
             return response
 
         try:
             self.spot_cam_wrapper.audio.set_volume(request.volume)
             response.success = True
-            response.message = 'Success'
+            response.message = "Success"
             return response
         except Exception as e:
             response.success = False
-            response.message = f'Error: {e}'
+            response.message = f"Error: {e}"
             return response
 
     def handle_stair_mode(self, request: SetBool.Request, response: SetBool.Response) -> SetBool.Response:
