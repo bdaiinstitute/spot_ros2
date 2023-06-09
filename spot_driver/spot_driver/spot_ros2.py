@@ -1,5 +1,6 @@
 ### Debug
 # from ros_helpers import *
+import sys
 import threading
 import time
 import traceback
@@ -11,6 +12,12 @@ import builtin_interfaces.msg
 import rclpy
 import rclpy.time
 import tf2_ros
+from bdai_ros2_wrappers.single_goal_action_server import (
+    SingleGoalActionServer,
+)
+from bdai_ros2_wrappers.single_goal_multiple_action_servers import (
+    SingleGoalMultipleActionServers,
+)
 from bosdyn.api import (
     geometry_pb2,
     image_pb2,
@@ -32,7 +39,7 @@ from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
 from rclpy.callback_groups import CallbackGroup, MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 from rclpy.clock import Clock
-from rclpy.executors import MultiThreadedExecutor
+from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.impl import rcutils_logger
 from rclpy.node import Node
 from rclpy.publisher import Publisher
@@ -41,7 +48,6 @@ from sensor_msgs.msg import CameraInfo, Image, JointState
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
-from spot_driver.single_goal_action_server import SingleGoalActionServer
 from spot_msgs.action import Manipulation, NavigateTo, RobotCommand, Trajectory  # type: ignore
 from spot_msgs.msg import (  # type: ignore
     BatteryStateArray,
@@ -561,12 +567,32 @@ class SpotROS(Node):
             )
             # spot_ros.trajectory_server.start()
 
-            self.robot_command_server = SingleGoalActionServer(
-                self, RobotCommand, "robot_command", self.handle_robot_command, callback_group=self.group
-            )
             if has_arm:
-                self.manipulation_server = ActionServer(
-                    self, Manipulation, "manipulation", self.handle_manipulation_command, callback_group=self.group
+                # Allows both the "robot command" and the "manipulation" action goal to preempt each other
+                self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
+                    self,
+                    [
+                        (
+                            RobotCommand,
+                            "robot_command",
+                            self.handle_robot_command,
+                            self.group,
+                        ),
+                        (
+                            Manipulation,
+                            "manipulation",
+                            self.handle_manipulation_command,
+                            self.group,
+                        ),
+                    ],
+                )
+            else:
+                self.robot_command_server = SingleGoalActionServer(
+                    self,
+                    RobotCommand,
+                    "robot_command",
+                    self.handle_robot_command,
+                    callback_group=self.group,
                 )
 
             # Register Shutdown Handle
@@ -603,9 +629,10 @@ class SpotROS(Node):
 
     def spin(self) -> None:
         self.get_logger().info("Spinning ros2_driver")
+        sys.stdout.flush()
         try:
             self.mt_executor.spin()
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, ExternalShutdownException):
             pass
 
         self.mt_executor.shutdown()
@@ -1034,9 +1061,9 @@ class SpotROS(Node):
             response.message = f"Error: {e}"
             return response
 
-    def _goal_complete(self, feedback: Feedback) -> GoalResponse:
+    def _robot_command_goal_complete(self, feedback: RobotCommandFeedback) -> GoalResponse:
         if feedback is None:
-            # NOTE: it can take an iteration for the feedback to get set.
+            # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
 
         if feedback.command.command_choice == feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
@@ -1305,15 +1332,14 @@ class SpotROS(Node):
         # The command is non-blocking, but we need to keep this function up in order to interrupt if a
         # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
         # monitor whether the timeout_cb has already aborted the command
-        feedback = None
-        feedback_msg = None
+        feedback: Optional[RobotCommandFeedback] = None
+        feedback_msg: Optional[RobotCommand.Feedback] = None
         while (
             rclpy.ok()
             and not goal_handle.is_cancel_requested
-            and self._goal_complete(feedback) == GoalResponse.IN_PROGRESS
+            and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
             and goal_handle.is_active
         ):
-            print(".")
             feedback = self._get_robot_command_feedback(goal_id)
             feedback_msg = RobotCommand.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
@@ -1325,7 +1351,7 @@ class SpotROS(Node):
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
 
-        result.success = self._goal_complete(feedback) == GoalResponse.SUCCESS
+        result.success = self._robot_command_goal_complete(feedback) == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
@@ -1345,6 +1371,50 @@ class SpotROS(Node):
         if not self.spot_wrapper:
             self.get_logger().info("Returning action result " + str(result))
         return result
+
+    def _manipulation_goal_complete(self, feedback: Optional[ManipulationApiFeedbackResponse]) -> GoalResponse:
+        if feedback is None:
+            # NOTE: it takes an iteration for the feedback to get set.
+            return GoalResponse.IN_PROGRESS
+
+        if feedback.current_state == manipulation_api_pb2.MANIP_STATE_UNKNOWN:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_DONE:
+            return GoalResponse.SUCCESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_SEARCHING_FOR_GRASP:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_GRASP:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASPING_OBJECT:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACING_OBJECT:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED:
+            return GoalResponse.SUCCESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_WALKING_TO_OBJECT:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_ATTEMPTING_RAYCASTING:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_PLACE:
+            return GoalResponse.IN_PROGRESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
+            return GoalResponse.FAILED
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_SUCCEEDED:
+            return GoalResponse.SUCCESS
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED:
+            return GoalResponse.FAILED
+        else:
+            raise Exception("Unknown manipulation state type")
 
     def _get_manipulation_command_feedback(self, goal_id: str) -> ManipulationApiFeedbackResponse:
         feedback = ManipulationApiFeedbackResponse()
@@ -1376,8 +1446,12 @@ class SpotROS(Node):
         # monitor whether the timeout_cb has already aborted the command
         feedback: Optional[ManipulationApiFeedbackResponse] = None
         feedback_msg: Optional[Manipulation.Feedback] = None
-        goal_complete = False
-        while rclpy.ok() and not goal_handle.is_cancel_requested and not goal_complete and goal_handle.is_active:
+        while (
+            rclpy.ok()
+            and not goal_handle.is_cancel_requested
+            and self._manipulation_goal_complete(feedback) == GoalResponse.IN_PROGRESS
+            and goal_handle.is_active
+        ):
             try:
                 if goal_id is not None:
                     feedback = self._get_manipulation_command_feedback(goal_id)
@@ -1387,11 +1461,6 @@ class SpotROS(Node):
             feedback_msg = Manipulation.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
 
-            goal_complete = feedback is not None and (
-                feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED
-                or feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED
-            )
-
             time.sleep(0.1)  # don't use rate here because we're already in a single thread
 
         # publish a final feedback
@@ -1399,7 +1468,7 @@ class SpotROS(Node):
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
-        result.success = self._goal_complete(feedback) == GoalResponse.SUCCESS
+        result.success = self._manipulation_goal_complete(feedback) == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
@@ -1823,13 +1892,14 @@ class SpotROS(Node):
             self.camera_static_transforms.append(static_tf)
             self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
 
-    def shutdown(self, sig: Any, frame: str) -> None:
+    def shutdown(self, sig: Optional[Any] = None, frame: Optional[str] = None) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
         if self.spot_wrapper is not None:
             self.spot_wrapper.sit()
         self.node_rate.sleep()
         if self.spot_wrapper is not None:
             self.spot_wrapper.disconnect()
+        self.destroy_node()
 
     def step(self) -> None:
         """Update spot sensors"""
@@ -1891,7 +1961,13 @@ class SpotROS(Node):
 def main(args: Optional[List[str]] = None) -> None:
     rclpy.init(args=args)
     spot_ros = SpotROS()
-    spot_ros.spin()
+    try:
+        spot_ros.spin()
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
+    if spot_ros.spot_wrapper is not None:
+        spot_ros.spot_wrapper.disconnect()
+    spot_ros.destroy_node()
     rclpy.shutdown()
 
 
