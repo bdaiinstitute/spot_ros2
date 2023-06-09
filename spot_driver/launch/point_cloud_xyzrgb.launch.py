@@ -45,126 +45,35 @@ def generate_launch_description():
     spot_name = LaunchConfiguration('spot_name')
     spot_name_arg = DeclareLaunchArgument('spot_name', description='Name of spot')
 
-    return LaunchDescription([
-        spot_name_arg,
+    camera = LaunchConfiguration('camera')
+    camera_arg = DeclareLaunchArgument('camera', description='Name of camera')
 
-        # launch plugin through rclcpp_components container
-        launch_ros.actions.ComposableNodeContainer(
-            name='frontleft_container',
-            namespace=spot_name,
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
-                # Driver itself
-                launch_ros.descriptions.ComposableNode(
-                    package='depth_image_proc',
-                    plugin='depth_image_proc::PointCloudXyzNode',
-                    name='point_cloud_xyz_frontleft',
-                    remappings=[
-                        ('image_rect', PathJoinSubstitution([spot_name, "depth/frontleft/image"])),
-                        ('camera_info', PathJoinSubstitution([spot_name, "depth/frontleft/camera_info"])),
-                        ('image', PathJoinSubstitution([spot_name, "depth/frontleft/image"])),
-                        ('points', PathJoinSubstitution([spot_name, "depth/frontleft/points"]))
-                    ]
-                ),
-            ],
-            output='screen',
-        ),
-        
-        launch_ros.actions.ComposableNodeContainer(
-            name='frontright_container',
-            namespace=spot_name,
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
-                # Driver itself
-                launch_ros.descriptions.ComposableNode(
-                    package='depth_image_proc',
-                    plugin='depth_image_proc::PointCloudXyzNode',
-                    name='point_cloud_xyz_frontright',
-                    remappings=[
-                        ('image_rect', PathJoinSubstitution([spot_name, "depth/frontright/image"])),
-                        ('camera_info', PathJoinSubstitution([spot_name, "depth/frontright/camera_info"])),
-                        ('image', PathJoinSubstitution([spot_name, "depth/frontright/image"])),
-                        ('points', PathJoinSubstitution([spot_name, "depth/frontright/points"]))
-                    ]
-                ),
-            ],
-            output='screen',
-        ),
-
-        launch_ros.actions.ComposableNodeContainer(
-            name='back_container',
-            namespace=spot_name,
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
-                launch_ros.descriptions.ComposableNode(
-                    package='depth_image_proc',
-                    plugin='depth_image_proc::PointCloudXyzrgbNode',
-                    name='point_cloud_xyzrgb_node',
-                    remappings=[('rgb/camera_info', '/camera/color/camera_info'),
-                                ('rgb/image_rect_color', '/camera/color/image_raw'),
-                                ('depth_registered/image_rect', '/camera/aligned_depth_to_color/image_raw'),
-                                ('points', '/camera/depth_registered/points')]
-                ),
-                # Driver itself
-                launch_ros.descriptions.ComposableNode(
-                    package='depth_image_proc',
-                    plugin='depth_image_proc::PointCloudXyzNode',
-                    name='point_cloud_xyz_back',
-                    remappings=[
-                        ('rgb/camera_info', PathJoinSubstitution([spot_name, "depth/back/image"])),
-                        ('rgb/image_rect_color', PathJoinSubstitution([spot_name, "depth/back/camera_info"])),
-                        ('depth_registered/image_rect', PathJoinSubstitution([spot_name, "depth/back/image"])),
-                        ('points', PathJoinSubstitution([spot_name, "depth/back/points"]))
-                    ]
-                ),
-            ],
-            output='screen',
-        ),
-        
-        launch_ros.actions.ComposableNodeContainer(
-            name='left_container',
-            namespace=spot_name,
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
-                # Driver itself
-                launch_ros.descriptions.ComposableNode(
-                    package='depth_image_proc',
-                    plugin='depth_image_proc::PointCloudXyzNode',
-                    name='point_cloud_xyz_left',
-                    remappings=[
-                        ('image_rect', PathJoinSubstitution([spot_name, "depth/left/image"])),
-                        ('camera_info', PathJoinSubstitution([spot_name, "depth/left/camera_info"])),
-                        ('image', PathJoinSubstitution([spot_name, "depth/left/image"])),
-                        ('points', PathJoinSubstitution([spot_name, "depth/left/points"]))
-                    ]
-                ),
-            ],
-            output='screen',
-        ),
-
-        launch_ros.actions.ComposableNodeContainer(
-            name='right_container',
-            namespace=spot_name,
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
-                # Driver itself
-                launch_ros.descriptions.ComposableNode(
-                    package='depth_image_proc',
-                    plugin='depth_image_proc::PointCloudXyzNode',
-                    name='point_cloud_xyz_right',
-                    remappings=[
-                        ('image_rect', PathJoinSubstitution([spot_name, "depth/right/image"])),
-                        ('camera_info', PathJoinSubstitution([spot_name, "depth/right/camera_info"])),
-                        ('image', PathJoinSubstitution([spot_name, "depth/right/image"])),
-                        ('points', PathJoinSubstitution([spot_name, "depth/right/points"]))
-                    ]
-                ),
-            ],
-            output='screen',
-        ),
-    ])
+    ld = LaunchDescription(
+        [
+            spot_name_arg,
+            camera_arg,
+            # launch plugin through rclcpp_components container
+            launch_ros.actions.ComposableNodeContainer(
+                name=(camera, '_container'),
+                namespace=spot_name,
+                package='rclcpp_components',
+                executable='component_container',
+                composable_node_descriptions=[
+                    # Driver itself
+                    launch_ros.descriptions.ComposableNode(
+                        package='depth_image_proc',
+                        plugin='depth_image_proc::PointCloudXyzrgbNode',
+                        name=('point_cloud_xyzrgb_', camera),
+                        remappings=[
+                            ('rgb/camera_info', PathJoinSubstitution([spot_name, "camera", camera, "camera_info"])),
+                            ('rgb/image_rect_color', PathJoinSubstitution([spot_name, "camera", camera, "image"])),
+                            ('depth_registered/image_rect', PathJoinSubstitution([spot_name, "depth_registered", camera, "image"])),
+                            ('points', PathJoinSubstitution([spot_name, "depth_registered", camera, "points"]))
+                        ]
+                    ),
+                ],
+                output='screen',
+            ),
+        ]
+    )
+    return ld

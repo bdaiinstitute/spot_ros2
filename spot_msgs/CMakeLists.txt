@@ -54,10 +54,16 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ListWorldObjects.srv"
   "srv/SetLocomotion.srv"
   "srv/SetVelocity.srv"
+  "srv/ExecuteDance.srv"
   "srv/ClearBehaviorFault.srv"
+  "srv/GraphNavUploadGraph.srv"
+  "srv/GraphNavClearGraph.srv"
+  "srv/GraphNavSetLocalization.srv"
+  "srv/GraphNavGetLocalizationPose.srv"
   "action/NavigateTo.action"
   "action/RobotCommand.action"
   "action/Trajectory.action"
+  "action/Manipulation.action"
   DEPENDENCIES bosdyn_msgs builtin_interfaces common_interfaces geometry_msgs std_msgs sensor_msgs
 )
 

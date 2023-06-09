@@ -1,15 +1,19 @@
+import cv2
 import os
 import time
+from typing import Callable, Tuple, Union
 import rclpy
+import numpy as np
 from builtin_interfaces.msg import Time, Duration
+from cv_bridge import CvBridge
 
 from std_msgs.msg import Empty
 from tf2_msgs.msg import TFMessage
 import tf2_py as tf2
 from geometry_msgs.msg import TransformStamped
-from sensor_msgs.msg import Image, CameraInfo
+from sensor_msgs.msg import CompressedImage, Image, CameraInfo
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import PoseWithCovariance
+from geometry_msgs.msg import PoseWithCovariance, PoseStamped
 from geometry_msgs.msg import TwistWithCovariance
 from geometry_msgs.msg import TwistWithCovarianceStamped
 from nav_msgs.msg import Odometry
@@ -27,6 +31,7 @@ from spot_msgs.msg import BatteryState, BatteryStateArray
 from bosdyn.api import image_pb2
 from bosdyn.client.math_helpers import SE3Pose
 from bosdyn.client.frame_helpers import get_odom_tform_body, get_vision_tform_body, get_a_tform_b
+from google.protobuf.timestamp_pb2 import Timestamp
 
 from spot_wrapper.wrapper import SpotWrapper
 
@@ -49,6 +54,7 @@ friendly_joint_names["hl.kn"] = "rear_left_knee"
 friendly_joint_names["hr.hx"] = "rear_right_hip_x"
 friendly_joint_names["hr.hy"] = "rear_right_hip_y"
 friendly_joint_names["hr.kn"] = "rear_right_knee"
+cv_bridge = CvBridge()
 
 
 def populateTransformStamped(time, parent_frame, child_frame, transform, frame_prefix):
@@ -129,33 +135,37 @@ def createDefaulCameraInfo():
     return camera_info_msg
 
 
-def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spot_wrapper: SpotWrapper):
-    """Takes the image and camera data and populates the necessary ROS messages
-    Args:
-        spot_wrapper: SpotWrapper
-        data: Image proto
-    Returns:
-        (tuple):
-            * Image: message of the image captured
-            * CameraInfo: message to define the state and config of the camera that took the image
-    """
-    image_msg = Image()
-    local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
+def _create_compressed_image_msg(data: image_pb2.ImageResponse, robot_to_local_time: Callable[[Timestamp], Timestamp], frame_prefix: str) -> CompressedImage:
+    image_msg = CompressedImage()
+    local_time = robot_to_local_time(data.shot.acquisition_time)
     image_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-    image_msg.header.frame_id = spot_wrapper.frame_prefix + data.shot.frame_name_image_sensor
-    image_msg.height = data.shot.image.rows
-    image_msg.width = data.shot.image.cols
+    image_msg.header.frame_id = frame_prefix + data.shot.frame_name_image_sensor
+    image_msg.format = "jpeg"
+    image_msg.data = data.shot.image.data
+    return image_msg
 
-    # Color/greyscale formats.
+
+def _create_image_msg(data: image_pb2.ImageResponse, robot_to_local_time: Callable[[Timestamp], Timestamp], frame_prefix: str) -> Image:
+    image_msg = None
+    local_time = robot_to_local_time(data.shot.acquisition_time)
+    stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
+    frame_id = frame_prefix + data.shot.frame_name_image_sensor
+
     # JPEG format
     if data.shot.image.format == image_pb2.Image.FORMAT_JPEG:
-        image_msg.encoding = "rgb8"
-        image_msg.is_bigendian = True
-        image_msg.step = 3 * data.shot.image.cols
-        image_msg.data = data.shot.image.data
+        cv2_image = cv2.imdecode(np.frombuffer(data.shot.image.data, dtype=np.uint8), -1)
+        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding='bgr8')
+        image_msg.header.stamp = stamp
+        image_msg.header.frame_id = frame_id
 
     # Uncompressed.  Requires pixel_format.
-    if data.shot.image.format == image_pb2.Image.FORMAT_RAW:
+    elif data.shot.image.format == image_pb2.Image.FORMAT_RAW:
+        image_msg = Image()
+        image_msg.header.stamp = stamp
+        image_msg.header.frame_id = frame_id
+        image_msg.height = data.shot.image.rows
+        image_msg.width = data.shot.image.cols
+
         # One byte per pixel.
         if data.shot.image.pixel_format == image_pb2.Image.PIXEL_FORMAT_GREYSCALE_U8:
             image_msg.encoding = "mono8"
@@ -183,6 +193,22 @@ def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spo
             image_msg.is_bigendian = False
             image_msg.step = 2 * data.shot.image.cols
             image_msg.data = data.shot.image.data
+    return image_msg
+
+
+def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, robot_to_local_time: Callable[[Timestamp], Timestamp], frame_prefix: str) -> Tuple[Union[Image, CompressedImage], CameraInfo]:
+    """Takes the image and camera data and populates the necessary ROS messages
+    Args:
+        data: Image proto
+        robot_to_local_time: Function to convert the robot time to the local time
+        frame_prefix: namespace for the published images
+
+    Returns:
+        (tuple):
+            * Image: message of the image captured
+            * CameraInfo: message to define the state and config of the camera that took the image
+    """
+    image_msg = _create_image_msg(data, robot_to_local_time, frame_prefix)
 
     # camera_info_msg = createDefaulCameraInfo(camera_info_msg)
     camera_info_msg = CameraInfo()
@@ -218,7 +244,7 @@ def bosdyn_data_to_image_and_camera_info_msgs(data: image_pb2.ImageResponse, spo
     camera_info_msg.p[9] = 0
     camera_info_msg.p[10] = 1
     camera_info_msg.p[11] = 0
-    local_time = spot_wrapper.robotToLocalTime(data.shot.acquisition_time)
+    local_time = robot_to_local_time(data.shot.acquisition_time)
     camera_info_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
     camera_info_msg.height = data.shot.image.rows
@@ -383,7 +409,7 @@ def GetTFFromState(state, spot_wrapper, inverse_target_frame):
                 local_time = spot_wrapper.robotToLocalTime(
                     state.kinematic_state.acquisition_timestamp)
                 tf_time = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-                if inverse_target_frame == frame_name:
+                if inverse_target_frame == spot_wrapper.frame_prefix + frame_name:
                     geo_tform_inversed = SE3Pose.from_obj(transform.parent_tform_child).inverse()
                     new_tf = populateTransformStamped(tf_time,
                                                       frame_name,

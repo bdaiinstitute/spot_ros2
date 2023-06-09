@@ -1,11 +1,14 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
+import cv2
 import os
 import sys
 import time
+import numpy as np
+from cv_bridge import CvBridge
 
 import rclpy
-from sensor_msgs.msg import CameraInfo, Image
+from sensor_msgs.msg import CameraInfo, CompressedImage, Image
 import bosdyn.client
 import bosdyn.client.util
 from bosdyn.api import image_pb2
@@ -14,6 +17,8 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from builtin_interfaces.msg import Time, Duration
 from spot_driver.ros_helpers import get_from_env_and_fall_back_to_param
 import rclpy.node
+
+from .ros_helpers import bosdyn_data_to_image_and_camera_info_msgs
 
 
 def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str):
@@ -75,6 +80,7 @@ class SpotImagePublisher(rclpy.node.Node):
 
         self.declare_parameter("image_service", ImageClient.default_service_name)
         self._image_service = self.get_parameter("image_service").value
+        self._cv_bridge = CvBridge()
 
         try:
             self._sdk = bosdyn.client.create_standard_sdk('image_publisher')
@@ -114,11 +120,12 @@ class SpotImagePublisher(rclpy.node.Node):
         if self._spot_name != "":
             self._frame_prefix = f"{self._spot_name}/"
 
-        # TODO: Add Hand
         self._image_requests = []
         self._image_publishers = {}
         self._camera_info_publishers = {}
         camera_sources = ["frontleft", "frontright", "left", "right", "back"]
+        if robot.has_arm():
+            camera_sources.append("hand")
         for camera_source in camera_sources:
             if self._camera_type == "camera":
                 pixel_format = image_pb2.Image.PIXEL_FORMAT_RGB_U8
@@ -143,8 +150,8 @@ class SpotImagePublisher(rclpy.node.Node):
 
         self._image_publisher_timer = self.create_timer(1/self._image_publish_rate, self.publish_image)
 
-    def robotToLocalTime(self, timestamp):
-        """Takes a timestamp and an estimated skew and return seconds and nano seconds in local time
+    def robotToLocalTime(self, timestamp: Timestamp) -> Timestamp:
+        """Takes a timestamp and an estimated skew and return seconds and nanoseconds in local time
 
         Args:
             timestamp: google.protobuf.Timestamp
@@ -168,112 +175,6 @@ class SpotImagePublisher(rclpy.node.Node):
 
         return rtime
 
-    def bosdyn_data_to_image_and_camera_info_msgs(self, data):
-        """Takes the image and camera data and populates the necessary ROS messages
-        Args:
-            data: Image proto
-        Returns:
-            (tuple):
-                * Image: message of the image captured
-                * CameraInfo: message to define the state and config of the camera that took the image
-        """
-        image_msg = Image()
-        local_time = self.robotToLocalTime(data.shot.acquisition_time)
-        image_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-        image_msg.header.frame_id = self._frame_prefix + data.shot.frame_name_image_sensor
-        image_msg.height = data.shot.image.rows
-        image_msg.width = data.shot.image.cols
-
-        # Color/greyscale formats.
-        # JPEG format
-        if data.shot.image.format == image_pb2.Image.FORMAT_JPEG:
-            image_msg.encoding = "rgb8"
-            image_msg.is_bigendian = True
-            image_msg.step = 3 * data.shot.image.cols
-            image_msg.data = data.shot.image.data
-
-        # Uncompressed.  Requires pixel_format.
-        if data.shot.image.format == image_pb2.Image.FORMAT_RAW:
-            # One byte per pixel.
-            if data.shot.image.pixel_format == image_pb2.Image.PIXEL_FORMAT_GREYSCALE_U8:
-                image_msg.encoding = "mono8"
-                image_msg.is_bigendian = True
-                image_msg.step = data.shot.image.cols
-                image_msg.data = data.shot.image.data
-
-            # Three bytes per pixel.
-            if data.shot.image.pixel_format == image_pb2.Image.PIXEL_FORMAT_RGB_U8:
-                image_msg.encoding = "rgb8"
-                image_msg.is_bigendian = True
-                image_msg.step = 3 * data.shot.image.cols
-                image_msg.data = data.shot.image.data
-
-            # Four bytes per pixel.
-            if data.shot.image.pixel_format == image_pb2.Image.PIXEL_FORMAT_RGBA_U8:
-                image_msg.encoding = "rgba8"
-                image_msg.is_bigendian = True
-                image_msg.step = 4 * data.shot.image.cols
-                image_msg.data = data.shot.image.data
-
-            # Little-endian uint16 z-distance from camera (mm).
-            if data.shot.image.pixel_format == image_pb2.Image.PIXEL_FORMAT_DEPTH_U16:
-                image_msg.encoding = "16UC1"
-                image_msg.is_bigendian = False
-                image_msg.step = 2 * data.shot.image.cols
-                image_msg.data = data.shot.image.data
-
-        # camera_info_msg = createDefaulCameraInfo(camera_info_msg)
-        camera_info_msg = CameraInfo()
-        camera_info_msg.distortion_model = "plumb_bob"
-
-        camera_info_msg.d.append(0)
-        camera_info_msg.d.append(0)
-        camera_info_msg.d.append(0)
-        camera_info_msg.d.append(0)
-        camera_info_msg.d.append(0)
-
-        camera_info_msg.k[1] = 0
-        camera_info_msg.k[3] = 0
-        camera_info_msg.k[6] = 0
-        camera_info_msg.k[7] = 0
-        camera_info_msg.k[8] = 1
-
-        camera_info_msg.r[0] = 1
-        camera_info_msg.r[1] = 0
-        camera_info_msg.r[2] = 0
-        camera_info_msg.r[3] = 0
-        camera_info_msg.r[4] = 1
-        camera_info_msg.r[5] = 0
-        camera_info_msg.r[6] = 0
-        camera_info_msg.r[7] = 0
-        camera_info_msg.r[8] = 1
-
-        camera_info_msg.p[1] = 0
-        camera_info_msg.p[3] = 0
-        camera_info_msg.p[4] = 0
-        camera_info_msg.p[7] = 0
-        camera_info_msg.p[8] = 0
-        camera_info_msg.p[9] = 0
-        camera_info_msg.p[10] = 1
-        camera_info_msg.p[11] = 0
-        local_time = self.robotToLocalTime(data.shot.acquisition_time)
-        camera_info_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-        camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
-        camera_info_msg.height = data.shot.image.rows
-        camera_info_msg.width = data.shot.image.cols
-
-        camera_info_msg.k[0] = data.source.pinhole.intrinsics.focal_length.x
-        camera_info_msg.k[2] = data.source.pinhole.intrinsics.principal_point.x
-        camera_info_msg.k[4] = data.source.pinhole.intrinsics.focal_length.y
-        camera_info_msg.k[5] = data.source.pinhole.intrinsics.principal_point.y
-
-        camera_info_msg.p[0] = data.source.pinhole.intrinsics.focal_length.x
-        camera_info_msg.p[2] = data.source.pinhole.intrinsics.principal_point.x
-        camera_info_msg.p[5] = data.source.pinhole.intrinsics.focal_length.y
-        camera_info_msg.p[6] = data.source.pinhole.intrinsics.principal_point.y
-
-        return image_msg, camera_info_msg
-
     def publish_image(self):
         start_time = time.time()
         image_responses = self._image_client.get_image(self._image_requests)
@@ -284,7 +185,7 @@ class SpotImagePublisher(rclpy.node.Node):
             return
 
         for image_response in image_responses:
-            image_msg, camera_info_msg = self.bosdyn_data_to_image_and_camera_info_msgs(image_response)
+            image_msg, camera_info_msg = bosdyn_data_to_image_and_camera_info_msgs(image_response, self.robotToLocalTime, self._frame_prefix)
             self._image_publishers[image_response.source.name].publish(image_msg)
             self._camera_info_publishers[image_response.source.name].publish(camera_info_msg)
         time2 = time.time()
