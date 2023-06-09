@@ -1143,7 +1143,7 @@ class SpotROS(Node):
             return response
 
         try:
-            self.spot_cam_wrapper.audio.play_sound(request.name, request.volume)
+            self.spot_cam_wrapper.audio.play_sound(request.name, request.volume_multiplier)
             response.success = True
             response.message = "Success"
             return response
