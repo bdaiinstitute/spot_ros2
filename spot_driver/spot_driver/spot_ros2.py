@@ -1263,7 +1263,7 @@ class SpotROS(Node):
                 else:
                     # sync_feedback.mobility_command_feedback_is_set, feedback_choice is actually not set.
                     # This may happen when a command finishes, which means we may return SUCCESS below.
-                    self.get_logger().info('mobility command feedback indicates goal has reached')
+                    self.get_logger().info("mobility command feedback indicates goal has reached")
                     pass
 
             if sync_feedback.gripper_command_feedback_is_set is True:
