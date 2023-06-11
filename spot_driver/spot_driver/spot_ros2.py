@@ -1261,8 +1261,10 @@ class SpotROS(Node):
                     self.get_logger().warn("WARNING: FollowArmCommand provides no feedback")
                     pass  # May return SUCCESS below
                 else:
-                    self.get_logger().error("ERROR: unknown mobility command type")
-                    return GoalResponse.IN_PROGRESS
+                    # sync_feedback.mobility_command_feedback_is_set, feedback_choice is actually not set.
+                    # This may happen when a command finishes, which means we may return SUCCESS below.
+                    self.get_logger().info('mobility command feedback indicates goal has reached')
+                    pass
 
             if sync_feedback.gripper_command_feedback_is_set is True:
                 grip_feedback = sync_feedback.gripper_command_feedback
