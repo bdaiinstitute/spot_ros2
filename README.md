@@ -91,7 +91,21 @@ The `bosdyn_msgs` package is installed as a debian package as part of the `insta
 MIT license - parts of the code developed specifically for ROS2.
 BSD3 license - parts of the code derived from the Clearpath Robotics ROS1 driver.
 
-## Contributors
+## Contributing
+To contribute, install `pre-commit` via pip, run `pre-commit install` and then run `pre-commit run --all-files` to 
+verify that your code will pass inspection. 
+```bash
+git clone https://github.com/bdaiinstitute/spot_ros2.git
+cd spot_ros2
+pip3 install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+Now whenever you commit code to this repository, it will be checked against our `pre-commit` hooks. You can also run
+`git commit --no-verify` if you wish you commit without checking against the hooks. 
+
+### Contributors
 
 This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and the [Boston Dynamics AI Institute](https://theaiinstitute.com/).
 

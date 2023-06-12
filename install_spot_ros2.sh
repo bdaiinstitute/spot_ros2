@@ -7,4 +7,3 @@ sudo apt install -y ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-tf
 wget -q -O /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v0.0.0-humble/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb
 sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb
 rm /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_amd64.deb
-

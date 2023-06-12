@@ -1,20 +1,20 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
 import launch
+import launch_ros
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
-import launch_ros
 
 
-def generate_launch_description():
+def generate_launch_description() -> launch.LaunchDescription:
     spot_name = LaunchConfiguration("spot_name", default="")
     spot_name_arg = DeclareLaunchArgument("spot_name", description="Name of spot", default_value="")
 
     image_publish_rate = LaunchConfiguration("image_publish_rate")
     image_publish_rate_arg = DeclareLaunchArgument(
         "image_publish_rate",
-        description='Rate in (hz) of image publishing',
+        description="Rate in (hz) of image publishing",
         default_value="10",
     )
 
@@ -56,7 +56,7 @@ def generate_launch_description():
                     "camera_type": camera_type,
                 }
             ],
-            condition=IfCondition(publish_camera_type)
+            condition=IfCondition(publish_camera_type),
         )
         nodes.append(camera_node)
 
