@@ -66,17 +66,17 @@ from spot_msgs.msg import (  # type: ignore
 from spot_msgs.srv import (  # type: ignore
     ClearBehaviorFault,
     ExecuteDance,
-    UploadAnimation,
-    ListAllDances,
-    ListAllMoves,
     GraphNavClearGraph,
     GraphNavGetLocalizationPose,
     GraphNavSetLocalization,
     GraphNavUploadGraph,
+    ListAllDances,
+    ListAllMoves,
     ListGraph,
     ListWorldObjects,
     SetLocomotion,
     SetVelocity,
+    UploadAnimation,
 )
 from spot_wrapper.wrapper import CameraSource, SpotWrapper
 
@@ -1002,27 +1002,6 @@ class SpotROS(Node):
             return response
         response.success, response.message = self.spot_wrapper.clear_behavior_fault(request.id)
         return response
-    
-    def handle_execute_dance(self, request: ExecuteDance.Request, response: ExecuteDance.Response) -> ExecuteDance.Response:
-        """ROS service handler for uploading and executing dance."""
-        response.success, response.message = self.spot_wrapper.execute_dance(request.choreo_file_content)
-        return response 
-    
-    def handle_list_all_dances(self, request: ListAllDances.Request, response: ListAllDances.Response) -> ListAllDances.Response:
-        """ROS service handler for getting list of already uploaded dances."""
-        response.success, response.message, response.dances = self.spot_wrapper.list_all_dances()
-        return response 
-    
-    def handle_list_all_moves(self, request: ListAllMoves.Request, response: ListAllMoves.Response) -> ListAllMoves.Response:
-        """ROS service handler for getting list of already uploaded moves."""
-        response.success, response.message, response.moves = self.spot_wrapper.list_all_moves()
-        return response 
-
-    def handle_upload_animation(self, request: UploadAnimation.Request, response: UploadAnimation.Response) -> UploadAnimation.Response:
-        """ROS service handler for uploading an animation."""
-        response.success, response.message = self.spot_wrapper.upload_animation(request.animation_name,
-                                                                                request.animation_file_content)
-        return response
 
     def handle_execute_dance(
         self, request: ExecuteDance.Request, response: ExecuteDance.Response
@@ -1033,6 +1012,41 @@ class SpotROS(Node):
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message = self.spot_wrapper.execute_dance(request.choreo_file_content)
+        return response
+
+    def handle_list_all_dances(
+        self, request: ListAllDances.Request, response: ListAllDances.Response
+    ) -> ListAllDances.Response:
+        """ROS service handler for getting list of already uploaded dances."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message, response.dances = self.spot_wrapper.list_all_dances()
+        return response
+
+    def handle_list_all_moves(
+        self, request: ListAllMoves.Request, response: ListAllMoves.Response
+    ) -> ListAllMoves.Response:
+        """ROS service handler for getting list of already uploaded moves."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message, response.moves = self.spot_wrapper.list_all_moves()
+        return response
+
+    def handle_upload_animation(
+        self, request: UploadAnimation.Request, response: UploadAnimation.Response
+    ) -> UploadAnimation.Response:
+        """ROS service handler for uploading an animation."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.upload_animation(
+            request.animation_name, request.animation_file_content
+        )
         return response
 
     def handle_stair_mode(self, request: SetBool.Request, response: SetBool.Response) -> SetBool.Response:
