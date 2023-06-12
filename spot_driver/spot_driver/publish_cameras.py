@@ -1,27 +1,24 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
-import cv2
-import os
 import sys
 import time
-import numpy as np
-from cv_bridge import CvBridge
 
-import rclpy
-from sensor_msgs.msg import CameraInfo, CompressedImage, Image
 import bosdyn.client
 import bosdyn.client.util
+import rclpy
+import rclpy.node
 from bosdyn.api import image_pb2
 from bosdyn.client.image import ImageClient, build_image_request
+from cv_bridge import CvBridge
 from google.protobuf.timestamp_pb2 import Timestamp
-from builtin_interfaces.msg import Time, Duration
+from sensor_msgs.msg import CameraInfo, Image
+
 from spot_driver.ros_helpers import get_from_env_and_fall_back_to_param
-import rclpy.node
 
 from .ros_helpers import bosdyn_data_to_image_and_camera_info_msgs
 
 
-def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str):
+def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str) -> str:
     if camera_source == "back":
         if camera_type == "camera":
             return "back_fisheye_image"
@@ -69,10 +66,10 @@ def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str):
 
 
 class SpotImagePublisher(rclpy.node.Node):
-    def __init__(self):
-        super().__init__(f"spot_image_publisher")
-        self.declare_parameter('spot_name', '')
-        self._spot_name = self.get_parameter('spot_name').value
+    def __init__(self) -> None:
+        super().__init__("spot_image_publisher")
+        self.declare_parameter("spot_name", "")
+        self._spot_name = self.get_parameter("spot_name").value
 
         self._username = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", self, "username", "user")
         self._password = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", self, "password", "password")
@@ -83,7 +80,7 @@ class SpotImagePublisher(rclpy.node.Node):
         self._cv_bridge = CvBridge()
 
         try:
-            self._sdk = bosdyn.client.create_standard_sdk('image_publisher')
+            self._sdk = bosdyn.client.create_standard_sdk("image_publisher")
         except Exception as e:
             self._logger.error("Error creating SDK object: %s", e)
             self._valid = False
@@ -100,7 +97,7 @@ class SpotImagePublisher(rclpy.node.Node):
             self._valid = False
             return
 
-        sdk = bosdyn.client.create_standard_sdk('image_capture')
+        sdk = bosdyn.client.create_standard_sdk("image_capture")
         robot = sdk.create_robot(self._robot_hostname)
         bosdyn.client.util.authenticate(robot)
         robot.sync_with_directory()
@@ -113,10 +110,12 @@ class SpotImagePublisher(rclpy.node.Node):
         self.declare_parameter("camera_type", "")
         self._camera_type = self.get_parameter("camera_type").value
         if self._camera_type not in ["camera", "depth", "depth_registered"]:
-            raise ValueError(f"camera_source must be in [\"camera\", \"depth\", \"depth_registered\"], "
-                             f"received {self._camera_type} instead")
+            raise ValueError(
+                'camera_source must be in ["camera", "depth", "depth_registered"], '
+                f"received {self._camera_type} instead"
+            )
 
-        self._frame_prefix = ''
+        self._frame_prefix = ""
         if self._spot_name != "":
             self._frame_prefix = f"{self._spot_name}/"
 
@@ -148,9 +147,9 @@ class SpotImagePublisher(rclpy.node.Node):
                 10,
             )
 
-        self._image_publisher_timer = self.create_timer(1/self._image_publish_rate, self.publish_image)
+        self._image_publisher_timer = self.create_timer(1 / self._image_publish_rate, self.publish_image)
 
-    def robotToLocalTime(self, timestamp: Timestamp) -> Timestamp:
+    def robot_to_local_time(self, timestamp: Timestamp) -> Timestamp:
         """Takes a timestamp and an estimated skew and return seconds and nanoseconds in local time
 
         Args:
@@ -175,7 +174,7 @@ class SpotImagePublisher(rclpy.node.Node):
 
         return rtime
 
-    def publish_image(self):
+    def publish_image(self) -> None:
         start_time = time.time()
         image_responses = self._image_client.get_image(self._image_requests)
         time1 = time.time()
@@ -185,7 +184,9 @@ class SpotImagePublisher(rclpy.node.Node):
             return
 
         for image_response in image_responses:
-            image_msg, camera_info_msg = bosdyn_data_to_image_and_camera_info_msgs(image_response, self.robotToLocalTime, self._frame_prefix)
+            image_msg, camera_info_msg = bosdyn_data_to_image_and_camera_info_msgs(
+                image_response, self.robot_to_local_time, self._frame_prefix
+            )
             self._image_publishers[image_response.source.name].publish(image_msg)
             self._camera_info_publishers[image_response.source.name].publish(camera_info_msg)
         time2 = time.time()
@@ -200,5 +201,5 @@ def main() -> None:
     rclpy.shutdown()
 
 
-if __name__ == '__main__':
-    exit(main())
+if __name__ == "__main__":
+    main()

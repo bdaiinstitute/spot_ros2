@@ -1,5 +1,7 @@
 ################  AUTOMATICALLY CREATED FILE DO NOT MODIFY ############
-
+# fmt: off
+# ruff: noqa
+# type: ignore
 from .manual_conversions import *
 
 def convert_bosdyn_msgs_mobility_params_to_any_proto(ros_msg, proto):
