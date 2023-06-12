@@ -1032,7 +1032,7 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message = self.spot_wrapper.execute_dance(request.upload_filepath)
+        response.success, response.message = self.spot_wrapper.execute_dance(request.choreo_file_content)
         return response
 
     def handle_stair_mode(self, request: SetBool.Request, response: SetBool.Response) -> SetBool.Response:
