@@ -1,4 +1,4 @@
-string choreo_file_content
 ---
 bool success 
 string message
+string[] dances
