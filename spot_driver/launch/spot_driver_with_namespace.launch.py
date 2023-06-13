@@ -16,7 +16,7 @@ def launch_robot_state_publisher(
     pkg_share = FindPackageShare("spot_description").find("spot_description")
     urdf_dir = os.path.join(pkg_share, "urdf")
 
-    has_arm = has_arm.perform(context)
+    has_arm = bool(has_arm.perform(context))
     if has_arm:
         xacro_file = os.path.join(urdf_dir, "spot_with_arm.urdf.xacro")
     else:
@@ -63,6 +63,7 @@ def generate_launch_description() -> launch.LaunchDescription:
         namespace=spot_name,
         parameters=[config_file, {"spot_name": spot_name}],
     )
+    ld.add_action(spot_driver_node)
 
     ld.add_action(OpaqueFunction(
         function=launch_robot_state_publisher, args=[spot_name, has_arm, ld]))
