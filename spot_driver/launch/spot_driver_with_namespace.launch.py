@@ -8,11 +8,10 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
+
 def launch_robot_state_publisher(
-        context: LaunchContext,
-        spot_name: LaunchConfiguration,
-        has_arm: LaunchConfiguration,
-        ld: LaunchDescription):
+    context: LaunchContext, spot_name: LaunchConfiguration, has_arm: LaunchConfiguration, ld: LaunchDescription
+):
     pkg_share = FindPackageShare("spot_description").find("spot_description")
     urdf_dir = os.path.join(pkg_share, "urdf")
 
@@ -40,20 +39,12 @@ def generate_launch_description() -> launch.LaunchDescription:
     spot_name_arg = DeclareLaunchArgument("spot_name", description="Name of spot")
 
     has_arm = LaunchConfiguration("has_arm")
-    has_arm_arg = DeclareLaunchArgument("has_arm",
-                                        description="Name of spot",
-                                        default_value="False")
+    has_arm_arg = DeclareLaunchArgument("has_arm", description="Name of spot", default_value="False")
 
     config_file = LaunchConfiguration("config_file")
     config_file_arg = DeclareLaunchArgument("config_file", description="Path to configuration file for the driver.")
 
-    ld = launch.LaunchDescription(
-        [
-            spot_name_arg,
-            config_file_arg,
-            has_arm_arg
-        ]
-    )
+    ld = launch.LaunchDescription([spot_name_arg, config_file_arg, has_arm_arg])
 
     spot_driver_node = launch_ros.actions.Node(
         package="spot_driver",
@@ -65,6 +56,5 @@ def generate_launch_description() -> launch.LaunchDescription:
     )
     ld.add_action(spot_driver_node)
 
-    ld.add_action(OpaqueFunction(
-        function=launch_robot_state_publisher, args=[spot_name, has_arm, ld]))
+    ld.add_action(OpaqueFunction(function=launch_robot_state_publisher, args=[spot_name, has_arm, ld]))
     return ld
