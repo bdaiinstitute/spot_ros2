@@ -81,8 +81,8 @@ from spot_msgs.srv import (  # type: ignore
     PlaySound,
     SetLocomotion,
     SetVelocity,
-    UploadAnimation,
     SetVolume,
+    UploadAnimation,
 )
 from spot_wrapper.cam_wrapper import SpotCamWrapper
 from spot_wrapper.wrapper import CameraSource, SpotWrapper
@@ -535,7 +535,6 @@ class SpotROS(Node):
                 callback_group=self.group,
             )
             self.create_service(
-<<<<<<< HEAD
                 UploadAnimation,
                 "upload_animation",
                 lambda request, response: self.service_wrapper(
@@ -558,11 +557,15 @@ class SpotROS(Node):
                     "list_all_moves", self.handle_list_all_moves, request, response
                 ),
                 callback_group=self.group,
+            )
             self.create_service(
-                ListSounds, 'list_sounds',
-                lambda request, response:
-                    spot_ros.service_wrapper('list_sounds', spot_ros.handle_list_sounds, request, response),
-                callback_group=spot_ros.group
+                ListSounds,
+                "list_sounds",
+                lambda request, response: self.service_wrapper(
+                    "list_sounds", self.handle_list_sounds, request, response
+                ),
+                callback_group=self.group,
+            )
             self.create_service(
                 ListSounds,
                 "list_sounds",
