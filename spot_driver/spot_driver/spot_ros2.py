@@ -567,14 +567,6 @@ class SpotROS(Node):
                 callback_group=self.group,
             )
             self.create_service(
-                ListSounds,
-                "list_sounds",
-                lambda request, response: self.service_wrapper(
-                    "list_sounds", self.handle_list_sounds, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
                 LoadSound,
                 "load_sound",
                 lambda request, response: self.service_wrapper("load_sound", self.handle_load_sound, request, response),
