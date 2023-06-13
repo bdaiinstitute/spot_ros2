@@ -9,9 +9,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.substitutions import FindPackageShare
 
 
-def launch_robot_state_publisher(
-    context: LaunchContext, has_arm: LaunchConfiguration, ld: LaunchDescription
-) -> None:
+def launch_robot_state_publisher(context: LaunchContext, has_arm: LaunchConfiguration, ld: LaunchDescription) -> None:
     pkg_share = FindPackageShare("spot_description").find("spot_description")
     urdf_dir = os.path.join(pkg_share, "urdf")
 
