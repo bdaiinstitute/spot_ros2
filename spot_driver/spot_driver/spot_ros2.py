@@ -1,5 +1,6 @@
 ### Debug
 # from ros_helpers import *
+import os
 import sys
 import threading
 import time
@@ -82,6 +83,7 @@ from spot_msgs.srv import (  # type: ignore
     SetLocomotion,
     SetVelocity,
     SetVolume,
+    TextToWav,
     UploadAnimation,
 )
 from spot_wrapper.cam_wrapper import SpotCamWrapper
@@ -596,6 +598,12 @@ class SpotROS(Node):
                 SetVolume,
                 "set_volume",
                 lambda request, response: self.service_wrapper("set_volume", self.handle_set_volume, request, response),
+                callback_group=self.group,
+            )
+            self.create_service(
+                TextToWav,
+                "text_to_wav",
+                lambda request, response: self.service_wrapper("text_to_wav", self.handle_text_to_wav, request, response),
                 callback_group=self.group,
             )
             self.create_service(
@@ -1277,6 +1285,46 @@ class SpotROS(Node):
             response.success = False
             response.message = f"Error: {e}"
             return response
+
+    def handle_text_to_wav(self, request: TextToWav.Request, response: TextToWav.Response) -> TextToWav.Response:
+        """ROS service handler for converting text to speech"""
+        txt_file = TextToWav.txt_file
+        audio_path = TextToWav.audio_path
+        audio_name = TextToWav.name
+        # call spot_wrapper function on txt_file to get audio file
+        try:
+            response.success, response.message = self._text_to_speech(txt_file, audio_path, audio_name)
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def _text_to_speech(self, text_path, audio_path, name):
+        import os
+        import gTTS
+        from pydub import AudioSegment
+
+        try:
+            with open(text_path, "r") as f:
+                text = f.read()
+
+            tts = gTTS(text)
+            audio_mp3 = str(name + ".mp3")
+            audio_mp3_path = os.join.path(audio_path, audio_mp3)
+            tts.save(audio_mp3_path)
+
+            sound = AudioSegment.from_mp3(audio_mp3_path)
+            audio_wav = str(name + ".wav")
+            audio_wav_path = os.path.join(audio_path, audio_wav)
+            sound.export(os.path.join(audio_path, audio_wav), format="wav")
+
+            os.remove(audio_mp3_path)
+
+            return True, audio_wav_path
+        
+        except Exception as e:
+            return False, e
 
     def _robot_command_goal_complete(self, feedback: RobotCommandFeedback) -> GoalResponse:
         if feedback is None:

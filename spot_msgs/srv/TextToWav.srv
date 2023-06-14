@@ -1,0 +1,6 @@
+string txt_file # abs_path
+string audio_path
+string name
+---
+bool success
+string wav_file # abs_path

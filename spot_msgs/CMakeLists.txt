@@ -65,6 +65,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/DeleteSound.srv"
   "srv/GetVolume.srv"
   "srv/SetVolume.srv"
+  "srv/TextToWav.srv"
   "srv/GraphNavUploadGraph.srv"
   "srv/GraphNavClearGraph.srv"
   "srv/GraphNavSetLocalization.srv"
