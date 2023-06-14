@@ -54,7 +54,7 @@ The spot login data hostname, username and password can either be specified as R
     ros2 launch spot_description description.launch.py
 
 ### SpotDriver
-    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>]
+    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>] [has_arm:=<True|False>]
 
 ### Depth image to Pointcloud2
     ros2 launch spot_driver point_cloud_xyz.launch.py
