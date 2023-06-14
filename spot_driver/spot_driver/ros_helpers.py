@@ -61,6 +61,14 @@ friendly_joint_names["hl.kn"] = "rear_left_knee"
 friendly_joint_names["hr.hx"] = "rear_right_hip_x"
 friendly_joint_names["hr.hy"] = "rear_right_hip_y"
 friendly_joint_names["hr.kn"] = "rear_right_knee"
+friendly_joint_names["arm0.sh0"] = "arm_sh0"
+friendly_joint_names["arm0.sh1"] = "arm_sh1"
+friendly_joint_names["arm0.hr0"] = "arm_hr0"
+friendly_joint_names["arm0.el0"] = "arm_el0"
+friendly_joint_names["arm0.el1"] = "arm_el1"
+friendly_joint_names["arm0.wr0"] = "arm_wr0"
+friendly_joint_names["arm0.wr1"] = "arm_wr1"
+friendly_joint_names["arm0.f1x"] = "arm_f1x"
 cv_bridge = CvBridge()
 
 
