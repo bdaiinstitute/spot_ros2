@@ -38,7 +38,7 @@ def generate_launch_description() -> launch.LaunchDescription:
     )
 
     has_arm = LaunchConfiguration("has_arm")
-    has_arm_arg = DeclareLaunchArgument("has_arm", description="Name of spot", default_value="False")
+    has_arm_arg = DeclareLaunchArgument("has_arm", description="Whether spot has arm", default_value="False")
 
     ld = launch.LaunchDescription([config_file_arg, has_arm_arg])
 

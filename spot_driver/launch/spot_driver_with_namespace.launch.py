@@ -39,7 +39,7 @@ def generate_launch_description() -> launch.LaunchDescription:
     spot_name_arg = DeclareLaunchArgument("spot_name", description="Name of spot")
 
     has_arm = LaunchConfiguration("has_arm")
-    has_arm_arg = DeclareLaunchArgument("has_arm", description="Name of spot", default_value="False")
+    has_arm_arg = DeclareLaunchArgument("has_arm", description="Whether spot has arm", default_value="False")
 
     config_file = LaunchConfiguration("config_file")
     config_file_arg = DeclareLaunchArgument("config_file", description="Path to configuration file for the driver.")
