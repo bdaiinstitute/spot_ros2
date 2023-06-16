@@ -1,5 +1,5 @@
 import rclpy
-from bdai_ros2_utilities.action_client_wrapper import ActionClientWrapper
+from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
