@@ -234,6 +234,13 @@ class SpotROS(Node):
         self.async_tasks_rate: int = self.get_parameter("async_tasks_rate").value
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
 
+        self.payload_credentials_file = get_from_env_and_fall_back_to_param(
+            "PAYLOAD_CREDENTIALS", self, "payload_credentials", None)
+        if self.payload_credentials_file is None:
+            self.get_logger().info("NO PAYLOAD CREDENTIALS", self.payload_credentials_file)
+        else:
+            self.get_logger().info("PAYLOAD CREDENTIALS ")
+
         self.username: Optional[str] = get_from_env_and_fall_back_to_param(
             "BOSDYN_CLIENT_USERNAME", self, "username", "user"
         )
@@ -305,6 +312,7 @@ class SpotROS(Node):
                 self.use_take_lease.value,
                 self.get_lease_on_action.value,
                 self.continually_try_stand.value,
+                payload_credentials_file = self.payload_credentials_file, 
             )
             if not self.spot_wrapper.is_valid:
                 return
