@@ -3,7 +3,7 @@ from typing import Any, Callable, Optional, Tuple, Union
 import builtin_interfaces.msg
 import google.protobuf.duration_pb2
 import google.protobuf.timestamp_pb2
-from bosdyn.api import geometry_pb2
+from bosdyn.api import geometry_pb2, gripper_camera_param_pb2
 from bosdyn.api.graph_nav import nav_pb2
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
 from builtin_interfaces.msg import Time
@@ -19,6 +19,7 @@ from geometry_msgs.msg import (
     Vector3,
     Wrench,
 )
+from spot_msgs.msg import GripperCameraParams
 
 # ROS <-> BOSDYN MATH
 
@@ -269,3 +270,60 @@ def bosdyn_pose_to_tf(
     tfmsg.transform.rotation.z = frame_t_pose.rotation.z
     tfmsg.transform.rotation.w = frame_t_pose.rotation.w
     return tfmsg
+
+def convert_spot_msgs_gripper_cam_params_proto_to_ros(proto: gripper_camera_param_pb2.GripperCameraParams, ros_msg: GripperCameraParams) -> None:
+    """
+    Convert GripperCameraParams proto to GripperCameraParams ROS message
+    """
+
+    proto.camera_mode = ros_msg.camera_mode
+    proto.brightness = ros_msg.brightness
+    proto.contrast = ros_msg.contrast
+    proto.saturation = ros_msg.saturation
+    proto.gain = ros_msg.gain
+    proto.exposure_auto = ros_msg.exposure_auto
+    proto.exposure_absolute = ros_msg.exposure_absolute
+    proto.exposure_roi.roi_percentage_in_image.x = ros_msg.exposure_roi_position[0]
+    proto.exposure_roi.roi_percentage_in_image.y = ros_msg.exposure_roi_position[1]
+    proto.exposure_roi.window_size = ros_msg.exposure_roi_size
+    proto.focus_auto = ros_msg.focus_auto
+    proto.focus_absolute = ros_msg.focus_absolute
+    proto.focus_roi.roi_percentage_in_image.x = ros_msg.focus_roi_position[0]
+    proto.focus_roi.roi_percentage_in_image.y = ros_msg.focus_roi_position[1]
+    proto.focus_roi.window_size = ros_msg.focus_roi_size
+    proto.draw_focus_roi_rectangle = ros_msg.draw_focus_roi_rectangle
+    proto.hdr = ros_msg.hdr
+    proto.led_mode = ros_msg.led_mode
+    proto.led_torch_brightness = ros_msg.led_torch_brightness
+    proto.white_balance_temperature_auto = ros_msg.white_balance_temperature_auto
+    proto.gamma = ros_msg.gamma
+    proto.white_balance_temperature = ros_msg.white_balance_temperature
+    proto.sharpness = ros_msg.sharpness
+
+def convert_spot_msgs_gripper_cam_params_ros_to_proto(ros_msg: GripperCameraParams, proto: gripper_camera_param_pb2.GripperCameraParams) -> None:
+    """
+    Convert GripperCameraParams ROS message to GripperCameraParams proto
+    """
+    ros_msg.camera_mode = proto.camera_mode
+    ros_msg.brightness = proto.brightness
+    ros_msg.contrast = proto.contrast
+    ros_msg.saturation = proto.saturation
+    ros_msg.gain = proto.gain
+    ros_msg.exposure_auto = proto.exposure_auto
+    ros_msg.exposure_absolute = proto.exposure_absolute
+    ros_msg.exposure_roi_position[0] = proto.exposure_roi.roi_percentage_in_image.x
+    ros_msg.exposure_roi_position[1] = proto.exposure_roi.roi_percentage_in_image.y
+    ros_msg.exposure_roi_size = proto.exposure_roi.window_size
+    ros_msg.focus_auto = proto.focus_auto
+    ros_msg.focus_absolute = proto.focus_absolute
+    ros_msg.focus_roi_position[0] = proto.focus_roi.roi_percentage_in_image.x
+    ros_msg.focus_roi_position[1] = proto.focus_roi.roi_percentage_in_image.y
+    ros_msg.focus_roi_size = proto.focus_roi.window_size
+    ros_msg.draw_focus_roi_rectangle = proto.draw_focus_roi_rectangle
+    ros_msg.hdr = proto.hdr
+    ros_msg.led_mode = proto.led_mode
+    ros_msg.led_torch_brightness = proto.led_torch_brightness
+    ros_msg.white_balance_temperature_auto = proto.white_balance_temperature_auto
+    ros_msg.gamma = proto.gamma
+    ros_msg.white_balance_temperature = proto.white_balance_temperature
+    ros_msg.sharpness = proto.sharpness

@@ -25,6 +25,7 @@ from bosdyn.api import (
     robot_command_pb2,
     trajectory_pb2,
     world_object_pb2,
+    gripper_camera_param_pb2
 )
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
@@ -62,6 +63,7 @@ from spot_msgs.msg import (  # type: ignore
     PowerState,
     SystemFaultState,
     WiFiState,
+    GripperCameraParams,
 )
 from spot_msgs.srv import (  # type: ignore
     ClearBehaviorFault,
@@ -83,6 +85,8 @@ from spot_msgs.srv import (  # type: ignore
     SetVelocity,
     SetVolume,
     UploadAnimation,
+    GetGripperCameraParams,
+    SetGripperCameraParams,
 )
 from spot_wrapper.cam_wrapper import SpotCamWrapper
 from spot_wrapper.wrapper import CameraSource, SpotWrapper
@@ -602,6 +606,18 @@ class SpotROS(Node):
                 ListGraph,
                 "list_graph",
                 lambda request, response: self.service_wrapper("list_graph", self.handle_list_graph, request, response),
+                callback_group=self.group,
+            )
+            self.create_service(
+                GetGripperCameraParams,
+                "get_gripper_camera_params",
+                lambda request, response: self.service_wrapper("get_gripper_camera_params", self.handle_get_gripper_camera_params, request, response),
+                callback_group=self.group,
+            )
+            self.create_service(
+                SetGripperCameraParams,
+                "set_gripper_camera_params",
+                lambda request, response: self.service_wrapper("set_gripper_camera_params", self.handle_set_gripper_camera_params, request, response),
                 callback_group=self.group,
             )
 
@@ -2066,6 +2082,40 @@ class SpotROS(Node):
             goal_handle.abort()
 
         return result
+
+    def handle_get_gripper_camera_params(self, request: GetGripperCameraParams.Request, response: GetGripperCameraParams.Response) -> GetGripperCameraParams.Response:
+        """
+        Return params from spot_wrapper get_gripper_camera_params
+        """
+        params, message = self.spot_wrapper.get_gripper_camera_params()
+
+        if params is None:
+            response.success = False
+            response.message = message
+            return response
+
+        response.success = True
+        response.message = message
+
+        conv.convert_spot_msgs_gripper_cam_params_proto_to_ros(params, response.params)
+
+        return response
+
+
+    def handle_set_gripper_camera_params(self, request: SetGripperCameraParams.Request, response: SetGripperCameraParams.Response) -> SetGripperCameraParams.Response:
+        """
+        Pass request.params through to spot_wrapper set_gripper_camera_params
+        """
+
+        params = gripper_camera_param_pb2.GripperCameraParams()
+        conv.convert_spot_msgs_gripper_cam_params_ros_to_proto(request.params, params)
+
+        success, message = self.spot_wrapper.set_gripper_camera_params(params)
+
+        response.success = success
+        response.message = message
+
+        return response
 
     def populate_camera_static_transforms(self, image_data: image_pb2.Image) -> None:
         """Check data received from one of the image tasks and use the transform snapshot to extract the camera frame
