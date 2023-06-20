@@ -1,5 +1,5 @@
 import rclpy
-from bdai_ros2_wrappers.action_client_wrapper import ActionClientWrapper
+from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import SE2Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
