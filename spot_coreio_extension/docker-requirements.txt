@@ -1,0 +1,4 @@
+bosdyn-api==3.2.0
+bosdyn-client==3.2.0
+bosdyn-core==3.2.0
+transform3d===0.0.4

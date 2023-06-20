@@ -1,0 +1,63 @@
+# Use a base image by OSRF that already contains ROS 2 Humble
+FROM arm64v8/ros:humble-ros-base-jammy
+
+# Setup environment variables
+ENV SPOT_WS /home/spot_ws
+
+# Install system utilities
+RUN apt-get update && apt-get install -y \
+        software-properties-common \
+        wget \
+        iputils-ping \
+        iproute2 \
+        nano \
+        python3-pip \
+        && rm -rf /var/lib/apt/lists/*
+
+# Copy over the python requirements file 
+COPY docker-requirements.txt ./
+
+# # Install the python requirements
+RUN python3 -m pip install pip==21.3.1 setuptools==59.6.0 wheel==0.37.1 && \
+    python3 -m pip install -r docker-requirements.txt --find-links .
+
+# RUN pip3 install bosdyn-client bosdyn-mission bosdyn-api bosdyn-core \
+#         transform3d
+
+# Install ROS dependecies
+RUN apt-get update && apt-get install -y \
+        ros-$ROS_DISTRO-joint-state-publisher-gui \
+        ros-$ROS_DISTRO-tf-transformations \ 
+        ros-$ROS_DISTRO-xacro \
+        ros-$ROS_DISTRO-depth-image-proc
+
+RUN apt-get update && apt-get install -y \
+         ros-$ROS_DISTRO-demo-nodes-cpp \
+         ros-$ROS_DISTRO-demo-nodes-py
+
+# Install Boston Dynamics AI Institute bosdyn_msgs package
+COPY ros-humble-bosdyn-msgs_0.0.0-0jammy_arm64.deb /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_arm64.deb 
+RUN  dpkg -i /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_arm64.deb \
+        && rm /tmp/ros-humble-bosdyn-msgs_0.0.0-0jammy_arm64.deb 
+
+# Setup the ROS workspace
+RUN mkdir -p ${SPOT_WS}/src 
+WORKDIR ${SPOT_WS}
+
+# Clone Spot ROS2 package and build source
+RUN git clone --recurse-submodules https://github.com/MASKOR/Spot-ROS2.git $SPOT_WS/src/
+RUN /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install"
+
+# NOTE: Edit these parameters with your robot's credentials and application needs
+COPY spot_ros_params.yml /
+
+# set up environment
+COPY update_bashrc /sbin/update_bashrc
+RUN chmod +x /sbin/update_bashrc ; sync ;\
+    /bin/bash -c /sbin/update_bashrc ; rm /sbin/update_bashrc
+
+# Change entrypoint to source ~/.bashrc and start in ~
+COPY spot_ros_entrypoint.sh /
+ENTRYPOINT ["/spot_ros_entrypoint.sh"]
+
+
