@@ -1,4 +1,4 @@
-spot_msgs/GetGripperCameraParams params
 ---
+spot_msgs/GripperCameraParams params
 bool success
 string message

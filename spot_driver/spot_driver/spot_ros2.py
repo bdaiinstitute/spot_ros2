@@ -20,12 +20,12 @@ from bdai_ros2_wrappers.single_goal_multiple_action_servers import (
 )
 from bosdyn.api import (
     geometry_pb2,
+    gripper_camera_param_pb2,
     image_pb2,
     manipulation_api_pb2,
     robot_command_pb2,
     trajectory_pb2,
     world_object_pb2,
-    gripper_camera_param_pb2
 )
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
@@ -63,12 +63,12 @@ from spot_msgs.msg import (  # type: ignore
     PowerState,
     SystemFaultState,
     WiFiState,
-    GripperCameraParams,
 )
 from spot_msgs.srv import (  # type: ignore
     ClearBehaviorFault,
     DeleteSound,
     ExecuteDance,
+    GetGripperCameraParams,
     GetVolume,
     GraphNavClearGraph,
     GraphNavGetLocalizationPose,
@@ -81,12 +81,11 @@ from spot_msgs.srv import (  # type: ignore
     ListWorldObjects,
     LoadSound,
     PlaySound,
+    SetGripperCameraParams,
     SetLocomotion,
     SetVelocity,
     SetVolume,
     UploadAnimation,
-    GetGripperCameraParams,
-    SetGripperCameraParams,
 )
 from spot_wrapper.cam_wrapper import SpotCamWrapper
 from spot_wrapper.wrapper import CameraSource, SpotWrapper
@@ -611,13 +610,17 @@ class SpotROS(Node):
             self.create_service(
                 GetGripperCameraParams,
                 "get_gripper_camera_params",
-                lambda request, response: self.service_wrapper("get_gripper_camera_params", self.handle_get_gripper_camera_params, request, response),
+                lambda request, response: self.service_wrapper(
+                    "get_gripper_camera_params", self.handle_get_gripper_camera_params, request, response
+                ),
                 callback_group=self.group,
             )
             self.create_service(
                 SetGripperCameraParams,
                 "set_gripper_camera_params",
-                lambda request, response: self.service_wrapper("set_gripper_camera_params", self.handle_set_gripper_camera_params, request, response),
+                lambda request, response: self.service_wrapper(
+                    "set_gripper_camera_params", self.handle_set_gripper_camera_params, request, response
+                ),
                 callback_group=self.group,
             )
 
@@ -2083,10 +2086,17 @@ class SpotROS(Node):
 
         return result
 
-    def handle_get_gripper_camera_params(self, request: GetGripperCameraParams.Request, response: GetGripperCameraParams.Response) -> GetGripperCameraParams.Response:
+    def handle_get_gripper_camera_params(
+        self, request: GetGripperCameraParams.Request, response: GetGripperCameraParams.Response
+    ) -> GetGripperCameraParams.Response:
         """
         Return params from spot_wrapper get_gripper_camera_params
         """
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is not initialized."
+            return response
+
         params, message = self.spot_wrapper.get_gripper_camera_params()
 
         if params is None:
@@ -2101,11 +2111,16 @@ class SpotROS(Node):
 
         return response
 
-
-    def handle_set_gripper_camera_params(self, request: SetGripperCameraParams.Request, response: SetGripperCameraParams.Response) -> SetGripperCameraParams.Response:
+    def handle_set_gripper_camera_params(
+        self, request: SetGripperCameraParams.Request, response: SetGripperCameraParams.Response
+    ) -> SetGripperCameraParams.Response:
         """
         Pass request.params through to spot_wrapper set_gripper_camera_params
         """
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is not initialized."
+            return response
 
         params = gripper_camera_param_pb2.GripperCameraParams()
         conv.convert_spot_msgs_gripper_cam_params_ros_to_proto(request.params, params)

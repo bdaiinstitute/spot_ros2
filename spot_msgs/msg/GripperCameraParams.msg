@@ -61,7 +61,7 @@ bool draw_focus_roi_rectangle
 uint8 hdr
 
 uint8 led_mode
-float led_torch_brightness
+float32 led_torch_brightness
 
 bool white_balance_temperature_auto
 float32 white_balance_temperature
