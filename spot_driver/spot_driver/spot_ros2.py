@@ -235,12 +235,8 @@ class SpotROS(Node):
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
 
         self.payload_credentials_file = get_from_env_and_fall_back_to_param(
-            "PAYLOAD_CREDENTIALS", self, "payload_credentials", None)
-        if self.payload_credentials_file is None:
-            self.get_logger().info("NO PAYLOAD CREDENTIALS", self.payload_credentials_file)
-        else:
-            self.get_logger().info("PAYLOAD CREDENTIALS ")
-
+            "PAYLOAD_CREDENTIALS", self, "payload_credentials", None
+        )
         self.username: Optional[str] = get_from_env_and_fall_back_to_param(
             "BOSDYN_CLIENT_USERNAME", self, "username", "user"
         )
