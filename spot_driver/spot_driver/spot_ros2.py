@@ -216,6 +216,8 @@ class SpotROS(Node):
 
         self.declare_parameter("spot_name", "")
 
+        self.declare_parameter("has_dock", False)
+
         self.auto_claim: Parameter = self.get_parameter("auto_claim")
         self.auto_power_on: Parameter = self.get_parameter("auto_power_on")
         self.auto_stand: Parameter = self.get_parameter("auto_stand")
@@ -239,6 +241,8 @@ class SpotROS(Node):
         self.name: Optional[str] = self.get_parameter("spot_name").value
         if not self.name:
             self.name = None
+
+        self.has_dock: bool = self.get_parameter("has_dock").value
 
         self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
@@ -498,14 +502,14 @@ class SpotROS(Node):
                 ),
                 callback_group=self.group,
             )
-            self.create_service(
-                Trigger,
-                "undock",
-                lambda request, response: self.service_wrapper(
-                    "undock", self.handle_undock, request, response
-                ),
-                callback_group=self.group,
-            )
+            # self.create_service(
+            #     Trigger,
+            #     "undock",
+            #     lambda request, response: self.service_wrapper(
+            #         "undock", self.handle_undock, request, response
+            #     ),
+            #     callback_group=self.group,
+            # )
 
             self.create_service(
                 SetBool,
@@ -613,12 +617,12 @@ class SpotROS(Node):
                 lambda request, response: self.service_wrapper("list_graph", self.handle_list_graph, request, response),
                 callback_group=self.group,
             )
-            self.create_service(
-                Dock,
-                "dock",
-                lambda request, response: self.service_wrapper("dock", self.handle_dock, request, response),
-                callback_group=self.group,
-            )
+            # self.create_service(
+            #     Dock,
+            #     "dock",
+            #     lambda request, response: self.service_wrapper("dock", self.handle_dock, request, response),
+            #     callback_group=self.group,
+            # )
 
             # This doesn't use the service wrapper because it's not a trigger, and we want different mock responses
             self.create_service(ListWorldObjects, "list_world_objects", self.handle_list_world_objects)
@@ -686,6 +690,21 @@ class SpotROS(Node):
                     RobotCommand,
                     "robot_command",
                     self.handle_robot_command,
+                    callback_group=self.group,
+                )
+
+            # Create Docking/Undocking services if a user-specifes a dock is available.
+            if self.has_dock:
+                self.create_service(
+                    Trigger,
+                    "undock",
+                    lambda request, response: self.service_wrapper("undock", self.handle_undock, request, response),
+                    callback_group=self.group,
+                )
+                self.create_service(
+                    Dock,
+                    "dock",
+                    lambda request, response: self.service_wrapper("dock", self.handle_dock, request, response),
                     callback_group=self.group,
                 )
 
