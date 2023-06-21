@@ -1,0 +1,52 @@
+name: build_documentation
+on: [push, pull_request, workflow_dispatch]
+permissions:
+    contents: write
+
+jobs:
+  build_jammy_humble:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install package
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          # pull ros_utilites and spot_wrapper
+          # git submodule init 
+          # git submodule update
+          pwd 
+          ls
+          apt-get update
+          apt install wget 
+          ./install_spot_ros2.sh
+          # go to root folder
+          cd ../../
+          colcon build --symlink-install
+          source install/local_setup.bash
+      - name: Install dependencies & build docs
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          sudo pip3 install transforms3d
+          sudo pip install transforms3d
+          sudo pip install aiortc
+          # go to documentation folder and build the .rst files 
+          cd docs
+          # we don't use the --implicit-namespaces flag
+          sphinx-apidoc -f -o source/ ../ ../*setup* ../examples ../*launch.py ../*command_spot_driver.py
+          cd ..
+          sphinx-build docs _build -v
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        with:
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: _build/
+          force_orphan: true
