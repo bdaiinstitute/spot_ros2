@@ -16,7 +16,7 @@
 
 # Overview
 This is a ROS2 package for BostonDynamics' Spot. The package contains all necessary topics, services and actions to teleoperate or navigate Spot.
-This package is derived of this [ROS1 package](https://github.com/heuristicus/spot_ros).
+This package is derived of this [ROS1 package](https://github.com/heuristicus/spot_ros). This package currently corresponds to version 3.2.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v3.2.0)
 
 ## Prerequisites
     - Tested for Ubuntu 20.04 + Foxy
