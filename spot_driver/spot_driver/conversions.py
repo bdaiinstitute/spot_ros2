@@ -1,4 +1,5 @@
 ################  AUTOMATICALLY CREATED FILE DO NOT MODIFY ############
+
 # fmt: off
 # ruff: noqa
 # type: ignore
@@ -7908,6 +7909,8 @@ def convert_bosdyn_msgs_capture_parameters_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_image_capture(proto, ros_msg):
     convert_proto_to_builtin_interfaces_time(proto.acquisition_time, ros_msg.acquisition_time)
     ros_msg.acquisition_time_is_set = proto.HasField("acquisition_time")
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot, ros_msg.transforms_snapshot)
+    ros_msg.transforms_snapshot_is_set = proto.HasField("transforms_snapshot")
     ros_msg.frame_name_image_sensor = proto.frame_name_image_sensor
     convert_proto_to_bosdyn_msgs_image(proto.image, ros_msg.image)
     ros_msg.image_is_set = proto.HasField("image")
@@ -7918,6 +7921,8 @@ def convert_bosdyn_msgs_image_capture_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.acquisition_time_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.acquisition_time, proto.acquisition_time)
+    if ros_msg.transforms_snapshot_is_set:
+        convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg.transforms_snapshot, proto.transforms_snapshot)
     proto.frame_name_image_sensor = ros_msg.frame_name_image_sensor
     if ros_msg.image_is_set:
         convert_bosdyn_msgs_image_to_proto(ros_msg.image, proto.image)
@@ -8508,6 +8513,8 @@ def convert_proto_to_bosdyn_msgs_local_grid(proto, ros_msg):
     ros_msg.local_grid_type_name = proto.local_grid_type_name
     convert_proto_to_builtin_interfaces_time(proto.acquisition_time, ros_msg.acquisition_time)
     ros_msg.acquisition_time_is_set = proto.HasField("acquisition_time")
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot, ros_msg.transforms_snapshot)
+    ros_msg.transforms_snapshot_is_set = proto.HasField("transforms_snapshot")
     ros_msg.frame_name_local_grid_data = proto.frame_name_local_grid_data
     convert_proto_to_bosdyn_msgs_local_grid_extent(proto.extent, ros_msg.extent)
     ros_msg.extent_is_set = proto.HasField("extent")
@@ -8525,6 +8532,8 @@ def convert_bosdyn_msgs_local_grid_to_proto(ros_msg, proto):
     proto.local_grid_type_name = ros_msg.local_grid_type_name
     if ros_msg.acquisition_time_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.acquisition_time, proto.acquisition_time)
+    if ros_msg.transforms_snapshot_is_set:
+        convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg.transforms_snapshot, proto.transforms_snapshot)
     proto.frame_name_local_grid_data = ros_msg.frame_name_local_grid_data
     if ros_msg.extent_is_set:
         convert_bosdyn_msgs_local_grid_extent_to_proto(ros_msg.extent, proto.extent)
@@ -8756,6 +8765,8 @@ def convert_bosdyn_msgs_walk_to_object_ray_in_world_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_walk_to_object_in_image(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_vec2(proto.pixel_xy, ros_msg.pixel_xy)
     ros_msg.pixel_xy_is_set = proto.HasField("pixel_xy")
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot_for_camera, ros_msg.transforms_snapshot_for_camera)
+    ros_msg.transforms_snapshot_for_camera_is_set = proto.HasField("transforms_snapshot_for_camera")
     ros_msg.frame_name_image_sensor = proto.frame_name_image_sensor
     convert_proto_to_bosdyn_msgs_image_source_pinhole_model(proto.camera_model, ros_msg.camera_model)
     ros_msg.camera_model_is_set = proto.HasField("camera_model")
@@ -8766,6 +8777,8 @@ def convert_bosdyn_msgs_walk_to_object_in_image_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.pixel_xy_is_set:
         convert_bosdyn_msgs_vec2_to_proto(ros_msg.pixel_xy, proto.pixel_xy)
+    if ros_msg.transforms_snapshot_for_camera_is_set:
+        convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg.transforms_snapshot_for_camera, proto.transforms_snapshot_for_camera)
     proto.frame_name_image_sensor = ros_msg.frame_name_image_sensor
     if ros_msg.camera_model_is_set:
         convert_bosdyn_msgs_image_source_pinhole_model_to_proto(ros_msg.camera_model, proto.camera_model)
@@ -8817,6 +8830,8 @@ def convert_bosdyn_msgs_pick_object_to_proto(ros_msg, proto):
 def convert_proto_to_bosdyn_msgs_pick_object_in_image(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_vec2(proto.pixel_xy, ros_msg.pixel_xy)
     ros_msg.pixel_xy_is_set = proto.HasField("pixel_xy")
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot_for_camera, ros_msg.transforms_snapshot_for_camera)
+    ros_msg.transforms_snapshot_for_camera_is_set = proto.HasField("transforms_snapshot_for_camera")
     ros_msg.frame_name_image_sensor = proto.frame_name_image_sensor
     convert_proto_to_bosdyn_msgs_image_source_pinhole_model(proto.camera_model, ros_msg.camera_model)
     ros_msg.camera_model_is_set = proto.HasField("camera_model")
@@ -8828,6 +8843,8 @@ def convert_bosdyn_msgs_pick_object_in_image_to_proto(ros_msg, proto):
     proto.Clear()
     if ros_msg.pixel_xy_is_set:
         convert_bosdyn_msgs_vec2_to_proto(ros_msg.pixel_xy, proto.pixel_xy)
+    if ros_msg.transforms_snapshot_for_camera_is_set:
+        convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg.transforms_snapshot_for_camera, proto.transforms_snapshot_for_camera)
     proto.frame_name_image_sensor = ros_msg.frame_name_image_sensor
     if ros_msg.camera_model_is_set:
         convert_bosdyn_msgs_image_source_pinhole_model_to_proto(ros_msg.camera_model, proto.camera_model)
@@ -8938,6 +8955,8 @@ def convert_proto_to_bosdyn_msgs_manipulation_api_feedback_response(proto, ros_m
     ros_msg.header_is_set = proto.HasField("header")
     ros_msg.manipulation_cmd_id = proto.manipulation_cmd_id
     ros_msg.current_state.value = proto.current_state
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot_manipulation_data, ros_msg.transforms_snapshot_manipulation_data)
+    ros_msg.transforms_snapshot_manipulation_data_is_set = proto.HasField("transforms_snapshot_manipulation_data")
 
 def convert_bosdyn_msgs_manipulation_api_feedback_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -8945,6 +8964,8 @@ def convert_bosdyn_msgs_manipulation_api_feedback_response_to_proto(ros_msg, pro
         convert_bosdyn_msgs_response_header_to_proto(ros_msg.header, proto.header)
     proto.manipulation_cmd_id = ros_msg.manipulation_cmd_id
     proto.current_state = ros_msg.current_state.value
+    if ros_msg.transforms_snapshot_manipulation_data_is_set:
+        convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg.transforms_snapshot_manipulation_data, proto.transforms_snapshot_manipulation_data)
 
 def convert_proto_to_bosdyn_msgs_manipulation_api_response(proto, ros_msg):
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
@@ -11372,6 +11393,8 @@ def convert_proto_to_bosdyn_msgs_point_cloud_source(proto, ros_msg):
     ros_msg.frame_name_sensor = proto.frame_name_sensor
     convert_proto_to_builtin_interfaces_time(proto.acquisition_time, ros_msg.acquisition_time)
     ros_msg.acquisition_time_is_set = proto.HasField("acquisition_time")
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot, ros_msg.transforms_snapshot)
+    ros_msg.transforms_snapshot_is_set = proto.HasField("transforms_snapshot")
 
 def convert_bosdyn_msgs_point_cloud_source_to_proto(ros_msg, proto):
     proto.Clear()
@@ -11379,6 +11402,8 @@ def convert_bosdyn_msgs_point_cloud_source_to_proto(ros_msg, proto):
     proto.frame_name_sensor = ros_msg.frame_name_sensor
     if ros_msg.acquisition_time_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.acquisition_time, proto.acquisition_time)
+    if ros_msg.transforms_snapshot_is_set:
+        convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg.transforms_snapshot, proto.transforms_snapshot)
 
 def convert_proto_to_bosdyn_msgs_point_cloud_encoding(proto, ros_msg):
     pass
@@ -11733,6 +11758,8 @@ def convert_proto_to_bosdyn_msgs_raycast_response(proto, ros_msg):
     for _item in proto.hits:
         ros_msg.hits.append(RayIntersection())
         convert_proto_to_bosdyn_msgs_ray_intersection(_item, ros_msg.hits[-1])
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot, ros_msg.transforms_snapshot)
+    ros_msg.transforms_snapshot_is_set = proto.HasField("transforms_snapshot")
 
 def convert_bosdyn_msgs_raycast_response_to_proto(ros_msg, proto):
     proto.Clear()
@@ -11744,6 +11771,8 @@ def convert_bosdyn_msgs_raycast_response_to_proto(ros_msg, proto):
     del proto.hits[:]
     for _item in ros_msg.hits:
         convert_bosdyn_msgs_ray_intersection_to_proto(_item, proto.hits.add())
+    if ros_msg.transforms_snapshot_is_set:
+        convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg.transforms_snapshot, proto.transforms_snapshot)
 
 def convert_proto_to_bosdyn_msgs_robot_command_one_of_command(proto, ros_msg):
     if proto.HasField("full_body_command"):
@@ -12306,6 +12335,8 @@ def convert_proto_to_bosdyn_msgs_kinematic_state(proto, ros_msg):
         convert_proto_to_bosdyn_msgs_joint_state(_item, ros_msg.joint_states[-1])
     convert_proto_to_builtin_interfaces_time(proto.acquisition_timestamp, ros_msg.acquisition_timestamp)
     ros_msg.acquisition_timestamp_is_set = proto.HasField("acquisition_timestamp")
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot, ros_msg.transforms_snapshot)
+    ros_msg.transforms_snapshot_is_set = proto.HasField("transforms_snapshot")
     convert_proto_to_geometry_msgs_twist(proto.velocity_of_body_in_vision, ros_msg.velocity_of_body_in_vision)
     ros_msg.velocity_of_body_in_vision_is_set = proto.HasField("velocity_of_body_in_vision")
     convert_proto_to_geometry_msgs_twist(proto.velocity_of_body_in_odom, ros_msg.velocity_of_body_in_odom)
@@ -12318,6 +12349,8 @@ def convert_bosdyn_msgs_kinematic_state_to_proto(ros_msg, proto):
         convert_bosdyn_msgs_joint_state_to_proto(_item, proto.joint_states.add())
     if ros_msg.acquisition_timestamp_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.acquisition_timestamp, proto.acquisition_timestamp)
+    if ros_msg.transforms_snapshot_is_set:
+        convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg.transforms_snapshot, proto.transforms_snapshot)
     if ros_msg.velocity_of_body_in_vision_is_set:
         convert_geometry_msgs_twist_to_proto(ros_msg.velocity_of_body_in_vision, proto.velocity_of_body_in_vision)
     if ros_msg.velocity_of_body_in_odom_is_set:
@@ -15514,6 +15547,8 @@ def convert_proto_to_bosdyn_msgs_world_object(proto, ros_msg):
     ros_msg.name = proto.name
     convert_proto_to_builtin_interfaces_time(proto.acquisition_time, ros_msg.acquisition_time)
     ros_msg.acquisition_time_is_set = proto.HasField("acquisition_time")
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot, ros_msg.transforms_snapshot)
+    ros_msg.transforms_snapshot_is_set = proto.HasField("transforms_snapshot")
     from bosdyn_msgs.msg import DrawableProperties
     ros_msg.drawable_properties = []
     for _item in proto.drawable_properties:
@@ -15536,6 +15571,8 @@ def convert_bosdyn_msgs_world_object_to_proto(ros_msg, proto):
     proto.name = ros_msg.name
     if ros_msg.acquisition_time_is_set:
         convert_builtin_interfaces_time_to_proto(ros_msg.acquisition_time, proto.acquisition_time)
+    if ros_msg.transforms_snapshot_is_set:
+        convert_bosdyn_msgs_frame_tree_snapshot_to_proto(ros_msg.transforms_snapshot, proto.transforms_snapshot)
     del proto.drawable_properties[:]
     for _item in ros_msg.drawable_properties:
         convert_bosdyn_msgs_drawable_properties_to_proto(_item, proto.drawable_properties.add())
