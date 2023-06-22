@@ -48,13 +48,6 @@ RUN /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symli
 # NOTE: Edit these parameters with your robot's credentials and application needs
 COPY spot_ros_params.yml /
 
-# # set up environment
-COPY update_bashrc /sbin/update_bashrc
-RUN chmod +x /sbin/update_bashrc ; sync ;\
-    /bin/bash -c /sbin/update_bashrc ; rm /sbin/update_bashrc
-
 # Change entrypoint to source ~/.bashrc and start in ~
 COPY spot_ros_entrypoint.sh /
 ENTRYPOINT ["/spot_ros_entrypoint.sh"]
-
-
