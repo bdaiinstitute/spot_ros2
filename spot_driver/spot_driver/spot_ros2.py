@@ -12,12 +12,8 @@ import builtin_interfaces.msg
 import rclpy
 import rclpy.time
 import tf2_ros
-from bdai_ros2_wrappers.single_goal_action_server import (
-    SingleGoalActionServer,
-)
-from bdai_ros2_wrappers.single_goal_multiple_action_servers import (
-    SingleGoalMultipleActionServers,
-)
+from bdai_ros2_wrappers.single_goal_action_server import SingleGoalActionServer
+from bdai_ros2_wrappers.single_goal_multiple_action_servers import SingleGoalMultipleActionServers
 from bosdyn.api import (
     geometry_pb2,
     image_pb2,
@@ -235,7 +231,7 @@ class SpotROS(Node):
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
 
         self.payload_credentials_file = get_from_env_and_fall_back_to_param(
-            "PAYLOAD_CREDENTIALS", self, "payload_credentials", None
+            "PAYLOAD_CREDENTIALS", self, "payload_credentials", ""
         )
         self.username: Optional[str] = get_from_env_and_fall_back_to_param(
             "BOSDYN_CLIENT_USERNAME", self, "username", "user"
@@ -308,7 +304,7 @@ class SpotROS(Node):
                 self.use_take_lease.value,
                 self.get_lease_on_action.value,
                 self.continually_try_stand.value,
-                payload_credentials_file = self.payload_credentials_file, 
+                payload_credentials_file=self.payload_credentials_file,
             )
             if not self.spot_wrapper.is_valid:
                 return
