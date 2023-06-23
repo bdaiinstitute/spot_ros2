@@ -11,9 +11,6 @@
     <a href="https://github.com/bdaiinstitute/spot_ros2/actions">
     <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/test.yml/badge.svg">
     </a>
-    <a href="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/build_documentation.yml">
-    <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/build_documentation.yml/badge.svg">
-    </a>
     <a href="https://bdaiinstitute.github.io/spot_ros2">
     <img src="https://img.shields.io/badge/docs-Python3-blue">
     </a>
