@@ -66,6 +66,7 @@ from spot_msgs.msg import (  # type: ignore
 from spot_msgs.srv import (  # type: ignore
     ClearBehaviorFault,
     DeleteSound,
+    Dock,
     ExecuteDance,
     GetVolume,
     GraphNavClearGraph,
@@ -497,6 +498,12 @@ class SpotROS(Node):
                 ),
                 callback_group=self.group,
             )
+            self.create_service(
+                Trigger,
+                "undock",
+                lambda request, response: self.service_wrapper("undock", self.handle_undock, request, response),
+                callback_group=self.group,
+            )
 
             self.create_service(
                 SetBool,
@@ -602,6 +609,12 @@ class SpotROS(Node):
                 ListGraph,
                 "list_graph",
                 lambda request, response: self.service_wrapper("list_graph", self.handle_list_graph, request, response),
+                callback_group=self.group,
+            )
+            self.create_service(
+                Dock,
+                "dock",
+                lambda request, response: self.service_wrapper("dock", self.handle_dock, request, response),
                 callback_group=self.group,
             )
 
@@ -1046,6 +1059,15 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.disengageEStop()
         return response
 
+    def handle_undock(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler to undock the robot."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.undock()
+        return response
+
     def handle_clear_behavior_fault(
         self, request: ClearBehaviorFault.Request, response: ClearBehaviorFault.Response
     ) -> ClearBehaviorFault.Response:
@@ -1243,6 +1265,15 @@ class SpotROS(Node):
             response.success = False
             response.message = "Error:{}".format(e)
             return response
+
+    def handle_dock(self, request: Dock.Request, response: Dock.Response) -> Dock.Response:
+        """ROS service handler to dock the robot."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.dock(request.dock_id)
+        return response
 
     def handle_max_vel(self, request: SetVelocity.Request, response: SetVelocity.Response) -> SetVelocity.Response:
         """
