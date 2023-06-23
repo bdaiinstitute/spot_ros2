@@ -9,7 +9,7 @@ permissions:
     contents: write
 
 jobs:
-  build_package_&_docs:
+  build_package_and_docs:
     runs-on: ubuntu-latest
     defaults:
       run:
