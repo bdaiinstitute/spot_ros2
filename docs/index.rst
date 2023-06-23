@@ -7,9 +7,9 @@ Welcome to Spot ROS2's documentation!
 =====================================
 
 .. toctree::
-   :caption: READMEs
+   :caption: README
 
-   source/readme_links.md
+   source/README.md
 
 
 .. toctree::
