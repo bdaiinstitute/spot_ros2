@@ -1,32 +1,29 @@
-import rclpy
-import time
 import math
+import time
+from typing import Any, List, Optional
 
+import builtin_interfaces.msg
+import rclpy
+from geometry_msgs.msg import Pose, PoseStamped, Twist
+from rclpy import Future
+from rclpy.action import ActionClient
 from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.duration import Duration
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
-from rclpy.duration import Duration
-
-from rclpy.action import ActionClient
-from std_srvs.srv import Trigger, SetBool
-from geometry_msgs.msg import TwistWithCovarianceStamped, Twist, Pose, PoseStamped
-
-from spot_msgs.srv import SetLocomotion
-from spot_msgs.srv import SetVelocity
-from spot_msgs.srv import ListGraph
-
-#from spot_msgs.srv import GripperAngleMove
-#from spot_msgs.srv import ArmJointMovement
-#from spot_msgs.srv import ArmForceTrajectory
-#from spot_msgs.srv import HandPose
-
-from spot_msgs.action import NavigateTo, Trajectory
-
+from std_srvs.srv import SetBool, Trigger
 from tf_transformations import quaternion_from_euler
 
-class CommandSpotDriver(Node):
+# from spot_msgs.srv import GripperAngleMove
+# from spot_msgs.srv import ArmJointMovement
+# from spot_msgs.srv import ArmForceTrajectory
+# from spot_msgs.srv import HandPose
+from spot_msgs.action import NavigateTo, Trajectory  # type: ignore
+from spot_msgs.srv import ListGraph, SetLocomotion, SetVelocity  # type: ignore
 
-    def __init__(self, node_name):
+
+class CommandSpotDriver(Node):
+    def __init__(self, node_name: str) -> None:
         try:
             super().__init__(node_name)
             self.declare_parameter("command", "")
@@ -47,8 +44,8 @@ class CommandSpotDriver(Node):
             self.set_velocity_client = self.create_client(SetVelocity, "max_velocity", callback_group=self.group)
             self.list_graph_client = self.create_client(ListGraph, "list_graph", callback_group=self.group)
 
-            self.trajectory_action_client = ActionClient(self, Trajectory, 'trajectory')
-            self.navigate_to_action_client = ActionClient(self, NavigateTo, 'navigate_to')
+            self.trajectory_action_client = ActionClient(self, Trajectory, "trajectory")
+            self.navigate_to_action_client = ActionClient(self, NavigateTo, "navigate_to")
 
             self.stow_client = self.create_client(Trigger, "arm_stow", callback_group=self.group)
             self.unstow_client = self.create_client(Trigger, "arm_unstow", callback_group=self.group)
@@ -56,26 +53,46 @@ class CommandSpotDriver(Node):
             self.close_client = self.create_client(Trigger, "gripper_close", callback_group=self.group)
             self.carry_client = self.create_client(Trigger, "arm_carry", callback_group=self.group)
 
-            #self.angle_open_client = self.create_client(GripperAngleMove, "gripper_angle_open", callback_group=self.group)
-            #self.joint_move_client = self.create_client(ArmJointMovement, "arm_joint_move", callback_group=self.group)
-            #self.force_trajectory_client = self.create_client(ArmForceTrajectory, "force_trajectory", callback_group=self.group)
-            #self.hand_pose_client = self.create_client(HandPose, "gripper_pose", callback_group=self.group)
+            # self.angle_open_client = self.create_client(
+            #   GripperAngleMove,
+            #   "gripper_angle_open",
+            #   callback_group=self.group
+            # )
+            # self.joint_move_client = self.create_client(
+            #   ArmJointMovement,
+            #   "arm_joint_move",
+            #   callback_group=self.group
+            # )
+            # self.force_trajectory_client = self.create_client(
+            #   ArmForceTrajectory,
+            #   "force_trajectory",
+            #   callback_group=self.group
+            # )
+            # self.hand_pose_client = self.create_client(
+            #   HandPose,
+            #   "gripper_pose",
+            #   callback_group=self.group
+            # )
 
             self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 1, callback_group=self.group)
             self.body_pose_publisher = self.create_publisher(Pose, "body_pose", 1, callback_group=self.group)
 
             self.timer = self.create_timer(0.1, self.do_command, callback_group=self.group)
-        except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
 
-    def wait_future(self, future, print_waiting=False):
+            self.navigate_to_get_result_future: Optional[Any] = None
+        except Exception as exc:
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
+
+    def wait_future(self, future: Future, print_waiting: bool = False) -> Any:
         while True:
             if future.done():
                 break
         resp = future.result()
         return resp
 
-    def send_trajectory_goal(self, target_pose, duration, precise_positioning=False):
+    def send_trajectory_goal(
+        self, target_pose: PoseStamped, duration: builtin_interfaces.msg.Duration, precise_positioning: bool = False
+    ) -> None:
         # PoseStamped, Duration, bool
         goal_msg = Trajectory.Goal()
         goal_msg.target_pose = target_pose
@@ -84,30 +101,32 @@ class CommandSpotDriver(Node):
 
         self.trajectory_action_client.wait_for_server()
 
-        self.trajectory_future =  self.trajectory_action_client.send_goal_async(goal_msg, feedback_callback=self.trajectory_feedback_callback)
+        self.trajectory_future = self.trajectory_action_client.send_goal_async(
+            goal_msg, feedback_callback=self.trajectory_feedback_callback
+        )
 
         self.trajectory_future.add_done_callback(self.trajectory_goal_response_callback)
 
-    def trajectory_goal_response_callback(self, future):
+    def trajectory_goal_response_callback(self, future: Future) -> None:
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.get_logger().info('Goal rejected :(')
+            self.get_logger().info("Goal rejected :(")
             return
 
-        self.get_logger().info('Goal accepted :)')
+        self.get_logger().info("Goal accepted :)")
 
         self.trajectory_get_result_future = goal_handle.get_result_async()
         self.trajectory_get_result_future.add_done_callback(self.trajectory_get_result_callback)
 
-    def trajectory_get_result_callback(self, future):
+    def trajectory_get_result_callback(self, future: Future) -> None:
         result = future.result().result
-        self.get_logger().info(f'Trajectory Result: {result.success} - {result.message}')
+        self.get_logger().info(f"Trajectory Result: {result.success} - {result.message}")
 
-    def trajectory_feedback_callback(self, feedback_msg):
+    def trajectory_feedback_callback(self, feedback_msg: Trajectory.Feedback) -> None:
         feedback = feedback_msg.feedback
-        self.get_logger().info(f'Received feedback: {feedback.feedback}')
+        self.get_logger().info(f"Received feedback: {feedback.feedback}")
 
-    def send_navigate_goal(self, upload_path, navigate_to):
+    def send_navigate_goal(self, upload_path: str, navigate_to: str) -> None:
         # PoseStamped, Duration, bool
         goal_msg = NavigateTo.Goal()
         goal_msg.upload_path = upload_path
@@ -117,120 +136,122 @@ class CommandSpotDriver(Node):
 
         self.navigate_to_action_client.wait_for_server()
 
-        self.navigate_to_future =  self.navigate_to_action_client.send_goal_async(goal_msg, feedback_callback=self.navigate_to_feedback_callback)
+        self.navigate_to_future = self.navigate_to_action_client.send_goal_async(
+            goal_msg, feedback_callback=self.navigate_to_feedback_callback
+        )
 
         self.navigate_to_future.add_done_callback(self.trajectory_goal_response_callback)
 
-    def navigate_to_goal_response_callback(self, future):
+    def navigate_to_goal_response_callback(self, future: Future) -> None:
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.get_logger().info('Goal rejected :(')
+            self.get_logger().info("Goal rejected :(")
             return
 
-        self.get_logger().info('Goal accepted :)')
+        self.get_logger().info("Goal accepted :)")
 
         self.navigate_to_get_result_future = goal_handle.get_result_async()
         self.navigate_to_get_result_future.add_done_callback(self.navigate_to_get_result_callback)
 
-    def navigate_to_get_result_callback(self, future):
+    def navigate_to_get_result_callback(self, future: Future) -> None:
         result = future.result().result
-        self.get_logger().info(f'NavigateTo Result: {result.success} - {result.message}')
+        self.get_logger().info(f"NavigateTo Result: {result.success} - {result.message}")
 
-    def navigate_to_feedback_callback(self, feedback_msg):
+    def navigate_to_feedback_callback(self, feedback_msg: NavigateTo.Feedback) -> None:
         # feedback = feedback_msg.feedback
-        self.get_logger().info(f'Received feedback navigate_to: {feedback_msg}')
+        self.get_logger().info(f"Received feedback navigate_to: {feedback_msg}")
 
-    def claim(self):
+    def claim(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.claim_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'CLAIM: {resp}')
+            self.get_logger().info(f"CLAIM: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def release(self):
+    def release(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.release_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'RELEASE: {resp}')
+            self.get_logger().info(f"RELEASE: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def power_on(self):
+    def power_on(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.power_on_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'POWER ON: {resp}')
+            self.get_logger().info(f"POWER ON: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def power_off(self):
+    def power_off(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.power_off_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'POWER OFF: {resp}')
+            self.get_logger().info(f"POWER OFF: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def sit(self):
+    def sit(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.sit_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'SIT: {resp}')
+            self.get_logger().info(f"SIT: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def stand(self):
+    def stand(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.stand_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'STAND: {resp}')
+            self.get_logger().info(f"STAND: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def list_graph(self, upload_dir):
+    def list_graph(self, upload_dir: str) -> ListGraph.Response:
         try:
-            self.get_logger().error(f'list_graph: {upload_dir}')
+            self.get_logger().error(f"list_graph: {upload_dir}")
             req = ListGraph.Request()
             req.upload_filepath = upload_dir
             future = self.list_graph_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def set_locomotion(self, mode=1):
+    def set_locomotion(self, mode: int = 1) -> Optional[SetLocomotion.Response]:
         try:
             req = SetLocomotion.Request()
             req.locomotion_mode = mode
             future = self.set_locomotion_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'SET LOCOMOTION: {resp}')
+            self.get_logger().info(f"SET LOCOMOTION: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def set_velocity(self, x, y, angular):
+    def set_velocity(self, x: float, y: float, angular: float) -> Optional[SetVelocity.Response]:
         try:
             req = SetVelocity.Request()
             req.velocity_limit.linear.x = x
@@ -238,151 +259,147 @@ class CommandSpotDriver(Node):
             req.velocity_limit.angular.z = angular
             future = self.set_velocity_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'SET MAX VELOCITY: {resp}')
+            self.get_logger().info(f"SET MAX VELOCITY: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception set_velocity: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception set_velocity: {type(exc)} - {exc}")
         return None
 
-    def stow(self):
+    def stow(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.stow_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'STOW: {resp}')
+            self.get_logger().info(f"STOW: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-
-    def unstow(self):
+    def unstow(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.unstow_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'UNSTOW: {resp}')
+            self.get_logger().info(f"UNSTOW: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def open(self):
+    def open(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.open_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'OPEN: {resp}')
+            self.get_logger().info(f"OPEN: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def close(self):
+    def close(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.close_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'CLOSE: {resp}')
+            self.get_logger().info(f"CLOSE: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def carry(self):
+    def carry(self) -> Optional[Trigger.Response]:
         try:
             req = Trigger.Request()
             future = self.carry_client.call_async(req)
             resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'CARRY: {resp}')
+            self.get_logger().info(f"CARRY: {resp}")
             return resp
         except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception: {type(exc)} - {exc}")
         return None
 
-    def angle_open(self):
+    # def angle_open(self):
+    #     try:
+    #         req = GripperAngleMove.Request()
+    #         req.gripper_angle = math.radians(10.0)
+    #         future = self.angle_open_client.call_async(req)
+    #         resp = self.wait_future(future, print_waiting=False)
+    #         self.get_logger().info(f"ANGLE OPEN: {resp}")
+    #         return resp
+    #     except Exception as exc:
+    #         self.get_logger().error(f"Exception: {type(exc)} - {exc}")
+    #     return None
+
+    # def joint_move(self):
+    #     try:
+    #         req = ArmJointMove.Request()
+    #         req.joint_target[0] = 0.0
+    #         req.joint_target[1] = 0.0
+    #         req.joint_target[2] = 0.0
+    #         req.joint_target[3] = 0.0
+    #         req.joint_target[4] = 0.0
+    #         req.joint_target[5] = 0.0
+    #         future = self.joint_move_client.call_async(req)
+    #         resp = self.wait_future(future, print_waiting=False)
+    #         self.get_logger().info(f"JOINT MOVE: {resp}")
+    #         return resp
+    #     except Exception as exc:
+    #         self.get_logger().error(f"Exception: {type(exc)} - {exc}")
+    #     return None
+
+    # def force_trajectory(self):
+    #     try:
+    #         req = ArmForceTrajectory.Request()
+    #
+    #         req.forces_pt0[0] = 0.0
+    #         req.forces_pt0[1] = 0.0
+    #         req.forces_pt0[2] = 0.0
+    #
+    #         req.torques_pt0[0] = 0.0
+    #         req.torques_pt0[1] = 0.0
+    #         req.torques_pt0[2] = 0.0
+    #
+    #         req.forces_pt1[0] = 0.0
+    #         req.forces_pt1[1] = 0.0
+    #         req.forces_pt1[2] = 0.0
+    #
+    #         req.torques_pt1[0] = 0.0
+    #         req.torques_pt1[1] = 0.0
+    #         req.torques_pt1[2] = 0.0
+    #
+    #         future = self.force_trajectory_client.call_async(req)
+    #         resp = self.wait_future(future, print_waiting=False)
+    #         self.get_logger().info(f"FORCE TRAJECTORY: {resp}")
+    #         return resp
+    #     except Exception as exc:
+    #         self.get_logger().error(f"Exception: {type(exc)} - {exc}")
+    #     return None
+
+    # def hand_pose(self):
+    #     try:
+    #         req = HandPose.Request()
+    #         future = self.hand_pose_client.call_async(req)
+    #         resp = self.wait_future(future, print_waiting=False)
+    #         self.get_logger().info(f"HAND POSE: {resp}")
+    #         return resp
+    #     except Exception as exc:
+    #         self.get_logger().error(f"Exception: {type(exc)} - {exc}")
+    #     return None
+
+    def cmd_vel(self, x: float, y: float, angular: float) -> None:
         try:
-            req = GripperAngleMove.Request()
-            req.gripper_angle = math.radians(10.0)
-            future = self.angle_open_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'ANGLE OPEN: {resp}')
-            return resp
-        except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
-        return None
-
-    def joint_move(self):
-        try:
-            req = ArmJointMove.Request()
-            req.joint_target[0] = 0.0
-            req.joint_target[1] = 0.0
-            req.joint_target[2] = 0.0
-            req.joint_target[3] = 0.0
-            req.joint_target[4] = 0.0
-            req.joint_target[5] = 0.0
-            future = self.joint_move_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'JOINT MOVE: {resp}')
-            return resp
-        except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
-        return None
-
-    def force_trajectory(self):
-        try:
-            req = ArmForceTrajectory.Request()
-
-            req.forces_pt0[0] = 0.0
-            req.forces_pt0[1] = 0.0
-            req.forces_pt0[2] = 0.0
-
-            req.torques_pt0[0] = 0.0
-            req.torques_pt0[1] = 0.0
-            req.torques_pt0[2] = 0.0
-
-            req.forces_pt1[0] = 0.0
-            req.forces_pt1[1] = 0.0
-            req.forces_pt1[2] = 0.0
-
-            req.torques_pt1[0] = 0.0
-            req.torques_pt1[1] = 0.0
-            req.torques_pt1[2] = 0.0
-
-            future = self.force_trajectory_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'FORCE TRAJECTORY: {resp}')
-            return resp
-        except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
-        return None
-
-    def hand_pose(self):
-        try:
-            req = HandPose.Request()
-            future = self.hand_pose_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
-            self.get_logger().info(f'HAND POSE: {resp}')
-            return resp
-        except Exception as exc:
-            self.get_logger().error(f'Exception: {type(exc)} - {exc}')
-        return None
-
-
-
-
-    def cmd_vel(self, x, y, angular):
-        try:
-            self.get_logger().info(f'PUSH VEL CMD: {x} {y} {angular}')
+            self.get_logger().info(f"PUSH VEL CMD: {x} {y} {angular}")
             msg = Twist()
             msg.linear.x = x
             msg.linear.y = y
             msg.angular.z = angular
             self.cmd_vel_publisher.publish(msg)
         except Exception as exc:
-            self.get_logger().error(f'Exception cmd_vel: {type(exc)} - {exc}')
+            self.get_logger().error(f"Exception cmd_vel: {type(exc)} - {exc}")
 
-    def body_pose(self, z, qx, qy, qz, qw):
+    def body_pose(self, z: float, qx: float, qy: float, qz: float, qw: float) -> None:
         msg = Pose()
         msg.orientation.x = qx
         msg.orientation.y = qy
@@ -391,18 +408,17 @@ class CommandSpotDriver(Node):
         msg.position.z = z
         self.body_pose_publisher.publish(msg)
 
-    def do_test(self):
-        resp = self.power_on()
-        resp = self.stand()
-        #resp = self.set_locomotion(mode=1)
-        #resp = self.set_velocity(0.2, 0.2, 0.1)
+    def do_test(self) -> None:
+        self.power_on()
+        self.stand()
+        # resp = self.set_locomotion(mode=1)
+        # resp = self.set_velocity(0.2, 0.2, 0.1)
         ##            self.cmd_vel(0.1, 0.0, 0.0)
         time.sleep(15)
-        resp = self.sit()
-        resp = self.power_off()
+        self.sit()
+        self.power_off()
 
-
-    def do_command(self):
+    def do_command(self) -> None:
         try:
             self.timer.cancel()
 
@@ -418,12 +434,12 @@ class CommandSpotDriver(Node):
                 return
 
             ## resp = self.claim()
-            #if not resp.success:
+            # if not resp.success:
             #    self.get_logger().error(f'CLAIM FAILED: {resp.message}')
             #    return
 
             if self.command == "test":
-                resp = self.do_test()
+                self.do_test()
 
             if self.command == "power_on":
                 resp = self.power_on()
@@ -447,11 +463,11 @@ class CommandSpotDriver(Node):
                 # have to wait to finish
                 ##resp = self.release()
 
-            self.get_logger().error(f'command: {self.command}')
+            self.get_logger().error(f"command: {self.command}")
 
             if self.command == "listgraph":
                 resp = self.list_graph(upload_dir)
-                self.get_logger().info(f'LISTGRAPH: {resp.waypoint_ids}')
+                self.get_logger().info(f"LISTGRAPH: {resp.waypoint_ids}")
 
             if self.command == "move":
                 resp = self.set_locomotion(mode=2)
@@ -469,7 +485,7 @@ class CommandSpotDriver(Node):
                 pose.header.frame_id = "body"
                 pose.pose.position.x = 1.0
                 pose.pose.position.y = 0.0
-                pose.pose.position.z = 0.0 # is not used
+                pose.pose.position.z = 0.0  # is not used
                 # only yaw computed from quat
                 yaw = 0.0
                 [qx, qy, qz, qw] = quaternion_from_euler(0.0, 0.0, math.degrees(yaw))
@@ -480,15 +496,14 @@ class CommandSpotDriver(Node):
 
                 duration = Duration(seconds=10, nanoseconds=0).to_msg()
 
-                self.trajectory_future = self.send_trajectory_goal(pose, duration)
+                self.send_trajectory_goal(pose, duration)
                 #   rclpy.spin_until_future_complete(action_client, future)
 
             if self.command == "navigate":
                 resp = self.set_velocity(0.5, 0.5, math.radians(30.0))
                 resp = self.list_graph(upload_dir)
-                self.get_logger().info(f'LISTGRAPH: {resp.waypoint_ids}')
-                navigate_to = "fb"
-                self.navigate_to_future = self.send_navigate_goal(upload_dir, resp.waypoint_ids[2])
+                self.get_logger().info(f"LISTGRAPH: {resp.waypoint_ids}")
+                self.send_navigate_goal(upload_dir, resp.waypoint_ids[2])
                 #   rclpy.spin_until_future_complete(action_client, future)
 
             if self.command == "stow":
@@ -507,15 +522,15 @@ class CommandSpotDriver(Node):
                 resp = self.carry()
 
             ## resp = self.release()
-            #if not resp.success:
+            # if not resp.success:
             #    self.get_logger().error(f'RELEASE FAILED: {resp.message}')
             #    return
 
         except Exception as exc:
-            self.get_logger().error(f'EXCEPTION: {type(exc)} - {exc}')
+            self.get_logger().error(f"EXCEPTION: {type(exc)} - {exc}")
 
 
-def main(args=None):
+def main(args: Optional[List[str]] = None) -> None:
     rclpy.init(args=args)
 
     node = CommandSpotDriver("command_spot_driver")
@@ -525,9 +540,8 @@ def main(args=None):
 
     executor.add_node(node)
 
-    #thread = threading.Thread(target=spin_thread, args=(node,))
-    #thread.start()
-
+    # thread = threading.Thread(target=spin_thread, args=(node,))
+    # thread.start()
 
     # print("COMMAND:", node.command)
     try:
@@ -541,5 +555,3 @@ def main(args=None):
     node.destroy_node()
     executor.shutdown()
     rclpy.shutdown()
-
-

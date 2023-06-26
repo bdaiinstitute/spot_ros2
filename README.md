@@ -16,7 +16,7 @@
 
 # Overview
 This is a ROS2 package for BostonDynamics' Spot. The package contains all necessary topics, services and actions to teleoperate or navigate Spot.
-This package is derived of this [ROS1 package](https://github.com/heuristicus/spot_ros).
+This package is derived of this [ROS1 package](https://github.com/heuristicus/spot_ros). This package currently corresponds to version 3.2.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v3.2.0)
 
 ## Prerequisites
     - Tested for Ubuntu 20.04 + Foxy
@@ -54,7 +54,7 @@ The spot login data hostname, username and password can either be specified as R
     ros2 launch spot_description description.launch.py
 
 ### SpotDriver
-    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>]
+    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>] [has_arm:=<True|False>]
 
 ### Depth image to Pointcloud2
     ros2 launch spot_driver point_cloud_xyz.launch.py
@@ -91,7 +91,21 @@ The `bosdyn_msgs` package is installed as a debian package as part of the `insta
 MIT license - parts of the code developed specifically for ROS2.
 BSD3 license - parts of the code derived from the Clearpath Robotics ROS1 driver.
 
-## Contributors
+## Contributing
+To contribute, install `pre-commit` via pip, run `pre-commit install` and then run `pre-commit run --all-files` to 
+verify that your code will pass inspection. 
+```bash
+git clone https://github.com/bdaiinstitute/spot_ros2.git
+cd spot_ros2
+pip3 install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+Now whenever you commit code to this repository, it will be checked against our `pre-commit` hooks. You can also run
+`git commit --no-verify` if you wish you commit without checking against the hooks. 
+
+### Contributors
 
 This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and the [Boston Dynamics AI Institute](https://theaiinstitute.com/).
 
