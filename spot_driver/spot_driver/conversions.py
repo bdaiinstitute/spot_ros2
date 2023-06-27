@@ -5649,10 +5649,10 @@ def convert_bosdyn_msgs_frame_tree_snapshot_parent_edge_to_proto(ros_msg: "bosdy
 
 
 def convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto: "bosdyn.api.geometry_pb2.FrameTreeSnapshot", ros_msg: "bosdyn_msgs.msgs.FrameTreeSnapshot") -> None:
-    from bosdyn_msgs.msg import KeyStringValueBosdynMsgsParentEdge
+    from bosdyn_msgs.msg import KeyStringValueBosdynMsgsFrameTreeSnapshotParentEdge
     ros_msg.child_to_parent_edge_map = []
     for _item in proto.child_to_parent_edge_map:
-        ros_msg.child_to_parent_edge_map.append(KeyStringValueBosdynMsgsParentEdge())
+        ros_msg.child_to_parent_edge_map.append(KeyStringValueBosdynMsgsFrameTreeSnapshotParentEdge())
         ros_msg.child_to_parent_edge_map[-1].key = _item
         convert_proto_to_bosdyn_msgs_frame_tree_snapshot_parent_edge(proto.child_to_parent_edge_map[_item], ros_msg.child_to_parent_edge_map[-1].value)
 
