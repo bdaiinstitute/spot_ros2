@@ -186,7 +186,13 @@ def _create_image_msg(
     # JPEG format
     if data.shot.image.format == image_pb2.Image.FORMAT_JPEG:
         cv2_image = cv2.imdecode(np.frombuffer(data.shot.image.data, dtype=np.uint8), -1)
-        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding="bgr8")
+        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding="passthrough")
+        if image_msg.encoding == "8UC3":
+            image_msg.encoding = "bgr8"  # required for cv_bridge handling of the message
+        elif image_msg.encoding == "8UC1":
+            image_msg.encoding = "mono8"  # required for cv_bridge handling of the message
+        else:
+            pass  # passthrough decides
         image_msg.header.stamp = stamp
         image_msg.header.frame_id = frame_id
 
