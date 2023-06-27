@@ -21,3 +21,4 @@
     preferred_odom_frame: "odom" # pass either odom/vision. This frame will become the parent of body in tf2 tree and will be used in odometry topic. https://dev.bostondynamics.com/docs/concepts/geometry_and_frames.html?highlight=frame#frames-in-the-spot-robot-world for more info.
     async_tasks_rate: 10
     cmd_duration: 0.125 # Increase if spot stutters while walking
+    rgb_cameras: True

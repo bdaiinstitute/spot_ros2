@@ -210,6 +210,7 @@ class SpotROS(Node):
         self.declare_parameter("publish_rgb", True)
         self.declare_parameter("publish_depth", True)
         self.declare_parameter("publish_depth_registered", False)
+        self.declare_parameter("rgb_cameras", True)
 
         self.declare_parameter("publish_graph_nav_pose", False)
         self.declare_parameter("graph_nav_seed_frame", "graph_nav_map")
@@ -228,6 +229,7 @@ class SpotROS(Node):
         self.publish_rgb: Parameter = self.get_parameter("publish_rgb")
         self.publish_depth: Parameter = self.get_parameter("publish_depth")
         self.publish_depth_registered: Parameter = self.get_parameter("publish_depth_registered")
+        self.rgb_cameras: Parameter = self.get_parameter("rgb_cameras")
 
         self.publish_graph_nav_pose: Parameter = self.get_parameter("publish_graph_nav_pose")
         self.graph_nav_seed_frame: str = self.get_parameter("graph_nav_seed_frame").value
@@ -318,6 +320,7 @@ class SpotROS(Node):
                 self.use_take_lease.value,
                 self.get_lease_on_action.value,
                 self.continually_try_stand.value,
+                self.rgb_cameras.value,
             )
             if not self.spot_wrapper.is_valid:
                 return
