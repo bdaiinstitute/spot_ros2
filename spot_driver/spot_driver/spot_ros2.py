@@ -65,16 +65,27 @@ from spot_msgs.msg import (  # type: ignore
 )
 from spot_msgs.srv import (  # type: ignore
     ClearBehaviorFault,
+    DeleteSound,
+    Dock,
     ExecuteDance,
+    GetVolume,
     GraphNavClearGraph,
     GraphNavGetLocalizationPose,
     GraphNavSetLocalization,
     GraphNavUploadGraph,
+    ListAllDances,
+    ListAllMoves,
     ListGraph,
+    ListSounds,
     ListWorldObjects,
+    LoadSound,
+    PlaySound,
     SetLocomotion,
     SetVelocity,
+    SetVolume,
+    UploadAnimation,
 )
+from spot_wrapper.cam_wrapper import SpotCamWrapper
 from spot_wrapper.wrapper import CameraSource, SpotWrapper
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
@@ -284,6 +295,7 @@ class SpotROS(Node):
         if self.name is not None:
             name_with_dot = self.name + "."
         self.wrapper_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_wrapper")
+        self.cam_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_cam_wrapper")
 
         name_str = ""
         if self.name is not None:
@@ -293,6 +305,7 @@ class SpotROS(Node):
 
         if self.name == MOCK_HOSTNAME:
             self.spot_wrapper: Optional[SpotWrapper] = None
+            self.cam_wrapper: Optional[SpotCamWrapper] = None
         else:
             self.spot_wrapper = SpotWrapper(
                 self.username,
@@ -311,6 +324,11 @@ class SpotROS(Node):
             )
             if not self.spot_wrapper.is_valid:
                 return
+
+            try:
+                self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
+            except SystemError:
+                self.spot_cam_wrapper = None
 
             all_cameras = ["frontleft", "frontright", "left", "right", "back"]
             has_arm = self.spot_wrapper.has_arm()
@@ -483,6 +501,12 @@ class SpotROS(Node):
                 ),
                 callback_group=self.group,
             )
+            self.create_service(
+                Trigger,
+                "undock",
+                lambda request, response: self.service_wrapper("undock", self.handle_undock, request, response),
+                callback_group=self.group,
+            )
 
             self.create_service(
                 SetBool,
@@ -521,9 +545,79 @@ class SpotROS(Node):
                 callback_group=self.group,
             )
             self.create_service(
+                UploadAnimation,
+                "upload_animation",
+                lambda request, response: self.service_wrapper(
+                    "upload_animation", self.handle_upload_animation, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
+                ListAllDances,
+                "list_all_dances",
+                lambda request, response: self.service_wrapper(
+                    "list_all_dances", self.handle_list_all_dances, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
+                ListAllMoves,
+                "list_all_moves",
+                lambda request, response: self.service_wrapper(
+                    "list_all_moves", self.handle_list_all_moves, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
+                ListSounds,
+                "list_sounds",
+                lambda request, response: self.service_wrapper(
+                    "list_sounds", self.handle_list_sounds, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
+                LoadSound,
+                "load_sound",
+                lambda request, response: self.service_wrapper("load_sound", self.handle_load_sound, request, response),
+                callback_group=self.group,
+            )
+            self.create_service(
+                PlaySound,
+                "play_sound",
+                lambda request, response: self.service_wrapper("play_sound", self.handle_play_sound, request, response),
+                callback_group=self.group,
+            )
+            self.create_service(
+                DeleteSound,
+                "delete_sound",
+                lambda request, response: self.service_wrapper(
+                    "delete_sound", self.handle_delete_sound, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
+                GetVolume,
+                "get_volume",
+                lambda request, response: self.service_wrapper("get_volume", self.handle_get_volume, request, response),
+                callback_group=self.group,
+            )
+            self.create_service(
+                SetVolume,
+                "set_volume",
+                lambda request, response: self.service_wrapper("set_volume", self.handle_set_volume, request, response),
+                callback_group=self.group,
+            )
+            self.create_service(
                 ListGraph,
                 "list_graph",
                 lambda request, response: self.service_wrapper("list_graph", self.handle_list_graph, request, response),
+                callback_group=self.group,
+            )
+            self.create_service(
+                Dock,
+                "dock",
+                lambda request, response: self.service_wrapper("dock", self.handle_dock, request, response),
                 callback_group=self.group,
             )
 
@@ -968,6 +1062,15 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.disengageEStop()
         return response
 
+    def handle_undock(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler to undock the robot."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.undock()
+        return response
+
     def handle_clear_behavior_fault(
         self, request: ClearBehaviorFault.Request, response: ClearBehaviorFault.Response
     ) -> ClearBehaviorFault.Response:
@@ -987,8 +1090,146 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message = self.spot_wrapper.execute_dance(request.upload_filepath)
+        response.success, response.message = self.spot_wrapper.execute_dance(request.choreo_file_content)
         return response
+
+    def handle_list_all_dances(
+        self, request: ListAllDances.Request, response: ListAllDances.Response
+    ) -> ListAllDances.Response:
+        """ROS service handler for getting list of already uploaded dances."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message, response.dances = self.spot_wrapper.list_all_dances()
+        return response
+
+    def handle_list_all_moves(
+        self, request: ListAllMoves.Request, response: ListAllMoves.Response
+    ) -> ListAllMoves.Response:
+        """ROS service handler for getting list of already uploaded moves."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message, response.moves = self.spot_wrapper.list_all_moves()
+        return response
+
+    def handle_upload_animation(
+        self, request: UploadAnimation.Request, response: UploadAnimation.Response
+    ) -> UploadAnimation.Response:
+        """ROS service handler for uploading an animation."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.upload_animation(
+            request.animation_name, request.animation_file_content
+        )
+        return response
+
+    def handle_list_sounds(self, request: ListSounds.Request, response: ListSounds.Response) -> ListSounds.Response:
+        """ROS service handler for listing sounds loaded on Spot CAM."""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+
+        try:
+            names = self.spot_cam_wrapper.audio.list_sounds()
+            response.names = names
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_load_sound(self, request: LoadSound.Request, response: LoadSound.Response) -> LoadSound.Response:
+        """ROS service handler for loading a wav file sound on Spot CAM."""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+
+        try:
+            self.spot_cam_wrapper.audio.load_sound(request.wav_path, request.name)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_play_sound(self, request: PlaySound.Request, response: PlaySound.Response) -> PlaySound.Response:
+        """ROS service handler for playing a sound loaded on Spot CAM."""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+
+        try:
+            self.spot_cam_wrapper.audio.play_sound(request.name, request.volume_multiplier)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_delete_sound(self, request: DeleteSound.Request, response: DeleteSound.Response) -> DeleteSound.Response:
+        """ROS service handler for deleting a sound loaded on Spot CAM."""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+
+        try:
+            self.spot_cam_wrapper.audio.delete_sound(request.name)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_get_volume(self, request: GetVolume.Request, response: GetVolume.Response) -> GetVolume.Response:
+        """ROS service handler for getting the volume on Spot CAM."""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+
+        try:
+            response.volume = self.spot_cam_wrapper.audio.get_volume()
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_set_volume(self, request: SetVolume.Request, response: SetVolume.Response) -> SetVolume.Response:
+        """ROS service handler for setting the volume on Spot CAM."""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+
+        try:
+            self.spot_cam_wrapper.audio.set_volume(request.volume)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
 
     def handle_stair_mode(self, request: SetBool.Request, response: SetBool.Response) -> SetBool.Response:
         """ROS service handler to set a stair mode to the robot."""
@@ -1027,6 +1268,15 @@ class SpotROS(Node):
             response.success = False
             response.message = "Error:{}".format(e)
             return response
+
+    def handle_dock(self, request: Dock.Request, response: Dock.Response) -> Dock.Response:
+        """ROS service handler to dock the robot."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.dock(request.dock_id)
+        return response
 
     def handle_max_vel(self, request: SetVelocity.Request, response: SetVelocity.Response) -> SetVelocity.Response:
         """
@@ -1263,6 +1513,11 @@ class SpotROS(Node):
                 elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_FOLLOW_ARM_FEEDBACK_SET:
                     self.get_logger().warn("WARNING: FollowArmCommand provides no feedback")
                     pass  # May return SUCCESS below
+                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_NOT_SET:
+                    # sync_feedback.mobility_command_feedback_is_set, feedback_choice is actually not set.
+                    # This may happen when a command finishes, which means we may return SUCCESS below.
+                    self.get_logger().info("mobility command feedback indicates goal has reached")
+                    pass
                 else:
                     self.get_logger().error("ERROR: unknown mobility command type")
                     return GoalResponse.IN_PROGRESS

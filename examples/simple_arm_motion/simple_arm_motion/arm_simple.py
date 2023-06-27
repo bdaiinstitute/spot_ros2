@@ -1,5 +1,5 @@
 import rclpy
-from bdai_ros2_utilities.action_client_wrapper import ActionClientWrapper
+from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
@@ -18,7 +18,7 @@ def hello_arm() -> bool:
     tf_listener = TFListenerWrapper("arm_simple_tf", wait_for_transform=[ODOM_FRAME_NAME, GRAV_ALIGNED_BODY_FRAME_NAME])
 
     robot = SimpleSpotCommander()
-    robot_command_client = ActionClientWrapper(RobotCommand, "robot_command")
+    robot_command_client = ActionClientWrapper(RobotCommand, "robot_command", "arm_simple_action_node")
 
     # Claim robot
     node.get_logger().info("Claiming robot")
