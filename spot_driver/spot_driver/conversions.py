@@ -2645,10 +2645,10 @@ def convert_bosdyn_msgs_series_block_index_block_entry_to_proto(ros_msg: "bosdyn
 def convert_proto_to_bosdyn_msgs_series_block_index(proto: "bosdyn.api.bddf_pb2.SeriesBlockIndex", ros_msg: "bosdyn_msgs.msgs.SeriesBlockIndex") -> None:
     ros_msg.series_index = proto.series_index
     ros_msg.descriptor_file_offset = proto.descriptor_file_offset
-    from bosdyn_msgs.msg import BlockEntry
+    from bosdyn_msgs.msg import SeriesBlockIndexBlockEntry
     ros_msg.block_entries = []
     for _item in proto.block_entries:
-        ros_msg.block_entries.append(BlockEntry())
+        ros_msg.block_entries.append(SeriesBlockIndexBlockEntry())
         convert_proto_to_bosdyn_msgs_series_block_index_block_entry(_item, ros_msg.block_entries[-1])
     ros_msg.total_bytes = proto.total_bytes
 
@@ -3727,10 +3727,10 @@ def convert_bosdyn_msgs_signal_schema_variable_to_proto(ros_msg: "bosdyn_msgs.ms
 
 
 def convert_proto_to_bosdyn_msgs_signal_schema(proto: "bosdyn.api.data_buffer_pb2.SignalSchema", ros_msg: "bosdyn_msgs.msgs.SignalSchema") -> None:
-    from bosdyn_msgs.msg import Variable
+    from bosdyn_msgs.msg import SignalSchemaVariable
     ros_msg.vars = []
     for _item in proto.vars:
-        ros_msg.vars.append(Variable())
+        ros_msg.vars.append(SignalSchemaVariable())
         convert_proto_to_bosdyn_msgs_signal_schema_variable(_item, ros_msg.vars[-1])
     ros_msg.schema_name = proto.schema_name
 
@@ -3860,10 +3860,10 @@ def convert_bosdyn_msgs_record_text_messages_response_error_to_proto(ros_msg: "b
 def convert_proto_to_bosdyn_msgs_record_text_messages_response(proto: "bosdyn.api.data_buffer_pb2.RecordTextMessagesResponse", ros_msg: "bosdyn_msgs.msgs.RecordTextMessagesResponse") -> None:
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
-    from bosdyn_msgs.msg import Error
+    from bosdyn_msgs.msg import RecordTextMessagesResponseError
     ros_msg.errors = []
     for _item in proto.errors:
-        ros_msg.errors.append(Error())
+        ros_msg.errors.append(RecordTextMessagesResponseError())
         convert_proto_to_bosdyn_msgs_record_text_messages_response_error(_item, ros_msg.errors[-1])
 
 
@@ -3900,10 +3900,10 @@ def convert_bosdyn_msgs_record_operator_comments_response_error_to_proto(ros_msg
 def convert_proto_to_bosdyn_msgs_record_operator_comments_response(proto: "bosdyn.api.data_buffer_pb2.RecordOperatorCommentsResponse", ros_msg: "bosdyn_msgs.msgs.RecordOperatorCommentsResponse") -> None:
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
-    from bosdyn_msgs.msg import Error
+    from bosdyn_msgs.msg import RecordOperatorCommentsResponseError
     ros_msg.errors = []
     for _item in proto.errors:
-        ros_msg.errors.append(Error())
+        ros_msg.errors.append(RecordOperatorCommentsResponseError())
         convert_proto_to_bosdyn_msgs_record_operator_comments_response_error(_item, ros_msg.errors[-1])
 
 
@@ -3940,10 +3940,10 @@ def convert_bosdyn_msgs_record_data_blobs_response_error_to_proto(ros_msg: "bosd
 def convert_proto_to_bosdyn_msgs_record_data_blobs_response(proto: "bosdyn.api.data_buffer_pb2.RecordDataBlobsResponse", ros_msg: "bosdyn_msgs.msgs.RecordDataBlobsResponse") -> None:
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
-    from bosdyn_msgs.msg import Error
+    from bosdyn_msgs.msg import RecordDataBlobsResponseError
     ros_msg.errors = []
     for _item in proto.errors:
-        ros_msg.errors.append(Error())
+        ros_msg.errors.append(RecordDataBlobsResponseError())
         convert_proto_to_bosdyn_msgs_record_data_blobs_response_error(_item, ros_msg.errors[-1])
 
 
@@ -3980,10 +3980,10 @@ def convert_bosdyn_msgs_record_signal_ticks_response_error_to_proto(ros_msg: "bo
 def convert_proto_to_bosdyn_msgs_record_signal_ticks_response(proto: "bosdyn.api.data_buffer_pb2.RecordSignalTicksResponse", ros_msg: "bosdyn_msgs.msgs.RecordSignalTicksResponse") -> None:
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
-    from bosdyn_msgs.msg import Error
+    from bosdyn_msgs.msg import RecordSignalTicksResponseError
     ros_msg.errors = []
     for _item in proto.errors:
-        ros_msg.errors.append(Error())
+        ros_msg.errors.append(RecordSignalTicksResponseError())
         convert_proto_to_bosdyn_msgs_record_signal_ticks_response_error(_item, ros_msg.errors[-1])
 
 
@@ -4020,10 +4020,10 @@ def convert_bosdyn_msgs_record_events_response_error_to_proto(ros_msg: "bosdyn_m
 def convert_proto_to_bosdyn_msgs_record_events_response(proto: "bosdyn.api.data_buffer_pb2.RecordEventsResponse", ros_msg: "bosdyn_msgs.msgs.RecordEventsResponse") -> None:
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
-    from bosdyn_msgs.msg import Error
+    from bosdyn_msgs.msg import RecordEventsResponseError
     ros_msg.errors = []
     for _item in proto.errors:
-        ros_msg.errors.append(Error())
+        ros_msg.errors.append(RecordEventsResponseError())
         convert_proto_to_bosdyn_msgs_record_events_response_error(_item, ros_msg.errors[-1])
 
 
@@ -6880,10 +6880,10 @@ def convert_proto_to_bosdyn_msgs_navigation_feedback_response(proto: "bosdyn.api
     ros_msg.last_ko_tform_goal_is_set = proto.HasField("last_ko_tform_goal")
     ros_msg.body_movement_status.value = proto.body_movement_status
     ros_msg.path_following_mode.value = proto.path_following_mode
-    from bosdyn_msgs.msg import KeyStringValueBosdynMsgsActiveRegionInformation
+    from bosdyn_msgs.msg import KeyStringValueBosdynMsgsNavigationFeedbackResponseActiveRegionInformation
     ros_msg.active_region_information = []
     for _item in proto.active_region_information:
-        ros_msg.active_region_information.append(KeyStringValueBosdynMsgsActiveRegionInformation())
+        ros_msg.active_region_information.append(KeyStringValueBosdynMsgsNavigationFeedbackResponseActiveRegionInformation())
         ros_msg.active_region_information[-1].key = _item
         convert_proto_to_bosdyn_msgs_navigation_feedback_response_active_region_information(proto.active_region_information[_item], ros_msg.active_region_information[-1].value)
     ros_msg.route_following_status.value = proto.route_following_status
@@ -7722,10 +7722,10 @@ def convert_bosdyn_msgs_edge_snapshot_stance_to_proto(ros_msg: "bosdyn_msgs.msgs
 
 def convert_proto_to_bosdyn_msgs_edge_snapshot(proto: "bosdyn.api.graph_nav.map_pb2.EdgeSnapshot", ros_msg: "bosdyn_msgs.msgs.EdgeSnapshot") -> None:
     ros_msg.id = proto.id
-    from bosdyn_msgs.msg import Stance
+    from bosdyn_msgs.msg import EdgeSnapshotStance
     ros_msg.stances = []
     for _item in proto.stances:
-        ros_msg.stances.append(Stance())
+        ros_msg.stances.append(EdgeSnapshotStance())
         convert_proto_to_bosdyn_msgs_edge_snapshot_stance(_item, ros_msg.stances[-1])
     from bosdyn_msgs.msg import KeyStringValueBosdynMsgsAreaCallbackData
     ros_msg.area_callbacks = []
@@ -10500,10 +10500,10 @@ def convert_proto_to_bosdyn_msgs_state_node_states_at_tick(proto: "bosdyn.api.mi
     ros_msg.tick_counter = proto.tick_counter
     convert_proto_to_builtin_interfaces_time(proto.tick_start_timestamp, ros_msg.tick_start_timestamp)
     ros_msg.tick_start_timestamp_is_set = proto.HasField("tick_start_timestamp")
-    from bosdyn_msgs.msg import NodeState
+    from bosdyn_msgs.msg import StateNodeStatesAtTickNodeState
     ros_msg.node_states = []
     for _item in proto.node_states:
-        ros_msg.node_states.append(NodeState())
+        ros_msg.node_states.append(StateNodeStatesAtTickNodeState())
         convert_proto_to_bosdyn_msgs_state_node_states_at_tick_node_state(_item, ros_msg.node_states[-1])
 
 
@@ -10531,15 +10531,15 @@ def convert_proto_to_bosdyn_msgs_state(proto: "bosdyn.api.mission.mission_pb2.St
     for _item in proto.questions:
         ros_msg.questions.append(Question())
         convert_proto_to_bosdyn_msgs_question(_item, ros_msg.questions[-1])
-    from bosdyn_msgs.msg import AnsweredQuestion
+    from bosdyn_msgs.msg import StateAnsweredQuestion
     ros_msg.answered_questions = []
     for _item in proto.answered_questions:
-        ros_msg.answered_questions.append(AnsweredQuestion())
+        ros_msg.answered_questions.append(StateAnsweredQuestion())
         convert_proto_to_bosdyn_msgs_state_answered_question(_item, ros_msg.answered_questions[-1])
-    from bosdyn_msgs.msg import NodeStatesAtTick
+    from bosdyn_msgs.msg import StateNodeStatesAtTick
     ros_msg.history = []
     for _item in proto.history:
-        ros_msg.history.append(NodeStatesAtTick())
+        ros_msg.history.append(StateNodeStatesAtTick())
         convert_proto_to_bosdyn_msgs_state_node_states_at_tick(_item, ros_msg.history[-1])
     ros_msg.status.value = proto.status
     ros_msg.error = proto.error
@@ -11478,10 +11478,10 @@ def convert_proto_to_bosdyn_msgs_prompt(proto: "bosdyn.api.mission.nodes_pb2.Pro
     ros_msg.always_reprompt = proto.always_reprompt
     ros_msg.text = proto.text
     ros_msg.source = proto.source
-    from bosdyn_msgs.msg import Option
+    from bosdyn_msgs.msg import PromptOption
     ros_msg.options = []
     for _item in proto.options:
-        ros_msg.options.append(Option())
+        ros_msg.options.append(PromptOption())
         convert_proto_to_bosdyn_msgs_prompt_option(_item, ros_msg.options[-1])
     convert_proto_to_bosdyn_msgs_node(proto.child, ros_msg.child)
     ros_msg.child_is_set = proto.HasField("child")
@@ -13769,10 +13769,10 @@ def convert_bosdyn_msgs_skeleton_link_to_proto(ros_msg: "bosdyn_msgs.msgs.Skelet
 
 
 def convert_proto_to_bosdyn_msgs_skeleton(proto: "bosdyn.api.robot_state_pb2.Skeleton", ros_msg: "bosdyn_msgs.msgs.Skeleton") -> None:
-    from bosdyn_msgs.msg import Link
+    from bosdyn_msgs.msg import SkeletonLink
     ros_msg.links = []
     for _item in proto.links:
-        ros_msg.links.append(Link())
+        ros_msg.links.append(SkeletonLink())
         convert_proto_to_bosdyn_msgs_skeleton_link(_item, ros_msg.links[-1])
     ros_msg.urdf = proto.urdf
 
@@ -15982,10 +15982,10 @@ def convert_bosdyn_msgs_get_visible_cameras_response_stream_to_proto(ros_msg: "b
 def convert_proto_to_bosdyn_msgs_get_visible_cameras_response(proto: "bosdyn.api.spot_cam.compositor_pb2.GetVisibleCamerasResponse", ros_msg: "bosdyn_msgs.msgs.GetVisibleCamerasResponse") -> None:
     convert_proto_to_bosdyn_msgs_response_header(proto.header, ros_msg.header)
     ros_msg.header_is_set = proto.HasField("header")
-    from bosdyn_msgs.msg import Stream
+    from bosdyn_msgs.msg import GetVisibleCamerasResponseStream
     ros_msg.streams = []
     for _item in proto.streams:
-        ros_msg.streams.append(Stream())
+        ros_msg.streams.append(GetVisibleCamerasResponseStream())
         convert_proto_to_bosdyn_msgs_get_visible_cameras_response_stream(_item, ros_msg.streams[-1])
 
 
@@ -16263,10 +16263,10 @@ def convert_proto_to_bosdyn_msgs_get_bit_status_response(proto: "bosdyn.api.spot
     for _item in proto.events:
         ros_msg.events.append(SystemFault())
         convert_proto_to_bosdyn_msgs_system_fault(_item, ros_msg.events[-1])
-    from bosdyn_msgs.msg import Degradation
+    from bosdyn_msgs.msg import GetBITStatusResponseDegradation
     ros_msg.degradations = []
     for _item in proto.degradations:
-        ros_msg.degradations.append(Degradation())
+        ros_msg.degradations.append(GetBITStatusResponseDegradation())
         convert_proto_to_bosdyn_msgs_get_bit_status_response_degradation(_item, ros_msg.degradations[-1])
 
 
@@ -16410,10 +16410,10 @@ def convert_proto_to_bosdyn_msgs_logpoint(proto: "bosdyn.api.spot_cam.logging_pb
     ros_msg.timestamp_is_set = proto.HasField("timestamp")
     convert_proto_to_bosdyn_msgs_logpoint_image_params(proto.image_params, ros_msg.image_params)
     ros_msg.image_params_is_set = proto.HasField("image_params")
-    from bosdyn_msgs.msg import Calibration
+    from bosdyn_msgs.msg import LogpointCalibration
     ros_msg.calibration = []
     for _item in proto.calibration:
-        ros_msg.calibration.append(Calibration())
+        ros_msg.calibration.append(LogpointCalibration())
         convert_proto_to_bosdyn_msgs_logpoint_calibration(_item, ros_msg.calibration[-1])
 
 
@@ -17426,10 +17426,10 @@ def convert_bosdyn_msgs_straight_staircase_landing_to_proto(ros_msg: "bosdyn_msg
 
 def convert_proto_to_bosdyn_msgs_straight_staircase(proto: "bosdyn.api.stairs_pb2.StraightStaircase", ros_msg: "bosdyn_msgs.msgs.StraightStaircase") -> None:
     convert_proto_to_bosdyn_msgs_straight_staircase_one_of_location(proto, ros_msg.location)
-    from bosdyn_msgs.msg import Stair
+    from bosdyn_msgs.msg import StraightStaircaseStair
     ros_msg.stairs = []
     for _item in proto.stairs:
-        ros_msg.stairs.append(Stair())
+        ros_msg.stairs.append(StraightStaircaseStair())
         convert_proto_to_bosdyn_msgs_straight_staircase_stair(_item, ros_msg.stairs[-1])
     convert_proto_to_bosdyn_msgs_straight_staircase_landing(proto.bottom_landing, ros_msg.bottom_landing)
     ros_msg.bottom_landing_is_set = proto.HasField("bottom_landing")
