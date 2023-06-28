@@ -204,7 +204,7 @@ class SpotROS(Node):
 
         self.declare_parameter("deadzone", 0.05)
         self.declare_parameter("estop_timeout", 9.0)
-        self.declare_parameter("async_tasks_rate", 10)
+        self.declare_parameter("async_tasks_rate", 50.0)
         self.declare_parameter("cmd_duration", 0.125)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("publish_rgb", True)
