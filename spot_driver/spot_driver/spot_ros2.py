@@ -193,6 +193,7 @@ class SpotROS(Node):
             "rear_image": 10.0,
             "graph_nav_pose": 10.0,
         }
+        max_task_rate = float(max(self.rates.values()))
 
         self.declare_parameter("auto_claim", False)
         self.declare_parameter("auto_power_on", False)
@@ -204,7 +205,7 @@ class SpotROS(Node):
 
         self.declare_parameter("deadzone", 0.05)
         self.declare_parameter("estop_timeout", 9.0)
-        self.declare_parameter("async_tasks_rate", 10)
+        self.declare_parameter("async_tasks_rate", max_task_rate)
         self.declare_parameter("cmd_duration", 0.125)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("publish_rgb", True)
@@ -244,7 +245,16 @@ class SpotROS(Node):
 
         self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
-        self.async_tasks_rate: int = self.get_parameter("async_tasks_rate").value
+        self.async_tasks_rate: float = self.get_parameter("async_tasks_rate").value
+        if self.async_tasks_rate < max_task_rate:
+            self.get_logger().warn(
+                COLOR_YELLOW
+                + f"The maximum individual task rate is {max_task_rate} Hz. You have manually set the async_tasks_rate"
+                f" to {self.async_tasks_rate} which is lower and will decrease the frequency of one of the periodic"
+                " tasks being run."
+                + COLOR_END
+            )
+
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
 
         self.username: Optional[str] = get_from_env_and_fall_back_to_param(
