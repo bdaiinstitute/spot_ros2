@@ -21,7 +21,6 @@ jobs:
     - name: Build package
       run: |
         source /opt/ros/$ROS_DISTRO/setup.bash
-        pwd 
         apt-get update
         apt install wget 
         ./install_spot_ros2.sh
@@ -32,7 +31,6 @@ jobs:
     - name: Install docs dependencies & build docs
       run: |
         source /opt/ros/$ROS_DISTRO/setup.bash
-        python -m pip install --upgrade pip
         pip install -r docs/requirements.txt
         # go to documentation folder and build the .rst files 
         cd docs
