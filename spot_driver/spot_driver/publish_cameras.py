@@ -77,6 +77,10 @@ class SpotImagePublisher(rclpy.node.Node):
 
         self.declare_parameter("image_service", ImageClient.default_service_name)
         self._image_service = self.get_parameter("image_service").value
+
+        self.declare_parameter("rgb_cameras", True)
+        self._rgb_cameras = self.get_parameter("rgb_cameras").value
+
         self._cv_bridge = CvBridge()
 
         try:
@@ -127,7 +131,10 @@ class SpotImagePublisher(rclpy.node.Node):
             camera_sources.append("hand")
         for camera_source in camera_sources:
             if self._camera_type == "camera":
-                pixel_format = image_pb2.Image.PIXEL_FORMAT_RGB_U8
+                if self._rgb_cameras:
+                    pixel_format = image_pb2.Image.PIXEL_FORMAT_RGB_U8
+                else:
+                    pixel_format = image_pb2.Image.PIXEL_FORMAT_GREYSCALE_U8
             else:
                 pixel_format = image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
             bosdyn_camera_source = translate_ros_camera_name_to_bosdyn(camera_source, self._camera_type)

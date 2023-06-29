@@ -69,6 +69,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GraphNavClearGraph.srv"
   "srv/GraphNavSetLocalization.srv"
   "srv/GraphNavGetLocalizationPose.srv"
+  "srv/Dock.srv"
   "action/NavigateTo.action"
   "action/RobotCommand.action"
   "action/Trajectory.action"
