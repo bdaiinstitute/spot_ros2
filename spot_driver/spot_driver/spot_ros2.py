@@ -304,7 +304,8 @@ class SpotROS(Node):
                 self.use_take_lease.value,
                 self.get_lease_on_action.value,
                 self.continually_try_stand.value,
-                payload_credentials_file=self.payload_credentials_file,
+                self.rgb_cameras.value,
+                self.payload_credentials_file,
             )
             if not self.spot_wrapper.is_valid:
                 return
