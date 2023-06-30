@@ -4,3 +4,5 @@
 *.orig
 .vscode
 */urdf/out*
+_build
+docs/source/*.rst
