@@ -71,6 +71,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GraphNavGetLocalizationPose.srv"
   "srv/Dock.srv"
   "action/NavigateTo.action"
+  "action/NavigateToDynamic.action"
   "action/RobotCommand.action"
   "action/Trajectory.action"
   "action/Manipulation.action"

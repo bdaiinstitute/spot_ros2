@@ -48,7 +48,7 @@ from sensor_msgs.msg import CameraInfo, Image, JointState
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
-from spot_msgs.action import Manipulation, NavigateTo, RobotCommand, Trajectory  # type: ignore
+from spot_msgs.action import Manipulation, NavigateTo, NavigateToDynamic, RobotCommand, Trajectory  # type: ignore
 from spot_msgs.msg import (  # type: ignore
     BatteryStateArray,
     BehaviorFaultState,
@@ -163,6 +163,7 @@ class SpotROS(Node):
         """
         super().__init__("spot_ros2")
         self.run_navigate_to: Optional[bool] = None
+        self.run_navigate_to_dynamic: Optional[bool] = None
         self._printed_once: bool = False
 
         self.get_logger().info(COLOR_GREEN + "Hi from spot_driver." + COLOR_END)
@@ -234,6 +235,7 @@ class SpotROS(Node):
 
         self._wait_for_goal: Optional[WaitForGoal] = None
         self.goal_handle: Optional[ServerGoalHandle] = None
+        self.goal_handle_dynamic: Optional[ServerGoalHandle] = None
 
         # This is only done from parameter because it should be passed by the launch file
         self.name: Optional[str] = self.get_parameter("spot_name").value
@@ -651,6 +653,10 @@ class SpotROS(Node):
 
             self.navigate_as = ActionServer(
                 self, NavigateTo, "navigate_to", self.handle_navigate_to, callback_group=self.group
+            )
+
+            self.navigate_as_dynamic = ActionServer(
+                self, NavigateToDynamic, "navigate_to_dynamic", self.handle_navigate_to_dynamic, callback_group=self.group
             )
             # spot_ros.navigate_as.start() # As is online
 
@@ -2088,6 +2094,53 @@ class SpotROS(Node):
         feedback_thread.join()
 
         result = NavigateTo.Result()
+        result.success = resp[0]
+        result.message = resp[1]
+        # check status
+        if resp[0]:
+            goal_handle.succeed()
+        else:
+            goal_handle.abort()
+
+        return result
+    
+    def handle_navigate_to_dynamic_feedback(self) -> None:
+        """Thread function to send navigate_to_dynamic feedback"""
+        #make sure to suffix all variables with _dynamic
+        if self.spot_wrapper is None:
+            return
+
+        while rclpy.ok() and self.run_navigate_to_dynamic:
+            localization_state = self.spot_wrapper._graph_nav_client.get_localization_state()
+            if localization_state.localization.waypoint_id:
+                feedback = NavigateToDynamic.Feedback()
+                feedback.waypoint_id = localization_state.localization.waypoint_id
+                feedback.message = self.spot_wrapper._navigate_to_dynamic_feedback
+                if self.goal_handle_dynamic is not None:
+                    self.goal_handle_dynamic.publish_feedback(feedback)
+            time.sleep(1)
+    
+    def handle_navigate_to_dynamic(self, goal_handle: ServerGoalHandle) -> NavigateToDynamic.Result:
+        """ROS service handler to run mission of the robot.  The robot will replay a mission"""
+        self.goal_handle_dynamic = goal_handle
+        feedback_thread = threading.Thread(target=self.handle_navigate_to_dynamic_feedback, args=())
+        self.run_navigate_to_dynamic = True
+        feedback_thread.start()
+        if self.spot_wrapper is None:
+            self.get_logger().error("Spot wrapper is None")
+            response = NavigateToDynamic.Result()
+            response.success = False
+            response.message = "Spot wrapper is None"
+            goal_handle.abort()
+            return response
+
+        resp = self.spot_wrapper.navigate_to_dynamic(
+            navigate_to=goal_handle.request.navigate_to
+        )
+        self.run_navigate_to_dynamic = False
+        feedback_thread.join()
+
+        result = NavigateToDynamic.Result()
         result.success = resp[0]
         result.message = resp[1]
         # check status
