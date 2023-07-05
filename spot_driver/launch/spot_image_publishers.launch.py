@@ -18,6 +18,13 @@ def generate_launch_description() -> launch.LaunchDescription:
         default_value="10",
     )
 
+    rgb_cameras = LaunchConfiguration("rgb_cameras", default="true")
+    rgb_cameras_arg = DeclareLaunchArgument(
+        "rgb_cameras",
+        description="Start publishing all RGB channels on Spot cameras",
+        default_value="true",
+    )
+
     publish_rgb = LaunchConfiguration("publish_rgb", default="true")
     publish_rgb_arg = DeclareLaunchArgument(
         "publish_rgb",
@@ -39,7 +46,14 @@ def generate_launch_description() -> launch.LaunchDescription:
         default_value="false",
     )
 
-    nodes = [spot_name_arg, image_publish_rate_arg, publish_rgb_arg, publish_depth_arg, publish_depth_registered_arg]
+    nodes = [
+        spot_name_arg,
+        image_publish_rate_arg,
+        rgb_cameras_arg,
+        publish_rgb_arg,
+        publish_depth_arg,
+        publish_depth_registered_arg,
+    ]
     camera_types = ["camera", "depth", "depth_registered"]
     publish_camera_types = [publish_rgb, publish_depth, publish_depth_registered]
     for camera_type, publish_camera_type in zip(camera_types, publish_camera_types):
@@ -54,6 +68,7 @@ def generate_launch_description() -> launch.LaunchDescription:
                     "spot_name": spot_name,
                     "image_publish_rate": image_publish_rate,
                     "camera_type": camera_type,
+                    "rgb_cameras": rgb_cameras,
                 }
             ],
             condition=IfCondition(publish_camera_type),
