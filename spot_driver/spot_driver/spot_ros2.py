@@ -1689,7 +1689,7 @@ class SpotROS(Node):
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED:
             return GoalResponse.FAILED
         else:
-            raise Exception(f"Unknown manipulation state type {feedback}")
+            raise Exception("Unknown manipulation state type")
 
     def _get_manipulation_command_feedback(self, goal_id: str) -> ManipulationApiFeedbackResponse:
         feedback = ManipulationApiFeedbackResponse()
