@@ -1,0 +1,6 @@
+float32 x
+float32 y
+float32 max_distance
+float32 max_yaw
+---
+bool success

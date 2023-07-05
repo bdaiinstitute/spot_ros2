@@ -80,6 +80,7 @@ from spot_msgs.srv import (  # type: ignore
     ListWorldObjects,
     LoadSound,
     PlaySound,
+    SetNavigateToParams,
     SetLocomotion,
     SetVelocity,
     SetVolume,
@@ -627,6 +628,13 @@ class SpotROS(Node):
                 GraphNavUploadGraph,
                 "graph_nav_upload_graph",
                 self.handle_graph_nav_upload_graph,
+                callback_group=self.group,
+            )
+
+            self.create_service(
+                SetNavigateToParams,
+                "set_navigate_to_params",
+                self.handle_set_navigate_to_params,
                 callback_group=self.group,
             )
 
@@ -1978,6 +1986,20 @@ class SpotROS(Node):
             self.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
             response.success = False
             response.message = f"Exception Error:{e}"
+        return response
+    
+    def handle_set_navigate_to_params(
+        self, request: SetNavigateToParams.Request, response: SetNavigateToParams.Response
+    ) -> SetNavigateToParams.Response:
+        if self.spot_wrapper is None:
+            self.get_logger().error("Spot wrapper is None")
+            response.success = False
+            return response
+        self.spot_wrapper._x = request.x
+        self.spot_wrapper._y = request.y
+        self.spot_wrapper._max_distance = request.max_distance
+        self.spot_wrapper._max_yaw = request.max_yaw
+        response.success = True
         return response
 
     def handle_graph_nav_clear_graph(
