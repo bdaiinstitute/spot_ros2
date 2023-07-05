@@ -18,6 +18,7 @@ from geometry_msgs.msg import (
     PoseWithCovariance,
     TransformStamped,
     TwistWithCovarianceStamped,
+    Vector3Stamped,
 )
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
@@ -627,6 +628,17 @@ def get_system_faults_from_state(state: robot_state_pb2.RobotState, spot_wrapper
         state.system_fault_state.historical_faults, spot_wrapper
     )
     return system_fault_state_msg
+
+
+def get_end_effector_force_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> Vector3Stamped:
+    force = Vector3Stamped()
+    local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
+    force.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
+    force.header.frame_id = spot_wrapper.frame_prefix + "hand"
+    force.vector.x = state.manipulator_state.estimated_end_effector_force_in_hand.x
+    force.vector.y = state.manipulator_state.estimated_end_effector_force_in_hand.y
+    force.vector.z = state.manipulator_state.estimated_end_effector_force_in_hand.z
+    return force
 
 
 def get_behavior_faults_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> BehaviorFaultState:
