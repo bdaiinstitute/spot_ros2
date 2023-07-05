@@ -254,7 +254,9 @@ class SpotROS(Node):
         )
         self.ip: Optional[str] = get_from_env_and_fall_back_to_param("SPOT_IP", self, "hostname", "10.0.0.3")
 
-        self.camera_static_transform_broadcaster: tf2_ros.TransformBroadcaster = tf2_ros.TransformBroadcaster(self)
+        self.camera_static_transform_broadcaster: tf2_ros.StaticTransformBroadcaster = (
+            tf2_ros.StaticTransformBroadcaster(self)
+        )
         # Static transform broadcaster is super simple and just a latched publisher. Every time we add a new static
         # transform we must republish all static transforms from this source, otherwise the tree will be incomplete.
         # We keep a list of all the static transforms we already have, so they can be republished, and so we can check
@@ -326,7 +328,7 @@ class SpotROS(Node):
             except SystemError:
                 self.spot_cam_wrapper = None
 
-            all_cameras = []
+            all_cameras = ["frontleft", "frontright", "left", "right", "back"]
             has_arm = self.spot_wrapper.has_arm()
             if has_arm:
                 all_cameras.append("hand")
@@ -336,9 +338,7 @@ class SpotROS(Node):
             if self.publish_rgb.value:
                 for camera_name in self.cameras_used.value:
                     setattr(
-                        self,
-                        f"{camera_name}_image_pub",
-                        self.create_publisher(Image, f"camera/{camera_name}/image", 10),
+                        self, f"{camera_name}_image_pub", self.create_publisher(Image, f"camera/{camera_name}/image", 1)
                     )
                     setattr(
                         self,
@@ -2126,15 +2126,15 @@ class SpotROS(Node):
         for frame_name in image_data.shot.transforms_snapshot.child_to_parent_edge_map:
             if frame_name in excluded_frames:
                 continue
-            image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name).parent_frame_name
-            """
+            parent_frame = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(
+                frame_name
+            ).parent_frame_name
             existing_transforms = [
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
             ]
             if (frame_prefix + parent_frame, frame_prefix + frame_name) in existing_transforms:
                 # We already extracted this transform
                 continue
-            """
 
             transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
             if self.spot_wrapper is not None:
@@ -2145,8 +2145,8 @@ class SpotROS(Node):
             static_tf = populate_transform_stamped(
                 tf_time, transform.parent_frame_name, frame_name, transform.parent_tform_child, frame_prefix
             )
-            # self.camera_static_transforms.append(static_tf)
-            self.camera_static_transform_broadcaster.sendTransform(static_tf)
+            self.camera_static_transforms.append(static_tf)
+            self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
 
     def shutdown(self, sig: Optional[Any] = None, frame: Optional[str] = None) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
