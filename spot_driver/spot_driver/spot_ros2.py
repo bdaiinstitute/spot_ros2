@@ -31,7 +31,7 @@ from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_msgs.msg import ManipulationApiFeedbackResponse, RobotCommandFeedback
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped
+from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped, Vector3Stamped
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
 from rclpy import Parameter
@@ -94,6 +94,7 @@ from .ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
     get_battery_states_from_state,
     get_behavior_faults_from_state,
+    get_end_effector_force_from_state,
     get_estop_state_from_state,
     get_feet_from_state,
     get_from_env_and_fall_back_to_param,
@@ -253,9 +254,7 @@ class SpotROS(Node):
         )
         self.ip: Optional[str] = get_from_env_and_fall_back_to_param("SPOT_IP", self, "hostname", "10.0.0.3")
 
-        self.camera_static_transform_broadcaster: tf2_ros.StaticTransformBroadcaster = (
-            tf2_ros.StaticTransformBroadcaster(self)
-        )
+        self.camera_static_transform_broadcaster: tf2_ros.TransformBroadcaster = tf2_ros.TransformBroadcaster(self)
         # Static transform broadcaster is super simple and just a latched publisher. Every time we add a new static
         # transform we must republish all static transforms from this source, otherwise the tree will be incomplete.
         # We keep a list of all the static transforms we already have, so they can be republished, and so we can check
@@ -327,7 +326,7 @@ class SpotROS(Node):
             except SystemError:
                 self.spot_cam_wrapper = None
 
-            all_cameras = ["frontleft", "frontright", "left", "right", "back"]
+            all_cameras = []
             has_arm = self.spot_wrapper.has_arm()
             if has_arm:
                 all_cameras.append("hand")
@@ -337,7 +336,9 @@ class SpotROS(Node):
             if self.publish_rgb.value:
                 for camera_name in self.cameras_used.value:
                     setattr(
-                        self, f"{camera_name}_image_pub", self.create_publisher(Image, f"camera/{camera_name}/image", 1)
+                        self,
+                        f"{camera_name}_image_pub",
+                        self.create_publisher(Image, f"camera/{camera_name}/image", 10),
                     )
                     setattr(
                         self,
@@ -417,6 +418,10 @@ class SpotROS(Node):
             self.system_faults_pub: Publisher = self.create_publisher(SystemFaultState, "status/system_faults", 1)
             self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
             self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
+            if has_arm:
+                self.end_effector_force_pub: Publisher = self.create_publisher(
+                    Vector3Stamped, "status/end_effector_force", 1
+                )
 
             self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
             self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
@@ -788,6 +793,10 @@ class SpotROS(Node):
             # Behavior Faults #
             behavior_fault_state_msg = get_behavior_faults_from_state(state, self.spot_wrapper)
             self.behavior_faults_pub.publish(behavior_fault_state_msg)
+
+            if self.spot_wrapper.has_arm():
+                end_effector_force_msg = get_end_effector_force_from_state(state, self.spot_wrapper)
+                self.end_effector_force_pub.publish(end_effector_force_msg)
 
     def metrics_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new metrics data.
@@ -2117,15 +2126,15 @@ class SpotROS(Node):
         for frame_name in image_data.shot.transforms_snapshot.child_to_parent_edge_map:
             if frame_name in excluded_frames:
                 continue
-            parent_frame = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(
-                frame_name
-            ).parent_frame_name
+            image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name).parent_frame_name
+            """
             existing_transforms = [
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
             ]
             if (frame_prefix + parent_frame, frame_prefix + frame_name) in existing_transforms:
                 # We already extracted this transform
                 continue
+            """
 
             transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
             if self.spot_wrapper is not None:
@@ -2136,8 +2145,8 @@ class SpotROS(Node):
             static_tf = populate_transform_stamped(
                 tf_time, transform.parent_frame_name, frame_name, transform.parent_tform_child, frame_prefix
             )
-            self.camera_static_transforms.append(static_tf)
-            self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
+            # self.camera_static_transforms.append(static_tf)
+            self.camera_static_transform_broadcaster.sendTransform(static_tf)
 
     def shutdown(self, sig: Optional[Any] = None, frame: Optional[str] = None) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
