@@ -331,8 +331,13 @@ class SpotROS(Node):
                 return
 
             try:
-                spot_cam_publisher = self.create_publisher(Image, "SpotCAM/image", 1)
                 self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
+                self.spot_cam_publisher = self.create_publisher(Image, "SpotCAM/image", 1)
+                self.create_timer(
+                    1 / self.rates["front_image"],
+                    self.publish_CAM_callback,
+                    callback_group=self.rgb_callback_group,
+                )
             except SystemError:
                 self.spot_cam_wrapper = None
 
@@ -357,11 +362,6 @@ class SpotROS(Node):
                 self.create_timer(
                     1 / self.rates["front_image"],
                     self.publish_camera_images_callback,
-                    callback_group=self.rgb_callback_group,
-                )
-                self.create_timer(
-                    1 / self.rates["front_image"],
-                    self.publish_CAM_callback,
                     callback_group=self.rgb_callback_group,
                 )
 
@@ -928,6 +928,7 @@ class SpotROS(Node):
             self.get_logger().error(f"Exception: {e} \n {traceback.format_exc()}")
 
     def publish_camera_images_callback(self) -> None:
+        self.get_logger().error("trying to get rgb image")
         if self.spot_wrapper is None:
             return
 
@@ -946,10 +947,12 @@ class SpotROS(Node):
 
     def publish_CAM_callback(self) -> None:
         self.get_logger().error("trying to get CAM image")
-        img = self.spot_cam_wrapper.image.get_img()
+        st = time.time()
+        img = self.spot_cam_wrapper.image.get_last_image()
         bridge = CvBridge()
         img_msg = bridge.cv2_to_imgmsg(img, encoding="passthrough")
-        self.cam_publisher.publish(imgmsg)
+        self.get_logger().error(f"converting to image message took {time.time() - st}")
+        self.spot_cam_publisher.publish(img_msg)
 
     def publish_depth_images_callback(self) -> None:
         if self.spot_wrapper is None:
