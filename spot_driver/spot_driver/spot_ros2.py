@@ -1652,41 +1652,41 @@ class SpotROS(Node):
             # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
 
-        if feedback.current_state == manipulation_api_pb2.MANIP_STATE_UNKNOWN:
+        if feedback.current_state.value == feedback.current_state.MANIP_STATE_UNKNOWN:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_DONE:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_DONE:
             return GoalResponse.SUCCESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_SEARCHING_FOR_GRASP:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_SEARCHING_FOR_GRASP:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_GRASP:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_GRASP:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASPING_OBJECT:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASPING_OBJECT:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACING_OBJECT:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACING_OBJECT:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_SUCCEEDED:
             return GoalResponse.SUCCESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_WALKING_TO_OBJECT:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_WALKING_TO_OBJECT:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_ATTEMPTING_RAYCASTING:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_ATTEMPTING_RAYCASTING:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_PLACE:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_PLACE:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_SUCCEEDED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_SUCCEEDED:
             return GoalResponse.SUCCESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED:
             return GoalResponse.FAILED
         else:
             raise Exception("Unknown manipulation state type")
