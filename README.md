@@ -3,20 +3,23 @@
   <h1 align="center">Spot ROS2 Driver</h1>
   <p align="center">
     <a href="https://github.com/MASKOR/spot_ros2/blob/main/LICENSE">
-      <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
     </a>
     <a href="https://www.python.org/">
-        <img src="https://img.shields.io/badge/built%20with-Python3-red.svg" />
+    <img src="https://img.shields.io/badge/built%20with-Python3-red.svg" />
     </a>
     <a href="https://github.com/bdaiinstitute/spot_ros2/actions">
     <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/test.yml/badge.svg">
+    </a>
+    <a href="https://bdaiinstitute.github.io/spot_ros2">
+    <img src="https://img.shields.io/badge/docs-Python3-blue">
     </a>
   </p>
 </p>
 
 # Overview
 This is a ROS2 package for BostonDynamics' Spot. The package contains all necessary topics, services and actions to teleoperate or navigate Spot.
-This package is derived of this [ROS1 package](https://github.com/heuristicus/spot_ros).
+This package is derived of this [ROS1 package](https://github.com/heuristicus/spot_ros). This package currently corresponds to version 3.2.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v3.2.0)
 
 ## Prerequisites
     - Tested for Ubuntu 20.04 + Foxy
@@ -54,7 +57,7 @@ The spot login data hostname, username and password can either be specified as R
     ros2 launch spot_description description.launch.py
 
 ### SpotDriver
-    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>]
+    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>] [has_arm:=<True|False>]
 
 ### Depth image to Pointcloud2
     ros2 launch spot_driver point_cloud_xyz.launch.py

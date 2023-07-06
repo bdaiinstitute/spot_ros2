@@ -18,6 +18,7 @@ from geometry_msgs.msg import (
     PoseWithCovariance,
     TransformStamped,
     TwistWithCovarianceStamped,
+    Vector3Stamped,
 )
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
@@ -61,6 +62,14 @@ friendly_joint_names["hl.kn"] = "rear_left_knee"
 friendly_joint_names["hr.hx"] = "rear_right_hip_x"
 friendly_joint_names["hr.hy"] = "rear_right_hip_y"
 friendly_joint_names["hr.kn"] = "rear_right_knee"
+friendly_joint_names["arm0.sh0"] = "arm_sh0"
+friendly_joint_names["arm0.sh1"] = "arm_sh1"
+friendly_joint_names["arm0.hr0"] = "arm_hr0"
+friendly_joint_names["arm0.el0"] = "arm_el0"
+friendly_joint_names["arm0.el1"] = "arm_el1"
+friendly_joint_names["arm0.wr0"] = "arm_wr0"
+friendly_joint_names["arm0.wr1"] = "arm_wr1"
+friendly_joint_names["arm0.f1x"] = "arm_f1x"
 cv_bridge = CvBridge()
 
 
@@ -178,7 +187,13 @@ def _create_image_msg(
     # JPEG format
     if data.shot.image.format == image_pb2.Image.FORMAT_JPEG:
         cv2_image = cv2.imdecode(np.frombuffer(data.shot.image.data, dtype=np.uint8), -1)
-        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding="bgr8")
+        image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding="passthrough")
+        if image_msg.encoding == "8UC3":
+            image_msg.encoding = "bgr8"  # required for cv_bridge handling of the message
+        elif image_msg.encoding == "8UC1":
+            image_msg.encoding = "mono8"  # required for cv_bridge handling of the message
+        else:
+            pass  # passthrough decides
         image_msg.header.stamp = stamp
         image_msg.header.frame_id = frame_id
 
@@ -613,6 +628,17 @@ def get_system_faults_from_state(state: robot_state_pb2.RobotState, spot_wrapper
         state.system_fault_state.historical_faults, spot_wrapper
     )
     return system_fault_state_msg
+
+
+def get_end_effector_force_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> Vector3Stamped:
+    force = Vector3Stamped()
+    local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
+    force.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
+    force.header.frame_id = spot_wrapper.frame_prefix + "hand"
+    force.vector.x = state.manipulator_state.estimated_end_effector_force_in_hand.x
+    force.vector.y = state.manipulator_state.estimated_end_effector_force_in_hand.y
+    force.vector.z = state.manipulator_state.estimated_end_effector_force_in_hand.z
+    return force
 
 
 def get_behavior_faults_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> BehaviorFaultState:

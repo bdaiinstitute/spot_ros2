@@ -1,5 +1,5 @@
 import rclpy
-from bdai_ros2_wrappers.action_client_wrapper import ActionClientWrapper
+from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import SE2Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
@@ -22,7 +22,7 @@ class WalkForward(Node):
             "walk_forward_tf", wait_for_transform=[BODY_FRAME_NAME, VISION_FRAME_NAME]
         )
         self._robot = SimpleSpotCommander()
-        self._robot_command_client = ActionClientWrapper(RobotCommand, "robot_command")
+        self._robot_command_client = ActionClientWrapper(RobotCommand, "robot_command", "walk_forward_action_node")
 
     def initialize_robot(self) -> bool:
         self.get_logger().info("Claiming robot")
