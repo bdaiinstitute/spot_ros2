@@ -61,6 +61,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ClearBehaviorFault.srv"
   "srv/ListPTZ.srv"
   "srv/MovePTZ.srv"
+  "srv/GetPTZ.srv"
   "srv/ListSounds.srv"
   "srv/LoadSound.srv"
   "srv/PlaySound.srv"

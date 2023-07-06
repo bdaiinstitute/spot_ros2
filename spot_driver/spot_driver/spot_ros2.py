@@ -78,6 +78,7 @@ from spot_msgs.srv import (  # type: ignore
     ListGraph,
     ListPTZ,
     MovePTZ,
+    GetPTZ,
     ListSounds,
     ListWorldObjects,
     LoadSound,
@@ -199,6 +200,7 @@ class SpotROS(Node):
             "side_image": 10.0,
             "rear_image": 10.0,
             "graph_nav_pose": 10.0,
+            "spot_cam_image": 10.0,
         }
 
         self.declare_parameter("auto_claim", False)
@@ -330,16 +332,19 @@ class SpotROS(Node):
             if not self.spot_wrapper.is_valid:
                 return
 
+            self.spot_cam_wrapper = None
+            '''
             try:
                 self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
                 self.spot_cam_publisher = self.create_publisher(Image, "SpotCAM/image", 1)
                 self.create_timer(
-                    1 / self.rates["front_image"],
+                    1 / self.rates["spot_cam_image"],
                     self.publish_CAM_callback,
-                    callback_group=self.rgb_callback_group,
+                    callback_group=self.group
                 )
             except SystemError:
                 self.spot_cam_wrapper = None
+            '''
 
             all_cameras = ["frontleft", "frontright", "left", "right", "back"]
             has_arm = self.spot_wrapper.has_arm()
@@ -568,6 +573,14 @@ class SpotROS(Node):
                 "move_ptz",
                 lambda request, response: self.service_wrapper(
                     "move_ptz", self.handle_move_ptz, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
+                GetPTZ,
+                "get_ptz",
+                lambda request, response: self.service_wrapper(
+                    "get_ptz", self.handle_get_ptz, request, response
                 ),
                 callback_group=self.group,
             )
@@ -949,9 +962,10 @@ class SpotROS(Node):
         self.get_logger().error("trying to get CAM image")
         st = time.time()
         img = self.spot_cam_wrapper.image.get_last_image()
+        if img is None:
+            return
         bridge = CvBridge()
         img_msg = bridge.cv2_to_imgmsg(img, encoding="passthrough")
-        self.get_logger().error(f"converting to image message took {time.time() - st}")
         self.spot_cam_publisher.publish(img_msg)
 
     def publish_depth_images_callback(self) -> None:
@@ -1195,6 +1209,27 @@ class SpotROS(Node):
             response.message = f"Listing PTZ camera names failed: {e}"
             response.names = []
         return response
+
+    def handle_get_ptz(
+        self, request: GetPTZ.Request, response: GetPTZ.Response
+    ) -> GetPTZ.Response:
+        """ROS service handle for getting the current pan, tilt, zoom of SpotCam."""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.pan, response.tilt, response.zoom = 0., 0., 0.
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            ptz_position = self.spot_cam_wrapper.ptz.get_ptz_position(request.name)
+            response.pan, response.tilt, response.zoom = ptz_position.pan.value, ptz_position.tilt.value, ptz_position.zoom.value
+            response.success = True
+            response.message = "Sucess"
+        except Exception as e:
+            response.success = False
+            response.pan, response.tilt, response.zoom = 0., 0., 0.
+            response.message = f"Getting PTZ camera pose failed: {e}"
+        return response
+
         
     def handle_move_ptz(
         self, request: MovePTZ.Request, response: MovePTZ.Response
