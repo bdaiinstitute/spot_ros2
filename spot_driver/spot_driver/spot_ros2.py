@@ -1837,7 +1837,7 @@ class SpotROS(Node):
                 # check for timeout
                 com_dur = self.get_clock().now() - command_start_time
 
-                if com_dur.nanoseconds / 1e9 > (cmd_duration_secs * 10.3):
+                if com_dur.nanoseconds / 1e9 > cmd_duration_secs:
                     # timeout, quit with failure
                     self.get_logger().error("TIMEOUT")
                     feedback = Trajectory.Feedback()
