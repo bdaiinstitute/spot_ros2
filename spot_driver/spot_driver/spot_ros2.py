@@ -2239,7 +2239,6 @@ class SpotROS(Node):
     
     def handle_navigate_to_dynamic_feedback(self) -> None:
         """Thread function to send navigate_to_dynamic feedback"""
-        #make sure to suffix all variables with _dynamic
         if self.spot_wrapper is None:
             return
 
@@ -2248,11 +2247,7 @@ class SpotROS(Node):
             if localization_state.localization.waypoint_id:
                 feedback = NavigateToDynamic.Feedback()
                 feedback.waypoint_id = localization_state.localization.waypoint_id
-                self.spot_wrapper._lock.acquire()
                 feedback.message = self.spot_wrapper._navigate_to_dynamic_feedback
-                if self.spot_wrapper._navigate_to_dynamic_feedback == "STATUS_STUCK": #robot should complain only once
-                    self.spot_wrapper._navigate_to_dynamic_feedback = ""
-                self.spot_wrapper._lock.release()
                 if self.goal_handle_dynamic is not None:
                     self.goal_handle_dynamic.publish_feedback(feedback)
             time.sleep(1)
