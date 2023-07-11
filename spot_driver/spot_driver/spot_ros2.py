@@ -31,7 +31,7 @@ from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_msgs.msg import ManipulationApiFeedbackResponse, RobotCommandFeedback
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped
+from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped, Vector3Stamped
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
 from rclpy import Parameter
@@ -98,6 +98,7 @@ from .ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
     get_battery_states_from_state,
     get_behavior_faults_from_state,
+    get_end_effector_force_from_state,
     get_estop_state_from_state,
     get_feet_from_state,
     get_from_env_and_fall_back_to_param,
@@ -202,6 +203,7 @@ class SpotROS(Node):
             "graph_nav_pose": 10.0,
             "spot_cam_image": 10.0,
         }
+        max_task_rate = float(max(self.rates.values()))
 
         self.declare_parameter("auto_claim", False)
         self.declare_parameter("auto_power_on", False)
@@ -213,12 +215,13 @@ class SpotROS(Node):
 
         self.declare_parameter("deadzone", 0.05)
         self.declare_parameter("estop_timeout", 9.0)
-        self.declare_parameter("async_tasks_rate", 10)
+        self.declare_parameter("async_tasks_rate", max_task_rate)
         self.declare_parameter("cmd_duration", 0.125)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("publish_rgb", True)
         self.declare_parameter("publish_depth", True)
         self.declare_parameter("publish_depth_registered", False)
+        self.declare_parameter("rgb_cameras", True)
 
         self.declare_parameter("publish_graph_nav_pose", False)
         self.declare_parameter("graph_nav_seed_frame", "graph_nav_map")
@@ -237,6 +240,7 @@ class SpotROS(Node):
         self.publish_rgb: Parameter = self.get_parameter("publish_rgb")
         self.publish_depth: Parameter = self.get_parameter("publish_depth")
         self.publish_depth_registered: Parameter = self.get_parameter("publish_depth_registered")
+        self.rgb_cameras: Parameter = self.get_parameter("rgb_cameras")
 
         self.publish_graph_nav_pose: Parameter = self.get_parameter("publish_graph_nav_pose")
         self.graph_nav_seed_frame: str = self.get_parameter("graph_nav_seed_frame").value
@@ -252,7 +256,16 @@ class SpotROS(Node):
 
         self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
-        self.async_tasks_rate: int = self.get_parameter("async_tasks_rate").value
+        self.async_tasks_rate: float = self.get_parameter("async_tasks_rate").value
+        if self.async_tasks_rate < max_task_rate:
+            self.get_logger().warn(
+                COLOR_YELLOW
+                + f"The maximum individual task rate is {max_task_rate} Hz. You have manually set the async_tasks_rate"
+                f" to {self.async_tasks_rate} which is lower and will decrease the frequency of one of the periodic"
+                " tasks being run."
+                + COLOR_END
+            )
+
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
 
         self.username: Optional[str] = get_from_env_and_fall_back_to_param(
@@ -328,6 +341,7 @@ class SpotROS(Node):
                 self.use_take_lease.value,
                 self.get_lease_on_action.value,
                 self.continually_try_stand.value,
+                self.rgb_cameras.value,
             )
             if not self.spot_wrapper.is_valid:
                 return
@@ -436,6 +450,10 @@ class SpotROS(Node):
             self.system_faults_pub: Publisher = self.create_publisher(SystemFaultState, "status/system_faults", 1)
             self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
             self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
+            if has_arm:
+                self.end_effector_force_pub: Publisher = self.create_publisher(
+                    Vector3Stamped, "status/end_effector_force", 1
+                )
 
             self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
             self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
@@ -842,6 +860,10 @@ class SpotROS(Node):
             # Behavior Faults #
             behavior_fault_state_msg = get_behavior_faults_from_state(state, self.spot_wrapper)
             self.behavior_faults_pub.publish(behavior_fault_state_msg)
+
+            if self.spot_wrapper.has_arm():
+                end_effector_force_msg = get_end_effector_force_from_state(state, self.spot_wrapper)
+                self.end_effector_force_pub.publish(end_effector_force_msg)
 
     def metrics_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new metrics data.
@@ -1755,41 +1777,41 @@ class SpotROS(Node):
             # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
 
-        if feedback.current_state == manipulation_api_pb2.MANIP_STATE_UNKNOWN:
+        if feedback.current_state.value == feedback.current_state.MANIP_STATE_UNKNOWN:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_DONE:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_DONE:
             return GoalResponse.SUCCESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_SEARCHING_FOR_GRASP:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_SEARCHING_FOR_GRASP:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_GRASP:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_GRASP:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASPING_OBJECT:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASPING_OBJECT:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACING_OBJECT:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACING_OBJECT:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_SUCCEEDED:
             return GoalResponse.SUCCESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_WALKING_TO_OBJECT:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_WALKING_TO_OBJECT:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_ATTEMPTING_RAYCASTING:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_ATTEMPTING_RAYCASTING:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_PLACE:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_PLACE:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
             return GoalResponse.FAILED
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_SUCCEEDED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_SUCCEEDED:
             return GoalResponse.SUCCESS
-        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED:
+        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED:
             return GoalResponse.FAILED
         else:
             raise Exception("Unknown manipulation state type")
@@ -1940,7 +1962,7 @@ class SpotROS(Node):
                 # check for timeout
                 com_dur = self.get_clock().now() - command_start_time
 
-                if com_dur.nanoseconds / 1e9 > (cmd_duration_secs * 10.3):
+                if com_dur.nanoseconds / 1e9 > cmd_duration_secs:
                     # timeout, quit with failure
                     self.get_logger().error("TIMEOUT")
                     feedback = Trajectory.Feedback()

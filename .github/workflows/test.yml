@@ -5,8 +5,11 @@ on:
     branches:
       - main
 
+permissions:
+    contents: write
+
 jobs:
-  build_jammy_humble:
+  build_package_and_docs:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -15,7 +18,23 @@ jobs:
       image: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
     steps:
     - uses: actions/checkout@v3
-    - name: Build and run tests
+    - name: Build package
       run: |
-        source /opt/ros/humble/setup.bash
+        source /opt/ros/$ROS_DISTRO/setup.bash
+        apt-get update
+        apt install wget 
+        ./install_spot_ros2.sh
+        # go to root folder
+        cd ../../
         colcon build --symlink-install
+        source install/local_setup.bash
+    - name: Install docs dependencies & build docs
+      run: |
+        source /opt/ros/$ROS_DISTRO/setup.bash
+        pip install -r docs/requirements.txt
+        # go to documentation folder and build the .rst files 
+        cd docs
+        # we don't use the --implicit-namespaces flag
+        sphinx-apidoc -f -o source/ ../ ../*setup* ../examples ../*launch.py ../*command_spot_driver.py
+        cd ..
+        sphinx-build docs _build -v
