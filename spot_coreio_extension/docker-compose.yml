@@ -1,12 +1,12 @@
 version: "3.5"
 services:
-  # ros_fastdds_discovery_server:
-  #   image: spot_ros2:arm64
-  #   network_mode: host
-  #   ipc: host
-  #   restart: unless-stopped
-  #   # Launch the FastDDS discovery sever to bypass the need of multicast to discover nodes
-  #   command: fastdds discovery -i 0 -p 21000
+  ros_fastdds_discovery_server:
+    image: spot_ros2:arm64
+    network_mode: host
+    ipc: host
+    restart: unless-stopped
+    # Launch the FastDDS discovery sever to bypass the need of multicast to discover nodes
+    command: fastdds discovery -i 0 -p 21000
   spot_ros2:
     image: spot_ros2:arm64
     network_mode: host
@@ -18,7 +18,7 @@ services:
     environment:
       - SPOT_IP=192.168.50.3
       - ROS_DOMAIN_ID=56
-      # - ROS_DISCOVERY_SERVER=192.168.80.3:21000
+      - ROS_DISCOVERY_SERVER=192.168.80.3:21000
       - PAYLOAD_CREDENTIALS=/opt/payload_credentials/payload_guid_and_secret
       - BOSDYN_CLIENT_USERNAME=user
       - BOSDYN_CLIENT_PASSWORD=bbbdddaaaiii
