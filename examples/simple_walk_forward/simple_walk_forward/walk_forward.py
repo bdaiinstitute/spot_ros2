@@ -1,4 +1,6 @@
 import argparse
+
+
 import rclpy
 
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
@@ -22,16 +24,13 @@ class WalkForward(Node):
         self._name = name
 
         self._tf_listener = TFListenerWrapper(
-            "walk_forward_tf", wait_for_transform=[self._name + 
-"/" + BODY_FRAME_NAME, self._name + "/" + VISION_FRAME_NAME]
+            "walk_forward_tf",
+            wait_for_transform=[self._name + "/" + BODY_FRAME_NAME, self._name + "/" + VISION_FRAME_NAME]
         )
         self._robot = SimpleSpotCommander(self._name)
         self._robot_command_client = ActionClientWrapper(
-            RobotCommand, 
-            "robot_command", 
-            "walk_forward_action_node",
-            namespace=self._name
-            )
+            RobotCommand, "robot_command", "walk_forward_action_node", namespace=self._name
+        )
 
     def initialize_robot(self) -> bool:
         self.get_logger().info("Claiming robot")
