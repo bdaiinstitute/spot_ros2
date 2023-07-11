@@ -1,4 +1,6 @@
+import argparse
 import rclpy
+
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import SE2Pose
@@ -15,14 +17,21 @@ ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
 
 
 class WalkForward(Node):
-    def __init__(self) -> None:
+    def __init__(self, name) -> None:
         super().__init__("walk_forward")
+        self._name = name
 
         self._tf_listener = TFListenerWrapper(
-            "walk_forward_tf", wait_for_transform=[BODY_FRAME_NAME, VISION_FRAME_NAME]
+            "walk_forward_tf", wait_for_transform=[self._name + 
+"/" + BODY_FRAME_NAME, self._name + "/" + VISION_FRAME_NAME]
         )
-        self._robot = SimpleSpotCommander()
-        self._robot_command_client = ActionClientWrapper(RobotCommand, "robot_command", "walk_forward_action_node")
+        self._robot = SimpleSpotCommander(self._name)
+        self._robot_command_client = ActionClientWrapper(
+            RobotCommand, 
+            "robot_command", 
+            "walk_forward_action_node",
+            namespace=self._name
+            )
 
     def initialize_robot(self) -> bool:
         self.get_logger().info("Claiming robot")
@@ -49,7 +58,7 @@ class WalkForward(Node):
     def walk_forward_with_world_frame_goal(self) -> None:
         self.get_logger().info("Walking forward")
         world_t_robot = self._tf_listener.lookup_a_tform_b(
-            VISION_FRAME_NAME, BODY_FRAME_NAME
+            self._name + "/" + VISION_FRAME_NAME, self._name + "/" + BODY_FRAME_NAME
         ).get_closest_se2_transform()
         world_t_goal = world_t_robot * ROBOT_T_GOAL
         proto_goal = RobotCommandBuilder.synchro_se2_trajectory_point_command(
@@ -66,7 +75,10 @@ class WalkForward(Node):
 
 def main() -> int:
     rclpy.init()
-    goto = WalkForward()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--robot")
+    args = parser.parse_args()
+    goto = WalkForward(args.robot)
     goto.initialize_robot()
     goto.walk_forward_with_world_frame_goal()
     goto.shutdown()
@@ -75,3 +87,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     exit(main())
+
