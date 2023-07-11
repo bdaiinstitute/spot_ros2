@@ -19,7 +19,7 @@ ros2 launch spot_driver spot_driver.launch.py
 
 5.  Run the example:
 ```bash
-ros2 run simple_walk_forward walk_forward
+ros2 run simple_walk_forward walk_forward --robot <spot_name>
 ```
 
 The robot should walk forward.
