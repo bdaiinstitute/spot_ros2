@@ -161,7 +161,7 @@ class SpotImageType(str, Enum):
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
-    def __init__(self) -> None:
+    def __init__(self, parameter_list: Optional[list[Parameter]] = None) -> None:
         """
         Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.
         Holds lease from wrapper and updates all async tasks at the ROS rate
@@ -222,6 +222,10 @@ class SpotROS(Node):
         self.declare_parameter("graph_nav_seed_frame", "graph_nav_map")
 
         self.declare_parameter("spot_name", "")
+
+        # used for setting when not using launch file
+        if parameter_list is not None:
+            self.set_parameters(parameter_list)
 
         self.auto_claim: Parameter = self.get_parameter("auto_claim")
         self.auto_power_on: Parameter = self.get_parameter("auto_power_on")
@@ -322,6 +326,7 @@ class SpotROS(Node):
             self.spot_wrapper: Optional[SpotWrapper] = None
             self.cam_wrapper: Optional[SpotCamWrapper] = None
         else:
+            # create SpotWrapper if not mocking
             self.spot_wrapper = SpotWrapper(
                 self.username,
                 self.password,
@@ -345,401 +350,403 @@ class SpotROS(Node):
             except SystemError:
                 self.spot_cam_wrapper = None
 
-            all_cameras = ["frontleft", "frontright", "left", "right", "back"]
+        all_cameras = ["frontleft", "frontright", "left", "right", "back"]
+        has_arm = False
+        if self.spot_wrapper is not None:
             has_arm = self.spot_wrapper.has_arm()
-            if has_arm:
-                all_cameras.append("hand")
-            self.declare_parameter("cameras_used", all_cameras)
-            self.cameras_used = self.get_parameter("cameras_used")
+        if has_arm:
+            all_cameras.append("hand")
+        self.declare_parameter("cameras_used", all_cameras)
+        self.cameras_used = self.get_parameter("cameras_used")
 
-            if self.publish_rgb.value:
-                for camera_name in self.cameras_used.value:
-                    setattr(
-                        self, f"{camera_name}_image_pub", self.create_publisher(Image, f"camera/{camera_name}/image", 1)
-                    )
-                    setattr(
-                        self,
-                        f"{camera_name}_image_info_pub",
-                        self.create_publisher(CameraInfo, f"camera/{camera_name}/camera_info", 1),
-                    )
-
-                self.create_timer(
-                    1 / self.rates["front_image"],
-                    self.publish_camera_images_callback,
-                    callback_group=self.rgb_callback_group,
+        if self.publish_rgb.value:
+            for camera_name in self.cameras_used.value:
+                setattr(
+                    self, f"{camera_name}_image_pub", self.create_publisher(Image, f"camera/{camera_name}/image", 1)
                 )
-
-            if self.publish_depth.value:
-                for camera_name in self.cameras_used.value:
-                    setattr(
-                        self, f"{camera_name}_depth_pub", self.create_publisher(Image, f"depth/{camera_name}/image", 1)
-                    )
-                    setattr(
-                        self,
-                        f"{camera_name}_depth_info_pub",
-                        self.create_publisher(CameraInfo, f"depth/{camera_name}/camera_info", 1),
-                    )
-
-                self.create_timer(
-                    1 / self.rates["front_image"],
-                    self.publish_depth_images_callback,
-                    callback_group=self.depth_callback_group,
-                )
-
-            if self.publish_depth_registered.value:
-                for camera_name in self.cameras_used.value:
-                    setattr(
-                        self,
-                        f"{camera_name}_depth_registered_pub",
-                        self.create_publisher(Image, f"depth_registered/{camera_name}/image", 1),
-                    )
-                    setattr(
-                        self,
-                        f"{camera_name}_depth_registered_info_pub",
-                        self.create_publisher(CameraInfo, f"depth_registered/{camera_name}/camera_info", 1),
-                    )
-
-                self.create_timer(
-                    1 / self.rates["front_image"],
-                    self.publish_depth_registered_images_callback,
-                    callback_group=self.depth_registered_callback_group,
-                )
-
-            if self.publish_graph_nav_pose.value:
-                # graph nav pose will be published both on a topic
-                # and as a TF transform from graph_nav_map to body.
-                self.graph_nav_pose_pub = self.create_publisher(PoseStamped, "graph_nav/body_pose", 1)
-                self.graph_nav_pose_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(self)
-
-                self.create_timer(
-                    1 / self.rates["graph_nav_pose"],
-                    self.publish_graph_nav_pose_callback,
-                    callback_group=self.graph_nav_callback_group,
-                )
-
-            self.declare_parameter("has_arm", has_arm)
-
-            # Status Publishers #
-            self.joint_state_pub: Publisher = self.create_publisher(JointState, "joint_states", 1)
-            self.dynamic_broadcaster: tf2_ros.TransformBroadcaster = tf2_ros.TransformBroadcaster(self)
-            self.metrics_pub: Publisher = self.create_publisher(Metrics, "status/metrics", 1)
-            self.lease_pub: Publisher = self.create_publisher(LeaseArray, "status/leases", 1)
-            self.odom_twist_pub: Publisher = self.create_publisher(TwistWithCovarianceStamped, "odometry/twist", 1)
-            self.odom_pub: Publisher = self.create_publisher(Odometry, "odometry", 1)
-            self.feet_pub: Publisher = self.create_publisher(FootStateArray, "status/feet", 1)
-            self.estop_pub: Publisher = self.create_publisher(EStopStateArray, "status/estop", 1)
-            self.wifi_pub: Publisher = self.create_publisher(WiFiState, "status/wifi", 1)
-            self.power_pub: Publisher = self.create_publisher(PowerState, "status/power_state", 1)
-            self.battery_pub: Publisher = self.create_publisher(BatteryStateArray, "status/battery_states", 1)
-            self.behavior_faults_pub: Publisher = self.create_publisher(BehaviorFaultState, "status/behavior_faults", 1)
-            self.system_faults_pub: Publisher = self.create_publisher(SystemFaultState, "status/system_faults", 1)
-            self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
-            self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
-            if has_arm:
-                self.end_effector_force_pub: Publisher = self.create_publisher(
-                    Vector3Stamped, "status/end_effector_force", 1
-                )
-
-            self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
-            self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
-            self.create_service(
-                Trigger,
-                "claim",
-                lambda request, response: self.service_wrapper("claim", self.handle_claim, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "release",
-                lambda request, response: self.service_wrapper("release", self.handle_release, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "stop",
-                lambda request, response: self.service_wrapper("stop", self.handle_stop, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "self_right",
-                lambda request, response: self.service_wrapper("self_right", self.handle_self_right, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "sit",
-                lambda request, response: self.service_wrapper("sit", self.handle_sit, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "stand",
-                lambda request, response: self.service_wrapper("stand", self.handle_stand, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "rollover",
-                lambda request, response: self.service_wrapper("rollover", self.handle_rollover, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "power_on",
-                lambda request, response: self.service_wrapper("power_on", self.handle_power_on, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "power_off",
-                lambda request, response: self.service_wrapper(
-                    "power_off", self.handle_safe_power_off, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "estop/hard",
-                lambda request, response: self.service_wrapper("estop/hard", self.handle_estop_hard, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "estop/gentle",
-                lambda request, response: self.service_wrapper(
-                    "estop/gentle", self.handle_estop_soft, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "estop/release",
-                lambda request, response: self.service_wrapper(
-                    "estop/release", self.handle_estop_disengage, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "undock",
-                lambda request, response: self.service_wrapper("undock", self.handle_undock, request, response),
-                callback_group=self.group,
-            )
-
-            self.create_service(
-                SetBool,
-                "stair_mode",
-                lambda request, response: self.service_wrapper("stair_mode", self.handle_stair_mode, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                SetLocomotion,
-                "locomotion_mode",
-                lambda request, response: self.service_wrapper(
-                    "locomotion_mode", self.handle_locomotion_mode, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                SetVelocity,
-                "max_velocity",
-                lambda request, response: self.service_wrapper("max_velocity", self.handle_max_vel, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                ClearBehaviorFault,
-                "clear_behavior_fault",
-                lambda request, response: self.service_wrapper(
-                    "clear_behavior_fault", self.handle_clear_behavior_fault, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                ExecuteDance,
-                "execute_dance",
-                lambda request, response: self.service_wrapper(
-                    "execute_dance", self.handle_execute_dance, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                UploadAnimation,
-                "upload_animation",
-                lambda request, response: self.service_wrapper(
-                    "upload_animation", self.handle_upload_animation, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                ListAllDances,
-                "list_all_dances",
-                lambda request, response: self.service_wrapper(
-                    "list_all_dances", self.handle_list_all_dances, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                ListAllMoves,
-                "list_all_moves",
-                lambda request, response: self.service_wrapper(
-                    "list_all_moves", self.handle_list_all_moves, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                ListSounds,
-                "list_sounds",
-                lambda request, response: self.service_wrapper(
-                    "list_sounds", self.handle_list_sounds, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                LoadSound,
-                "load_sound",
-                lambda request, response: self.service_wrapper("load_sound", self.handle_load_sound, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                PlaySound,
-                "play_sound",
-                lambda request, response: self.service_wrapper("play_sound", self.handle_play_sound, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                DeleteSound,
-                "delete_sound",
-                lambda request, response: self.service_wrapper(
-                    "delete_sound", self.handle_delete_sound, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                GetVolume,
-                "get_volume",
-                lambda request, response: self.service_wrapper("get_volume", self.handle_get_volume, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                SetVolume,
-                "set_volume",
-                lambda request, response: self.service_wrapper("set_volume", self.handle_set_volume, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                ListGraph,
-                "list_graph",
-                lambda request, response: self.service_wrapper("list_graph", self.handle_list_graph, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Dock,
-                "dock",
-                lambda request, response: self.service_wrapper("dock", self.handle_dock, request, response),
-                callback_group=self.group,
-            )
-
-            # This doesn't use the service wrapper because it's not a trigger, and we want different mock responses
-            self.create_service(ListWorldObjects, "list_world_objects", self.handle_list_world_objects)
-
-            self.create_service(
-                GraphNavUploadGraph,
-                "graph_nav_upload_graph",
-                self.handle_graph_nav_upload_graph,
-                callback_group=self.group,
-            )
-
-            self.create_service(
-                GraphNavClearGraph,
-                "graph_nav_clear_graph",
-                self.handle_graph_nav_clear_graph,
-                callback_group=self.group,
-            )
-
-            self.create_service(
-                GraphNavGetLocalizationPose,
-                "graph_nav_get_localization_pose",
-                self.handle_graph_nav_get_localization_pose,
-                callback_group=self.group,
-            )
-
-            self.create_service(
-                GraphNavSetLocalization,
-                "graph_nav_set_localization",
-                self.handle_graph_nav_set_localization,
-                callback_group=self.group,
-            )
-
-            self.navigate_as = ActionServer(
-                self, NavigateTo, "navigate_to", self.handle_navigate_to, callback_group=self.group
-            )
-            # spot_ros.navigate_as.start() # As is online
-
-            self.trajectory_server = ActionServer(
-                self, Trajectory, "trajectory", self.handle_trajectory, callback_group=self.group
-            )
-            # spot_ros.trajectory_server.start()
-
-            if has_arm:
-                # Allows both the "robot command" and the "manipulation" action goal to preempt each other
-                self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
+                setattr(
                     self,
-                    [
-                        (
-                            RobotCommand,
-                            "robot_command",
-                            self.handle_robot_command,
-                            self.group,
-                        ),
-                        (
-                            Manipulation,
-                            "manipulation",
-                            self.handle_manipulation_command,
-                            self.group,
-                        ),
-                    ],
+                    f"{camera_name}_image_info_pub",
+                    self.create_publisher(CameraInfo, f"camera/{camera_name}/camera_info", 1),
                 )
-            else:
-                self.robot_command_server = SingleGoalActionServer(
+
+            self.create_timer(
+                1 / self.rates["front_image"],
+                self.publish_camera_images_callback,
+                callback_group=self.rgb_callback_group,
+            )
+
+        if self.publish_depth.value:
+            for camera_name in self.cameras_used.value:
+                setattr(
+                    self, f"{camera_name}_depth_pub", self.create_publisher(Image, f"depth/{camera_name}/image", 1)
+                )
+                setattr(
                     self,
-                    RobotCommand,
-                    "robot_command",
-                    self.handle_robot_command,
-                    callback_group=self.group,
+                    f"{camera_name}_depth_info_pub",
+                    self.create_publisher(CameraInfo, f"depth/{camera_name}/camera_info", 1),
                 )
 
-            # Register Shutdown Handle
-            # rclpy.on_shutdown(spot_ros.shutdown) ############## Shutdown Handle
+            self.create_timer(
+                1 / self.rates["front_image"],
+                self.publish_depth_images_callback,
+                callback_group=self.depth_callback_group,
+            )
 
-            # Wait for an estop to be connected
-            if self.spot_wrapper and not self.start_estop.value:
-                printed = False
-                while self.spot_wrapper.is_estopped():
-                    if not printed:
-                        self.get_logger().warn(
-                            COLOR_YELLOW
-                            + "Waiting for estop to be released.  Make sure you have an active estop."
-                            '  You can acquire an estop on the tablet by choosing "Acquire Cut Motor Power Authority"'
-                            " in the dropdown menu from the power icon.  (This will not power the motors or take the"
-                            " lease.)"
-                            + COLOR_END,
-                        )
-                        printed = True
-                    time.sleep(0.5)
-                self.get_logger().info("Found estop!")
+        if self.publish_depth_registered.value:
+            for camera_name in self.cameras_used.value:
+                setattr(
+                    self,
+                    f"{camera_name}_depth_registered_pub",
+                    self.create_publisher(Image, f"depth_registered/{camera_name}/image", 1),
+                )
+                setattr(
+                    self,
+                    f"{camera_name}_depth_registered_info_pub",
+                    self.create_publisher(CameraInfo, f"depth_registered/{camera_name}/camera_info", 1),
+                )
 
-            self.create_timer(1 / self.async_tasks_rate, self.step, callback_group=self.group)
+            self.create_timer(
+                1 / self.rates["front_image"],
+                self.publish_depth_registered_images_callback,
+                callback_group=self.depth_registered_callback_group,
+            )
 
-            self.mt_executor = MultiThreadedExecutor(num_threads=8)
-            self.mt_executor.add_node(self)
+        if self.publish_graph_nav_pose.value:
+            # graph nav pose will be published both on a topic
+            # and as a TF transform from graph_nav_map to body.
+            self.graph_nav_pose_pub = self.create_publisher(PoseStamped, "graph_nav/body_pose", 1)
+            self.graph_nav_pose_transform_broadcaster = tf2_ros.StaticTransformBroadcaster(self)
 
-            if self.spot_wrapper is not None and self.auto_claim.value:
-                self.spot_wrapper.claim()
-                if self.auto_power_on.value:
-                    self.spot_wrapper.power_on()
-                    if self.auto_stand.value:
-                        self.spot_wrapper.stand()
+            self.create_timer(
+                1 / self.rates["graph_nav_pose"],
+                self.publish_graph_nav_pose_callback,
+                callback_group=self.graph_nav_callback_group,
+            )
+
+        self.declare_parameter("has_arm", has_arm)
+
+        # Status Publishers #
+        self.joint_state_pub: Publisher = self.create_publisher(JointState, "joint_states", 1)
+        self.dynamic_broadcaster: tf2_ros.TransformBroadcaster = tf2_ros.TransformBroadcaster(self)
+        self.metrics_pub: Publisher = self.create_publisher(Metrics, "status/metrics", 1)
+        self.lease_pub: Publisher = self.create_publisher(LeaseArray, "status/leases", 1)
+        self.odom_twist_pub: Publisher = self.create_publisher(TwistWithCovarianceStamped, "odometry/twist", 1)
+        self.odom_pub: Publisher = self.create_publisher(Odometry, "odometry", 1)
+        self.feet_pub: Publisher = self.create_publisher(FootStateArray, "status/feet", 1)
+        self.estop_pub: Publisher = self.create_publisher(EStopStateArray, "status/estop", 1)
+        self.wifi_pub: Publisher = self.create_publisher(WiFiState, "status/wifi", 1)
+        self.power_pub: Publisher = self.create_publisher(PowerState, "status/power_state", 1)
+        self.battery_pub: Publisher = self.create_publisher(BatteryStateArray, "status/battery_states", 1)
+        self.behavior_faults_pub: Publisher = self.create_publisher(BehaviorFaultState, "status/behavior_faults", 1)
+        self.system_faults_pub: Publisher = self.create_publisher(SystemFaultState, "status/system_faults", 1)
+        self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
+        self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
+        if has_arm:
+            self.end_effector_force_pub: Publisher = self.create_publisher(
+                Vector3Stamped, "status/end_effector_force", 1
+            )
+
+        self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
+        self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
+        self.create_service(
+            Trigger,
+            "claim",
+            lambda request, response: self.service_wrapper("claim", self.handle_claim, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "release",
+            lambda request, response: self.service_wrapper("release", self.handle_release, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "stop",
+            lambda request, response: self.service_wrapper("stop", self.handle_stop, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "self_right",
+            lambda request, response: self.service_wrapper("self_right", self.handle_self_right, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "sit",
+            lambda request, response: self.service_wrapper("sit", self.handle_sit, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "stand",
+            lambda request, response: self.service_wrapper("stand", self.handle_stand, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "rollover",
+            lambda request, response: self.service_wrapper("rollover", self.handle_rollover, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "power_on",
+            lambda request, response: self.service_wrapper("power_on", self.handle_power_on, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "power_off",
+            lambda request, response: self.service_wrapper(
+                "power_off", self.handle_safe_power_off, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "estop/hard",
+            lambda request, response: self.service_wrapper("estop/hard", self.handle_estop_hard, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "estop/gentle",
+            lambda request, response: self.service_wrapper(
+                "estop/gentle", self.handle_estop_soft, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "estop/release",
+            lambda request, response: self.service_wrapper(
+                "estop/release", self.handle_estop_disengage, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "undock",
+            lambda request, response: self.service_wrapper("undock", self.handle_undock, request, response),
+            callback_group=self.group,
+        )
+
+        self.create_service(
+            SetBool,
+            "stair_mode",
+            lambda request, response: self.service_wrapper("stair_mode", self.handle_stair_mode, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            SetLocomotion,
+            "locomotion_mode",
+            lambda request, response: self.service_wrapper(
+                "locomotion_mode", self.handle_locomotion_mode, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            SetVelocity,
+            "max_velocity",
+            lambda request, response: self.service_wrapper("max_velocity", self.handle_max_vel, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ClearBehaviorFault,
+            "clear_behavior_fault",
+            lambda request, response: self.service_wrapper(
+                "clear_behavior_fault", self.handle_clear_behavior_fault, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ExecuteDance,
+            "execute_dance",
+            lambda request, response: self.service_wrapper(
+                "execute_dance", self.handle_execute_dance, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            UploadAnimation,
+            "upload_animation",
+            lambda request, response: self.service_wrapper(
+                "upload_animation", self.handle_upload_animation, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ListAllDances,
+            "list_all_dances",
+            lambda request, response: self.service_wrapper(
+                "list_all_dances", self.handle_list_all_dances, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ListAllMoves,
+            "list_all_moves",
+            lambda request, response: self.service_wrapper(
+                "list_all_moves", self.handle_list_all_moves, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ListSounds,
+            "list_sounds",
+            lambda request, response: self.service_wrapper(
+                "list_sounds", self.handle_list_sounds, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            LoadSound,
+            "load_sound",
+            lambda request, response: self.service_wrapper("load_sound", self.handle_load_sound, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            PlaySound,
+            "play_sound",
+            lambda request, response: self.service_wrapper("play_sound", self.handle_play_sound, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            DeleteSound,
+            "delete_sound",
+            lambda request, response: self.service_wrapper(
+                "delete_sound", self.handle_delete_sound, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            GetVolume,
+            "get_volume",
+            lambda request, response: self.service_wrapper("get_volume", self.handle_get_volume, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            SetVolume,
+            "set_volume",
+            lambda request, response: self.service_wrapper("set_volume", self.handle_set_volume, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ListGraph,
+            "list_graph",
+            lambda request, response: self.service_wrapper("list_graph", self.handle_list_graph, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Dock,
+            "dock",
+            lambda request, response: self.service_wrapper("dock", self.handle_dock, request, response),
+            callback_group=self.group,
+        )
+
+        # This doesn't use the service wrapper because it's not a trigger, and we want different mock responses
+        self.create_service(ListWorldObjects, "list_world_objects", self.handle_list_world_objects)
+
+        self.create_service(
+            GraphNavUploadGraph,
+            "graph_nav_upload_graph",
+            self.handle_graph_nav_upload_graph,
+            callback_group=self.group,
+        )
+
+        self.create_service(
+            GraphNavClearGraph,
+            "graph_nav_clear_graph",
+            self.handle_graph_nav_clear_graph,
+            callback_group=self.group,
+        )
+
+        self.create_service(
+            GraphNavGetLocalizationPose,
+            "graph_nav_get_localization_pose",
+            self.handle_graph_nav_get_localization_pose,
+            callback_group=self.group,
+        )
+
+        self.create_service(
+            GraphNavSetLocalization,
+            "graph_nav_set_localization",
+            self.handle_graph_nav_set_localization,
+            callback_group=self.group,
+        )
+
+        self.navigate_as = ActionServer(
+            self, NavigateTo, "navigate_to", self.handle_navigate_to, callback_group=self.group
+        )
+        # spot_ros.navigate_as.start() # As is online
+
+        self.trajectory_server = ActionServer(
+            self, Trajectory, "trajectory", self.handle_trajectory, callback_group=self.group
+        )
+        # spot_ros.trajectory_server.start()
+
+        if has_arm:
+            # Allows both the "robot command" and the "manipulation" action goal to preempt each other
+            self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
+                self,
+                [
+                    (
+                        RobotCommand,
+                        "robot_command",
+                        self.handle_robot_command,
+                        self.group,
+                    ),
+                    (
+                        Manipulation,
+                        "manipulation",
+                        self.handle_manipulation_command,
+                        self.group,
+                    ),
+                ],
+            )
+        else:
+            self.robot_command_server = SingleGoalActionServer(
+                self,
+                RobotCommand,
+                "robot_command",
+                self.handle_robot_command,
+                callback_group=self.group,
+            )
+
+        # Register Shutdown Handle
+        # rclpy.on_shutdown(spot_ros.shutdown) ############## Shutdown Handle
+
+        # Wait for an estop to be connected
+        if self.spot_wrapper is not None and not self.start_estop.value:
+            printed = False
+            while self.spot_wrapper.is_estopped():
+                if not printed:
+                    self.get_logger().warn(
+                        COLOR_YELLOW
+                        + "Waiting for estop to be released.  Make sure you have an active estop."
+                        '  You can acquire an estop on the tablet by choosing "Acquire Cut Motor Power Authority"'
+                        " in the dropdown menu from the power icon.  (This will not power the motors or take the"
+                        " lease.)"
+                        + COLOR_END,
+                    )
+                    printed = True
+                time.sleep(0.5)
+            self.get_logger().info("Found estop!")
+
+        self.create_timer(1 / self.async_tasks_rate, self.step, callback_group=self.group)
+
+        self.mt_executor = MultiThreadedExecutor(num_threads=8)
+        self.mt_executor.add_node(self)
+
+        if self.spot_wrapper is not None and self.auto_claim.value:
+            self.spot_wrapper.claim()
+            if self.auto_power_on.value:
+                self.spot_wrapper.power_on()
+                if self.auto_stand.value:
+                    self.spot_wrapper.stand()
 
     def spin(self) -> None:
         self.get_logger().info("Spinning ros2_driver")
