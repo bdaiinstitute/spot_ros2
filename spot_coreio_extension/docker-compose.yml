@@ -23,6 +23,6 @@ services:
       - BOSDYN_CLIENT_USERNAME=user
       - BOSDYN_CLIENT_PASSWORD=bbbdddaaaiii
     # Launch the Spot ROS 2 driver 
-    command: ros2 launch spot_driver spot_driver_with_namespace.launch.py spot_name:=Eddie config_file:=/spot_ros_params.yml
+    command: ros2 launch spot_driver spot_driver.launch.py config_file:=/spot_ros_params.yml
     # depends_on:
       # - ros_fastdds_discovery_server

@@ -51,6 +51,8 @@ sshpass -p $pass ssh -p 20022 spot@$ip_addr << EOF
   echo -e $pass | sudo -S chmod 777 .
   echo -e $pass | sudo -S docker kill spot-spot_ros2-1
   echo -e $pass | sudo -S docker rm spot-spot_ros2-1
+  echo -e $pass | sudo -S docker kill spot-ros_fastdds_discovery_server-1
+  echo -e $pass | sudo -S docker rm spot-ros_fastdds_discovery_server-1
   echo -e $pass | sudo -S docker rmi -f spot_ros2:arm64
   echo "21000 22000" | sudo tee /proc/sys/net/ipv4/ip_local_port_range
   echo "Loading docker..."
