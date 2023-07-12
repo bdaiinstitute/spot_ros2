@@ -25,7 +25,7 @@ class WalkForward(Node):
 
         self._tf_listener = TFListenerWrapper(
             "walk_forward_tf",
-            wait_for_transform=[self._name + "/" + BODY_FRAME_NAME, self._name + "/" + VISION_FRAME_NAME]
+            wait_for_transform=[self._name + "/" + BODY_FRAME_NAME, self._name + "/" + VISION_FRAME_NAME],
         )
         self._robot = SimpleSpotCommander(self._name)
         self._robot_command_client = ActionClientWrapper(
