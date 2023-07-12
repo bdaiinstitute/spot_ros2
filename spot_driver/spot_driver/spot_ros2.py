@@ -1847,7 +1847,7 @@ class SpotROS(Node):
 
     def body_pose_callback(self, data: Pose) -> None:
         """Callback for cmd_vel command"""
-        if not self.spot_wrapper:
+        if self.spot_wrapper is None:
             self.get_logger().info("Mock mode, received command vel " + str(data))
             return
         q = Quaternion()
@@ -2158,7 +2158,7 @@ class SpotROS(Node):
                 self.spot_wrapper.updateTasks()  # Testing with Robot
             self.get_logger().debug("UPDATE TASKS")
             feedback_msg = Feedback()
-            if self.spot_wrapper:
+            if self.spot_wrapper is not None:
                 feedback_msg.standing = self.spot_wrapper.is_standing
                 feedback_msg.sitting = self.spot_wrapper.is_sitting
                 feedback_msg.moving = self.spot_wrapper.is_moving
@@ -2173,34 +2173,35 @@ class SpotROS(Node):
                     pass
             self.feedback_pub.publish(feedback_msg)
             mobility_params_msg = MobilityParams()
-            try:
-                mobility_params = self.spot_wrapper.get_mobility_params()
-                mobility_params_msg.body_control.position.x = (
-                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.x
-                )
-                mobility_params_msg.body_control.position.y = (
-                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.y
-                )
-                mobility_params_msg.body_control.position.z = (
-                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.z
-                )
-                mobility_params_msg.body_control.orientation.x = (
-                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.x
-                )
-                mobility_params_msg.body_control.orientation.y = (
-                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.y
-                )
-                mobility_params_msg.body_control.orientation.z = (
-                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.z
-                )
-                mobility_params_msg.body_control.orientation.w = (
-                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.w
-                )
-                mobility_params_msg.locomotion_hint = mobility_params.locomotion_hint
-                mobility_params_msg.stair_hint = mobility_params.stair_hint
-            except Exception as e:
-                self.get_logger().error("Error:{}".format(e))
-                pass
+            if self.spot_wrapper is not None:
+                try:
+                    mobility_params = self.spot_wrapper.get_mobility_params()
+                    mobility_params_msg.body_control.position.x = (
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.x
+                    )
+                    mobility_params_msg.body_control.position.y = (
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.y
+                    )
+                    mobility_params_msg.body_control.position.z = (
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.z
+                    )
+                    mobility_params_msg.body_control.orientation.x = (
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.x
+                    )
+                    mobility_params_msg.body_control.orientation.y = (
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.y
+                    )
+                    mobility_params_msg.body_control.orientation.z = (
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.z
+                    )
+                    mobility_params_msg.body_control.orientation.w = (
+                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.w
+                    )
+                    mobility_params_msg.locomotion_hint = mobility_params.locomotion_hint
+                    mobility_params_msg.stair_hint = mobility_params.stair_hint
+                except Exception as e:
+                    self.get_logger().error("Error:{}".format(e))
+                    pass
             self.mobility_params_pub.publish(mobility_params_msg)
 
 
