@@ -31,7 +31,7 @@ from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_msgs.msg import ManipulationApiFeedbackResponse, RobotCommandFeedback
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped, Vector3Stamped
+from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
 from rclpy import Parameter
@@ -48,7 +48,7 @@ from sensor_msgs.msg import CameraInfo, Image, JointState
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
-from spot_msgs.action import Manipulation, NavigateTo, RobotCommand, Trajectory  # type: ignore
+from spot_msgs.action import Manipulation, NavigateTo, NavigateToDynamic, RobotCommand, Trajectory  # type: ignore
 from spot_msgs.msg import (  # type: ignore
     BatteryStateArray,
     BehaviorFaultState,
@@ -76,10 +76,14 @@ from spot_msgs.srv import (  # type: ignore
     ListAllDances,
     ListAllMoves,
     ListGraph,
+    ListPTZ,
+    MovePTZ,
+    GetPTZ,
     ListSounds,
     ListWorldObjects,
     LoadSound,
     PlaySound,
+    SetNavigateToParams,
     SetLocomotion,
     SetVelocity,
     SetVolume,
@@ -94,7 +98,6 @@ from .ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
     get_battery_states_from_state,
     get_behavior_faults_from_state,
-    get_end_effector_force_from_state,
     get_estop_state_from_state,
     get_feet_from_state,
     get_from_env_and_fall_back_to_param,
@@ -108,6 +111,9 @@ from .ros_helpers import (
     get_wifi_from_state,
     populate_transform_stamped,
 )
+
+import cv2
+from cv_bridge import CvBridge
 
 MAX_DURATION = 1e6
 MOCK_HOSTNAME = "Mock_spot"
@@ -164,6 +170,7 @@ class SpotROS(Node):
         """
         super().__init__("spot_ros2")
         self.run_navigate_to: Optional[bool] = None
+        self.run_navigate_to_dynamic: Optional[bool] = None
         self._printed_once: bool = False
 
         self.get_logger().info(COLOR_GREEN + "Hi from spot_driver." + COLOR_END)
@@ -193,8 +200,8 @@ class SpotROS(Node):
             "side_image": 10.0,
             "rear_image": 10.0,
             "graph_nav_pose": 10.0,
+            "spot_cam_image": 10.0,
         }
-        max_task_rate = float(max(self.rates.values()))
 
         self.declare_parameter("auto_claim", False)
         self.declare_parameter("auto_power_on", False)
@@ -206,13 +213,12 @@ class SpotROS(Node):
 
         self.declare_parameter("deadzone", 0.05)
         self.declare_parameter("estop_timeout", 9.0)
-        self.declare_parameter("async_tasks_rate", max_task_rate)
+        self.declare_parameter("async_tasks_rate", 10)
         self.declare_parameter("cmd_duration", 0.125)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("publish_rgb", True)
         self.declare_parameter("publish_depth", True)
         self.declare_parameter("publish_depth_registered", False)
-        self.declare_parameter("rgb_cameras", True)
 
         self.declare_parameter("publish_graph_nav_pose", False)
         self.declare_parameter("graph_nav_seed_frame", "graph_nav_map")
@@ -231,13 +237,13 @@ class SpotROS(Node):
         self.publish_rgb: Parameter = self.get_parameter("publish_rgb")
         self.publish_depth: Parameter = self.get_parameter("publish_depth")
         self.publish_depth_registered: Parameter = self.get_parameter("publish_depth_registered")
-        self.rgb_cameras: Parameter = self.get_parameter("rgb_cameras")
 
         self.publish_graph_nav_pose: Parameter = self.get_parameter("publish_graph_nav_pose")
         self.graph_nav_seed_frame: str = self.get_parameter("graph_nav_seed_frame").value
 
         self._wait_for_goal: Optional[WaitForGoal] = None
         self.goal_handle: Optional[ServerGoalHandle] = None
+        self.goal_handle_dynamic: Optional[ServerGoalHandle] = None
 
         # This is only done from parameter because it should be passed by the launch file
         self.name: Optional[str] = self.get_parameter("spot_name").value
@@ -246,16 +252,7 @@ class SpotROS(Node):
 
         self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
-        self.async_tasks_rate: float = self.get_parameter("async_tasks_rate").value
-        if self.async_tasks_rate < max_task_rate:
-            self.get_logger().warn(
-                COLOR_YELLOW
-                + f"The maximum individual task rate is {max_task_rate} Hz. You have manually set the async_tasks_rate"
-                f" to {self.async_tasks_rate} which is lower and will decrease the frequency of one of the periodic"
-                " tasks being run."
-                + COLOR_END
-            )
-
+        self.async_tasks_rate: int = self.get_parameter("async_tasks_rate").value
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
 
         self.username: Optional[str] = get_from_env_and_fall_back_to_param(
@@ -331,26 +328,33 @@ class SpotROS(Node):
                 self.use_take_lease.value,
                 self.get_lease_on_action.value,
                 self.continually_try_stand.value,
-                self.rgb_cameras.value,
             )
             if not self.spot_wrapper.is_valid:
                 return
 
+            self.spot_cam_wrapper = None
+            '''
             try:
                 self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
+                self.spot_cam_publisher = self.create_publisher(Image, "SpotCAM/image", 1)
+                self.create_timer(
+                    1 / self.rates["spot_cam_image"],
+                    self.publish_CAM_callback,
+                    callback_group=self.group
+                )
             except SystemError:
                 self.spot_cam_wrapper = None
+            '''
 
-            # all_cameras = ["frontleft", "frontright", "left", "right", "back"]
+            all_cameras = ["frontleft", "frontright", "left", "right", "back"]
             has_arm = self.spot_wrapper.has_arm()
-            # if has_arm:
-            #     all_cameras.append("hand")
-            self.all_cameras = ["hand"]
-            # self.declare_parameter("cameras_used", all_cameras)
-            # self.cameras_used = self.get_parameter("cameras_used")
+            if has_arm:
+                all_cameras.append("hand")
+            self.declare_parameter("cameras_used", all_cameras)
+            self.cameras_used = self.get_parameter("cameras_used")
 
             if self.publish_rgb.value:
-                for camera_name in self.all_cameras: #self.cameras_used.value:
+                for camera_name in self.cameras_used.value:
                     setattr(
                         self, f"{camera_name}_image_pub", self.create_publisher(Image, f"camera/{camera_name}/image", 1)
                     )
@@ -367,7 +371,7 @@ class SpotROS(Node):
                 )
 
             if self.publish_depth.value:
-                for camera_name in self.all_cameras: #self.cameras_used.value:
+                for camera_name in self.cameras_used.value:
                     setattr(
                         self, f"{camera_name}_depth_pub", self.create_publisher(Image, f"depth/{camera_name}/image", 1)
                     )
@@ -384,7 +388,7 @@ class SpotROS(Node):
                 )
 
             if self.publish_depth_registered.value:
-                for camera_name in self.all_cameras: #self.cameras_used.value:
+                for camera_name in self.cameras_used.value:
                     setattr(
                         self,
                         f"{camera_name}_depth_registered_pub",
@@ -432,10 +436,6 @@ class SpotROS(Node):
             self.system_faults_pub: Publisher = self.create_publisher(SystemFaultState, "status/system_faults", 1)
             self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
             self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
-            if has_arm:
-                self.end_effector_force_pub: Publisher = self.create_publisher(
-                    Vector3Stamped, "status/end_effector_force", 1
-                )
 
             self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
             self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
@@ -569,6 +569,30 @@ class SpotROS(Node):
                 callback_group=self.group,
             )
             self.create_service(
+                MovePTZ,
+                "move_ptz",
+                lambda request, response: self.service_wrapper(
+                    "move_ptz", self.handle_move_ptz, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
+                GetPTZ,
+                "get_ptz",
+                lambda request, response: self.service_wrapper(
+                    "get_ptz", self.handle_get_ptz, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
+                ListPTZ,
+                "list_ptz",
+                lambda request, response: self.service_wrapper(
+                    "list_ptz", self.handle_list_ptz, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
                 ListAllDances,
                 "list_all_dances",
                 lambda request, response: self.service_wrapper(
@@ -648,6 +672,13 @@ class SpotROS(Node):
             )
 
             self.create_service(
+                SetNavigateToParams,
+                "set_navigate_to_params",
+                self.handle_set_navigate_to_params,
+                callback_group=self.group,
+            )
+
+            self.create_service(
                 GraphNavClearGraph,
                 "graph_nav_clear_graph",
                 self.handle_graph_nav_clear_graph,
@@ -670,6 +701,10 @@ class SpotROS(Node):
 
             self.navigate_as = ActionServer(
                 self, NavigateTo, "navigate_to", self.handle_navigate_to, callback_group=self.group
+            )
+
+            self.navigate_as_dynamic = ActionServer(
+                self, NavigateToDynamic, "navigate_to_dynamic", self.handle_navigate_to_dynamic, callback_group=self.group
             )
             # spot_ros.navigate_as.start() # As is online
 
@@ -808,10 +843,6 @@ class SpotROS(Node):
             behavior_fault_state_msg = get_behavior_faults_from_state(state, self.spot_wrapper)
             self.behavior_faults_pub.publish(behavior_fault_state_msg)
 
-            if self.spot_wrapper.has_arm():
-                end_effector_force_msg = get_end_effector_force_from_state(state, self.spot_wrapper)
-                self.end_effector_force_pub.publish(end_effector_force_msg)
-
     def metrics_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new metrics data.
         Args:
@@ -910,11 +941,12 @@ class SpotROS(Node):
             self.get_logger().error(f"Exception: {e} \n {traceback.format_exc()}")
 
     def publish_camera_images_callback(self) -> None:
+        self.get_logger().error("trying to get rgb image")
         if self.spot_wrapper is None:
             return
 
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["visual"]) for camera_name in self.all_cameras] #self.cameras_used.value]
+            [CameraSource(camera_name, ["visual"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
@@ -926,12 +958,22 @@ class SpotROS(Node):
             image_info_pub.publish(camera_info)
             self.populate_camera_static_transforms(image_entry.image_response)
 
+    def publish_CAM_callback(self) -> None:
+        self.get_logger().error("trying to get CAM image")
+        st = time.time()
+        img = self.spot_cam_wrapper.image.get_last_image()
+        if img is None:
+            return
+        bridge = CvBridge()
+        img_msg = bridge.cv2_to_imgmsg(img, encoding="passthrough")
+        self.spot_cam_publisher.publish(img_msg)
+
     def publish_depth_images_callback(self) -> None:
         if self.spot_wrapper is None:
             return
 
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["depth"]) for camera_name in self.all_cameras] #self.cameras_used.value]
+            [CameraSource(camera_name, ["depth"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
@@ -948,7 +990,7 @@ class SpotROS(Node):
             return
 
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["depth_registered"]) for camera_name in self.all_cameras] #self.cameras_used.value]
+            [CameraSource(camera_name, ["depth_registered"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
@@ -1146,6 +1188,66 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.upload_animation(
             request.animation_name, request.animation_file_content
         )
+        return response
+
+    def handle_list_ptz(
+        self, request: ListPTZ.Request, response: ListPTZ.Response
+    ) -> ListPTZ.Response:
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            ptz_names = [ptz_info['name'] for ptz_info in self.spot_cam_wrapper.ptz.list_ptz()]
+            self.get_logger().error(f"ptz_names are given as {ptz_names}")
+            self.get_logger().error(f"ptz_names are given as type {type(ptz_names)}")
+            response.success = True
+            response.message = "Success"
+            response.names = ptz_names
+        except Exception as e:
+            response.success = False
+            response.message = f"Listing PTZ camera names failed: {e}"
+            response.names = []
+        return response
+
+    def handle_get_ptz(
+        self, request: GetPTZ.Request, response: GetPTZ.Response
+    ) -> GetPTZ.Response:
+        """ROS service handle for getting the current pan, tilt, zoom of SpotCam."""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.pan, response.tilt, response.zoom = 0., 0., 0.
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            ptz_position = self.spot_cam_wrapper.ptz.get_ptz_position(request.name)
+            response.pan, response.tilt, response.zoom = ptz_position.pan.value, ptz_position.tilt.value, ptz_position.zoom.value
+            response.success = True
+            response.message = "Sucess"
+        except Exception as e:
+            response.success = False
+            response.pan, response.tilt, response.zoom = 0., 0., 0.
+            response.message = f"Getting PTZ camera pose failed: {e}"
+        return response
+
+        
+    def handle_move_ptz(
+        self, request: MovePTZ.Request, response: MovePTZ.Response
+    ) -> MovePTZ.Response:
+        """ROS service handle for moving the PTZ camera of Spot CAM."""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            self.spot_cam_wrapper.ptz.set_ptz_position(
+                request.name, request.pan, request.tilt, request.zoom
+            )
+            response.success = True
+            response.message = "Sucess"
+        except Exception as e:
+            response.success = False
+            response.message = f"Moving PTZ camera names failed: {e}"
         return response
 
     def handle_list_sounds(self, request: ListSounds.Request, response: ListSounds.Response) -> ListSounds.Response:
@@ -1653,41 +1755,41 @@ class SpotROS(Node):
             # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
 
-        if feedback.current_state.value == feedback.current_state.MANIP_STATE_UNKNOWN:
+        if feedback.current_state == manipulation_api_pb2.MANIP_STATE_UNKNOWN:
             return GoalResponse.FAILED
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_DONE:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_DONE:
             return GoalResponse.SUCCESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_SEARCHING_FOR_GRASP:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_SEARCHING_FOR_GRASP:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_GRASP:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_GRASP:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASPING_OBJECT:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASPING_OBJECT:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACING_OBJECT:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACING_OBJECT:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_SUCCEEDED:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_SUCCEEDED:
             return GoalResponse.SUCCESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED:
             return GoalResponse.FAILED
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
             return GoalResponse.FAILED
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
             return GoalResponse.FAILED
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_WALKING_TO_OBJECT:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_WALKING_TO_OBJECT:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_ATTEMPTING_RAYCASTING:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_ATTEMPTING_RAYCASTING:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_PLACE:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_MOVING_TO_PLACE:
             return GoalResponse.IN_PROGRESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
             return GoalResponse.FAILED
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_SUCCEEDED:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_SUCCEEDED:
             return GoalResponse.SUCCESS
-        elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED:
+        elif feedback.current_state == manipulation_api_pb2.MANIP_STATE_PLACE_FAILED:
             return GoalResponse.FAILED
         else:
             raise Exception("Unknown manipulation state type")
@@ -1838,7 +1940,7 @@ class SpotROS(Node):
                 # check for timeout
                 com_dur = self.get_clock().now() - command_start_time
 
-                if com_dur.nanoseconds / 1e9 > cmd_duration_secs:
+                if com_dur.nanoseconds / 1e9 > (cmd_duration_secs * 10.3):
                     # timeout, quit with failure
                     self.get_logger().error("TIMEOUT")
                     feedback = Trajectory.Feedback()
@@ -1996,6 +2098,20 @@ class SpotROS(Node):
             response.success = False
             response.message = f"Exception Error:{e}"
         return response
+    
+    def handle_set_navigate_to_params(
+        self, request: SetNavigateToParams.Request, response: SetNavigateToParams.Response
+    ) -> SetNavigateToParams.Response:
+        if self.spot_wrapper is None:
+            self.get_logger().error("Spot wrapper is None")
+            response.success = False
+            return response
+        self.spot_wrapper._x = request.x
+        self.spot_wrapper._y = request.y
+        self.spot_wrapper._max_distance = request.max_distance
+        self.spot_wrapper._max_yaw = request.max_yaw
+        response.success = True
+        return response
 
     def handle_graph_nav_clear_graph(
         self, request: GraphNavClearGraph.Request, response: GraphNavClearGraph.Response
@@ -2111,6 +2227,52 @@ class SpotROS(Node):
         feedback_thread.join()
 
         result = NavigateTo.Result()
+        result.success = resp[0]
+        result.message = resp[1]
+        # check status
+        if resp[0]:
+            goal_handle.succeed()
+        else:
+            goal_handle.abort()
+
+        return result
+    
+    def handle_navigate_to_dynamic_feedback(self) -> None:
+        """Thread function to send navigate_to_dynamic feedback"""
+        if self.spot_wrapper is None:
+            return
+
+        while rclpy.ok() and self.run_navigate_to_dynamic:
+            localization_state = self.spot_wrapper._graph_nav_client.get_localization_state()
+            if localization_state.localization.waypoint_id:
+                feedback = NavigateToDynamic.Feedback()
+                feedback.waypoint_id = localization_state.localization.waypoint_id
+                feedback.message = self.spot_wrapper._navigate_to_dynamic_feedback
+                if self.goal_handle_dynamic is not None:
+                    self.goal_handle_dynamic.publish_feedback(feedback)
+            time.sleep(1)
+    
+    def handle_navigate_to_dynamic(self, goal_handle: ServerGoalHandle) -> NavigateToDynamic.Result:
+        """ROS service handler to run mission of the robot.  The robot will replay a mission"""
+        self.goal_handle_dynamic = goal_handle
+        feedback_thread = threading.Thread(target=self.handle_navigate_to_dynamic_feedback, args=())
+        self.run_navigate_to_dynamic = True
+        feedback_thread.start()
+        if self.spot_wrapper is None:
+            self.get_logger().error("Spot wrapper is None")
+            response = NavigateToDynamic.Result()
+            response.success = False
+            response.message = "Spot wrapper is None"
+            goal_handle.abort()
+            return response
+
+        resp = self.spot_wrapper.navigate_to_dynamic(
+            navigate_to=goal_handle.request.navigate_to
+        )
+        self.run_navigate_to_dynamic = False
+        feedback_thread.join()
+
+        result = NavigateToDynamic.Result()
         result.success = resp[0]
         result.message = resp[1]
         # check status
