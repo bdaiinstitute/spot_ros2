@@ -1087,7 +1087,7 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message = self.spot_wrapper.undock()
+        response.success, response.message = self.spot_wrapper.spot_docking.undock()
         return response
 
     def handle_clear_behavior_fault(
@@ -1294,7 +1294,7 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message = self.spot_wrapper.dock(request.dock_id)
+        response.success, response.message = self.spot_wrapper.spot_docking.dock(request.dock_id)
         return response
 
     def handle_max_vel(self, request: SetVelocity.Request, response: SetVelocity.Response) -> SetVelocity.Response:
