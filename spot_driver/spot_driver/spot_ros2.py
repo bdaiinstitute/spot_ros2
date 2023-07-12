@@ -341,16 +341,23 @@ class SpotROS(Node):
             except SystemError:
                 self.spot_cam_wrapper = None
 
-            # all_cameras = ["frontleft", "frontright", "left", "right", "back"]
+            all_cameras = ["frontleft", "frontright", "left", "right", "back"]
             has_arm = self.spot_wrapper.has_arm()
-            # if has_arm:
-            #     all_cameras.append("hand")
-            self.all_cameras = ["hand"]
-            # self.declare_parameter("cameras_used", all_cameras)
-            # self.cameras_used = self.get_parameter("cameras_used")
+            if has_arm:
+                all_cameras.append("hand")
+
+            self.declare_parameter("cameras_used", all_cameras)
+            self.cameras_used = self.get_parameter("cameras_used")
+            self.get_logger().error(f"the parameters we got is {self.cameras_used.value}")
+            cameras_used = [camera_name for camera_name in self.cameras_used.value if camera_name in all_cameras]
+            cameras_used_param = Parameter('cameras_used', Parameter.Type.STRING_ARRAY, cameras_used)
+            self.set_parameters([cameras_used_param])
+            self.cameras_used = self.get_parameter("cameras_used")
+            self.get_logger().error(f"the parameters we got is {self.cameras_used.value}")
+
 
             if self.publish_rgb.value:
-                for camera_name in self.all_cameras: #self.cameras_used.value:
+                for camera_name in self.cameras_used.value:
                     setattr(
                         self, f"{camera_name}_image_pub", self.create_publisher(Image, f"camera/{camera_name}/image", 1)
                     )
@@ -367,7 +374,7 @@ class SpotROS(Node):
                 )
 
             if self.publish_depth.value:
-                for camera_name in self.all_cameras: #self.cameras_used.value:
+                for camera_name in self.cameras_used.value:
                     setattr(
                         self, f"{camera_name}_depth_pub", self.create_publisher(Image, f"depth/{camera_name}/image", 1)
                     )
@@ -384,7 +391,7 @@ class SpotROS(Node):
                 )
 
             if self.publish_depth_registered.value:
-                for camera_name in self.all_cameras: #self.cameras_used.value:
+                for camera_name in self.cameras_used.value:
                     setattr(
                         self,
                         f"{camera_name}_depth_registered_pub",
@@ -914,7 +921,7 @@ class SpotROS(Node):
             return
 
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["visual"]) for camera_name in self.all_cameras] #self.cameras_used.value]
+            [CameraSource(camera_name, ["visual"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
@@ -931,7 +938,7 @@ class SpotROS(Node):
             return
 
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["depth"]) for camera_name in self.all_cameras] #self.cameras_used.value]
+            [CameraSource(camera_name, ["depth"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
@@ -948,7 +955,7 @@ class SpotROS(Node):
             return
 
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["depth_registered"]) for camera_name in self.all_cameras] #self.cameras_used.value]
+            [CameraSource(camera_name, ["depth_registered"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
