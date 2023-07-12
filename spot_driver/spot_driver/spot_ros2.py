@@ -153,6 +153,10 @@ class WaitForGoal(object):
             time.sleep(0.05)
         self._at_goal = True
 
+class SpotImageType(str, Enum):
+    RGB = 'visual'
+    Depth = 'depth'
+    RegDepth = 'depth_registered'
 
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
