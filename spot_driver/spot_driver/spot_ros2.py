@@ -4,6 +4,7 @@ import sys
 import threading
 import time
 import traceback
+from functools import partial
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -359,58 +360,16 @@ class SpotROS(Node):
         self.declare_parameter("cameras_used", all_cameras)
         self.cameras_used = self.get_parameter("cameras_used")
 
+        # Create the necessary publishers and timers
+        # if enable set up publisher for rgb images
         if self.publish_rgb.value:
-            for camera_name in self.cameras_used.value:
-                setattr(
-                    self, f"{camera_name}_image_pub", self.create_publisher(Image, f"camera/{camera_name}/image", 1)
-                )
-                setattr(
-                    self,
-                    f"{camera_name}_image_info_pub",
-                    self.create_publisher(CameraInfo, f"camera/{camera_name}/camera_info", 1),
-                )
-
-            self.create_timer(
-                1 / self.rates["front_image"],
-                self.publish_camera_images_callback,
-                callback_group=self.rgb_callback_group,
-            )
-
+            self.create_image_publisher(SpotImageType.RGB, self.rgb_callback_group)
+        # if enabled set up publisher for depth images
         if self.publish_depth.value:
-            for camera_name in self.cameras_used.value:
-                setattr(
-                    self, f"{camera_name}_depth_pub", self.create_publisher(Image, f"depth/{camera_name}/image", 1)
-                )
-                setattr(
-                    self,
-                    f"{camera_name}_depth_info_pub",
-                    self.create_publisher(CameraInfo, f"depth/{camera_name}/camera_info", 1),
-                )
-
-            self.create_timer(
-                1 / self.rates["front_image"],
-                self.publish_depth_images_callback,
-                callback_group=self.depth_callback_group,
-            )
-
+            self.create_image_publisher(SpotImageType.Depth, self.depth_callback_group)
+        # if enable publish registered depth
         if self.publish_depth_registered.value:
-            for camera_name in self.cameras_used.value:
-                setattr(
-                    self,
-                    f"{camera_name}_depth_registered_pub",
-                    self.create_publisher(Image, f"depth_registered/{camera_name}/image", 1),
-                )
-                setattr(
-                    self,
-                    f"{camera_name}_depth_registered_info_pub",
-                    self.create_publisher(CameraInfo, f"depth_registered/{camera_name}/camera_info", 1),
-                )
-
-            self.create_timer(
-                1 / self.rates["front_image"],
-                self.publish_depth_registered_images_callback,
-                callback_group=self.depth_registered_callback_group,
-            )
+            self.create_image_publisher(SpotImageType.RegDepth, self.depth_registered_callback_group)
 
         if self.publish_graph_nav_pose.value:
             # graph nav pose will be published both on a topic
@@ -919,55 +878,41 @@ class SpotROS(Node):
         except Exception as e:
             self.get_logger().error(f"Exception: {e} \n {traceback.format_exc()}")
 
-    def publish_camera_images_callback(self) -> None:
+    def create_image_publisher(self, image_type: SpotImageType, callback_group: CallbackGroup) -> None:
+        for camera_name in self.cameras_used.value:
+            setattr(
+                self, f"{camera_name}_{image_type}_pub", self.create_publisher(Image, f"{image_type}/{camera_name}/image", 1)
+            )
+            setattr(
+                self,
+                f"{camera_name}_{image_type}_info_pub",
+                self.create_publisher(CameraInfo, f"{image_type}/{camera_name}/camera_info", 1),
+            )
+        # create a timer for publishing
+        self.create_timer(
+            1 / self.rates["front_image"],
+            partial(self.publish_camera_images_callback, image_type),
+            callback_group=callback_group,
+        )
+
+    def publish_camera_images_callback(self, image_type: SpotImageType) -> None:
+        """
+        Publishes the camera images from a specific image type
+        """
         if self.spot_wrapper is None:
             return
 
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["visual"]) for camera_name in self.cameras_used.value]
+            [CameraSource(camera_name, [image_type]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
             )
-            image_pub = getattr(self, f"{image_entry.camera_name}_image_pub")
-            image_info_pub = getattr(self, f"{image_entry.camera_name}_image_info_pub")
+            image_pub = getattr(self, f"{image_entry.camera_name}_{image_type}_pub")
+            image_info_pub = getattr(self, f"{image_entry.camera_name}_{image_type}_info_pub")
             image_pub.publish(image_msg)
             image_info_pub.publish(camera_info)
-            self.populate_camera_transforms(image_entry.image_response)
-
-    def publish_depth_images_callback(self) -> None:
-        if self.spot_wrapper is None:
-            return
-
-        result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["depth"]) for camera_name in self.cameras_used.value]
-        )
-        for image_entry in result:
-            image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-                image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
-            )
-            depth_pub = getattr(self, f"{image_entry.camera_name}_depth_pub")
-            depth_info_pub = getattr(self, f"{image_entry.camera_name}_depth_info_pub")
-            depth_pub.publish(image_msg)
-            depth_info_pub.publish(camera_info)
-            self.populate_camera_transforms(image_entry.image_response)
-
-    def publish_depth_registered_images_callback(self) -> None:
-        if self.spot_wrapper is None:
-            return
-
-        result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["depth_registered"]) for camera_name in self.cameras_used.value]
-        )
-        for image_entry in result:
-            image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-                image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
-            )
-            depth_registered_pub = getattr(self, f"{image_entry.camera_name}_depth_registered_pub")
-            depth_registered_info_pub = getattr(self, f"{image_entry.camera_name}_depth_registered_info_pub")
-            depth_registered_pub.publish(image_msg)
-            depth_registered_info_pub.publish(camera_info)
             self.populate_camera_transforms(image_entry.image_response)
 
     def service_wrapper(
