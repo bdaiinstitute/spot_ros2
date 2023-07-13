@@ -179,6 +179,7 @@ class SpotROS(Node):
         self.rgb_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_registered_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
+        self.rgb_registered_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.graph_nav_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         rate = self.create_rate(100)
         self.node_rate: Rate = rate
@@ -212,6 +213,9 @@ class SpotROS(Node):
         self.declare_parameter("publish_rgb", True)
         self.declare_parameter("publish_depth", True)
         self.declare_parameter("publish_depth_registered", False)
+        # MOD
+        self.declare_parameter("publish_rgb_registered", False)
+        # ENDMOD
         self.declare_parameter("rgb_cameras", True)
 
         self.declare_parameter("publish_graph_nav_pose", False)
@@ -230,6 +234,9 @@ class SpotROS(Node):
 
         self.publish_rgb: Parameter = self.get_parameter("publish_rgb")
         self.publish_depth: Parameter = self.get_parameter("publish_depth")
+        # MOD
+        self.publish_rgb_registered: Parameter = self.get_parameter("publish_rgb_registered")
+        # ENDMOD
         self.publish_depth_registered: Parameter = self.get_parameter("publish_depth_registered")
         self.rgb_cameras: Parameter = self.get_parameter("rgb_cameras")
 
@@ -400,6 +407,26 @@ class SpotROS(Node):
                     self.publish_depth_registered_images_callback,
                     callback_group=self.depth_registered_callback_group,
                 )
+            # MOD
+            if self.publish_rgb_registered.value:
+                for camera_name in self.cameras_used.value:
+                    setattr(
+                        self,
+                        f"{camera_name}_rgb_registered_pub",
+                        self.create_publisher(Image, f"rgb_registered/{camera_name}/image", 1),
+                    )
+                    setattr(
+                        self,
+                        f"{camera_name}_rgb_registered_info_pub",
+                        self.create_publisher(CameraInfo, f"rgb_registered/{camera_name}/camera_info", 1),
+                    )
+
+                self.create_timer(
+                    1 / self.rates["front_image"],
+                    self.publish_rgb_registered_images_callback,
+                    callback_group=self.rgb_registered_callback_group,
+                )
+            # ENDMOD
 
             if self.publish_graph_nav_pose.value:
                 # graph nav pose will be published both on a topic
@@ -957,6 +984,23 @@ class SpotROS(Node):
             depth_registered_info_pub = getattr(self, f"{image_entry.camera_name}_depth_registered_info_pub")
             depth_registered_pub.publish(image_msg)
             depth_registered_info_pub.publish(camera_info)
+            self.populate_camera_static_transforms(image_entry.image_response)
+
+    def publish_rgb_registered_images_callback(self) -> None:
+        if self.spot_wrapper is None:
+            return
+
+        result = self.spot_wrapper.get_images_by_cameras(
+            [CameraSource(camera_name, ["rgb_registered"]) for camera_name in self.cameras_used.value]
+        )
+        for image_entry in result:
+            image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
+                image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
+            )
+            rgb_registered_pub = getattr(self, f"{image_entry.camera_name}_rgb_registered_pub")
+            rgb_registered_info_pub = getattr(self, f"{image_entry.camera_name}_rgb_registered_info_pub")
+            rgb_registered_pub.publish(image_msg)
+            rgb_registered_info_pub.publish(camera_info)
             self.populate_camera_static_transforms(image_entry.image_response)
 
     def service_wrapper(
