@@ -997,8 +997,8 @@ class SpotROS(Node):
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
             )
-            rgb_registered_pub = getattr(self, f"{image_entry.camera_name}_rgb_registered_pub")
-            rgb_registered_info_pub = getattr(self, f"{image_entry.camera_name}_rgb_registered_info_pub")
+            rgb_registered_pub = getattr(self, f"{image_entry.camera_name}_image_registered_pub")
+            rgb_registered_info_pub = getattr(self, f"{image_entry.camera_name}_image_registered_info_pub")
             rgb_registered_pub.publish(image_msg)
             rgb_registered_info_pub.publish(camera_info)
             self.populate_camera_static_transforms(image_entry.image_response)
