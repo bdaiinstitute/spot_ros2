@@ -11,7 +11,9 @@ from rclpy.callback_groups import ReentrantCallbackGroup, CallbackGroup
 from rclpy.executors import MultiThreadedExecutor, SingleThreadedExecutor, ExternalShutdownException
 
 import spot_driver.spot_ros2
-from spot_msgs.srv import Dock
+from spot_msgs.srv import (  # type: ignore
+    Dock,
+)
 from std_srvs.srv import Trigger
 from rclpy.task import Future
 
@@ -30,6 +32,7 @@ def call_trigger_client(client: rclpy.node.Client, executor: MultiThreadedExecut
     executor.spin_until_future_complete(future)
     resp = future.result()
     return resp
+
 
 class SpotDriverTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -50,29 +53,28 @@ class SpotDriverTest(unittest.TestCase):
         self.client_node = rclpy.node.Node(node_name="client_tester")
         self.command_exec: MultiThreadedExecutor = MultiThreadedExecutor(num_threads=8)
         self.command_exec.add_node(self.client_node)
-        self.claim_client: rclpy.node.Client = self.client_node.create_client(Trigger, "claim", callback_group=self.group)
-        self.release_client: rclpy.node.Client = self.client_node.create_client(Trigger, "release", callback_group=self.group)
-        self.power_on_client: rclpy.node.Client = self.client_node.create_client(Trigger, "power_on", callback_group=self.group)
-        self.power_off_client: rclpy.node.Client = self.client_node.create_client(Trigger, "power_off", callback_group=self.group)
-        self.sit_client: rclpy.node.Client = self.client_node.create_client(Trigger, "sit", callback_group=self.group)
-        self.stand_client: rclpy.node.Client = self.client_node.create_client(Trigger, "stand", callback_group=self.group)
-        self.estop_gentle: rclpy.node.Client = self.client_node.create_client(Trigger, "estop/gentle", callback_group=self.group)
-        self.estop_hard: rclpy.node.Client = self.client_node.create_client(Trigger, "estop/hard", callback_group=self.group)
+        self.claim_client: rclpy.node.Client = self.client_node.create_client(Trigger, "claim",
+                                                                              callback_group=self.group)
+        self.release_client: rclpy.node.Client = self.client_node.create_client(Trigger, "release",
+                                                                                callback_group=self.group)
+        self.power_on_client: rclpy.node.Client = self.client_node.create_client(Trigger, "power_on",
+                                                                                 callback_group=self.group)
+        self.power_off_client: rclpy.node.Client = self.client_node.create_client(Trigger, "power_off",
+                                                                                  callback_group=self.group)
+        self.sit_client: rclpy.node.Client = self.client_node.create_client(Trigger, "sit",
+                                                                            callback_group=self.group)
+        self.stand_client: rclpy.node.Client = self.client_node.create_client(Trigger, "stand",
+                                                                              callback_group=self.group)
+        self.estop_gentle: rclpy.node.Client = self.client_node.create_client(Trigger, "estop/gentle",
+                                                                              callback_group=self.group)
+        self.estop_hard: rclpy.node.Client = self.client_node.create_client(Trigger, "estop/hard",
+                                                                            callback_group=self.group)
         self.estop_release: rclpy.node.Client = self.client_node.create_client(Trigger, "estop/release",
                                                                             callback_group=self.group)
         self.undock_client: rclpy.node.Client = self.client_node.create_client(Trigger, "undock",
                                                                             callback_group=self.group)
         self.dock_client: rclpy.node.Client = self.client_node.create_client(Dock, "dock",
                                                                             callback_group=self.group)
-
-        # # create and run commander
-        # self.commander: spot_driver.command_spot_driver.CommandSpotDriver = spot_driver.command_spot_driver.CommandSpotDriver("command_spot_driver")
-        # self.command_exec: MultiThreadedExecutor = MultiThreadedExecutor(num_threads=8)
-        # self.command_exec.add_node(self.commander)
-        # self.commander_thread: Thread = Thread(target=spin_thread, args=(self.command_exec,))
-        # self.commander_thread.start()
-
-
 
     def tearDown(self) -> None:
         # shutdown and kill any nodes and threads
@@ -90,7 +92,7 @@ class SpotDriverTest(unittest.TestCase):
         rclpy.shutdown()
         self.context = None
 
-    def test_wrapped_commands(self):
+    def test_wrapped_commands(self) -> None:
         """
         Spot Ros2 driver has multiple commands that are wrapped in a service wrapper.
         When no spot_wrapper is present they return true, but this test at least tests

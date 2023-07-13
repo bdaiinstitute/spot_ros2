@@ -4,6 +4,7 @@ import sys
 import threading
 import time
 import traceback
+import typing
 from functools import partial
 from dataclasses import dataclass
 from enum import Enum
@@ -162,7 +163,7 @@ class SpotImageType(str, Enum):
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
-    def __init__(self, parameter_list: Optional[list[Parameter]] = None) -> None:
+    def __init__(self, parameter_list: Optional[typing.List[Parameter]] = None) -> None:
         """
         Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.
         Holds lease from wrapper and updates all async tasks at the ROS rate
