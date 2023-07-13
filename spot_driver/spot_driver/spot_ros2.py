@@ -991,7 +991,7 @@ class SpotROS(Node):
             return
 
         result = self.spot_wrapper.get_images_by_cameras(
-            [CameraSource(camera_name, ["rgb_registered"]) for camera_name in self.cameras_used.value]
+            [CameraSource(camera_name, ["visual_registered"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
