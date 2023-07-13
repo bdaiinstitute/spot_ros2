@@ -5,9 +5,9 @@ import threading
 import time
 import traceback
 import typing
-from functools import partial
 from dataclasses import dataclass
 from enum import Enum
+from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import builtin_interfaces.msg
@@ -155,10 +155,12 @@ class WaitForGoal(object):
             time.sleep(0.05)
         self._at_goal = True
 
+
 class SpotImageType(str, Enum):
-    RGB = 'visual'
-    Depth = 'depth'
-    RegDepth = 'depth_registered'
+    RGB = "visual"
+    Depth = "depth"
+    RegDepth = "depth_registered"
+
 
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
@@ -460,9 +462,7 @@ class SpotROS(Node):
         self.create_service(
             Trigger,
             "power_off",
-            lambda request, response: self.service_wrapper(
-                "power_off", self.handle_safe_power_off, request, response
-            ),
+            lambda request, response: self.service_wrapper("power_off", self.handle_safe_power_off, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -474,9 +474,7 @@ class SpotROS(Node):
         self.create_service(
             Trigger,
             "estop/gentle",
-            lambda request, response: self.service_wrapper(
-                "estop/gentle", self.handle_estop_soft, request, response
-            ),
+            lambda request, response: self.service_wrapper("estop/gentle", self.handle_estop_soft, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -557,9 +555,7 @@ class SpotROS(Node):
         self.create_service(
             ListSounds,
             "list_sounds",
-            lambda request, response: self.service_wrapper(
-                "list_sounds", self.handle_list_sounds, request, response
-            ),
+            lambda request, response: self.service_wrapper("list_sounds", self.handle_list_sounds, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -577,9 +573,7 @@ class SpotROS(Node):
         self.create_service(
             DeleteSound,
             "delete_sound",
-            lambda request, response: self.service_wrapper(
-                "delete_sound", self.handle_delete_sound, request, response
-            ),
+            lambda request, response: self.service_wrapper("delete_sound", self.handle_delete_sound, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -882,7 +876,9 @@ class SpotROS(Node):
     def create_image_publisher(self, image_type: SpotImageType, callback_group: CallbackGroup) -> None:
         for camera_name in self.cameras_used.value:
             setattr(
-                self, f"{camera_name}_{image_type}_pub", self.create_publisher(Image, f"{image_type}/{camera_name}/image", 1)
+                self,
+                f"{camera_name}_{image_type}_pub",
+                self.create_publisher(Image, f"{image_type}/{camera_name}/image", 1),
             )
             setattr(
                 self,

@@ -1,21 +1,17 @@
-import multiprocessing
-import threading
-import time
 import unittest
 from threading import Thread
-from typing import Optional, Any
+from typing import Any, Optional
 
 import rclpy
 from rclpy import Context
-from rclpy.callback_groups import ReentrantCallbackGroup, CallbackGroup
-from rclpy.executors import MultiThreadedExecutor, SingleThreadedExecutor, ExternalShutdownException
+from rclpy.callback_groups import CallbackGroup, ReentrantCallbackGroup
+from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
+from std_srvs.srv import Trigger
 
 import spot_driver.spot_ros2
 from spot_msgs.srv import (  # type: ignore
     Dock,
 )
-from std_srvs.srv import Trigger
-from rclpy.task import Future
 
 
 def spin_thread(executor: MultiThreadedExecutor) -> None:
@@ -26,7 +22,9 @@ def spin_thread(executor: MultiThreadedExecutor) -> None:
             pass
 
 
-def call_trigger_client(client: rclpy.node.Client, executor: MultiThreadedExecutor, request: Any = Trigger.Request()) -> spot_driver.spot_ros2.Response:
+def call_trigger_client(
+    client: rclpy.node.Client, executor: MultiThreadedExecutor, request: Any = Trigger.Request()
+) -> spot_driver.spot_ros2.Response:
     req = request
     future = client.call_async(req)
     executor.spin_until_future_complete(future)
@@ -53,28 +51,35 @@ class SpotDriverTest(unittest.TestCase):
         self.client_node = rclpy.node.Node(node_name="client_tester")
         self.command_exec: MultiThreadedExecutor = MultiThreadedExecutor(num_threads=8)
         self.command_exec.add_node(self.client_node)
-        self.claim_client: rclpy.node.Client = self.client_node.create_client(Trigger, "claim",
-                                                                              callback_group=self.group)
-        self.release_client: rclpy.node.Client = self.client_node.create_client(Trigger, "release",
-                                                                                callback_group=self.group)
-        self.power_on_client: rclpy.node.Client = self.client_node.create_client(Trigger, "power_on",
-                                                                                 callback_group=self.group)
-        self.power_off_client: rclpy.node.Client = self.client_node.create_client(Trigger, "power_off",
-                                                                                  callback_group=self.group)
-        self.sit_client: rclpy.node.Client = self.client_node.create_client(Trigger, "sit",
-                                                                            callback_group=self.group)
-        self.stand_client: rclpy.node.Client = self.client_node.create_client(Trigger, "stand",
-                                                                              callback_group=self.group)
-        self.estop_gentle: rclpy.node.Client = self.client_node.create_client(Trigger, "estop/gentle",
-                                                                              callback_group=self.group)
-        self.estop_hard: rclpy.node.Client = self.client_node.create_client(Trigger, "estop/hard",
-                                                                            callback_group=self.group)
-        self.estop_release: rclpy.node.Client = self.client_node.create_client(Trigger, "estop/release",
-                                                                            callback_group=self.group)
-        self.undock_client: rclpy.node.Client = self.client_node.create_client(Trigger, "undock",
-                                                                            callback_group=self.group)
-        self.dock_client: rclpy.node.Client = self.client_node.create_client(Dock, "dock",
-                                                                            callback_group=self.group)
+        self.claim_client: rclpy.node.Client = self.client_node.create_client(
+            Trigger, "claim", callback_group=self.group
+        )
+        self.release_client: rclpy.node.Client = self.client_node.create_client(
+            Trigger, "release", callback_group=self.group
+        )
+        self.power_on_client: rclpy.node.Client = self.client_node.create_client(
+            Trigger, "power_on", callback_group=self.group
+        )
+        self.power_off_client: rclpy.node.Client = self.client_node.create_client(
+            Trigger, "power_off", callback_group=self.group
+        )
+        self.sit_client: rclpy.node.Client = self.client_node.create_client(Trigger, "sit", callback_group=self.group)
+        self.stand_client: rclpy.node.Client = self.client_node.create_client(
+            Trigger, "stand", callback_group=self.group
+        )
+        self.estop_gentle: rclpy.node.Client = self.client_node.create_client(
+            Trigger, "estop/gentle", callback_group=self.group
+        )
+        self.estop_hard: rclpy.node.Client = self.client_node.create_client(
+            Trigger, "estop/hard", callback_group=self.group
+        )
+        self.estop_release: rclpy.node.Client = self.client_node.create_client(
+            Trigger, "estop/release", callback_group=self.group
+        )
+        self.undock_client: rclpy.node.Client = self.client_node.create_client(
+            Trigger, "undock", callback_group=self.group
+        )
+        self.dock_client: rclpy.node.Client = self.client_node.create_client(Dock, "dock", callback_group=self.group)
 
     def tearDown(self) -> None:
         # shutdown and kill any nodes and threads
