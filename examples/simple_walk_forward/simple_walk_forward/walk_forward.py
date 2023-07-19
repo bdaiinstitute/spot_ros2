@@ -1,8 +1,7 @@
 import argparse
-
+from typing import Optional
 
 import rclpy
-
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import SE2Pose
@@ -19,7 +18,7 @@ ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
 
 
 class WalkForward(Node):
-    def __init__(self, name) -> None:
+    def __init__(self, name: Optional[str]) -> None:
         super().__init__("walk_forward")
         # Include the option to have a namespae or not
         if name is not None:
@@ -28,7 +27,6 @@ class WalkForward(Node):
         else:
             self._name = ""
             self._namespace = ""
-        
 
         self._tf_listener = TFListenerWrapper(
             "walk_forward_tf",
@@ -95,4 +93,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     exit(main())
-
