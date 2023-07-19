@@ -874,16 +874,22 @@ class SpotROS(Node):
             self.get_logger().error(f"Exception: {e} \n {traceback.format_exc()}")
 
     def create_image_publisher(self, image_type: SpotImageType, callback_group: CallbackGroup) -> None:
+        topic_name = image_type.value
+        publisher_name = image_type.value
+        # RGB is the only type with different naming scheme
+        if image_type == SpotImageType.RGB:
+            topic_name = "camera"
+            publisher_name = "image"
         for camera_name in self.cameras_used.value:
             setattr(
                 self,
-                f"{camera_name}_{image_type}_pub",
-                self.create_publisher(Image, f"{image_type}/{camera_name}/image", 1),
+                f"{camera_name}_{publisher_name}_pub",
+                self.create_publisher(Image, f"{topic_name}/{camera_name}/image", 1),
             )
             setattr(
                 self,
-                f"{camera_name}_{image_type}_info_pub",
-                self.create_publisher(CameraInfo, f"{image_type}/{camera_name}/camera_info", 1),
+                f"{camera_name}_{publisher_name}_info_pub",
+                self.create_publisher(CameraInfo, f"{topic_name}/{camera_name}/camera_info", 1),
             )
         # create a timer for publishing
         self.create_timer(
@@ -899,6 +905,11 @@ class SpotROS(Node):
         if self.spot_wrapper is None:
             return
 
+        publisher_name = image_type.value
+        # RGB is the only type with different naming scheme
+        if image_type == SpotImageType.RGB:
+            publisher_name = "image"
+
         result = self.spot_wrapper.get_images_by_cameras(
             [CameraSource(camera_name, [image_type]) for camera_name in self.cameras_used.value]
         )
@@ -906,8 +917,8 @@ class SpotROS(Node):
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
             )
-            image_pub = getattr(self, f"{image_entry.camera_name}_{image_type}_pub")
-            image_info_pub = getattr(self, f"{image_entry.camera_name}_{image_type}_info_pub")
+            image_pub = getattr(self, f"{image_entry.camera_name}_{publisher_name}_pub")
+            image_info_pub = getattr(self, f"{image_entry.camera_name}_{publisher_name}_info_pub")
             image_pub.publish(image_msg)
             image_info_pub.publish(camera_info)
             self.populate_camera_transforms(image_entry.image_response)
