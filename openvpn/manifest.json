@@ -1,0 +1,6 @@
+{
+    "description": "OpenVPN Client",
+    "version": "3.2.0",
+    "icon": "icon.png",
+    "images": ["openvpn_client.tar.gz"]
+  }

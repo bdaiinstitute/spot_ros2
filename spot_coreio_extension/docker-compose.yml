@@ -7,6 +7,17 @@ services:
     restart: unless-stopped
     # Launch the FastDDS discovery sever to bypass the need of multicast to discover nodes
     command: fastdds discovery -i 0 -p 21000
+  openvpn_client:
+    image: openvpn_client
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      # Mount /persist/openvpn/ for the .ovpn cred file
+      - /persist/openvpn/:/persist/openvpn/
   spot_ros2:
     image: spot_ros2:arm64
     network_mode: host
@@ -24,5 +35,7 @@ services:
       - BOSDYN_CLIENT_PASSWORD=bbbdddaaaiii
     # Launch the Spot ROS 2 driver 
     command: ros2 launch spot_driver spot_driver.launch.py config_file:=/spot_ros_params.yml
-    # depends_on:
-      # - ros_fastdds_discovery_server
+    depends_on:
+      - ros_fastdds_discovery_server
+      - openvpn_client
+  

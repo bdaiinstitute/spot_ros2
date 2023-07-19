@@ -1,0 +1,13 @@
+version: "3.5"
+services:
+  openvpn_client:
+    image: openvpn_client
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      # Mount /persist/openvpn/ for the .ovpn cred file
+      - /persist/openvpn/:/persist/openvpn/
