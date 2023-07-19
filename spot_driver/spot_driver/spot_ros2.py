@@ -2109,14 +2109,36 @@ class SpotROS(Node):
     def handle_set_navigate_to_params(
         self, request: SetNavigateToParams.Request, response: SetNavigateToParams.Response
     ) -> SetNavigateToParams.Response:
+
         if self.spot_wrapper is None:
             self.get_logger().error("Spot wrapper is None")
             response.success = False
             return response
-        self.spot_wrapper._x = request.x
-        self.spot_wrapper._y = request.y
-        self.spot_wrapper._max_distance = request.max_distance
-        self.spot_wrapper._max_yaw = request.max_yaw
+
+        localization_state = self.spot_wrapper._graph_nav_client.get_localization_state()
+        current_waypoint = localization_state.localization.waypoint_id
+
+        self.spot_wrapper._graphnav_lock.acquire()
+        velocity_max = geometry_pb2.SE2Velocity(linear = geometry_pb2.Vec2(x = request.x, y = request.y), angular = 1)
+        velocity_min = geometry_pb2.SE2Velocity(linear = geometry_pb2.Vec2(x = - request.x, y = - request.y), angular = -1)
+        if request.x == 0 or request.y == 0:
+            self._graphnav_vel_zero = True
+        else:
+            self._graphnav_vel_zero = False
+        velocity_params = geometry_pb2.SE2VelocityLimit(max_vel = velocity_max, min_vel = velocity_min)
+        self.spot_wrapper.graphnav_travel_params = self.spot_wrapper._graph_nav_client.generate_travel_params(request.max_distance, request.max_yaw, velocity_params)
+        if self.spot_wrapper._navigating:
+            if not current_waypoint: # Should be able to get current waypoint, something has gone wrong
+                response.success = False
+                self.spot_wrapper._graphnav_lock.release()
+                return response
+            # Need to change the goal waypoint temporarily for Graphnav to register the change in travel params.
+            # Have talked to this BD support and they confirmed this is a bug.
+            # This is a temporary fix.
+            self.spot_wrapper._graph_nav_client.navigate_to(
+                    current_waypoint, 0.1,  leases=[self.spot_wrapper.navigate_to_dynamic_sublease.lease_proto])
+            time.sleep(0.1)
+        self.spot_wrapper._graphnav_lock.release()
         response.success = True
         return response
 
