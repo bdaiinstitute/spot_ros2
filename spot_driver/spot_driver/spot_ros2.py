@@ -2125,6 +2125,11 @@ class SpotROS(Node):
             self._graphnav_vel_zero = True
         else:
             self._graphnav_vel_zero = False
+        if request.x < 0 or request.y < 0:
+            self._graphnav_vel_negative = True
+        else:
+            self._graphnav_vel_negative = False
+        
         velocity_params = geometry_pb2.SE2VelocityLimit(max_vel = velocity_max, min_vel = velocity_min)
         self.spot_wrapper.graphnav_travel_params = self.spot_wrapper._graph_nav_client.generate_travel_params(request.max_distance, request.max_yaw, velocity_params)
         if self.spot_wrapper._navigating:
