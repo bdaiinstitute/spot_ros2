@@ -17,14 +17,19 @@ This is a simple example of using ROS2 to move the arm up and down and open and 
 ```bash
 ros2 launch spot_driver spot_driver.launch.py
 ```
+If you want to launch with a namespace,
+```bash
+ros2 launch spot_driver_with_namespace.launch.py spot_name:=<spot_name> 
+```
 
 5.  Run the example:
 ```bash
 ros2 run simple_arm_motion arm_simple
 ```
-
-The robot should move its arm up and down.
-
+If you launched the spot_ros2 driver with a namespace, use the following command instead:
+```bash
+ros2 run simple_arm_motion arm_simple --robot <spot_name>
+```
 
 ## Converting Direct API Calls to ROS2
 
