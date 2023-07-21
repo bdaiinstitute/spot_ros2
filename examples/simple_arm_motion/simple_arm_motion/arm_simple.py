@@ -1,3 +1,6 @@
+import argparse
+from typing import Optional
+
 import rclpy
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bosdyn.api import geometry_pb2
@@ -12,13 +15,22 @@ import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 
 
-def hello_arm() -> bool:
+def hello_arm(robot_name: Optional[str]) -> bool:
     # Set up basic ROS2 utilities for communicating with the driver
     node = Node("arm_simple")
-    tf_listener = TFListenerWrapper("arm_simple_tf", wait_for_transform=[ODOM_FRAME_NAME, GRAV_ALIGNED_BODY_FRAME_NAME])
+    name = ""
+    namespace = ""
+    if robot_name is not None:
+        name = robot_name + "/"
+        namespace = robot_name
+    tf_listener = TFListenerWrapper(
+        "arm_simple_tf", wait_for_transform=[name + ODOM_FRAME_NAME, name + GRAV_ALIGNED_BODY_FRAME_NAME]
+    )
 
-    robot = SimpleSpotCommander()
-    robot_command_client = ActionClientWrapper(RobotCommand, "robot_command", "arm_simple_action_node")
+    robot = SimpleSpotCommander(namespace)
+    robot_command_client = ActionClientWrapper(
+        RobotCommand, "robot_command", "arm_simple_action_node", namespace=namespace
+    )
 
     # Claim robot
     node.get_logger().info("Claiming robot")
@@ -59,7 +71,7 @@ def hello_arm() -> bool:
 
     flat_body_T_hand = geometry_pb2.SE3Pose(position=hand_ewrt_flat_body, rotation=flat_body_Q_hand)
 
-    odom_T_flat_body = tf_listener.lookup_a_tform_b(ODOM_FRAME_NAME, GRAV_ALIGNED_BODY_FRAME_NAME)
+    odom_T_flat_body = tf_listener.lookup_a_tform_b(name + ODOM_FRAME_NAME, name + GRAV_ALIGNED_BODY_FRAME_NAME)
 
     odom_T_hand = odom_T_flat_body * math_helpers.SE3Pose.from_obj(flat_body_T_hand)
 
@@ -134,7 +146,10 @@ def hello_arm() -> bool:
 
 def main() -> None:
     rclpy.init()
-    hello_arm()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--robot", type=str, default=None)
+    args = parser.parse_args()
+    hello_arm(args.robot)
 
 
 if __name__ == "__main__":
