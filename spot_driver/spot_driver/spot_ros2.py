@@ -183,6 +183,7 @@ class SpotROS(Node):
         self.callbacks["world_objects"] = self.world_objects_callback
 
         self.group: CallbackGroup = ReentrantCallbackGroup()
+        self.set_nav_params_group = MutuallyExclusiveCallbackGroup()
         self.rgb_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_registered_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
@@ -682,7 +683,7 @@ class SpotROS(Node):
                 SetNavigateToParams,
                 "set_navigate_to_params",
                 self.handle_set_navigate_to_params,
-                callback_group=self.group,
+                callback_group=self.set_nav_params_group,
             )
 
             self.create_service(
@@ -2122,13 +2123,22 @@ class SpotROS(Node):
         velocity_max = geometry_pb2.SE2Velocity(linear = geometry_pb2.Vec2(x = request.x, y = request.y), angular = 1)
         velocity_min = geometry_pb2.SE2Velocity(linear = geometry_pb2.Vec2(x = - request.x, y = - request.y), angular = -1)
         if request.x == 0 or request.y == 0:
-            self._graphnav_vel_zero = True
+            self.spot_wrapper._graphnav_vel_zero = True
         else:
-            self._graphnav_vel_zero = False
+            self.spot_wrapper._graphnav_vel_zero = False
         if request.x < 0 or request.y < 0:
-            self._graphnav_vel_negative = True
+            self.spot_wrapper._graphnav_vel_negative = True
         else:
-            self._graphnav_vel_negative = False
+            self.spot_wrapper._graphnav_vel_negative = False
+        if self.spot_wrapper._graphnav_vel_negative:
+            # release the lock, wait for the graphnav to terminate, and then return
+            # This makes sure a cancelation request can not be overidden by future set_nav_param requests
+            self.spot_wrapper._graphnav_lock.release()
+            while self.spot_wrapper._navigating:
+                time.sleep(0.2)
+            response.success = True
+            return response
+                
         
         velocity_params = geometry_pb2.SE2VelocityLimit(max_vel = velocity_max, min_vel = velocity_min)
         self.spot_wrapper.graphnav_travel_params = self.spot_wrapper._graph_nav_client.generate_travel_params(request.max_distance, request.max_yaw, velocity_params)
