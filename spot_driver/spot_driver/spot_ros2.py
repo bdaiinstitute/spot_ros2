@@ -86,7 +86,8 @@ from spot_msgs.srv import (  # type: ignore
     UploadAnimation,
 )
 from spot_wrapper.cam_wrapper import SpotCamWrapper
-from spot_wrapper.wrapper import CameraSource, SpotWrapper
+from spot_wrapper.spot_images import CameraSource
+from spot_wrapper.wrapper import SpotWrapper
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -912,7 +913,7 @@ class SpotROS(Node):
         if self.spot_wrapper is None:
             return
 
-        result = self.spot_wrapper.get_images_by_cameras(
+        result = self.spot_wrapper.spot_images.get_images_by_cameras(
             [CameraSource(camera_name, ["visual"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
@@ -929,7 +930,7 @@ class SpotROS(Node):
         if self.spot_wrapper is None:
             return
 
-        result = self.spot_wrapper.get_images_by_cameras(
+        result = self.spot_wrapper.spot_images.get_images_by_cameras(
             [CameraSource(camera_name, ["depth"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
@@ -946,7 +947,7 @@ class SpotROS(Node):
         if self.spot_wrapper is None:
             return
 
-        result = self.spot_wrapper.get_images_by_cameras(
+        result = self.spot_wrapper.spot_images.get_images_by_cameras(
             [CameraSource(camera_name, ["depth_registered"]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
