@@ -16,12 +16,19 @@ This is a simple example of using ROS2 to make the robot walk 1m forward.
 ```bash
 ros2 launch spot_driver spot_driver.launch.py
 ```
+If you want to launch with a namespace,
+```bash
+ros2 launch spot_driver_with_namespace.launch.py spot_name:=<spot_name> 
+```
 
 5.  Run the example:
 ```bash
 ros2 run simple_walk_forward walk_forward
 ```
-
+If you are launching spot_ros2 with a namespace, use the following command instead:
+```bash
+ros2 run simple_walk_forward walk_forward --robot <spot_name>
+```
 The robot should walk forward.
 
 ## Understanding the Code
