@@ -88,7 +88,8 @@ from spot_msgs.srv import (  # type: ignore
     UploadAnimation,
 )
 from spot_wrapper.cam_wrapper import SpotCamWrapper
-from spot_wrapper.wrapper import CameraSource, SpotWrapper
+from spot_wrapper.spot_images import CameraSource
+from spot_wrapper.wrapper import SpotWrapper
 
 #####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -910,7 +911,7 @@ class SpotROS(Node):
         if image_type == SpotImageType.RGB:
             publisher_name = "image"
 
-        result = self.spot_wrapper.get_images_by_cameras(
+        result = self.spot_wrapper.spot_images.get_images_by_cameras(
             [CameraSource(camera_name, [image_type]) for camera_name in self.cameras_used.value]
         )
         for image_entry in result:
@@ -2166,7 +2167,7 @@ class SpotROS(Node):
                 self.spot_wrapper.updateTasks()  # Testing with Robot
             self.get_logger().debug("UPDATE TASKS")
             feedback_msg = Feedback()
-            if self.spot_wrapper is not None:
+            if self.spot_wrapper:
                 feedback_msg.standing = self.spot_wrapper.is_standing
                 feedback_msg.sitting = self.spot_wrapper.is_sitting
                 feedback_msg.moving = self.spot_wrapper.is_moving
