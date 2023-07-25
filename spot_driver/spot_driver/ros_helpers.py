@@ -186,6 +186,7 @@ def _create_image_msg(
 
     # JPEG format
     if data.shot.image.format == image_pb2.Image.FORMAT_JPEG:
+        """
         cv2_image = cv2.imdecode(np.frombuffer(data.shot.image.data, dtype=np.uint8), -1)
         image_msg = cv_bridge.cv2_to_imgmsg(cv2_image, encoding="passthrough")
         if image_msg.encoding == "8UC3":
@@ -196,6 +197,15 @@ def _create_image_msg(
             pass  # passthrough decides
         image_msg.header.stamp = stamp
         image_msg.header.frame_id = frame_id
+        """
+        image_msg.encoding = "rgb8"
+        image_msg.is_bigendian = True
+        image_msg.step = 3 * data.shot.image.cols
+        image_msg.data = data.shot.image.data
+        image_msg.header.stamp = stamp
+        image_msg.header.frame_id = frame_id
+        image_msg.height = data.shot.image.rows
+        image_msg.width = data.shot.image.cols
 
     # Uncompressed.  Requires pixel_format.
     elif data.shot.image.format == image_pb2.Image.FORMAT_RAW:
@@ -232,6 +242,7 @@ def _create_image_msg(
             image_msg.is_bigendian = False
             image_msg.step = 2 * data.shot.image.cols
             image_msg.data = data.shot.image.data
+
     return image_msg
 
 
