@@ -46,7 +46,7 @@ from rclpy.impl import rcutils_logger
 from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
-from sensor_msgs.msg import CameraInfo, Image, JointState
+from sensor_msgs.msg import CameraInfo, CompressedImage, Image, JointState
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
@@ -881,17 +881,19 @@ class SpotROS(Node):
         if image_type == SpotImageType.RGB:
             topic_name = "camera"
             publisher_name = "image"
+        ### MODDED
         for camera_name in self.cameras_used.value:
             setattr(
                 self,
                 f"{camera_name}_{publisher_name}_pub",
-                self.create_publisher(Image, f"{topic_name}/{camera_name}/image", 1),
+                self.create_publisher(CompressedImage, f"{topic_name}/{camera_name}/image", 1),
             )
             setattr(
                 self,
                 f"{camera_name}_{publisher_name}_info_pub",
                 self.create_publisher(CameraInfo, f"{topic_name}/{camera_name}/camera_info", 1),
             )
+        ### ENDMOD 
         # create a timer for publishing
         self.create_timer(
             1 / self.rates["front_image"],

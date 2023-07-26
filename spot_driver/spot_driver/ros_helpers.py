@@ -195,13 +195,12 @@ def _create_image_msg(
         else:
             pass  # passthrough decides
         image_msg.header.stamp = stamp
-        image_msg.header.frame_id = frame_id
         image_msg.encoding = "rgb8"
         image_msg.is_bigendian = True
         image_msg.step = 3 * data.shot.image.cols
         image_msg.data = data.shot.image.data
         image_msg.header.stamp = stamp
-        image_msg.header.frame_id = frame_id
+        image_msg.header.frame_id = frame_id + "_jpeg"
         image_msg.height = data.shot.image.rows
         image_msg.width = data.shot.image.cols
 
@@ -209,7 +208,9 @@ def _create_image_msg(
     elif data.shot.image.format == image_pb2.Image.FORMAT_RAW:
         image_msg = Image()
         image_msg.header.stamp = stamp
-        image_msg.header.frame_id = frame_id
+        # MOD
+        image_msg.header.frame_id = frame_id + "_raw"
+        # ENDMOD
         image_msg.height = data.shot.image.rows
         image_msg.width = data.shot.image.cols
 
@@ -240,6 +241,9 @@ def _create_image_msg(
             image_msg.is_bigendian = False
             image_msg.step = 2 * data.shot.image.cols
             image_msg.data = data.shot.image.data
+        # MOD
+        image_msg.header.frame_id = frame_id + "_raw"
+        # ENDMOD
 
     return image_msg
 
@@ -258,7 +262,7 @@ def bosdyn_data_to_image_and_camera_info_msgs(
             * Image: message of the image captured
             * CameraInfo: message to define the state and config of the camera that took the image
     """
-    image_msg = _create_image_msg(data, robot_to_local_time, frame_prefix)
+    image_msg = _create_compressed_image_msg(data, robot_to_local_time, frame_prefix)
 
     # camera_info_msg = create_default_camera_info(camera_info_msg)
     camera_info_msg = CameraInfo()
@@ -296,7 +300,7 @@ def bosdyn_data_to_image_and_camera_info_msgs(
     camera_info_msg.p[11] = 0
     local_time = robot_to_local_time(data.shot.acquisition_time)
     camera_info_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-    camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
+    camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor + image_msg.header.frame_id
     camera_info_msg.height = data.shot.image.rows
     camera_info_msg.width = data.shot.image.cols
 
