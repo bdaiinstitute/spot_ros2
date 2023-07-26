@@ -466,6 +466,29 @@ def get_tf_from_state(
                         tf_time, frame_name, transform.parent_frame_name, geo_tform_inversed, spot_wrapper.frame_prefix
                     )
                 else:
+                    # Arm specific workaround for bug/discrepancy between link names in the transform tree snapshot
+                    # bundled with hand camera image result callbacks and the link names in robot state callbacks.
+                    #
+                    # On image callback, we publish static transforms for each camera frame's kinematic chain just
+                    # once on the first callback received. This sets the initial, fixed position of the frame, but
+                    # the hand cameras move on the arm independent of the body frame, which necessitates dynamic tf
+                    # updates. Unfortunately the hand camera transform snapshot trees refer to a link "arm0.link_wr1",
+                    # which is not used anywhere else - in fact it is just "link_wr1" in robot state callbacks.
+                    #
+                    # This special case code simply generates a duplicate transform for "link_wr1" aliased to
+                    # "arm0.link_wr1" for hand camera use cases. We leave the original transform alone for other
+                    # pipelines such as manipulation and avoid the RPC call to "has_arm()" on the SpotWrapper
+                    # as this link will not exist on arm-less spots.
+                    if frame_name == "link_wr1":
+                        alias_tf = populate_transform_stamped(
+                            tf_time,
+                            transform.parent_frame_name,
+                            "arm0.link_wr1",
+                            transform.parent_tform_child,
+                            spot_wrapper.frame_prefix,
+                        )
+                        tf_msg.transforms.append(alias_tf)
+
                     new_tf = populate_transform_stamped(
                         tf_time,
                         transform.parent_frame_name,
