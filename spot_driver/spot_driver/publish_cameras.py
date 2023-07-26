@@ -138,7 +138,9 @@ class SpotImagePublisher(rclpy.node.Node):
             else:
                 pixel_format = image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
             bosdyn_camera_source = translate_ros_camera_name_to_bosdyn(camera_source, self._camera_type)
-            image_request = build_image_request(bosdyn_camera_source, pixel_format=pixel_format)
+            image_request = build_image_request(
+                bosdyn_camera_source, image_format=image_pb2.Image.FORMAT_JPEG, pixel_format=pixel_format
+            )
             print(bosdyn_camera_source)
             self._image_requests.append(image_request)
 
