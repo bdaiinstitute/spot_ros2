@@ -254,7 +254,6 @@ class SpotROS(Node):
             "image": self.get_parameter("image_rate").value,
             "graph_nav_pose": self.get_parameter("graph_nav_pose_rate").value,
         }
-        self.get_logger().info("Rates: " + str(self.rates))
         max_task_rate = float(max(self.rates.values()))
 
         self.declare_parameter("async_tasks_rate", max_task_rate)
