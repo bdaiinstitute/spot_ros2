@@ -2120,9 +2120,9 @@ class SpotROS(Node):
         for frame_name in image_data.shot.transforms_snapshot.child_to_parent_edge_map:
             if frame_name in excluded_frames:
                 continue
-            parent_frame = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(
-                frame_name
-            ).parent_frame_name
+
+            transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
+            parent_frame = transform.parent_frame_name
 
             # special case handling of parent frame to sync with robot state naming, see above
             if parent_frame == "arm0.link_wr1":
@@ -2135,14 +2135,13 @@ class SpotROS(Node):
                 # We already extracted this transform
                 continue
 
-            transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
             if self.spot_wrapper is not None:
                 local_time = self.spot_wrapper.robotToLocalTime(image_data.shot.acquisition_time)
             else:
                 local_time = Timestamp()
             tf_time = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
             static_tf = populate_transform_stamped(
-                tf_time, transform.parent_frame_name, frame_name, transform.parent_tform_child, frame_prefix
+                tf_time, parent_frame, frame_name, transform.parent_tform_child, frame_prefix
             )
             self.camera_static_transforms.append(static_tf)
             self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
