@@ -2101,12 +2101,33 @@ class SpotROS(Node):
             frame_prefix = self.spot_wrapper.frame_prefix
         excluded_frames = [self.tf_name_vision_odom.value, self.tf_name_kinematic_odom.value, frame_prefix + "body"]
         excluded_frames = [f[f.rfind("/") + 1 :] for f in excluded_frames]
+
+        # Special case handling for hand camera frames that reference the link "arm0.link_wr1" in their
+        # transform snapshots. This name only appears in hand camera transform snapshots and appears to
+        # be a bug in this particular image callback path.
+        #
+        # 1. We exclude publishing a static transform from arm0.link_wr1 -> body here because it depends
+        #    on the arm's position and a static transform would fix it to its initial position.
+        #
+        # 2. Below we rename the parent link "arm0.link_wr1" to "link_wr1" as it appears in robot state
+        #    which is used for publishing dynamic tfs elsewhere. Without this, the hand camera frame
+        #    positions would never properly update as no other pipelines reference "arm0.link_wr1".
+        #
+        # We save an RPC call to self.spot_wrapper.has_arm() and any extra complexity here as the link
+        # will not exist if the spot does not have an arm and the special case code will have no effect.
+        excluded_frames.append("arm0.link_wr1")
+
         for frame_name in image_data.shot.transforms_snapshot.child_to_parent_edge_map:
             if frame_name in excluded_frames:
                 continue
             parent_frame = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(
                 frame_name
             ).parent_frame_name
+
+            # special case handling of parent frame to sync with robot state naming, see above
+            if parent_frame == "arm0.link_wr1":
+                parent_frame = "link_wr1"
+
             existing_transforms = [
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
             ]
