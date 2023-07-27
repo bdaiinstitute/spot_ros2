@@ -192,19 +192,6 @@ class SpotROS(Node):
         rate = self.create_rate(100)
         self.node_rate: Rate = rate
 
-        # spot_ros.yaml
-        self.rates = {
-            "robot_state": 50.0,
-            "metrics": 0.04,
-            "lease": 1.0,
-            "world_objects": 20.0,
-            "front_image": 10.0,
-            "side_image": 10.0,
-            "rear_image": 10.0,
-            "graph_nav_pose": 10.0,
-        }
-        max_task_rate = float(max(self.rates.values()))
-
         self.declare_parameter("auto_claim", False)
         self.declare_parameter("auto_power_on", False)
         self.declare_parameter("auto_stand", False)
@@ -215,13 +202,20 @@ class SpotROS(Node):
 
         self.declare_parameter("deadzone", 0.05)
         self.declare_parameter("estop_timeout", 9.0)
-        self.declare_parameter("async_tasks_rate", max_task_rate)
         self.declare_parameter("cmd_duration", 0.125)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("publish_rgb", True)
         self.declare_parameter("publish_depth", True)
         self.declare_parameter("publish_depth_registered", False)
         self.declare_parameter("rgb_cameras", True)
+
+        # Declare rates for the spot_ros2 publishers, which are combined to a dictionary
+        self.declare_parameter("robot_state_rate", 50.0)
+        self.declare_parameter("metrics_rate", 0.04)
+        self.declare_parameter("lease_rate", 1.0)
+        self.declare_parameter("world_objects_rate", 20.0)
+        self.declare_parameter("image_rate", 10.0)
+        self.declare_parameter("graph_nav_pose_rate", 10.0)
 
         self.declare_parameter("publish_graph_nav_pose", False)
         self.declare_parameter("graph_nav_seed_frame", "graph_nav_map")
@@ -252,6 +246,17 @@ class SpotROS(Node):
         self._wait_for_goal: Optional[WaitForGoal] = None
         self.goal_handle: Optional[ServerGoalHandle] = None
 
+        self.rates = {
+            "robot_state": self.get_parameter("robot_state_rate").value,
+            "metrics": self.get_parameter("metrics_rate").value,
+            "lease": self.get_parameter("lease_rate").value,
+            "world_objects": self.get_parameter("world_objects_rate").value,
+            "image": self.get_parameter("image_rate").value,
+            "graph_nav_pose": self.get_parameter("graph_nav_pose_rate").value,
+        }
+        max_task_rate = float(max(self.rates.values()))
+
+        self.declare_parameter("async_tasks_rate", max_task_rate)
         # This is only done from parameter because it should be passed by the launch file
         self.name: Optional[str] = self.get_parameter("spot_name").value
         if not self.name:
@@ -894,7 +899,7 @@ class SpotROS(Node):
             )
         # create a timer for publishing
         self.create_timer(
-            1 / self.rates["front_image"],
+            1 / self.rates["image"],
             partial(self.publish_camera_images_callback, image_type),
             callback_group=callback_group,
         )
