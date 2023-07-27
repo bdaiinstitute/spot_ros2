@@ -2034,7 +2034,7 @@ class SpotROS(Node):
             world_object.apriltag_properties.frame_name_fiducial = "fiducial_3"
             world_object.apriltag_properties.frame_name_fiducial_filtered = "filtered_fiducial_3"
         else:
-            proto_response = self.spot_wrapper.list_world_objects(object_types, time_start_point)
+            proto_response = self.spot_wrapper.spot_world_objects.list_world_objects(object_types, time_start_point)
         conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
         return response
 
