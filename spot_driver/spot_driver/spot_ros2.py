@@ -922,7 +922,7 @@ class SpotROS(Node):
             image_info_pub = getattr(self, f"{image_entry.camera_name}_{publisher_name}_info_pub")
             image_pub.publish(image_msg)
             image_info_pub.publish(camera_info)
-            self.populate_camera_transforms(image_entry.image_response)
+            self.populate_camera_static_transforms(image_entry.image_response)
 
     def service_wrapper(
         self,
@@ -2085,19 +2085,11 @@ class SpotROS(Node):
 
         return result
 
-    def populate_camera_transforms(self, image_data: image_pb2.Image) -> None:
+    def populate_camera_static_transforms(self, image_data: image_pb2.Image) -> None:
         """Check data received from one of the image tasks and use the transform snapshot to extract the camera frame
-        transforms. This is the transforms from body->frontleft->frontleft_fisheye, for example.
-
-        In most cases, these transforms never change, but they may be calibrated slightly differently for each robot,
-        so we need to generate and publish the static transforms once.
-
-        The only (known) exception to this is the transforms for the hand/arm mounted cameras, which must publish
-        a dynamic update for the arm's base link relative to the body. This frame/link "arm0.link_wr1" in the image
-        response's transform snapshot tree does now follow the same naming convention ("link_wr1") as reported in the
-        robot state / dynamic tf publisher logic elsewhere. We don't want to alias/hack this as it is used by
-        other pipelines such as manipulation - so we special case and publish the dynamic arm link here instead.
-
+        transforms. This is the transforms from body->frontleft->frontleft_fisheye, for example. These transforms
+        never change, but they may be calibrated slightly differently for each robot, so we need to generate the
+        transforms at runtime.
         Args:
         image_data: Image protobuf data from the wrapper
         """
@@ -2110,42 +2102,49 @@ class SpotROS(Node):
         excluded_frames = [self.tf_name_vision_odom.value, self.tf_name_kinematic_odom.value, frame_prefix + "body"]
         excluded_frames = [f[f.rfind("/") + 1 :] for f in excluded_frames]
 
-        # We assume all frames are static, except for a special case/naming convention used by the transform tree
-        # snapshot returned in the spot image callbacks for arm/hand cameras.
-        dynamic_frames = []
-        if self.spot_wrapper and self.spot_wrapper.has_arm():
-            dynamic_frames = ["arm0.link_wr1"]
+        # Special case handling for hand camera frames that reference the link "arm0.link_wr1" in their
+        # transform snapshots. This name only appears in hand camera transform snapshots and appears to
+        # be a bug in this particular image callback path.
+        #
+        # 1. We exclude publishing a static transform from arm0.link_wr1 -> body here because it depends
+        #    on the arm's position and a static transform would fix it to its initial position.
+        #
+        # 2. Below we rename the parent link "arm0.link_wr1" to "link_wr1" as it appears in robot state
+        #    which is used for publishing dynamic tfs elsewhere. Without this, the hand camera frame
+        #    positions would never properly update as no other pipelines reference "arm0.link_wr1".
+        #
+        # We save an RPC call to self.spot_wrapper.has_arm() and any extra complexity here as the link
+        # will not exist if the spot does not have an arm and the special case code will have no effect.
+        excluded_frames.append("arm0.link_wr1")
 
         for frame_name in image_data.shot.transforms_snapshot.child_to_parent_edge_map:
             if frame_name in excluded_frames:
                 continue
-            parent_frame = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(
-                frame_name
-            ).parent_frame_name
-
-            if frame_name not in dynamic_frames:
-                existing_static_transforms = [
-                    (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
-                ]
-                if (frame_prefix + parent_frame, frame_prefix + frame_name) in existing_static_transforms:
-                    # We already extracted this static transform
-                    continue
 
             transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
+            parent_frame = transform.parent_frame_name
+
+            # special case handling of parent frame to sync with robot state naming, see above
+            if parent_frame == "arm0.link_wr1":
+                parent_frame = "link_wr1"
+
+            existing_transforms = [
+                (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
+            ]
+            if (frame_prefix + parent_frame, frame_prefix + frame_name) in existing_transforms:
+                # We already extracted this transform
+                continue
+
             if self.spot_wrapper is not None:
                 local_time = self.spot_wrapper.robotToLocalTime(image_data.shot.acquisition_time)
             else:
                 local_time = Timestamp()
             tf_time = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
-            tf = populate_transform_stamped(
-                tf_time, transform.parent_frame_name, frame_name, transform.parent_tform_child, frame_prefix
+            static_tf = populate_transform_stamped(
+                tf_time, parent_frame, frame_name, transform.parent_tform_child, frame_prefix
             )
-
-            if frame_name in dynamic_frames:
-                self.dynamic_broadcaster.sendTransform(tf)
-            else:
-                self.camera_static_transforms.append(tf)
-                self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
+            self.camera_static_transforms.append(static_tf)
+            self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
 
     def shutdown(self, sig: Optional[Any] = None, frame: Optional[str] = None) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
