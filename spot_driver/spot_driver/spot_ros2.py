@@ -2047,14 +2047,14 @@ class SpotROS(Node):
             velocity_max = geometry_pb2.SE2Velocity(linear = geometry_pb2.Vec2(x = request.x, y = request.y), angular = 1)
             velocity_min = geometry_pb2.SE2Velocity(linear = geometry_pb2.Vec2(x = - request.x, y = - request.y), angular = -1)
             if request.x == 0 or request.y == 0:
-                self.spot_wrapper._graphnav_vel_zero = True
+                self.spot_wrapper._graphnav_paused = True
             else:
-                self.spot_wrapper._graphnav_vel_zero = False
+                self.spot_wrapper._graphnav_paused = False
             if (request.x < 0 or request.y < 0):
-                self.spot_wrapper._graphnav_vel_negative = True
+                self.spot_wrapper._graphnav_cancelled = True
             else:
-                self.spot_wrapper._graphnav_vel_negative = False
-            if self.spot_wrapper._graphnav_vel_negative:
+                self.spot_wrapper._graphnav_cancelled = False
+            if self.spot_wrapper._graphnav_cancelled:
                 # release the lock, wait for the graphnav to terminate, and then return
                 # This makes sure a cancelation request can not be overidden by future set_nav_param requests
                 self.spot_wrapper._graphnav_lock.release()
