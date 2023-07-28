@@ -33,7 +33,7 @@ from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_msgs.msg import ManipulationApiFeedbackResponse, RobotCommandFeedback
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped
+from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped, Vector3Stamped
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
 from rclpy import Parameter
@@ -100,6 +100,7 @@ from .ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
     get_battery_states_from_state,
     get_behavior_faults_from_state,
+    get_end_effector_force_from_state,
     get_estop_state_from_state,
     get_feet_from_state,
     get_from_env_and_fall_back_to_param,
@@ -114,8 +115,6 @@ from .ros_helpers import (
     populate_transform_stamped,
 )
 
-import cv2
-from cv_bridge import CvBridge
 
 MAX_DURATION = 1e6
 MOCK_HOSTNAME = "Mock_spot"
@@ -214,6 +213,7 @@ class SpotROS(Node):
         self.declare_parameter("publish_rgb", True)
         self.declare_parameter("publish_depth", True)
         self.declare_parameter("publish_depth_registered", False)
+        self.declare_parameter("rgb_cameras", True)
 
         # Declare rates for the spot_ros2 publishers, which are combined to a dictionary
         self.declare_parameter("robot_state_rate", 50.0)
@@ -246,6 +246,7 @@ class SpotROS(Node):
         self.publish_rgb: Parameter = self.get_parameter("publish_rgb")
         self.publish_depth: Parameter = self.get_parameter("publish_depth")
         self.publish_depth_registered: Parameter = self.get_parameter("publish_depth_registered")
+        self.rgb_cameras: Parameter = self.get_parameter("rgb_cameras")
 
         self.publish_graph_nav_pose: Parameter = self.get_parameter("publish_graph_nav_pose")
         self.graph_nav_seed_frame: str = self.get_parameter("graph_nav_seed_frame").value
