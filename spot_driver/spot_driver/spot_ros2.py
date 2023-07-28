@@ -363,8 +363,8 @@ class SpotROS(Node):
             if not self.spot_wrapper.is_valid:
                 return
 
-            self.enable_payload_cam: Parameter = self.get_parameter("enable_payload_cam").value
-            if self.enable_payload_cam:
+            enable_payload_cam: Parameter = self.get_parameter("enable_payload_cam").value
+            if enable_payload_cam:
                 try:
                     self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
                 except SystemError:
