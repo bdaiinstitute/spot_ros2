@@ -59,7 +59,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ListAllMoves.srv"
   "srv/UploadAnimation.srv"
   "srv/ClearBehaviorFault.srv"
-  "srv/ListPTZ.srv"
   "srv/MovePTZ.srv"
   "srv/GetPTZ.srv"
   "srv/ListSounds.srv"
