@@ -228,6 +228,8 @@ class SpotROS(Node):
 
         self.declare_parameter("spot_name", "")
 
+        self.declare_parameter("enable_payload_cam", True)
+
         # used for setting when not using launch file
         if parameter_list is not None:
             self.set_parameters(parameter_list)
@@ -351,9 +353,13 @@ class SpotROS(Node):
             if not self.spot_wrapper.is_valid:
                 return
 
-            try:
-                self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
-            except SystemError:
+            self.enable_payload_cam: Parameter = self.get_parameter("enable_payload_cam").value
+            if self.enable_payload_cam:
+                try:
+                    self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
+                except SystemError:
+                    self.spot_cam_wrapper = None
+            else:
                 self.spot_cam_wrapper = None
 
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
