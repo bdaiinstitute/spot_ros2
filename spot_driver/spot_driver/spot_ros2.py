@@ -2052,61 +2052,12 @@ class SpotROS(Node):
             self.get_logger().error("Spot wrapper is None")
             response.success = False
             return response
+        
+        success = self.spot_wrapper.set_navigate_to_params(request.x, request.y, request.max_distance, request.max_yaw)
+        response.success = success
+        return response
 
-        self.spot_wrapper._graphnav_lock.acquire()
-        try:
-            # Pause graphnav if x or y is zero
-            if request.x == 0 or request.y == 0:
-                self.spot_wrapper._graphnav_paused = True
-            else:
-                self.spot_wrapper._graphnav_paused = False
-            
-            # cancel graphnav if either value is negative
-            if (request.x < 0 or request.y < 0):
-                self.spot_wrapper._graphnav_cancelled = True
-            else:
-                self.spot_wrapper._graphnav_cancelled = False
-            if self.spot_wrapper._graphnav_cancelled:
-                # release the lock, wait for the graphnav to terminate, and then return
-                # this makes sure a cancelation request can not be overidden by future set_nav_param requests
-                # Note that requesting a cancellation while spot is not navigating has no effect,
-                # and future navigate_to_dynamic requests will run normally
-                self.spot_wrapper._graphnav_lock.release()
-                while self.spot_wrapper._navigating:
-                    time.sleep(0.2)
-                response.success = True
-                return response
-                    
-            # hardcode the angular_velocity limit
-            angular_velocity_limit = 1
-            velocity_max = geometry_pb2.SE2Velocity(linear = geometry_pb2.Vec2(x = request.x, y = request.y), angular = angular_velocity_limit)
-            velocity_min = geometry_pb2.SE2Velocity(linear = geometry_pb2.Vec2(x = - request.x, y = - request.y), angular = -angular_velocity_limit)
-            velocity_params = geometry_pb2.SE2VelocityLimit(max_vel = velocity_max, min_vel = velocity_min)
-            self.spot_wrapper.graphnav_travel_params = self.spot_wrapper._graph_nav_client.generate_travel_params(request.max_distance, request.max_yaw, velocity_params)
 
-            # The code upto this point should be sufficient to modify velocity
-            # However due to a SDK bug, we need to change the goal waypoint temporarily for Graphnav to register the change in travel params.
-            # Have talked to this BD support and they confirmed this is a bug.
-
-            # If spot is navigating, we will send a quick navigation request to its current location (not noticable)
-            if self.spot_wrapper._navigating:
-                localization_state = self.spot_wrapper._graph_nav_client.get_localization_state()
-                current_waypoint = localization_state.localization.waypoint_id
-                if not current_waypoint: # Should be able to get current waypoint, something has gone wrong
-                    response.success = False
-                    self.spot_wrapper._graphnav_lock.release()
-                    return response
-
-                self.spot_wrapper._graph_nav_client.navigate_to(
-                        current_waypoint, 0.1,  leases=[self.spot_wrapper.navigate_to_dynamic_sublease.lease_proto])
-                time.sleep(0.1) #Sleep to wait for navigation to complete
-            self.spot_wrapper._graphnav_lock.release()
-            response.success = True
-            return response
-        except Exception:
-            # Release lock to avoid deadlocks in future runs
-            self.spot_wrapper._graphnav_lock.release() 
-            raise
 
     def handle_graph_nav_clear_graph(
         self, request: GraphNavClearGraph.Request, response: GraphNavClearGraph.Response
