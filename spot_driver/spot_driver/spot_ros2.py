@@ -557,17 +557,13 @@ class SpotROS(Node):
         self.create_service(
             MovePTZ,
             "move_ptz",
-            lambda request, response: self.service_wrapper(
-                "move_ptz", self.handle_move_ptz, request, response
-            ),
+            lambda request, response: self.service_wrapper("move_ptz", self.handle_move_ptz, request, response),
             callback_group=self.group,
         )
         self.create_service(
             GetPTZ,
             "get_ptz",
-            lambda request, response: self.service_wrapper(
-                "get_ptz", self.handle_get_ptz, request, response
-            ),
+            lambda request, response: self.service_wrapper("get_ptz", self.handle_get_ptz, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -1156,38 +1152,36 @@ class SpotROS(Node):
         )
         return response
 
-    def handle_get_ptz(
-        self, request: GetPTZ.Request, response: GetPTZ.Response
-    ) -> GetPTZ.Response:
+    def handle_get_ptz(self, request: GetPTZ.Request, response: GetPTZ.Response) -> GetPTZ.Response:
         """ROS service handle for getting the current pan, tilt, zoom of SpotCam."""
         if self.spot_cam_wrapper is None:
             response.success = False
-            response.pan, response.tilt, response.zoom = 0., 0., 0.
+            response.pan, response.tilt, response.zoom = 0.0, 0.0, 0.0
             response.message = "Spot CAM has not been initialized"
             return response
         try:
             ptz_position = self.spot_cam_wrapper.ptz.get_ptz_position(request.name)
-            response.pan, response.tilt, response.zoom = ptz_position.pan.value, ptz_position.tilt.value, ptz_position.zoom.value
+            response.pan, response.tilt, response.zoom = (
+                ptz_position.pan.value,
+                ptz_position.tilt.value,
+                ptz_position.zoom.value,
+            )
             response.success = True
             response.message = "Sucess"
         except Exception as e:
             response.success = False
-            response.pan, response.tilt, response.zoom = 0., 0., 0.
+            response.pan, response.tilt, response.zoom = 0.0, 0.0, 0.0
             response.message = f"Getting PTZ camera pose failed: {e}"
         return response
-        
-    def handle_move_ptz(
-        self, request: MovePTZ.Request, response: MovePTZ.Response
-    ) -> MovePTZ.Response:
+
+    def handle_move_ptz(self, request: MovePTZ.Request, response: MovePTZ.Response) -> MovePTZ.Response:
         """ROS service handle for moving the PTZ camera of Spot CAM."""
         if self.spot_cam_wrapper is None:
             response.success = False
             response.message = "Spot CAM has not been initialized"
             return response
         try:
-            self.spot_cam_wrapper.ptz.set_ptz_position(
-                request.name, request.pan, request.tilt, request.zoom
-            )
+            self.spot_cam_wrapper.ptz.set_ptz_position(request.name, request.pan, request.tilt, request.zoom)
             response.success = True
             response.message = "Sucess"
         except Exception as e:
@@ -2043,21 +2037,18 @@ class SpotROS(Node):
             response.success = False
             response.message = f"Exception Error:{e}"
         return response
-    
+
     def handle_set_navigate_to_params(
         self, request: SetNavigateToParams.Request, response: SetNavigateToParams.Response
     ) -> SetNavigateToParams.Response:
-
         if self.spot_wrapper is None:
             self.get_logger().error("Spot wrapper is None")
             response.success = False
             return response
-        
+
         success = self.spot_wrapper.set_navigate_to_params(request.x, request.y, request.max_distance, request.max_yaw)
         response.success = success
         return response
-
-
 
     def handle_graph_nav_clear_graph(
         self, request: GraphNavClearGraph.Request, response: GraphNavClearGraph.Response
@@ -2182,7 +2173,7 @@ class SpotROS(Node):
             goal_handle.abort()
 
         return result
-    
+
     def handle_navigate_to_dynamic_feedback(self) -> None:
         """Thread function to send navigate_to_dynamic feedback"""
         if self.spot_wrapper is None:
@@ -2197,12 +2188,12 @@ class SpotROS(Node):
                 if self.goal_handle_dynamic is not None:
                     self.goal_handle_dynamic.publish_feedback(feedback)
             time.sleep(1)
-    
+
     def handle_navigate_to_dynamic(self, goal_handle: ServerGoalHandle) -> NavigateToDynamic.Result:
         """Navigate to a given goal waypoint. Unlike navigate_to,
-          this method supports velocity adjustment and pausing/cancellation during a navigation request
-          (see handle_set_navigate_to_params)"""
-        
+        this method supports velocity adjustment and pausing/cancellation during a navigation request
+        (see handle_set_navigate_to_params)"""
+
         self.goal_handle_dynamic = goal_handle
         # Create thread to periodically publish feedback
         feedback_thread = threading.Thread(target=self.handle_navigate_to_dynamic_feedback, args=())
@@ -2214,13 +2205,11 @@ class SpotROS(Node):
             response.message = "Spot wrapper is None"
             goal_handle.abort()
             return response
-        
+
         feedback_thread.start()
 
         # This is a blocking call
-        resp = self.spot_wrapper.navigate_to_dynamic(
-            navigate_to=goal_handle.request.navigate_to
-        )
+        resp = self.spot_wrapper.navigate_to_dynamic(navigate_to=goal_handle.request.navigate_to)
         self.run_navigate_to_dynamic = False
 
         feedback_thread.join()
