@@ -1,5 +1,6 @@
 ### Debug
 # from ros_helpers import *
+
 import sys
 import threading
 import time
@@ -70,6 +71,7 @@ from spot_msgs.srv import (  # type: ignore
     DeleteSound,
     Dock,
     ExecuteDance,
+    GetPTZ,
     GetVolume,
     GraphNavClearGraph,
     GraphNavGetLocalizationPose,
@@ -78,14 +80,13 @@ from spot_msgs.srv import (  # type: ignore
     ListAllDances,
     ListAllMoves,
     ListGraph,
-    MovePTZ,
-    GetPTZ,
     ListSounds,
     ListWorldObjects,
     LoadSound,
+    MovePTZ,
     PlaySound,
-    SetNavigateToParams,
     SetLocomotion,
+    SetNavigateToParams,
     SetVelocity,
     SetVolume,
     UploadAnimation,
@@ -114,7 +115,6 @@ from .ros_helpers import (
     get_wifi_from_state,
     populate_transform_stamped,
 )
-
 
 MAX_DURATION = 1e6
 MOCK_HOSTNAME = "Mock_spot"
