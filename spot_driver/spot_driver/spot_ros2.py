@@ -1523,9 +1523,17 @@ class SpotROS(Node):
                 if grip_feedback.command.command_choice == grip_feedback.command.COMMAND_CLAW_GRIPPER_FEEDBACK_SET:
                     if (
                         grip_feedback.command.claw_gripper_feedback.status.value
-                        != grip_feedback.command.claw_gripper_feedback.status.STATUS_AT_GOAL
+                        == grip_feedback.command.claw_gripper_feedback.status.STATUS_IN_PROGRESS
                     ):
                         return GoalResponse.IN_PROGRESS
+                    elif (
+                        grip_feedback.command.claw_gripper_feedback.status.value
+                        == grip_feedback.command.claw_gripper_feedback.status.STATUS_UNKNOWN
+                    ):
+                        self.get_logger().error("ERROR: claw grippper status unknown")
+                        return GoalResponse.IN_PROGRESS
+                    # else: STATUS_AT_GOAL or STATUS_APPLYING_FORCE
+
                 else:
                     self.get_logger().error("ERROR: unknown gripper command type")
                     return GoalResponse.IN_PROGRESS
