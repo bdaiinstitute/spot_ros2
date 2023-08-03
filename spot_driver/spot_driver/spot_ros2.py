@@ -861,7 +861,7 @@ class SpotROS(Node):
 
         try:
             # noinspection PyProtectedMember
-            state = self.spot_wrapper._graph_nav_client.get_localization_state()
+            state = self.spot_wrapper.spot_graph_nav._graph_nav_client.get_localization_state()
             if not state.localization.waypoint_id:
                 self.get_logger().warning("Robot is not localized; Please upload graph and localize.")
                 return
@@ -1934,11 +1934,11 @@ class SpotROS(Node):
 
         try:
             if request.method == "fiducial":
-                self.spot_wrapper._set_initial_localization_fiducial()
+                self.spot_wrapper.spot_graph_nav.set_initial_localization_fiducial()
                 response.success = True
                 response.message = "Success"
             elif request.method == "waypoint":
-                self.spot_wrapper._set_initial_localization_waypoint([request.waypoint_id])
+                self.spot_wrapper.spot_graph_nav.set_initial_localization_waypoint([request.waypoint_id])
                 response.success = True
                 response.message = "Success"
             else:
@@ -1964,7 +1964,7 @@ class SpotROS(Node):
 
         try:
             self.get_logger().info(f"Uploading GraphNav map: {request.upload_filepath}")
-            self.spot_wrapper._upload_graph_and_snapshots(request.upload_filepath)
+            self.spot_wrapper.spot_graph_nav.upload_graph(request.upload_filepath)
             self.get_logger().info("Uploaded")
             response.success = True
             response.message = "Success"
@@ -1985,7 +1985,7 @@ class SpotROS(Node):
 
         try:
             self.get_logger().info("Clearing graph")
-            self.spot_wrapper._clear_graph()
+            self.spot_wrapper.spot_graph_nav.clear_graph()
             self.get_logger().info("Cleared")
             response.success = True
             response.message = "Success"
@@ -2005,9 +2005,9 @@ class SpotROS(Node):
 
         try:
             self.get_logger().error(f"handle_list_graph: {request}")
-            self.spot_wrapper._clear_graph()
-            self.spot_wrapper._upload_graph_and_snapshots(request.upload_filepath)
-            response.waypoint_ids = self.spot_wrapper.list_graph(request.upload_filepath)
+            self.spot_wrapper.spot_graph_nav.clear_graph()
+            self.spot_wrapper.spot_graph_nav.upload_graph(request.upload_filepath)
+            response.waypoint_ids = self.spot_wrapper.spot_graph_nav.list_graph(request.upload_filepath)
             self.get_logger().error(f"handle_list_graph RESPONSE: {response}")
         except Exception as e:
             self.get_logger().error("Exception Error:{}".format(e))
@@ -2078,7 +2078,7 @@ class SpotROS(Node):
             return response
 
         # run navigate_to
-        resp = self.spot_wrapper.navigate_to(
+        resp = self.spot_wrapper.spot_graph_nav.navigate_to(
             upload_path=goal_handle.request.upload_path,
             navigate_to=goal_handle.request.navigate_to,
             initial_localization_fiducial=goal_handle.request.initial_localization_fiducial,
