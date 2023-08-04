@@ -1,5 +1,5 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
-
+import argparse
 import sys
 import time
 
@@ -66,8 +66,11 @@ def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str) ->
 
 
 class SpotImagePublisher(rclpy.node.Node):
-    def __init__(self) -> None:
-        super().__init__("spot_image_publisher")
+    def __init__(
+        self,
+        camera_type: str
+    ) -> None:
+        super().__init__(camera_type + "_image_publisher")
         self.declare_parameter("spot_name", "")
         self._spot_name = self.get_parameter("spot_name").value
 
@@ -77,9 +80,8 @@ class SpotImagePublisher(rclpy.node.Node):
 
         self.declare_parameter("image_service", ImageClient.default_service_name)
         self._image_service = self.get_parameter("image_service").value
-
-        self.declare_parameter("rgb_cameras", True)
-        self._rgb_cameras = self.get_parameter("rgb_cameras").value
+        print(self.get_namespace())
+        print(self.get_name())
 
         self._cv_bridge = CvBridge()
 
@@ -101,24 +103,17 @@ class SpotImagePublisher(rclpy.node.Node):
             self._valid = False
             return
 
-        sdk = bosdyn.client.create_standard_sdk("image_capture")
-        robot = sdk.create_robot(self._robot_hostname)
-        bosdyn.client.util.authenticate(robot)
-        robot.sync_with_directory()
-        robot.time_sync.wait_for_sync()
-        self._image_client = robot.ensure_client(self._image_service)
+        # sdk = bosdyn.client.create_standard_sdk("image_capture")
+        # robot = sdk.create_robot(self._robot_hostname)
+        # bosdyn.client.util.authenticate(robot)
+        self._robot.sync_with_directory()
+        self._robot.time_sync.wait_for_sync()
+        self._image_client = self._robot.ensure_client(self._image_service)
 
-        self.declare_parameter("image_publish_rate", 10)
+        self.declare_parameter("image_publish_rate", 100)
         self._image_publish_rate = self.get_parameter("image_publish_rate").value
 
-        self.declare_parameter("camera_type", "camera")
-        self._camera_type = self.get_parameter("camera_type").value
-        if self._camera_type not in ["camera", "depth", "depth_registered"]:
-            raise ValueError(
-                'camera_source must be in ["camera", "depth", "depth_registered"], '
-                f"received {self._camera_type} instead"
-            )
-
+        self.declare_parameter("cameras_used", "")
         self._frame_prefix = ""
         if self._spot_name != "":
             self._frame_prefix = f"{self._spot_name}/"
@@ -126,20 +121,21 @@ class SpotImagePublisher(rclpy.node.Node):
         self._image_requests = []
         self._image_publishers = {}
         self._camera_info_publishers = {}
-        camera_sources = ["frontleft"] # , "frontright", "left", "right", "back"]
-        if robot.has_arm():
+        camera_sources = ["frontleft", "frontright"]#, "left"]# , "right", "back"]
+        if self._robot.has_arm():
             camera_sources.append("hand")
+        self._camera_type = camera_type
+
+        self.last_image_seconds = {}# [-1 for cam in camera_sources]
+        self.last_image_nanos = {} # [-1 for cam in camera_sources]
+        
         for camera_source in camera_sources:
             if self._camera_type == "camera":
-                if self._rgb_cameras:
-                    pixel_format = image_pb2.Image.PIXEL_FORMAT_RGB_U8
-                else:
-                    pixel_format = image_pb2.Image.PIXEL_FORMAT_GREYSCALE_U8
+                pixel_format = image_pb2.Image.PIXEL_FORMAT_RGB_U8
             else:
                 pixel_format = image_pb2.Image.PIXEL_FORMAT_DEPTH_U16
             bosdyn_camera_source = translate_ros_camera_name_to_bosdyn(camera_source, self._camera_type)
             image_request = build_image_request(bosdyn_camera_source, pixel_format=pixel_format)
-            print(bosdyn_camera_source)
             self._image_requests.append(image_request)
 
             self._camera_info_publishers[bosdyn_camera_source] = self.create_publisher(
@@ -182,28 +178,44 @@ class SpotImagePublisher(rclpy.node.Node):
         return rtime
 
     def publish_image(self) -> None:
-        # start_time = time.time()
+        start_time = time.time()
         image_responses = self._image_client.get_image(self._image_requests)
-        # time1 = time.time()
+        time1 = time.time()
         # print(f"Time taken to get responses is {time1-start_time}s")
         if len(image_responses) == 0:
             self.get_logger().info("No images received")
             return
 
+        i = 0
         for image_response in image_responses:
+            if image_response.source.name not in self.last_image_seconds:
+                self.last_image_seconds[image_response.source.name] = -1
+            if image_response.source.name not in self.last_image_nanos:
+                self.last_image_nanos[image_response.source.name] = -1
+            new_timestamp_sec = image_response.shot.acquisition_time.seconds
+            new_timestamp_nanos = image_response.shot.acquisition_time.nanos
+            if new_timestamp_sec == self.last_image_seconds[image_response.source.name]:
+                if new_timestamp_nanos == self.last_image_nanos[image_response.source.name]:
+                    continue
             image_msg, camera_info_msg = bosdyn_data_to_image_and_camera_info_msgs(
                 image_response, self.robot_to_local_time, self._frame_prefix
             )
             self._image_publishers[image_response.source.name].publish(image_msg)
             self._camera_info_publishers[image_response.source.name].publish(camera_info_msg)
-        # time2 = time.time()
+            self.last_image_seconds[image_response.source.name] = new_timestamp_sec
+            self.last_image_nanos[image_response.source.name] = new_timestamp_nanos
+            i += 1
+        time2 = time.time()
         # print(f"Time taken to publish responses is {time2-time1}s")
         # print(f"Overall time taken is {time2-start_time}")
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cam", type=str, default="rgb")
+    args = parser.parse_args()
     rclpy.init(args=sys.argv)
-    spot_image_publisher = SpotImagePublisher()
+    spot_image_publisher = SpotImagePublisher(args.cam)
     rclpy.spin(spot_image_publisher)
     rclpy.shutdown()
 

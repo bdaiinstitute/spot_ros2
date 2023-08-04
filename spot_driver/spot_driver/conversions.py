@@ -3,7 +3,7 @@
 # fmt: off
 # ruff: noqa
 # type: ignore
-from .manual_conversions import *
+from manual_conversions import *
 
 
 def convert_bosdyn_msgs_mobility_params_to_any_proto(ros_msg: "bosdyn_msgs.msgs.MobilityParams", proto: "google.protobuf.any_pb2.Any") -> None:
