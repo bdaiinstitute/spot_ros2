@@ -364,16 +364,15 @@ class SpotROS(Node):
         self.declare_parameter("cameras_used", all_cameras)
         self.cameras_used = self.get_parameter("cameras_used")
 
-        # Create the necessary publishers and timers
-        # if enable set up publisher for rgb images
-        if self.publish_rgb.value:
-            self.create_image_publisher(SpotImageType.RGB, self.rgb_callback_group)
-        # if enabled set up publisher for depth images
-        if self.publish_depth.value:
-            self.create_image_publisher(SpotImageType.Depth, self.depth_callback_group)
-        # if enable publish registered depth
-        if self.publish_depth_registered.value:
-            self.create_image_publisher(SpotImageType.RegDepth, self.depth_registered_callback_group)
+        # Create list of image types to publish
+        published_types = (
+            ([SpotImageType.RGB] if self.publish_rgb.value else [])
+            + ([SpotImageType.Depth] if self.publish_depth.value else [])
+            + ([SpotImageType.RegDepth] if self.publish_depth_registered.value else [])
+        )
+
+        # Create a timer to publish images at a rate and publishers for each requested image type
+        self.create_image_publishers(published_types, self.rgb_callback_group)
 
         if self.publish_graph_nav_pose.value:
             # graph nav pose will be published both on a topic
@@ -874,50 +873,63 @@ class SpotROS(Node):
         except Exception as e:
             self.get_logger().error(f"Exception: {e} \n {traceback.format_exc()}")
 
-    def create_image_publisher(self, image_type: SpotImageType, callback_group: CallbackGroup) -> None:
-        topic_name = image_type.value
-        publisher_name = image_type.value
-        # RGB is the only type with different naming scheme
-        if image_type == SpotImageType.RGB:
-            topic_name = "camera"
-            publisher_name = "image"
+    def create_image_publishers(self, image_types: List[SpotImageType], callback_group: CallbackGroup) -> None:
+        """
+        Create a publisher for each combination of cameras and image types.
+        Create a timer to publish images at a fixed rate.
+        """
+
         for camera_name in self.cameras_used.value:
-            setattr(
-                self,
-                f"{camera_name}_{publisher_name}_pub",
-                self.create_publisher(Image, f"{topic_name}/{camera_name}/image", 1),
-            )
-            setattr(
-                self,
-                f"{camera_name}_{publisher_name}_info_pub",
-                self.create_publisher(CameraInfo, f"{topic_name}/{camera_name}/camera_info", 1),
-            )
+            for image_type in image_types:
+                topic_name = image_type.value
+                publisher_name = image_type.value
+                # RGB is the only type with different naming scheme
+                if image_type == SpotImageType.RGB:
+                    topic_name = "camera"
+                    publisher_name = "image"
+                setattr(
+                    self,
+                    f"{camera_name}_{publisher_name}_pub",
+                    self.create_publisher(Image, f"{topic_name}/{camera_name}/image", 1),
+                )
+                setattr(
+                    self,
+                    f"{camera_name}_{publisher_name}_info_pub",
+                    self.create_publisher(CameraInfo, f"{topic_name}/{camera_name}/camera_info", 1),
+                )
         # create a timer for publishing
         self.create_timer(
             1 / self.rates["front_image"],
-            partial(self.publish_camera_images_callback, image_type),
+            partial(self.publish_camera_images_callback, image_types),
             callback_group=callback_group,
         )
 
-    def publish_camera_images_callback(self, image_type: SpotImageType) -> None:
+    def publish_camera_images_callback(self, image_types: List[SpotImageType]) -> None:
         """
-        Publishes the camera images from a specific image type
+        Given a list of image types, retrieve camera images for all requested types and publish them to ROS topics
         """
         if self.spot_wrapper is None:
             return
 
-        publisher_name = image_type.value
-        # RGB is the only type with different naming scheme
-        if image_type == SpotImageType.RGB:
-            publisher_name = "image"
+        # Create camera sources to represent all requested cameras and image types.
+        camera_sources = [
+            (CameraSource(camera_name, [image_type]) for camera_name in self.cameras_used.value)
+            for image_type in image_types
+        ]
 
-        result = self.spot_wrapper.spot_images.get_images_by_cameras(
-            [CameraSource(camera_name, [image_type]) for camera_name in self.cameras_used.value]
-        )
+        # Get image data for all camera sources in a single request to the Spot SDK.
+        # This avoids having requests block each other if they were generated in separate timer callbacks.
+        result = self.spot_wrapper.spot_images.get_images_by_cameras(camera_sources)
+
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
                 image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
             )
+
+            publisher_name = image_entry.image_type
+            if image_entry.image_type == SpotImageType.RGB:
+                publisher_name = "image"
+
             image_pub = getattr(self, f"{image_entry.camera_name}_{publisher_name}_pub")
             image_info_pub = getattr(self, f"{image_entry.camera_name}_{publisher_name}_info_pub")
             image_pub.publish(image_msg)
