@@ -45,6 +45,7 @@ from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.impl import rcutils_logger
 from rclpy.node import Node
 from rclpy.publisher import Publisher
+from rclpy.qos import qos_profile_sensor_data
 from rclpy.timer import Rate
 from sensor_msgs.msg import CameraInfo, Image, JointState
 from std_srvs.srv import SetBool, Trigger
@@ -890,7 +891,7 @@ class SpotROS(Node):
                 setattr(
                     self,
                     f"{camera_name}_{publisher_name}_pub",
-                    self.create_publisher(Image, f"{topic_name}/{camera_name}/image", 1),
+                    self.create_publisher(Image, f"{topic_name}/{camera_name}/image", qos_profile_sensor_data),
                 )
                 setattr(
                     self,
