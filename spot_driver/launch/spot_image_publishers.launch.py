@@ -15,7 +15,7 @@ def generate_launch_description() -> launch.LaunchDescription:
     image_publish_rate_arg = DeclareLaunchArgument(
         "image_publish_rate",
         description="Rate in (hz) of image publishing",
-        default_value="10",
+        default_value="15",
     )
 
     rgb_cameras = LaunchConfiguration("rgb_cameras", default="true")
@@ -56,6 +56,7 @@ def generate_launch_description() -> launch.LaunchDescription:
     ]
     camera_types = ["camera", "depth", "depth_registered"]
     publish_camera_types = [publish_rgb, publish_depth, publish_depth_registered]
+
     for camera_type, publish_camera_type in zip(camera_types, publish_camera_types):
         camera_node = launch_ros.actions.Node(
             package="spot_driver",

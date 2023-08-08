@@ -2,6 +2,8 @@
 
 import sys
 import time
+from collections import deque
+from typing import Deque, Optional
 
 import bosdyn.client
 import bosdyn.client.util
@@ -11,6 +13,7 @@ from bosdyn.api import image_pb2
 from bosdyn.client.image import ImageClient, build_image_request
 from cv_bridge import CvBridge
 from google.protobuf.timestamp_pb2 import Timestamp
+from rclpy.qos import qos_profile_system_default
 from sensor_msgs.msg import CameraInfo, Image
 
 from spot_driver.ros_helpers import get_from_env_and_fall_back_to_param
@@ -108,7 +111,7 @@ class SpotImagePublisher(rclpy.node.Node):
         robot.time_sync.wait_for_sync()
         self._image_client = robot.ensure_client(self._image_service)
 
-        self.declare_parameter("image_publish_rate", 10)
+        self.declare_parameter("image_publish_rate", 15)
         self._image_publish_rate = self.get_parameter("image_publish_rate").value
 
         self.declare_parameter("camera_type", "")
@@ -126,6 +129,10 @@ class SpotImagePublisher(rclpy.node.Node):
         self._image_requests = []
         self._image_publishers = {}
         self._camera_info_publishers = {}
+
+        self._RATE_WINDOW = 10
+        self._last_n_timestamps: Deque[float] = deque()
+
         camera_sources = ["frontleft", "frontright", "left", "right", "back"]
         if robot.has_arm():
             camera_sources.append("hand")
@@ -145,16 +152,44 @@ class SpotImagePublisher(rclpy.node.Node):
             self._camera_info_publishers[bosdyn_camera_source] = self.create_publisher(
                 CameraInfo,
                 f"{self._camera_type}/{camera_source}/camera_info",
-                10,
+                qos_profile_system_default,
             )
 
             self._image_publishers[bosdyn_camera_source] = self.create_publisher(
                 Image,
                 f"{self._camera_type}/{camera_source}/image",
-                10,
+                qos_profile_system_default,
             )
 
         self._image_publisher_timer = self.create_timer(1 / self._image_publish_rate, self.publish_image)
+
+    def update_rate(self, timestamp: float) -> Optional[float]:
+        """
+        Given a new timestamp, appends that timestamp to a deque, calculates the differences between each pair of
+        consecutive timestamps, and then calculates an average rate for all sampled timestamps.
+
+        The maximum number of timestamps to store in the deque is set by self._RATE_WINDOW. If the number of timestamps
+        in the deque exceeds this limit, the oldest timestamp is discarded.
+
+        Args:
+            timestamp: float
+        Returns:
+            float
+            None, if the number of recorded timestamps is less than self._RATE_WINDOW
+        """
+
+        self._last_n_timestamps.appendleft(timestamp)
+
+        rate_average = None
+
+        if len(self._last_n_timestamps) >= self._RATE_WINDOW:
+            rates = []
+            for i in range(1, len(self._last_n_timestamps) - 1):
+                rates.append(1.0 / (self._last_n_timestamps[i - 1] - self._last_n_timestamps[i]))
+            rate_average = sum(rates) / len(rates)
+            self._last_n_timestamps.pop()
+
+        return rate_average
 
     def robot_to_local_time(self, timestamp: Timestamp) -> Timestamp:
         """Takes a timestamp and an estimated skew and return seconds and nanoseconds in local time
@@ -197,8 +232,14 @@ class SpotImagePublisher(rclpy.node.Node):
             self._image_publishers[image_response.source.name].publish(image_msg)
             self._camera_info_publishers[image_response.source.name].publish(camera_info_msg)
         time2 = time.time()
-        print(f"Time taken to publish responses is {time2-time1}s")
-        print(f"Overall time taken is {time2-start_time}")
+
+        self.get_logger().info(f"Request time: {time1 - start_time:.3f}s")
+        self.get_logger().info(f"ROS pub time: {time2 - time1:.3f}s")
+        self.get_logger().info(f"Overall time: {time2 - start_time:.3f}")
+
+        rate = self.update_rate(start_time)
+        if rate:
+            self.get_logger().info(f"Callback rate: {rate:.3f} Hz")
 
 
 def main() -> None:
