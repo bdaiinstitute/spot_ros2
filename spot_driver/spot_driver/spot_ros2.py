@@ -2004,11 +2004,10 @@ class SpotROS(Node):
             return response
 
         try:
-            self.get_logger().error(f"handle_list_graph: {request}")
+            self.get_logger().info(f"Listing graph for: {request.upload_filepath}")
             self.spot_wrapper.spot_graph_nav.clear_graph()
             self.spot_wrapper.spot_graph_nav.upload_graph(request.upload_filepath)
-            response.waypoint_ids = self.spot_wrapper.spot_graph_nav.list_graph(request.upload_filepath)
-            self.get_logger().error(f"handle_list_graph RESPONSE: {response}")
+            response.waypoint_ids = self.spot_wrapper.spot_graph_nav.list_graph()
         except Exception as e:
             self.get_logger().error("Exception Error:{}".format(e))
         return response
