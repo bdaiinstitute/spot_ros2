@@ -12,6 +12,7 @@ import tf2_ros
 from bosdyn.api import image_pb2, robot_state_pb2, world_object_pb2
 from bosdyn.client.frame_helpers import get_a_tform_b, get_odom_tform_body, get_vision_tform_body
 from bosdyn.client.math_helpers import SE3Pose
+from bosdyn_msgs.msg import ManipulatorState
 from builtin_interfaces.msg import Duration, Time
 from cv_bridge import CvBridge
 from geometry_msgs.msg import (
@@ -26,6 +27,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image, JointState
 from tf2_msgs.msg import TFMessage
 
+from spot_driver.conversions import convert_proto_to_bosdyn_msgs_manipulator_state
 from spot_msgs.msg import (  # type: ignore
     BatteryState,
     BatteryStateArray,
@@ -322,6 +324,21 @@ def get_joint_states_from_state(state: robot_state_pb2.RobotState, spot_wrapper:
         joint_state.effort.append(joint.load.value)
 
     return joint_state
+
+
+def get_manipulator_state_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> ManipulatorState:
+    """Maps manipulation state data from robot state proto to Bosdyn ManipulatorState message
+
+    Args:
+        state: Robot State proto
+        spot_wrapper: A SpotWrapper object
+
+    Returns:
+        ManipulatorState message
+    """
+    manipulator_state = ManipulatorState()
+    convert_proto_to_bosdyn_msgs_manipulator_state(proto=state.manipulator_state, ros_msg=manipulator_state)
+    return manipulator_state
 
 
 def get_estop_state_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> EStopStateArray:

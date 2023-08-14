@@ -32,7 +32,7 @@ from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
-from bosdyn_msgs.msg import ManipulationApiFeedbackResponse, RobotCommandFeedback
+from bosdyn_msgs.msg import ManipulationApiFeedbackResponse, ManipulatorState, RobotCommandFeedback
 from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped, Vector3Stamped
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
@@ -50,6 +50,28 @@ from sensor_msgs.msg import CameraInfo, Image, JointState
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
+
+#####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
+# Release
+from spot_driver.ros_helpers import (
+    bosdyn_data_to_image_and_camera_info_msgs,
+    get_battery_states_from_state,
+    get_behavior_faults_from_state,
+    get_end_effector_force_from_state,
+    get_estop_state_from_state,
+    get_feet_from_state,
+    get_from_env_and_fall_back_to_param,
+    get_joint_states_from_state,
+    get_manipulator_state_from_state,
+    get_odom_from_state,
+    get_odom_twist_from_state,
+    get_power_states_from_state,
+    get_system_faults_from_state,
+    get_tf_from_state,
+    get_tf_from_world_objects,
+    get_wifi_from_state,
+    populate_transform_stamped,
+)
 from spot_msgs.action import Manipulation, NavigateTo, RobotCommand, Trajectory  # type: ignore
 from spot_msgs.msg import (  # type: ignore
     BatteryStateArray,
@@ -90,27 +112,6 @@ from spot_msgs.srv import (  # type: ignore
 from spot_wrapper.cam_wrapper import SpotCamWrapper
 from spot_wrapper.spot_images import CameraSource
 from spot_wrapper.wrapper import SpotWrapper
-
-#####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
-# Release
-from .ros_helpers import (
-    bosdyn_data_to_image_and_camera_info_msgs,
-    get_battery_states_from_state,
-    get_behavior_faults_from_state,
-    get_end_effector_force_from_state,
-    get_estop_state_from_state,
-    get_feet_from_state,
-    get_from_env_and_fall_back_to_param,
-    get_joint_states_from_state,
-    get_odom_from_state,
-    get_odom_twist_from_state,
-    get_power_states_from_state,
-    get_system_faults_from_state,
-    get_tf_from_state,
-    get_tf_from_world_objects,
-    get_wifi_from_state,
-    populate_transform_stamped,
-)
 
 MAX_DURATION = 1e6
 MOCK_HOSTNAME = "Mock_spot"
@@ -414,6 +415,7 @@ class SpotROS(Node):
             self.end_effector_force_pub: Publisher = self.create_publisher(
                 Vector3Stamped, "status/end_effector_force", 1
             )
+            self.manipulator_state_pub: Publisher = self.create_publisher(ManipulatorState, "manipulation_state", 1)
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
@@ -781,6 +783,9 @@ class SpotROS(Node):
             if self.spot_wrapper.has_arm():
                 end_effector_force_msg = get_end_effector_force_from_state(state, self.spot_wrapper)
                 self.end_effector_force_pub.publish(end_effector_force_msg)
+
+                manipulator_state_msg = get_manipulator_state_from_state(state, self.spot_wrapper)
+                self.manipulator_state_pub.publish(manipulator_state_msg)
 
     def metrics_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new metrics data.
