@@ -46,6 +46,8 @@ source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 source install/local_setup.bash
 ```
+### For ARM-based computers
+If you are installing on an ARM-based computer such as the CoreIO, you should use the `install_spot_ros2_arm.sh`.
 
 ## Example Code
 See the [examples](examples/) for some examples of using the ROS2 driver.
