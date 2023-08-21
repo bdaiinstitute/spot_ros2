@@ -146,75 +146,17 @@ Visualization Manager:
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
-      Frames:
-        All Enabled: true
-        base_link:
-          Value: true
-        body:
-          Value: true
-        front_left_hip:
-          Value: true
-        front_left_lower_leg:
-          Value: true
-        front_left_upper_leg:
-          Value: true
-        front_rail:
-          Value: true
-        front_right_hip:
-          Value: true
-        front_right_lower_leg:
-          Value: true
-        front_right_upper_leg:
-          Value: true
-        rear_left_hip:
-          Value: true
-        rear_left_lower_leg:
-          Value: true
-        rear_left_upper_leg:
-          Value: true
-        rear_rail:
-          Value: true
-        rear_right_hip:
-          Value: true
-        rear_right_lower_leg:
-          Value: true
-        rear_right_upper_leg:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: false
-      Tree:
-        body:
-          base_link:
-            {}
-          front_left_hip:
-            front_left_upper_leg:
-              front_left_lower_leg:
-                {}
-          front_rail:
-            {}
-          front_right_hip:
-            front_right_upper_leg:
-              front_right_lower_leg:
-                {}
-          rear_left_hip:
-            rear_left_upper_leg:
-              rear_left_lower_leg:
-                {}
-          rear_rail:
-            {}
-          rear_right_hip:
-            rear_right_upper_leg:
-              rear_right_lower_leg:
-                {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:

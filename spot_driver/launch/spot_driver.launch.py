@@ -5,12 +5,14 @@ import launch_ros
 import xacro
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch.conditions import IfCondition
 
 
-def launch_robot_state_publisher(context: LaunchContext, has_arm: LaunchConfiguration, launch_rviz: LaunchConfiguration, ld: LaunchDescription) -> None:
+def launch_robot_state_publisher(
+    context: LaunchContext, has_arm: LaunchConfiguration, launch_rviz: LaunchConfiguration, ld: LaunchDescription
+) -> None:
     pkg_share = FindPackageShare("spot_description").find("spot_description")
     urdf_dir = os.path.join(pkg_share, "urdf")
 
@@ -31,9 +33,7 @@ def launch_robot_state_publisher(context: LaunchContext, has_arm: LaunchConfigur
     )
     ld.add_action(robot_state_publisher)
 
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("spot_driver"), "rviz", "viz_spot.rviz"]
-    )
+    rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_driver"), "rviz", "viz_spot.rviz"])
 
     rviz = launch_ros.actions.Node(
         package="rviz2",
@@ -57,11 +57,7 @@ def generate_launch_description() -> launch.LaunchDescription:
     has_arm_arg = DeclareLaunchArgument("has_arm", description="Whether spot has arm", default_value="False")
 
     launch_rviz = LaunchConfiguration("launch_rviz")
-    launch_rviz_arg = DeclareLaunchArgument(
-        "launch_rviz",
-        default_value="False",
-        description="Launch RViz?"
-    )
+    launch_rviz_arg = DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?")
 
     ld = launch.LaunchDescription([config_file_arg, has_arm_arg, launch_rviz_arg])
 

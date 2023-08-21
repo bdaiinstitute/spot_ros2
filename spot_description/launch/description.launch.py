@@ -3,35 +3,36 @@ import os
 import launch
 import launch_ros
 from launch.substitutions import (
-    Command, 
+    Command,
+    FindExecutable,
     LaunchConfiguration,
     PathJoinSubstitution,
-    FindExecutable,
 )
 
 
 def generate_launch_description() -> launch.LaunchDescription:
     pkg_share = launch_ros.substitutions.FindPackageShare(package="spot_description").find("spot_description")
-    default_model_path = os.path.join(pkg_share, "urdf/spot_with_arm.urdf.xacro")
+    default_model_path = os.path.join(pkg_share, "urdf/spot.urdf.xacro")
     default_rviz2_path = os.path.join(pkg_share, "rviz/viz_spot.rviz")
-    # default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
 
     arm_param = launch.actions.DeclareLaunchArgument(
-        "arm", 
-        default_value="False", 
-        description="include arm in robot model"
+        "arm", default_value="false", description="include arm in robot model"
+    )
+    tf_prefix_param = launch.actions.DeclareLaunchArgument(
+        "tf_prefix", default_value='""', description="apply namespace prefix to robot links and joints"
     )
 
     robot_description = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ", 
-            PathJoinSubstitution(
-                [pkg_share, "urdf", "spot_with_arm.urdf.xacro"]
-            ),
+            " ",
+            PathJoinSubstitution([pkg_share, "urdf", "spot.urdf.xacro"]),
             " ",
             "arm:=",
             LaunchConfiguration("arm"),
+            " ",
+            "tf_prefix:=",
+            LaunchConfiguration("tf_prefix"),
             " ",
         ]
     )
@@ -73,6 +74,7 @@ def generate_launch_description() -> launch.LaunchDescription:
                 name="rvizconfig", default_value=default_rviz2_path, description="Absolute path to rviz config file"
             ),
             arm_param,
+            tf_prefix_param,
             joint_state_publisher_node,
             joint_state_publisher_gui_node,
             robot_state_publisher_node,
