@@ -1,30 +1,50 @@
-import os
-
 import launch
 import launch_ros
-import xacro
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+)
 from launch_ros.substitutions import FindPackageShare
 
 
-def launch_robot_state_publisher(
-    context: LaunchContext, has_arm: LaunchConfiguration, launch_rviz: LaunchConfiguration, ld: LaunchDescription
-) -> None:
+def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
+    config_file = LaunchConfiguration("config_file")
+    has_arm = LaunchConfiguration("has_arm")
+    launch_rviz = LaunchConfiguration("launch_rviz")
+    tf_prefix = LaunchConfiguration("tf_prefix")
+    parent = LaunchConfiguration("parent")
+
     pkg_share = FindPackageShare("spot_description").find("spot_description")
-    urdf_dir = os.path.join(pkg_share, "urdf")
 
-    has_arm = has_arm.perform(context) == "True"
-    if has_arm:
-        xacro_file = os.path.join(urdf_dir, "spot_with_arm.urdf.xacro")
-    else:
-        xacro_file = os.path.join(urdf_dir, "spot.urdf.xacro")
-    doc = xacro.process_file(xacro_file)
-    robot_desc = doc.toprettyxml(indent="  ")
+    spot_driver_node = launch_ros.actions.Node(
+        package="spot_driver", executable="spot_ros2", name="spot_ros2", output="screen", parameters=[config_file]
+    )
+    ld.add_action(spot_driver_node)
 
-    params = {"robot_description": robot_desc}
+    robot_description = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([pkg_share, "urdf", "spot.urdf.xacro"]),
+            " ",
+            "arm:=",
+            has_arm,
+            " ",
+            "tf_prefix:=",
+            tf_prefix,
+            " ",
+            "parent:=",
+            parent,
+            " ",
+        ]
+    )
+
+    params = {"robot_description": robot_description}
     robot_state_publisher = launch_ros.actions.Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -39,7 +59,7 @@ def launch_robot_state_publisher(
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", rviz_config_file],
+        arguments=["-d", rviz_config_file, "-f", parent.perform(context)],
         output="screen",
         condition=IfCondition(launch_rviz),
     )
@@ -48,24 +68,26 @@ def launch_robot_state_publisher(
 
 
 def generate_launch_description() -> launch.LaunchDescription:
-    config_file = LaunchConfiguration("config_file", default="")
-    config_file_arg = DeclareLaunchArgument(
-        "config_file", description="Path to configuration file for the driver.", default_value=""
+    launch_args = []
+
+    launch_args.append(
+        DeclareLaunchArgument("config_file", default_value="", description="Path to configuration file for the driver.")
     )
 
-    has_arm = LaunchConfiguration("has_arm")
-    has_arm_arg = DeclareLaunchArgument("has_arm", description="Whether spot has arm", default_value="False")
+    launch_args.append(DeclareLaunchArgument("has_arm", default_value="False", description="Whether spot has arm"))
 
-    launch_rviz = LaunchConfiguration("launch_rviz")
-    launch_rviz_arg = DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?")
-
-    ld = launch.LaunchDescription([config_file_arg, has_arm_arg, launch_rviz_arg])
-
-    spot_driver_node = launch_ros.actions.Node(
-        package="spot_driver", executable="spot_ros2", name="spot_ros2", output="screen", parameters=[config_file]
+    launch_args.append(
+        DeclareLaunchArgument(
+            "tf_prefix", default_value='""', description="apply namespace prefix to robot links and joints"
+        )
     )
-    ld.add_action(spot_driver_node)
 
-    ld.add_action(OpaqueFunction(function=launch_robot_state_publisher, args=[has_arm, launch_rviz, ld]))
+    launch_args.append(DeclareLaunchArgument("parent", default_value="world", description="parent link/frame for Spot"))
+
+    launch_args.append(DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?"))
+
+    ld = launch.LaunchDescription(launch_args)
+
+    ld.add_action(OpaqueFunction(function=launch_setup, ld=ld))
 
     return ld

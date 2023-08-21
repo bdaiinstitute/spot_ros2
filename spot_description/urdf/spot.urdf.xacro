@@ -13,7 +13,7 @@
   <xacro:load_spot
     arm="$(arg arm)"
     tf_prefix="$(arg tf_prefix)"
-    parent="world">
+    parent="$(arg parent)">
     <origin xyz="0 0 0" rpy="0 0 0" />  <!-- position robot in the world -->
   </xacro:load_spot>
 
