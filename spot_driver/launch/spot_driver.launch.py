@@ -88,6 +88,6 @@ def generate_launch_description() -> launch.LaunchDescription:
 
     ld = launch.LaunchDescription(launch_args)
 
-    ld.add_action(OpaqueFunction(function=launch_setup, ld=ld))
+    ld.add_action(OpaqueFunction(function=launch_setup, args=[ld]))
 
     return ld
