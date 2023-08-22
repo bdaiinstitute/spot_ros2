@@ -13,7 +13,7 @@ while true; do
 done
 
 if test -f "$REQUIREMENTS_FILE"; then
-    pip3 install -r $REQUIREMENTS_FILE
+    sudo pip3 install -r $REQUIREMENTS_FILE
 else
     echo "ERROR: $REQUIREMENTS_FILE not found. Please initialize spot_wrapper with: git submodule init --update"  
     exit 1
@@ -24,6 +24,7 @@ sudo apt install -y ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-tf
 # Install the dist-utils
 sudo apt-get install python3-distutils
 sudo apt-get install python3-apt
+sudo pip3 install --force-reinstall -v "setuptools==59.6.0"
 
 
 if $ARM; then
