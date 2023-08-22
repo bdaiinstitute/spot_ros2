@@ -37,12 +37,9 @@ git submodule init
 git submodule update
 ```
 
-Then run the install script:
+Then run the install script. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system 
 ```bash
 cd <path to spot_ros2>
-```
-The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system 
-```
 ./install_spot_ros2.sh
 or
 ./install_spot_ros2.sh --arm64
