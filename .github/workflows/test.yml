@@ -23,12 +23,12 @@ jobs:
         submodules: recursive
     - name: Build package
       run: |
-        source /opt/ros/$ROS_DISTRO/setup.bash
         apt-get update
         apt install wget 
         ./install_spot_ros2.sh
         # go to root folder
         cd ../../
+        source /opt/ros/$ROS_DISTRO/setup.bash
         colcon build --symlink-install
         source install/local_setup.bash
     - name: Install docs dependencies & build docs

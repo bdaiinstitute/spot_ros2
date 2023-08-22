@@ -15,7 +15,7 @@ done
 if test -f "$REQUIREMENTS_FILE"; then
     pip3 install -r $REQUIREMENTS_FILE
 else
-    echo "ERROR: $REQUIREMENTS_FILE not found. Please initialize the submodule spot_wrapper first" 
+    echo "ERROR: $REQUIREMENTS_FILE not found. Please initialize spot_wrapper with: git submodule init --update"  
     exit 1
 fi
 
