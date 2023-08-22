@@ -37,17 +37,20 @@ git submodule init
 git submodule update
 ```
 
-Then run the install script:
+Then run the install script. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system 
 ```bash
 cd <path to spot_ros2>
 ./install_spot_ros2.sh
+or
+./install_spot_ros2.sh --arm64
+```
+From here, set up the ROS2 workspace
+```
 cd <ros2 ws>
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 source install/local_setup.bash
 ```
-### For ARM-based computers
-If you are installing on an ARM-based computer such as the CoreIO, you should use the `install_spot_ros2_arm.sh`.
 
 ## Example Code
 See the [examples](examples/) for some examples of using the ROS2 driver.
