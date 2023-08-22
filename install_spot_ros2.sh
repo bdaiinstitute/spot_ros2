@@ -21,6 +21,10 @@ fi
 
 # Install ROS dependencies
 sudo apt install -y ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-tf-transformations ros-$ROS_DISTRO-xacro ros-$ROS_DISTRO-depth-image-proc
+# Install the dist-utils
+sudo apt-get install python3-distutils
+sudo apt-get install python3-apt
+
 
 if $ARM; then
     # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
