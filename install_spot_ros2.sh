@@ -33,4 +33,3 @@ else
     sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
     rm /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
 fi
-
