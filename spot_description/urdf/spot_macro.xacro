@@ -3,15 +3,7 @@
 <robot name="spot" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:macro name="load_spot" params="
     arm:=false
-    tf_prefix
-    parent
-    *origin" >
-
-        <joint name="${tf_prefix}body_joint" type="fixed">
-            <xacro:insert_block name="origin" />
-            <parent link="${parent}"/>
-            <child link="${tf_prefix}body" />
-        </joint>
+    tf_prefix">
 
         <link name="${tf_prefix}body">
             <visual>

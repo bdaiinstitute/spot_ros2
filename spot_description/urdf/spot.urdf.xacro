@@ -6,15 +6,10 @@
   <!-- Parameters -->
   <xacro:arg name="arm" default="false" />
   <xacro:arg name="tf_prefix" default="" />
-  <xacro:arg name="parent" default="" />
 
   <!-- Load Spot -->
-  <link name="world"/>
   <xacro:load_spot
     arm="$(arg arm)"
-    tf_prefix="$(arg tf_prefix)"
-    parent="$(arg parent)">
-    <origin xyz="0 0 0" rpy="0 0 0" />  <!-- position robot in the world -->
-  </xacro:load_spot>
+    tf_prefix="$(arg tf_prefix)" />
 
 </robot>
