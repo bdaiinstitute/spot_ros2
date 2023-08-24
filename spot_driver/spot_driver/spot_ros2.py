@@ -92,6 +92,7 @@ from spot_msgs.srv import (  # type: ignore
     DeleteSound,
     Dock,
     ExecuteDance,
+    GetGripperCameraParameters,
     GetVolume,
     GraphNavClearGraph,
     GraphNavGetLocalizationPose,
@@ -104,6 +105,7 @@ from spot_msgs.srv import (  # type: ignore
     ListWorldObjects,
     LoadSound,
     PlaySound,
+    SetGripperCameraParameters,
     SetLocomotion,
     SetVelocity,
     SetVolume,
@@ -331,6 +333,10 @@ class SpotROS(Node):
         if self.name is not None:
             name_str = " for " + self.name
         self.get_logger().info("Starting ROS driver for Spot" + name_str)
+
+        all_cameras = ["frontleft", "frontright", "left", "right", "back"]
+        has_arm = False
+
         ############## testing with Robot
 
         if self.name == MOCK_HOSTNAME:
@@ -356,17 +362,15 @@ class SpotROS(Node):
             if not self.spot_wrapper.is_valid:
                 return
 
+            has_arm = self.spot_wrapper.has_arm()
+            if has_arm:
+                all_cameras.append("hand")
+
             try:
-                self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
+                self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger, has_arm)
             except SystemError:
                 self.spot_cam_wrapper = None
 
-        all_cameras = ["frontleft", "frontright", "left", "right", "back"]
-        has_arm = False
-        if self.spot_wrapper is not None:
-            has_arm = self.spot_wrapper.has_arm()
-        if has_arm:
-            all_cameras.append("hand")
         self.declare_parameter("cameras_used", all_cameras)
         self.cameras_used = self.get_parameter("cameras_used")
 
@@ -637,6 +641,20 @@ class SpotROS(Node):
             GraphNavSetLocalization,
             "graph_nav_set_localization",
             self.handle_graph_nav_set_localization,
+            callback_group=self.group,
+        )
+
+        self.create_service(
+            GetGripperCameraParameters,
+            "get_gripper_camera_parameters",
+            self.handle_get_gripper_camera_parameters,
+            callback_group=self.group,
+        )
+
+        self.create_service(
+            SetGripperCameraParameters,
+            "set_gripper_camera_parameters",
+            self.handle_set_gripper_camera_parameters,
             callback_group=self.group,
         )
 
@@ -2228,6 +2246,18 @@ class SpotROS(Node):
                     self.get_logger().error("Error:{}".format(e))
                     pass
             self.mobility_params_pub.publish(mobility_params_msg)
+
+    def handle_get_gripper_camera_parameters(
+        self, request: GetGripperCameraParameters.Request
+    ) -> GetGripperCameraParameters.Response:
+        if self.cam_wrapper is not None:
+            return self.cam_wrapper.gripper.get_params(request)
+
+    def handle_set_gripper_camera_parameters(
+        self, request: SetGripperCameraParameters.Request
+    ) -> SetGripperCameraParameters.Response:
+        if self.cam_wrapper is not None:
+            return self.cam_wrapper.gripper.set_params(request)
 
 
 def main(args: Optional[List[str]] = None) -> None:
