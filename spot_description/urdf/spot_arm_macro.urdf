@@ -7,13 +7,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_sh0.obj"/>
+          <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_sh0.obj"/>
         </geometry>
         <material name="${tf_prefix}arm_link_sh0"> <color rgba="0.2 0.2 0.2 1"/></material>  
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_sh0.stl" />
+          <mesh filename="file://$(find spot_description)/meshes/arm/collision/arm_link_sh0.stl" />
         </geometry>
       </collision>
       <inertial>
@@ -34,13 +34,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_sh1.obj"/>
+          <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_sh1.obj"/>
         </geometry>
         <material name="${tf_prefix}arm_link_sh1"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_sh1.stl" />
+          <mesh filename="file://$(find spot_description)/meshes/arm/collision/arm_link_sh1.stl" />
         </geometry>
       </collision>
       <inertial>
@@ -62,13 +62,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_hr0.obj"/>
+          <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_hr0.obj"/>
         </geometry>
         <material name="${tf_prefix}arm_link_hr0"> <color rgba="0.2 0.2 0.2 1"/></material> 
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_hr0.stl" />
+          <mesh filename="file://$(find spot_description)/meshes/arm/collision/arm_link_hr0.stl" />
         </geometry>
       </collision>
       <inertial>
@@ -89,13 +89,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_el0.obj"/>
+          <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_el0.obj"/>
         </geometry>
         <material name="${tf_prefix}arm_link_el0"> <color rgba="0.2 0.2 0.2 1"/></material>  
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_el0.stl" />
+          <mesh filename="file://$(find spot_description)/meshes/arm/collision/arm_link_el0.stl" />
         </geometry>
       </collision>
       <inertial>
@@ -116,13 +116,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_el1.obj"/>
+          <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_el1.obj"/>
         </geometry>
         <material name="${tf_prefix}arm_link_el1"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_el1.stl" />
+          <mesh filename="file://$(find spot_description)/meshes/arm/collision/arm_link_el1.stl" />
         </geometry>
       </collision>
       <inertial>
@@ -143,13 +143,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_wr0.obj"/>
+          <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_wr0.obj"/>
         </geometry>
         <material name="${tf_prefix}arm_link_wr0"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_wr0.stl" />
+          <mesh filename="file://$(find spot_description)/meshes/arm/collision/arm_link_wr0.stl" />
         </geometry>
       </collision>
       <inertial>
@@ -170,13 +170,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_wr1.obj"/>
+          <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_wr1.obj"/>
         </geometry>
         <material name="${tf_prefix}arm_link_wr1"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_wr1.stl" />
+          <mesh filename="file://$(find spot_description)/meshes/arm/collision/arm_link_wr1.stl" />
         </geometry>
       </collision>
       <inertial>
@@ -197,13 +197,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_fngr.obj"/>
+          <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_fngr.obj"/>
         </geometry>
         <material name="${tf_prefix}arm_link_fngr"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_fngr.stl" />
+          <mesh filename="file://$(find spot_description)/meshes/arm/collision/arm_link_fngr.stl" />
         </geometry>
       </collision>
       <inertial>

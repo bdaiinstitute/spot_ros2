@@ -8,12 +8,12 @@
         <link name="${tf_prefix}body">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/body.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/body.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/body_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/body_collision.stl" />
                 </geometry>
             </collision>
         </link>
@@ -60,12 +60,12 @@
         <link name="${tf_prefix}front_left_hip">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/front_left_hip.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/front_left_hip.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/front_left_hip_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/front_left_hip_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -84,12 +84,12 @@
         <link name="${tf_prefix}front_left_upper_leg">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/front_left_upper_leg.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/front_left_upper_leg.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/front_left_upper_leg_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/front_left_upper_leg_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -108,12 +108,12 @@
         <link name="${tf_prefix}front_left_lower_leg">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/front_left_lower_leg.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/front_left_lower_leg.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/front_left_lower_leg_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/front_left_lower_leg_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -132,12 +132,12 @@
         <link name="${tf_prefix}front_right_hip">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/front_right_hip.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/front_right_hip.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/front_right_hip_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/front_right_hip_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -156,12 +156,12 @@
         <link name="${tf_prefix}front_right_upper_leg">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/front_right_upper_leg.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/front_right_upper_leg.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/front_right_upper_leg_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/front_right_upper_leg_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -180,12 +180,12 @@
         <link name="${tf_prefix}front_right_lower_leg">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/front_right_lower_leg.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/front_right_lower_leg.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/front_right_lower_leg_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/front_right_lower_leg_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -204,12 +204,12 @@
         <link name="${tf_prefix}rear_left_hip">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/rear_left_hip.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_left_hip.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/rear_left_hip_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/rear_left_hip_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -228,12 +228,12 @@
         <link name="${tf_prefix}rear_left_upper_leg">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/rear_left_upper_leg.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_left_upper_leg.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/rear_left_upper_leg_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/rear_left_upper_leg_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -252,12 +252,12 @@
         <link name="${tf_prefix}rear_left_lower_leg">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/rear_left_lower_leg.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_left_lower_leg.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/rear_left_lower_leg_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/rear_left_lower_leg_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -276,12 +276,12 @@
         <link name="${tf_prefix}rear_right_hip">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/rear_right_hip.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_right_hip.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/rear_right_hip_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/rear_right_hip_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -300,12 +300,12 @@
         <link name="${tf_prefix}rear_right_upper_leg">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/rear_right_upper_leg.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_right_upper_leg.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/rear_right_upper_leg_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/rear_right_upper_leg_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
@@ -324,12 +324,12 @@
         <link name="${tf_prefix}rear_right_lower_leg">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/rear_right_lower_leg.dae" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_right_lower_leg.dae" />
                 </geometry>
             </visual>
             <collision>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/collision/rear_right_lower_leg_collision.stl" />
+                    <mesh filename="file://$(find spot_description)/meshes/base/collision/rear_right_lower_leg_collision.stl" />
                 </geometry>
             </collision>
             <inertial>
