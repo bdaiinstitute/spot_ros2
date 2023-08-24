@@ -101,7 +101,7 @@ def hello_arm(robot_name: Optional[str]) -> bool:
     conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
     # Send the request and wait until the arm arrives at the goal
     node.get_logger().info("Moving arm to position 1.")
-    robot_command_client.send_goal_and_wait(action_goal)
+    robot_command_client.send_goal_and_wait("arm_move_one", action_goal)
 
     # Move the arm to a different position
     hand_ewrt_flat_body.z = 0
@@ -137,7 +137,7 @@ def hello_arm(robot_name: Optional[str]) -> bool:
     conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
     # Send the request and wait until the arm arrives at the goal
     node.get_logger().info("Moving arm to position 2.")
-    robot_command_client.send_goal_and_wait(action_goal)
+    robot_command_client.send_goal_and_wait("arm_move_two", action_goal)
 
     tf_listener.shutdown()
 
