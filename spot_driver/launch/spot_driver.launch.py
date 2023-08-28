@@ -25,8 +25,6 @@ def create_rviz_config(robot_name: str) -> None:
 
     with open(RVIZ_TEMPLATE_FILENAME, "r") as template_file:
         config = yaml.safe_load(template_file)
-        # replace fixed frame with robot body frame
-        config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{robot_name}/body"
         # Add robot models for each robot
         for display in config["Visualization Manager"]["Displays"]:
             if "RobotModel" in display["Class"]:
@@ -42,6 +40,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     launch_rviz = LaunchConfiguration("launch_rviz")
     rviz_config_filename = LaunchConfiguration("rviz_config_filename").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
+    tf_prefix = LaunchConfiguration("tf_prefix")
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -65,7 +64,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             has_arm,
             " ",
             "tf_prefix:=",
-            spot_name + "/",
+            tf_prefix,
             " ",
         ]
     )
@@ -78,6 +77,13 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         parameters=[params],
         namespace=spot_name,
     )
+    joint_state_publisher_node = launch_ros.actions.Node(
+        package="joint_state_publisher",
+        executable="joint_state_publisher",
+        name="joint_state_publisher",
+        namespace=spot_name,
+    )
+    ld.add_action(joint_state_publisher_node)
     ld.add_action(robot_state_publisher)
 
     if not rviz_config_filename:
@@ -90,7 +96,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", rviz_config_file],
+        arguments=["-d", rviz_config_file.perform(context)],
         output="screen",
         condition=IfCondition(launch_rviz),
     )
