@@ -2322,8 +2322,8 @@ class SpotROS(Node):
         request: GetGripperCameraParameters.Request,
         response: GetGripperCameraParameters.Response,
     ) -> GetGripperCameraParameters.Response:
-        if self.cam_wrapper is not None:
-            response = self.cam_wrapper.gripper.get_params(request)
+        if self.spot_cam_wrapper is not None:
+            response = self.spot_cam_wrapper.gripper.get_params(request)
         return response
 
     def handle_set_gripper_camera_parameters(
@@ -2331,8 +2331,8 @@ class SpotROS(Node):
         request: SetGripperCameraParameters.Request,
         response: SetGripperCameraParameters.Response,
     ) -> SetGripperCameraParameters.Response:
-        if self.cam_wrapper is not None:
-            response = self.cam_wrapper.gripper.set_params(request)
+        if self.spot_cam_wrapper is not None:
+            response = self.spot_cam_wrapper.gripper.set_params(request)
         return response
 
 
