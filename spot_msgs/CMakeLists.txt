@@ -70,6 +70,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GraphNavSetLocalization.srv"
   "srv/GraphNavGetLocalizationPose.srv"
   "srv/Dock.srv"
+  "srv/GetGripperCameraParameters.srv"
+  "srv/SetGripperCameraParameters.srv"
   "action/NavigateTo.action"
   "action/RobotCommand.action"
   "action/Trajectory.action"
