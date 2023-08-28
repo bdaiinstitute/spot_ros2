@@ -72,7 +72,7 @@ class WalkForward(Node):
         )
         action_goal = RobotCommand.Goal()
         conv.convert_proto_to_bosdyn_msgs_robot_command(proto_goal, action_goal.command)
-        self._robot_command_client.send_goal_and_wait(action_goal)
+        self._robot_command_client.send_goal_and_wait("walk_forward", action_goal)
         self.get_logger().info("Successfully walked forward")
 
     def shutdown(self) -> None:
