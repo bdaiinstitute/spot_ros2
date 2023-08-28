@@ -17,15 +17,18 @@ jobs:
     container:
       image: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repo and submodules
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
     - name: Build package
       run: |
-        source /opt/ros/$ROS_DISTRO/setup.bash
         apt-get update
         apt install wget 
         ./install_spot_ros2.sh
         # go to root folder
         cd ../../
+        source /opt/ros/$ROS_DISTRO/setup.bash
         colcon build --symlink-install
         source install/local_setup.bash
     - name: Install docs dependencies & build docs

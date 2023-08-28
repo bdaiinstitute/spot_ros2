@@ -1633,6 +1633,9 @@ class SpotROS(Node):
             result.success = False
             result.message = "Cancelled"
             goal_handle.canceled()
+            if self.spot_wrapper is not None:
+                _, stop_message = self.spot_wrapper.stop()
+                self.get_logger().info(f"Stop attempt due to cancellation: {stop_message}")
         elif not goal_handle.is_active:
             result.success = False
             result.message = "Cancelled"
@@ -1750,6 +1753,9 @@ class SpotROS(Node):
             result.success = False
             result.message = "Cancelled"
             goal_handle.canceled()
+            if self.spot_wrapper is not None:
+                _, stop_message = self.spot_wrapper.stop()
+                self.get_logger().info(f"Stop attempt due to cancellation: {stop_message}")
         elif not goal_handle.is_active:
             result.success = False
             result.message = "Cancelled"

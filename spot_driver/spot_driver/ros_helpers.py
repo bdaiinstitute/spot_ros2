@@ -289,7 +289,7 @@ def bosdyn_data_to_image_and_camera_info_msgs(
     camera_info_msg.p[11] = 0
     local_time = robot_to_local_time(data.shot.acquisition_time)
     camera_info_msg.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
-    camera_info_msg.header.frame_id = data.shot.frame_name_image_sensor
+    camera_info_msg.header.frame_id = frame_prefix + data.shot.frame_name_image_sensor
     camera_info_msg.height = data.shot.image.rows
     camera_info_msg.width = data.shot.image.cols
 
