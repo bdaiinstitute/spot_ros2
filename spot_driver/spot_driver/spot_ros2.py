@@ -353,10 +353,6 @@ class SpotROS(Node):
         if self.name is not None:
             name_str = " for " + self.name
         self.get_logger().info("Starting ROS driver for Spot" + name_str)
-
-        all_cameras = ["frontleft", "frontright", "left", "right", "back"]
-        has_arm = False
-
         ############## testing with Robot
 
         if self.name == MOCK_HOSTNAME:
@@ -382,15 +378,17 @@ class SpotROS(Node):
             if not self.spot_wrapper.is_valid:
                 return
 
-            has_arm = self.spot_wrapper.has_arm()
-            if has_arm:
-                all_cameras.append("hand")
-
             try:
-                self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger, has_arm)
+                self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
             except SystemError:
                 self.spot_cam_wrapper = None
 
+        all_cameras = ["frontleft", "frontright", "left", "right", "back"]
+        has_arm = False
+        if self.spot_wrapper is not None:
+            has_arm = self.spot_wrapper.has_arm()
+        if has_arm:
+            all_cameras.append("hand")
         self.declare_parameter("cameras_used", all_cameras)
         self.cameras_used = self.get_parameter("cameras_used")
 
@@ -2322,8 +2320,8 @@ class SpotROS(Node):
         request: GetGripperCameraParameters.Request,
         response: GetGripperCameraParameters.Response,
     ) -> GetGripperCameraParameters.Response:
-        if self.spot_cam_wrapper is not None:
-            response = self.spot_cam_wrapper.gripper.get_params(request)
+        if self.spot_wrapper is not None:
+            response = self.spot_wrapper.spot_images.get_gripper_camera_params(request)
         return response
 
     def handle_set_gripper_camera_parameters(
@@ -2331,8 +2329,8 @@ class SpotROS(Node):
         request: SetGripperCameraParameters.Request,
         response: SetGripperCameraParameters.Response,
     ) -> SetGripperCameraParameters.Response:
-        if self.spot_cam_wrapper is not None:
-            response = self.spot_cam_wrapper.gripper.set_params(request)
+        if self.spot_wrapper is not None:
+            response = self.spot_wrapper.spot_images.gripper.set_gripper_camera_params(request)
         return response
 
 
