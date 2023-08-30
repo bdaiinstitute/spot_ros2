@@ -2330,7 +2330,7 @@ class SpotROS(Node):
         response: SetGripperCameraParameters.Response,
     ) -> SetGripperCameraParameters.Response:
         if self.spot_wrapper is not None:
-            response = self.spot_wrapper.spot_images.gripper.set_gripper_camera_params(request)
+            response = self.spot_wrapper.spot_images.set_gripper_camera_params(request)
         return response
 
 
