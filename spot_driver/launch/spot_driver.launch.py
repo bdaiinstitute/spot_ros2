@@ -77,13 +77,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         parameters=[params],
         namespace=spot_name,
     )
-    joint_state_publisher_node = launch_ros.actions.Node(
-        package="joint_state_publisher",
-        executable="joint_state_publisher",
-        name="joint_state_publisher",
-        namespace=spot_name,
-    )
-    ld.add_action(joint_state_publisher_node)
     ld.add_action(robot_state_publisher)
 
     if not rviz_config_filename:
@@ -108,20 +101,30 @@ def generate_launch_description() -> launch.LaunchDescription:
     launch_args = []
 
     launch_args.append(
-        DeclareLaunchArgument("config_file", default_value="", description="Path to configuration file for the driver.")
+        DeclareLaunchArgument(
+            "config_file",
+            default_value="",
+            description="Path to configuration file for the driver.",
+        )
     )
 
     launch_args.append(DeclareLaunchArgument("has_arm", default_value="False", description="Whether spot has arm"))
 
     launch_args.append(
         DeclareLaunchArgument(
-            "tf_prefix", default_value='""', description="apply namespace prefix to robot links and joints"
+            "tf_prefix",
+            default_value='""',
+            description="apply namespace prefix to robot links and joints",
         )
     )
 
     launch_args.append(DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?"))
     launch_args.append(
-        DeclareLaunchArgument("rviz_config_filename", default_value="", description="RViz config file name")
+        DeclareLaunchArgument(
+            "rviz_config_filename",
+            default_value="",
+            description="RViz config file name",
+        )
     )
 
     launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
