@@ -668,14 +668,24 @@ class SpotROS(Node):
         self.create_service(
             GetGripperCameraParameters,
             "get_gripper_camera_parameters",
-            self.handle_get_gripper_camera_parameters,
+            lambda request, response: self.service_wrapper(
+                "get_gripper_camera_parameters",
+                self.handle_get_gripper_camera_parameters,
+                request,
+                response,
+            ),
             callback_group=self.group,
         )
 
         self.create_service(
             SetGripperCameraParameters,
             "set_gripper_camera_parameters",
-            self.handle_set_gripper_camera_parameters,
+            lambda request, response: self.service_wrapper(
+                "set_gripper_camera_parameters",
+                self.handle_set_gripper_camera_parameters,
+                request,
+                response,
+            ),
             callback_group=self.group,
         )
 
@@ -2177,6 +2187,56 @@ class SpotROS(Node):
 
         return result
 
+    def handle_get_gripper_camera_parameters(
+        self,
+        request: GetGripperCameraParameters.Request,
+        response: GetGripperCameraParameters.Response,
+    ) -> GetGripperCameraParameters.Response:
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper was not initialized"
+            return response
+        if not self.spot_wrapper.has_arm():
+            response.success = False
+            response.message = "Spot {} does not have an arm.".format(self.name)
+            return response
+
+        try:
+            response = self.spot_wrapper.spot_images.get_gripper_camera_params(request)
+            request.success = True
+            request.message = "Successfully sent request to get gripper camera parameters"
+        except Exception as e:
+            self.get_logger().error("Error:{}".format(e))
+            request.success = False
+            request.message = e
+
+        return response
+
+    def handle_set_gripper_camera_parameters(
+        self,
+        request: SetGripperCameraParameters.Request,
+        response: SetGripperCameraParameters.Response,
+    ) -> SetGripperCameraParameters.Response:
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper was not initialized"
+            return response
+        if not self.spot_wrapper.has_arm():
+            response.success = False
+            response.message = "Spot {} does not have an arm.".format(self.name)
+            return response
+
+        try:
+            response = self.spot_wrapper.spot_images.set_gripper_camera_params(request)
+            request.success = True
+            request.message = "Successfully sent request to set gripper camera parameters"
+        except Exception as e:
+            self.get_logger().error("Error:{}".format(e))
+            request.success = False
+            request.message = e
+
+        return response
+
     def populate_camera_static_transforms(self, image_data: image_pb2.Image) -> None:
         """Check data received from one of the image tasks and use the transform snapshot to extract the camera frame
         transforms. This is the transforms from body->frontleft->frontleft_fisheye, for example. These transforms
@@ -2314,32 +2374,6 @@ class SpotROS(Node):
                     self.get_logger().error("Error:{}".format(e))
                     pass
             self.mobility_params_pub.publish(mobility_params_msg)
-
-    def handle_get_gripper_camera_parameters(
-        self,
-        request: GetGripperCameraParameters.Request,
-        response: GetGripperCameraParameters.Response,
-    ) -> GetGripperCameraParameters.Response:
-        if self.spot_wrapper is not None and self.spot_wrapper.has_arm():
-            try:
-                response = self.spot_wrapper.spot_images.get_gripper_camera_params(request)
-            except Exception as e:
-                self.get_logger().error("Error:{}".format(e))
-                pass
-        return response
-
-    def handle_set_gripper_camera_parameters(
-        self,
-        request: SetGripperCameraParameters.Request,
-        response: SetGripperCameraParameters.Response,
-    ) -> SetGripperCameraParameters.Response:
-        if self.spot_wrapper is not None and self.spot_wrapper.has_arm():
-            try:
-                response = self.spot_wrapper.spot_images.set_gripper_camera_params(request)
-            except Exception as e:
-                self.get_logger().error("Error:{}".format(e))
-                pass
-        return response
 
 
 def main(args: Optional[List[str]] = None) -> None:
