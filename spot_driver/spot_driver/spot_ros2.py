@@ -2197,12 +2197,11 @@ class SpotROS(Node):
             return response
         if not self.spot_wrapper.has_arm():
             return response
-
         try:
             proto_request = gripper_camera_param_pb2.GripperCameraGetParamRequest()
-            conv.convert_bosdyn_msgs_gripper_camera_get_param_request_to_proto(request, proto_request)
+            conv.convert_bosdyn_msgs_gripper_camera_get_param_request_to_proto(request.request, proto_request)
             proto_response = self.spot_wrapper.spot_images.get_gripper_camera_params(proto_request)
-            conv.convert_proto_to_bosdyn_msgs_gripper_camera_get_param_response(proto_response, response)
+            conv.convert_proto_to_bosdyn_msgs_gripper_camera_get_param_response(proto_response, response.response)
         except Exception as e:
             self.get_logger().error("Error:{}\n{}".format(e, traceback.format_exc()))
 
@@ -2220,9 +2219,9 @@ class SpotROS(Node):
 
         try:
             proto_request = gripper_camera_param_pb2.GripperCameraParamRequest()
-            conv.convert_bosdyn_msgs_gripper_camera_param_request_to_proto(request, proto_request)
+            conv.convert_bosdyn_msgs_gripper_camera_param_request_to_proto(request.request, proto_request)
             proto_response = self.spot_wrapper.spot_images.set_gripper_camera_params(proto_request)
-            conv.convert_proto_to_bosdyn_msgs_gripper_camera_param_response(proto_response, response)
+            conv.convert_proto_to_bosdyn_msgs_gripper_camera_param_response(proto_response, response.response)
         except Exception as e:
             self.get_logger().error("Error:{}\n{}".format(e, traceback.format_exc()))
 
