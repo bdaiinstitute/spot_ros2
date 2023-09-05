@@ -22,6 +22,7 @@ from bdai_ros2_wrappers.single_goal_multiple_action_servers import (
 )
 from bosdyn.api import (
     geometry_pb2,
+    gripper_camera_param_pb2,
     image_pb2,
     manipulation_api_pb2,
     robot_command_pb2,
@@ -2193,25 +2194,17 @@ class SpotROS(Node):
         response: GetGripperCameraParameters.Response,
     ) -> GetGripperCameraParameters.Response:
         if self.spot_wrapper is None:
-            # response.success = False
-            # response.message = "Spot wrapper was not initialized"
             return response
         if not self.spot_wrapper.has_arm():
-            # response.success = False
-            # response.message = "Spot {} does not have an arm.".format(self.name)
             return response
 
         try:
-            proto_response = self.spot_wrapper.spot_images.get_gripper_camera_params(request)
-            conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
-            # request.success = True
-            # request.message = (
-            #     "Successfully sent request to get gripper camera parameters"
-            # )
+            proto_request = gripper_camera_param_pb2.GripperCameraGetParamRequest()
+            conv.convert_bosdyn_msgs_gripper_camera_get_param_request_to_proto(request, proto_request)
+            proto_response = self.spot_wrapper.spot_images.get_gripper_camera_params(proto_request)
+            conv.convert_proto_to_bosdyn_msgs_gripper_camera_get_param_response(proto_response, response)
         except Exception as e:
             self.get_logger().error("Error:{}\n{}".format(e, traceback.format_exc()))
-            # request.success = False
-            # request.message = e + "\n" + traceback.format_exc()
 
         return response
 
@@ -2221,17 +2214,15 @@ class SpotROS(Node):
         response: SetGripperCameraParameters.Response,
     ) -> SetGripperCameraParameters.Response:
         if self.spot_wrapper is None:
-            # response.success = False
-            # response.message = "Spot wrapper was not initialized"
             return response
         if not self.spot_wrapper.has_arm():
-            # response.success = False
-            # response.message = "Spot {} does not have an arm.".format(self.name)
             return response
 
         try:
-            proto_response = self.spot_wrapper.spot_images.set_gripper_camera_params(request)
-            conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
+            proto_request = gripper_camera_param_pb2.GripperCameraParamRequest()
+            conv.convert_bosdyn_msgs_gripper_camera_param_request_to_proto(request, proto_request)
+            proto_response = self.spot_wrapper.spot_images.set_gripper_camera_params(proto_request)
+            conv.convert_proto_to_bosdyn_msgs_gripper_camera_param_response(proto_response, response)
         except Exception as e:
             self.get_logger().error("Error:{}\n{}".format(e, traceback.format_exc()))
 
