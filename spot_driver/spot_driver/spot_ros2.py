@@ -2193,22 +2193,24 @@ class SpotROS(Node):
         response: GetGripperCameraParameters.Response,
     ) -> GetGripperCameraParameters.Response:
         if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper was not initialized"
+            # response.success = False
+            # response.message = "Spot wrapper was not initialized"
             return response
         if not self.spot_wrapper.has_arm():
-            response.success = False
-            response.message = "Spot {} does not have an arm.".format(self.name)
+            # response.success = False
+            # response.message = "Spot {} does not have an arm.".format(self.name)
             return response
 
         try:
             response = self.spot_wrapper.spot_images.get_gripper_camera_params(request)
-            request.success = True
-            request.message = "Successfully sent request to get gripper camera parameters"
+            # request.success = True
+            # request.message = (
+            #     "Successfully sent request to get gripper camera parameters"
+            # )
         except Exception as e:
-            self.get_logger().error("Error:{}".format(e))
-            request.success = False
-            request.message = e
+            self.get_logger().error("Error:{}\n{}".format(e, traceback.format_exc()))
+            # request.success = False
+            # request.message = e + "\n" + traceback.format_exc()
 
         return response
 
@@ -2218,22 +2220,18 @@ class SpotROS(Node):
         response: SetGripperCameraParameters.Response,
     ) -> SetGripperCameraParameters.Response:
         if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper was not initialized"
+            # response.success = False
+            # response.message = "Spot wrapper was not initialized"
             return response
         if not self.spot_wrapper.has_arm():
-            response.success = False
-            response.message = "Spot {} does not have an arm.".format(self.name)
+            # response.success = False
+            # response.message = "Spot {} does not have an arm.".format(self.name)
             return response
 
         try:
             response = self.spot_wrapper.spot_images.set_gripper_camera_params(request)
-            request.success = True
-            request.message = "Successfully sent request to set gripper camera parameters"
         except Exception as e:
-            self.get_logger().error("Error:{}".format(e))
-            request.success = False
-            request.message = e
+            self.get_logger().error("Error:{}\n{}".format(e, traceback.format_exc()))
 
         return response
 
