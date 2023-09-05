@@ -2202,7 +2202,8 @@ class SpotROS(Node):
             return response
 
         try:
-            response = self.spot_wrapper.spot_images.get_gripper_camera_params(request)
+            proto_response = self.spot_wrapper.spot_images.get_gripper_camera_params(request)
+            conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
             # request.success = True
             # request.message = (
             #     "Successfully sent request to get gripper camera parameters"
@@ -2229,7 +2230,8 @@ class SpotROS(Node):
             return response
 
         try:
-            response = self.spot_wrapper.spot_images.set_gripper_camera_params(request)
+            proto_response = self.spot_wrapper.spot_images.set_gripper_camera_params(request)
+            conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
         except Exception as e:
             self.get_logger().error("Error:{}\n{}".format(e, traceback.format_exc()))
 
