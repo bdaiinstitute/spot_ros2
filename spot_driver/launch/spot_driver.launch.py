@@ -27,7 +27,7 @@ def create_rviz_config(robot_name: str) -> None:
         config = yaml.safe_load(template_file)
         # Add robot models for each robot
         for display in config["Visualization Manager"]["Displays"]:
-            if "RobotModel" in display["Class"]:
+            if robot_name != "" and "RobotModel" in display["Class"]:
                 display["Description Topic"]["Value"] = f"/{robot_name}/robot_description"
 
     with open(RVIZ_OUTPUT_FILENAME, "w") as out_file:
