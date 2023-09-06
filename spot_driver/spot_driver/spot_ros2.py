@@ -665,30 +665,30 @@ class SpotROS(Node):
             self.handle_graph_nav_set_localization,
             callback_group=self.group,
         )
-
-        self.create_service(
-            GetGripperCameraParameters,
-            "get_gripper_camera_parameters",
-            lambda request, response: self.service_wrapper(
+        if has_arm:
+            self.create_service(
+                GetGripperCameraParameters,
                 "get_gripper_camera_parameters",
-                self.handle_get_gripper_camera_parameters,
-                request,
-                response,
-            ),
-            callback_group=self.group,
-        )
+                lambda request, response: self.service_wrapper(
+                    "get_gripper_camera_parameters",
+                    self.handle_get_gripper_camera_parameters,
+                    request,
+                    response,
+                ),
+                callback_group=self.group,
+            )
 
-        self.create_service(
-            SetGripperCameraParameters,
-            "set_gripper_camera_parameters",
-            lambda request, response: self.service_wrapper(
+            self.create_service(
+                SetGripperCameraParameters,
                 "set_gripper_camera_parameters",
-                self.handle_set_gripper_camera_parameters,
-                request,
-                response,
-            ),
-            callback_group=self.group,
-        )
+                lambda request, response: self.service_wrapper(
+                    "set_gripper_camera_parameters",
+                    self.handle_set_gripper_camera_parameters,
+                    request,
+                    response,
+                ),
+                callback_group=self.group,
+            )
 
         self.navigate_as = ActionServer(
             self,
