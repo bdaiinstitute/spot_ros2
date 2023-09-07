@@ -2,10 +2,9 @@
 
 <robot name="spot" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:macro name="load_spot" params="
-    arm:=false
-    tf_prefix">
+    arm:=false ">
 
-        <link name="${tf_prefix}body">
+        <link name="body">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/body.dae" />
@@ -18,46 +17,46 @@
             </collision>
         </link>
 
-        <link name="${tf_prefix}base_link">
+        <link name="base_link">
             <inertial>
                 <origin rpy="0.0 0.0 0.0" xyz="0.006394396536052227 -9.812158532440662e-05 0.0009113792330026627"/>
                 <mass value="32.86"/>
                 <inertia ixx="0.13143999874591827" ixy="0.0" ixz="0.0" iyy="0.13143999874591827" iyz="0.0" izz="0.13143999874591827"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}base_link_joint" type="fixed">
+        <joint name="base_link_joint" type="fixed">
             <origin xyz="0 0 0" rpy="0 0 0" />
-            <parent link="${tf_prefix}body" />
-            <child link="${tf_prefix}base_link" />
+            <parent link="body" />
+            <child link="base_link" />
         </joint>
 
-        <link name="${tf_prefix}front_rail">
+        <link name="front_rail">
             <inertial>
                 <origin rpy="0. 0. 0." xyz="0. 0. 0."/>
                 <mass value="1.0e-6"/>
                 <inertia ixx="1.0e-9" ixy="0.0" ixz="0.0" iyy="1.0e-9" iyz="0.0" izz="1.0e-9"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}front_rail_joint" type="fixed">
+        <joint name="front_rail_joint" type="fixed">
             <origin xyz="0.223 0 0.0805" rpy="0 0 0" />
-            <parent link="${tf_prefix}body" />
-            <child link="${tf_prefix}front_rail" />
+            <parent link="body" />
+            <child link="front_rail" />
         </joint>
 
-        <link name="${tf_prefix}rear_rail">
+        <link name="rear_rail">
             <inertial>
                 <origin rpy="0. 0. 0." xyz="0. 0. 0."/>
                 <mass value="1.0e-6"/>
                 <inertia ixx="1.0e-9" ixy="0.0" ixz="0.0" iyy="1.0e-9" iyz="0.0" izz="1.0e-9"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}rear_rail_joint" type="fixed">
+        <joint name="rear_rail_joint" type="fixed">
             <origin xyz="-0.223 0 0.0805" rpy="0 0 0" />
-            <parent link="${tf_prefix}body" />
-            <child link="${tf_prefix}rear_rail" />
+            <parent link="body" />
+            <child link="rear_rail" />
         </joint>
 
-        <link name="${tf_prefix}front_left_hip">
+        <link name="front_left_hip">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/front_left_hip.dae" />
@@ -74,14 +73,14 @@
                 <inertia ixx="0.0021147398873455382" ixy="0.0" ixz="0.0" iyy="0.0018129577956607131" iyz="0.0" izz="0.002265435737304666"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}front_left_hip_x" type="revolute">
+        <joint name="front_left_hip_x" type="revolute">
             <origin xyz="0.29785 0.05500 0.00000" rpy="0 0 0" />
             <axis xyz="1 0 0" />
-            <parent link="${tf_prefix}body" />
-            <child link="${tf_prefix}front_left_hip" />
+            <parent link="body" />
+            <child link="front_left_hip" />
             <limit effort="1000" velocity="1000.00" lower="-0.78539816339744827899" upper="0.78539816339744827899" />
         </joint>
-        <link name="${tf_prefix}front_left_upper_leg">
+        <link name="front_left_upper_leg">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/front_left_upper_leg.dae" />
@@ -98,14 +97,14 @@
                 <inertia ixx="0.02755964961185679" ixy="0.0" ixz="0.0" iyy="0.027354914287651046" iyz="0.0" izz="0.002848145546743553"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}front_left_hip_y" type="revolute">
+        <joint name="front_left_hip_y" type="revolute">
             <origin xyz="0.0 0.110945 0.0" rpy="0 0 0" />
             <axis xyz="0 1 0" />
-            <parent link="${tf_prefix}front_left_hip" />
-            <child link="${tf_prefix}front_left_upper_leg" />
+            <parent link="front_left_hip" />
+            <child link="front_left_upper_leg" />
             <limit effort="1000" velocity="1000.00" lower="-0.89884456477707963539" upper="2.2951079663725435509" />
         </joint>
-        <link name="${tf_prefix}front_left_lower_leg">
+        <link name="front_left_lower_leg">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/front_left_lower_leg.dae" />
@@ -122,14 +121,14 @@
                 <inertia ixx="0.003999022654901177" ixy="0.0" ixz="0.0" iyy="0.0040503157598010785" iyz="0.0" izz="0.0001493402097647426"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}front_left_knee" type="revolute">
+        <joint name="front_left_knee" type="revolute">
             <origin xyz="0.025 0.000 -0.3205" rpy="0 0 0" />
             <axis xyz="0 1 0" />
-            <parent link="${tf_prefix}front_left_upper_leg" />
-            <child link="${tf_prefix}front_left_lower_leg" />
+            <parent link="front_left_upper_leg" />
+            <child link="front_left_lower_leg" />
             <limit effort="1000" velocity="1000.00" lower="-2.7929" upper="-0.254801" />
         </joint>
-        <link name="${tf_prefix}front_right_hip">
+        <link name="front_right_hip">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/front_right_hip.dae" />
@@ -146,14 +145,14 @@
                 <inertia ixx="0.0021147398873455382" ixy="0.0" ixz="0.0" iyy="0.0018129577956607131" iyz="0.0" izz="0.002265435737304666"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}front_right_hip_x" type="revolute">
+        <joint name="front_right_hip_x" type="revolute">
             <origin xyz="0.29785 -0.05500 0.00000" rpy="0 0 0" />
             <axis xyz="1 0 0" />
-            <parent link="${tf_prefix}body" />
-            <child link="${tf_prefix}front_right_hip" />
+            <parent link="body" />
+            <child link="front_right_hip" />
             <limit effort="1000" velocity="1000.00" lower="-0.78539816339744827899" upper="0.78539816339744827899" />
         </joint>
-        <link name="${tf_prefix}front_right_upper_leg">
+        <link name="front_right_upper_leg">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/front_right_upper_leg.dae" />
@@ -170,14 +169,14 @@
                 <inertia ixx="0.02755964678927691" ixy="0.0" ixz="0.0" iyy="0.02735491706466737" iyz="0.0" izz="0.0028481453594764797"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}front_right_hip_y" type="revolute">
+        <joint name="front_right_hip_y" type="revolute">
             <origin xyz="0.0 -0.110945 0.0" rpy="0 0 0" />
             <axis xyz="0 1 0" />
-            <parent link="${tf_prefix}front_right_hip" />
-            <child link="${tf_prefix}front_right_upper_leg" />
+            <parent link="front_right_hip" />
+            <child link="front_right_upper_leg" />
             <limit effort="1000" velocity="1000.00" lower="-0.89884456477707963539" upper="2.2951079663725435509" />
         </joint>
-        <link name="${tf_prefix}front_right_lower_leg">
+        <link name="front_right_lower_leg">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/front_right_lower_leg.dae" />
@@ -194,14 +193,14 @@
                 <inertia ixx="0.003999022654901177" ixy="0.0" ixz="0.0" iyy="0.0040503157598010785" iyz="0.0" izz="0.0001493402097647426"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}front_right_knee" type="revolute">
+        <joint name="front_right_knee" type="revolute">
             <origin xyz="0.025 0.000 -0.3205" rpy="0 0 0" />
             <axis xyz="0 1 0" />
-            <parent link="${tf_prefix}front_right_upper_leg" />
-            <child link="${tf_prefix}front_right_lower_leg" />
+            <parent link="front_right_upper_leg" />
+            <child link="front_right_lower_leg" />
             <limit effort="1000" velocity="1000.00" lower="-2.7929" upper="-0.247563" />
         </joint>
-        <link name="${tf_prefix}rear_left_hip">
+        <link name="rear_left_hip">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_left_hip.dae" />
@@ -218,14 +217,14 @@
                 <inertia ixx="0.0021147398873455382" ixy="0.0" ixz="0.0" iyy="0.0018129577956607131" iyz="0.0" izz="0.002265435737304666"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}rear_left_hip_x" type="revolute">
+        <joint name="rear_left_hip_x" type="revolute">
             <origin xyz="-0.29785 0.05500 0.00000" rpy="0 0 0" />
             <axis xyz="1 0 0" />
-            <parent link="${tf_prefix}body" />
-            <child link="${tf_prefix}rear_left_hip" />
+            <parent link="body" />
+            <child link="rear_left_hip" />
             <limit effort="1000" velocity="1000.00" lower="-0.78539816339744827899" upper="0.78539816339744827899" />
         </joint>
-        <link name="${tf_prefix}rear_left_upper_leg">
+        <link name="rear_left_upper_leg">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_left_upper_leg.dae" />
@@ -242,14 +241,14 @@
                 <inertia ixx="0.02755964961185679" ixy="0.0" ixz="0.0" iyy="0.027354914287651046" iyz="0.0" izz="0.002848145546743553"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}rear_left_hip_y" type="revolute">
+        <joint name="rear_left_hip_y" type="revolute">
             <origin xyz="0.0 0.110945 0.0" rpy="0 0 0" />
             <axis xyz="0 1 0" />
-            <parent link="${tf_prefix}rear_left_hip" />
-            <child link="${tf_prefix}rear_left_upper_leg" />
+            <parent link="rear_left_hip" />
+            <child link="rear_left_upper_leg" />
             <limit effort="1000" velocity="1000.00" lower="-0.89884456477707963539" upper="2.2951079663725435509" />
         </joint>
-        <link name="${tf_prefix}rear_left_lower_leg">
+        <link name="rear_left_lower_leg">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_left_lower_leg.dae" />
@@ -266,14 +265,14 @@
                 <inertia ixx="0.003999022654901177" ixy="0.0" ixz="0.0" iyy="0.0040503157598010785" iyz="0.0" izz="0.0001493402097647426"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}rear_left_knee" type="revolute">
+        <joint name="rear_left_knee" type="revolute">
             <origin xyz="0.025 0.000 -0.3205" rpy="0 0 0" />
             <axis xyz="0 1 0" />
-            <parent link="${tf_prefix}rear_left_upper_leg" />
-            <child link="${tf_prefix}rear_left_lower_leg" />
+            <parent link="rear_left_upper_leg" />
+            <child link="rear_left_lower_leg" />
             <limit effort="1000" velocity="1000.00" lower="-2.7929" upper="-0.267153" />
         </joint>
-        <link name="${tf_prefix}rear_right_hip">
+        <link name="rear_right_hip">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_right_hip.dae" />
@@ -290,14 +289,14 @@
                 <inertia ixx="0.0021147398873455382" ixy="0.0" ixz="0.0" iyy="0.0018129577956607131" iyz="0.0" izz="0.002265435737304666"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}rear_right_hip_x" type="revolute">
+        <joint name="rear_right_hip_x" type="revolute">
             <origin xyz="-0.29785 -0.05500 0.00000" rpy="0 0 0" />
             <axis xyz="1 0 0" />
-            <parent link="${tf_prefix}body" />
-            <child link="${tf_prefix}rear_right_hip" />
+            <parent link="body" />
+            <child link="rear_right_hip" />
             <limit effort="1000" velocity="1000.00" lower="-0.78539816339744827899" upper="0.78539816339744827899" />
         </joint>
-        <link name="${tf_prefix}rear_right_upper_leg">
+        <link name="rear_right_upper_leg">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_right_upper_leg.dae" />
@@ -314,14 +313,14 @@
                 <inertia ixx="0.02755964678927691" ixy="0.0" ixz="0.0" iyy="0.02735491706466737" iyz="0.0" izz="0.0028481453594764797"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}rear_right_hip_y" type="revolute">
+        <joint name="rear_right_hip_y" type="revolute">
             <origin xyz="0.0 -0.110945 0.0" rpy="0 0 0" />
             <axis xyz="0 1 0" />
-            <parent link="${tf_prefix}rear_right_hip" />
-            <child link="${tf_prefix}rear_right_upper_leg" />
+            <parent link="rear_right_hip" />
+            <child link="rear_right_upper_leg" />
             <limit effort="1000" velocity="1000.00" lower="-0.89884456477707963539" upper="2.2951079663725435509" />
         </joint>
-        <link name="${tf_prefix}rear_right_lower_leg">
+        <link name="rear_right_lower_leg">
             <visual>
                 <geometry>
                     <mesh filename="file://$(find spot_description)/meshes/base/visual/rear_right_lower_leg.dae" />
@@ -338,11 +337,11 @@
                 <inertia ixx="0.003999022654901177" ixy="0.0" ixz="0.0" iyy="0.0040503157598010785" iyz="0.0" izz="0.0001493402097647426"/>
             </inertial>
         </link>
-        <joint name="${tf_prefix}rear_right_knee" type="revolute">
+        <joint name="rear_right_knee" type="revolute">
             <origin xyz="0.025 0.000 -0.3205" rpy="0 0 0" />
             <axis xyz="0 1 0" />
-            <parent link="${tf_prefix}rear_right_upper_leg" />
-            <child link="${tf_prefix}rear_right_lower_leg" />
+            <parent link="rear_right_upper_leg" />
+            <child link="rear_right_lower_leg" />
             <limit effort="1000" velocity="1000.00" lower="-2.7929" upper="-0.257725" />
         </joint>
 
@@ -355,7 +354,7 @@
         <!-- Include Arm if necessary-->
         <xacro:if value="${arm}">
             <xacro:include filename="$(find spot_description)/urdf/spot_arm_macro.urdf" />
-            <xacro:load_arm tf_prefix="${tf_prefix}" />
+            <xacro:load_arm />
         </xacro:if>
     </xacro:macro>
 </robot>

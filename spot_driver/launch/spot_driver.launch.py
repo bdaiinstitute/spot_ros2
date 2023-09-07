@@ -40,7 +40,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     launch_rviz = LaunchConfiguration("launch_rviz")
     rviz_config_filename = LaunchConfiguration("rviz_config_filename").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
-    tf_prefix = LaunchConfiguration("tf_prefix")
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -62,9 +61,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             " ",
             "arm:=",
             has_arm,
-            " ",
-            "tf_prefix:=",
-            tf_prefix,
             " ",
         ]
     )
@@ -109,14 +105,6 @@ def generate_launch_description() -> launch.LaunchDescription:
     )
 
     launch_args.append(DeclareLaunchArgument("has_arm", default_value="False", description="Whether spot has arm"))
-
-    launch_args.append(
-        DeclareLaunchArgument(
-            "tf_prefix",
-            default_value='""',
-            description="apply namespace prefix to robot links and joints",
-        )
-    )
 
     launch_args.append(DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?"))
     launch_args.append(

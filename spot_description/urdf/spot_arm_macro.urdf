@@ -1,15 +1,14 @@
 <?xml version="1.0"?>
 <robot name="spot_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="load_arm" params="
-    tf_prefix" >
+  <xacro:macro name="load_arm" >
 
-    <link name="${tf_prefix}arm_link_sh0">
+    <link name="arm_link_sh0">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_sh0.obj"/>
         </geometry>
-        <material name="${tf_prefix}arm_link_sh0"> <color rgba="0.2 0.2 0.2 1"/></material>  
+        <material name="arm_link_sh0"> <color rgba="0.2 0.2 0.2 1"/></material>  
       </visual>
       <collision>
         <geometry>
@@ -22,21 +21,21 @@
         <inertia ixx="0.009014303010689815" ixy="0.0" ixz="0.0" iyy="0.005835102417829581" iyz="0.0" izz="0.00778747846359954"/>
       </inertial>
     </link>
-    <joint name="${tf_prefix}arm_sh0" type="revolute">
+    <joint name="arm_sh0" type="revolute">
       <origin xyz="0.292 0.0 0.188" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
-      <parent link="${tf_prefix}body"/>
-      <child link="${tf_prefix}arm_link_sh0"/>
+      <parent link="body"/>
+      <child link="arm_link_sh0"/>
       <limit effort="1000" velocity="1000.00" lower="-2.61799387799149441136" upper="3.14159265358979311599"/>
     </joint>
 
-    <link name="${tf_prefix}arm_link_sh1">
+    <link name="arm_link_sh1">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_sh1.obj"/>
         </geometry>
-        <material name="${tf_prefix}arm_link_sh1"> <color rgba="0.2 0.2 0.2 1"/></material>
+        <material name="arm_link_sh1"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
@@ -49,22 +48,22 @@
         <inertia ixx="0.00020292766231464653" ixy="0.0" ixz="0.0" iyy="0.00017078637725384855" iyz="0.0" izz="0.00020384964230406682"/>
       </inertial>
     </link>
-    <joint name="${tf_prefix}arm_sh1" type="revolute">
+    <joint name="arm_sh1" type="revolute">
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
-      <parent link="${tf_prefix}arm_link_sh0"/>
-      <child link="${tf_prefix}arm_link_sh1"/>
+      <parent link="arm_link_sh0"/>
+      <child link="arm_link_sh1"/>
       <!-- <limit effort="1000" velocity="1000.00" lower="-0.52359877559829881565" upper="3.14159265358979311599"/> -->
       <limit effort="1000" velocity="1000.00" lower="-3.14159265358979311599" upper="0.52359877559829881565"/>
     </joint>
     
-    <link name="${tf_prefix}arm_link_hr0">
+    <link name="arm_link_hr0">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_hr0.obj"/>
         </geometry>
-        <material name="${tf_prefix}arm_link_hr0"> <color rgba="0.2 0.2 0.2 1"/></material> 
+        <material name="arm_link_hr0"> <color rgba="0.2 0.2 0.2 1"/></material> 
       </visual>
       <collision>
         <geometry>
@@ -77,21 +76,21 @@
         <inertia ixx="6.312631747339145e-10" ixy="0.0" ixz="0.0" iyy="1.1487063558949979e-08" iyz="0.0" izz="1.161105128440526e-08"/>
       </inertial>
     </link>
-    <joint name="${tf_prefix}arm_hr0" type="fixed">
+    <joint name="arm_hr0" type="fixed">
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
       <axis xyz="1 0 0"/>
-      <parent link="${tf_prefix}arm_link_sh1"/>
-      <child link="${tf_prefix}arm_link_hr0"/>
+      <parent link="arm_link_sh1"/>
+      <child link="arm_link_hr0"/>
       <limit effort="1000" velocity="1000.00" lower="-1e6" upper="1e6"/>
     </joint>
 
-    <link name="${tf_prefix}arm_link_el0">
+    <link name="arm_link_el0">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_el0.obj"/>
         </geometry>
-        <material name="${tf_prefix}arm_link_el0"> <color rgba="0.2 0.2 0.2 1"/></material>  
+        <material name="arm_link_el0"> <color rgba="0.2 0.2 0.2 1"/></material>  
       </visual>
       <collision>
         <geometry>
@@ -104,21 +103,21 @@
         <inertia ixx="0.0008215365829160558" ixy="0.0" ixz="0.0" iyy="0.0020047889807066404" iyz="0.0" izz="0.0019722797759789395"/>
       </inertial>
     </link>
-    <joint name="${tf_prefix}arm_el0" type="revolute">
+    <joint name="arm_el0" type="revolute">
       <origin xyz="0.3385 0 0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
-      <parent link="${tf_prefix}arm_link_hr0"/>
-      <child link="${tf_prefix}arm_link_el0"/>
+      <parent link="arm_link_hr0"/>
+      <child link="arm_link_el0"/>
       <limit effort="1000" velocity="1000.00" lower="0" upper="3.14159265358979311599"/>
     </joint>
 
-    <link name="${tf_prefix}arm_link_el1">
+    <link name="arm_link_el1">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_el1.obj"/>
         </geometry>
-        <material name="${tf_prefix}arm_link_el1"> <color rgba="0.2 0.2 0.2 1"/></material>
+        <material name="arm_link_el1"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
@@ -131,21 +130,21 @@
         <inertia ixx="0.0006254807525240598" ixy="0.0" ixz="0.0" iyy="0.004402454711936095" iyz="0.0" izz="0.004515915146038191"/>
       </inertial>
     </link>
-    <joint name="${tf_prefix}arm_el1" type="revolute">
+    <joint name="arm_el1" type="revolute">
       <origin xyz="0.40330 0.0 0.0750" rpy="0 0 0"/>
       <axis xyz="1 0 0"/>
-      <parent link="${tf_prefix}arm_link_el0"/>
-      <child link="${tf_prefix}arm_link_el1"/>
+      <parent link="arm_link_el0"/>
+      <child link="arm_link_el1"/>
       <limit effort="1000" velocity="1000.00" lower="-2.79252680319092716487" upper="2.79252680319092716487"/>
     </joint>
 
-    <link name="${tf_prefix}arm_link_wr0">
+    <link name="arm_link_wr0">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_wr0.obj"/>
         </geometry>
-        <material name="${tf_prefix}arm_link_wr0"> <color rgba="0.2 0.2 0.2 1"/></material>
+        <material name="arm_link_wr0"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
@@ -158,21 +157,21 @@
         <inertia ixx="0.0009851320696685427" ixy="0.0" ixz="0.0" iyy="0.0008916145765810678" iyz="0.0" izz="0.0012354892751854467"/>
       </inertial>
     </link>
-    <joint name="${tf_prefix}arm_wr0" type="revolute">
+    <joint name="arm_wr0" type="revolute">
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
-      <parent link="${tf_prefix}arm_link_el1"/>
-      <child link="${tf_prefix}arm_link_wr0"/>
+      <parent link="arm_link_el1"/>
+      <child link="arm_link_wr0"/>
       <limit effort="1000" velocity="1000.00" lower="-1.83259571459404613236" upper="1.83259571459404613236"/>
     </joint>
 
-    <link name="${tf_prefix}arm_link_wr1">
+    <link name="arm_link_wr1">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_wr1.obj"/>
         </geometry>
-        <material name="${tf_prefix}arm_link_wr1"> <color rgba="0.2 0.2 0.2 1"/></material>
+        <material name="arm_link_wr1"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
@@ -185,21 +184,21 @@
         <inertia ixx="0.00076741362048185" ixy="0.0" ixz="0.0" iyy="0.0017628124054271809" iyz="0.0" izz="0.0016818105865345951"/>
       </inertial>
     </link>
-    <joint name="${tf_prefix}arm_wr1" type="revolute">
+    <joint name="arm_wr1" type="revolute">
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
       <axis xyz="1 0 0"/>
-      <parent link="${tf_prefix}arm_link_wr0"/>
-      <child link="${tf_prefix}arm_link_wr1"/>
+      <parent link="arm_link_wr0"/>
+      <child link="arm_link_wr1"/>
       <limit effort="1000" velocity="1000.00" lower="-2.87979326579064354163" upper="2.87979326579064354163"/>
     </joint>
     
-    <link name="${tf_prefix}arm_link_fngr">
+    <link name="arm_link_fngr">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find spot_description)/meshes/arm/visual/arm_link_fngr.obj"/>
         </geometry>
-        <material name="${tf_prefix}arm_link_fngr"> <color rgba="0.2 0.2 0.2 1"/></material>
+        <material name="arm_link_fngr"> <color rgba="0.2 0.2 0.2 1"/></material>
       </visual>
       <collision>
         <geometry>
@@ -212,11 +211,11 @@
         <inertia ixx="0.0001439963634171048" ixy="0.0" ixz="0.0" iyy="0.0003007126997998294" iyz="0.0" izz="0.0003912783268020657"/>
       </inertial>
     </link>
-    <joint name="${tf_prefix}arm_f1x" type="revolute">
+    <joint name="arm_f1x" type="revolute">
       <origin xyz="0.11745 0 0.014820" rpy="0 0 0"/>
       <axis xyz="0.0 1.0 0.0"/>
-      <parent link="${tf_prefix}arm_link_wr1"/>
-      <child link="${tf_prefix}arm_link_fngr"/>
+      <parent link="arm_link_wr1"/>
+      <child link="arm_link_fngr"/>
       <limit effort="1000" velocity="1000.00" lower="-1.57" upper="0.0"/>
     </joint>
   </xacro:macro>
