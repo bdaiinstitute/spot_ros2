@@ -22,6 +22,7 @@ from bdai_ros2_wrappers.single_goal_multiple_action_servers import (
 )
 from bosdyn.api import (
     geometry_pb2,
+    gripper_camera_param_pb2,
     image_pb2,
     manipulation_api_pb2,
     robot_command_pb2,
@@ -32,14 +33,29 @@ from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
-from bosdyn_msgs.msg import ManipulationApiFeedbackResponse, ManipulatorState, RobotCommandFeedback
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist, TwistWithCovarianceStamped, Vector3Stamped
+from bosdyn_msgs.msg import (
+    ManipulationApiFeedbackResponse,
+    ManipulatorState,
+    RobotCommandFeedback,
+)
+from geometry_msgs.msg import (
+    Pose,
+    PoseStamped,
+    TransformStamped,
+    Twist,
+    TwistWithCovarianceStamped,
+    Vector3Stamped,
+)
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
-from rclpy.callback_groups import CallbackGroup, MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
+from rclpy.callback_groups import (
+    CallbackGroup,
+    MutuallyExclusiveCallbackGroup,
+    ReentrantCallbackGroup,
+)
 from rclpy.clock import Clock
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.impl import rcutils_logger
@@ -92,6 +108,7 @@ from spot_msgs.srv import (  # type: ignore
     DeleteSound,
     Dock,
     ExecuteDance,
+    GetGripperCameraParameters,
     GetVolume,
     GraphNavClearGraph,
     GraphNavGetLocalizationPose,
@@ -104,6 +121,7 @@ from spot_msgs.srv import (  # type: ignore
     ListWorldObjects,
     LoadSound,
     PlaySound,
+    SetGripperCameraParameters,
     SetLocomotion,
     SetVelocity,
     SetVolume,
@@ -139,7 +157,12 @@ class GoalResponse(Enum):
 
 
 class WaitForGoal(object):
-    def __init__(self, clock: Clock, _time: Union[float, rclpy.time.Time], callback: Optional[Callable] = None) -> None:
+    def __init__(
+        self,
+        clock: Clock,
+        _time: Union[float, rclpy.time.Time],
+        callback: Optional[Callable] = None,
+    ) -> None:
         self._at_goal: bool = False
         self._callback: Optional[Callable] = callback
         self._clock: Clock = clock
@@ -524,7 +547,10 @@ class SpotROS(Node):
             ClearBehaviorFault,
             "clear_behavior_fault",
             lambda request, response: self.service_wrapper(
-                "clear_behavior_fault", self.handle_clear_behavior_fault, request, response
+                "clear_behavior_fault",
+                self.handle_clear_behavior_fault,
+                request,
+                response,
             ),
             callback_group=self.group,
         )
@@ -639,14 +665,46 @@ class SpotROS(Node):
             self.handle_graph_nav_set_localization,
             callback_group=self.group,
         )
+        if has_arm:
+            self.create_service(
+                GetGripperCameraParameters,
+                "get_gripper_camera_parameters",
+                lambda request, response: self.service_wrapper(
+                    "get_gripper_camera_parameters",
+                    self.handle_get_gripper_camera_parameters,
+                    request,
+                    response,
+                ),
+                callback_group=self.group,
+            )
+
+            self.create_service(
+                SetGripperCameraParameters,
+                "set_gripper_camera_parameters",
+                lambda request, response: self.service_wrapper(
+                    "set_gripper_camera_parameters",
+                    self.handle_set_gripper_camera_parameters,
+                    request,
+                    response,
+                ),
+                callback_group=self.group,
+            )
 
         self.navigate_as = ActionServer(
-            self, NavigateTo, "navigate_to", self.handle_navigate_to, callback_group=self.group
+            self,
+            NavigateTo,
+            "navigate_to",
+            self.handle_navigate_to,
+            callback_group=self.group,
         )
         # spot_ros.navigate_as.start() # As is online
 
         self.trajectory_server = ActionServer(
-            self, Trajectory, "trajectory", self.handle_trajectory, callback_group=self.group
+            self,
+            Trajectory,
+            "trajectory",
+            self.handle_trajectory,
+            callback_group=self.group,
         )
         # spot_ros.trajectory_server.start()
 
@@ -855,7 +913,9 @@ class SpotROS(Node):
         if world_objects:
             # TF
             tf_msg = get_tf_from_world_objects(
-                world_objects.world_objects, self.spot_wrapper, self.preferred_odom_frame.value
+                world_objects.world_objects,
+                self.spot_wrapper,
+                self.preferred_odom_frame.value,
             )
             if len(tf_msg.transforms) > 0:
                 self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
@@ -871,7 +931,10 @@ class SpotROS(Node):
                 self.get_logger().warning("Robot is not localized; Please upload graph and localize.")
                 return
 
-            seed_t_body_msg, seed_t_body_trans_msg = conv.bosdyn_localization_to_pose_msg(
+            (
+                seed_t_body_msg,
+                seed_t_body_trans_msg,
+            ) = conv.bosdyn_localization_to_pose_msg(
                 state.localization,
                 self.spot_wrapper.robotToLocalTime,
                 in_seed_frame=True,
@@ -926,7 +989,9 @@ class SpotROS(Node):
         )
         for image_entry in result:
             image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-                image_entry.image_response, self.spot_wrapper.robotToLocalTime, self.spot_wrapper.frame_prefix
+                image_entry.image_response,
+                self.spot_wrapper.robotToLocalTime,
+                self.spot_wrapper.frame_prefix,
             )
             image_pub = getattr(self, f"{image_entry.camera_name}_{publisher_name}_pub")
             image_info_pub = getattr(self, f"{image_entry.camera_name}_{publisher_name}_info_pub")
@@ -1095,7 +1160,11 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message, response.dances = self.spot_wrapper.list_all_dances()
+        (
+            response.success,
+            response.message,
+            response.dances,
+        ) = self.spot_wrapper.list_all_dances()
         return response
 
     def handle_list_all_moves(
@@ -1106,7 +1175,11 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message, response.moves = self.spot_wrapper.list_all_moves()
+        (
+            response.success,
+            response.message,
+            response.moves,
+        ) = self.spot_wrapper.list_all_moves()
         return response
 
     def handle_upload_animation(
@@ -1569,7 +1642,8 @@ class SpotROS(Node):
         else:
             if self.spot_wrapper is not None:
                 conv.convert_proto_to_bosdyn_msgs_robot_command_feedback(
-                    self.spot_wrapper.get_robot_command_feedback(goal_id).feedback, feedback
+                    self.spot_wrapper.get_robot_command_feedback(goal_id).feedback,
+                    feedback,
                 )
         return feedback
 
@@ -1899,7 +1973,9 @@ class SpotROS(Node):
         self.spot_wrapper.set_mobility_params(mobility_params)
 
     def handle_graph_nav_get_localization_pose(
-        self, request: GraphNavGetLocalizationPose.Response, response: GraphNavGetLocalizationPose.Response
+        self,
+        request: GraphNavGetLocalizationPose.Response,
+        response: GraphNavGetLocalizationPose.Response,
     ) -> GraphNavGetLocalizationPose.Response:
         if self.spot_wrapper is None:
             self.get_logger().error("Spot wrapper is None")
@@ -1935,7 +2011,9 @@ class SpotROS(Node):
         return response
 
     def handle_graph_nav_set_localization(
-        self, request: GraphNavSetLocalization.Request, response: GraphNavSetLocalization.Response
+        self,
+        request: GraphNavSetLocalization.Request,
+        response: GraphNavSetLocalization.Response,
     ) -> GraphNavSetLocalization.Response:
         if self.spot_wrapper is None:
             self.get_logger().error("Spot wrapper is None")
@@ -1965,7 +2043,9 @@ class SpotROS(Node):
         return response
 
     def handle_graph_nav_upload_graph(
-        self, request: GraphNavUploadGraph.Request, response: GraphNavUploadGraph.Response
+        self,
+        request: GraphNavUploadGraph.Request,
+        response: GraphNavUploadGraph.Response,
     ) -> GraphNavUploadGraph.Response:
         if self.spot_wrapper is None:
             self.get_logger().error("Spot wrapper is None")
@@ -2108,6 +2188,63 @@ class SpotROS(Node):
 
         return result
 
+    def handle_get_gripper_camera_parameters(
+        self,
+        request: GetGripperCameraParameters.Request,
+        response: GetGripperCameraParameters.Response,
+    ) -> GetGripperCameraParameters.Response:
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot Wrapper not initialized"
+            return response
+        if not self.spot_wrapper.has_arm():
+            response.success = False
+            response.message = "Spot configuration does not have arm"
+            return response
+        try:
+            proto_request = gripper_camera_param_pb2.GripperCameraGetParamRequest()
+            conv.convert_bosdyn_msgs_gripper_camera_get_param_request_to_proto(request.request, proto_request)
+            proto_response = self.spot_wrapper.spot_images.get_gripper_camera_params(proto_request)
+            conv.convert_proto_to_bosdyn_msgs_gripper_camera_get_param_response(proto_response, response.response)
+            response.success = True
+            response.message = "Request to get gripper camera parameters sent"
+        except Exception as e:
+            error_str = "Error:{}\n{}".format(e, traceback.format_exc())
+            self.get_logger().error(error_str)
+            response.success = False
+            response.message = error_str
+
+        return response
+
+    def handle_set_gripper_camera_parameters(
+        self,
+        request: SetGripperCameraParameters.Request,
+        response: SetGripperCameraParameters.Response,
+    ) -> SetGripperCameraParameters.Response:
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot Wrapper not initialized"
+            return response
+        if not self.spot_wrapper.has_arm():
+            response.success = False
+            response.message = "Spot configuration does not have arm"
+            return response
+
+        try:
+            proto_request = gripper_camera_param_pb2.GripperCameraParamRequest()
+            conv.convert_bosdyn_msgs_gripper_camera_param_request_to_proto(request.request, proto_request)
+            proto_response = self.spot_wrapper.spot_images.set_gripper_camera_params(proto_request)
+            conv.convert_proto_to_bosdyn_msgs_gripper_camera_param_response(proto_response, response.response)
+            response.success = True
+            response.message = "Request to set gripper camera parameters sent"
+        except Exception as e:
+            error_str = "Error:{}\n{}".format(e, traceback.format_exc())
+            self.get_logger().error(error_str)
+            response.success = False
+            response.message = error_str
+
+        return response
+
     def populate_camera_static_transforms(self, image_data: image_pb2.Image) -> None:
         """Check data received from one of the image tasks and use the transform snapshot to extract the camera frame
         transforms. This is the transforms from body->frontleft->frontleft_fisheye, for example. These transforms
@@ -2122,7 +2259,11 @@ class SpotROS(Node):
         frame_prefix = MOCK_HOSTNAME + "/"
         if self.spot_wrapper is not None:
             frame_prefix = self.spot_wrapper.frame_prefix
-        excluded_frames = [self.tf_name_vision_odom.value, self.tf_name_kinematic_odom.value, frame_prefix + "body"]
+        excluded_frames = [
+            self.tf_name_vision_odom.value,
+            self.tf_name_kinematic_odom.value,
+            frame_prefix + "body",
+        ]
         excluded_frames = [f[f.rfind("/") + 1 :] for f in excluded_frames]
 
         # Special case handling for hand camera frames that reference the link "arm0.link_wr1" in their
@@ -2154,7 +2295,10 @@ class SpotROS(Node):
             existing_transforms = [
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
             ]
-            if (frame_prefix + parent_frame, frame_prefix + frame_name) in existing_transforms:
+            if (
+                frame_prefix + parent_frame,
+                frame_prefix + frame_name,
+            ) in existing_transforms:
                 # We already extracted this transform
                 continue
 
@@ -2164,7 +2308,11 @@ class SpotROS(Node):
                 local_time = Timestamp()
             tf_time = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
             static_tf = populate_transform_stamped(
-                tf_time, parent_frame, frame_name, transform.parent_tform_child, frame_prefix
+                tf_time,
+                parent_frame,
+                frame_name,
+                transform.parent_tform_child,
+                frame_prefix,
             )
             self.camera_static_transforms.append(static_tf)
             self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
