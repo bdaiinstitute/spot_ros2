@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/build/spot_msgs/rosidl_generator_c/spot_msgs/action/detail/robot_command__functions.h

@@ -1,3 +1,0 @@
-[console_scripts]
-walk_forward = simple_walk_forward.walk_forward:main
-

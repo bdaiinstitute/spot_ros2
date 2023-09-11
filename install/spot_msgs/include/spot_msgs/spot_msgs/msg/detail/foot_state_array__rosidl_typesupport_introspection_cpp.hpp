@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/build/spot_msgs/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/foot_state_array__rosidl_typesupport_introspection_cpp.hpp

@@ -1,2 +1,0 @@
-
-string[] waypoint_ids

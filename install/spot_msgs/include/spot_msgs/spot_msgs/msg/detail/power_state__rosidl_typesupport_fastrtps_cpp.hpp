@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/build/spot_msgs/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/power_state__rosidl_typesupport_fastrtps_cpp.hpp

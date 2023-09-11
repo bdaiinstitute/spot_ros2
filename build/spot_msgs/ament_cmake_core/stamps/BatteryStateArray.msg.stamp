@@ -1,1 +1,0 @@
-BatteryState[] battery_states

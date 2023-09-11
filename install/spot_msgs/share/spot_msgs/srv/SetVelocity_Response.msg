@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/build/spot_msgs/rosidl_cmake/srv/SetVelocity_Response.msg

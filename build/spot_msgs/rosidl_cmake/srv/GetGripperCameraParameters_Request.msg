@@ -1,1 +1,0 @@
-bosdyn_msgs/GripperCameraGetParamRequest request

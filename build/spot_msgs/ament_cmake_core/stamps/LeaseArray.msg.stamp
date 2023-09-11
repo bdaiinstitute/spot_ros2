@@ -1,1 +1,0 @@
-LeaseResource[] resources

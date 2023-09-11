@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/examples/simple_walk_forward/setup.py

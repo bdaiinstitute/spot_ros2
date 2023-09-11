@@ -1,7 +1,0 @@
-# Calls SetLocalization RPC; Trigger a manual localization.
-# Typically done to provide the initial localization. There
-# are two localization methods: by fiducial, or by waypoint.
-# If by waypoint, then the ID of the waypoint should be
-# provided.
-string method
-string waypoint_id
