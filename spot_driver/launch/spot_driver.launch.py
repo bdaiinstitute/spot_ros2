@@ -25,16 +25,18 @@ def create_rviz_config(robot_name: str) -> None:
 
     with open(RVIZ_TEMPLATE_FILENAME, "r") as template_file:
         config = yaml.safe_load(template_file)
-        # replace fixed frame with robot body frame
-        config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{robot_name}/vision"
-        # Add robot models for each robot
-        for display in config["Visualization Manager"]["Displays"]:
-            if "RobotModel" in display["Class"]:
-                display["Description Topic"]["Value"] = f"/{robot_name}/robot_description"
 
-            if "Image" in display["Class"]:
-                topic_name = display["Topic"]["Value"]
-                display["Topic"]["Value"] = f"/{robot_name}{topic_name}"
+        if robot_name:
+            # replace fixed frame with robot body frame
+            config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{robot_name}/vision"
+            # Add robot models for each robot
+            for display in config["Visualization Manager"]["Displays"]:
+                if "RobotModel" in display["Class"]:
+                    display["Description Topic"]["Value"] = f"/{robot_name}/robot_description"
+
+                if "Image" in display["Class"]:
+                    topic_name = display["Topic"]["Value"]
+                    display["Topic"]["Value"] = f"/{robot_name}{topic_name}"
 
     with open(RVIZ_OUTPUT_FILENAME, "w") as out_file:
         yaml.dump(config, out_file)
