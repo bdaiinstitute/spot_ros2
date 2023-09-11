@@ -2,51 +2,144 @@ import os
 
 import launch
 import launch_ros
-import xacro
+import yaml
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
-from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+)
 from launch_ros.substitutions import FindPackageShare
 
 
-def launch_robot_state_publisher(context: LaunchContext, has_arm: LaunchConfiguration, ld: LaunchDescription) -> None:
+def create_rviz_config(robot_name: str) -> None:
+    """Writes a configuration file for rviz to visualize a single spot robot"""
+    PACKAGE = "spot_driver"
+
+    RVIZ_TEMPLATE_FILENAME = os.path.join(get_package_share_directory(PACKAGE), "rviz", "spot_template.yaml")
+    RVIZ_OUTPUT_FILENAME = os.path.join(get_package_share_directory(PACKAGE), "rviz", "spot.rviz")
+
+    with open(RVIZ_TEMPLATE_FILENAME, "r") as template_file:
+        config = yaml.safe_load(template_file)
+
+        if robot_name:
+            # replace fixed frame with robot body frame
+            config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{robot_name}/vision"
+            # Add robot models for each robot
+            for display in config["Visualization Manager"]["Displays"]:
+                if "RobotModel" in display["Class"]:
+                    display["Description Topic"]["Value"] = f"/{robot_name}/robot_description"
+
+                if "Image" in display["Class"]:
+                    topic_name = display["Topic"]["Value"]
+                    display["Topic"]["Value"] = f"/{robot_name}{topic_name}"
+
+    with open(RVIZ_OUTPUT_FILENAME, "w") as out_file:
+        yaml.dump(config, out_file)
+
+
+def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
+    config_file = LaunchConfiguration("config_file")
+    has_arm = LaunchConfiguration("has_arm")
+    launch_rviz = LaunchConfiguration("launch_rviz")
+    rviz_config_filename = LaunchConfiguration("rviz_config_filename").perform(context)
+    spot_name = LaunchConfiguration("spot_name").perform(context)
+    tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
+
     pkg_share = FindPackageShare("spot_description").find("spot_description")
-    urdf_dir = os.path.join(pkg_share, "urdf")
 
-    has_arm = has_arm.perform(context) == "True"
-    if has_arm:
-        xacro_file = os.path.join(urdf_dir, "spot_with_arm.urdf.xacro")
-    else:
-        xacro_file = os.path.join(urdf_dir, "spot.urdf.xacro")
-    doc = xacro.process_file(xacro_file)
-    robot_desc = doc.toprettyxml(indent="  ")
+    spot_driver_node = launch_ros.actions.Node(
+        package="spot_driver",
+        executable="spot_ros2",
+        name="spot_ros2",
+        output="screen",
+        parameters=[config_file, {"spot_name": spot_name}],
+        namespace=spot_name,
+    )
+    ld.add_action(spot_driver_node)
 
-    params = {"robot_description": robot_desc}
+    if not tf_prefix and spot_name:
+        tf_prefix = PathJoinSubstitution([spot_name, ""])
+
+    robot_description = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([pkg_share, "urdf", "spot.urdf.xacro"]),
+            " ",
+            "arm:=",
+            has_arm,
+            " ",
+            "tf_prefix:=",
+            tf_prefix,
+            " ",
+        ]
+    )
+
+    params = {"robot_description": robot_description}
     robot_state_publisher = launch_ros.actions.Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
         parameters=[params],
+        namespace=spot_name,
     )
     ld.add_action(robot_state_publisher)
 
+    if not rviz_config_filename:
+        create_rviz_config(spot_name)
+        rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_driver"), "rviz", "spot.rviz"])
+    else:
+        rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_driver"), "rviz", rviz_config_filename])
+
+    rviz = launch_ros.actions.Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        arguments=["-d", rviz_config_file.perform(context)],
+        output="screen",
+        condition=IfCondition(launch_rviz),
+    )
+
+    ld.add_action(rviz)
+
 
 def generate_launch_description() -> launch.LaunchDescription:
-    config_file = LaunchConfiguration("config_file", default="")
-    config_file_arg = DeclareLaunchArgument(
-        "config_file", description="Path to configuration file for the driver.", default_value=""
+    launch_args = []
+
+    launch_args.append(
+        DeclareLaunchArgument(
+            "config_file",
+            default_value="",
+            description="Path to configuration file for the driver.",
+        )
     )
 
-    has_arm = LaunchConfiguration("has_arm")
-    has_arm_arg = DeclareLaunchArgument("has_arm", description="Whether spot has arm", default_value="False")
-
-    ld = launch.LaunchDescription([config_file_arg, has_arm_arg])
-
-    spot_driver_node = launch_ros.actions.Node(
-        package="spot_driver", executable="spot_ros2", name="spot_ros2", output="screen", parameters=[config_file]
+    launch_args.append(DeclareLaunchArgument("has_arm", default_value="False", description="Whether spot has arm"))
+    launch_args.append(
+        DeclareLaunchArgument(
+            "tf_prefix",
+            default_value="",
+            description="apply namespace prefix to robot links and joints",
+        )
     )
-    ld.add_action(spot_driver_node)
 
-    ld.add_action(OpaqueFunction(function=launch_robot_state_publisher, args=[has_arm, ld]))
+    launch_args.append(DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?"))
+    launch_args.append(
+        DeclareLaunchArgument(
+            "rviz_config_filename",
+            default_value="",
+            description="RViz config file name",
+        )
+    )
+
+    launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
+    ld = launch.LaunchDescription(launch_args)
+
+    ld.add_action(OpaqueFunction(function=launch_setup, args=[ld]))
 
     return ld

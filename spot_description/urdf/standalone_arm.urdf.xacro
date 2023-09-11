@@ -2,5 +2,5 @@
 <robot name="standalone_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- Root link -->
   <link name="body"/>
-  <xacro:include filename="$(find spot_description)/urdf/spot_arm.urdf" />
+  <xacro:include filename="$(find spot_description)/urdf/spot_arm_macro.urdf" />
 </robot>

@@ -318,7 +318,7 @@ def get_joint_states_from_state(state: robot_state_pb2.RobotState, spot_wrapper:
     local_time = spot_wrapper.robotToLocalTime(state.kinematic_state.acquisition_timestamp)
     joint_state.header.stamp = Time(sec=local_time.seconds, nanosec=local_time.nanos)
     for joint in state.kinematic_state.joint_states:
-        joint_state.name.append(friendly_joint_names.get(joint.name, "ERROR"))
+        joint_state.name.append(spot_wrapper.frame_prefix + friendly_joint_names.get(joint.name, "ERROR"))
         joint_state.position.append(joint.position.value)
         joint_state.velocity.append(joint.velocity.value)
         joint_state.effort.append(joint.load.value)
