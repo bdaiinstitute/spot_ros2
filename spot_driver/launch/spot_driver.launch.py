@@ -46,7 +46,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     config_file = LaunchConfiguration("config_file")
     has_arm = LaunchConfiguration("has_arm")
     launch_rviz = LaunchConfiguration("launch_rviz")
-    rviz_config_filename = LaunchConfiguration("rviz_config_filename").perform(context)
+    rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
 
@@ -90,17 +90,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(robot_state_publisher)
 
-    if not rviz_config_filename:
+    # It looks like passing an optional of value "None" gets converted to a string of value "None"
+    if rviz_config_file is None or rviz_config_file == "None":
         create_rviz_config(spot_name)
-        rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_driver"), "rviz", "spot.rviz"])
-    else:
-        rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_driver"), "rviz", rviz_config_filename])
+        rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_driver"), "rviz", "spot.rviz"]).perform(context)
 
     rviz = launch_ros.actions.Node(
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", rviz_config_file.perform(context)],
+        arguments=["-d", rviz_config_file],
         output="screen",
         condition=IfCondition(launch_rviz),
     )
@@ -131,9 +130,9 @@ def generate_launch_description() -> launch.LaunchDescription:
     launch_args.append(DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?"))
     launch_args.append(
         DeclareLaunchArgument(
-            "rviz_config_filename",
+            "rviz_config_file",
             default_value="",
-            description="RViz config file name",
+            description="RViz config file",
         )
     )
 
