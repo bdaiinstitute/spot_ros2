@@ -1,0 +1,6 @@
+source;share/spot_wrapper/hook/pythonpath.ps1
+source;share/spot_wrapper/hook/pythonpath.dsv
+source;share/spot_wrapper/hook/pythonpath.sh
+source;../../build/spot_wrapper/share/spot_wrapper/hook/pythonpath_develop.ps1
+source;../../build/spot_wrapper/share/spot_wrapper/hook/pythonpath_develop.dsv
+source;../../build/spot_wrapper/share/spot_wrapper/hook/pythonpath_develop.sh

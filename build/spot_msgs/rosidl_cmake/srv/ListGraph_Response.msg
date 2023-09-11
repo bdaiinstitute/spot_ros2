@@ -1,0 +1,2 @@
+
+string[] waypoint_ids

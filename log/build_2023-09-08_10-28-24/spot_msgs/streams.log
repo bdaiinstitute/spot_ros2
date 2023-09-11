@@ -1,0 +1,1350 @@
+[0.038s] Invoking command in '/home/bhung/spot_ros2/build/spot_msgs': CMAKE_PREFIX_PATH=/home/bhung/bdai/ws/src/arm_utilities/install/arms:/home/bhung/bdai/ws/src/arm_utilities/install/arm_utilities:/opt/ros/humble /usr/bin/cmake --build /home/bhung/spot_ros2/build/spot_msgs -- -j16 -l16
+[0.752s] -- Found ament_cmake: 1.3.5 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.752s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.752s] -- Found rclcpp: 16.0.5 (/opt/ros/humble/share/rclcpp/cmake)
+[0.753s] -- Found rosidl_generator_c: 3.1.5 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.753s] -- Found rosidl_adapter: 3.1.5 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.753s] -- Found rosidl_generator_cpp: 3.1.5 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.753s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.753s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.753s] -- Found rmw_implementation_cmake: 6.1.1 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.753s] -- Found rmw_fastrtps_cpp: 6.2.3 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[0.753s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.753s] -- Found bosdyn_msgs: 0.0.0 (/opt/ros/humble/share/bosdyn_msgs/cmake)
+[0.753s] -- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[2.111s] -- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)
+[3.491s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[4.037s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[4.055s] -- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+[4.071s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[4.071s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+[4.071s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+[4.336s] -- Found ament_lint_auto: 0.12.7 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[4.346s] -- Added test 'copyright' to check source files copyright and LICENSE
+[4.348s] -- Added test 'flake8' to check Python code syntax and style conventions
+[4.348s] -- Added test 'lint_cmake' to check CMake code style
+[4.348s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[4.349s] -- Added test 'xmllint' to check XML markup files
+[4.351s] -- Configuring done
+[4.440s] -- Generating done
+[4.441s] -- Build files have been written to: /home/bhung/spot_ros2/build/spot_msgs
+[4.471s] [  0%] [34m[1mGenerating C code for ROS interfaces[0m
+[4.472s] [  0%] Built target ament_cmake_python_symlink_spot_msgs
+[4.482s] [  0%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[4.657s] running egg_info
+[4.658s] writing spot_msgs.egg-info/PKG-INFO
+[4.658s] writing dependency_links to spot_msgs.egg-info/dependency_links.txt
+[4.658s] writing top-level names to spot_msgs.egg-info/top_level.txt
+[4.660s] reading manifest file 'spot_msgs.egg-info/SOURCES.txt'
+[4.661s] writing manifest file 'spot_msgs.egg-info/SOURCES.txt'
+[4.678s] [  0%] Built target ament_cmake_python_build_spot_msgs_egg
+[6.541s] [  0%] Built target spot_msgs__cpp
+[6.555s] [  0%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[6.556s] [  0%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[6.556s] [  0%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[6.909s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_generator_c[0m
+[6.934s] [  1%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/battery_state_array__functions.c.o[0m
+[6.935s] [  1%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/foot_state_array__functions.c.o[0m
+[6.935s] [  1%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/e_stop_state_array__functions.c.o[0m
+[6.935s] [  1%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/behavior_fault__functions.c.o[0m
+[6.935s] [  1%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/metrics__functions.c.o[0m
+[6.936s] [  2%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/lease_array__functions.c.o[0m
+[6.936s] [  2%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/lease_owner__functions.c.o[0m
+[6.942s] [  2%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/mobility_params__functions.c.o[0m
+[6.963s] [  2%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/wi_fi_state__functions.c.o[0m
+[6.964s] [  3%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/system_fault__functions.c.o[0m
+[6.966s] [  3%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/battery_state__functions.c.o[0m
+[6.966s] [  3%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/behavior_fault_state__functions.c.o[0m
+[6.974s] [  4%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/e_stop_state__functions.c.o[0m
+[7.037s] [  4%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/foot_state__functions.c.o[0m
+[7.037s] [  4%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/feedback__functions.c.o[0m
+[7.037s] [  4%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/lease__functions.c.o[0m
+[7.038s] [  5%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/lease_resource__functions.c.o[0m
+[7.038s] [  6%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/list_graph__functions.c.o[0m
+[7.038s] [  6%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/power_state__functions.c.o[0m
+[7.039s] [  6%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/msg/detail/system_fault_state__functions.c.o[0m
+[7.052s] [  6%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/list_world_objects__functions.c.o[0m
+[7.054s] [  7%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/execute_dance__functions.c.o[0m
+[7.055s] [  7%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/set_locomotion__functions.c.o[0m
+[7.070s] [  7%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/set_velocity__functions.c.o[0m
+[7.080s] [  7%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/list_all_moves__functions.c.o[0m
+[7.088s] [  7%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/list_all_dances__functions.c.o[0m
+[7.103s] [  7%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/upload_animation__functions.c.o[0m
+[7.107s] [  8%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/clear_behavior_fault__functions.c.o[0m
+[7.107s] [  8%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/list_sounds__functions.c.o[0m
+[7.116s] [  8%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/play_sound__functions.c.o[0m
+[7.116s] [  8%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/load_sound__functions.c.o[0m
+[7.123s] [  9%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/delete_sound__functions.c.o[0m
+[7.125s] [  9%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/get_volume__functions.c.o[0m
+[7.150s] [  9%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/set_volume__functions.c.o[0m
+[7.156s] [  9%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/graph_nav_upload_graph__functions.c.o[0m
+[7.165s] [ 10%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/graph_nav_clear_graph__functions.c.o[0m
+[7.167s] [ 10%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/graph_nav_set_localization__functions.c.o[0m
+[7.192s] [ 10%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/dock__functions.c.o[0m
+[7.193s] [ 10%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/graph_nav_get_localization_pose__functions.c.o[0m
+[7.197s] [ 11%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/get_gripper_camera_parameters__functions.c.o[0m
+[7.202s] [ 11%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/srv/detail/set_gripper_camera_parameters__functions.c.o[0m
+[7.203s] [ 11%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/action/detail/navigate_to__functions.c.o[0m
+[7.223s] [ 12%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/action/detail/robot_command__functions.c.o[0m
+[7.224s] [ 12%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/action/detail/trajectory__functions.c.o[0m
+[7.228s] [ 12%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_c.dir/rosidl_generator_c/spot_msgs/action/detail/manipulation__functions.c.o[0m
+[7.388s] [ 12%] [32m[1mLinking C shared library libspot_msgs__rosidl_generator_c.so[0m
+[7.474s] [ 12%] Built target spot_msgs__rosidl_generator_c
+[7.494s] [ 13%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[7.496s] [ 14%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[7.497s] [ 15%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[8.303s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_typesupport_cpp[0m
+[8.354s] [ 16%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/battery_state_array__type_support.cpp.o[0m
+[8.355s] [ 16%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/foot_state_array__type_support.cpp.o[0m
+[8.355s] [ 17%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/lease_array__type_support.cpp.o[0m
+[8.358s] [ 17%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/behavior_fault__type_support.cpp.o[0m
+[8.358s] [ 17%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/lease_owner__type_support.cpp.o[0m
+[8.360s] [ 17%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/metrics__type_support.cpp.o[0m
+[8.361s] [ 17%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/mobility_params__type_support.cpp.o[0m
+[8.365s] [ 17%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/wi_fi_state__type_support.cpp.o[0m
+[8.366s] [ 18%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/system_fault__type_support.cpp.o[0m
+[8.367s] [ 18%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/e_stop_state_array__type_support.cpp.o[0m
+[8.369s] [ 18%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/battery_state__type_support.cpp.o[0m
+[8.723s] [ 18%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/behavior_fault_state__type_support.cpp.o[0m
+[8.729s] [ 19%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/e_stop_state__type_support.cpp.o[0m
+[8.751s] [ 19%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/feedback__type_support.cpp.o[0m
+[8.768s] [ 19%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/foot_state__type_support.cpp.o[0m
+[8.776s] [ 20%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/lease__type_support.cpp.o[0m
+[8.780s] [ 20%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/lease_resource__type_support.cpp.o[0m
+[8.806s] [ 20%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/power_state__type_support.cpp.o[0m
+[8.814s] [ 21%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/list_graph__type_support.cpp.o[0m
+[8.816s] [ 21%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/msg/system_fault_state__type_support.cpp.o[0m
+[8.816s] [ 21%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/list_world_objects__type_support.cpp.o[0m
+[8.861s] [ 21%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/set_locomotion__type_support.cpp.o[0m
+[9.083s] [ 21%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/set_velocity__type_support.cpp.o[0m
+[9.143s] [ 22%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/execute_dance__type_support.cpp.o[0m
+[9.145s] [ 22%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/list_all_dances__type_support.cpp.o[0m
+[9.163s] [ 22%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/list_all_moves__type_support.cpp.o[0m
+[9.178s] [ 22%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/upload_animation__type_support.cpp.o[0m
+[9.180s] [ 23%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/clear_behavior_fault__type_support.cpp.o[0m
+[9.183s] [ 23%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/list_sounds__type_support.cpp.o[0m
+[9.201s] [ 23%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/load_sound__type_support.cpp.o[0m
+[9.202s] [ 23%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/play_sound__type_support.cpp.o[0m
+[9.284s] [ 24%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/delete_sound__type_support.cpp.o[0m
+[9.299s] [ 24%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/get_volume__type_support.cpp.o[0m
+[9.495s] [ 24%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/set_volume__type_support.cpp.o[0m
+[9.536s] [ 24%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/graph_nav_upload_graph__type_support.cpp.o[0m
+[9.547s] [ 25%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/graph_nav_clear_graph__type_support.cpp.o[0m
+[9.569s] [ 25%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/graph_nav_set_localization__type_support.cpp.o[0m
+[9.569s] [ 25%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/graph_nav_get_localization_pose__type_support.cpp.o[0m
+[9.592s] [ 26%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/dock__type_support.cpp.o[0m
+[9.611s] [ 26%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/get_gripper_camera_parameters__type_support.cpp.o[0m
+[9.617s] [ 26%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/srv/set_gripper_camera_parameters__type_support.cpp.o[0m
+[9.673s] [ 26%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/action/navigate_to__type_support.cpp.o[0m
+[9.740s] [ 27%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/action/robot_command__type_support.cpp.o[0m
+[9.788s] [ 27%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/action/trajectory__type_support.cpp.o[0m
+[9.889s] [ 27%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/spot_msgs/action/manipulation__type_support.cpp.o[0m
+[9.922s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_typesupport_c[0m
+[9.965s] [ 27%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/battery_state_array__type_support.cpp.o[0m
+[9.965s] [ 27%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/behavior_fault__type_support.cpp.o[0m
+[9.982s] [ 27%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/e_stop_state_array__type_support.cpp.o[0m
+[9.991s] [ 28%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/foot_state_array__type_support.cpp.o[0m
+[10.007s] [ 28%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/lease_owner__type_support.cpp.o[0m
+[10.014s] [ 28%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/lease_array__type_support.cpp.o[0m
+[10.015s] [ 28%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/metrics__type_support.cpp.o[0m
+[10.027s] [ 29%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/mobility_params__type_support.cpp.o[0m
+[10.052s] [ 29%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/system_fault__type_support.cpp.o[0m
+[10.060s] [ 29%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/wi_fi_state__type_support.cpp.o[0m
+[10.061s] [ 29%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/battery_state__type_support.cpp.o[0m
+[10.071s] [ 30%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/behavior_fault_state__type_support.cpp.o[0m
+[10.088s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_typesupport_introspection_cpp[0m
+[10.090s] [ 30%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/e_stop_state__type_support.cpp.o[0m
+[10.092s] [ 30%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/feedback__type_support.cpp.o[0m
+[10.100s] [ 30%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/foot_state__type_support.cpp.o[0m
+[10.104s] [ 31%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/lease__type_support.cpp.o[0m
+[10.114s] [ 31%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/lease_resource__type_support.cpp.o[0m
+[10.117s] [ 31%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/power_state__type_support.cpp.o[0m
+[10.135s] [ 32%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/msg/system_fault_state__type_support.cpp.o[0m
+[10.147s] [ 32%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/list_graph__type_support.cpp.o[0m
+[10.150s] [ 32%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/list_world_objects__type_support.cpp.o[0m
+[10.158s] [ 33%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/set_velocity__type_support.cpp.o[0m
+[10.158s] [ 33%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/set_locomotion__type_support.cpp.o[0m
+[10.165s] [ 33%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/execute_dance__type_support.cpp.o[0m
+[10.175s] [ 34%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/battery_state_array__type_support.cpp.o[0m
+[10.187s] [ 34%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/behavior_fault__type_support.cpp.o[0m
+[10.187s] [ 34%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/list_all_dances__type_support.cpp.o[0m
+[10.200s] [ 34%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/list_all_moves__type_support.cpp.o[0m
+[10.204s] [ 35%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/upload_animation__type_support.cpp.o[0m
+[10.212s] [ 35%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/e_stop_state_array__type_support.cpp.o[0m
+[10.217s] [ 35%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/clear_behavior_fault__type_support.cpp.o[0m
+[10.227s] [ 35%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/list_sounds__type_support.cpp.o[0m
+[10.244s] [ 35%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/load_sound__type_support.cpp.o[0m
+[10.252s] [ 36%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/play_sound__type_support.cpp.o[0m
+[10.265s] [ 37%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/foot_state_array__type_support.cpp.o[0m
+[10.273s] [ 37%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/delete_sound__type_support.cpp.o[0m
+[10.297s] [ 37%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/set_volume__type_support.cpp.o[0m
+[10.298s] [ 37%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/get_volume__type_support.cpp.o[0m
+[10.305s] [ 38%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/graph_nav_upload_graph__type_support.cpp.o[0m
+[10.318s] [ 38%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/graph_nav_clear_graph__type_support.cpp.o[0m
+[10.321s] [ 38%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/graph_nav_set_localization__type_support.cpp.o[0m
+[10.347s] [ 38%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/graph_nav_get_localization_pose__type_support.cpp.o[0m
+[10.353s] [ 39%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/dock__type_support.cpp.o[0m
+[10.358s] [ 39%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/lease_array__type_support.cpp.o[0m
+[10.367s] [ 39%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/set_gripper_camera_parameters__type_support.cpp.o[0m
+[10.367s] [ 39%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/srv/get_gripper_camera_parameters__type_support.cpp.o[0m
+[10.399s] [ 39%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/lease_owner__type_support.cpp.o[0m
+[10.402s] [ 40%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/action/navigate_to__type_support.cpp.o[0m
+[10.420s] [ 40%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/action/robot_command__type_support.cpp.o[0m
+[10.423s] [ 40%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/action/trajectory__type_support.cpp.o[0m
+[10.426s] [ 40%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/spot_msgs/action/manipulation__type_support.cpp.o[0m
+[10.516s] [ 40%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/metrics__type_support.cpp.o[0m
+[10.523s] [ 41%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/mobility_params__type_support.cpp.o[0m
+[10.532s] [ 41%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/system_fault__type_support.cpp.o[0m
+[10.534s] [ 42%] [32m[1mLinking CXX shared library libspot_msgs__rosidl_typesupport_c.so[0m
+[10.565s] [ 42%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/wi_fi_state__type_support.cpp.o[0m
+[10.585s] [ 42%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/battery_state__type_support.cpp.o[0m
+[10.608s] [ 42%] [32m[1mLinking CXX shared library libspot_msgs__rosidl_typesupport_cpp.so[0m
+[10.627s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_typesupport_fastrtps_cpp[0m
+[10.634s] [ 42%] Built target spot_msgs__rosidl_typesupport_c
+[10.646s] [ 43%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/behavior_fault_state__type_support.cpp.o[0m
+[10.710s] [ 44%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/battery_state_array__type_support.cpp.o[0m
+[10.732s] [ 44%] Built target spot_msgs__rosidl_typesupport_cpp
+[10.737s] [ 44%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/e_stop_state__type_support.cpp.o[0m
+[10.745s] [ 44%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/feedback__type_support.cpp.o[0m
+[10.795s] [ 44%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/behavior_fault__type_support.cpp.o[0m
+[10.898s] [ 44%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/e_stop_state_array__type_support.cpp.o[0m
+[10.899s] [ 44%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/foot_state__type_support.cpp.o[0m
+[10.966s] [ 45%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/lease__type_support.cpp.o[0m
+[11.068s] [ 45%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/lease_resource__type_support.cpp.o[0m
+[11.088s] [ 45%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/power_state__type_support.cpp.o[0m
+[11.100s] [ 45%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/msg/detail/system_fault_state__type_support.cpp.o[0m
+[11.105s] [ 46%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/list_graph__type_support.cpp.o[0m
+[11.154s] [ 46%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/list_world_objects__type_support.cpp.o[0m
+[11.191s] [ 46%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/set_locomotion__type_support.cpp.o[0m
+[11.262s] [ 46%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/set_velocity__type_support.cpp.o[0m
+[11.268s] [ 47%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/execute_dance__type_support.cpp.o[0m
+[11.330s] [ 47%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/list_all_dances__type_support.cpp.o[0m
+[11.370s] [ 47%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/foot_state_array__type_support.cpp.o[0m
+[11.385s] [ 48%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/lease_array__type_support.cpp.o[0m
+[11.523s] [ 48%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/list_all_moves__type_support.cpp.o[0m
+[11.526s] [ 48%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/lease_owner__type_support.cpp.o[0m
+[11.580s] [ 49%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/upload_animation__type_support.cpp.o[0m
+[11.654s] [ 49%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/clear_behavior_fault__type_support.cpp.o[0m
+[11.683s] [ 49%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/list_sounds__type_support.cpp.o[0m
+[11.697s] [ 49%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/load_sound__type_support.cpp.o[0m
+[11.758s] [ 50%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/play_sound__type_support.cpp.o[0m
+[11.784s] [ 50%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/delete_sound__type_support.cpp.o[0m
+[11.801s] [ 50%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/get_volume__type_support.cpp.o[0m
+[11.832s] [ 50%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/set_volume__type_support.cpp.o[0m
+[11.965s] [ 51%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/graph_nav_upload_graph__type_support.cpp.o[0m
+[11.986s] [ 51%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/metrics__type_support.cpp.o[0m
+[12.034s] [ 51%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/graph_nav_clear_graph__type_support.cpp.o[0m
+[12.087s] [ 52%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/mobility_params__type_support.cpp.o[0m
+[12.141s] [ 52%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/graph_nav_set_localization__type_support.cpp.o[0m
+[12.147s] [ 52%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/graph_nav_get_localization_pose__type_support.cpp.o[0m
+[12.156s] [ 53%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/dock__type_support.cpp.o[0m
+[12.257s] [ 53%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/get_gripper_camera_parameters__type_support.cpp.o[0m
+[12.284s] [ 53%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/srv/detail/set_gripper_camera_parameters__type_support.cpp.o[0m
+[12.301s] [ 53%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/action/detail/navigate_to__type_support.cpp.o[0m
+[12.334s] [ 54%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/action/detail/robot_command__type_support.cpp.o[0m
+[12.352s] [ 54%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/action/detail/trajectory__type_support.cpp.o[0m
+[12.365s] [ 54%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/system_fault__type_support.cpp.o[0m
+[12.440s] [ 54%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/spot_msgs/action/detail/manipulation__type_support.cpp.o[0m
+[12.514s] [ 54%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/wi_fi_state__type_support.cpp.o[0m
+[12.587s] [ 54%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/battery_state__type_support.cpp.o[0m
+[12.604s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_typesupport_introspection_c[0m
+[12.629s] [ 55%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/behavior_fault_state__type_support.cpp.o[0m
+[12.656s] [ 55%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/e_stop_state__type_support.cpp.o[0m
+[12.676s] [ 55%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/battery_state_array__type_support.c.o[0m
+[12.698s] [ 55%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/behavior_fault__type_support.c.o[0m
+[12.729s] [ 55%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/e_stop_state_array__type_support.c.o[0m
+[12.733s] [ 56%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/foot_state_array__type_support.c.o[0m
+[12.756s] [ 56%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/lease_array__type_support.c.o[0m
+[12.759s] [ 56%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/lease_owner__type_support.c.o[0m
+[12.794s] [ 57%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/metrics__type_support.c.o[0m
+[12.811s] [ 57%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/mobility_params__type_support.c.o[0m
+[12.813s] [ 57%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/system_fault__type_support.c.o[0m
+[12.824s] [ 57%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/wi_fi_state__type_support.c.o[0m
+[12.855s] [ 58%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/battery_state__type_support.c.o[0m
+[12.867s] [ 58%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/behavior_fault_state__type_support.c.o[0m
+[12.871s] [ 58%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/e_stop_state__type_support.c.o[0m
+[12.878s] [ 58%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/feedback__type_support.c.o[0m
+[12.916s] [ 59%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/foot_state__type_support.c.o[0m
+[12.922s] [ 59%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/lease__type_support.c.o[0m
+[12.926s] [ 59%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/feedback__type_support.cpp.o[0m
+[12.928s] [ 59%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/lease_resource__type_support.c.o[0m
+[12.940s] [ 59%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/power_state__type_support.c.o[0m
+[12.951s] [ 59%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/foot_state__type_support.cpp.o[0m
+[12.973s] [ 60%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/msg/detail/system_fault_state__type_support.c.o[0m
+[12.986s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_typesupport_fastrtps_c[0m
+[12.989s] [ 61%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/list_graph__type_support.c.o[0m
+[12.989s] [ 61%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/lease__type_support.cpp.o[0m
+[13.011s] [ 61%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/list_world_objects__type_support.c.o[0m
+[13.035s] [ 61%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/lease_resource__type_support.cpp.o[0m
+[13.055s] [ 61%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/set_locomotion__type_support.c.o[0m
+[13.059s] [ 61%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/power_state__type_support.cpp.o[0m
+[13.072s] [ 61%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/battery_state_array__type_support_c.cpp.o[0m
+[13.085s] [ 61%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/detail/dds_fastrtps/system_fault_state__type_support.cpp.o[0m
+[13.100s] [ 62%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/list_graph__type_support.cpp.o[0m
+[13.117s] [ 63%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/set_velocity__type_support.c.o[0m
+[13.169s] [ 63%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/execute_dance__type_support.c.o[0m
+[13.201s] [ 63%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/list_all_dances__type_support.c.o[0m
+[13.204s] [ 63%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/list_world_objects__type_support.cpp.o[0m
+[13.221s] [ 63%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/list_all_moves__type_support.c.o[0m
+[13.244s] [ 63%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/set_locomotion__type_support.cpp.o[0m
+[13.262s] [ 63%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/set_velocity__type_support.cpp.o[0m
+[13.264s] [ 64%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/upload_animation__type_support.c.o[0m
+[13.281s] [ 64%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/clear_behavior_fault__type_support.c.o[0m
+[13.324s] [ 65%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/execute_dance__type_support.cpp.o[0m
+[13.334s] [ 65%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/list_sounds__type_support.c.o[0m
+[13.347s] [ 66%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/load_sound__type_support.c.o[0m
+[13.392s] [ 66%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/play_sound__type_support.c.o[0m
+[13.409s] [ 66%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/delete_sound__type_support.c.o[0m
+[13.469s] [ 66%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/get_volume__type_support.c.o[0m
+[13.476s] [ 67%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/set_volume__type_support.c.o[0m
+[13.506s] [ 67%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/graph_nav_upload_graph__type_support.c.o[0m
+[13.520s] [ 67%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/graph_nav_clear_graph__type_support.c.o[0m
+[13.538s] [ 67%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/behavior_fault__type_support_c.cpp.o[0m
+[13.558s] [ 67%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/graph_nav_set_localization__type_support.c.o[0m
+[13.561s] [ 67%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/list_all_dances__type_support.cpp.o[0m
+[13.573s] [ 67%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/list_all_moves__type_support.cpp.o[0m
+[13.579s] [ 68%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/graph_nav_get_localization_pose__type_support.c.o[0m
+[13.605s] [ 68%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/dock__type_support.c.o[0m
+[13.609s] [ 68%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/get_gripper_camera_parameters__type_support.c.o[0m
+[13.633s] [ 68%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/set_gripper_camera_parameters__type_support.c.o[0m
+[13.654s] [ 68%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/upload_animation__type_support.cpp.o[0m
+[13.660s] [ 69%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/action/detail/navigate_to__type_support.c.o[0m
+[13.674s] [ 69%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/e_stop_state_array__type_support_c.cpp.o[0m
+[13.680s] [ 70%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/clear_behavior_fault__type_support.cpp.o[0m
+[13.687s] [ 70%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/action/detail/robot_command__type_support.c.o[0m
+[13.712s] [ 70%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/action/detail/trajectory__type_support.c.o[0m
+[13.731s] [ 70%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/spot_msgs/action/detail/manipulation__type_support.c.o[0m
+[13.742s] [ 70%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/list_sounds__type_support.cpp.o[0m
+[13.756s] [ 70%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/load_sound__type_support.cpp.o[0m
+[13.797s] [ 71%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/play_sound__type_support.cpp.o[0m
+[13.803s] [ 71%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/delete_sound__type_support.cpp.o[0m
+[13.819s] [ 72%] [32m[1mLinking C shared library libspot_msgs__rosidl_typesupport_introspection_c.so[0m
+[13.839s] [ 72%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/get_volume__type_support.cpp.o[0m
+[13.844s] [ 72%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/set_volume__type_support.cpp.o[0m
+[13.900s] [ 73%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/graph_nav_upload_graph__type_support.cpp.o[0m
+[13.919s] [ 73%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/graph_nav_clear_graph__type_support.cpp.o[0m
+[13.921s] [ 74%] [32m[1mLinking CXX shared library libspot_msgs__rosidl_typesupport_introspection_cpp.so[0m
+[13.977s] [ 74%] Built target spot_msgs__rosidl_typesupport_introspection_c
+[13.989s] [ 74%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/graph_nav_set_localization__type_support.cpp.o[0m
+[14.059s] [ 75%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/foot_state_array__type_support_c.cpp.o[0m
+[14.197s] [ 75%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/lease_array__type_support_c.cpp.o[0m
+[14.208s] [ 75%] Built target spot_msgs__rosidl_typesupport_introspection_cpp
+[14.220s] [ 75%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/lease_owner__type_support_c.cpp.o[0m
+[14.249s] [ 75%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/graph_nav_get_localization_pose__type_support.cpp.o[0m
+[14.258s] [ 76%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/dock__type_support.cpp.o[0m
+[14.276s] [ 76%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/get_gripper_camera_parameters__type_support.cpp.o[0m
+[14.324s] [ 76%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/srv/detail/dds_fastrtps/set_gripper_camera_parameters__type_support.cpp.o[0m
+[14.334s] [ 76%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/action/detail/dds_fastrtps/navigate_to__type_support.cpp.o[0m
+[14.381s] [ 77%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/action/detail/dds_fastrtps/robot_command__type_support.cpp.o[0m
+[14.426s] [ 77%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/action/detail/dds_fastrtps/trajectory__type_support.cpp.o[0m
+[14.432s] [ 77%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/spot_msgs/action/detail/dds_fastrtps/manipulation__type_support.cpp.o[0m
+[14.464s] [ 77%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/metrics__type_support_c.cpp.o[0m
+[14.497s] [ 78%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/mobility_params__type_support_c.cpp.o[0m
+[14.522s] [ 78%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/system_fault__type_support_c.cpp.o[0m
+[14.548s] [ 78%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/wi_fi_state__type_support_c.cpp.o[0m
+[14.576s] [ 79%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/battery_state__type_support_c.cpp.o[0m
+[14.613s] [ 79%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/behavior_fault_state__type_support_c.cpp.o[0m
+[14.676s] [ 79%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/e_stop_state__type_support_c.cpp.o[0m
+[14.721s] [ 79%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/feedback__type_support_c.cpp.o[0m
+[14.842s] [ 80%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/foot_state__type_support_c.cpp.o[0m
+[14.860s] [ 80%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/lease__type_support_c.cpp.o[0m
+[14.902s] [ 80%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/lease_resource__type_support_c.cpp.o[0m
+[14.953s] [ 80%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/power_state__type_support_c.cpp.o[0m
+[14.959s] [ 81%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/msg/detail/system_fault_state__type_support_c.cpp.o[0m
+[15.004s] [ 81%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/list_graph__type_support_c.cpp.o[0m
+[15.022s] [ 81%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/list_world_objects__type_support_c.cpp.o[0m
+[15.038s] [ 81%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/set_locomotion__type_support_c.cpp.o[0m
+[15.084s] [ 82%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/set_velocity__type_support_c.cpp.o[0m
+[15.104s] [ 82%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/execute_dance__type_support_c.cpp.o[0m
+[15.186s] [ 82%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/list_all_dances__type_support_c.cpp.o[0m
+[15.216s] [ 82%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/list_all_moves__type_support_c.cpp.o[0m
+[15.226s] [ 83%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/upload_animation__type_support_c.cpp.o[0m
+[15.286s] [ 83%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/clear_behavior_fault__type_support_c.cpp.o[0m
+[15.320s] [ 83%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/list_sounds__type_support_c.cpp.o[0m
+[15.337s] [ 83%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/load_sound__type_support_c.cpp.o[0m
+[15.369s] [ 84%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/play_sound__type_support_c.cpp.o[0m
+[15.401s] [ 84%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/delete_sound__type_support_c.cpp.o[0m
+[15.404s] [ 84%] [32m[1mLinking CXX shared library libspot_msgs__rosidl_typesupport_fastrtps_cpp.so[0m
+[15.448s] [ 84%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/get_volume__type_support_c.cpp.o[0m
+[15.467s] [ 85%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/set_volume__type_support_c.cpp.o[0m
+[15.500s] [ 85%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/graph_nav_upload_graph__type_support_c.cpp.o[0m
+[15.524s] [ 85%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/graph_nav_clear_graph__type_support_c.cpp.o[0m
+[15.528s] [ 85%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/graph_nav_set_localization__type_support_c.cpp.o[0m
+[15.601s] [ 86%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/graph_nav_get_localization_pose__type_support_c.cpp.o[0m
+[15.616s] [ 86%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/dock__type_support_c.cpp.o[0m
+[15.665s] [ 86%] Built target spot_msgs__rosidl_typesupport_fastrtps_cpp
+[15.684s] [ 86%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/get_gripper_camera_parameters__type_support_c.cpp.o[0m
+[15.698s] [ 86%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/srv/detail/set_gripper_camera_parameters__type_support_c.cpp.o[0m
+[15.735s] [ 87%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/action/detail/navigate_to__type_support_c.cpp.o[0m
+[15.753s] [ 87%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/action/detail/robot_command__type_support_c.cpp.o[0m
+[15.800s] [ 87%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/action/detail/trajectory__type_support_c.cpp.o[0m
+[15.848s] [ 87%] [32mBuilding CXX object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/spot_msgs/action/detail/manipulation__type_support_c.cpp.o[0m
+[16.207s] [ 88%] [32m[1mLinking CXX shared library libspot_msgs__rosidl_typesupport_fastrtps_c.so[0m
+[16.276s] [ 88%] Built target spot_msgs__rosidl_typesupport_fastrtps_c
+[16.299s] [ 88%] Built target spot_msgs
+[16.323s] [ 88%] [34m[1mGenerating Python code for ROS interfaces[0m
+[19.973s] [ 88%] Built target spot_msgs__py
+[19.991s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_generator_py[0m
+[20.019s] [ 89%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_battery_state_array_s.c.o[0m
+[20.019s] [ 90%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_lease_array_s.c.o[0m
+[20.020s] [ 90%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_metrics_s.c.o[0m
+[20.021s] [ 91%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_system_fault_s.c.o[0m
+[20.021s] [ 91%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_behavior_fault_s.c.o[0m
+[20.021s] [ 91%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_behavior_fault_state_s.c.o[0m
+[20.022s] [ 91%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_wi_fi_state_s.c.o[0m
+[20.022s] [ 91%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_feedback_s.c.o[0m
+[20.022s] [ 91%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_e_stop_state_array_s.c.o[0m
+[20.022s] [ 91%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_foot_state_array_s.c.o[0m
+[20.023s] [ 92%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_e_stop_state_s.c.o[0m
+[20.025s] [ 92%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_lease_owner_s.c.o[0m
+[20.025s] [ 92%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_battery_state_s.c.o[0m
+[20.031s] [ 92%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_foot_state_s.c.o[0m
+[20.050s] [ 92%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_mobility_params_s.c.o[0m
+[20.052s] [ 92%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_lease_s.c.o[0m
+[20.221s] [ 92%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_power_state_s.c.o[0m
+[20.221s] [ 93%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_lease_resource_s.c.o[0m
+[20.225s] [ 93%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/msg/_system_fault_state_s.c.o[0m
+[20.225s] [ 93%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_list_all_dances_s.c.o[0m
+[20.225s] [ 94%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_list_graph_s.c.o[0m
+[20.226s] [ 95%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_execute_dance_s.c.o[0m
+[20.226s] [ 95%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_list_world_objects_s.c.o[0m
+[20.231s] [ 95%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_set_velocity_s.c.o[0m
+[20.232s] [ 95%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_set_locomotion_s.c.o[0m
+[20.244s] [ 96%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_clear_behavior_fault_s.c.o[0m
+[20.245s] [ 96%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_list_all_moves_s.c.o[0m
+[20.245s] [ 96%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_upload_animation_s.c.o[0m
+[20.255s] [ 96%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_list_sounds_s.c.o[0m
+[20.255s] [ 96%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_play_sound_s.c.o[0m
+[20.277s] [ 96%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_load_sound_s.c.o[0m
+[20.319s] [ 97%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_delete_sound_s.c.o[0m
+[20.418s] [ 97%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_get_volume_s.c.o[0m
+[20.422s] [ 97%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_set_volume_s.c.o[0m
+[20.426s] [ 98%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_graph_nav_clear_graph_s.c.o[0m
+[20.426s] [ 98%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_graph_nav_set_localization_s.c.o[0m
+[20.426s] [ 98%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_graph_nav_upload_graph_s.c.o[0m
+[20.432s] [ 98%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_graph_nav_get_localization_pose_s.c.o[0m
+[20.447s] [ 99%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_get_gripper_camera_parameters_s.c.o[0m
+[20.450s] [ 99%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_dock_s.c.o[0m
+[20.453s] [ 99%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/srv/_set_gripper_camera_parameters_s.c.o[0m
+[20.454s] [ 99%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/action/_navigate_to_s.c.o[0m
+[20.460s] [100%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/action/_robot_command_s.c.o[0m
+[20.478s] [100%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/action/_trajectory_s.c.o[0m
+[20.481s] [100%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_generator_py.dir/rosidl_generator_py/spot_msgs/action/_manipulation_s.c.o[0m
+[20.695s] [100%] [32m[1mLinking C shared library rosidl_generator_py/spot_msgs/libspot_msgs__rosidl_generator_py.so[0m
+[20.739s] [100%] Built target spot_msgs__rosidl_generator_py
+[20.746s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_typesupport_c__pyext[0m
+[20.746s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_typesupport_introspection_c__pyext[0m
+[20.746s] [35m[1mConsolidate compiler generated dependencies of target spot_msgs__rosidl_typesupport_fastrtps_c__pyext[0m
+[20.757s] [100%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/spot_msgs/_spot_msgs_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[20.757s] [100%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/spot_msgs/_spot_msgs_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[20.758s] [100%] [32mBuilding C object CMakeFiles/spot_msgs__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/spot_msgs/_spot_msgs_s.ep.rosidl_typesupport_c.c.o[0m
+[21.012s] [100%] [32m[1mLinking C shared library rosidl_generator_py/spot_msgs/spot_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so[0m
+[21.012s] [100%] [32m[1mLinking C shared library rosidl_generator_py/spot_msgs/spot_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so[0m
+[21.014s] [100%] [32m[1mLinking C shared library rosidl_generator_py/spot_msgs/spot_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so[0m
+[21.062s] [100%] Built target spot_msgs__rosidl_typesupport_introspection_c__pyext
+[21.063s] [100%] Built target spot_msgs__rosidl_typesupport_c__pyext
+[21.063s] [100%] Built target spot_msgs__rosidl_typesupport_fastrtps_c__pyext
+[21.071s] Invoked command in '/home/bhung/spot_ros2/build/spot_msgs' returned '0': CMAKE_PREFIX_PATH=/home/bhung/bdai/ws/src/arm_utilities/install/arms:/home/bhung/bdai/ws/src/arm_utilities/install/arm_utilities:/opt/ros/humble /usr/bin/cmake --build /home/bhung/spot_ros2/build/spot_msgs -- -j16 -l16
+[21.621s] Invoking command in '/home/bhung/spot_ros2/build/spot_msgs': CMAKE_PREFIX_PATH=/home/bhung/bdai/ws/src/arm_utilities/install/arms:/home/bhung/bdai/ws/src/arm_utilities/install/arm_utilities:/opt/ros/humble /usr/bin/cmake --install /home/bhung/spot_ros2/build/spot_msgs
+[21.627s] -- Install configuration: ""
+[21.627s] -- Execute custom install script
+[21.630s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/ament_index/resource_index/rosidl_interfaces/spot_msgs
+[21.631s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__functions.h
+[21.631s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__struct.h
+[21.631s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__type_support.h
+[21.631s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__functions.h
+[21.631s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__struct.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__type_support.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__functions.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__struct.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__type_support.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__functions.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__struct.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__type_support.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/manipulation.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/navigate_to.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/robot_command.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/trajectory.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/battery_state.h
+[21.632s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/battery_state_array.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/behavior_fault.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/behavior_fault_state.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__functions.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__struct.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__type_support.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__functions.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__struct.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__type_support.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__functions.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__struct.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__type_support.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__functions.h
+[21.633s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__struct.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__type_support.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__functions.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__struct.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__type_support.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__functions.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__struct.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__type_support.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__functions.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__struct.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__type_support.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__functions.h
+[21.634s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__struct.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__type_support.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__functions.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__struct.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__type_support.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__functions.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__struct.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__type_support.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__functions.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__struct.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__type_support.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__functions.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__struct.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__type_support.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__functions.h
+[21.635s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__struct.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__type_support.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__functions.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__struct.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__type_support.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__functions.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__struct.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__type_support.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__functions.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__struct.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__type_support.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__functions.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__struct.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__type_support.h
+[21.636s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__functions.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__struct.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__type_support.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__functions.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__struct.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__type_support.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/e_stop_state.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/e_stop_state_array.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/feedback.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/foot_state.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/foot_state_array.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/lease.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/lease_array.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/lease_owner.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/lease_resource.h
+[21.637s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/metrics.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/mobility_params.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/power_state.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/rosidl_generator_c__visibility_control.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/system_fault.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/system_fault_state.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/wi_fi_state.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/clear_behavior_fault.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/delete_sound.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__functions.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__struct.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__type_support.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__functions.h
+[21.638s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__struct.h
+[21.639s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__type_support.h
+[21.639s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__functions.h
+[21.639s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__struct.h
+[21.639s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__type_support.h
+[21.639s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__functions.h
+[21.639s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__struct.h
+[21.639s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__type_support.h
+[21.639s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__functions.h
+[21.645s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__struct.h
+[21.649s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__type_support.h
+[21.655s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__functions.h
+[21.655s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__struct.h
+[21.655s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__type_support.h
+[21.655s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__functions.h
+[21.655s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__struct.h
+[21.655s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__type_support.h
+[21.655s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__functions.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__struct.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__type_support.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__functions.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__struct.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__type_support.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__functions.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__struct.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__type_support.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__functions.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__struct.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__type_support.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__functions.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__struct.h
+[21.656s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__type_support.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__functions.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__struct.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__type_support.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__functions.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__struct.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__type_support.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__functions.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__struct.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__type_support.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__functions.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__struct.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__type_support.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__functions.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__struct.h
+[21.657s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__type_support.h
+[21.657s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__functions.h
+[21.663s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__struct.h
+[21.667s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__type_support.h
+[21.672s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__functions.h
+[21.672s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__struct.h
+[21.672s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__type_support.h
+[21.672s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__functions.h
+[21.672s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__struct.h
+[21.672s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__type_support.h
+[21.672s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__functions.h
+[21.672s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__struct.h
+[21.672s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__type_support.h
+[21.673s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__functions.h
+[21.673s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__struct.h
+[21.673s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__type_support.h
+[21.673s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/dock.h
+[21.673s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/execute_dance.h
+[21.673s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/get_gripper_camera_parameters.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/get_volume.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/graph_nav_clear_graph.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/graph_nav_get_localization_pose.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/graph_nav_set_localization.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/graph_nav_upload_graph.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_all_dances.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_all_moves.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_graph.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_sounds.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_world_objects.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/load_sound.h
+[21.678s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/play_sound.h
+[21.678s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/set_gripper_camera_parameters.h
+[21.683s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/set_locomotion.h
+[21.683s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/set_velocity.h
+[21.683s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/set_volume.h
+[21.683s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/upload_animation.h
+[21.684s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/environment/library_path.sh
+[21.684s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/environment/library_path.dsv
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__rosidl_typesupport_fastrtps_c.h
+[21.685s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__rosidl_typesupport_fastrtps_c.h
+[21.686s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__rosidl_typesupport_fastrtps_c.h
+[21.692s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__rosidl_typesupport_fastrtps_c.h
+[21.692s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__rosidl_typesupport_fastrtps_c.h
+[21.692s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__rosidl_typesupport_fastrtps_c.h
+[21.692s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__rosidl_typesupport_fastrtps_c.h
+[21.692s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__rosidl_typesupport_fastrtps_c.h
+[21.692s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__rosidl_typesupport_fastrtps_c.h
+[21.692s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__rosidl_typesupport_fastrtps_c.h
+[21.692s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__rosidl_typesupport_fastrtps_c.h
+[21.693s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__rosidl_typesupport_fastrtps_c.h
+[21.693s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__rosidl_typesupport_fastrtps_c.h
+[21.693s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__rosidl_typesupport_fastrtps_c.h
+[21.693s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__rosidl_typesupport_fastrtps_c.h
+[21.693s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__rosidl_typesupport_fastrtps_c.h
+[21.698s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__rosidl_typesupport_fastrtps_c.h
+[21.698s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__rosidl_typesupport_fastrtps_c.h
+[21.698s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__rosidl_typesupport_fastrtps_c.h
+[21.698s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__rosidl_typesupport_fastrtps_c.h
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__builder.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__struct.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__traits.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__builder.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__struct.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__traits.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__builder.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__struct.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__traits.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__builder.hpp
+[21.699s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__struct.hpp
+[21.700s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__traits.hpp
+[21.700s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/manipulation.hpp
+[21.700s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/navigate_to.hpp
+[21.700s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/robot_command.hpp
+[21.700s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/trajectory.hpp
+[21.700s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/battery_state.hpp
+[21.700s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/battery_state_array.hpp
+[21.700s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/behavior_fault.hpp
+[21.700s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/behavior_fault_state.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__builder.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__struct.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__traits.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__builder.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__struct.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__traits.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__builder.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__struct.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__traits.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__builder.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__struct.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__traits.hpp
+[21.701s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__builder.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__struct.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__traits.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__builder.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__struct.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__traits.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__builder.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__struct.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__traits.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__builder.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__struct.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__traits.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__builder.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__struct.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__traits.hpp
+[21.702s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__builder.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__struct.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__traits.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__builder.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__struct.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__traits.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__builder.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__struct.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__traits.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__builder.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__struct.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__traits.hpp
+[21.703s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__builder.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__struct.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__traits.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__builder.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__struct.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__traits.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__builder.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__struct.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__traits.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__builder.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__struct.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__traits.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__builder.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__struct.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__traits.hpp
+[21.704s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__builder.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__struct.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__traits.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/e_stop_state.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/e_stop_state_array.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/feedback.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/foot_state.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/foot_state_array.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/lease.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/lease_array.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/lease_owner.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/lease_resource.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/metrics.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/mobility_params.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/power_state.hpp
+[21.705s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/system_fault.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/system_fault_state.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/wi_fi_state.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/clear_behavior_fault.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/delete_sound.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__builder.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__struct.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__traits.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__builder.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__struct.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__traits.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__builder.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__struct.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__traits.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__builder.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__struct.hpp
+[21.706s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__traits.hpp
+[21.706s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__builder.hpp
+[21.712s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__struct.hpp
+[21.716s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__traits.hpp
+[21.721s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__builder.hpp
+[21.721s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__struct.hpp
+[21.721s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__traits.hpp
+[21.721s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__builder.hpp
+[21.721s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__struct.hpp
+[21.721s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__traits.hpp
+[21.721s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__builder.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__struct.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__traits.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__builder.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__struct.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__traits.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__builder.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__struct.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__traits.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__builder.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__struct.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__traits.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__builder.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__struct.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__traits.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__builder.hpp
+[21.722s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__struct.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__traits.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__builder.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__struct.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__traits.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__builder.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__struct.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__traits.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__builder.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__struct.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__traits.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__builder.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__struct.hpp
+[21.723s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__traits.hpp
+[21.723s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__builder.hpp
+[21.728s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__struct.hpp
+[21.733s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__traits.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__builder.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__struct.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__traits.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__builder.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__struct.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__traits.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__builder.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__struct.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__traits.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__builder.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__struct.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__traits.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/dock.hpp
+[21.738s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/execute_dance.hpp
+[21.738s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/get_gripper_camera_parameters.hpp
+[21.743s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/get_volume.hpp
+[21.743s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/graph_nav_clear_graph.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/graph_nav_get_localization_pose.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/graph_nav_set_localization.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/graph_nav_upload_graph.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_all_dances.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_all_moves.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_graph.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_sounds.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/list_world_objects.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/load_sound.hpp
+[21.744s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/play_sound.hpp
+[21.744s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/set_gripper_camera_parameters.hpp
+[21.749s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/set_locomotion.hpp
+[21.749s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/set_velocity.hpp
+[21.749s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/set_volume.hpp
+[21.749s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/upload_animation.hpp
+[21.750s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__rosidl_typesupport_fastrtps_cpp.hpp
+[21.750s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__rosidl_typesupport_fastrtps_cpp.hpp
+[21.750s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__rosidl_typesupport_fastrtps_cpp.hpp
+[21.750s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__rosidl_typesupport_fastrtps_cpp.hpp
+[21.750s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__rosidl_typesupport_fastrtps_cpp.hpp
+[21.750s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__rosidl_typesupport_fastrtps_cpp.hpp
+[21.750s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__rosidl_typesupport_fastrtps_cpp.hpp
+[21.750s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__rosidl_typesupport_fastrtps_cpp.hpp
+[21.751s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[21.752s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__rosidl_typesupport_fastrtps_cpp.hpp
+[21.752s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__rosidl_typesupport_fastrtps_cpp.hpp
+[21.752s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__rosidl_typesupport_fastrtps_cpp.hpp
+[21.752s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__rosidl_typesupport_fastrtps_cpp.hpp
+[21.752s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__rosidl_typesupport_fastrtps_cpp.hpp
+[21.757s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__rosidl_typesupport_fastrtps_cpp.hpp
+[21.758s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__rosidl_typesupport_fastrtps_cpp.hpp
+[21.758s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__rosidl_typesupport_fastrtps_cpp.hpp
+[21.758s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__rosidl_typesupport_fastrtps_cpp.hpp
+[21.762s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__rosidl_typesupport_fastrtps_cpp.hpp
+[21.762s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__rosidl_typesupport_fastrtps_cpp.hpp
+[21.762s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__rosidl_typesupport_fastrtps_cpp.hpp
+[21.762s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__rosidl_typesupport_fastrtps_cpp.hpp
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__rosidl_typesupport_introspection_c.h
+[21.763s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__rosidl_typesupport_introspection_c.h
+[21.764s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__rosidl_typesupport_introspection_c.h
+[21.765s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__rosidl_typesupport_introspection_c.h
+[21.765s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__rosidl_typesupport_introspection_c.h
+[21.765s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__rosidl_typesupport_introspection_c.h
+[21.769s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__rosidl_typesupport_introspection_c.h
+[21.770s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__rosidl_typesupport_introspection_c.h
+[21.770s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__rosidl_typesupport_introspection_c.h
+[21.775s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__rosidl_typesupport_introspection_c.h
+[21.775s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__rosidl_typesupport_introspection_c.h
+[21.775s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__rosidl_typesupport_introspection_c.h
+[21.775s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__rosidl_typesupport_introspection_c.h
+[21.776s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/manipulation__rosidl_typesupport_introspection_cpp.hpp
+[21.776s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/navigate_to__rosidl_typesupport_introspection_cpp.hpp
+[21.776s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/robot_command__rosidl_typesupport_introspection_cpp.hpp
+[21.776s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/action/detail/trajectory__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/battery_state_array__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/behavior_fault_state__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/e_stop_state_array__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/feedback__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/foot_state_array__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_array__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_owner__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/lease_resource__rosidl_typesupport_introspection_cpp.hpp
+[21.777s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/metrics__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/mobility_params__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/power_state__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/system_fault_state__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/msg/detail/wi_fi_state__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/clear_behavior_fault__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/delete_sound__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/dock__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/execute_dance__rosidl_typesupport_introspection_cpp.hpp
+[21.778s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_gripper_camera_parameters__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/get_volume__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_clear_graph__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_get_localization_pose__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_set_localization__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/graph_nav_upload_graph__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_dances__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_all_moves__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_graph__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_sounds__rosidl_typesupport_introspection_cpp.hpp
+[21.783s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/list_world_objects__rosidl_typesupport_introspection_cpp.hpp
+[21.784s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/load_sound__rosidl_typesupport_introspection_cpp.hpp
+[21.784s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/play_sound__rosidl_typesupport_introspection_cpp.hpp
+[21.784s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_gripper_camera_parameters__rosidl_typesupport_introspection_cpp.hpp
+[21.789s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_locomotion__rosidl_typesupport_introspection_cpp.hpp
+[21.789s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_velocity__rosidl_typesupport_introspection_cpp.hpp
+[21.789s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/set_volume__rosidl_typesupport_introspection_cpp.hpp
+[21.789s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/include/spot_msgs/spot_msgs/srv/detail/upload_animation__rosidl_typesupport_introspection_cpp.hpp
+[21.789s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/environment/pythonpath.sh
+[21.789s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/environment/pythonpath.dsv
+[21.790s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs-0.0.0-py3.10.egg-info/PKG-INFO
+[21.790s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs-0.0.0-py3.10.egg-info/SOURCES.txt
+[21.790s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs-0.0.0-py3.10.egg-info/dependency_links.txt
+[21.790s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs-0.0.0-py3.10.egg-info/top_level.txt
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/__init__.py
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/_spot_msgs_s.ep.rosidl_typesupport_c.c
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/_spot_msgs_s.ep.rosidl_typesupport_fastrtps_c.c
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/_spot_msgs_s.ep.rosidl_typesupport_introspection_c.c
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/__init__.py
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_manipulation.py
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_manipulation_s.c
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_navigate_to.py
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_navigate_to_s.c
+[21.791s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_robot_command.py
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_robot_command_s.c
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_trajectory.py
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_trajectory_s.c
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/libspot_msgs__rosidl_generator_py.so
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/__init__.py
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_battery_state.py
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_battery_state_array.py
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_battery_state_array_s.c
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_battery_state_s.c
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_behavior_fault.py
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_behavior_fault_s.c
+[21.792s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_behavior_fault_state.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_behavior_fault_state_s.c
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_e_stop_state.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_e_stop_state_array.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_e_stop_state_array_s.c
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_e_stop_state_s.c
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_feedback.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_feedback_s.c
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_foot_state.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_foot_state_array.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_foot_state_array_s.c
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_foot_state_s.c
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_array.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_array_s.c
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_owner.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_owner_s.c
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_resource.py
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_resource_s.c
+[21.793s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_s.c
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_metrics.py
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_metrics_s.c
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_mobility_params.py
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_mobility_params_s.c
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_power_state.py
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_power_state_s.c
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_system_fault.py
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_system_fault_s.c
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_system_fault_state.py
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_system_fault_state_s.c
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_wi_fi_state.py
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_wi_fi_state_s.c
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/spot_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/spot_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/spot_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/__init__.py
+[21.794s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_clear_behavior_fault.py
+[21.795s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_clear_behavior_fault_s.c
+[21.795s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_delete_sound.py
+[21.795s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_delete_sound_s.c
+[21.795s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_dock.py
+[21.795s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_dock_s.c
+[21.795s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_execute_dance.py
+[21.795s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_execute_dance_s.c
+[21.795s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_get_gripper_camera_parameters.py
+[21.802s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_get_gripper_camera_parameters_s.c
+[21.807s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_get_volume.py
+[21.807s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_get_volume_s.c
+[21.807s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_clear_graph.py
+[21.807s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_clear_graph_s.c
+[21.807s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_get_localization_pose.py
+[21.807s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_get_localization_pose_s.c
+[21.807s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_set_localization.py
+[21.807s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_set_localization_s.c
+[21.807s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_upload_graph.py
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_upload_graph_s.c
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_all_dances.py
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_all_dances_s.c
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_all_moves.py
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_all_moves_s.c
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_graph.py
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_graph_s.c
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_sounds.py
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_sounds_s.c
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_world_objects.py
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_world_objects_s.c
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_load_sound.py
+[21.808s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_load_sound_s.c
+[21.809s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_play_sound.py
+[21.809s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_play_sound_s.c
+[21.809s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_gripper_camera_parameters.py
+[21.814s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_gripper_camera_parameters_s.c
+[21.819s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_locomotion.py
+[21.819s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_locomotion_s.c
+[21.819s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_velocity.py
+[21.820s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_velocity_s.c
+[21.820s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_volume.py
+[21.820s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_volume_s.c
+[21.820s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_upload_animation.py
+[21.820s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_upload_animation_s.c
+[21.820s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/spot_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[21.821s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/spot_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[21.821s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/spot_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[21.821s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/BatteryStateArray.idl
+[21.821s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/BehaviorFault.idl
+[21.821s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/EStopStateArray.idl
+[21.821s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/FootStateArray.idl
+[21.821s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/LeaseArray.idl
+[21.821s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/LeaseOwner.idl
+[21.822s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/Metrics.idl
+[21.822s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/MobilityParams.idl
+[21.822s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/SystemFault.idl
+[21.822s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/WiFiState.idl
+[21.822s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/BatteryState.idl
+[21.822s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/BehaviorFaultState.idl
+[21.822s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/EStopState.idl
+[21.823s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/Feedback.idl
+[21.823s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/FootState.idl
+[21.823s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/Lease.idl
+[21.823s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/LeaseResource.idl
+[21.823s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/PowerState.idl
+[21.823s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/SystemFaultState.idl
+[21.824s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListGraph.idl
+[21.824s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListWorldObjects.idl
+[21.824s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetLocomotion.idl
+[21.824s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetVelocity.idl
+[21.824s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ExecuteDance.idl
+[21.824s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListAllDances.idl
+[21.825s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListAllMoves.idl
+[21.825s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/UploadAnimation.idl
+[21.825s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ClearBehaviorFault.idl
+[21.825s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListSounds.idl
+[21.825s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/LoadSound.idl
+[21.825s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/PlaySound.idl
+[21.826s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/DeleteSound.idl
+[21.826s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GetVolume.idl
+[21.826s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetVolume.idl
+[21.826s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavUploadGraph.idl
+[21.826s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavClearGraph.idl
+[21.826s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavSetLocalization.idl
+[21.826s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavGetLocalizationPose.idl
+[21.827s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/Dock.idl
+[21.827s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GetGripperCameraParameters.idl
+[21.832s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetGripperCameraParameters.idl
+[21.837s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/action/NavigateTo.idl
+[21.837s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/action/RobotCommand.idl
+[21.837s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/action/Trajectory.idl
+[21.837s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/action/Manipulation.idl
+[21.837s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/BatteryStateArray.msg
+[21.837s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/BehaviorFault.msg
+[21.837s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/EStopStateArray.msg
+[21.837s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/FootStateArray.msg
+[21.837s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/LeaseArray.msg
+[21.838s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/LeaseOwner.msg
+[21.838s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/Metrics.msg
+[21.838s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/MobilityParams.msg
+[21.838s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/SystemFault.msg
+[21.838s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/WiFiState.msg
+[21.838s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/BatteryState.msg
+[21.838s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/BehaviorFaultState.msg
+[21.838s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/EStopState.msg
+[21.838s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/Feedback.msg
+[21.839s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/FootState.msg
+[21.839s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/Lease.msg
+[21.839s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/LeaseResource.msg
+[21.839s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/PowerState.msg
+[21.839s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/msg/SystemFaultState.msg
+[21.839s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListGraph.srv
+[21.839s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListGraph_Request.msg
+[21.839s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListGraph_Response.msg
+[21.839s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListWorldObjects.srv
+[21.840s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListWorldObjects_Request.msg
+[21.840s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListWorldObjects_Response.msg
+[21.840s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetLocomotion.srv
+[21.840s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetLocomotion_Request.msg
+[21.840s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetLocomotion_Response.msg
+[21.840s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetVelocity.srv
+[21.840s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetVelocity_Request.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetVelocity_Response.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ExecuteDance.srv
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ExecuteDance_Request.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ExecuteDance_Response.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListAllDances.srv
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListAllDances_Request.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListAllDances_Response.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListAllMoves.srv
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListAllMoves_Request.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListAllMoves_Response.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/UploadAnimation.srv
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/UploadAnimation_Request.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/UploadAnimation_Response.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ClearBehaviorFault.srv
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ClearBehaviorFault_Request.msg
+[21.841s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ClearBehaviorFault_Response.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListSounds.srv
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListSounds_Request.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/ListSounds_Response.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/LoadSound.srv
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/LoadSound_Request.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/LoadSound_Response.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/PlaySound.srv
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/PlaySound_Request.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/PlaySound_Response.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/DeleteSound.srv
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/DeleteSound_Request.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/DeleteSound_Response.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GetVolume.srv
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GetVolume_Request.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GetVolume_Response.msg
+[21.842s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetVolume.srv
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetVolume_Request.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetVolume_Response.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavUploadGraph.srv
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavUploadGraph_Request.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavUploadGraph_Response.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavClearGraph.srv
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavClearGraph_Request.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavClearGraph_Response.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavSetLocalization.srv
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavSetLocalization_Request.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavSetLocalization_Response.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavGetLocalizationPose.srv
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavGetLocalizationPose_Request.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GraphNavGetLocalizationPose_Response.msg
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/Dock.srv
+[21.843s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/Dock_Request.msg
+[21.844s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/Dock_Response.msg
+[21.844s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GetGripperCameraParameters.srv
+[21.849s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GetGripperCameraParameters_Request.msg
+[21.854s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/GetGripperCameraParameters_Response.msg
+[21.859s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetGripperCameraParameters.srv
+[21.864s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetGripperCameraParameters_Request.msg
+[21.868s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/srv/SetGripperCameraParameters_Response.msg
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/action/NavigateTo.action
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/action/RobotCommand.action
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/action/Trajectory.action
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/action/Manipulation.action
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/ament_index/resource_index/package_run_dependencies/spot_msgs
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/ament_index/resource_index/parent_prefix_path/spot_msgs
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/environment/ament_prefix_path.sh
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/environment/ament_prefix_path.dsv
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/environment/path.sh
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/environment/path.dsv
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/local_setup.bash
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/local_setup.sh
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/local_setup.zsh
+[21.873s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/local_setup.dsv
+[21.874s] -- Symlinking: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.dsv
+[21.878s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/ament_index/resource_index/packages/spot_msgs
+[21.878s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/rosidl_cmake-extras.cmake
+[21.878s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+[21.879s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+[21.879s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+[21.879s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/ament_cmake_export_targets-extras.cmake
+[21.879s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[21.879s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[21.879s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgsConfig.cmake
+[21.879s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgsConfig-version.cmake
+[21.879s] -- Up-to-date symlink: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.xml
+[21.879s] -- Installing: /home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_generator_c.so
+[21.880s] -- Set runtime path of "/home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_generator_c.so" to ""
+[21.880s] -- Installing: /home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_fastrtps_c.so
+[21.881s] -- Set runtime path of "/home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_fastrtps_c.so" to ""
+[21.881s] -- Installing: /home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_fastrtps_cpp.so
+[21.882s] -- Set runtime path of "/home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_fastrtps_cpp.so" to ""
+[21.882s] -- Installing: /home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_introspection_c.so
+[21.882s] -- Set runtime path of "/home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_introspection_c.so" to ""
+[21.883s] -- Installing: /home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_c.so
+[21.883s] -- Set runtime path of "/home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_c.so" to ""
+[21.883s] -- Installing: /home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_introspection_cpp.so
+[21.884s] -- Set runtime path of "/home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_introspection_cpp.so" to ""
+[21.885s] -- Installing: /home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_cpp.so
+[21.885s] -- Set runtime path of "/home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_typesupport_cpp.so" to ""
+[21.954s] Listing '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/__init__.py'...
+[21.954s] Listing '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/__init__.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_manipulation.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_navigate_to.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_robot_command.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/action/_trajectory.py'...
+[21.954s] Listing '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/__init__.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_battery_state.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_battery_state_array.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_behavior_fault.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_behavior_fault_state.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_e_stop_state.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_e_stop_state_array.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_feedback.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_foot_state.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_foot_state_array.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_array.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_owner.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_lease_resource.py'...
+[21.954s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_metrics.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_mobility_params.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_power_state.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_system_fault.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_system_fault_state.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/msg/_wi_fi_state.py'...
+[21.955s] Listing '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/__init__.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_clear_behavior_fault.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_delete_sound.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_dock.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_execute_dance.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_get_gripper_camera_parameters.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_get_volume.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_clear_graph.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_get_localization_pose.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_set_localization.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_graph_nav_upload_graph.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_all_dances.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_all_moves.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_graph.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_sounds.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_list_world_objects.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_load_sound.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_play_sound.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_gripper_camera_parameters.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_locomotion.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_velocity.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_set_volume.py'...
+[21.955s] Compiling '/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages/spot_msgs/srv/_upload_animation.py'...
+[21.957s] -- Installing: /home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_generator_py.so
+[21.958s] -- Set runtime path of "/home/bhung/spot_ros2/install/spot_msgs/lib/libspot_msgs__rosidl_generator_py.so" to ""
+[21.958s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/export_spot_msgs__rosidl_generator_cExport.cmake
+[21.958s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/export_spot_msgs__rosidl_generator_cExport-noconfig.cmake
+[21.958s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/export_spot_msgs__rosidl_typesupport_fastrtps_cExport.cmake
+[21.958s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/export_spot_msgs__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/export_spot_msgs__rosidl_generator_cppExport.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/export_spot_msgs__rosidl_typesupport_fastrtps_cppExport.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/export_spot_msgs__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgs__rosidl_typesupport_introspection_cExport.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgs__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgs__rosidl_typesupport_cExport.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgs__rosidl_typesupport_cExport-noconfig.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgs__rosidl_typesupport_introspection_cppExport.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgs__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgs__rosidl_typesupport_cppExport.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/spot_msgs__rosidl_typesupport_cppExport-noconfig.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/export_spot_msgs__rosidl_generator_pyExport.cmake
+[21.959s] -- Up-to-date: /home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/cmake/export_spot_msgs__rosidl_generator_pyExport-noconfig.cmake
+[21.963s] Invoked command in '/home/bhung/spot_ros2/build/spot_msgs' returned '0': CMAKE_PREFIX_PATH=/home/bhung/bdai/ws/src/arm_utilities/install/arms:/home/bhung/bdai/ws/src/arm_utilities/install/arm_utilities:/opt/ros/humble /usr/bin/cmake --install /home/bhung/spot_ros2/build/spot_msgs

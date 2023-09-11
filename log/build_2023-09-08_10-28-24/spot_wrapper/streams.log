@@ -1,0 +1,18 @@
+[1.075s] Invoking command in '/home/bhung/spot_ros2/build/spot_wrapper': PYTHONPATH=/home/bhung/spot_ros2/build/spot_wrapper/prefix_override:/home/bhung/spot_ros2/install/spot_wrapper/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/spot_wrapper/build --no-deps
+[1.464s] running develop
+[1.464s] /usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+[1.464s]   warnings.warn(
+[1.465s] /usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[1.465s]   warnings.warn(
+[1.693s] running egg_info
+[1.694s] writing spot_wrapper.egg-info/PKG-INFO
+[1.694s] writing dependency_links to spot_wrapper.egg-info/dependency_links.txt
+[1.694s] writing requirements to spot_wrapper.egg-info/requires.txt
+[1.694s] writing top-level names to spot_wrapper.egg-info/top_level.txt
+[1.695s] reading manifest file 'spot_wrapper.egg-info/SOURCES.txt'
+[1.696s] writing manifest file 'spot_wrapper.egg-info/SOURCES.txt'
+[1.735s] running build_ext
+[1.736s] Creating /home/bhung/spot_ros2/install/spot_wrapper/lib/python3.10/site-packages/spot-wrapper.egg-link (link to .)
+[1.736s] 
+[1.736s] Installed /home/bhung/spot_ros2/build/spot_wrapper
+[1.775s] Invoked command in '/home/bhung/spot_ros2/build/spot_wrapper' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/spot_wrapper/prefix_override:/home/bhung/spot_ros2/install/spot_wrapper/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/spot_wrapper/build --no-deps

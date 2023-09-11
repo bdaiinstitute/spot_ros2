@@ -1,0 +1,2 @@
+string animation_name
+string animation_file_content

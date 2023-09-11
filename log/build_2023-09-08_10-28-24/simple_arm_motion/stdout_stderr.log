@@ -1,0 +1,19 @@
+running develop
+/usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+/usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+running egg_info
+writing simple_arm_motion.egg-info/PKG-INFO
+writing dependency_links to simple_arm_motion.egg-info/dependency_links.txt
+writing entry points to simple_arm_motion.egg-info/entry_points.txt
+writing requirements to simple_arm_motion.egg-info/requires.txt
+writing top-level names to simple_arm_motion.egg-info/top_level.txt
+reading manifest file 'simple_arm_motion.egg-info/SOURCES.txt'
+writing manifest file 'simple_arm_motion.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages/simple-arm-motion.egg-link (link to .)
+Installing arm_simple script to /home/bhung/spot_ros2/install/simple_arm_motion/lib/simple_arm_motion
+
+Installed /home/bhung/spot_ros2/build/simple_arm_motion
+running install_data

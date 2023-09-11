@@ -1,0 +1,21 @@
+[1.692s] Invoking command in '/home/bhung/spot_ros2/build/simple_walk_forward': PYTHONPATH=/home/bhung/spot_ros2/build/simple_walk_forward/prefix_override:/home/bhung/spot_ros2/install/simple_walk_forward/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_walk_forward/build --no-deps install_data
+[2.080s] running develop
+[2.080s] /usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+[2.080s]   warnings.warn(
+[2.081s] /usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[2.081s]   warnings.warn(
+[2.373s] running egg_info
+[2.373s] writing simple_walk_forward.egg-info/PKG-INFO
+[2.374s] writing dependency_links to simple_walk_forward.egg-info/dependency_links.txt
+[2.374s] writing entry points to simple_walk_forward.egg-info/entry_points.txt
+[2.374s] writing requirements to simple_walk_forward.egg-info/requires.txt
+[2.374s] writing top-level names to simple_walk_forward.egg-info/top_level.txt
+[2.376s] reading manifest file 'simple_walk_forward.egg-info/SOURCES.txt'
+[2.377s] writing manifest file 'simple_walk_forward.egg-info/SOURCES.txt'
+[2.431s] running build_ext
+[2.432s] Creating /home/bhung/spot_ros2/install/simple_walk_forward/lib/python3.10/site-packages/simple-walk-forward.egg-link (link to .)
+[2.432s] Installing walk_forward script to /home/bhung/spot_ros2/install/simple_walk_forward/lib/simple_walk_forward
+[2.433s] 
+[2.433s] Installed /home/bhung/spot_ros2/build/simple_walk_forward
+[2.433s] running install_data
+[2.494s] Invoked command in '/home/bhung/spot_ros2/build/simple_walk_forward' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/simple_walk_forward/prefix_override:/home/bhung/spot_ros2/install/simple_walk_forward/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_walk_forward/build --no-deps install_data

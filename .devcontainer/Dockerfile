@@ -48,6 +48,7 @@ RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.2
   && dpkg -i /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb \
   && rm /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
 
+
 # Install packages inside the new environment
 RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
     && pip install --root-user-action=ignore --no-cache-dir --default-timeout=900 \

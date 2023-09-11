@@ -1,0 +1,21 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from spot_msgs/srv/GetVolume.srv
+// generated code does not contain a copyright notice
+
+
+module spot_msgs {
+  module srv {
+    struct GetVolume_Request {
+      uint8 structure_needs_at_least_one_member;
+    };
+    struct GetVolume_Response {
+      @verbatim (language="comment", text=
+        "From 0 to 100")
+      float volume;
+
+      boolean success;
+
+      string message;
+    };
+  };
+};

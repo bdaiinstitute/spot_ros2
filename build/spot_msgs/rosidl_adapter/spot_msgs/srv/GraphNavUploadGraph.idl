@@ -1,0 +1,20 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from spot_msgs/srv/GraphNavUploadGraph.srv
+// generated code does not contain a copyright notice
+
+
+module spot_msgs {
+  module srv {
+    @verbatim (language="comment", text=
+      "Loads the GraphNav map from 'upload_filepath' and" "\n"
+      "uploads it to the GraphNav server using UploadGraph rpc.")
+    struct GraphNavUploadGraph_Request {
+      string upload_filepath;
+    };
+    struct GraphNavUploadGraph_Response {
+      boolean success;
+
+      string message;
+    };
+  };
+};

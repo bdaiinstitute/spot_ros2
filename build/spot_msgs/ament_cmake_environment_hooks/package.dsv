@@ -1,0 +1,4 @@
+source;share/spot_msgs/local_setup.bash
+source;share/spot_msgs/local_setup.dsv
+source;share/spot_msgs/local_setup.sh
+source;share/spot_msgs/local_setup.zsh

@@ -1,0 +1,19 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from spot_msgs/srv/GraphNavClearGraph.srv
+// generated code does not contain a copyright notice
+
+
+module spot_msgs {
+  module srv {
+    @verbatim (language="comment", text=
+      "Clears the graph on Spot's GraphNav server")
+    struct GraphNavClearGraph_Request {
+      uint8 structure_needs_at_least_one_member;
+    };
+    struct GraphNavClearGraph_Response {
+      boolean success;
+
+      string message;
+    };
+  };
+};

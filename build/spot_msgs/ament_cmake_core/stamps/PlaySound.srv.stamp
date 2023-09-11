@@ -1,0 +1,5 @@
+string name
+float32 volume_multiplier
+---
+bool success
+string message

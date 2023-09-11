@@ -1,0 +1,42 @@
+running develop
+/usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+/usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+running egg_info
+creating spot_driver.egg-info
+writing spot_driver.egg-info/PKG-INFO
+writing dependency_links to spot_driver.egg-info/dependency_links.txt
+writing entry points to spot_driver.egg-info/entry_points.txt
+writing requirements to spot_driver.egg-info/requires.txt
+writing top-level names to spot_driver.egg-info/top_level.txt
+writing manifest file 'spot_driver.egg-info/SOURCES.txt'
+reading manifest file 'spot_driver.egg-info/SOURCES.txt'
+writing manifest file 'spot_driver.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/bhung/spot_ros2/install/spot_driver/lib/python3.10/site-packages/spot-driver.egg-link (link to .)
+Installing command_spot script to /home/bhung/spot_ros2/install/spot_driver/lib/spot_driver
+Installing spot_publish_cameras script to /home/bhung/spot_ros2/install/spot_driver/lib/spot_driver
+Installing spot_ros2 script to /home/bhung/spot_ros2/install/spot_driver/lib/spot_driver
+
+Installed /home/bhung/spot_ros2/build/spot_driver
+running install_data
+creating /home/bhung/spot_ros2/install/spot_driver/share/ament_index
+creating /home/bhung/spot_ros2/install/spot_driver/share/ament_index/resource_index
+creating /home/bhung/spot_ros2/install/spot_driver/share/ament_index/resource_index/packages
+copying resource/spot_driver -> /home/bhung/spot_ros2/install/spot_driver/share/ament_index/resource_index/packages
+copying package.xml -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver
+creating /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/launch
+copying launch/spot_driver.launch.py -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/launch
+copying launch/view_robot.launch.py -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/launch
+copying launch/point_cloud_xyz.launch.py -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/launch
+copying launch/point_cloud_xyzrgb.launch.py -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/launch
+copying launch/spot_image_publishers.launch.py -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/launch
+creating /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/rviz
+copying rviz/spot_template.yaml -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/rviz
+copying rviz/viz_spot.rviz -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/rviz
+creating /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/config
+copying config/teleop.yaml -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/config
+copying config/spot_ros_example.yaml -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/config
+copying config/twist_mux.yaml -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/config
+copying config/planar.yaml -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/config

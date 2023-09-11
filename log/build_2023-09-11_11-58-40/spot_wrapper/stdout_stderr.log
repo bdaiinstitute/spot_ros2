@@ -1,0 +1,16 @@
+running develop
+/usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+/usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+running egg_info
+writing spot_wrapper.egg-info/PKG-INFO
+writing dependency_links to spot_wrapper.egg-info/dependency_links.txt
+writing requirements to spot_wrapper.egg-info/requires.txt
+writing top-level names to spot_wrapper.egg-info/top_level.txt
+reading manifest file 'spot_wrapper.egg-info/SOURCES.txt'
+writing manifest file 'spot_wrapper.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/bhung/spot_ros2/install/spot_wrapper/lib/python3.10/site-packages/spot-wrapper.egg-link (link to .)
+
+Installed /home/bhung/spot_ros2/build/spot_wrapper

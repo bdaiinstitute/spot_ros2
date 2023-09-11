@@ -1,0 +1,20 @@
+[1.774s] Invoking command in '/home/bhung/spot_ros2/build/utilities': PYTHONPATH=/home/bhung/spot_ros2/build/utilities/prefix_override:/home/bhung/spot_ros2/install/utilities/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/utilities/build --no-deps install_data
+[2.164s] running develop
+[2.166s] /usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+[2.166s]   warnings.warn(
+[2.173s] /usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[2.174s]   warnings.warn(
+[2.427s] running egg_info
+[2.427s] writing utilities.egg-info/PKG-INFO
+[2.428s] writing dependency_links to utilities.egg-info/dependency_links.txt
+[2.428s] writing entry points to utilities.egg-info/entry_points.txt
+[2.428s] writing requirements to utilities.egg-info/requires.txt
+[2.428s] writing top-level names to utilities.egg-info/top_level.txt
+[2.429s] reading manifest file 'utilities.egg-info/SOURCES.txt'
+[2.430s] writing manifest file 'utilities.egg-info/SOURCES.txt'
+[2.460s] running build_ext
+[2.462s] Creating /home/bhung/spot_ros2/install/utilities/lib/python3.10/site-packages/utilities.egg-link (link to .)
+[2.467s] 
+[2.468s] Installed /home/bhung/spot_ros2/build/utilities
+[2.469s] running install_data
+[2.515s] Invoked command in '/home/bhung/spot_ros2/build/utilities' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/utilities/prefix_override:/home/bhung/spot_ros2/install/utilities/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/utilities/build --no-deps install_data

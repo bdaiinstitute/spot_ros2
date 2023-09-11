@@ -1,0 +1,21 @@
+[1.914s] Invoking command in '/home/bhung/spot_ros2/build/simple_arm_motion': PYTHONPATH=/home/bhung/spot_ros2/build/simple_arm_motion/prefix_override:/home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_arm_motion/build --no-deps install_data
+[2.335s] running develop
+[2.336s] /usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+[2.336s]   warnings.warn(
+[2.337s] /usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[2.337s]   warnings.warn(
+[2.601s] running egg_info
+[2.601s] writing simple_arm_motion.egg-info/PKG-INFO
+[2.601s] writing dependency_links to simple_arm_motion.egg-info/dependency_links.txt
+[2.602s] writing entry points to simple_arm_motion.egg-info/entry_points.txt
+[2.602s] writing requirements to simple_arm_motion.egg-info/requires.txt
+[2.602s] writing top-level names to simple_arm_motion.egg-info/top_level.txt
+[2.602s] reading manifest file 'simple_arm_motion.egg-info/SOURCES.txt'
+[2.602s] writing manifest file 'simple_arm_motion.egg-info/SOURCES.txt'
+[2.642s] running build_ext
+[2.642s] Creating /home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages/simple-arm-motion.egg-link (link to .)
+[2.643s] Installing arm_simple script to /home/bhung/spot_ros2/install/simple_arm_motion/lib/simple_arm_motion
+[2.643s] 
+[2.643s] Installed /home/bhung/spot_ros2/build/simple_arm_motion
+[2.644s] running install_data
+[2.677s] Invoked command in '/home/bhung/spot_ros2/build/simple_arm_motion' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/simple_arm_motion/prefix_override:/home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_arm_motion/build --no-deps install_data

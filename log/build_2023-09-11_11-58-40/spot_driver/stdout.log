@@ -1,0 +1,17 @@
+running develop
+running egg_info
+writing spot_driver.egg-info/PKG-INFO
+writing dependency_links to spot_driver.egg-info/dependency_links.txt
+writing entry points to spot_driver.egg-info/entry_points.txt
+writing requirements to spot_driver.egg-info/requires.txt
+writing top-level names to spot_driver.egg-info/top_level.txt
+reading manifest file 'spot_driver.egg-info/SOURCES.txt'
+writing manifest file 'spot_driver.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/bhung/spot_ros2/install/spot_driver/lib/python3.10/site-packages/spot-driver.egg-link (link to .)
+Installing command_spot script to /home/bhung/spot_ros2/install/spot_driver/lib/spot_driver
+Installing spot_publish_cameras script to /home/bhung/spot_ros2/install/spot_driver/lib/spot_driver
+Installing spot_ros2 script to /home/bhung/spot_ros2/install/spot_driver/lib/spot_driver
+
+Installed /home/bhung/spot_ros2/build/spot_driver
+running install_data

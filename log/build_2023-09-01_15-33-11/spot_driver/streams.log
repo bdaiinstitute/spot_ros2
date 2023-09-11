@@ -1,0 +1,24 @@
+[0.476s] Invoking command in '/home/bhung/spot_ros2/build/spot_driver': AMENT_PREFIX_PATH=/home/bhung/spot_ros2/install/spot_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/bhung/spot_ros2/install/spot_msgs LD_LIBRARY_PATH=/home/bhung/spot_ros2/install/spot_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/bhung/spot_ros2/build/spot_driver/prefix_override:/home/bhung/spot_ros2/install/spot_driver/lib/python3.10/site-packages:/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/spot_driver/build --no-deps install_data
+[0.654s] running develop
+[0.654s] /usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+[0.654s]   warnings.warn(
+[0.655s] /usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[0.655s]   warnings.warn(
+[0.780s] running egg_info
+[0.780s] writing spot_driver.egg-info/PKG-INFO
+[0.780s] writing dependency_links to spot_driver.egg-info/dependency_links.txt
+[0.780s] writing entry points to spot_driver.egg-info/entry_points.txt
+[0.780s] writing requirements to spot_driver.egg-info/requires.txt
+[0.781s] writing top-level names to spot_driver.egg-info/top_level.txt
+[0.782s] reading manifest file 'spot_driver.egg-info/SOURCES.txt'
+[0.783s] writing manifest file 'spot_driver.egg-info/SOURCES.txt'
+[0.803s] running build_ext
+[0.803s] Creating /home/bhung/spot_ros2/install/spot_driver/lib/python3.10/site-packages/spot-driver.egg-link (link to .)
+[0.804s] Installing command_spot script to /home/bhung/spot_ros2/install/spot_driver/lib/spot_driver
+[0.804s] Installing spot_publish_cameras script to /home/bhung/spot_ros2/install/spot_driver/lib/spot_driver
+[0.804s] Installing spot_ros2 script to /home/bhung/spot_ros2/install/spot_driver/lib/spot_driver
+[0.804s] 
+[0.805s] Installed /home/bhung/spot_ros2/build/spot_driver
+[0.805s] running install_data
+[0.805s] copying launch/spot_driver.launch.py -> /home/bhung/spot_ros2/install/spot_driver/share/spot_driver/launch
+[0.824s] Invoked command in '/home/bhung/spot_ros2/build/spot_driver' returned '0': AMENT_PREFIX_PATH=/home/bhung/spot_ros2/install/spot_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/bhung/spot_ros2/install/spot_msgs LD_LIBRARY_PATH=/home/bhung/spot_ros2/install/spot_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/bhung/spot_ros2/build/spot_driver/prefix_override:/home/bhung/spot_ros2/install/spot_driver/lib/python3.10/site-packages:/home/bhung/spot_ros2/install/spot_msgs/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/spot_driver/build --no-deps install_data

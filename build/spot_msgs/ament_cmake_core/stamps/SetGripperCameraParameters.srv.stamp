@@ -1,0 +1,5 @@
+bosdyn_msgs/GripperCameraParamRequest request
+---
+bosdyn_msgs/GripperCameraParamResponse response
+bool success
+string message

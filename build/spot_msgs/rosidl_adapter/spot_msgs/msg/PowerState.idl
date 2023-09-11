@@ -1,0 +1,37 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from spot_msgs/msg/PowerState.msg
+// generated code does not contain a copyright notice
+
+#include "builtin_interfaces/msg/Duration.idl"
+#include "std_msgs/msg/Header.idl"
+
+module spot_msgs {
+  module msg {
+    module PowerState_Constants {
+      const uint8 STATE_UNKNOWN = 0;
+      const uint8 STATE_OFF = 1;
+      const uint8 STATE_ON = 2;
+      const uint8 STATE_POWERING_ON = 3;
+      const uint8 STATE_POWERING_OFF = 4;
+      const uint8 STATE_ERROR = 5;
+      @verbatim (language="comment", text=
+        "ShorePowerState")
+      const uint8 STATE_UNKNOWN_SHORE_POWER = 0;
+      const uint8 STATE_ON_SHORE_POWER = 1;
+      const uint8 STATE_OFF_SHORE_POWER = 2;
+    };
+    @verbatim (language="comment", text=
+      "MotorPowerState")
+    struct PowerState {
+      std_msgs::msg::Header header;
+
+      uint8 motor_power_state;
+
+      uint8 shore_power_state;
+
+      double locomotion_charge_percentage;
+
+      builtin_interfaces::msg::Duration locomotion_estimated_runtime;
+    };
+  };
+};
