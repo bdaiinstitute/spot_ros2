@@ -2,6 +2,7 @@ ARM=false
 ROS_DISTRO=humble
 HELP=$'--arm64: Installs ARM64 version'
 REQUIREMENTS_FILE=spot_wrapper/requirements.txt
+BD_MSGS=ros-humble-bosdyn-msgs
 
 while true; do
   case "$1" in
@@ -15,7 +16,9 @@ done
 if test -f "$REQUIREMENTS_FILE"; then
     sudo pip3 install -r $REQUIREMENTS_FILE
 else
-    echo "ERROR: $REQUIREMENTS_FILE not found. Please initialize spot_wrapper with: git submodule init --update"  
+    echo "ERROR: $REQUIREMENTS_FILE not found. Please initialize spot_wrapper with:"
+    echo "git submodule init"
+    echo "git submodule update"  
     exit 1
 fi
 
@@ -25,8 +28,6 @@ sudo apt install -y ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-tf
 sudo apt-get install python3-distutils
 sudo apt-get install python3-apt
 sudo pip3 install --force-reinstall -v "setuptools==59.6.0"
-
-
 
 # Check if bosdyn msgs is installed; if so, then tells you to consider updating
 PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $BD_MSGS|grep "install ok installed")
