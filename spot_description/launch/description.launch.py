@@ -27,6 +27,9 @@ def launch_setup(context: launch.LaunchContext) -> typing.List[launch_ros.action
             "arm:=",
             LaunchConfiguration("arm"),
             " ",
+            "tf_prefix:=",
+            LaunchConfiguration("tf_prefix"),
+            " ",
         ]
     )
 
@@ -70,21 +73,18 @@ def launch_setup(context: launch.LaunchContext) -> typing.List[launch_ros.action
 def generate_launch_description() -> launch.LaunchDescription:
     launch_arguments = [
         launch.actions.DeclareLaunchArgument(
-            name="gui",
-            default_value="True",
-            description="Flag to enable joint_state_publisher_gui",
+            name="gui", default_value="True", description="Flag to enable joint_state_publisher_gui"
         ),
         launch.actions.DeclareLaunchArgument(
-            name="model",
-            default_value=default_model_path,
-            description="Absolute path to robot urdf file",
+            name="model", default_value=default_model_path, description="Absolute path to robot urdf file"
         ),
         launch.actions.DeclareLaunchArgument(
-            name="rvizconfig",
-            default_value=default_rviz2_path,
-            description="Absolute path to rviz config file",
+            name="rvizconfig", default_value=default_rviz2_path, description="Absolute path to rviz config file"
         ),
         launch.actions.DeclareLaunchArgument("arm", default_value="false", description="include arm in robot model"),
+        launch.actions.DeclareLaunchArgument(
+            "tf_prefix", default_value='""', description="apply namespace prefix to robot links and joints"
+        ),
         launch.actions.DeclareLaunchArgument("namespace", default_value="", description="Namespace for robot tf topic"),
     ]
 

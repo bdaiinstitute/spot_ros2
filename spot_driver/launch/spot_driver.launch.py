@@ -25,10 +25,16 @@ def create_rviz_config(robot_name: str) -> None:
 
     with open(RVIZ_TEMPLATE_FILENAME, "r") as template_file:
         config = yaml.safe_load(template_file)
+        # replace fixed frame with robot body frame
+        config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{robot_name}/vision"
         # Add robot models for each robot
         for display in config["Visualization Manager"]["Displays"]:
-            if robot_name != "" and "RobotModel" in display["Class"]:
+            if "RobotModel" in display["Class"]:
                 display["Description Topic"]["Value"] = f"/{robot_name}/robot_description"
+
+            if "Image" in display["Class"]:
+                topic_name = display["Topic"]["Value"]
+                display["Topic"]["Value"] = f"/{robot_name}{topic_name}"
 
     with open(RVIZ_OUTPUT_FILENAME, "w") as out_file:
         yaml.dump(config, out_file)
@@ -40,6 +46,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     launch_rviz = LaunchConfiguration("launch_rviz")
     rviz_config_filename = LaunchConfiguration("rviz_config_filename").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
+    tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -53,6 +60,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(spot_driver_node)
 
+    if not tf_prefix:
+        tf_prefix = PathJoinSubstitution([spot_name, ""])
+
     robot_description = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -61,6 +71,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             " ",
             "arm:=",
             has_arm,
+            " ",
+            "tf_prefix:=",
+            tf_prefix,
             " ",
         ]
     )
@@ -105,6 +118,13 @@ def generate_launch_description() -> launch.LaunchDescription:
     )
 
     launch_args.append(DeclareLaunchArgument("has_arm", default_value="False", description="Whether spot has arm"))
+    launch_args.append(
+        DeclareLaunchArgument(
+            "tf_prefix",
+            default_value="",
+            description="apply namespace prefix to robot links and joints",
+        )
+    )
 
     launch_args.append(DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?"))
     launch_args.append(

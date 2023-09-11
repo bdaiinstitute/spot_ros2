@@ -5,9 +5,11 @@
 
   <!-- Parameters -->
   <xacro:arg name="arm" default="false" />
+  <xacro:arg name="tf_prefix" default="" />
 
   <!-- Load Spot -->
   <xacro:load_spot
-    arm="$(arg arm)" />
+    arm="$(arg arm)"
+    tf_prefix="$(arg tf_prefix)" />
 
 </robot>
