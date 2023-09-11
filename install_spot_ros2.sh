@@ -27,15 +27,31 @@ sudo apt-get install python3-apt
 sudo pip3 install --force-reinstall -v "setuptools==59.6.0"
 
 
-if $ARM; then
+
+# Check if bosdyn msgs is installed; if so, then tells you to consider updating
+PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $BD_MSGS|grep "install ok installed")
+# echo Checking for $REQUIRED_PKG: $PKG_OK
+if [ "" = "$PKG_OK" ]; then
+  echo "$BD_MSGS not found; going to install"
+  if $ARM; then
     # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
     wget -q -O /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_arm64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/bosdyn_msgs-v.3.2.0-humble-arm64/ros-humble-bosdyn-msgs_3.2.0-0jammy_arm64.deb
+  else
+      # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
+      wget -q -O /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.2.0-frametreesnapshot/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
+  fi
+  sudo apt-get update -y
+  sudo apt --fix-broken install /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb -y
+  rm /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
+  sudo apt-get -f install
+  # sudo apt-get --yes install $REQUIRED_PKG
 else
-    # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
-    wget -q -O /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.2.0-frametreesnapshot/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
+  echo "Package $BD_MSGS already installed; for the newest release, consider install using:"
+  echo "(AMD64 platform) wget -q -O /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_arm64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/bosdyn_msgs-v.3.2.0-humble-arm64/ros-humble-bosdyn-msgs_3.2.0-0jammy_arm64.deb"
+  echo "(ARM platform) wget -q -O /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.2.0-frametreesnapshot/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb"
+  echo "sudo apt-get update -y"
+  echo "sudo apt --fix-broken install --reinstall /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb -y"
+  echo "rm /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb"
+  echo "sudo apt-get -f install"
 fi
 
-sudo apt-get update -y
-sudo apt --fix-broken install /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
-rm /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
-sudo apt-get -f install
