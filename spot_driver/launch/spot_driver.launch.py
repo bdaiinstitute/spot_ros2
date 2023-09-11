@@ -60,7 +60,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(spot_driver_node)
 
-    if not tf_prefix:
+    if not tf_prefix and spot_name:
         tf_prefix = PathJoinSubstitution([spot_name, ""])
 
     robot_description = Command(
