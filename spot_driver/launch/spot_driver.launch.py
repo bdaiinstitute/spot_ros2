@@ -90,9 +90,10 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(robot_state_publisher)
 
-    if not rviz_config_file:
+    # It looks like passing an optional of value "None" gets converted to a string of value "None"
+    if rviz_config_file is None or rviz_config_file == "None":
         create_rviz_config(spot_name)
-        rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_driver"), "rviz", "spot.rviz"])
+        rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_driver"), "rviz", "spot.rviz"]).perform(context)
 
     rviz = launch_ros.actions.Node(
         package="rviz2",
