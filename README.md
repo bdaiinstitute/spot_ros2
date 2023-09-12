@@ -78,6 +78,8 @@ Due to known issues with the Spot CAM, it is disabled by default. To enable publ
 ### Spot CAM Known Issues
 The Spot CAM payload has known issues with the SSL certification process in https. If you get the following errors:
 
+![image](https://github.com/bdaiinstitute/spot_ros2/assets/137220849/a2d8e248-ab4f-494b-b431-82adc7acf25d)
+
 Then you want to log into the Spot CAM over the browser. In your browser, type in:
 
     https://<ip_address_of_spot>:<sdp_port>/h264.sdp.html
