@@ -18,7 +18,7 @@ ros2 launch spot_driver spot_driver.launch.py
 ```
 If you want to launch with a namespace,
 ```bash
-ros2 launch spot_driver_with_namespace.launch.py spot_name:=<spot_name> 
+ros2 launch spot_driver.launch.py spot_name:=<spot_name> 
 ```
 
 5.  Run the example:
