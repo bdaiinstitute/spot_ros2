@@ -350,7 +350,6 @@ class SpotROS(Node):
         if self.name is not None:
             name_with_dot = self.name + "."
         self.wrapper_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_wrapper")
-        self.cam_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_cam_wrapper")
 
         name_str = ""
         if self.name is not None:
@@ -384,6 +383,7 @@ class SpotROS(Node):
             self.spot_cam_wrapper = None
             if self.initialize_spot_cam:
                 try:
+                    self.cam_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_cam_wrapper")
                     self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
                 except SystemError:
                     self.spot_cam_wrapper = None
