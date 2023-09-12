@@ -51,7 +51,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
-    camera_sources = LaunchConfiguration("camera_sources")
+    camera_sources_yaml = LaunchConfiguration("camera_sources_yaml")
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -94,7 +94,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(robot_state_publisher)
 
     # It looks like passing an optional of value "None" gets converted to a string of value "None"
-    if rviz_config_file is None or rviz_config_file == "None":
+    if not rviz_config_file or rviz_config_file == "None":
         create_rviz_config(spot_name)
         rviz_config_file = PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "rviz", "spot.rviz"]).perform(context)
 
@@ -113,7 +113,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "launch", "spot_depth_publishers.launch.py"])]
         ),
-        launch_arguments={"spot_name": spot_name, "camera_sources": camera_sources}.items(),
+        launch_arguments={"spot_name": spot_name, "camera_sources_yaml": camera_sources_yaml}.items(),
     )
     ld.add_action(depth_images)
 
@@ -146,8 +146,8 @@ def generate_launch_description() -> launch.LaunchDescription:
     )
     launch_args.append(
         DeclareLaunchArgument(
-            "camera_sources",
-            default_value=["frontleft", "frontright", "left", "right", "back", "hand"],
+            "camera_sources_yaml",
+            default_value="",
             description="List of camera sources",
         )
     )

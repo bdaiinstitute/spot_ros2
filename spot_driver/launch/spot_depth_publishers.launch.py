@@ -1,7 +1,11 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
+import os
+
 import launch
 import launch_ros
+import yaml
+from ament_index_python.packages import get_package_share_directory
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
@@ -9,12 +13,21 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 def launch_depth_register_nodelets(
     context: launch.LaunchContext,
     spot_name: LaunchConfiguration,
-    camera_sources: LaunchConfiguration,
+    camera_sources_yaml: LaunchConfiguration,
     ld: launch.LaunchDescription,
 ) -> None:
     composable_node_descriptions = []
 
-    for camera in camera_sources.perform(context):
+    camera_sources_yaml = camera_sources_yaml.perform(context)
+    if not camera_sources_yaml or camera_sources_yaml == "None":
+        camera_sources = ["frontleft", "frontright", "left", "right", "back", "hand"]
+    else:
+        with open(camera_sources_yaml, "r") as yaml_file:
+            camera_sources = yaml.safe_load(yaml_file)["sources"]
+
+    cameras_str = ""
+    for camera in camera_sources:
+        cameras_str += camera
         composable_node_descriptions.append(
             launch_ros.descriptions.ComposableNode(
                 package="depth_image_proc",
@@ -40,6 +53,10 @@ def launch_depth_register_nodelets(
             )
         )
 
+    debug_file = os.path.join(get_package_share_directory("spot_driver"), "rviz", "debug2.txt")
+    with open(debug_file, "w") as out_file:
+        out_file.write(cameras_str)
+
     container = launch_ros.actions.ComposableNodeContainer(
         name="container",
         namespace=spot_name,
@@ -56,14 +73,14 @@ def generate_launch_description() -> launch.LaunchDescription:
     spot_name = LaunchConfiguration("spot_name")
     spot_name_arg = DeclareLaunchArgument("spot_name", description="Name of spot")
 
-    camera_sources = LaunchConfiguration("camera_sources")
-    camera_sources_arg = DeclareLaunchArgument(
-        "camera_sources",
-        default_value=["frontleft", "frontright", "left", "right", "back", "hand"],
-        description="List of camera sources",
+    camera_sources_yaml = LaunchConfiguration("camera_sources_yaml")
+    camera_sources_yaml_arg = DeclareLaunchArgument(
+        "camera_sources_yaml",
+        default_value="",
+        description="Yaml file containing a list of camera sources",
     )
 
-    ld = launch.LaunchDescription([spot_name_arg, camera_sources_arg])
+    ld = launch.LaunchDescription([spot_name_arg, camera_sources_yaml_arg])
 
-    ld.add_action(OpaqueFunction(function=launch_depth_register_nodelets, args=[spot_name, camera_sources, ld]))
+    ld.add_action(OpaqueFunction(function=launch_depth_register_nodelets, args=[spot_name, camera_sources_yaml, ld]))
     return ld
