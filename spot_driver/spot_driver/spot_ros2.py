@@ -380,6 +380,8 @@ class SpotROS(Node):
             )
             if not self.spot_wrapper.is_valid:
                 return
+
+            self.spot_cam_wrapper = None
             if self.initialize_spot_cam:
                 try:
                     self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
