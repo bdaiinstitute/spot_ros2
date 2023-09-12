@@ -1,11 +1,9 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
-import os
 
 import launch
 import launch_ros
 import yaml
-from ament_index_python.packages import get_package_share_directory
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
@@ -52,10 +50,6 @@ def launch_depth_register_nodelets(
                 ],
             )
         )
-
-    debug_file = os.path.join(get_package_share_directory("spot_driver"), "rviz", "debug2.txt")
-    with open(debug_file, "w") as out_file:
-        out_file.write(cameras_str)
 
     container = launch_ros.actions.ComposableNodeContainer(
         name="container",
