@@ -5,8 +5,9 @@ import launch_ros
 import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     Command,
     FindExecutable,
@@ -15,13 +16,14 @@ from launch.substitutions import (
 )
 from launch_ros.substitutions import FindPackageShare
 
+THIS_PACKAGE = "spot_driver"
+
 
 def create_rviz_config(robot_name: str) -> None:
     """Writes a configuration file for rviz to visualize a single spot robot"""
-    PACKAGE = "spot_driver"
 
-    RVIZ_TEMPLATE_FILENAME = os.path.join(get_package_share_directory(PACKAGE), "rviz", "spot_template.yaml")
-    RVIZ_OUTPUT_FILENAME = os.path.join(get_package_share_directory(PACKAGE), "rviz", "spot.rviz")
+    RVIZ_TEMPLATE_FILENAME = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot_template.yaml")
+    RVIZ_OUTPUT_FILENAME = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot.rviz")
 
     with open(RVIZ_TEMPLATE_FILENAME, "r") as template_file:
         config = yaml.safe_load(template_file)
@@ -49,6 +51,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
+    camera_sources = LaunchConfiguration("camera_sources")
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -93,7 +96,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     # It looks like passing an optional of value "None" gets converted to a string of value "None"
     if rviz_config_file is None or rviz_config_file == "None":
         create_rviz_config(spot_name)
-        rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_driver"), "rviz", "spot.rviz"]).perform(context)
+        rviz_config_file = PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "rviz", "spot.rviz"]).perform(context)
 
     rviz = launch_ros.actions.Node(
         package="rviz2",
@@ -106,6 +109,14 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     ld.add_action(rviz)
 
+    depth_images = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "launch", "spot_depth_publishers.launch.py"])]
+        ),
+        launch_arguments={"spot_name": spot_name, "camera_sources": camera_sources}.items(),
+    )
+    ld.add_action(depth_images)
+
 
 def generate_launch_description() -> launch.LaunchDescription:
     launch_args = []
@@ -117,7 +128,6 @@ def generate_launch_description() -> launch.LaunchDescription:
             description="Path to configuration file for the driver.",
         )
     )
-
     launch_args.append(DeclareLaunchArgument("has_arm", default_value="False", description="Whether spot has arm"))
     launch_args.append(
         DeclareLaunchArgument(
@@ -126,7 +136,6 @@ def generate_launch_description() -> launch.LaunchDescription:
             description="apply namespace prefix to robot links and joints",
         )
     )
-
     launch_args.append(DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?"))
     launch_args.append(
         DeclareLaunchArgument(
@@ -135,8 +144,15 @@ def generate_launch_description() -> launch.LaunchDescription:
             description="RViz config file",
         )
     )
-
+    launch_args.append(
+        DeclareLaunchArgument(
+            "camera_sources",
+            default_value=["frontleft", "frontright", "left", "right", "back", "hand"],
+            description="List of camera sources",
+        )
+    )
     launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
+
     ld = launch.LaunchDescription(launch_args)
 
     ld.add_action(OpaqueFunction(function=launch_setup, args=[ld]))

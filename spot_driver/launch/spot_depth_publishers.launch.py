@@ -7,14 +7,14 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 
 def launch_depth_register_nodelets(
-    context: launch.LaunchContext, spot_name: LaunchConfiguration, ld: launch.LaunchDescription
+    context: launch.LaunchContext,
+    spot_name: LaunchConfiguration,
+    camera_sources: LaunchConfiguration,
+    ld: launch.LaunchDescription,
 ) -> None:
-    # TODO: provide these names as LaunchConfiguration inputs to allow higher-level functions to set them
-    camera_sources = ["frontleft", "frontright", "left", "right", "back", "hand"]
-
     composable_node_descriptions = []
 
-    for camera in camera_sources:
+    for camera in camera_sources.perform(context):
         composable_node_descriptions.append(
             launch_ros.descriptions.ComposableNode(
                 package="depth_image_proc",
@@ -56,9 +56,14 @@ def generate_launch_description() -> launch.LaunchDescription:
     spot_name = LaunchConfiguration("spot_name")
     spot_name_arg = DeclareLaunchArgument("spot_name", description="Name of spot")
 
-    # ... other code omitted for clarity ...
+    camera_sources = LaunchConfiguration("camera_sources")
+    camera_sources_arg = DeclareLaunchArgument(
+        "camera_sources",
+        default_value=["frontleft", "frontright", "left", "right", "back", "hand"],
+        description="List of camera sources",
+    )
 
-    ld = launch.LaunchDescription([spot_name_arg, ...])
+    ld = launch.LaunchDescription([spot_name_arg, camera_sources_arg])
 
-    ld.add_action(OpaqueFunction(function=launch_depth_register_nodelets, args=[spot_name, ld]))
+    ld.add_action(OpaqueFunction(function=launch_depth_register_nodelets, args=[spot_name, camera_sources, ld]))
     return ld
