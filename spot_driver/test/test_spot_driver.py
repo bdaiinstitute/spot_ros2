@@ -3,9 +3,11 @@ import unittest
 
 import bdai_ros2_wrappers.scope as ros_scope
 import rclpy
+from bosdyn_msgs.msg import RobotCommandFeedback
 from std_srvs.srv import Trigger
 
 import spot_driver.spot_ros2
+from spot_driver.spot_ros2 import GoalResponse
 from spot_msgs.srv import (  # type: ignore
     Dock,
 )
@@ -64,6 +66,17 @@ class SpotDriverTest(unittest.TestCase):
         self.assertEqual(resp.success, True)
         resp = self.dock_client.call(Dock.Request())
         self.assertEqual(resp.success, True)
+
+    def test_robot_command_goal_complete(self) -> None:
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(None), GoalResponse.IN_PROGRESS)
+
+        feedback = RobotCommandFeedback()
+
+        # Testing FullBodyFeedback
+        feedback.command.command_choice = feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET
+
+        feedback.command.full_body_feedback.status.value = feedback.command.full_body_feedback.status.STATUS_UNKNOWN
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
 
 
 if __name__ == "__main__":
