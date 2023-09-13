@@ -71,6 +71,21 @@ The `command_spot_driver` node contains service and action clients. To send a tr
 
     ros2 run spot_driver command_spot --ros-args -p command:=trajectory
 
+### Spot CAM Usage
+Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:
+    `initialize_spot_cam: True`
+
+### Spot CAM Known Issues
+The Spot CAM payload has known issues with the SSL certification process in https. If you get the following errors:
+
+![image](https://github.com/bdaiinstitute/spot_ros2/assets/137220849/a2d8e248-ab4f-494b-b431-82adc7acf25d)
+
+Then you want to log into the Spot CAM over the browser. In your browser, type in:
+
+    https://<ip_address_of_spot>:<sdp_port>/h264.sdp.html
+
+The default port for SDP is 31102 for the Spot CAM. Once inside, you will be prompted to log in using your username and password. Do so and the WebRTC frames should begin to properly stream.
+
 
 ### Multiple Robots
 If you want to use multiple robots, use the `spot_driver_with_namespace` launch file:

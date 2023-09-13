@@ -243,6 +243,7 @@ class SpotROS(Node):
 
         self.declare_parameter("publish_graph_nav_pose", False)
         self.declare_parameter("graph_nav_seed_frame", "graph_nav_map")
+        self.declare_parameter("initialize_spot_cam", False)
 
         self.declare_parameter("spot_name", "")
 
@@ -266,6 +267,7 @@ class SpotROS(Node):
 
         self.publish_graph_nav_pose: Parameter = self.get_parameter("publish_graph_nav_pose")
         self.graph_nav_seed_frame: str = self.get_parameter("graph_nav_seed_frame").value
+        self.initialize_spot_cam: bool = self.get_parameter("initialize_spot_cam").value
 
         self._wait_for_goal: Optional[WaitForGoal] = None
         self.goal_handle: Optional[ServerGoalHandle] = None
@@ -348,7 +350,6 @@ class SpotROS(Node):
         if self.name is not None:
             name_with_dot = self.name + "."
         self.wrapper_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_wrapper")
-        self.cam_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_cam_wrapper")
 
         name_str = ""
         if self.name is not None:
@@ -379,10 +380,13 @@ class SpotROS(Node):
             if not self.spot_wrapper.is_valid:
                 return
 
-            try:
-                self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
-            except SystemError:
-                self.spot_cam_wrapper = None
+            self.spot_cam_wrapper = None
+            if self.initialize_spot_cam:
+                try:
+                    self.cam_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_cam_wrapper")
+                    self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
+                except SystemError:
+                    self.spot_cam_wrapper = None
 
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
         has_arm = False
