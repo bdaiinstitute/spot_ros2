@@ -51,16 +51,20 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
-    camera_sources_yaml = LaunchConfiguration("camera_sources_yaml")
+    use_depth_registered_nodelets = LaunchConfiguration("use_depth_registered_nodelets")
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
+
+    spot_driver_params = [config_file, {"spot_name": spot_name}]
+    if use_depth_registered_nodelets.perform(context):
+        spot_driver_params.append({"publish_depth_registered": False})
 
     spot_driver_node = launch_ros.actions.Node(
         package="spot_driver",
         executable="spot_ros2",
         name="spot_ros2",
         output="screen",
-        parameters=[config_file, {"spot_name": spot_name}],
+        parameters=spot_driver_params,
         namespace=spot_name,
     )
     ld.add_action(spot_driver_node)
@@ -109,13 +113,18 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     ld.add_action(rviz)
 
-    depth_images = IncludeLaunchDescription(
+    registered_depth_image_nodes = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "launch", "spot_depth_publishers.launch.py"])]
+            [
+                PathJoinSubstitution(
+                    [FindPackageShare(THIS_PACKAGE), "launch", "spot_depth_registered_publishers.launch.py"]
+                )
+            ]
         ),
-        launch_arguments={"spot_name": spot_name, "camera_sources_yaml": camera_sources_yaml}.items(),
+        launch_arguments={"spot_name": spot_name, "has_arm": has_arm}.items(),
+        condition=IfCondition(use_depth_registered_nodelets),
     )
-    ld.add_action(depth_images)
+    ld.add_action(registered_depth_image_nodes)
 
 
 def generate_launch_description() -> launch.LaunchDescription:
@@ -146,9 +155,9 @@ def generate_launch_description() -> launch.LaunchDescription:
     )
     launch_args.append(
         DeclareLaunchArgument(
-            "camera_sources_yaml",
-            default_value="",
-            description="List of camera sources",
+            "use_depth_registered_nodelets",
+            default_value="True",
+            description="launch composable nodes for publishing depth registered images.",
         )
     )
     launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))

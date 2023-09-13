@@ -3,7 +3,6 @@
 
 import launch
 import launch_ros
-import yaml
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
@@ -11,21 +10,16 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 def launch_depth_register_nodelets(
     context: launch.LaunchContext,
     spot_name: LaunchConfiguration,
-    camera_sources_yaml: LaunchConfiguration,
+    has_arm: LaunchConfiguration,
     ld: launch.LaunchDescription,
 ) -> None:
     composable_node_descriptions = []
 
-    camera_sources_yaml = camera_sources_yaml.perform(context)
-    if not camera_sources_yaml or camera_sources_yaml == "None":
-        camera_sources = ["frontleft", "frontright", "left", "right", "back", "hand"]
-    else:
-        with open(camera_sources_yaml, "r") as yaml_file:
-            camera_sources = yaml.safe_load(yaml_file)["sources"]
+    camera_sources = ["frontleft", "frontright", "left", "right", "back"]
+    if has_arm.perform(context):
+        camera_sources.append("hand")
 
-    cameras_str = ""
     for camera in camera_sources:
-        cameras_str += camera
         composable_node_descriptions.append(
             launch_ros.descriptions.ComposableNode(
                 package="depth_image_proc",
@@ -67,14 +61,10 @@ def generate_launch_description() -> launch.LaunchDescription:
     spot_name = LaunchConfiguration("spot_name")
     spot_name_arg = DeclareLaunchArgument("spot_name", description="Name of spot")
 
-    camera_sources_yaml = LaunchConfiguration("camera_sources_yaml")
-    camera_sources_yaml_arg = DeclareLaunchArgument(
-        "camera_sources_yaml",
-        default_value="",
-        description="Yaml file containing a list of camera sources",
-    )
+    has_arm = LaunchConfiguration("has_arm")
+    has_arm_arg = DeclareLaunchArgument("has_arm", default_value="False", description="Whether spot has arm")
 
-    ld = launch.LaunchDescription([spot_name_arg, camera_sources_yaml_arg])
+    ld = launch.LaunchDescription([spot_name_arg, has_arm_arg])
 
-    ld.add_action(OpaqueFunction(function=launch_depth_register_nodelets, args=[spot_name, camera_sources_yaml, ld]))
+    ld.add_action(OpaqueFunction(function=launch_depth_register_nodelets, args=[spot_name, has_arm, ld]))
     return ld
