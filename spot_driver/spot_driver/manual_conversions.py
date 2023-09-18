@@ -19,6 +19,7 @@ from geometry_msgs.msg import (
     Vector3,
     Wrench,
 )
+from google.protobuf import wrappers_pb2
 
 # ROS <-> BOSDYN MATH
 
@@ -150,8 +151,13 @@ def convert_proto_to_geometry_msgs_wrench(proto: geometry_pb2.Wrench, ros_msg: W
     convert_proto_to_geometry_msgs_vector3(proto.torque, ros_msg.torque)
 
 
+# Cannot find float32 proto
+def convert_float32_to_proto(ros_msg: float, proto: wrappers_pb2.FloatValue) -> None:
+    proto.value = ros_msg
+
+
 # Cannot find float64 proto
-def convert_float64_to_proto(ros_msg: float, proto: Any) -> None:
+def convert_float64_to_proto(ros_msg: float, proto: wrappers_pb2.DoubleValue) -> None:
     proto.value = ros_msg
 
 
