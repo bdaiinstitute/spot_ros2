@@ -16,7 +16,7 @@ def launch_depth_register_nodelets(
     composable_node_descriptions = []
 
     camera_sources = ["frontleft", "frontright", "left", "right", "back"]
-    if has_arm.perform(context):
+    if has_arm.perform(context) == "true" or has_arm.perform(context) == "True":
         camera_sources.append("hand")
 
     for camera in camera_sources:
