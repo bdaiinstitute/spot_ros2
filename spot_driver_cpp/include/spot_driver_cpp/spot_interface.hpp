@@ -16,32 +16,31 @@ namespace spot_ros2
 {
 using GetImagesResult = std::unordered_map<std::string, sensor_msgs::msg::Image>;
 
+/**
+ * @brief Defines an interface for a class to connect to and interact with Spot.
+ */
 class SpotInterfaceBase
 {
 public:
-virtual ~SpotInterfaceBase() {}
+  virtual ~SpotInterfaceBase() {}
 
-virtual bool createRobot(const std::string& ip_address) = 0;
-
-virtual bool authenticate(const std::string& username, const std::string& password) = 0;
-
-virtual bool hasArm() const = 0;
-
-virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) = 0;
-
+  virtual bool createRobot(const std::string& ip_address) = 0;
+  virtual bool authenticate(const std::string& username, const std::string& password) = 0;
+  virtual bool hasArm() const = 0;
+  virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) = 0;
 };
 
+/**
+ * @brief Implements SpotInterfaceBase to use the Spot C++ SDK.
+ */
 class SpotInterface : public SpotInterfaceBase
 {
 public:
   SpotInterface();
 
   bool createRobot(const std::string& ip_address) override;
-
   bool authenticate(const std::string& username, const std::string& password) override;
-
   bool hasArm() const override;
-
   tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) override;
 
 private:
