@@ -1,0 +1,6 @@
+find_package(ament_cmake_gmock REQUIRED)
+
+ament_add_gmock(test_spot_image_publisher
+  test_spot_image_publisher.cpp
+)
+target_link_libraries(test_spot_image_publisher spot_image_publisher)

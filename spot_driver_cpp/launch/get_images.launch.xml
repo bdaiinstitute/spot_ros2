@@ -1,0 +1,25 @@
+<launch>
+  <arg name="spot_name" default="" />
+
+  <arg name="address" />
+  <arg name="username" />
+  <arg name="password" />
+
+  <arg name="image_quality" default="70.0"/>
+  <arg name="rgb_cameras" default="true"/>
+  <arg name="publish_rgb" default="true"/>
+  <arg name="publish_depth" default="true"/>
+  <arg name="publish_depth_registered" default="false"/>
+
+  <node pkg="spot_image_publisher" exec="spot_image_publisher_node" namespace="$(var spot_name)" output="screen">
+    <param name="address" value="$(var address)"/>
+    <param name="username" value="$(var username)"/>
+    <param name="password" value="$(var password)"/>
+    
+    <param name="image_quality" value="$(var image_quality)"/>
+    <param name="rgb_cameras" value="$(var rgb_cameras)"/>
+    <param name="publish_rgb" value="$(var publish_rgb)"/>
+    <param name="publish_depth" value="$(var publish_depth)"/>
+    <param name="publish_depth_registered" value="$(var publish_depth_registered)"/>
+  </node>
+</launch>
