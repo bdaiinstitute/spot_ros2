@@ -234,7 +234,8 @@ tl::expected<void, std::string> SpotInterface::authenticate(const std::string& u
 tl::expected<bool, std::string> SpotInterface::hasArm() const
 {
   // TODO: programmatically determine if Spot has an arm attached, like the existing Python driver does
-  return true;
+  // For now, always return false to avoid erroneously requesting wrist camera data from Spots without arms.
+  return false;
 }
 
 tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::api::GetImageRequest request)
