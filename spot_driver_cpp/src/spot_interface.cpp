@@ -1,13 +1,18 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include "spot_driver_cpp/spot_image_sources.hpp"
 #include <spot_driver_cpp/spot_interface.hpp>
 
+#include <bosdyn/api/image.pb.h>
+#include <builtin_interfaces/msg/time.hpp>
 #include <cv_bridge/cv_bridge.h>
-#include <opencv2/core/hal/interface.h>
+#include <google/protobuf/duration.pb.h>
+#include <google/protobuf/timestamp.pb.h>
 #include <opencv2/imgcodecs.hpp>
+#include <sensor_msgs/distortion_models.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <spot_driver_cpp/spot_image_sources.hpp>
+#include <spot_driver_cpp/types.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <tl_expected/expected.hpp>
 
@@ -48,16 +53,82 @@ tl::expected<int, std::string> getCvPixelFormat(const bosdyn::api::Image_PixelFo
   }
 }
 
-tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api::ImageCapture& image_capture)
+builtin_interfaces::msg::Time applyClockSkew(const google::protobuf::Timestamp& timestamp, const google::protobuf::Duration& clock_skew)
+{
+  long int seconds_unskewed = timestamp.seconds() - clock_skew.seconds();
+  int nanos_unskewed = timestamp.nanos() - clock_skew.nanos();
+
+  // Carry over a second if needed
+  // Note: Since ROS Time messages store the nanoseconds component as an unsigned integer, we need to do this before converting to ROS Time.
+  if (nanos_unskewed < 0)
+  {
+    nanos_unskewed += 1e9;
+    seconds_unskewed -= 1;
+  }
+
+  // If the timestamp contains a negative time, create an all-zero ROS Time.
+  if (seconds_unskewed < 0)
+  {
+    return builtin_interfaces::build<builtin_interfaces::msg::Time>().sec(0).nanosec(0);
+  }
+  else
+  {
+    return builtin_interfaces::build<builtin_interfaces::msg::Time>().sec(seconds_unskewed).nanosec(nanos_unskewed);
+  }
+}
+
+tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(const bosdyn::api::ImageResponse& image_response, const google::protobuf::Duration& clock_skew)
+{
+  sensor_msgs::msg::CameraInfo info_msg;
+  info_msg.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+  info_msg.height = image_response.shot().image().rows();
+  info_msg.width = image_response.shot().image().cols();
+  // TODO: use Spot's prefix here
+  info_msg.header.frame_id = image_response.shot().frame_name_image_sensor();
+  info_msg.header.stamp = applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
+
+  // We assume that the camera images have already been corrected for distortion, so the 5 distortion parameters are all zero
+  info_msg.d = std::vector<double>{5, 0.0};
+
+  // Set the rectification matrix to identity, since this is not a stereo pair.
+  info_msg.r[0] = 1.0;
+  info_msg.r[1] = 0.0;
+  info_msg.r[2] = 0.0;
+  info_msg.r[3] = 0.0;
+  info_msg.r[4] = 1.0;
+  info_msg.r[5] = 0.0;
+  info_msg.r[6] = 0.0;
+  info_msg.r[7] = 0.0;
+  info_msg.r[8] = 1.0;
+
+  const auto& intrinsics = image_response.source().pinhole().intrinsics();
+
+  // Create the 3x3 intrinsics matrix.
+  info_msg.k[0] = intrinsics.focal_length().x();
+  info_msg.k[2] = intrinsics.principal_point().x();
+  info_msg.k[4] = intrinsics.focal_length().y();
+  info_msg.k[5] = intrinsics.principal_point().y();
+  info_msg.k[8] = 1.0;
+
+  // All Spot cameras are functionally monocular, so Tx and Ty are not set here.
+  info_msg.p[0] = intrinsics.focal_length().x();
+  info_msg.p[2] = intrinsics.principal_point().x();
+  info_msg.p[5] = intrinsics.focal_length().y();
+  info_msg.p[6] = intrinsics.principal_point().y();
+  info_msg.p[10] = 1.0;
+
+  return info_msg;
+}
+
+tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api::ImageCapture& image_capture, const google::protobuf::Duration& clock_skew)
 {
       const auto& image = image_capture.image();
       auto data = image.data();
-      const auto& timestamp = image_capture.acquisition_time();
 
       std_msgs::msg::Header header;
+      // TODO: use Spot's prefix here
       header.frame_id = image_capture.frame_name_image_sensor();
-      header.stamp.sec = timestamp.seconds();
-      header.stamp.nanosec = timestamp.nanos();
+      header.stamp = applyClockSkew(image_capture.acquisition_time(), clock_skew);
 
       const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
       if (!pixel_format_cv)
@@ -132,6 +203,19 @@ bool SpotInterface::authenticate(const std::string& username, const std::string&
     return false;
   }
 
+  const auto start_time_sync_response = robot_->StartTimeSync();
+  if (!start_time_sync_response)
+  {
+    return false;
+  }
+
+  const auto get_time_sync_thread_response = robot_->GetTimeSyncThread();
+  if (!get_time_sync_thread_response)
+  {
+    return false;
+  }
+  time_sync_thread_ = get_time_sync_thread_response.response;
+
   const auto image_client_result =
         robot_->EnsureServiceClient<::bosdyn::client::ImageClient>(
             ::bosdyn::client::ImageClient::GetDefaultServiceName());
@@ -160,32 +244,65 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
       return tl::make_unexpected("Failed to get images: " + get_image_result.status.DebugString());
   }
 
+  const auto clock_skew_result = getClockSkew();
+  if (!clock_skew_result)
+  {
+    return tl::make_unexpected("Failed to get latest clock skew: " + clock_skew_result.error());
+  }
+
   GetImagesResult out;
   for (const auto& image_response : get_image_result.response.image_responses())
   {      
       const auto& image = image_response.shot().image();
       auto data = image.data();
 
-      if (const auto image_msg = toImageMsg(image_response.shot()); image_msg.has_value())
+      const auto image_msg = toImageMsg(image_response.shot(), clock_skew_result.value());
+      if (!image_msg)
       {
-        const auto& camera_name = image_response.source().name();
-        if(const auto result = fromSpotImageSourceName(camera_name); result.has_value())
-        {
-          out.try_emplace(result.value(), image_msg.value());
-        }
-        else
-        {
-          std::cerr << "Failed to convert API image source name to ImageSource." << std::endl;
-        }
+        std::cerr << "Failed to convert SDK image response to ROS Image message: " << image_msg.error() << std::endl;
+        continue;
+      }
+
+      const auto info_msg = toCameraInfoMsg(image_response, clock_skew_result.value());
+      if (!info_msg)
+      {
+        std::cerr << "Failed to convert SDK image response to ROS CameraInfo message: " << info_msg.error() << std::endl;
+        continue;
+      }
+
+      const auto& camera_name = image_response.source().name();
+      if(const auto result = fromSpotImageSourceName(camera_name); result.has_value())
+      {
+        out.try_emplace(result.value(), ImageWithCameraInfo{image_msg.value(), info_msg.value()});
       }
       else
       {
-        // If an image cannot be converted, log an error message but continue processing the remaining images.
-        std::cerr << image_msg.error() << std::endl;
+        std::cerr << "Failed to convert API image source name to ImageSource: " << result.error() << std::endl;
       }
   }
 
   return out;
 }
 
+tl::expected<builtin_interfaces::msg::Time, std::string> SpotInterface::convertRobotTimeToLocalTime(const google::protobuf::Timestamp& robot_timestamp)
+{
+  const auto get_clock_skew_result = getClockSkew();
+  if (!get_clock_skew_result)
+  {
+    return tl::make_unexpected("Failed to get clock skew: " + get_clock_skew_result.error());
+  }
+
+  return applyClockSkew(robot_timestamp, get_clock_skew_result.value());
+}
+
+
+tl::expected<google::protobuf::Duration, std::string> SpotInterface::getClockSkew()
+{
+  const auto get_skew_response = time_sync_thread_->GetEndpoint()->GetClockSkew();
+  if (!get_skew_response)
+  {
+    return tl::make_unexpected("Failed to get clock skew: " + get_skew_response.status.DebugString());
+  }
+  return *get_skew_response.response;
+}
 }

@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <spot_driver_cpp/spot_image_sources.hpp>
+#include <spot_driver_cpp/types.hpp>
 #include <tl_expected/expected.hpp>
 
 namespace
@@ -15,7 +16,9 @@ const std::vector<std::string> kImageSourceNames = {
 
 constexpr auto kImageSourceHand = "hand";
 
-constexpr auto kSuffixFisheye = "_fisheye_image";
+constexpr auto kSuffixBodyColor = "_fisheye_image";
+constexpr auto kSuffixHandColor = "_color_image";
+
 constexpr auto kSuffixDepth = "_depth";
 constexpr auto kSuffixDepthRegistered = "_depth_registered";
 
@@ -53,7 +56,14 @@ std::string toSpotImageSourceName(const ImageSource& image_source)
 {
     if (image_source.type == SpotImageType::RGB)
     {
-        return std::string(image_source.name).append(kSuffixFisheye);
+      if (image_source.name == kImageSourceHand)
+      {
+        return std::string(image_source.name).append(kSuffixHandColor);
+      }
+      else
+      {
+        return std::string(image_source.name).append(kSuffixBodyColor);
+      }
     }
     else if (image_source.type == SpotImageType::DEPTH)
     {
@@ -67,7 +77,11 @@ std::string toSpotImageSourceName(const ImageSource& image_source)
 
 tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string& source_name)
 {
-  if(const auto result = getBeforeSuffix(source_name, kSuffixFisheye); result.has_value())
+  if(const auto result = getBeforeSuffix(source_name, kSuffixBodyColor); result.has_value())
+  {
+    return ImageSource{result.value(), SpotImageType::RGB};
+  }
+  else if(const auto result = getBeforeSuffix(source_name, kSuffixHandColor); result.has_value())
   {
     return ImageSource{result.value(), SpotImageType::RGB};
   }
@@ -84,7 +98,6 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
     return tl::make_unexpected("Could not convert source name `" + source_name + "` to ImageSource.");
   }
 }
-
 
 std::vector<ImageSource> createImageSourcesList(const bool get_rgb_images, const bool get_depth_images, const bool get_depth_registered_images, const bool has_hand_camera)
 {
@@ -125,6 +138,4 @@ std::vector<ImageSource> createImageSourcesList(const bool get_rgb_images, const
 
     return sources;
 }
-
-
 }

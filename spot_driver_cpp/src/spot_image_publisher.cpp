@@ -4,12 +4,15 @@
 
 #include <rclcpp/node.hpp>
 #include <rmw/qos_profiles.h>
+#include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
+#include <spot_driver_cpp/types.hpp>
 
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 
 namespace
 {
@@ -77,22 +80,38 @@ RclcppPublisherInterface::RclcppPublisherInterface(const std::shared_ptr<rclcpp:
 
 void RclcppPublisherInterface::createPublishers(const std::vector<ImageSource>& image_sources)
 {
-    publishers_.clear();
+    image_publishers_.clear();
+    info_publishers_.clear();
 
     for (const auto& image_source : image_sources)
     {
-        std::string image_topic_name{toRosTopic(image_source).append("/image")};
-        publishers_.try_emplace(image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name, rclcpp::QoS(1)));
+        const auto topic_name_base = toRosTopic(image_source);
+
+        const auto image_topic_name = topic_name_base + "/image";
+        image_publishers_.try_emplace(image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name, rclcpp::QoS(1)));
+
+        const auto info_topic_name = topic_name_base + "/camera_info";
+        info_publishers_.try_emplace(info_topic_name, node_->create_publisher<sensor_msgs::msg::CameraInfo>(info_topic_name, rclcpp::QoS(1)));
     }
 }
 
-void RclcppPublisherInterface::publishImages(const std::map<ImageSource, sensor_msgs::msg::Image>& images)
+void RclcppPublisherInterface::publish(const std::map<ImageSource, ImageWithCameraInfo>& images)
 {
     for (const auto& [image_source, image_data] : images)
     {
-        std::string image_topic_name{toRosTopic(image_source).append("/image")};
-        const auto publisher = publishers_.at(image_topic_name);
-        publisher->publish(image_data);
+        const auto topic_name_base = toRosTopic(image_source);
+        const auto image_topic_name = topic_name_base + "/image";
+        const auto info_topic_name = topic_name_base + "/camera_info";
+
+        try
+        {
+            image_publishers_.at(image_topic_name)->publish(image_data.image);
+            info_publishers_.at(info_topic_name)->publish(image_data.info);
+        }
+        catch(const std::out_of_range& e)
+        {
+            std::cerr << "No publisher exists for image source " << image_source.name << std::endl;
+        }
     }
 }
 
@@ -147,10 +166,12 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const
 
     for (const auto& source : sources)
     {
+        const auto source_name = toSpotImageSourceName(source);
+        std::cout << source_name << std::endl;
         if (source.type == SpotImageType::RGB)
         {
             bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
-            image_request->set_image_source_name(toSpotImageSourceName(source));
+            image_request->set_image_source_name(source_name);
             image_request->set_quality_percent(rgb_image_quality);
             image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8);
             image_request->set_image_format(get_raw_rgb_images ? bosdyn::api::Image_Format_FORMAT_RAW : bosdyn::api::Image_Format_FORMAT_JPEG);
@@ -158,14 +179,14 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const
         else if (source.type == SpotImageType::DEPTH)
         {
             bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
-            image_request->set_image_source_name(toSpotImageSourceName(source));
+            image_request->set_image_source_name(source_name);
             image_request->set_quality_percent(kDefaultDepthImageQuality);
             image_request->set_image_format(bosdyn::api::Image_Format_FORMAT_RAW);
         }
         else // SpotImageType::DEPTH_REGISTERED
         {
             bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
-            image_request->set_image_source_name(toSpotImageSourceName(source));
+            image_request->set_image_source_name(source_name);
             image_request->set_quality_percent(kDefaultDepthImageQuality);
             image_request->set_image_format(bosdyn::api::Image_Format_FORMAT_RAW);
         }
@@ -259,10 +280,11 @@ void SpotImagePublisher::timerCallback()
     const auto images = spot_interface_->getImages(*image_request_message_);
     if(!images.has_value())
     {
+        std::cerr << "Failed to get images: " << images.error() << std::endl;
         return;
     }
 
-    publisher_interface_->publishImages(images.value());
+    publisher_interface_->publish(images.value());
 }
 
 

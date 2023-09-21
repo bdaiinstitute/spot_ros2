@@ -7,9 +7,11 @@
 #include <rclcpp/node_options.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/timer.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
 #include <spot_driver_cpp/spot_interface.hpp>
+#include <spot_driver_cpp/types.hpp>
 
 #include <memory>
 #include <string>
@@ -54,7 +56,7 @@ public:
   virtual ~PublisherInterfaceBase() {};
 
   virtual void createPublishers(const std::vector<ImageSource>& image_sources) = 0;
-  virtual void publishImages(const std::map<ImageSource, sensor_msgs::msg::Image>& images) = 0;
+  virtual void publish(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
 };
 
 /**
@@ -66,11 +68,12 @@ public:
   RclcppPublisherInterface(const std::shared_ptr<rclcpp::Node>& node);
 
   void createPublishers(const std::vector<ImageSource>& image_sources) override;
-  void publishImages(const std::map<ImageSource, sensor_msgs::msg::Image>& images) override;
+  void publish(const std::map<ImageSource, ImageWithCameraInfo>& images) override;
 
 private:
   std::shared_ptr<rclcpp::Node> node_;
-  std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::Image>>> publishers_;
+  std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::Image>>> image_publishers_;
+  std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::CameraInfo>>> info_publishers_;
 };
 
 /**

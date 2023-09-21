@@ -3,25 +3,13 @@
 #pragma once
 
 #include <bosdyn/client/image/image_client.h>
+#include <spot_driver_cpp/types.hpp>
 #include <tl_expected/expected.hpp>
 #include <string>
 #include <map>
 
 namespace spot_ros2
 {
-enum class SpotImageType
-{
-  RGB,
-  DEPTH,
-  DEPTH_REGISTERED,
-};
-
-struct ImageSource
-{
-  std::string name;
-  SpotImageType type;
-};
-
 std::string toRosTopic(const ImageSource& image_source);
 
 std::string toSpotImageSourceName(const ImageSource& image_source);
@@ -38,20 +26,4 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
  * @return ImageSources 
  */
 std::vector<ImageSource> createImageSourcesList(const bool get_rgb_images, const bool get_depth_images, const bool get_depth_registered_images, const bool has_hand_camera);
-}
-
-namespace std
-{
-  template <> struct less<spot_ros2::ImageSource>
-  {
-    bool operator()(const spot_ros2::ImageSource& lhs, const spot_ros2::ImageSource& rhs) const
-    {
-      if (lhs.name != rhs.name)
-      {
-        return lhs.name < rhs.name;
-      }
-
-      return lhs.type < rhs.type;
-    }
-  };
 }

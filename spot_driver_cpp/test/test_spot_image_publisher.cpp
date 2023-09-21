@@ -1,10 +1,11 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include "spot_driver_cpp/spot_image_sources.hpp"
 #include <gmock/gmock.h>
 
 #include <spot_driver_cpp/spot_image_publisher.hpp>
+#include <spot_driver_cpp/spot_image_sources.hpp>
 #include <spot_driver_cpp/spot_interface.hpp>
+#include <spot_driver_cpp/types.hpp>
 
 #include <memory>
 #include <optional>
@@ -99,7 +100,7 @@ class MockPublisherInterface : public PublisherInterfaceBase
 {
 public:
   MOCK_METHOD(void, createPublishers, (const std::vector<ImageSource>& image_sources), (override));
-  MOCK_METHOD(void, publishImages, ((const std::map<ImageSource, sensor_msgs::msg::Image>&)), (override));
+  MOCK_METHOD(void, publish, ((const std::map<ImageSource, ImageWithCameraInfo>&)), (override));
 };
 
 class MockSpotInterface : public SpotInterfaceBase
@@ -109,6 +110,8 @@ public:
   MOCK_METHOD(bool, authenticate, (const std::string& username, const std::string& password), (override));
   MOCK_METHOD(bool, hasArm, (), (const, override));
   MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest request), (override));
+  MOCK_METHOD((tl::expected<builtin_interfaces::msg::Time, std::string>), convertRobotTimeToLocalTime, (const google::protobuf::Timestamp& robot_timestamp), (override));
+
 };
 
 class MockTimerInterface : public TimerInterfaceBase
@@ -289,7 +292,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggers)
     // THEN the images we received from the Spot interface are published
     InSequence seq;
     EXPECT_CALL(*spot_interface_ptr, getImages);
-    EXPECT_CALL(*publisher_interface_ptr, publishImages);
+    EXPECT_CALL(*publisher_interface_ptr, publish);
   }
 
   // WHEN the timer callback is triggered
