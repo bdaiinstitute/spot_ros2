@@ -65,6 +65,11 @@ builtin_interfaces::msg::Time applyClockSkew(const google::protobuf::Timestamp& 
     nanos_unskewed += 1e9;
     seconds_unskewed -= 1;
   }
+  else if (nanos_unskewed >= 1e9)
+  {
+    nanos_unskewed -= 1e9;
+    seconds_unskewed += 1;
+  }
 
   // If the timestamp contains a negative time, create an all-zero ROS Time.
   if (seconds_unskewed < 0)
