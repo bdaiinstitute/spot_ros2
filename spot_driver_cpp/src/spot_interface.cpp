@@ -136,7 +136,7 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
       const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
       if (!pixel_format_cv)
       {
-        return tl::make_unexpected("Failed to convert image to message: " + pixel_format_cv.error());
+        return tl::make_unexpected("Failed to determine pixel format: " + pixel_format_cv.error());
       }
 
       if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG)
@@ -159,6 +159,10 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
         // Note: as currently implemented, this assumes that the only images which will be provided as raw data will be 16UC1 depth images.
         // TODO: handle converting raw RGB and grayscale images as well.
         const cv::Mat img = cv::Mat(image.rows(), image.cols(), pixel_format_cv.value(), &data.front());
+        if (!img.data)
+        {
+          return tl::make_unexpected("Failed to decode raw-formatted image.");
+        }
         const auto image = cv_bridge::CvImage{header, "mono16", img}.toImageMsg();
         return *image;
       }

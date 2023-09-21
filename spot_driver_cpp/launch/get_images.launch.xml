@@ -1,10 +1,11 @@
 <launch>
-  <arg name="spot_name" default="" />
-
+  <!-- Args for required parameters: -->
   <arg name="address" />
   <arg name="username" />
   <arg name="password" />
 
+  <!-- Args for optional parameters: -->
+  <arg name="spot_name" default="" />
   <arg name="image_quality" default="70.0"/>
   <arg name="rgb_cameras" default="true"/>
   <arg name="publish_rgb" default="true"/>
@@ -12,8 +13,8 @@
   <arg name="publish_depth_registered" default="false"/>
 
   <node pkg="spot_driver_cpp" exec="spot_image_publisher_node" namespace="$(var spot_name)" output="screen">
-    <!-- Node that Spot's name is used as the namespace for the node, rather than being passed in as a parameter.
-         This simplifies publishing topics with the correct prefix. -->
+    <!-- Note: Spot's name is used as the namespace for the node, rather than being passed in as a parameter.
+         This simplifies publishing topics with the correct prefix, since the name will be used as the prefix. -->
     <param name="address" value="$(var address)"/>
     <param name="username" value="$(var username)"/>
     <param name="password" value="$(var password)"/>

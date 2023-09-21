@@ -30,7 +30,7 @@ tl::expected<std::string, std::string> getBeforeSuffix(const std::string& string
       return string.substr(0, index);
     }
 
-    return tl::make_unexpected("Did not find suffix within string");
+    return tl::make_unexpected("Did not find substring `" + suffix + "` within string `" + string + "`.");
 }
 }
 
