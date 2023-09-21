@@ -77,14 +77,13 @@ builtin_interfaces::msg::Time applyClockSkew(const google::protobuf::Timestamp& 
   }
 }
 
-tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(const bosdyn::api::ImageResponse& image_response, const google::protobuf::Duration& clock_skew)
+tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(const bosdyn::api::ImageResponse& image_response, const std::string& robot_name, const google::protobuf::Duration& clock_skew)
 {
   sensor_msgs::msg::CameraInfo info_msg;
   info_msg.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
   info_msg.height = image_response.shot().image().rows();
   info_msg.width = image_response.shot().image().cols();
-  // TODO: use Spot's prefix here
-  info_msg.header.frame_id = image_response.shot().frame_name_image_sensor();
+  info_msg.header.frame_id = robot_name + "/" + image_response.shot().frame_name_image_sensor();
   info_msg.header.stamp = applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
 
   // We assume that the camera images have already been corrected for distortion, so the 5 distortion parameters are all zero
@@ -120,14 +119,13 @@ tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(const bo
   return info_msg;
 }
 
-tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api::ImageCapture& image_capture, const google::protobuf::Duration& clock_skew)
+tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name, const google::protobuf::Duration& clock_skew)
 {
       const auto& image = image_capture.image();
       auto data = image.data();
 
       std_msgs::msg::Header header;
-      // TODO: use Spot's prefix here
-      header.frame_id = image_capture.frame_name_image_sensor();
+      header.frame_id = robot_name + "/" + image_capture.frame_name_image_sensor();
       header.stamp = applyClockSkew(image_capture.acquisition_time(), clock_skew);
 
       const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
@@ -177,8 +175,10 @@ SpotInterface::SpotInterface()
 {
 }
 
-bool SpotInterface::createRobot(const std::string& ip_address)
+bool SpotInterface::createRobot(const std::string& ip_address, const std::string& robot_name)
 {
+  robot_name_ = robot_name;
+
   auto create_robot_result = client_sdk_->CreateRobot(ip_address);
   if(!create_robot_result.status)
   {
@@ -203,6 +203,8 @@ bool SpotInterface::authenticate(const std::string& username, const std::string&
     return false;
   }
 
+  // Start time synchronization between the robot and the client system.
+  // This must be done only after a successful authentication.
   const auto start_time_sync_response = robot_->StartTimeSync();
   if (!start_time_sync_response)
   {
@@ -256,14 +258,14 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
       const auto& image = image_response.shot().image();
       auto data = image.data();
 
-      const auto image_msg = toImageMsg(image_response.shot(), clock_skew_result.value());
+      const auto image_msg = toImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
       if (!image_msg)
       {
         std::cerr << "Failed to convert SDK image response to ROS Image message: " << image_msg.error() << std::endl;
         continue;
       }
 
-      const auto info_msg = toCameraInfoMsg(image_response, clock_skew_result.value());
+      const auto info_msg = toCameraInfoMsg(image_response, robot_name_, clock_skew_result.value());
       if (!info_msg)
       {
         std::cerr << "Failed to convert SDK image response to ROS CameraInfo message: " << info_msg.error() << std::endl;
@@ -298,10 +300,14 @@ tl::expected<builtin_interfaces::msg::Time, std::string> SpotInterface::convertR
 
 tl::expected<google::protobuf::Duration, std::string> SpotInterface::getClockSkew()
 {
+  if (!time_sync_thread_)
+  {
+    return tl::make_unexpected("Time sync thread was not initialized.");
+  }
   const auto get_skew_response = time_sync_thread_->GetEndpoint()->GetClockSkew();
   if (!get_skew_response)
   {
-    return tl::make_unexpected("Failed to get clock skew: " + get_skew_response.status.DebugString());
+    return tl::make_unexpected("Received a failure result from the TimeSyncEndpoint: " + get_skew_response.status.DebugString());
   }
   return *get_skew_response.response;
 }

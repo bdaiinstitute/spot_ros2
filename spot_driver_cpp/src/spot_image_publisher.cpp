@@ -160,6 +160,12 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const
     return declareAndGetParameter<bool>(node_, kParameterNamePublishDepthRegisteredImages, kDefaultPublishDepthRegisteredImages);
 }
 
+std::string RclcppParameterInterface::getSpotName() const
+{
+    // The spot_name parameter always matches the namespace of this node, minus the leading `/` character.
+    return std::string{node_->get_namespace()}.substr(1);
+}
+
 ::bosdyn::api::GetImageRequest createImageRequest(const std::vector<ImageSource>& sources, [[maybe_unused]] const bool has_rgb_cameras, const double rgb_image_quality, const bool get_raw_rgb_images)
 {
     ::bosdyn::api::GetImageRequest request_message;
@@ -167,7 +173,6 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const
     for (const auto& source : sources)
     {
         const auto source_name = toSpotImageSourceName(source);
-        std::cout << source_name << std::endl;
         if (source.type == SpotImageType::RGB)
         {
             bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
@@ -239,9 +244,10 @@ bool SpotImagePublisher::initialize()
     const auto publish_depth_images = parameter_interface_->getPublishDepthImages();
     const auto publish_depth_registered_images = parameter_interface_->getPublishDepthRegisteredImages();
     const auto has_rgb_cameras = parameter_interface_->getHasRGBCameras();
+    const auto spot_name = parameter_interface_->getSpotName();
 
     // Initialize the SDK client, and connect to the robot
-    if (!spot_interface_->createRobot(*address))
+    if (!spot_interface_->createRobot(*address, spot_name))
     {
         std::cerr << "Failed to create robot at IP address" << std::endl;
         return false;
@@ -264,8 +270,6 @@ bool SpotImagePublisher::initialize()
 
     // Create a timer to request and publish images at a fixed rate
     timer_interface_->setTimer(kImageCallbackPeriod, [this](){ timerCallback(); });
-
-    std::cout << "connected to robot!" << std::endl;
 
     return true;
 }

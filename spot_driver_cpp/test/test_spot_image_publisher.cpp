@@ -64,6 +64,11 @@ public:
     return publish_depth_registered_images;
   }
 
+  std::string getSpotName() const override
+  {
+    return spot_name;
+  }
+
   std::optional<std::string> address = std::nullopt;
   std::optional<std::string> username = std::nullopt;
   std::optional<std::string> password = std::nullopt;
@@ -73,6 +78,7 @@ public:
   bool publish_rgb_images = kDefaultPublishRGBImages;
   bool publish_depth_images = kDefaultPublishDepthImages;
   bool publish_depth_registered_images = kDefaultPublishDepthRegisteredImages;
+  std::string spot_name;
 };
 
 class FakeTimerInterface : public TimerInterfaceBase
@@ -106,7 +112,7 @@ public:
 class MockSpotInterface : public SpotInterfaceBase
 {
 public:
-  MOCK_METHOD(bool, createRobot, (const std::string&), (override));
+  MOCK_METHOD(bool, createRobot, (const std::string&, const std::string&), (override));
   MOCK_METHOD(bool, authenticate, (const std::string& username, const std::string& password), (override));
   MOCK_METHOD(bool, hasArm, (), (const, override));
   MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest request), (override));
@@ -243,7 +249,7 @@ TEST_F(TestInitSpotImagePublisher, InitFailsIfRobotNotCreated)
 
   // GIVEN the spot interface's createRobot function will return false to indicate that it did not succeed
   // THEN the createRobot function is called exactly once with the same address as what was provided through the parameter interface
-  EXPECT_CALL(*spot_interface_ptr, createRobot(kExampleAddress)).WillOnce(Return(false));
+  EXPECT_CALL(*spot_interface_ptr, createRobot(kExampleAddress, _)).WillOnce(Return(false));
 
   // WHEN the SpotImagePublisher is initialized
   // THEN initialization fails

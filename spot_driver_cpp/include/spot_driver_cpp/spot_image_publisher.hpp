@@ -99,6 +99,7 @@ public:
   virtual bool getPublishRGBImages() const = 0;
   virtual bool getPublishDepthImages() const = 0;
   virtual bool getPublishDepthRegisteredImages() const = 0;
+  virtual std::string getSpotName() const = 0;
 
 protected:
   // These are the definitions of the default values for optional parameters.
@@ -124,6 +125,7 @@ public:
   bool getPublishRGBImages() const override;
   bool getPublishDepthImages() const override;
   bool getPublishDepthRegisteredImages() const override;
+  std::string getSpotName() const override;
 
 private:
   std::shared_ptr<rclcpp::Node> node_;

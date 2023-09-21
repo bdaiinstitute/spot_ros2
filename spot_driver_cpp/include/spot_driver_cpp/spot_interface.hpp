@@ -29,7 +29,7 @@ class SpotInterfaceBase
 public:
   virtual ~SpotInterfaceBase() {}
 
-  virtual bool createRobot(const std::string& ip_address) = 0;
+  virtual bool createRobot(const std::string& ip_address, const std::string& robot_name) = 0;
   virtual bool authenticate(const std::string& username, const std::string& password) = 0;
   virtual bool hasArm() const = 0;
   virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) = 0;
@@ -44,7 +44,7 @@ class SpotInterface : public SpotInterfaceBase
 public:
   SpotInterface();
 
-  bool createRobot(const std::string& ip_address) override;
+  bool createRobot(const std::string& ip_address, const std::string& robot_name) override;
   bool authenticate(const std::string& username, const std::string& password) override;
   bool hasArm() const override;
   tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) override;
@@ -53,6 +53,7 @@ public:
 private:
   tl::expected<google::protobuf::Duration, std::string> getClockSkew();
 
+  std::string robot_name_;
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread_;
