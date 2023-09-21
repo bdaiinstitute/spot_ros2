@@ -16,7 +16,7 @@
 
 namespace
 {
-constexpr auto kImageCallbackPeriod = std::chrono::duration<double>{1.0 / 15.0 };
+constexpr auto kImageCallbackPeriod = std::chrono::duration<double>{1.0 / 15.0 };  // 15 Hz
 constexpr auto kDefaultDepthImageQuality = 100.0;
 
 constexpr auto kParameterNameAddress = "address";
@@ -85,6 +85,8 @@ void RclcppPublisherInterface::createPublishers(const std::vector<ImageSource>& 
 
     for (const auto& image_source : image_sources)
     {
+        // Since these topic names do not have a leading `/` character, they will be published within the namespace of the node, which should match the name of the robot.
+        // For example, the topic for the front left RGB camera will ultimately appear as `/MyRobotName/camera/frontleft/image`.
         const auto topic_name_base = toRosTopic(image_source);
 
         const auto image_topic_name = topic_name_base + "/image";
@@ -163,7 +165,15 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const
 std::string RclcppParameterInterface::getSpotName() const
 {
     // The spot_name parameter always matches the namespace of this node, minus the leading `/` character.
-    return std::string{node_->get_namespace()}.substr(1);
+    try
+    {
+        return std::string{node_->get_namespace()}.substr(1);
+    }
+    catch(const std::out_of_range& e)
+    {
+        // get_namespace() should not return an empty string, but we handle this situation just in case.
+        return "";
+    }
 }
 
 ::bosdyn::api::GetImageRequest createImageRequest(const std::vector<ImageSource>& sources, [[maybe_unused]] const bool has_rgb_cameras, const double rgb_image_quality, const bool get_raw_rgb_images)
