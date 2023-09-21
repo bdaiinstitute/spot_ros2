@@ -7,6 +7,7 @@
 #include <opencv2/opencv.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <spot_driver_cpp/spot_image_sources.hpp>
 #include <string>
 #include <tl_expected/expected.hpp>
 
@@ -14,7 +15,7 @@
 
 namespace spot_ros2
 {
-using GetImagesResult = std::unordered_map<std::string, sensor_msgs::msg::Image>;
+using GetImagesResult = std::map<ImageSource, sensor_msgs::msg::Image>;
 
 /**
  * @brief Defines an interface for a class to connect to and interact with Spot.

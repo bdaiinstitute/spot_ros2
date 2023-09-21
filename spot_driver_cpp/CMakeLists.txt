@@ -15,7 +15,7 @@ find_package(cv_bridge REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tl_expected REQUIRED)
 
-add_library(spot_image_publisher src/spot_image_publisher.cpp src/spot_interface.cpp)
+add_library(spot_image_publisher src/spot_image_publisher.cpp src/spot_image_sources.cpp src/spot_interface.cpp)
 target_include_directories(spot_image_publisher
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

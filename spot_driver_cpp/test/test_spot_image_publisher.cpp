@@ -1,5 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include "spot_driver_cpp/spot_image_sources.hpp"
 #include <gmock/gmock.h>
 
 #include <spot_driver_cpp/spot_image_publisher.hpp>
@@ -97,8 +98,8 @@ private:
 class MockPublisherInterface : public PublisherInterfaceBase
 {
 public:
-  MOCK_METHOD(void, createPublishers, (const ImageSources& image_sources), (override));
-  MOCK_METHOD(void, publishImages, ((const std::unordered_map<std::string, sensor_msgs::msg::Image>&)), (override));
+  MOCK_METHOD(void, createPublishers, (const std::vector<ImageSource>& image_sources), (override));
+  MOCK_METHOD(void, publishImages, ((const std::map<ImageSource, sensor_msgs::msg::Image>&)), (override));
 };
 
 class MockSpotInterface : public SpotInterfaceBase

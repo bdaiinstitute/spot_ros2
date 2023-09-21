@@ -1,5 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include "spot_driver_cpp/spot_image_sources.hpp"
 #include <spot_driver_cpp/spot_interface.hpp>
 
 #include <cv_bridge/cv_bridge.h>
@@ -168,7 +169,14 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
       if (const auto image_msg = toImageMsg(image_response.shot()); image_msg.has_value())
       {
         const auto& camera_name = image_response.source().name();
-        out.try_emplace(camera_name, image_msg.value());
+        if(const auto result = fromSpotImageSourceName(camera_name); result.has_value())
+        {
+          out.try_emplace(result.value(), image_msg.value());
+        }
+        else
+        {
+          std::cerr << "Failed to convert API image source name to ImageSource." << std::endl;
+        }
       }
       else
       {

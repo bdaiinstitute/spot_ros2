@@ -5,6 +5,7 @@
 #include <rclcpp/node.hpp>
 #include <rmw/qos_profiles.h>
 #include <sensor_msgs/msg/image.hpp>
+#include <spot_driver_cpp/spot_image_sources.hpp>
 
 #include <iostream>
 #include <memory>
@@ -23,34 +24,6 @@ constexpr auto kParameterNameHasRGBCameras = "rgb_cameras";
 constexpr auto kParameterNamePublishRGBImages = "publish_rgb";
 constexpr auto kParameterNamePublishDepthImages = "publish_depth";
 constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
-
-const std::vector<std::string> kImageSourceNamesRGB = {
-    "back_fisheye_image",
-    "frontleft_fisheye_image",
-    "frontright_fisheye_image",
-    "left_fisheye_image",
-    "right_fisheye_image",
-};
-
-const std::vector<std::string> kImageSourceNamesDepth = {
-    "back_depth",
-    "frontleft_depth",
-    "frontright_depth",
-    "left_depth",
-    "right_depth",
-};
-
-const std::vector<std::string> kImageSourceNamesDepthRegistered = {
-    "back_depth_registered",
-    "frontleft_depth_registered",
-    "frontright_depth_registered",
-    "left_depth_registered",
-    "right_depth_registered",
-};
-
-constexpr auto kImageSourceHandRGB = "hand_color_image";
-constexpr auto kImageSourceHandDepth = "hand_depth";
-constexpr auto kImageSourceHandDepthRegistered = "hand_depth_registered";
 
 template<typename ParameterT>
 std::optional<ParameterT> declareAndGetParameter(const std::shared_ptr<rclcpp::Node>& node, const std::string& name)
@@ -102,27 +75,23 @@ RclcppPublisherInterface::RclcppPublisherInterface(const std::shared_ptr<rclcpp:
 {
 }
 
-void RclcppPublisherInterface::createPublishers(const ImageSources& image_sources)
+void RclcppPublisherInterface::createPublishers(const std::vector<ImageSource>& image_sources)
 {
     publishers_.clear();
 
-    std::vector<std::string> image_sources_combined;
-    image_sources_combined.insert(image_sources_combined.end(), image_sources.rgb.cbegin(), image_sources.rgb.cend());
-    image_sources_combined.insert(image_sources_combined.end(), image_sources.depth.cbegin(), image_sources.depth.cend());
-    image_sources_combined.insert(image_sources_combined.end(), image_sources.depth_registered.cbegin(), image_sources.depth_registered.cend());
-
-    for (const auto& image_source : image_sources_combined)
+    for (const auto& image_source : image_sources)
     {
-        publishers_.try_emplace(image_source, node_->create_publisher<sensor_msgs::msg::Image>(image_source, rclcpp::QoS(1)));
+        std::string image_topic_name{toRosTopic(image_source).append("/image")};
+        publishers_.try_emplace(image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name, rclcpp::QoS(1)));
     }
 }
 
-void RclcppPublisherInterface::publishImages(const std::unordered_map<std::string, sensor_msgs::msg::Image>& images)
+void RclcppPublisherInterface::publishImages(const std::map<ImageSource, sensor_msgs::msg::Image>& images)
 {
-    for (const auto& [name, image_data] : images)
+    for (const auto& [image_source, image_data] : images)
     {
-        std::cout << name << std::endl;
-        const auto publisher = publishers_.at(name);
+        std::string image_topic_name{toRosTopic(image_source).append("/image")};
+        const auto publisher = publishers_.at(image_topic_name);
         publisher->publish(image_data);
     }
 }
@@ -172,80 +141,35 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const
     return declareAndGetParameter<bool>(node_, kParameterNamePublishDepthRegisteredImages, kDefaultPublishDepthRegisteredImages);
 }
 
-std::string createTopicName(const std::string& camera_name, const SpotImageType& image_type)
-{
-  if (image_type == SpotImageType::RGB)
-  {
-    return std::string("camera/").append(camera_name).append("/image");
-  }
-  else
-  {
-    return std::string("depth/").append(camera_name).append("/image");
-  }
-}
-
-ImageSources createImageSourcesList(const bool get_rgb_images, const bool get_depth_images, const bool get_depth_registered_images, const bool has_hand_camera)
-{
-    ImageSources sources;
-    if (get_rgb_images)
-    {
-        sources.rgb = kImageSourceNamesRGB;
-        if (has_hand_camera)
-        {
-            sources.rgb.push_back(kImageSourceHandRGB);
-        }
-    }
-
-    if (get_depth_images)
-    {
-        sources.depth = kImageSourceNamesDepth;
-        if (has_hand_camera)
-        {
-            sources.depth.push_back(kImageSourceHandDepth);
-        }
-    }
-
-    if (get_depth_registered_images)
-    {
-        sources.depth_registered = kImageSourceNamesDepthRegistered;
-        if (has_hand_camera)
-        {
-            sources.depth_registered.push_back(kImageSourceHandDepthRegistered);
-        }
-    }
-
-    return sources;
-}
-
-::bosdyn::api::GetImageRequest createImageRequest(const ImageSources& sources, [[maybe_unused]] const bool has_rgb_cameras, const double rgb_image_quality, const bool get_raw_rgb_images)
+::bosdyn::api::GetImageRequest createImageRequest(const std::vector<ImageSource>& sources, [[maybe_unused]] const bool has_rgb_cameras, const double rgb_image_quality, const bool get_raw_rgb_images)
 {
     ::bosdyn::api::GetImageRequest request_message;
-    for (const auto& source : sources.rgb)
-    {
-        // TODO: if Spot has grayscale body cameras instead of RGB, request grayscale images
-        bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
-        image_request->set_image_source_name(source);
-        image_request->set_quality_percent(rgb_image_quality);
-        image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8);
-        image_request->set_image_format(get_raw_rgb_images ? bosdyn::api::Image_Format_FORMAT_RAW : bosdyn::api::Image_Format_FORMAT_JPEG);
-    }
 
-    for (const auto& source : sources.depth)
+    for (const auto& source : sources)
     {
-        bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
-        image_request->set_image_source_name(source);
-        image_request->set_quality_percent(kDefaultDepthImageQuality);
-        image_request->set_image_format(bosdyn::api::Image_Format_FORMAT_RAW);
-    }
-
-    for (const auto& source : sources.depth_registered)
-    {
-        bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
-        image_request->set_image_source_name(source);
-        image_request->set_quality_percent(kDefaultDepthImageQuality);
-        image_request->set_image_format(bosdyn::api::Image_Format_FORMAT_RAW);
-    }
-    
+        if (source.type == SpotImageType::RGB)
+        {
+            bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
+            image_request->set_image_source_name(toSpotImageSourceName(source));
+            image_request->set_quality_percent(rgb_image_quality);
+            image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8);
+            image_request->set_image_format(get_raw_rgb_images ? bosdyn::api::Image_Format_FORMAT_RAW : bosdyn::api::Image_Format_FORMAT_JPEG);
+        }
+        else if (source.type == SpotImageType::DEPTH)
+        {
+            bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
+            image_request->set_image_source_name(toSpotImageSourceName(source));
+            image_request->set_quality_percent(kDefaultDepthImageQuality);
+            image_request->set_image_format(bosdyn::api::Image_Format_FORMAT_RAW);
+        }
+        else // SpotImageType::DEPTH_REGISTERED
+        {
+            bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
+            image_request->set_image_source_name(toSpotImageSourceName(source));
+            image_request->set_quality_percent(kDefaultDepthImageQuality);
+            image_request->set_image_format(bosdyn::api::Image_Format_FORMAT_RAW);
+        }
+    }  
 
     return request_message;
 }
