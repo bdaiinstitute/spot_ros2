@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <optional>
+#include <tl_expected/expected.hpp>
 
 using ::testing::AtLeast;
 using ::testing::InSequence;
@@ -112,9 +113,9 @@ public:
 class MockSpotInterface : public SpotInterfaceBase
 {
 public:
-  MOCK_METHOD(bool, createRobot, (const std::string&, const std::string&), (override));
-  MOCK_METHOD(bool, authenticate, (const std::string& username, const std::string& password), (override));
-  MOCK_METHOD(bool, hasArm, (), (const, override));
+  MOCK_METHOD((tl::expected<void, std::string>), createRobot, (const std::string&, const std::string&), (override));
+  MOCK_METHOD((tl::expected<void, std::string>), authenticate, (const std::string& username, const std::string& password), (override));
+  MOCK_METHOD((tl::expected<bool, std::string>), hasArm, (), (const, override));
   MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest request), (override));
   MOCK_METHOD((tl::expected<builtin_interfaces::msg::Time, std::string>), convertRobotTimeToLocalTime, (const google::protobuf::Timestamp& robot_timestamp), (override));
 
@@ -187,8 +188,8 @@ public:
     parameter_interface_ptr->username = kExampleUsername;
     parameter_interface_ptr->password = kExamplePassword;
 
-    ON_CALL(*spot_interface_ptr, createRobot).WillByDefault(Return(true));
-    ON_CALL(*spot_interface_ptr, authenticate).WillByDefault(Return(true));
+    ON_CALL(*spot_interface_ptr, createRobot).WillByDefault(Return(tl::expected<void, std::string>{}));
+    ON_CALL(*spot_interface_ptr, authenticate).WillByDefault(Return(tl::expected<void, std::string>{}));
     ON_CALL(*spot_interface_ptr, hasArm).WillByDefault(Return(true));
   }
   
@@ -249,7 +250,7 @@ TEST_F(TestInitSpotImagePublisher, InitFailsIfRobotNotCreated)
 
   // GIVEN the spot interface's createRobot function will return false to indicate that it did not succeed
   // THEN the createRobot function is called exactly once with the same address as what was provided through the parameter interface
-  EXPECT_CALL(*spot_interface_ptr, createRobot(kExampleAddress, _)).WillOnce(Return(false));
+  EXPECT_CALL(*spot_interface_ptr, createRobot(kExampleAddress, _)).WillOnce(Return(tl::make_unexpected("dummy error message")));
 
   // WHEN the SpotImagePublisher is initialized
   // THEN initialization fails
@@ -260,11 +261,11 @@ TEST_F(TestInitSpotImagePublisher, InitFailsIfRobotNotAuthenticated)
 {
   // GIVEN all required parameters are set to correct values
   // GIVEN the createRobot function will return true to indicate that it succeeded
-  ON_CALL(*spot_interface_ptr, createRobot).WillByDefault(Return(true));
+  ON_CALL(*spot_interface_ptr, createRobot).WillByDefault(Return(tl::expected<void, std::string>{}));
 
   // GIVEN the spot interface's authenticate function will return false to indicate that it failed
   // THEN the authenticate function is called exactly once with the same username and password as what was provided through the parameter interface
-  EXPECT_CALL(*spot_interface_ptr, authenticate(kExampleUsername, kExamplePassword)).WillOnce(Return(false));
+  EXPECT_CALL(*spot_interface_ptr, authenticate(kExampleUsername, kExamplePassword)).WillOnce(Return(tl::make_unexpected("dummy error message")));
 
   // WHEN the SpotImagePulisher is initialized
   // THEN initialization fails
@@ -276,8 +277,8 @@ TEST_F(TestInitSpotImagePublisher, InitSucceeds)
   // GIVEN all required parameters are set to correct values
   // GIVEN the createRobot function will return true to indicate that it succeeded
   // GIVEN the authenticate function will return true to indicate that it succeeded
-  ON_CALL(*spot_interface_ptr, createRobot).WillByDefault(Return(true));
-  ON_CALL(*spot_interface_ptr, authenticate).WillByDefault(Return(true));
+  ON_CALL(*spot_interface_ptr, createRobot).WillByDefault(Return(tl::expected<void, std::string>{}));
+  ON_CALL(*spot_interface_ptr, authenticate).WillByDefault(Return(tl::expected<void, std::string>{}));
   ON_CALL(*spot_interface_ptr, hasArm).WillByDefault(Return(true));
 
   // THEN the timer interface's setTimer function is called once with the expected timer period

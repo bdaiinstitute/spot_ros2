@@ -175,32 +175,32 @@ SpotInterface::SpotInterface()
 {
 }
 
-bool SpotInterface::createRobot(const std::string& ip_address, const std::string& robot_name)
+tl::expected<void, std::string> SpotInterface::createRobot(const std::string& ip_address, const std::string& robot_name)
 {
   robot_name_ = robot_name;
 
   auto create_robot_result = client_sdk_->CreateRobot(ip_address);
   if(!create_robot_result.status)
   {
-    return false;
+    return tl::make_unexpected("Received error result when creating SDK robot interface: " + create_robot_result.status.DebugString());
   }
 
   robot_ = std::move(create_robot_result.response);
 
-  return true;
+  return {};
 }
 
-bool SpotInterface::authenticate(const std::string& username, const std::string& password)
+tl::expected<void, std::string> SpotInterface::authenticate(const std::string& username, const std::string& password)
 {
   if (!robot_)
   {
-    return false;
+    return tl::make_unexpected("Spot SDK robot interface must be initialized before attempting to authenticate with the robot.");
   }
 
   const auto authenticate_result = robot_->Authenticate(username, password);
   if(!authenticate_result)
   {
-    return false;
+    return tl::make_unexpected("Authentication with provided username and password did not succeed.");
   }
 
   // Start time synchronization between the robot and the client system.
@@ -208,13 +208,13 @@ bool SpotInterface::authenticate(const std::string& username, const std::string&
   const auto start_time_sync_response = robot_->StartTimeSync();
   if (!start_time_sync_response)
   {
-    return false;
+    return tl::make_unexpected("Failed to start time synchronization.");
   }
 
   const auto get_time_sync_thread_response = robot_->GetTimeSyncThread();
   if (!get_time_sync_thread_response)
   {
-    return false;
+    return tl::make_unexpected("Failed to get the time synchronization thread.");
   }
   time_sync_thread_ = get_time_sync_thread_response.response;
 
@@ -223,15 +223,15 @@ bool SpotInterface::authenticate(const std::string& username, const std::string&
             ::bosdyn::client::ImageClient::GetDefaultServiceName());
   if (!image_client_result.status)
   {
-    return false;
+    return tl::make_unexpected("Failed to initialize the Spot SDK image client.");
   }
 
   image_client_.reset(std::move(image_client_result.response));
 
-  return true;
+  return {};
 }
 
-bool SpotInterface::hasArm() const
+tl::expected<bool, std::string> SpotInterface::hasArm() const
 {
   // TODO: programmatically determine if Spot has an arm attached, like the existing Python driver does
   return true;

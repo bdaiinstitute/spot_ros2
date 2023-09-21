@@ -29,9 +29,9 @@ class SpotInterfaceBase
 public:
   virtual ~SpotInterfaceBase() {}
 
-  virtual bool createRobot(const std::string& ip_address, const std::string& robot_name) = 0;
-  virtual bool authenticate(const std::string& username, const std::string& password) = 0;
-  virtual bool hasArm() const = 0;
+  virtual tl::expected<void, std::string> createRobot(const std::string& ip_address, const std::string& robot_name) = 0;
+  virtual tl::expected<void, std::string> authenticate(const std::string& username, const std::string& password) = 0;
+  virtual tl::expected<bool, std::string> hasArm() const = 0;
   virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) = 0;
   virtual tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(const google::protobuf::Timestamp& robot_timestamp) = 0;
 };
@@ -44,9 +44,9 @@ class SpotInterface : public SpotInterfaceBase
 public:
   SpotInterface();
 
-  bool createRobot(const std::string& ip_address, const std::string& robot_name) override;
-  bool authenticate(const std::string& username, const std::string& password) override;
-  bool hasArm() const override;
+  tl::expected<void, std::string> createRobot(const std::string& ip_address, const std::string& robot_name) override;
+  tl::expected<void, std::string> authenticate(const std::string& username, const std::string& password) override;
+  tl::expected<bool, std::string> hasArm() const override;
   tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) override;
   tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(const google::protobuf::Timestamp& robot_timestamp) override;
 

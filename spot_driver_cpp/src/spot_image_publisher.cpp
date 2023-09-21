@@ -257,20 +257,27 @@ bool SpotImagePublisher::initialize()
     const auto spot_name = parameter_interface_->getSpotName();
 
     // Initialize the SDK client, and connect to the robot
-    if (!spot_interface_->createRobot(*address, spot_name))
+    if (const auto result = spot_interface_->createRobot(*address, spot_name); !result)
     {
-        std::cerr << "Failed to create robot at IP address" << std::endl;
+        std::cerr << "Failed to create interface to robot: " << result.error() << std::endl;
         return false;
     }
 
-    if (!spot_interface_->authenticate(*username, *password))
+    if (const auto result = spot_interface_->authenticate(*username, *password); !result)
     {
-        std::cerr << "Failed to authenticate with robot" << std::endl;
+        std::cerr << "Failed to authenticate with robot: " << result.error() << std::endl;
+        return false;
+    }
+
+    const auto has_arm_result = spot_interface_->hasArm();
+    if (!has_arm_result)
+    {
+        std::cerr << "Failed to determine if Spot is equipped with an arm: " << has_arm_result.error() << std::endl;
         return false;
     }
 
     // Generate the list of image sources based on which cameras the user has requested that we publish
-    const auto sources = createImageSourcesList(publish_rgb_images, publish_depth_images, publish_depth_registered_images, spot_interface_->hasArm());
+    const auto sources = createImageSourcesList(publish_rgb_images, publish_depth_images, publish_depth_registered_images, has_arm_result.value());
 
     // Generate the image request message to capture the data from the specified image sources
     image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, false);
