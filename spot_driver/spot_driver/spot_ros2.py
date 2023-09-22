@@ -2397,8 +2397,8 @@ def main(args: Optional[List[str]] = None) -> None:
         pass
     if spot_ros.spot_wrapper is not None:
         spot_ros.spot_wrapper.disconnect()
-    spot_ros.destroy_node()
     rclpy.try_shutdown()
+    spot_ros.destroy_node()
 
 
 if __name__ == "__main__":

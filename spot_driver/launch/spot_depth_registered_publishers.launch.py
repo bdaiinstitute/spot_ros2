@@ -44,6 +44,29 @@ def launch_depth_register_nodelets(
                 ],
             )
         )
+        composable_node_descriptions.append(
+            launch_ros.descriptions.ComposableNode(
+                package="depth_image_proc",
+                plugin="depth_image_proc::ConvertMetricNode",
+                name="convert_node_" + camera,
+                namespace=spot_name,
+                # Each entry in the remappings list is a tuple.
+                # The first element in the tuple is the internal name of the topic used within the nodelet.
+                # The second element is the external name of the topic used by other nodes in the system.
+                remappings=[
+                    ("image_raw", PathJoinSubstitution(["depth_registered", camera, "image"]).perform(context)),
+                    ("image", PathJoinSubstitution(["depth_converted", camera, "image"]).perform(context)),
+                    # (
+                    #     "depth_registered/image_rect",
+                    #     PathJoinSubstitution(["depth_registered_converted", camera, "image"]).perform(context),
+                    # ),
+                    # (
+                    #     "depth_registered/camera_info",
+                    #     PathJoinSubstitution(["depth_registered_converted", camera, "camera_info"]).perform(context),
+                    # ),
+                ],
+            )
+        )
 
     container = launch_ros.actions.ComposableNodeContainer(
         name="container",
