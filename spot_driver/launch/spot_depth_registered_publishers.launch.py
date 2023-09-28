@@ -44,6 +44,23 @@ def launch_depth_register_nodelets(
                 ],
             )
         )
+        composable_node_descriptions.append(
+            launch_ros.descriptions.ComposableNode(
+                package="depth_image_proc",
+                plugin="depth_image_proc::PointCloudXyzrgbNode",
+                name="point_cloud_xyzrgb_node_" + camera,
+                namespace=spot_name,
+                remappings=[
+                    ("rgb/camera_info", PathJoinSubstitution(["camera", camera, "camera_info"]).perform(context)),
+                    ("rgb/image_rect_color", PathJoinSubstitution(["camera", camera, "image"]).perform(context)),
+                    (
+                        "depth_registered/image_rect",
+                        PathJoinSubstitution(["depth_registered", camera, "image"]).perform(context),
+                    ),
+                    ("points", PathJoinSubstitution(["depth_registered", camera, "points"]).perform(context)),
+                ],
+            ),
+        )
 
     container = launch_ros.actions.ComposableNodeContainer(
         name="container",
