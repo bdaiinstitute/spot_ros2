@@ -290,6 +290,7 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
       else
       {
         std::cerr << "Failed to convert API image source name to ImageSource: " << result.error() << std::endl;
+        continue;
       }
   }
 
