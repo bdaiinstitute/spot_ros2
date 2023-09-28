@@ -2,7 +2,9 @@
 
 #include <spot_driver_cpp/spot_interface.hpp>
 
+#include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>
+#include <bosdyn/client/gripper_camera_param/gripper_camera_param_client.h>
 #include <builtin_interfaces/msg/time.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <google/protobuf/duration.pb.h>
@@ -16,6 +18,7 @@
 #include <std_msgs/msg/header.hpp>
 #include <tl_expected/expected.hpp>
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
@@ -242,9 +245,16 @@ tl::expected<void, std::string> SpotInterface::authenticate(const std::string& u
 
 tl::expected<bool, std::string> SpotInterface::hasArm() const
 {
-  // TODO: programmatically determine if Spot has an arm attached, like the existing Python driver does
-  // For now, always return false to avoid erroneously requesting wrist camera data from Spots without arms.
-  return false;
+  // Determine if Spot has an arm by checking if the client for gripper camera parameters exists, since Spots without arms do not have this client.
+  const auto list_result = robot_->ListServices();
+  if (!list_result.status)
+  {
+    return tl::make_unexpected("Failed to retrieve list of Spot services.");
+  }
+
+  const auto& services = list_result.response;
+
+  return std::find_if(services.cbegin(),services.cend(), [](const ::bosdyn::api::ServiceEntry& entry){ return entry.name() == ::bosdyn::client::GripperCameraParamClient::GetDefaultServiceName(); } ) != services.cend();
 }
 
 tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::api::GetImageRequest request)
