@@ -8,6 +8,7 @@ import typing
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
+from importlib.metadata import version
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import builtin_interfaces.msg
@@ -421,6 +422,7 @@ class SpotROS(Node):
             )
 
         self.declare_parameter("has_arm", has_arm)
+        self._impedance_feedback_implemented = self._check_sdk_for_impedance_feedback()
 
         # Status Publishers #
         self.joint_state_pub: Publisher = self.create_publisher(JointState, "joint_states", 1)
@@ -771,6 +773,14 @@ class SpotROS(Node):
                 self.spot_wrapper.power_on()
                 if self.auto_stand.value:
                     self.spot_wrapper.stand()
+
+    def _check_sdk_for_impedance_feedback(self) -> bool:
+        """Incredibly janky way to check if the bosdyn api is past 3.3.0, when impedance feedback is implemented"""
+        sdk_version = version("bosdyn.api")
+        sdk_numbers = [int(digit) for digit in sdk_version.split(".")]
+        if sdk_numbers[-2] > 2:
+            return True
+        return False
 
     def spin(self) -> None:
         self.get_logger().info("Spinning ros2_driver")
@@ -1531,11 +1541,15 @@ class SpotROS(Node):
                     ):
                         return GoalResponse.FAILED
                 elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET:
-                    if (
-                        arm_feedback.feedback.arm_impedance_feedback.status
-                        != arm_feedback.feedback.arm_impedance_feedback.status.STATUS_TRAJECTORY_COMPLETE
-                    ):
-                        return GoalResponse.IN_PROGRESS
+                    if self._impedance_feedback_implemented:
+                        if (
+                            arm_feedback.feedback.arm_impedance_feedback.status
+                            != arm_feedback.feedback.arm_impedance_feedback.status.STATUS_TRAJECTORY_COMPLETE
+                        ):
+                            return GoalResponse.IN_PROGRESS
+                    else:
+                        self.get_logger().warn("WARNING: Impedance command provides no feedback on this SDK version")
+                        pass  # May return SUCCESS below
                 else:
                     self.get_logger().error("ERROR: unknown arm command type")
                     return GoalResponse.IN_PROGRESS
