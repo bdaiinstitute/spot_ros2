@@ -166,7 +166,7 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
         {
           return tl::make_unexpected("Failed to decode raw-formatted image.");
         }
-        const auto image = cv_bridge::CvImage{header, "mono16", img}.toImageMsg();
+        const auto image = cv_bridge::CvImage{header, sensor_msgs::image_encodings::TYPE_16UC1, img}.toImageMsg();
         return *image;
       }
       else if (image.format() == bosdyn::api::Image_Format_FORMAT_RLE)
