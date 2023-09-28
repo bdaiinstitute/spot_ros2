@@ -3,12 +3,13 @@
 <package format="3">
   <name>spot_driver_cpp</name>
   <version>0.0.0</version>
-  <description>C++-based ROS 2 driver nodes for Spot.</description>
+  <description>C++ ROS 2 driver nodes for Spot.</description>
   <maintainer email="jschornak@theaiinstitute.com">Joe Schornak</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>bosdyn</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>
