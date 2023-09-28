@@ -778,9 +778,12 @@ class SpotROS(Node):
         """Incredibly janky way to check if the bosdyn api is past 3.3.0, when impedance feedback is implemented"""
         sdk_version = version("bosdyn.api")
         sdk_numbers = [int(digit) for digit in sdk_version.split(".")]
-        if sdk_numbers[-2] > 2:
+        if sdk_numbers[0] > 3:
             return True
-        return False
+        elif sdk_numbers[0] == 3 and sdk_numbers[1] > 2:
+            return True
+        else:
+            return False
 
     def spin(self) -> None:
         self.get_logger().info("Spinning ros2_driver")
