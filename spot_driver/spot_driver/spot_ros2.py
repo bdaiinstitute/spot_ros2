@@ -353,6 +353,8 @@ class SpotROS(Node):
         name_with_dot = ""
         if self.name is not None:
             name_with_dot = self.name + "."
+
+        logging.basicConfig(format="[%(filename)s:%(lineno)d] %(message)s", level=logging.ERROR)
         self.wrapper_logger = logging.getLogger(f"{name_with_dot}spot_wrapper")
 
         name_str = ""
