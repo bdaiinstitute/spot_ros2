@@ -185,15 +185,15 @@ class SpotROS(Node):
 
         # spot_ros.yaml
         self.rates = {
-            "robot_state": 50.0,
+            "robot_state": 100.0,
             "metrics": 0.04,
             "lease": 1.0,
-            "world_objects": 20.0,
-            "front_image": 10.0,
-            "side_image": 10.0,
-            "rear_image": 10.0,
+            "world_objects": 2.0,
+            "front_image": 2.0,
+            "side_image": 2.0,
+            "rear_image": 2.0,
             "graph_nav_pose": 10.0,
-        }
+         }
         max_task_rate = float(max(self.rates.values()))
 
         self.declare_parameter("auto_claim", False)
@@ -375,7 +375,8 @@ class SpotROS(Node):
                         f"{camera_name}_depth_info_pub",
                         self.create_publisher(CameraInfo, f"depth/{camera_name}/camera_info", 1),
                     )
-
+                
+                print(f'\n\nFRONT IMAGE RATE: {self.rates["front_image"]}\n\n')
                 self.create_timer(
                     1 / self.rates["front_image"],
                     self.publish_depth_images_callback,
