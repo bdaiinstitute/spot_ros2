@@ -187,6 +187,27 @@ class SpotImageType(str, Enum):
     RegDepth = "depth_registered"
 
 
+class SpotWrapperLogger(rcutils_logger.RcutilsLogger):
+    """Class that wraps the logger so it behaves as the Spot-SDK expects."""
+
+    def __init__(self, name: str):
+        super().__init__(name=name)
+
+    def exception(self, msg: str, *args: str, **kwargs: str) -> None:
+        """Wraps an exception in the style format expected by logging.Logger.
+
+        This is required by the Spot-SDK (which is called by SpotWrapper on the chance that
+        the async_tasks function has an error.
+
+        See: https://github.com/boston-dynamics/spot-sdk/blob/6a03ae12056a74e65fd9715128e0c40762dfa7ba/python/bosdyn-client/src/bosdyn/client/async_tasks.py#L182C1-L182C1
+
+        Args:
+            msg: error message to report
+        """
+        error_msg = msg % args
+        self.error(error_msg, **kwargs)
+
+
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
@@ -349,7 +370,7 @@ class SpotROS(Node):
         name_with_dot = ""
         if self.name is not None:
             name_with_dot = self.name + "."
-        self.wrapper_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_wrapper")
+        self.wrapper_logger = SpotWrapperLogger(name=f"{name_with_dot}spot_wrapper")
 
         name_str = ""
         if self.name is not None:
