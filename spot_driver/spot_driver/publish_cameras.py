@@ -1,12 +1,11 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
-import sys
 import time
 
+import bdai_ros2_wrappers.process as ros_process
 import bosdyn.client
 import bosdyn.client.util
-import rclpy
-import rclpy.node
+from bdai_ros2_wrappers.node import Node
 from bosdyn.api import image_pb2
 from bosdyn.client.image import ImageClient, build_image_request
 from cv_bridge import CvBridge
@@ -65,7 +64,7 @@ def translate_ros_camera_name_to_bosdyn(camera_source: str, camera_type: str) ->
     raise ValueError(f"Invalid camera source {camera_source} or camera_type {camera_type} supplied")
 
 
-class SpotImagePublisher(rclpy.node.Node):
+class SpotImagePublisher(Node):
     def __init__(self) -> None:
         super().__init__("spot_image_publisher")
         self.declare_parameter("spot_name", "")
@@ -201,11 +200,9 @@ class SpotImagePublisher(rclpy.node.Node):
         print(f"Overall time taken is {time2-start_time}")
 
 
+@ros_process.main(prebaked=False)
 def main() -> None:
-    rclpy.init(args=sys.argv)
-    spot_image_publisher = SpotImagePublisher()
-    rclpy.spin(spot_image_publisher)
-    rclpy.shutdown()
+    ros_process.spin(SpotImagePublisher)
 
 
 if __name__ == "__main__":

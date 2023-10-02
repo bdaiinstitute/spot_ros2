@@ -7,6 +7,7 @@
   <maintainer email="engineering@theaiinstitute.com">BD AI Institute</maintainer>
   <license>TODO: License declaration</license>
 
+  <exec_depend>bdai_ros2_wrappers</exec_depend>
   <test_depend>python3-pytest</test_depend>
 
   <export>
