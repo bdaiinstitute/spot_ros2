@@ -1,6 +1,5 @@
 ### Debug
 # from ros_helpers import *
-import logging
 import sys
 import threading
 import time
@@ -15,9 +14,6 @@ import builtin_interfaces.msg
 import rclpy
 import rclpy.time
 import tf2_ros
-from bdai_ros2_wrappers.logging import (
-    logs_to_ros,
-)
 from bdai_ros2_wrappers.single_goal_action_server import (
     SingleGoalActionServer,
 )
@@ -353,9 +349,7 @@ class SpotROS(Node):
         name_with_dot = ""
         if self.name is not None:
             name_with_dot = self.name + "."
-
-        logging.basicConfig(format="[%(filename)s:%(lineno)d] %(message)s", level=logging.ERROR)
-        self.wrapper_logger = logging.getLogger(f"{name_with_dot}spot_wrapper")
+        self.wrapper_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_wrapper")
 
         name_str = ""
         if self.name is not None:
@@ -2398,8 +2392,7 @@ def main(args: Optional[List[str]] = None) -> None:
     rclpy.init(args=args)
     spot_ros = SpotROS()
     try:
-        with logs_to_ros(spot_ros):
-            spot_ros.spin()
+        spot_ros.spin()
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     if spot_ros.spot_wrapper is not None:
