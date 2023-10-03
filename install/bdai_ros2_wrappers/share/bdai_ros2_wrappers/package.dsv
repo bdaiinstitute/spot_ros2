@@ -1,9 +1,0 @@
-source;share/bdai_ros2_wrappers/hook/pythonpath.ps1
-source;share/bdai_ros2_wrappers/hook/pythonpath.dsv
-source;share/bdai_ros2_wrappers/hook/pythonpath.sh
-source;share/bdai_ros2_wrappers/hook/ament_prefix_path.ps1
-source;share/bdai_ros2_wrappers/hook/ament_prefix_path.dsv
-source;share/bdai_ros2_wrappers/hook/ament_prefix_path.sh
-source;../../build/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/pythonpath_develop.ps1
-source;../../build/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/pythonpath_develop.dsv
-source;../../build/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/pythonpath_develop.sh

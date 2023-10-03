@@ -1,9 +1,0 @@
-/home/bhung/spot_ros2/build/spot_description/CMakeFiles/uninstall.dir
-/home/bhung/spot_ros2/build/spot_description/CMakeFiles/spot_description_uninstall.dir
-/home/bhung/spot_ros2/build/spot_description/CMakeFiles/test.dir
-/home/bhung/spot_ros2/build/spot_description/CMakeFiles/edit_cache.dir
-/home/bhung/spot_ros2/build/spot_description/CMakeFiles/rebuild_cache.dir
-/home/bhung/spot_ros2/build/spot_description/CMakeFiles/list_install_components.dir
-/home/bhung/spot_ros2/build/spot_description/CMakeFiles/install.dir
-/home/bhung/spot_ros2/build/spot_description/CMakeFiles/install/local.dir
-/home/bhung/spot_ros2/build/spot_description/CMakeFiles/install/strip.dir

@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/build/spot_msgs/rosidl_typesupport_introspection_c/spot_msgs/srv/detail/get_volume__rosidl_typesupport_introspection_c.h

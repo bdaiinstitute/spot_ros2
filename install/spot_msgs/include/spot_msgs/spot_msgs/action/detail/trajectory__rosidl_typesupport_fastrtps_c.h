@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/build/spot_msgs/rosidl_typesupport_fastrtps_c/spot_msgs/action/detail/trajectory__rosidl_typesupport_fastrtps_c.h

@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/build/spot_msgs/rosidl_typesupport_fastrtps_cpp/spot_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h

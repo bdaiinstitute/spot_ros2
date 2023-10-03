@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/spot_driver/launch/view_robot.launch.py

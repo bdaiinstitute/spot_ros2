@@ -1,1 +1,0 @@
-/home/bhung/spot_ros2/build/spot_msgs/ament_cmake_python/spot_msgs/spot_msgs.egg-info/SOURCES.txt

@@ -1,6 +1,0 @@
-setup.py
-spot_msgs/__init__.py
-spot_msgs.egg-info/PKG-INFO
-spot_msgs.egg-info/SOURCES.txt
-spot_msgs.egg-info/dependency_links.txt
-spot_msgs.egg-info/top_level.txt
