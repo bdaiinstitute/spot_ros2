@@ -1,0 +1,22 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from spot_msgs/msg/Metrics.msg
+// generated code does not contain a copyright notice
+
+#include "builtin_interfaces/msg/Duration.idl"
+#include "std_msgs/msg/Header.idl"
+
+module spot_msgs {
+  module msg {
+    struct Metrics {
+      std_msgs::msg::Header header;
+
+      float distance;
+
+      int32 gait_cycles;
+
+      builtin_interfaces::msg::Duration time_moving;
+
+      builtin_interfaces::msg::Duration electric_power;
+    };
+  };
+};

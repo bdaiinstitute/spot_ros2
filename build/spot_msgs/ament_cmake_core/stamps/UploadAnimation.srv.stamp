@@ -1,0 +1,5 @@
+string animation_name
+string animation_file_content
+---
+bool success 
+string message

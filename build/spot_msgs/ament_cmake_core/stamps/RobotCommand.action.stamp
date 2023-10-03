@@ -1,0 +1,7 @@
+bosdyn_msgs/RobotCommand command
+---
+bosdyn_msgs/RobotCommandFeedback result
+bool success
+string message
+---
+bosdyn_msgs/RobotCommandFeedback feedback

@@ -1,0 +1,19 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from spot_msgs/srv/PlaySound.srv
+// generated code does not contain a copyright notice
+
+
+module spot_msgs {
+  module srv {
+    struct PlaySound_Request {
+      string name;
+
+      float volume_multiplier;
+    };
+    struct PlaySound_Response {
+      boolean success;
+
+      string message;
+    };
+  };
+};

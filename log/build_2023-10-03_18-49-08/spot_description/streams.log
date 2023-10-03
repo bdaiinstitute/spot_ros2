@@ -1,0 +1,137 @@
+[0.661s] Invoking command in '/home/bhung/spot_ros2/build/spot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake /home/bhung/spot_ros2/spot_description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/bhung/spot_ros2/install/spot_description
+[1.124s] -- The C compiler identification is GNU 11.4.0
+[1.124s] -- The CXX compiler identification is GNU 11.4.0
+[1.124s] -- Detecting C compiler ABI info
+[1.124s] -- Detecting C compiler ABI info - done
+[1.124s] -- Check for working C compiler: /usr/bin/cc - skipped
+[1.124s] -- Detecting C compile features
+[1.124s] -- Detecting C compile features - done
+[1.124s] -- Detecting CXX compiler ABI info
+[1.124s] -- Detecting CXX compiler ABI info - done
+[1.124s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[1.124s] -- Detecting CXX compile features
+[1.124s] -- Detecting CXX compile features - done
+[1.124s] -- Found ament_cmake: 1.3.5 (/opt/ros/humble/share/ament_cmake/cmake)
+[1.125s] -- Found Python3: /usr/bin/python3.10 (found version "3.10.12") found components: Interpreter 
+[1.125s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.125s] -- Found ament_lint_auto: 0.12.7 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.160s] -- Added test 'copyright' to check source files copyright and LICENSE
+[1.168s] -- Added test 'flake8' to check Python code syntax and style conventions
+[1.169s] -- Added test 'lint_cmake' to check CMake code style
+[1.170s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[1.174s] -- Added test 'xmllint' to check XML markup files
+[1.176s] -- Configuring done
+[1.179s] -- Generating done
+[1.180s] -- Build files have been written to: /home/bhung/spot_ros2/build/spot_description
+[1.184s] Invoked command in '/home/bhung/spot_ros2/build/spot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake /home/bhung/spot_ros2/spot_description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/bhung/spot_ros2/install/spot_description
+[1.186s] Invoking command in '/home/bhung/spot_ros2/build/spot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --build /home/bhung/spot_ros2/build/spot_description -- -j16 -l16
+[1.231s] Invoked command in '/home/bhung/spot_ros2/build/spot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --build /home/bhung/spot_ros2/build/spot_description -- -j16 -l16
+[1.254s] Invoking command in '/home/bhung/spot_ros2/build/spot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --install /home/bhung/spot_ros2/build/spot_description
+[1.259s] -- Install configuration: ""
+[1.259s] -- Execute custom install script
+[1.260s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/launch/description.launch.py
+[1.266s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/launch/standalone_arm.launch.py
+[1.276s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/launch/urdf_viz.launch
+[1.283s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/urdf/README.md
+[1.290s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/urdf/accessories.urdf.xacro
+[1.299s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/urdf/empty.urdf
+[1.305s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/urdf/spot.urdf.xacro
+[1.312s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/urdf/spot_arm_macro.urdf
+[1.321s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/urdf/spot_macro.xacro
+[1.330s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/urdf/spot_simple.urdf.xacro
+[1.340s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/urdf/standalone_arm.urdf.xacro
+[1.348s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/collision/arm_link_el0.stl
+[1.354s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/collision/arm_link_el1.stl
+[1.361s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/collision/arm_link_fngr.stl
+[1.368s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/collision/arm_link_hr0.stl
+[1.375s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/collision/arm_link_sh0.stl
+[1.384s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/collision/arm_link_sh1.stl
+[1.391s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/collision/arm_link_wr0.stl
+[1.398s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/collision/arm_link_wr1.stl
+[1.408s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/visual/arm_link_el0.obj
+[1.416s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/visual/arm_link_el1.obj
+[1.425s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/visual/arm_link_fngr.obj
+[1.432s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/visual/arm_link_hr0.obj
+[1.438s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/visual/arm_link_sh0.obj
+[1.445s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/visual/arm_link_sh1.obj
+[1.452s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/visual/arm_link_wr0.obj
+[1.461s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/arm/visual/arm_link_wr1.obj
+[1.470s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/body_collision.stl
+[1.480s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/front_left_hip_collision.stl
+[1.489s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/front_left_lower_leg_collision.stl
+[1.499s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/front_left_upper_leg_collision.stl
+[1.509s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/front_right_hip_collision.stl
+[1.520s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/front_right_lower_leg_collision.stl
+[1.529s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/front_right_upper_leg_collision.stl
+[1.538s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/lidar_mount_collision.stl
+[1.546s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/rear_left_hip_collision.stl
+[1.552s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/rear_left_lower_leg_collision.stl
+[1.559s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/rear_left_upper_leg_collision.stl
+[1.566s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/rear_right_hip_collision.stl
+[1.576s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/rear_right_lower_leg_collision.stl
+[1.582s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/rear_right_upper_leg_collision.stl
+[1.589s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/velo_collision.stl
+[1.596s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/collision/velodyne_cage.stl
+[1.605s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/body.dae
+[1.615s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/front_left_hip.dae
+[1.625s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/front_left_lower_leg.dae
+[1.634s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/front_left_upper_leg.dae
+[1.644s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/front_right_hip.dae
+[1.654s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/front_right_lower_leg.dae
+[1.665s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/front_right_upper_leg.dae
+[1.674s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/lidar_mount.dae
+[1.684s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/pack_body.dae
+[1.694s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/pack_top.dae
+[1.704s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/rear_left_hip.dae
+[1.714s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/rear_left_lower_leg.dae
+[1.725s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/rear_left_upper_leg.dae
+[1.736s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/rear_right_hip.dae
+[1.746s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/rear_right_lower_leg.dae
+[1.756s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/rear_right_upper_leg.dae
+[1.763s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/spot_mat.png
+[1.775s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base/visual/velo.dae
+[1.781s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/body.stl
+[1.789s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/fl_hip.stl
+[1.796s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/fl_lleg.stl
+[1.804s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/fl_uleg.stl
+[1.812s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/fr_hip.stl
+[1.819s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/fr_lleg.stl
+[1.828s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/fr_uleg.stl
+[1.838s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/hl_hip.stl
+[1.846s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/hl_lleg.stl
+[1.856s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/hl_uleg.stl
+[1.862s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/hr_hip.stl
+[1.869s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/hr_lleg.stl
+[1.876s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/collision/hr_uleg.stl
+[1.883s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/body.obj
+[1.891s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/fl_hip.obj
+[1.897s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/fl_lleg.obj
+[1.904s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/fl_uleg.obj
+[1.912s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/fr_hip.obj
+[1.919s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/fr_lleg.obj
+[1.926s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/fr_uleg.obj
+[1.933s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/hl_hip.obj
+[1.940s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/hl_lleg.obj
+[1.949s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/hl_uleg.obj
+[1.957s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/hr_hip.obj
+[1.967s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/hr_lleg.obj
+[1.976s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/meshes/base_simple/visual/hr_uleg.obj
+[1.985s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/rviz/standalone_arm.rviz
+[1.994s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/rviz/urdf_viz.rviz
+[2.004s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/rviz/viz_spot.rviz
+[2.014s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/ament_index/resource_index/package_run_dependencies/spot_description
+[2.024s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/ament_index/resource_index/parent_prefix_path/spot_description
+[2.040s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/environment/ament_prefix_path.sh
+[2.042s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/environment/ament_prefix_path.dsv
+[2.053s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/environment/path.sh
+[2.056s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/environment/path.dsv
+[2.062s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/local_setup.bash
+[2.069s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/local_setup.sh
+[2.078s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/local_setup.zsh
+[2.085s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/local_setup.dsv
+[2.092s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/package.dsv
+[2.098s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/ament_index/resource_index/packages/spot_description
+[2.105s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/cmake/spot_descriptionConfig.cmake
+[2.110s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/cmake/spot_descriptionConfig-version.cmake
+[2.117s] -- Symlinking: /home/bhung/spot_ros2/install/spot_description/share/spot_description/package.xml
+[2.131s] Invoked command in '/home/bhung/spot_ros2/build/spot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --install /home/bhung/spot_ros2/build/spot_description

@@ -1,0 +1,3 @@
+# Loads the GraphNav map from 'upload_filepath' and
+# uploads it to the GraphNav server using UploadGraph rpc.
+string upload_filepath

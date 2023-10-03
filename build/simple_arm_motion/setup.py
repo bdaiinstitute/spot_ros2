@@ -1,0 +1,1 @@
+/home/bhung/spot_ros2/examples/simple_arm_motion/setup.py

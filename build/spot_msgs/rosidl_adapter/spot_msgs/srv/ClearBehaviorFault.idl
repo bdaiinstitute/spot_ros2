@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from spot_msgs/srv/ClearBehaviorFault.srv
+// generated code does not contain a copyright notice
+
+
+module spot_msgs {
+  module srv {
+    struct ClearBehaviorFault_Request {
+      uint32 id;
+    };
+    struct ClearBehaviorFault_Response {
+      boolean success;
+
+      string message;
+    };
+  };
+};

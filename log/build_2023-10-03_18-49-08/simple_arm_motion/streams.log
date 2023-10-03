@@ -1,0 +1,28 @@
+[1.835s] Invoking command in '/home/bhung/spot_ros2/build/simple_arm_motion': PYTHONPATH=/home/bhung/spot_ros2/build/simple_arm_motion/prefix_override:/home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_arm_motion/build --no-deps install_data
+[2.220s] running develop
+[2.220s] /usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+[2.220s]   warnings.warn(
+[2.221s] /usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[2.221s]   warnings.warn(
+[2.370s] running egg_info
+[2.370s] creating simple_arm_motion.egg-info
+[2.370s] writing simple_arm_motion.egg-info/PKG-INFO
+[2.370s] writing dependency_links to simple_arm_motion.egg-info/dependency_links.txt
+[2.370s] writing entry points to simple_arm_motion.egg-info/entry_points.txt
+[2.370s] writing requirements to simple_arm_motion.egg-info/requires.txt
+[2.371s] writing top-level names to simple_arm_motion.egg-info/top_level.txt
+[2.371s] writing manifest file 'simple_arm_motion.egg-info/SOURCES.txt'
+[2.372s] reading manifest file 'simple_arm_motion.egg-info/SOURCES.txt'
+[2.372s] writing manifest file 'simple_arm_motion.egg-info/SOURCES.txt'
+[2.395s] running build_ext
+[2.395s] Creating /home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages/simple-arm-motion.egg-link (link to .)
+[2.396s] Installing arm_simple script to /home/bhung/spot_ros2/install/simple_arm_motion/lib/simple_arm_motion
+[2.396s] 
+[2.396s] Installed /home/bhung/spot_ros2/build/simple_arm_motion
+[2.396s] running install_data
+[2.396s] creating /home/bhung/spot_ros2/install/simple_arm_motion/share/ament_index
+[2.396s] creating /home/bhung/spot_ros2/install/simple_arm_motion/share/ament_index/resource_index
+[2.396s] creating /home/bhung/spot_ros2/install/simple_arm_motion/share/ament_index/resource_index/packages
+[2.396s] copying resource/simple_arm_motion -> /home/bhung/spot_ros2/install/simple_arm_motion/share/ament_index/resource_index/packages
+[2.396s] copying package.xml -> /home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion
+[2.420s] Invoked command in '/home/bhung/spot_ros2/build/simple_arm_motion' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/simple_arm_motion/prefix_override:/home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_arm_motion/build --no-deps install_data

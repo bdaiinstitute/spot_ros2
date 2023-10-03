@@ -1,0 +1,21 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from spot_msgs/srv/GetGripperCameraParameters.srv
+// generated code does not contain a copyright notice
+
+#include "bosdyn_msgs/msg/GripperCameraGetParamRequest.idl"
+#include "bosdyn_msgs/msg/GripperCameraGetParamResponse.idl"
+
+module spot_msgs {
+  module srv {
+    struct GetGripperCameraParameters_Request {
+      bosdyn_msgs::msg::GripperCameraGetParamRequest request;
+    };
+    struct GetGripperCameraParameters_Response {
+      bosdyn_msgs::msg::GripperCameraGetParamResponse response;
+
+      boolean success;
+
+      string message;
+    };
+  };
+};

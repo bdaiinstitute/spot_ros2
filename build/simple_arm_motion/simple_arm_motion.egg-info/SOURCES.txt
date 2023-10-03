@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+resource/simple_arm_motion
+simple_arm_motion/__init__.py
+simple_arm_motion/arm_simple.py
+simple_arm_motion.egg-info/PKG-INFO
+simple_arm_motion.egg-info/SOURCES.txt
+simple_arm_motion.egg-info/dependency_links.txt
+simple_arm_motion.egg-info/entry_points.txt
+simple_arm_motion.egg-info/requires.txt
+simple_arm_motion.egg-info/top_level.txt
+simple_arm_motion.egg-info/zip-safe

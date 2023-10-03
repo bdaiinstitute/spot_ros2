@@ -1,0 +1,34 @@
+// generated from rosidl_adapter/resource/action.idl.em
+// with input from spot_msgs/action/Trajectory.action
+// generated code does not contain a copyright notice
+
+#include "builtin_interfaces/msg/Duration.idl"
+#include "geometry_msgs/msg/PoseStamped.idl"
+
+module spot_msgs {
+  module action {
+    struct Trajectory_Goal {
+      geometry_msgs::msg::PoseStamped target_pose;
+
+      @verbatim (language="comment", text=
+        "After this duration, the command will time out and the robot will stop. Must be non-zero")
+      builtin_interfaces::msg::Duration duration;
+
+      @verbatim (language="comment", text=
+        "If true, the feedback from the trajectory command must indicate that the robot is" "\n"
+        "at the goal position. If set to false, the robot being near the goal is equivalent to" "\n"
+        "it being at the goal. This is based on the feedback received from the boston dynamics" "\n"
+        "API call at" "\n"
+        "https://dev.bostondynamics.com/protos/bosdyn/api/proto_reference.html?highlight=status_near_goal#se2trajectorycommand-feedback-status")
+      boolean precise_positioning;
+    };
+    struct Trajectory_Result {
+      boolean success;
+
+      string message;
+    };
+    struct Trajectory_Feedback {
+      string feedback;
+    };
+  };
+};

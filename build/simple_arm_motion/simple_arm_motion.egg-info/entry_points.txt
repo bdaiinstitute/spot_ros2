@@ -1,0 +1,3 @@
+[console_scripts]
+arm_simple = simple_arm_motion.arm_simple:main
+

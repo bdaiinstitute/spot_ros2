@@ -1,0 +1,3 @@
+string upload_filepath
+---
+string[] waypoint_ids

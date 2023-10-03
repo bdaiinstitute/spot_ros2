@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+resource/simple_walk_forward
+simple_walk_forward/__init__.py
+simple_walk_forward/walk_forward.py
+simple_walk_forward.egg-info/PKG-INFO
+simple_walk_forward.egg-info/SOURCES.txt
+simple_walk_forward.egg-info/dependency_links.txt
+simple_walk_forward.egg-info/entry_points.txt
+simple_walk_forward.egg-info/requires.txt
+simple_walk_forward.egg-info/top_level.txt
+simple_walk_forward.egg-info/zip-safe

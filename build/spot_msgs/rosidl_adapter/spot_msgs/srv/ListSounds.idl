@@ -1,0 +1,19 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from spot_msgs/srv/ListSounds.srv
+// generated code does not contain a copyright notice
+
+
+module spot_msgs {
+  module srv {
+    struct ListSounds_Request {
+      uint8 structure_needs_at_least_one_member;
+    };
+    struct ListSounds_Response {
+      sequence<string> names;
+
+      boolean success;
+
+      string message;
+    };
+  };
+};

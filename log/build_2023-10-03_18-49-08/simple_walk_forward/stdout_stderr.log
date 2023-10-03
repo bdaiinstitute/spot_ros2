@@ -1,0 +1,26 @@
+running develop
+/usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+/usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+running egg_info
+creating simple_walk_forward.egg-info
+writing simple_walk_forward.egg-info/PKG-INFO
+writing dependency_links to simple_walk_forward.egg-info/dependency_links.txt
+writing entry points to simple_walk_forward.egg-info/entry_points.txt
+writing requirements to simple_walk_forward.egg-info/requires.txt
+writing top-level names to simple_walk_forward.egg-info/top_level.txt
+writing manifest file 'simple_walk_forward.egg-info/SOURCES.txt'
+reading manifest file 'simple_walk_forward.egg-info/SOURCES.txt'
+writing manifest file 'simple_walk_forward.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/bhung/spot_ros2/install/simple_walk_forward/lib/python3.10/site-packages/simple-walk-forward.egg-link (link to .)
+Installing walk_forward script to /home/bhung/spot_ros2/install/simple_walk_forward/lib/simple_walk_forward
+
+Installed /home/bhung/spot_ros2/build/simple_walk_forward
+running install_data
+creating /home/bhung/spot_ros2/install/simple_walk_forward/share/ament_index
+creating /home/bhung/spot_ros2/install/simple_walk_forward/share/ament_index/resource_index
+creating /home/bhung/spot_ros2/install/simple_walk_forward/share/ament_index/resource_index/packages
+copying resource/simple_walk_forward -> /home/bhung/spot_ros2/install/simple_walk_forward/share/ament_index/resource_index/packages
+copying package.xml -> /home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward

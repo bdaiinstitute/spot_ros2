@@ -1,0 +1,588 @@
+[0.253s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--symlink-install']
+[0.253s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=True, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=16, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x7f7cd915ac20>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7f7cd92c1a50>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7f7cd92c1a50>>)
+[0.269s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.269s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.269s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.269s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.269s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.269s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.269s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/bhung/spot_ros2'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['ignore', 'ignore_ament_install']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'ignore'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'ignore_ament_install'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['colcon_pkg']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'colcon_pkg'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['colcon_meta']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'colcon_meta'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['ros']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'ros'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['cmake', 'python']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'cmake'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'python'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['python_setup_py']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'python_setup_py'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extensions ['ignore', 'ignore_ament_install']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extension 'ignore'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extension 'ignore_ament_install'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extensions ['colcon_pkg']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extension 'colcon_pkg'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extensions ['colcon_meta']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extension 'colcon_meta'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extensions ['ros']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extension 'ros'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extensions ['cmake', 'python']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extension 'cmake'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extension 'python'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extensions ['python_setup_py']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs/source) by extension 'python_setup_py'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extensions ['ignore', 'ignore_ament_install']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extension 'ignore'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extension 'ignore_ament_install'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extensions ['colcon_pkg']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extension 'colcon_pkg'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extensions ['colcon_meta']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extension 'colcon_meta'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extensions ['ros']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extension 'ros'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extensions ['cmake', 'python']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extension 'cmake'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extension 'python'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extensions ['python_setup_py']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples) by extension 'python_setup_py'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_arm_motion) by extensions ['ignore', 'ignore_ament_install']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_arm_motion) by extension 'ignore'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_arm_motion) by extension 'ignore_ament_install'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_arm_motion) by extensions ['colcon_pkg']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_arm_motion) by extension 'colcon_pkg'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_arm_motion) by extensions ['colcon_meta']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_arm_motion) by extension 'colcon_meta'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_arm_motion) by extensions ['ros']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_arm_motion) by extension 'ros'
+[0.278s] DEBUG:colcon.colcon_core.package_identification:Package 'examples/simple_arm_motion' with type 'ros.ament_python' and name 'simple_arm_motion'
+[0.278s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_walk_forward) by extensions ['ignore', 'ignore_ament_install']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_walk_forward) by extension 'ignore'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_walk_forward) by extension 'ignore_ament_install'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_walk_forward) by extensions ['colcon_pkg']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_walk_forward) by extension 'colcon_pkg'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_walk_forward) by extensions ['colcon_meta']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_walk_forward) by extension 'colcon_meta'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_walk_forward) by extensions ['ros']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/simple_walk_forward) by extension 'ros'
+[0.279s] DEBUG:colcon.colcon_core.package_identification:Package 'examples/simple_walk_forward' with type 'ros.ament_python' and name 'simple_walk_forward'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/utilities) by extensions ['ignore', 'ignore_ament_install']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/utilities) by extension 'ignore'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/utilities) by extension 'ignore_ament_install'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/utilities) by extensions ['colcon_pkg']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/utilities) by extension 'colcon_pkg'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/utilities) by extensions ['colcon_meta']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/utilities) by extension 'colcon_meta'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/utilities) by extensions ['ros']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(examples/utilities) by extension 'ros'
+[0.279s] DEBUG:colcon.colcon_core.package_identification:Package 'examples/utilities' with type 'ros.ament_python' and name 'utilities'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.279s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extensions ['ignore', 'ignore_ament_install']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extension 'ignore'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extension 'ignore_ament_install'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extensions ['colcon_pkg']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extension 'colcon_pkg'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extensions ['colcon_meta']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extension 'colcon_meta'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extensions ['ros']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extension 'ros'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extensions ['cmake', 'python']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extension 'cmake'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extension 'python'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extensions ['python_setup_py']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities) by extension 'python_setup_py'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities/bdai_ros2_wrappers) by extensions ['ignore', 'ignore_ament_install']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities/bdai_ros2_wrappers) by extension 'ignore'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities/bdai_ros2_wrappers) by extension 'ignore_ament_install'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities/bdai_ros2_wrappers) by extensions ['colcon_pkg']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities/bdai_ros2_wrappers) by extension 'colcon_pkg'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities/bdai_ros2_wrappers) by extensions ['colcon_meta']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities/bdai_ros2_wrappers) by extension 'colcon_meta'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities/bdai_ros2_wrappers) by extensions ['ros']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(ros_utilities/bdai_ros2_wrappers) by extension 'ros'
+[0.280s] DEBUG:colcon.colcon_core.package_identification:Package 'ros_utilities/bdai_ros2_wrappers' with type 'ros.ament_python' and name 'bdai_ros2_wrappers'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(spot_description) by extensions ['ignore', 'ignore_ament_install']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(spot_description) by extension 'ignore'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(spot_description) by extension 'ignore_ament_install'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(spot_description) by extensions ['colcon_pkg']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(spot_description) by extension 'colcon_pkg'
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(spot_description) by extensions ['colcon_meta']
+[0.280s] Level 1:colcon.colcon_core.package_identification:_identify(spot_description) by extension 'colcon_meta'
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_description) by extensions ['ros']
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_description) by extension 'ros'
+[0.281s] DEBUG:colcon.colcon_core.package_identification:Package 'spot_description' with type 'ros.ament_cmake' and name 'spot_description'
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_driver) by extensions ['ignore', 'ignore_ament_install']
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_driver) by extension 'ignore'
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_driver) by extension 'ignore_ament_install'
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_driver) by extensions ['colcon_pkg']
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_driver) by extension 'colcon_pkg'
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_driver) by extensions ['colcon_meta']
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_driver) by extension 'colcon_meta'
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_driver) by extensions ['ros']
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_driver) by extension 'ros'
+[0.281s] DEBUG:colcon.colcon_core.package_identification:Package 'spot_driver' with type 'ros.ament_python' and name 'spot_driver'
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_msgs) by extensions ['ignore', 'ignore_ament_install']
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_msgs) by extension 'ignore'
+[0.281s] Level 1:colcon.colcon_core.package_identification:_identify(spot_msgs) by extension 'ignore_ament_install'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_msgs) by extensions ['colcon_pkg']
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_msgs) by extension 'colcon_pkg'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_msgs) by extensions ['colcon_meta']
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_msgs) by extension 'colcon_meta'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_msgs) by extensions ['ros']
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_msgs) by extension 'ros'
+[0.282s] DEBUG:colcon.colcon_core.package_identification:Package 'spot_msgs' with type 'ros.ament_cmake' and name 'spot_msgs'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extensions ['ignore', 'ignore_ament_install']
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extension 'ignore'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extension 'ignore_ament_install'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extensions ['colcon_pkg']
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extension 'colcon_pkg'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extensions ['colcon_meta']
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extension 'colcon_meta'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extensions ['ros']
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extension 'ros'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extensions ['cmake', 'python']
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extension 'cmake'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extension 'python'
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extensions ['python_setup_py']
+[0.282s] Level 1:colcon.colcon_core.package_identification:_identify(spot_wrapper) by extension 'python_setup_py'
+[0.469s] DEBUG:colcon.colcon_core.package_identification:Package 'spot_wrapper' with type 'python' and name 'spot_wrapper'
+[0.469s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.470s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.470s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.470s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.470s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.488s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.489s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.489s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/bhung/spot_ros2/install/utilities' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.489s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/bhung/spot_ros2/install/spot_msgs' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.489s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/bhung/spot_ros2/install/spot_driver' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.489s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/bhung/spot_ros2/install/spot_description' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.489s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/bhung/spot_ros2/install/simple_walk_forward' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.489s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/bhung/spot_ros2/install/simple_arm_motion' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.490s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/bhung/spot_ros2/install/bdai_ros2_wrappers' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.490s] WARNING:colcon.colcon_ros.prefix_path.catkin:The path '/home/bhung/spot_ros2/install/spot_msgs' in the environment variable CMAKE_PREFIX_PATH doesn't exist
+[0.490s] WARNING:colcon.colcon_ros.prefix_path.catkin:The path '/home/bhung/spot_ros2/install/spot_description' in the environment variable CMAKE_PREFIX_PATH doesn't exist
+[0.491s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 0 installed packages in /home/bhung/spot_ros2/install
+[0.492s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 384 installed packages in /opt/ros/humble
+[0.493s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.533s] Level 5:colcon.colcon_core.verb:set package 'bdai_ros2_wrappers' build argument 'cmake_args' from command line to 'None'
+[0.533s] Level 5:colcon.colcon_core.verb:set package 'bdai_ros2_wrappers' build argument 'cmake_target' from command line to 'None'
+[0.533s] Level 5:colcon.colcon_core.verb:set package 'bdai_ros2_wrappers' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.533s] Level 5:colcon.colcon_core.verb:set package 'bdai_ros2_wrappers' build argument 'cmake_clean_cache' from command line to 'False'
+[0.533s] Level 5:colcon.colcon_core.verb:set package 'bdai_ros2_wrappers' build argument 'cmake_clean_first' from command line to 'False'
+[0.533s] Level 5:colcon.colcon_core.verb:set package 'bdai_ros2_wrappers' build argument 'cmake_force_configure' from command line to 'False'
+[0.533s] Level 5:colcon.colcon_core.verb:set package 'bdai_ros2_wrappers' build argument 'ament_cmake_args' from command line to 'None'
+[0.533s] Level 5:colcon.colcon_core.verb:set package 'bdai_ros2_wrappers' build argument 'catkin_cmake_args' from command line to 'None'
+[0.533s] Level 5:colcon.colcon_core.verb:set package 'bdai_ros2_wrappers' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.533s] DEBUG:colcon.colcon_core.verb:Building package 'bdai_ros2_wrappers' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/bhung/spot_ros2/build/bdai_ros2_wrappers', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/bhung/spot_ros2/install/bdai_ros2_wrappers', 'merge_install': False, 'path': '/home/bhung/spot_ros2/ros_utilities/bdai_ros2_wrappers', 'symlink_install': True, 'test_result_base': None}
+[0.534s] Level 5:colcon.colcon_core.verb:set package 'simple_arm_motion' build argument 'cmake_args' from command line to 'None'
+[0.534s] Level 5:colcon.colcon_core.verb:set package 'simple_arm_motion' build argument 'cmake_target' from command line to 'None'
+[0.534s] Level 5:colcon.colcon_core.verb:set package 'simple_arm_motion' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.534s] Level 5:colcon.colcon_core.verb:set package 'simple_arm_motion' build argument 'cmake_clean_cache' from command line to 'False'
+[0.534s] Level 5:colcon.colcon_core.verb:set package 'simple_arm_motion' build argument 'cmake_clean_first' from command line to 'False'
+[0.534s] Level 5:colcon.colcon_core.verb:set package 'simple_arm_motion' build argument 'cmake_force_configure' from command line to 'False'
+[0.534s] Level 5:colcon.colcon_core.verb:set package 'simple_arm_motion' build argument 'ament_cmake_args' from command line to 'None'
+[0.534s] Level 5:colcon.colcon_core.verb:set package 'simple_arm_motion' build argument 'catkin_cmake_args' from command line to 'None'
+[0.534s] Level 5:colcon.colcon_core.verb:set package 'simple_arm_motion' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.534s] DEBUG:colcon.colcon_core.verb:Building package 'simple_arm_motion' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/bhung/spot_ros2/build/simple_arm_motion', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/bhung/spot_ros2/install/simple_arm_motion', 'merge_install': False, 'path': '/home/bhung/spot_ros2/examples/simple_arm_motion', 'symlink_install': True, 'test_result_base': None}
+[0.535s] Level 5:colcon.colcon_core.verb:set package 'simple_walk_forward' build argument 'cmake_args' from command line to 'None'
+[0.535s] Level 5:colcon.colcon_core.verb:set package 'simple_walk_forward' build argument 'cmake_target' from command line to 'None'
+[0.535s] Level 5:colcon.colcon_core.verb:set package 'simple_walk_forward' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.535s] Level 5:colcon.colcon_core.verb:set package 'simple_walk_forward' build argument 'cmake_clean_cache' from command line to 'False'
+[0.535s] Level 5:colcon.colcon_core.verb:set package 'simple_walk_forward' build argument 'cmake_clean_first' from command line to 'False'
+[0.535s] Level 5:colcon.colcon_core.verb:set package 'simple_walk_forward' build argument 'cmake_force_configure' from command line to 'False'
+[0.535s] Level 5:colcon.colcon_core.verb:set package 'simple_walk_forward' build argument 'ament_cmake_args' from command line to 'None'
+[0.535s] Level 5:colcon.colcon_core.verb:set package 'simple_walk_forward' build argument 'catkin_cmake_args' from command line to 'None'
+[0.535s] Level 5:colcon.colcon_core.verb:set package 'simple_walk_forward' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.535s] DEBUG:colcon.colcon_core.verb:Building package 'simple_walk_forward' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/bhung/spot_ros2/build/simple_walk_forward', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/bhung/spot_ros2/install/simple_walk_forward', 'merge_install': False, 'path': '/home/bhung/spot_ros2/examples/simple_walk_forward', 'symlink_install': True, 'test_result_base': None}
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'spot_description' build argument 'cmake_args' from command line to 'None'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'spot_description' build argument 'cmake_target' from command line to 'None'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'spot_description' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'spot_description' build argument 'cmake_clean_cache' from command line to 'False'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'spot_description' build argument 'cmake_clean_first' from command line to 'False'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'spot_description' build argument 'cmake_force_configure' from command line to 'False'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'spot_description' build argument 'ament_cmake_args' from command line to 'None'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'spot_description' build argument 'catkin_cmake_args' from command line to 'None'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'spot_description' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.536s] DEBUG:colcon.colcon_core.verb:Building package 'spot_description' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/bhung/spot_ros2/build/spot_description', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/bhung/spot_ros2/install/spot_description', 'merge_install': False, 'path': '/home/bhung/spot_ros2/spot_description', 'symlink_install': True, 'test_result_base': None}
+[0.537s] Level 5:colcon.colcon_core.verb:set package 'spot_msgs' build argument 'cmake_args' from command line to 'None'
+[0.537s] Level 5:colcon.colcon_core.verb:set package 'spot_msgs' build argument 'cmake_target' from command line to 'None'
+[0.537s] Level 5:colcon.colcon_core.verb:set package 'spot_msgs' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.537s] Level 5:colcon.colcon_core.verb:set package 'spot_msgs' build argument 'cmake_clean_cache' from command line to 'False'
+[0.537s] Level 5:colcon.colcon_core.verb:set package 'spot_msgs' build argument 'cmake_clean_first' from command line to 'False'
+[0.537s] Level 5:colcon.colcon_core.verb:set package 'spot_msgs' build argument 'cmake_force_configure' from command line to 'False'
+[0.537s] Level 5:colcon.colcon_core.verb:set package 'spot_msgs' build argument 'ament_cmake_args' from command line to 'None'
+[0.537s] Level 5:colcon.colcon_core.verb:set package 'spot_msgs' build argument 'catkin_cmake_args' from command line to 'None'
+[0.537s] Level 5:colcon.colcon_core.verb:set package 'spot_msgs' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.537s] DEBUG:colcon.colcon_core.verb:Building package 'spot_msgs' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/bhung/spot_ros2/build/spot_msgs', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/bhung/spot_ros2/install/spot_msgs', 'merge_install': False, 'path': '/home/bhung/spot_ros2/spot_msgs', 'symlink_install': True, 'test_result_base': None}
+[0.538s] Level 5:colcon.colcon_core.verb:set package 'spot_wrapper' build argument 'cmake_args' from command line to 'None'
+[0.538s] Level 5:colcon.colcon_core.verb:set package 'spot_wrapper' build argument 'cmake_target' from command line to 'None'
+[0.538s] Level 5:colcon.colcon_core.verb:set package 'spot_wrapper' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.538s] Level 5:colcon.colcon_core.verb:set package 'spot_wrapper' build argument 'cmake_clean_cache' from command line to 'False'
+[0.538s] Level 5:colcon.colcon_core.verb:set package 'spot_wrapper' build argument 'cmake_clean_first' from command line to 'False'
+[0.538s] Level 5:colcon.colcon_core.verb:set package 'spot_wrapper' build argument 'cmake_force_configure' from command line to 'False'
+[0.538s] Level 5:colcon.colcon_core.verb:set package 'spot_wrapper' build argument 'ament_cmake_args' from command line to 'None'
+[0.538s] Level 5:colcon.colcon_core.verb:set package 'spot_wrapper' build argument 'catkin_cmake_args' from command line to 'None'
+[0.538s] Level 5:colcon.colcon_core.verb:set package 'spot_wrapper' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.538s] DEBUG:colcon.colcon_core.verb:Building package 'spot_wrapper' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/bhung/spot_ros2/build/spot_wrapper', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/bhung/spot_ros2/install/spot_wrapper', 'merge_install': False, 'path': '/home/bhung/spot_ros2/spot_wrapper', 'symlink_install': True, 'test_result_base': None}
+[0.539s] Level 5:colcon.colcon_core.verb:set package 'utilities' build argument 'cmake_args' from command line to 'None'
+[0.539s] Level 5:colcon.colcon_core.verb:set package 'utilities' build argument 'cmake_target' from command line to 'None'
+[0.539s] Level 5:colcon.colcon_core.verb:set package 'utilities' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.539s] Level 5:colcon.colcon_core.verb:set package 'utilities' build argument 'cmake_clean_cache' from command line to 'False'
+[0.539s] Level 5:colcon.colcon_core.verb:set package 'utilities' build argument 'cmake_clean_first' from command line to 'False'
+[0.539s] Level 5:colcon.colcon_core.verb:set package 'utilities' build argument 'cmake_force_configure' from command line to 'False'
+[0.539s] Level 5:colcon.colcon_core.verb:set package 'utilities' build argument 'ament_cmake_args' from command line to 'None'
+[0.539s] Level 5:colcon.colcon_core.verb:set package 'utilities' build argument 'catkin_cmake_args' from command line to 'None'
+[0.539s] Level 5:colcon.colcon_core.verb:set package 'utilities' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.539s] DEBUG:colcon.colcon_core.verb:Building package 'utilities' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/bhung/spot_ros2/build/utilities', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/bhung/spot_ros2/install/utilities', 'merge_install': False, 'path': '/home/bhung/spot_ros2/examples/utilities', 'symlink_install': True, 'test_result_base': None}
+[0.540s] Level 5:colcon.colcon_core.verb:set package 'spot_driver' build argument 'cmake_args' from command line to 'None'
+[0.540s] Level 5:colcon.colcon_core.verb:set package 'spot_driver' build argument 'cmake_target' from command line to 'None'
+[0.540s] Level 5:colcon.colcon_core.verb:set package 'spot_driver' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.540s] Level 5:colcon.colcon_core.verb:set package 'spot_driver' build argument 'cmake_clean_cache' from command line to 'False'
+[0.540s] Level 5:colcon.colcon_core.verb:set package 'spot_driver' build argument 'cmake_clean_first' from command line to 'False'
+[0.540s] Level 5:colcon.colcon_core.verb:set package 'spot_driver' build argument 'cmake_force_configure' from command line to 'False'
+[0.540s] Level 5:colcon.colcon_core.verb:set package 'spot_driver' build argument 'ament_cmake_args' from command line to 'None'
+[0.540s] Level 5:colcon.colcon_core.verb:set package 'spot_driver' build argument 'catkin_cmake_args' from command line to 'None'
+[0.540s] Level 5:colcon.colcon_core.verb:set package 'spot_driver' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.540s] DEBUG:colcon.colcon_core.verb:Building package 'spot_driver' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/bhung/spot_ros2/build/spot_driver', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/bhung/spot_ros2/install/spot_driver', 'merge_install': False, 'path': '/home/bhung/spot_ros2/spot_driver', 'symlink_install': True, 'test_result_base': None}
+[0.541s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.546s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.546s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/bhung/spot_ros2/spot_msgs' with build type 'ament_cmake'
+[0.546s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/bhung/spot_ros2/spot_msgs'
+[0.550s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.550s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.550s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.554s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/bhung/spot_ros2/ros_utilities/bdai_ros2_wrappers' with build type 'ament_python'
+[0.554s] Level 1:colcon.colcon_core.shell:create_environment_hook('bdai_ros2_wrappers', 'ament_prefix_path')
+[0.556s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/ament_prefix_path.ps1'
+[0.556s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/ament_prefix_path.dsv'
+[0.556s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/ament_prefix_path.sh'
+[0.559s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.559s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.562s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/bhung/spot_ros2/examples/simple_arm_motion' with build type 'ament_python'
+[0.563s] Level 1:colcon.colcon_core.shell:create_environment_hook('simple_arm_motion', 'ament_prefix_path')
+[0.565s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/hook/ament_prefix_path.ps1'
+[0.565s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/hook/ament_prefix_path.dsv'
+[0.566s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/hook/ament_prefix_path.sh'
+[0.567s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.567s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.571s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/bhung/spot_ros2/examples/simple_walk_forward' with build type 'ament_python'
+[0.571s] Level 1:colcon.colcon_core.shell:create_environment_hook('simple_walk_forward', 'ament_prefix_path')
+[0.573s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/hook/ament_prefix_path.ps1'
+[0.573s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/hook/ament_prefix_path.dsv'
+[0.574s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/hook/ament_prefix_path.sh'
+[0.575s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.575s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.579s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/bhung/spot_ros2/spot_description' with build type 'ament_cmake'
+[0.579s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/bhung/spot_ros2/spot_description'
+[0.581s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.581s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.585s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/bhung/spot_ros2/spot_wrapper'
+[0.587s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.587s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.591s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/bhung/spot_ros2/examples/utilities' with build type 'ament_python'
+[0.591s] Level 1:colcon.colcon_core.shell:create_environment_hook('utilities', 'ament_prefix_path')
+[0.593s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/utilities/share/utilities/hook/ament_prefix_path.ps1'
+[0.593s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/utilities/share/utilities/hook/ament_prefix_path.dsv'
+[0.593s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/utilities/share/utilities/hook/ament_prefix_path.sh'
+[0.595s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.595s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.602s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/spot_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake /home/bhung/spot_ros2/spot_msgs -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/bhung/spot_ros2/install/spot_msgs
+[0.811s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/bhung/spot_ros2/ros_utilities/bdai_ros2_wrappers'
+[0.813s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.813s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.015s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/bhung/spot_ros2/examples/simple_arm_motion'
+[1.017s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.017s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.233s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/bhung/spot_ros2/examples/simple_walk_forward'
+[1.237s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.237s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.243s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/spot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake /home/bhung/spot_ros2/spot_description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/bhung/spot_ros2/install/spot_description
+[1.694s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/bhung/spot_ros2/examples/utilities'
+[1.697s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.697s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.766s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/spot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake /home/bhung/spot_ros2/spot_description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/bhung/spot_ros2/install/spot_description
+[1.768s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/spot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --build /home/bhung/spot_ros2/build/spot_description -- -j16 -l16
+[1.812s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/spot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --build /home/bhung/spot_ros2/build/spot_description -- -j16 -l16
+[1.816s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/spot_wrapper': PYTHONPATH=/home/bhung/spot_ros2/build/spot_wrapper/prefix_override:/home/bhung/spot_ros2/install/spot_wrapper/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/spot_wrapper/build --no-deps
+[1.836s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/spot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --install /home/bhung/spot_ros2/build/spot_description
+[2.101s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/bdai_ros2_wrappers': PYTHONPATH=/home/bhung/spot_ros2/build/bdai_ros2_wrappers/prefix_override:/home/bhung/spot_ros2/install/bdai_ros2_wrappers/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/bdai_ros2_wrappers/build --no-deps install_data
+[2.114s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/utilities': PYTHONPATH=/home/bhung/spot_ros2/build/utilities/prefix_override:/home/bhung/spot_ros2/install/utilities/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/utilities/build --no-deps install_data
+[2.329s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_wrapper', 'pythonpath_develop')
+[2.333s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/spot_wrapper/share/spot_wrapper/hook/pythonpath_develop.ps1'
+[2.334s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/spot_wrapper' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/spot_wrapper/prefix_override:/home/bhung/spot_ros2/install/spot_wrapper/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/spot_wrapper/build --no-deps
+[2.334s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/build/spot_wrapper/share/spot_wrapper/hook/pythonpath_develop.dsv'
+[2.335s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/spot_wrapper/share/spot_wrapper/hook/pythonpath_develop.sh'
+[2.345s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_wrapper' for CMake module files
+[2.345s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_wrapper' for CMake config files
+[2.346s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_wrapper/lib'
+[2.346s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_wrapper/bin'
+[2.346s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_wrapper/lib/pkgconfig/spot_wrapper.pc'
+[2.346s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_wrapper/lib/python3.10/site-packages'
+[2.346s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_wrapper', 'pythonpath')
+[2.351s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_wrapper/share/spot_wrapper/hook/pythonpath.ps1'
+[2.352s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/spot_wrapper/share/spot_wrapper/hook/pythonpath.dsv'
+[2.352s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_wrapper/share/spot_wrapper/hook/pythonpath.sh'
+[2.352s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_wrapper/bin'
+[2.352s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(spot_wrapper)
+[2.356s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_wrapper/share/spot_wrapper/package.ps1'
+[2.357s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/spot_wrapper/share/spot_wrapper/package.dsv'
+[2.357s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_wrapper/share/spot_wrapper/package.sh'
+[2.358s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_wrapper/share/spot_wrapper/package.bash'
+[2.358s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_wrapper/share/spot_wrapper/package.zsh'
+[2.359s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/spot_wrapper/share/colcon-core/packages/spot_wrapper)
+[2.398s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/simple_arm_motion': PYTHONPATH=/home/bhung/spot_ros2/build/simple_arm_motion/prefix_override:/home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_arm_motion/build --no-deps install_data
+[2.400s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/simple_walk_forward': PYTHONPATH=/home/bhung/spot_ros2/build/simple_walk_forward/prefix_override:/home/bhung/spot_ros2/install/simple_walk_forward/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_walk_forward/build --no-deps install_data
+[2.609s] Level 1:colcon.colcon_core.shell:create_environment_hook('bdai_ros2_wrappers', 'pythonpath_develop')
+[2.613s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/pythonpath_develop.ps1'
+[2.614s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/bdai_ros2_wrappers' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/bdai_ros2_wrappers/prefix_override:/home/bhung/spot_ros2/install/bdai_ros2_wrappers/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/bdai_ros2_wrappers/build --no-deps install_data
+[2.614s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/build/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/pythonpath_develop.dsv'
+[2.615s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/pythonpath_develop.sh'
+[2.621s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/bdai_ros2_wrappers' for CMake module files
+[2.622s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/bdai_ros2_wrappers' for CMake config files
+[2.622s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/lib'
+[2.623s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/bin'
+[2.623s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/lib/pkgconfig/bdai_ros2_wrappers.pc'
+[2.623s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/lib/python3.10/site-packages'
+[2.623s] Level 1:colcon.colcon_core.shell:create_environment_hook('bdai_ros2_wrappers', 'pythonpath')
+[2.627s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/pythonpath.ps1'
+[2.629s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/pythonpath.dsv'
+[2.629s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/hook/pythonpath.sh'
+[2.630s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/bin'
+[2.630s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(bdai_ros2_wrappers)
+[2.634s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/package.ps1'
+[2.635s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/package.dsv'
+[2.636s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/package.sh'
+[2.636s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/package.bash'
+[2.637s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers/package.zsh'
+[2.637s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/colcon-core/packages/bdai_ros2_wrappers)
+[2.654s] Level 1:colcon.colcon_core.shell:create_environment_hook('utilities', 'pythonpath_develop')
+[2.654s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/utilities' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/utilities/prefix_override:/home/bhung/spot_ros2/install/utilities/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/utilities/build --no-deps install_data
+[2.658s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/utilities/share/utilities/hook/pythonpath_develop.ps1'
+[2.659s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/build/utilities/share/utilities/hook/pythonpath_develop.dsv'
+[2.659s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/utilities/share/utilities/hook/pythonpath_develop.sh'
+[2.665s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/utilities' for CMake module files
+[2.666s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/utilities' for CMake config files
+[2.667s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/utilities/lib'
+[2.667s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/utilities/bin'
+[2.667s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/utilities/lib/pkgconfig/utilities.pc'
+[2.667s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/utilities/lib/python3.10/site-packages'
+[2.668s] Level 1:colcon.colcon_core.shell:create_environment_hook('utilities', 'pythonpath')
+[2.672s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/utilities/share/utilities/hook/pythonpath.ps1'
+[2.672s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/utilities/share/utilities/hook/pythonpath.dsv'
+[2.672s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/utilities/share/utilities/hook/pythonpath.sh'
+[2.673s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/utilities/bin'
+[2.673s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(utilities)
+[2.678s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/utilities/share/utilities/package.ps1'
+[2.678s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/utilities/share/utilities/package.dsv'
+[2.679s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/utilities/share/utilities/package.sh'
+[2.680s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/utilities/share/utilities/package.bash'
+[2.680s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/utilities/share/utilities/package.zsh'
+[2.680s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/utilities/share/colcon-core/packages/utilities)
+[2.708s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(spot_description)
+[2.712s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description' for CMake module files
+[2.713s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/spot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --install /home/bhung/spot_ros2/build/spot_description
+[2.713s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description' for CMake config files
+[2.713s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_description', 'cmake_prefix_path')
+[2.715s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_description/share/spot_description/hook/cmake_prefix_path.ps1'
+[2.715s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/spot_description/share/spot_description/hook/cmake_prefix_path.dsv'
+[2.715s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_description/share/spot_description/hook/cmake_prefix_path.sh'
+[2.716s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description/bin'
+[2.716s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description/lib/pkgconfig/spot_description.pc'
+[2.716s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description/lib/python3.10/site-packages'
+[2.716s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description/bin'
+[2.718s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.ps1'
+[2.719s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.dsv'
+[2.719s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.sh'
+[2.719s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.bash'
+[2.719s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.zsh'
+[2.719s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/spot_description/share/colcon-core/packages/spot_description)
+[2.734s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(spot_description)
+[2.737s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description' for CMake module files
+[2.738s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description' for CMake config files
+[2.738s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_description', 'cmake_prefix_path')
+[2.740s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_description/share/spot_description/hook/cmake_prefix_path.ps1'
+[2.740s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/spot_description/share/spot_description/hook/cmake_prefix_path.dsv'
+[2.740s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_description/share/spot_description/hook/cmake_prefix_path.sh'
+[2.740s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description/bin'
+[2.740s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description/lib/pkgconfig/spot_description.pc'
+[2.740s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description/lib/python3.10/site-packages'
+[2.741s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_description/bin'
+[2.743s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.ps1'
+[2.743s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.dsv'
+[2.743s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.sh'
+[2.743s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.bash'
+[2.743s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_description/share/spot_description/package.zsh'
+[2.744s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/spot_description/share/colcon-core/packages/spot_description)
+[2.871s] Level 1:colcon.colcon_core.shell:create_environment_hook('simple_walk_forward', 'pythonpath_develop')
+[2.873s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/simple_walk_forward/share/simple_walk_forward/hook/pythonpath_develop.ps1'
+[2.874s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/simple_walk_forward' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/simple_walk_forward/prefix_override:/home/bhung/spot_ros2/install/simple_walk_forward/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_walk_forward/build --no-deps install_data
+[2.874s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/build/simple_walk_forward/share/simple_walk_forward/hook/pythonpath_develop.dsv'
+[2.874s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/simple_walk_forward/share/simple_walk_forward/hook/pythonpath_develop.sh'
+[2.877s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_walk_forward' for CMake module files
+[2.877s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_walk_forward' for CMake config files
+[2.877s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_walk_forward/lib'
+[2.877s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_walk_forward/bin'
+[2.877s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_walk_forward/lib/pkgconfig/simple_walk_forward.pc'
+[2.877s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_walk_forward/lib/python3.10/site-packages'
+[2.877s] Level 1:colcon.colcon_core.shell:create_environment_hook('simple_walk_forward', 'pythonpath')
+[2.879s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/hook/pythonpath.ps1'
+[2.880s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/hook/pythonpath.dsv'
+[2.880s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/hook/pythonpath.sh'
+[2.880s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_walk_forward/bin'
+[2.880s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(simple_walk_forward)
+[2.882s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/package.ps1'
+[2.882s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/package.dsv'
+[2.882s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/package.sh'
+[2.883s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/package.bash'
+[2.883s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/simple_walk_forward/share/simple_walk_forward/package.zsh'
+[2.883s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/simple_walk_forward/share/colcon-core/packages/simple_walk_forward)
+[2.980s] Level 1:colcon.colcon_core.shell:create_environment_hook('simple_arm_motion', 'pythonpath_develop')
+[2.982s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/simple_arm_motion/share/simple_arm_motion/hook/pythonpath_develop.ps1'
+[2.983s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/simple_arm_motion' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/simple_arm_motion/prefix_override:/home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/simple_arm_motion/build --no-deps install_data
+[2.983s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/build/simple_arm_motion/share/simple_arm_motion/hook/pythonpath_develop.dsv'
+[2.983s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/simple_arm_motion/share/simple_arm_motion/hook/pythonpath_develop.sh'
+[2.986s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_arm_motion' for CMake module files
+[2.986s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_arm_motion' for CMake config files
+[2.986s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_arm_motion/lib'
+[2.986s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_arm_motion/bin'
+[2.986s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_arm_motion/lib/pkgconfig/simple_arm_motion.pc'
+[2.986s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_arm_motion/lib/python3.10/site-packages'
+[2.986s] Level 1:colcon.colcon_core.shell:create_environment_hook('simple_arm_motion', 'pythonpath')
+[2.988s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/hook/pythonpath.ps1'
+[2.988s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/hook/pythonpath.dsv'
+[2.989s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/hook/pythonpath.sh'
+[2.989s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/simple_arm_motion/bin'
+[2.989s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(simple_arm_motion)
+[2.991s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/package.ps1'
+[2.991s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/package.dsv'
+[2.992s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/package.sh'
+[2.992s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/package.bash'
+[2.992s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/simple_arm_motion/share/simple_arm_motion/package.zsh'
+[2.992s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/simple_arm_motion/share/colcon-core/packages/simple_arm_motion)
+[5.424s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/spot_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake /home/bhung/spot_ros2/spot_msgs -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/bhung/spot_ros2/install/spot_msgs
+[5.424s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/spot_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --build /home/bhung/spot_ros2/build/spot_msgs -- -j16 -l16
+[22.009s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/spot_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --build /home/bhung/spot_ros2/build/spot_msgs -- -j16 -l16
+[22.464s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/spot_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --install /home/bhung/spot_ros2/build/spot_msgs
+[26.326s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(spot_msgs)
+[26.331s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs' for CMake module files
+[26.331s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/spot_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bhung/spot_ros2/install/utilities:/home/bhung/spot_ros2/install/spot_driver:/home/bhung/spot_ros2/install/simple_walk_forward:/home/bhung/spot_ros2/install/simple_arm_motion:/home/bhung/spot_ros2/install/bdai_ros2_wrappers:/opt/ros/humble /usr/bin/cmake --install /home/bhung/spot_ros2/build/spot_msgs
+[26.331s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs' for CMake config files
+[26.334s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_msgs', 'cmake_prefix_path')
+[26.336s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/cmake_prefix_path.ps1'
+[26.336s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/cmake_prefix_path.dsv'
+[26.336s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/cmake_prefix_path.sh'
+[26.336s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/lib'
+[26.336s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_msgs', 'ld_library_path_lib')
+[26.338s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/ld_library_path_lib.ps1'
+[26.338s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/ld_library_path_lib.dsv'
+[26.338s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/ld_library_path_lib.sh'
+[26.338s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/bin'
+[26.339s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/lib/pkgconfig/spot_msgs.pc'
+[26.339s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/lib/python3.10/site-packages'
+[26.339s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/bin'
+[26.340s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.ps1'
+[26.341s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.dsv'
+[26.341s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.sh'
+[26.341s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.bash'
+[26.341s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.zsh'
+[26.341s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/spot_msgs/share/colcon-core/packages/spot_msgs)
+[26.797s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(spot_msgs)
+[26.799s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs' for CMake module files
+[26.800s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs' for CMake config files
+[26.802s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_msgs', 'cmake_prefix_path')
+[26.803s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/cmake_prefix_path.ps1'
+[26.803s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/cmake_prefix_path.dsv'
+[26.804s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/cmake_prefix_path.sh'
+[26.804s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/lib'
+[26.804s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_msgs', 'ld_library_path_lib')
+[26.805s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/ld_library_path_lib.ps1'
+[26.806s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/ld_library_path_lib.dsv'
+[26.806s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/hook/ld_library_path_lib.sh'
+[26.806s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/bin'
+[26.806s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/lib/pkgconfig/spot_msgs.pc'
+[26.806s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/lib/python3.10/site-packages'
+[26.806s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_msgs/bin'
+[26.808s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.ps1'
+[26.808s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.dsv'
+[26.808s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.sh'
+[26.808s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.bash'
+[26.809s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_msgs/share/spot_msgs/package.zsh'
+[26.809s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/spot_msgs/share/colcon-core/packages/spot_msgs)
+[26.809s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/bhung/spot_ros2/spot_driver' with build type 'ament_python'
+[26.809s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_driver', 'ament_prefix_path')
+[26.810s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/hook/ament_prefix_path.ps1'
+[26.811s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/hook/ament_prefix_path.dsv'
+[26.811s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/hook/ament_prefix_path.sh'
+[26.813s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[26.813s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[27.017s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/bhung/spot_ros2/spot_driver'
+[27.019s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[27.019s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[27.309s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/bhung/spot_ros2/build/spot_driver': PYTHONPATH=/home/bhung/spot_ros2/build/spot_driver/prefix_override:/home/bhung/spot_ros2/install/spot_driver/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/spot_driver/build --no-deps install_data
+[27.681s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_driver', 'pythonpath_develop')
+[27.683s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/spot_driver/share/spot_driver/hook/pythonpath_develop.ps1'
+[27.683s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/bhung/spot_ros2/build/spot_driver' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/spot_driver/prefix_override:/home/bhung/spot_ros2/install/spot_driver/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/spot_driver/build --no-deps install_data
+[27.683s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/build/spot_driver/share/spot_driver/hook/pythonpath_develop.dsv'
+[27.683s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/build/spot_driver/share/spot_driver/hook/pythonpath_develop.sh'
+[27.686s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_driver' for CMake module files
+[27.686s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_driver' for CMake config files
+[27.686s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_driver/lib'
+[27.686s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_driver/bin'
+[27.686s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_driver/lib/pkgconfig/spot_driver.pc'
+[27.686s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_driver/lib/python3.10/site-packages'
+[27.686s] Level 1:colcon.colcon_core.shell:create_environment_hook('spot_driver', 'pythonpath')
+[27.688s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/hook/pythonpath.ps1'
+[27.688s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/hook/pythonpath.dsv'
+[27.688s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/hook/pythonpath.sh'
+[27.689s] Level 1:colcon.colcon_core.environment:checking '/home/bhung/spot_ros2/install/spot_driver/bin'
+[27.689s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(spot_driver)
+[27.690s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/package.ps1'
+[27.690s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/package.dsv'
+[27.691s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/package.sh'
+[27.691s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/package.bash'
+[27.691s] INFO:colcon.colcon_core.shell:Creating package script '/home/bhung/spot_ros2/install/spot_driver/share/spot_driver/package.zsh'
+[27.691s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/bhung/spot_ros2/install/spot_driver/share/colcon-core/packages/spot_driver)
+[27.691s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[27.691s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[27.691s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[27.691s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[27.696s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[27.696s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[27.696s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[27.704s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[27.706s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/bhung/spot_ros2/install/local_setup.ps1'
+[27.706s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/bhung/spot_ros2/install/_local_setup_util_ps1.py'
+[27.707s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/bhung/spot_ros2/install/setup.ps1'
+[27.708s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/bhung/spot_ros2/install/local_setup.sh'
+[27.708s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/bhung/spot_ros2/install/_local_setup_util_sh.py'
+[27.709s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/bhung/spot_ros2/install/setup.sh'
+[27.710s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/bhung/spot_ros2/install/local_setup.bash'
+[27.710s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/bhung/spot_ros2/install/setup.bash'
+[27.711s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/bhung/spot_ros2/install/local_setup.zsh'
+[27.711s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/bhung/spot_ros2/install/setup.zsh'

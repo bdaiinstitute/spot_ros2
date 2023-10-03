@@ -1,0 +1,27 @@
+[1.545s] Invoking command in '/home/bhung/spot_ros2/build/bdai_ros2_wrappers': PYTHONPATH=/home/bhung/spot_ros2/build/bdai_ros2_wrappers/prefix_override:/home/bhung/spot_ros2/install/bdai_ros2_wrappers/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/bdai_ros2_wrappers/build --no-deps install_data
+[1.815s] running develop
+[1.815s] /usr/local/lib/python3.10/dist-packages/setuptools/command/easy_install.py:156: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+[1.815s]   warnings.warn(
+[1.816s] /usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[1.816s]   warnings.warn(
+[1.992s] running egg_info
+[1.992s] creating bdai_ros2_wrappers.egg-info
+[1.993s] writing bdai_ros2_wrappers.egg-info/PKG-INFO
+[1.993s] writing dependency_links to bdai_ros2_wrappers.egg-info/dependency_links.txt
+[1.993s] writing entry points to bdai_ros2_wrappers.egg-info/entry_points.txt
+[1.993s] writing requirements to bdai_ros2_wrappers.egg-info/requires.txt
+[1.993s] writing top-level names to bdai_ros2_wrappers.egg-info/top_level.txt
+[1.993s] writing manifest file 'bdai_ros2_wrappers.egg-info/SOURCES.txt'
+[1.995s] reading manifest file 'bdai_ros2_wrappers.egg-info/SOURCES.txt'
+[1.995s] writing manifest file 'bdai_ros2_wrappers.egg-info/SOURCES.txt'
+[2.023s] running build_ext
+[2.024s] Creating /home/bhung/spot_ros2/install/bdai_ros2_wrappers/lib/python3.10/site-packages/bdai-ros2-wrappers.egg-link (link to .)
+[2.024s] 
+[2.024s] Installed /home/bhung/spot_ros2/build/bdai_ros2_wrappers
+[2.024s] running install_data
+[2.024s] creating /home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/ament_index
+[2.025s] creating /home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/ament_index/resource_index
+[2.025s] creating /home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/ament_index/resource_index/packages
+[2.025s] copying resource/bdai_ros2_wrappers -> /home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/ament_index/resource_index/packages
+[2.025s] copying package.xml -> /home/bhung/spot_ros2/install/bdai_ros2_wrappers/share/bdai_ros2_wrappers
+[2.058s] Invoked command in '/home/bhung/spot_ros2/build/bdai_ros2_wrappers' returned '0': PYTHONPATH=/home/bhung/spot_ros2/build/bdai_ros2_wrappers/prefix_override:/home/bhung/spot_ros2/install/bdai_ros2_wrappers/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/bhung/spot_ros2/build/bdai_ros2_wrappers/build --no-deps install_data
