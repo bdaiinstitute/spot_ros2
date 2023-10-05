@@ -12,7 +12,13 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+    TextSubstitution
+)
 from launch_ros.substitutions import FindPackageShare
 
 from spot_wrapper.wrapper import SpotWrapper
@@ -82,6 +88,89 @@ def create_point_cloud_nodelets(
     composable_node_descriptions = []
 
     for camera in get_camera_sources(has_arm):
+        composable_node_descriptions.append(
+            launch_ros.descriptions.ComposableNode(
+                package="depth_image_proc",
+                plugin="depth_image_proc::PointCloudXyzrgbNode",
+                name="point_cloud_xyzrgb_node_" + camera,
+                namespace=spot_name,
+                # Each entry in the remappings list is a tuple.
+                # The first element in the tuple is the internal name of the topic used within the nodelet.
+                # The second element is the external name of the topic used by other nodes in the system.
+                remappings=[
+                    ("rgb/camera_info", PathJoinSubstitution(["camera", camera, "camera_info"]).perform(context)),
+                    ("rgb/image_rect_color", PathJoinSubstitution(["camera", camera, "image"]).perform(context)),
+                    (
+                        "depth_registered/image_rect",
+                        PathJoinSubstitution(["depth_registered", camera, "image"]).perform(context),
+                    ),
+                    ("points", PathJoinSubstitution(["depth_registered", camera, "points"]).perform(context)),
+                ],
+            ),
+        )
+    return composable_node_descriptions
+
+
+class DepthRegisteredMode(Enum):
+    DISABLE = (0,)
+    FROM_SPOT = (1,)
+    FROM_NODELETS = (2,)
+
+
+def get_camera_sources(context: launch.LaunchContext, has_arm: LaunchConfiguration) -> List[str]:
+    camera_sources = ["frontleft", "frontright", "left", "right", "back"]
+    if has_arm.perform(context) == "true" or has_arm.perform(context) == "True":
+        camera_sources.append("hand")
+    return camera_sources
+
+
+def create_depth_registration_nodelets(
+    context: launch.LaunchContext,
+    spot_name: LaunchConfiguration,
+    has_arm: LaunchConfiguration,
+) -> List[launch_ros.descriptions.ComposableNode]:
+    """Create the list of depth_image_proc::RegisterNode composable nodes required to generate registered depth images for Spot's cameras."""
+
+    composable_node_descriptions = []
+
+    for camera in get_camera_sources(context, has_arm):
+        composable_node_descriptions.append(
+            launch_ros.descriptions.ComposableNode(
+                package="depth_image_proc",
+                plugin="depth_image_proc::RegisterNode",
+                name="register_node_" + camera,
+                namespace=spot_name,
+                # Each entry in the remappings list is a tuple.
+                # The first element in the tuple is the internal name of the topic used within the nodelet.
+                # The second element is the external name of the topic used by other nodes in the system.
+                remappings=[
+                    ("depth/image_rect", PathJoinSubstitution(["depth", camera, "image"]).perform(context)),
+                    ("depth/camera_info", PathJoinSubstitution(["depth", camera, "camera_info"]).perform(context)),
+                    ("rgb/camera_info", PathJoinSubstitution(["camera", camera, "camera_info"]).perform(context)),
+                    (
+                        "depth_registered/image_rect",
+                        PathJoinSubstitution(["depth_registered", camera, "image"]).perform(context),
+                    ),
+                    (
+                        "depth_registered/camera_info",
+                        PathJoinSubstitution(["depth_registered", camera, "camera_info"]).perform(context),
+                    ),
+                ],
+            )
+        )
+    return composable_node_descriptions
+
+
+def create_point_cloud_nodelets(
+    context: launch.LaunchContext,
+    spot_name: LaunchConfiguration,
+    has_arm: LaunchConfiguration,
+) -> List[launch_ros.descriptions.ComposableNode]:
+    """Create the list of depth_image_proc::PointCloudXyzrgbNode composable nodes required to generate point clouds for each pair of RGB and registered depth cameras."""
+
+    composable_node_descriptions = []
+
+    for camera in get_camera_sources(context, has_arm):
         composable_node_descriptions.append(
             launch_ros.descriptions.ComposableNode(
                 package="depth_image_proc",
