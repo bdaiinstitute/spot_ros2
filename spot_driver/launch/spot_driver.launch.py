@@ -40,7 +40,8 @@ def create_depth_registration_nodelets(
     spot_name: LaunchConfiguration,
     has_arm: LaunchConfiguration,
 ) -> List[launch_ros.descriptions.ComposableNode]:
-    """Create the list of depth_image_proc::RegisterNode composable nodes required to generate registered depth images for Spot's cameras."""
+    """Create the list of depth_image_proc::RegisterNode composable nodes required to generate registered depth images
+    for Spot's cameras."""
 
     composable_node_descriptions = []
 
@@ -77,7 +78,8 @@ def create_point_cloud_nodelets(
     spot_name: LaunchConfiguration,
     has_arm: LaunchConfiguration,
 ) -> List[launch_ros.descriptions.ComposableNode]:
-    """Create the list of depth_image_proc::PointCloudXyzrgbNode composable nodes required to generate point clouds for each pair of RGB and registered depth cameras."""
+    """Create the list of depth_image_proc::PointCloudXyzrgbNode composable nodes required to generate point clouds for
+    each pair of RGB and registered depth cameras."""
 
     composable_node_descriptions = []
 
@@ -215,7 +217,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     ld.add_action(rviz)
 
-    # Parse config options to create a list of composable node descriptions for the nodelets we want to run within the composable node container.
+    # Parse config options to create a list of composable node descriptions for the nodelets we want to run within the
+    # composable node container.
     composable_node_descriptions = (
         create_depth_registration_nodelets(context, spot_name, has_arm)
         if depth_registered_mode is DepthRegisteredMode.FROM_NODELETS
