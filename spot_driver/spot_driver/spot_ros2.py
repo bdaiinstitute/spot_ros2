@@ -1198,6 +1198,9 @@ class SpotROS(Node):
             choreography = ChoreographySequence()
             choreography.ParseFromString(bytes(bytearray(request.choreo_sequence_bytes)))
             response.success, response.message = self.spot_wrapper.execute_dance(choreography)
+        else:
+            response.success = False
+            response.message = "No choreography sequence found in request"
         return response
 
     def handle_list_all_dances(
