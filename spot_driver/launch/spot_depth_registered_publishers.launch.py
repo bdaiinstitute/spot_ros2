@@ -66,7 +66,7 @@ def launch_depth_register_nodelets(
         name="container",
         namespace=spot_name,
         package="rclcpp_components",
-        executable="component_container",
+        executable="component_container_mt",
         output="screen",
         composable_node_descriptions=composable_node_descriptions,
     )
