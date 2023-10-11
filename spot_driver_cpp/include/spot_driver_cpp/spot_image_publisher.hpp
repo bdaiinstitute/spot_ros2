@@ -192,4 +192,4 @@ private:
   std::shared_ptr<rclcpp::Node> node_;
   SpotImagePublisher internal_;
 };
-}
+} // namespace spot_ros2

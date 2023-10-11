@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
+
+list(APPEND CMAKE_PREFIX_PATH /opt/spot-cpp-sdk)
+
 project(spot_driver_cpp)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -7,45 +10,80 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
+  cv_bridge
+  rclcpp
+  rclcpp_components
+  sensor_msgs
+  tl_expected
+)
+
 find_package(ament_cmake REQUIRED)
 find_package(bosdyn REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
-find_package(cv_bridge REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(tl_expected REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
-add_library(spot_image_publisher src/spot_image_publisher.cpp src/spot_image_sources.cpp src/spot_interface.cpp)
+add_library(spot_image_publisher SHARED src/spot_image_publisher.cpp src/spot_image_sources.cpp src/spot_interface.cpp)
 target_include_directories(spot_image_publisher
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(spot_image_publisher PUBLIC bosdyn::bosdyn_client_static)
-ament_target_dependencies(spot_image_publisher PUBLIC rclcpp cv_bridge sensor_msgs tl_expected)
+ament_target_dependencies(spot_image_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
 add_executable(spot_image_publisher_node src/spot_image_publisher_node.cpp)
 target_link_libraries(spot_image_publisher_node PUBLIC spot_image_publisher)
+target_include_directories(spot_image_publisher_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
 
 # TODO: Fix linking against shared SDK libraries to allow loading as a component node
-# add_library(spot_image_publisher_node_component SHARED src/spot_image_publisher_node_component.cpp)
-# target_link_libraries(spot_image_publisher_node_component PUBLIC spot_image_publisher)
-# ament_target_dependencies(spot_image_publisher_node_component PUBLIC rclcpp_components)
-# rclcpp_components_register_nodes(spot_image_publisher spot_ros2::SpotImagePublisherNode)
+# add_library(spot_image_publisher_node_component_lib SHARED src/spot_image_publisher_node_component.cpp)
+# target_link_libraries(spot_image_publisher_node_component_lib PUBLIC spot_image_publisher)
+# target_include_directories(spot_image_publisher_node_component_lib
+#   PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>
+# )
+# ament_target_dependencies(spot_image_publisher_node_component_lib PUBLIC rclcpp_components)
 
+rclcpp_components_register_node(
+  spot_image_publisher
+  PLUGIN "spot_ros2::SpotImagePublisherNode"
+  EXECUTABLE spot_image_publisher_node_component)
+
+# Install Libraries
 install(
   TARGETS
     spot_image_publisher
-    spot_image_publisher_node
-    # spot_image_publisher_node_component
-  DESTINATION
-    lib/${PROJECT_NAME}
+    # spot_image_publisher_node_component_lib
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
+# Install Binaries
 install(
-  DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
+  TARGETS 
+    spot_image_publisher_node
+    spot_image_publisher_node_component
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
+
+# Install include and launch directories
+install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+
+ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 if(BUILD_TESTING)
   # find_package(ament_lint_auto REQUIRED)

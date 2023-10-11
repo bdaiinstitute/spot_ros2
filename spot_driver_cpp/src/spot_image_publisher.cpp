@@ -320,4 +320,7 @@ std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotImagePublisherNo
 {
     return node_->get_node_base_interface();
 }
-}
+} // namespace spot_ros2
+
+#include <rclcpp_components/register_node_macro.hpp>
+RCLCPP_COMPONENTS_REGISTER_NODE(spot_ros2::SpotImagePublisherNode)
