@@ -41,16 +41,6 @@ target_include_directories(spot_image_publisher_node
     $<INSTALL_INTERFACE:include>
 )
 
-# TODO: Fix linking against shared SDK libraries to allow loading as a component node
-# add_library(spot_image_publisher_node_component_lib SHARED src/spot_image_publisher_node_component.cpp)
-# target_link_libraries(spot_image_publisher_node_component_lib PUBLIC spot_image_publisher)
-# target_include_directories(spot_image_publisher_node_component_lib
-#   PUBLIC
-#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#     $<INSTALL_INTERFACE:include>
-# )
-# ament_target_dependencies(spot_image_publisher_node_component_lib PUBLIC rclcpp_components)
-
 rclcpp_components_register_node(
   spot_image_publisher
   PLUGIN "spot_ros2::SpotImagePublisherNode"
@@ -60,7 +50,6 @@ rclcpp_components_register_node(
 install(
   TARGETS
     spot_image_publisher
-    # spot_image_publisher_node_component_lib
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
