@@ -1,0 +1,13 @@
+version: 2
+
+updates:
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "23:59"
+      timezone: "America/New_York"
+    commit-message:
+      prefix: "[dependabot] "
+    # 1 per submodule
+    open-pull-requests-limit: 2
