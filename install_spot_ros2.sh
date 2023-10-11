@@ -37,4 +37,9 @@ else
     wget -q -O /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.2.0-frametreesnapshot/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
     sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
     rm /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
+    
+    # Install spot-cpp-sdk
+    wget -q -O /tmp/spot-cpp-sdk_3.3.0_amd64.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v3.3.0-cmake-infra/spot-cpp-sdk_3.3.0_amd64.deb
+    sudo dpkg -i /tmp/spot-cpp-sdk_3.3.0_amd64.deb
+    rm /tmp/spot-cpp-sdk_3.3.0_amd64.deb
 fi
