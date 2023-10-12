@@ -26,6 +26,22 @@
 
 namespace
 {
+static const std::set<std::string> kExcludedStaticTfFrames {
+  // We exclude the odometry frames from static transforms since they are not static. We can ignore the body
+  // frame because it is a child of odom or vision depending on the preferred_odom_frame, and will be published
+  // by the non-static transform publishing that is done by the state callback
+  "body",
+  "odom",
+  "vision",
+
+  // Special case handling for hand camera frames that reference the link "arm0.link_wr1" in their
+  // transform snapshots. This name only appears in hand camera transform snapshots and appears to
+  // be a bug in this particular image callback path.
+  // We exclude publishing a static transform from arm0.link_wr1 -> body here because it depends
+  // on the arm's position and a static transform would fix it to its initial position.
+  "arm0.link_wr1",
+};
+
 tl::expected<int, std::string> getCvPixelFormat(const bosdyn::api::Image_PixelFormat& format)
 {
   switch(format)
@@ -182,21 +198,18 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
 
 tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> getImageTransforms(const bosdyn::api::ImageResponse& image_response, const std::string& robot_name, const google::protobuf::Duration& clock_skew)
 {
-  std::set<std::string> excluded_frames {
-    "arm0.link_wr1",
-    robot_name + "/" + "body",
-    robot_name + "/" + "odom",
-    robot_name + "/" + "vision",
-  };
-
   std::vector<geometry_msgs::msg::TransformStamped> out;
   for (const auto& [child_frame_id, transform] : image_response.shot().transforms_snapshot().child_to_parent_edge_map())
   {
-    if (excluded_frames.count(child_frame_id) > 0)
+    // Do not publish static transforms for excluded frames
+    if (kExcludedStaticTfFrames.count(child_frame_id) > 0)
     {
       continue;
     }
 
+    // Rename the parent link "arm0.link_wr1" to "link_wr1" as it appears in robot state
+    // which is used for publishing dynamic tfs elsewhere. Without this, the hand camera frame
+    // positions would never properly update as no other pipelines reference "arm0.link_wr1".
     const auto parent_frame_id = (transform.parent_frame_name() == "arm0.link_wr1") ? "link_wr1" : transform.parent_frame_name();
 
     geometry_msgs::msg::TransformStamped tform_msg;
