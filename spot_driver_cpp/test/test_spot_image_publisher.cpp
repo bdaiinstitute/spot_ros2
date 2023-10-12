@@ -2,9 +2,12 @@
 
 #include <gmock/gmock.h>
 
+#include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
+#include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>
+#include <spot_driver_cpp/interfaces/spot_interface_base.hpp>
+#include <spot_driver_cpp/interfaces/timer_interface_base.hpp>
 #include <spot_driver_cpp/spot_image_publisher.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
-#include <spot_driver_cpp/spot_interface.hpp>
 #include <spot_driver_cpp/types.hpp>
 
 #include <memory>

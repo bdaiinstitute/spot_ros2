@@ -6,6 +6,10 @@
 #include <rmw/qos_profiles.h>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
+#include <spot_driver_cpp/interfaces/spot_interface.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 
@@ -18,164 +22,10 @@ namespace
 {
 constexpr auto kImageCallbackPeriod = std::chrono::duration<double>{1.0 / 15.0 };  // 15 Hz
 constexpr auto kDefaultDepthImageQuality = 100.0;
-
-constexpr auto kParameterNameAddress = "address";
-constexpr auto kParameterNameUsername = "username";
-constexpr auto kParameterNamePassword = "password";
-constexpr auto kParameterNameRGBImageQuality = "image_quality";
-constexpr auto kParameterNameHasRGBCameras = "rgb_cameras";
-constexpr auto kParameterNamePublishRGBImages = "publish_rgb";
-constexpr auto kParameterNamePublishDepthImages = "publish_depth";
-constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
-
-template<typename ParameterT>
-std::optional<ParameterT> declareAndGetParameter(const std::shared_ptr<rclcpp::Node>& node, const std::string& name)
-{
-    if (!node->has_parameter(name))
-    {
-        node->declare_parameter<ParameterT>(name);
-    }
-
-    ParameterT out;
-    if(!node->get_parameter<ParameterT>(name, out))
-    {
-        return std::nullopt;
-    }
-    return out;
-}
-
-template<typename ParameterT>
-ParameterT declareAndGetParameter(const std::shared_ptr<rclcpp::Node>& node, const std::string& name, const ParameterT& default_value)
-{
-    if (!node->has_parameter(name))
-    {
-        node->declare_parameter<ParameterT>(name);
-    }
-
-    return node->get_parameter_or<ParameterT>(name, default_value);
-}
 }  // namespace
 
 namespace spot_ros2
 {
-RclcppWallTimerInterface::RclcppWallTimerInterface(const std::shared_ptr<rclcpp::Node>& node)
-: node_{node}
-{
-}
-
-void RclcppWallTimerInterface::setTimer(const std::chrono::duration<double>& period, const std::function<void()>& callback)
-{
-    timer_ = node_->create_wall_timer(period, callback);
-}
-
-void RclcppWallTimerInterface::clearTimer()
-{
-    timer_.reset();
-}
-
-RclcppPublisherInterface::RclcppPublisherInterface(const std::shared_ptr<rclcpp::Node>& node)
-: node_{ node }
-{
-}
-
-void RclcppPublisherInterface::createPublishers(const std::vector<ImageSource>& image_sources)
-{
-    image_publishers_.clear();
-    info_publishers_.clear();
-
-    for (const auto& image_source : image_sources)
-    {
-        // Since these topic names do not have a leading `/` character, they will be published within the namespace of the node, which should match the name of the robot.
-        // For example, the topic for the front left RGB camera will ultimately appear as `/MyRobotName/camera/frontleft/image`.
-        const auto topic_name_base = toRosTopic(image_source);
-
-        const auto image_topic_name = topic_name_base + "/image";
-        image_publishers_.try_emplace(image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name, rclcpp::QoS(1)));
-
-        const auto info_topic_name = topic_name_base + "/camera_info";
-        info_publishers_.try_emplace(info_topic_name, node_->create_publisher<sensor_msgs::msg::CameraInfo>(info_topic_name, rclcpp::QoS(1)));
-    }
-}
-
-void RclcppPublisherInterface::publish(const std::map<ImageSource, ImageWithCameraInfo>& images)
-{
-    for (const auto& [image_source, image_data] : images)
-    {
-        const auto topic_name_base = toRosTopic(image_source);
-        const auto image_topic_name = topic_name_base + "/image";
-        const auto info_topic_name = topic_name_base + "/camera_info";
-
-        try
-        {
-            image_publishers_.at(image_topic_name)->publish(image_data.image);
-            info_publishers_.at(info_topic_name)->publish(image_data.info);
-        }
-        catch(const std::out_of_range& e)
-        {
-            std::cerr << "No publisher exists for image source " << image_source.name << std::endl;
-        }
-    }
-}
-
-RclcppParameterInterface::RclcppParameterInterface(const std::shared_ptr<rclcpp::Node>& node)
-: node_{node}
-{
-}
-
-std::optional<std::string> RclcppParameterInterface::getAddress() const
-{
-    return declareAndGetParameter<std::string>(node_, kParameterNameAddress);
-}
-
-std::optional<std::string> RclcppParameterInterface::getUsername() const
-{
-    return declareAndGetParameter<std::string>(node_, kParameterNameUsername);
-}
-
-std::optional<std::string> RclcppParameterInterface::getPassword() const
-{
-    return declareAndGetParameter<std::string>(node_, kParameterNamePassword);
-}
-
-double RclcppParameterInterface::getRGBImageQuality() const
-{
-    return declareAndGetParameter<double>(node_, kParameterNameRGBImageQuality, kDefaultRGBImageQuality);
-}
-
-bool RclcppParameterInterface::getHasRGBCameras() const
-{
-    return declareAndGetParameter<bool>(node_, kParameterNameHasRGBCameras, kDefaultHasRGBCameras);
-}
-
-bool RclcppParameterInterface::getPublishRGBImages() const
-{
-    return declareAndGetParameter<bool>(node_, kParameterNamePublishRGBImages, kDefaultPublishRGBImages);
-}
-
-bool RclcppParameterInterface::getPublishDepthImages() const
-{
-    return declareAndGetParameter<bool>(node_, kParameterNamePublishDepthImages, kDefaultPublishDepthImages);
-}
-
-bool RclcppParameterInterface::getPublishDepthRegisteredImages() const
-{
-    return declareAndGetParameter<bool>(node_, kParameterNamePublishDepthRegisteredImages, kDefaultPublishDepthRegisteredImages);
-}
-
-std::string RclcppParameterInterface::getSpotName() const
-{
-    // The spot_name parameter always matches the namespace of this node, minus the leading `/` character.
-    try
-    {
-        return std::string{node_->get_namespace()}.substr(1);
-    }
-    catch(const std::out_of_range& e)
-    {
-        // get_namespace() should not return an empty string, but we handle this situation just in case.
-        return "";
-    }
-}
-
 ::bosdyn::api::GetImageRequest createImageRequest(const std::vector<ImageSource>& sources, [[maybe_unused]] const bool has_rgb_cameras, const double rgb_image_quality, const bool get_raw_rgb_images)
 {
     ::bosdyn::api::GetImageRequest request_message;
@@ -307,20 +157,4 @@ void SpotImagePublisher::timerCallback()
 
     publisher_interface_->publish(images.value());
 }
-
-
-SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_options)
-: node_{ std::make_shared<rclcpp::Node>( "image_publisher" , node_options) }
-, internal_{ SpotImagePublisher{ node_ } }
-{
-    internal_.initialize();
-}
-
-std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotImagePublisherNode::get_node_base_interface()
-{
-    return node_->get_node_base_interface();
-}
 } // namespace spot_ros2
-
-#include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(spot_ros2::SpotImagePublisherNode)

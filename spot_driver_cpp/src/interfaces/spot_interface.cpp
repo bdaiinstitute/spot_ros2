@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/spot_interface.hpp>
+#include <spot_driver_cpp/interfaces/spot_interface.hpp>
 
 #include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>

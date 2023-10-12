@@ -24,7 +24,15 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-add_library(spot_image_publisher SHARED src/spot_image_publisher.cpp src/spot_image_sources.cpp src/spot_interface.cpp)
+# Base library containing the SpotImagePublisherNode class
+add_library(spot_image_publisher
+  src/interfaces/rclcpp_parameter_interface.cpp
+  src/interfaces/rclcpp_publisher_interface.cpp
+  src/interfaces/rclcpp_wall_timer_interface.cpp
+  src/interfaces/spot_interface.cpp
+  src/spot_image_publisher.cpp
+  src/spot_image_publisher_node.cpp
+  src/spot_image_sources.cpp)
 target_include_directories(spot_image_publisher
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -33,7 +41,8 @@ target_include_directories(spot_image_publisher
 target_link_libraries(spot_image_publisher PUBLIC bosdyn::bosdyn_client_static)
 ament_target_dependencies(spot_image_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
-add_executable(spot_image_publisher_node src/spot_image_publisher_node.cpp)
+# Create executable to allow running SpotImagePublisherNode directly as a ROS 2 node
+add_executable(spot_image_publisher_node src/spot_image_publisher_node_main.cpp)
 target_link_libraries(spot_image_publisher_node PUBLIC spot_image_publisher)
 target_include_directories(spot_image_publisher_node
   PUBLIC
@@ -41,8 +50,18 @@ target_include_directories(spot_image_publisher_node
     $<INSTALL_INTERFACE:include>
 )
 
+# Register a composable node to allow loading SpotImagePublisherNode in a component container
+add_library(spot_image_publisher_component SHARED src/spot_image_publisher_component.cpp)
+target_include_directories(spot_image_publisher_component
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(spot_image_publisher_component PUBLIC spot_image_publisher)
+ament_target_dependencies(spot_image_publisher PUBLIC rclcpp_components)
+
 rclcpp_components_register_node(
-  spot_image_publisher
+  spot_image_publisher_component
   PLUGIN "spot_ros2::SpotImagePublisherNode"
   EXECUTABLE spot_image_publisher_node_component)
 
@@ -50,6 +69,7 @@ rclcpp_components_register_node(
 install(
   TARGETS
     spot_image_publisher
+    spot_image_publisher_component
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
