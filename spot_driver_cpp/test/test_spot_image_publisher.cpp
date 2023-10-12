@@ -5,6 +5,7 @@
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/spot_interface_base.hpp>
+#include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/timer_interface_base.hpp>
 #include <spot_driver_cpp/spot_image_publisher.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
@@ -132,6 +133,12 @@ public:
   MOCK_METHOD(void, clearTimer, (), (override));
 };
 
+class MockTfInterface : public TfInterfaceBase
+{
+public:
+  MOCK_METHOD((tl::expected<void, std::string>), publishStaticTransforms, (const std::vector<geometry_msgs::msg::TransformStamped>& transforms), (override));
+};
+
 class TestInitSpotImagePublisherParametersUnset : public ::testing::Test
 {
 public:
@@ -142,8 +149,9 @@ public:
 
     publisher_interface_ptr = publisher_interface.get();
     spot_interface_ptr = spot_interface.get();
+    tf_interface_ptr = tf_interface.get();
 
-    image_publisher = std::make_unique<SpotImagePublisher>(std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface), std::move(parameter_interface));
+    image_publisher = std::make_unique<SpotImagePublisher>(std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface), std::move(parameter_interface), std::move(tf_interface));
 
   }
   
@@ -158,6 +166,9 @@ public:
 
   std::unique_ptr<MockSpotInterface> spot_interface = std::make_unique<MockSpotInterface>();
   MockSpotInterface* spot_interface_ptr;
+
+  std::unique_ptr<MockTfInterface> tf_interface = std::make_unique<MockTfInterface>();
+  MockTfInterface* tf_interface_ptr;
 
   std::unique_ptr<SpotImagePublisher> image_publisher;
 };
@@ -175,7 +186,7 @@ public:
   }
 };
 
-class TestRunSpotImagePublisher: public ::testing::Test
+class TestRunSpotImagePublisher: public TestInitSpotImagePublisher
 {
 public:
   void SetUp() override
@@ -185,8 +196,9 @@ public:
 
     publisher_interface_ptr = publisher_interface.get();
     spot_interface_ptr = spot_interface.get();
+    tf_interface_ptr = tf_interface.get();
 
-    image_publisher = std::make_unique<SpotImagePublisher>(std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface), std::move(parameter_interface));
+    image_publisher = std::make_unique<SpotImagePublisher>(std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface), std::move(parameter_interface), std::move(tf_interface));
 
     parameter_interface_ptr->address = kExampleAddress;
     parameter_interface_ptr->username = kExampleUsername;
@@ -207,6 +219,9 @@ public:
 
   std::unique_ptr<MockSpotInterface> spot_interface = std::make_unique<MockSpotInterface>();
   MockSpotInterface* spot_interface_ptr;
+
+  std::unique_ptr<MockTfInterface> tf_interface = std::make_unique<MockTfInterface>();
+  MockTfInterface* tf_interface_ptr;
 
   std::unique_ptr<SpotImagePublisher> image_publisher;
 };

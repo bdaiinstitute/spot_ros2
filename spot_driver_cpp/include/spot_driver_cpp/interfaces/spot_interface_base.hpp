@@ -3,6 +3,7 @@
 #pragma once
 
 #include <builtin_interfaces/msg/time.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
 #include <tl_expected/expected.hpp>
 
@@ -11,7 +12,11 @@
 
 namespace spot_ros2
 {
-using GetImagesResult = std::map<ImageSource, ImageWithCameraInfo>;
+struct GetImagesResult
+{
+std::map<ImageSource, ImageWithCameraInfo> images_;
+std::vector<geometry_msgs::msg::TransformStamped> transforms_;
+};
 
 /**
  * @brief Defines an interface for a class to connect to and interact with Spot.

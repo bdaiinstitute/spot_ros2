@@ -12,9 +12,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
   cv_bridge
+  geometry_msgs
   rclcpp
   rclcpp_components
   sensor_msgs
+  tf2_ros
   tl_expected
 )
 
@@ -28,6 +30,7 @@ endforeach()
 add_library(spot_image_publisher
   src/interfaces/rclcpp_parameter_interface.cpp
   src/interfaces/rclcpp_publisher_interface.cpp
+  src/interfaces/rclcpp_tf_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
   src/interfaces/spot_interface.cpp
   src/spot_image_publisher.cpp

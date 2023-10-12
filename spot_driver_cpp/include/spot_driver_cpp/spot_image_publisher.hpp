@@ -2,12 +2,14 @@
 
 #pragma once
 
+#include "spot_driver_cpp/interfaces/tf_interface_base.hpp"
 #include <rclcpp/node.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/spot_interface_base.hpp>
+#include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/timer_interface_base.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
@@ -36,7 +38,7 @@ namespace spot_ros2
 class SpotImagePublisher
 {
 public:
-  SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface, std::unique_ptr<SpotInterfaceBase> spot_interface, std::unique_ptr<PublisherInterfaceBase> publisher_interface, std::unique_ptr<ParameterInterfaceBase> parameter_interface);
+  SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface, std::unique_ptr<SpotInterfaceBase> spot_interface, std::unique_ptr<PublisherInterfaceBase> publisher_interface, std::unique_ptr<ParameterInterfaceBase> parameter_interface, std::unique_ptr<TfInterfaceBase> tf_interface);
 
   explicit SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node);
 
@@ -57,5 +59,6 @@ private:
   std::unique_ptr<SpotInterfaceBase> spot_interface_;
   std::unique_ptr<PublisherInterfaceBase> publisher_interface_;
   std::unique_ptr<ParameterInterfaceBase> parameter_interface_;
+  std::unique_ptr<TfInterfaceBase> tf_interface_;
 };
 } // namespace spot_ros2

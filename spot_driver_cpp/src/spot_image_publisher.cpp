@@ -8,8 +8,9 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
-#include <spot_driver_cpp/interfaces/spot_interface.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
+#include <spot_driver_cpp/interfaces/spot_interface.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 
@@ -60,16 +61,17 @@ namespace spot_ros2
     return request_message;
 }
 
-SpotImagePublisher::SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface, std::unique_ptr<SpotInterfaceBase> spot_interface, std::unique_ptr<PublisherInterfaceBase> publisher_interface, std::unique_ptr<ParameterInterfaceBase> parameter_interface)
+SpotImagePublisher::SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface, std::unique_ptr<SpotInterfaceBase> spot_interface, std::unique_ptr<PublisherInterfaceBase> publisher_interface, std::unique_ptr<ParameterInterfaceBase> parameter_interface, std::unique_ptr<TfInterfaceBase> tf_interface)
 : timer_interface_{ std::move(timer_interface) }
 , spot_interface_{ std::move(spot_interface) }
 , publisher_interface_{ std::move(publisher_interface) }
 , parameter_interface_{ std::move(parameter_interface) }
+, tf_interface_{ std::move(tf_interface) }
 {
 }
 
 SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node)
-: SpotImagePublisher( std::make_unique<RclcppWallTimerInterface>(node), std::make_unique<SpotInterface>(), std::make_unique<RclcppPublisherInterface>(node), std::make_unique<RclcppParameterInterface>(node))
+: SpotImagePublisher( std::make_unique<RclcppWallTimerInterface>(node), std::make_unique<SpotInterface>(), std::make_unique<RclcppPublisherInterface>(node), std::make_unique<RclcppParameterInterface>(node), std::make_unique<RclcppTfInterface>(node))
 {
 }
 
@@ -128,13 +130,15 @@ void SpotImagePublisher::timerCallback()
         return;
     }
 
-    const auto images = spot_interface_->getImages(*image_request_message_);
-    if(!images.has_value())
+    const auto image_result = spot_interface_->getImages(*image_request_message_);
+    if(!image_result.has_value())
     {
-        std::cerr << "Failed to get images: " << images.error() << std::endl;
+        std::cerr << "Failed to get images: " << image_result.error() << std::endl;
         return;
     }
 
-    publisher_interface_->publish(images.value());
+    publisher_interface_->publish(image_result.value().images_);
+
+    tf_interface_->publishStaticTransforms(image_result.value().transforms_);
 }
 } // namespace spot_ros2

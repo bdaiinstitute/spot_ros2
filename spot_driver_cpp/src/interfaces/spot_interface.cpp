@@ -7,6 +7,7 @@
 #include <bosdyn/client/gripper_camera_param/gripper_camera_param_client.h>
 #include <builtin_interfaces/msg/time.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/timestamp.pb.h>
 #include <opencv2/imgcodecs.hpp>
@@ -178,6 +179,41 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
         return tl::make_unexpected("Unknown image format.");
       }
 }
+
+tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> getImageTransforms(const bosdyn::api::ImageResponse& image_response, const std::string& robot_name, const google::protobuf::Duration& clock_skew)
+{
+  std::set<std::string> excluded_frames {
+    "arm0.link_wr1",
+    robot_name + "/" + "body",
+    robot_name + "/" + "odom",
+    robot_name + "/" + "vision",
+  };
+
+  std::vector<geometry_msgs::msg::TransformStamped> out;
+  for (const auto& [child_frame_id, transform] : image_response.shot().transforms_snapshot().child_to_parent_edge_map())
+  {
+    if (excluded_frames.count(child_frame_id) > 0)
+    {
+      continue;
+    }
+
+    const auto parent_frame_id = (transform.parent_frame_name() == "arm0.link_wr1") ? "link_wr1" : transform.parent_frame_name();
+
+    geometry_msgs::msg::TransformStamped tform_msg;
+    tform_msg.header.stamp = applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
+    tform_msg.header.frame_id = robot_name + "/" + parent_frame_id;
+    tform_msg.child_frame_id = robot_name + "/" + child_frame_id;
+    tform_msg.transform.translation.x = transform.parent_tform_child().position().x();
+    tform_msg.transform.translation.y = transform.parent_tform_child().position().y();
+    tform_msg.transform.translation.z = transform.parent_tform_child().position().z();
+    tform_msg.transform.rotation.w = transform.parent_tform_child().rotation().w();
+    tform_msg.transform.rotation.x = transform.parent_tform_child().rotation().x();
+    tform_msg.transform.rotation.y = transform.parent_tform_child().rotation().y();
+    tform_msg.transform.rotation.z = transform.parent_tform_child().rotation().z();
+    out.push_back(tform_msg);
+  }
+  return out;
+}
 }
 
 namespace spot_ros2
@@ -295,11 +331,21 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
       const auto& camera_name = image_response.source().name();
       if(const auto result = fromSpotImageSourceName(camera_name); result.has_value())
       {
-        out.try_emplace(result.value(), ImageWithCameraInfo{image_msg.value(), info_msg.value()});
+        out.images_.try_emplace(result.value(), ImageWithCameraInfo{image_msg.value(), info_msg.value()});
       }
       else
       {
         std::cerr << "Failed to convert API image source name to ImageSource: " << result.error() << std::endl;
+        continue;
+      }
+
+      if (const auto transforms_result = getImageTransforms(image_response, robot_name_, clock_skew_result.value()); transforms_result.has_value())
+      {
+        out.transforms_.insert(out.transforms_.end(), transforms_result.value().begin(), transforms_result.value().end());
+      }
+      else
+      {
+        std::cerr << "Failed to get image transforms: " << transforms_result.error() << std::endl;
         continue;
       }
   }

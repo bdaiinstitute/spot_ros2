@@ -12,7 +12,9 @@
   <depend>bosdyn</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>tf2_ros</depend>
   <depend>tl_expected</depend>
 
   <!-- <test_depend>ament_lint_auto</test_depend> -->
