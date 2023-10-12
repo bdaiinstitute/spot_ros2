@@ -14,9 +14,9 @@ class RclcppParameterInterface : public ParameterInterfaceBase
 {
 public:
   explicit RclcppParameterInterface(const std::shared_ptr<rclcpp::Node>& node);
-  std::optional<std::string> getAddress() const override;
-  std::optional<std::string> getUsername() const override;
-  std::optional<std::string> getPassword() const override;
+  std::string getAddress() const override;
+  std::string getUsername() const override;
+  std::string getPassword() const override;
   double getRGBImageQuality() const override;
   bool getHasRGBCameras() const override;
   bool getPublishRGBImages() const override;

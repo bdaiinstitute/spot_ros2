@@ -75,30 +75,10 @@ SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node
 
 bool SpotImagePublisher::initialize()
 {
-    // Get and validate parameters which do not have default values, and which are required to be set at runtime
+    // These parameters all fall back to default values if the user did not set them at runtime
     const auto address = parameter_interface_->getAddress();
     const auto username = parameter_interface_->getUsername();
     const auto password = parameter_interface_->getPassword();
-
-    if (!address.has_value())
-    {
-        std::cerr << "Failed to get address" << std::endl;
-        return false;
-    }
-
-    if (!username.has_value())
-    {
-        std::cerr << "Failed to get username" << std::endl;
-        return false;
-    }
-
-    if (!password.has_value())
-    {
-        std::cerr << "Failed to get password" << std::endl;
-        return false;
-    }
-
-    // Get parameters which fall back to default values if the user did not set them at runtime
     const auto rgb_image_quality = parameter_interface_->getRGBImageQuality();
     const auto publish_rgb_images = parameter_interface_->getPublishRGBImages();
     const auto publish_depth_images = parameter_interface_->getPublishDepthImages();
@@ -107,13 +87,13 @@ bool SpotImagePublisher::initialize()
     const auto spot_name = parameter_interface_->getSpotName();
 
     // Initialize the SDK client, and connect to the robot
-    if (const auto result = spot_interface_->createRobot(*address, spot_name); !result)
+    if (const auto result = spot_interface_->createRobot(address, spot_name); !result)
     {
         std::cerr << "Failed to create interface to robot: " << result.error() << std::endl;
         return false;
     }
 
-    if (const auto result = spot_interface_->authenticate(*username, *password); !result)
+    if (const auto result = spot_interface_->authenticate(username, password); !result)
     {
         std::cerr << "Failed to authenticate with robot: " << result.error() << std::endl;
         return false;

@@ -28,17 +28,17 @@ constexpr auto kExamplePassword { "hunter2" };
 class FakeParameterInterface : public ParameterInterfaceBase
 {
 public:
-  std::optional<std::string> getAddress() const override
+  std::string getAddress() const override
   {
     return address;
   }
 
-  std::optional<std::string> getUsername() const override
+  std::string getUsername() const override
   {
     return username;
   }
 
-  std::optional<std::string> getPassword() const override
+  std::string getPassword() const override
   {
     return password;
   }
@@ -73,9 +73,9 @@ public:
     return spot_name;
   }
 
-  std::optional<std::string> address = std::nullopt;
-  std::optional<std::string> username = std::nullopt;
-  std::optional<std::string> password = std::nullopt;
+  std::string address;
+  std::string username;
+  std::string password;
 
   double rgb_image_quality = kDefaultRGBImageQuality;
   bool has_rgb_cameras = kDefaultHasRGBCameras;
@@ -210,42 +210,6 @@ public:
 
   std::unique_ptr<SpotImagePublisher> image_publisher;
 };
-
-TEST_F(TestInitSpotImagePublisherParametersUnset, InitFailsIfNoAddress)
-{
-  // GIVEN the parameter for the address was not defined
-  parameter_interface_ptr->address = std::nullopt;
-  parameter_interface_ptr->username = kExampleUsername;
-  parameter_interface_ptr->password = kExamplePassword;
-
-  // WHEN the SpotImagePublisher is initialized
-  // THEN initialization fails
-  ASSERT_FALSE(image_publisher->initialize());
-}
-
-TEST_F(TestInitSpotImagePublisherParametersUnset, InitFailsIfNoUsername)
-{
-  // GIVEN the parameter for the username was not defined
-  parameter_interface_ptr->address = kExampleAddress;
-  parameter_interface_ptr->username = std::nullopt;
-  parameter_interface_ptr->password = kExamplePassword;
-
-  // WHEN the SpotImagePublisher is initialized
-  // THEN initialization fails
-  ASSERT_FALSE(image_publisher->initialize());
-}
-
-TEST_F(TestInitSpotImagePublisherParametersUnset, InitFailsIfNoPassword)
-{
-  // GIVEN the parameter for the password was not defined
-  parameter_interface_ptr->address = kExampleAddress;
-  parameter_interface_ptr->username = kExampleUsername;
-  parameter_interface_ptr->password = std::nullopt;
-
-  // WHEN the SpotImagePublisher is initialized
-  // THEN initialization fails
-  ASSERT_FALSE(image_publisher->initialize());
-}
 
 TEST_F(TestInitSpotImagePublisher, InitFailsIfRobotNotCreated)
 {

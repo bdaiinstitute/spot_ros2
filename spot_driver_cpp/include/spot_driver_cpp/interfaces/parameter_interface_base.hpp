@@ -15,16 +15,12 @@ class ParameterInterfaceBase
 public:
   virtual ~ParameterInterfaceBase() {};
 
-  // These functions retrieve required parameters, where it is not possible to connect to Spot unless each parameter is set by the user to a specific value.
-  // If the parameter was set, return its value.
-  // If the parameter was not set, return std::nullopt.
-  virtual std::optional<std::string> getAddress() const = 0;
-  virtual std::optional<std::string> getUsername() const = 0;
-  virtual std::optional<std::string> getPassword() const = 0;
-
   // These functions retrieve optional parameters, where a default value can be used if the user does not provide a specific value.
   // If the parameter was set, return the value provided by the user.
   // If the parameter was not set, return the default value.
+  virtual std::string getAddress() const = 0;
+  virtual std::string getUsername() const = 0;
+  virtual std::string getPassword() const = 0;
   virtual double getRGBImageQuality() const = 0;
   virtual bool getHasRGBCameras() const = 0;
   virtual bool getPublishRGBImages() const = 0;
@@ -34,6 +30,9 @@ public:
 
 protected:
   // These are the definitions of the default values for optional parameters.
+  static constexpr auto kDefaultAddress = "10.0.0.3";
+  static constexpr auto kDefaultUsername = "user";
+  static constexpr auto kDefaultPassword = "password";
   static constexpr double kDefaultRGBImageQuality{ 70.0 };
   static constexpr bool kDefaultHasRGBCameras{ true };
   static constexpr bool kDefaultPublishRGBImages{ true };
