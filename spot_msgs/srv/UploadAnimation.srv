@@ -1,6 +1,6 @@
 string animation_name
 string animation_file_content
-byte[] animation_proto_serialized
+char[] animation_proto_serialized
 ---
 bool success 
 string message
