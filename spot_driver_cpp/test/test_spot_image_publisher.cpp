@@ -16,6 +16,7 @@
 
 using ::testing::AtLeast;
 using ::testing::InSequence;
+using ::testing::Property;
 using ::testing::Return;
 using ::testing::_;
 
@@ -193,7 +194,6 @@ public:
 
     ON_CALL(*spot_interface_ptr, createRobot).WillByDefault(Return(tl::expected<void, std::string>{}));
     ON_CALL(*spot_interface_ptr, authenticate).WillByDefault(Return(tl::expected<void, std::string>{}));
-    ON_CALL(*spot_interface_ptr, hasArm).WillByDefault(Return(true));
   }
   
   std::unique_ptr<FakeParameterInterface> parameter_interface = std::make_unique<FakeParameterInterface>();
@@ -239,11 +239,29 @@ TEST_F(TestInitSpotImagePublisher, InitFailsIfRobotNotAuthenticated)
   ASSERT_FALSE(image_publisher->initialize());
 }
 
+TEST_F(TestInitSpotImagePublisher, InitFailsIfHasArmFails)
+{
+  // GIVEN all required parameters are set to correct values
+  // GIVEN the createRobot function will return true to indicate that it succeeded
+  // GIVEN authentication will succeed
+  ON_CALL(*spot_interface_ptr, createRobot).WillByDefault(Return(tl::expected<void, std::string>{}));
+  ON_CALL(*spot_interface_ptr, authenticate).WillByDefault(Return(tl::expected<void, std::string>{}));
+
+  // GIVEN the check to determine if Spot has an arm will fail
+  // THEN hasArm() will be called exactly once
+  EXPECT_CALL(*spot_interface_ptr, hasArm).WillOnce(Return(tl::make_unexpected("dummy error message")));
+
+  // WHEN the SpotImagePulisher is initialized
+  // THEN initialization fails
+  ASSERT_FALSE(image_publisher->initialize());
+}
+
 TEST_F(TestInitSpotImagePublisher, InitSucceeds)
 {
   // GIVEN all required parameters are set to correct values
   // GIVEN the createRobot function will return true to indicate that it succeeded
   // GIVEN the authenticate function will return true to indicate that it succeeded
+  // GIVEn Spot has an arm
   ON_CALL(*spot_interface_ptr, createRobot).WillByDefault(Return(tl::expected<void, std::string>{}));
   ON_CALL(*spot_interface_ptr, authenticate).WillByDefault(Return(tl::expected<void, std::string>{}));
   ON_CALL(*spot_interface_ptr, hasArm).WillByDefault(Return(true));
@@ -256,16 +274,47 @@ TEST_F(TestInitSpotImagePublisher, InitSucceeds)
   EXPECT_TRUE(image_publisher->initialize());
 }
 
-TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggers)
+TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm)
 {
+  parameter_interface_ptr->publish_rgb_images = true;
+  parameter_interface_ptr->publish_depth_images = true;
+  parameter_interface_ptr->publish_depth_registered_images = true;
+
+  // GIVEN Spot has an arm
+  ON_CALL(*spot_interface_ptr, hasArm).WillByDefault(Return(true));
+
   // GIVEN the SpotImagePublisher was successfully initialized
   ASSERT_TRUE(image_publisher->initialize());
 
   {
-    // THEN we send an image request to the Spot interface
+    // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
     // THEN the images we received from the Spot interface are published
     InSequence seq;
-    EXPECT_CALL(*spot_interface_ptr, getImages);
+    EXPECT_CALL(*spot_interface_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
+    EXPECT_CALL(*publisher_interface_ptr, publish);
+  }
+
+  // WHEN the timer callback is triggered
+  timer_interface_ptr->trigger();
+}
+
+TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm)
+{
+  parameter_interface_ptr->publish_rgb_images = true;
+  parameter_interface_ptr->publish_depth_images = true;
+  parameter_interface_ptr->publish_depth_registered_images = true;
+
+  // GIVEN Spot does not have an arm
+  ON_CALL(*spot_interface_ptr, hasArm).WillByDefault(Return(false));
+
+  // GIVEN the SpotImagePublisher was successfully initialized
+  ASSERT_TRUE(image_publisher->initialize());
+
+  {
+    // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
+    // THEN the images we received from the Spot interface are published
+    InSequence seq;
+    EXPECT_CALL(*spot_interface_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
     EXPECT_CALL(*publisher_interface_ptr, publish);
   }
 
