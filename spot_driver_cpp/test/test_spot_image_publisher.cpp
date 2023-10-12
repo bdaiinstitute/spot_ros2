@@ -276,6 +276,7 @@ TEST_F(TestInitSpotImagePublisher, InitSucceeds)
 
 TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm)
 {
+  // GIVEN we request all possible image types
   parameter_interface_ptr->publish_rgb_images = true;
   parameter_interface_ptr->publish_depth_images = true;
   parameter_interface_ptr->publish_depth_registered_images = true;
@@ -288,6 +289,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm)
 
   {
     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
+    // (3 image types for 5 body cameras + 1 hand camera = 18 image requests)
     // THEN the images we received from the Spot interface are published
     InSequence seq;
     EXPECT_CALL(*spot_interface_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
@@ -300,6 +302,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm)
 
 TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm)
 {
+  // GIVEN we request all possible image types
   parameter_interface_ptr->publish_rgb_images = true;
   parameter_interface_ptr->publish_depth_images = true;
   parameter_interface_ptr->publish_depth_registered_images = true;
@@ -312,6 +315,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm)
 
   {
     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
+    // (3 image types for 5 body cameras = 15 image requests)
     // THEN the images we received from the Spot interface are published
     InSequence seq;
     EXPECT_CALL(*spot_interface_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
