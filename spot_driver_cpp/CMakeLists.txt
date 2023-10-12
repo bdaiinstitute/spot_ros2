@@ -39,6 +39,7 @@ target_include_directories(spot_image_publisher
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(spot_image_publisher PUBLIC bosdyn::bosdyn_client_static)
+set_property(TARGET spot_image_publisher PROPERTY POSITION_INDEPENDENT_CODE ON)
 ament_target_dependencies(spot_image_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
 # Create executable to allow running SpotImagePublisherNode directly as a ROS 2 node
