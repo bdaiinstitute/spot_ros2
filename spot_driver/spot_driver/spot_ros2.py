@@ -1194,9 +1194,9 @@ class SpotROS(Node):
             return response
         if request.choreo_file_content:
             response.success, response.message = self.spot_wrapper.execute_dance(request.choreo_file_content)
-        elif request.choreo_sequence_bytes:
+        elif request.choreo_sequence_serialized:
             choreography = ChoreographySequence()
-            choreography.ParseFromString(bytes(bytearray(request.choreo_sequence_bytes)))
+            choreography.ParseFromString(bytes(bytearray(request.choreo_sequence_serialized)))
             response.success, response.message = self.spot_wrapper.execute_dance(choreography)
         else:
             response.success = False
@@ -1305,9 +1305,9 @@ class SpotROS(Node):
             response.success, response.message = self.spot_wrapper.upload_animation(
                 request.animation_name, request.animation_file_content
             )
-        elif request.animation_proto_bytes:
+        elif request.animation_proto_serialized:
             animation = Animation()
-            animation.ParseFromString(bytes(bytearray(request.animation_proto_bytes)))
+            animation.ParseFromString(bytes(bytearray(request.animation_proto_serialized)))
             response.success, response.message = self.spot_wrapper.upload_animation_proto(animation)
         else:
             self.message = "Error: No data passed in message"
