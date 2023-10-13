@@ -8,6 +8,7 @@
 
 namespace spot_ros2
 {
+/** @brief Represents the three types of images Spot can capture. */
 enum class SpotImageType
 {
   RGB,
@@ -15,12 +16,26 @@ enum class SpotImageType
   DEPTH_REGISTERED,
 };
 
+/** @brief Defines the name and type of an image source. */
 struct ImageSource
 {
+  /**
+   * @brief Name of the image source.
+   * @details One of the following:
+   *   - "back"
+   *   - "frontleft"
+   *   - "frontright"
+   *   - "left"
+   *   - "right"
+   *   - "hand"
+   */
   std::string name;
+
+  /** @brief Type of the image source. */
   SpotImageType type;
 };
 
+/** @brief Stores an Image message and a corresponding CameraInfo message together. */
 struct ImageWithCameraInfo
 {
   sensor_msgs::msg::Image image;

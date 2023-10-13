@@ -10,10 +10,29 @@
 
 namespace spot_ros2
 {
+/**
+  * @brief Create the ROS topic name corresponding to an ImageSource.
+  * 
+  * @param image_source Input image source.
+  * @return ROS topic name for the input image source.
+  */
 std::string toRosTopic(const ImageSource& image_source);
 
+/**
+ * @brief Create the Spot SDK source name corresponding to an ImageSource.
+ * 
+ * @param image_source Input image source.
+ * @return Spot SDK source name for the input image source.
+ */
 std::string toSpotImageSourceName(const ImageSource& image_source);
 
+/**
+ * @brief Create an ImageSource corresponding to a Spot SDK source name.
+ * 
+ * @param source_name Input source name.
+ * @return If the input source name was successfully parsed, return an ImageSource.
+ * @return If the input source name does not match the expected name of any known Spot SDK source, return an error.
+ */
 tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string& source_name);
 
 /**

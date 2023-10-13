@@ -18,7 +18,8 @@ public:
 
   /**
    * @brief Returns the NodeBaseInterface of this class's node.
-   * @details This function exists to allow spinning the class's node as if it were derived from rclcpp::Node. This allows loading this class as a component node in a composable node container.
+   * @details This function exists to allow spinning the class's node as if it were derived from rclcpp::Node.
+   * This allows loading this class as a component node in a composable node container.
    * 
    * @return A shared_ptr to the NodeBaseInterface of the node stored as a private member of this class.
    */

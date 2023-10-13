@@ -28,18 +28,35 @@ namespace spot_ros2
  * @param has_rgb_cameras Set this to true if Spot's 2D body cameras can capture RGB image data.
  * @param rgb_image_quality A value in the range from 0.0 to 100.0 which defines the level of compression to use when requesting JPEG-compressed RGB image data.
  * @param get_raw_rgb_images If true, request raw images from Spot's 2D body cameras. If false, request JPEG-compressed images.
- * @return ::bosdyn::api::GetImageRequest A GetImageRequest message equivalent to the input parameters.
+ * @return A GetImageRequest message equivalent to the input parameters.
  */
 ::bosdyn::api::GetImageRequest createImageRequest(const std::vector<ImageSource>& sources, const bool has_rgb_cameras, const double rgb_image_quality, const bool get_raw_rgb_images);
 
 /**
- * @brief A class to connect to and authenticate with Spot, retrieve images from its cameras, and publish each image to a ROS topic.
+ * @brief A class to connect to and authenticate with Spot, retrieve images from its cameras, and publish the images to the middleware.
  */
 class SpotImagePublisher
 {
 public:
+  /**
+  * @brief Constructor for SpotImagePublisher, which allows setting the specific implementation of the interface
+  * classes which are used by the node.
+  * @details This is used to perform dependency injection in unit tests.
+  * 
+  * @param timer_interface A unique_ptr to an instance of a class that implements TimerInterfaceBase.
+  * @param spot_interface  A unique_ptr to an instance of a class that implements SpotInterfaceBase.
+  * @param publisher_interface  A unique_ptr to an instance of a class that implements PublisherInterfaceBase.
+  * @param parameter_interface  A unique_ptr to an instance of a class that implements ParameterInterfaceBase.
+  * @param tf_interface  A unique_ptr to an instance of a class that implements TfInterfaceBase.
+  */
   SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface, std::unique_ptr<SpotInterfaceBase> spot_interface, std::unique_ptr<PublisherInterfaceBase> publisher_interface, std::unique_ptr<ParameterInterfaceBase> parameter_interface, std::unique_ptr<TfInterfaceBase> tf_interface);
 
+  /**
+   * @brief Constuctor for SpotImagePublisher, which creates instances of rclcpp-specialized interface classes
+   * using the provided node.
+   * 
+   * @param node ROS 2 node to use when creating the interfaces.
+   */
   explicit SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node);
 
   /**
@@ -51,10 +68,20 @@ public:
   bool initialize();
 
 private:
+  /**
+   * @brief Callback function which is called through timer_interface_.
+   * @details Requests image data from Spot, and then publishes the images and static camera transforms. 
+   */
   void timerCallback();
 
+  /**
+   * @brief Image request message which is set when SpotImagePublisher::initialize() is called.
+   * @details This is generated only once and then cached because the configuration of which cameras to request images
+   * from, what quality to use, etc., does not dynamically change while the driver is running.
+   */
   std::optional<::bosdyn::api::GetImageRequest> image_request_message_;
 
+  // Interface classes to interact with Spot and the middleware.
   std::unique_ptr<TimerInterfaceBase> timer_interface_;
   std::unique_ptr<SpotInterfaceBase> spot_interface_;
   std::unique_ptr<PublisherInterfaceBase> publisher_interface_;
