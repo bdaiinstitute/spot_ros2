@@ -6,6 +6,7 @@
 #include <rclcpp/node.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/spot_interface_base.hpp>
@@ -49,7 +50,7 @@ public:
   * @param parameter_interface  A unique_ptr to an instance of a class that implements ParameterInterfaceBase.
   * @param tf_interface  A unique_ptr to an instance of a class that implements TfInterfaceBase.
   */
-  SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface, std::unique_ptr<SpotInterfaceBase> spot_interface, std::unique_ptr<PublisherInterfaceBase> publisher_interface, std::unique_ptr<ParameterInterfaceBase> parameter_interface, std::unique_ptr<TfInterfaceBase> tf_interface);
+  SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface, std::unique_ptr<SpotInterfaceBase> spot_interface, std::unique_ptr<PublisherInterfaceBase> publisher_interface, std::unique_ptr<ParameterInterfaceBase> parameter_interface, std::unique_ptr<TfInterfaceBase> tf_interface, std::unique_ptr<LoggerInterfaceBase> logger_interface);
 
   /**
    * @brief Constuctor for SpotImagePublisher, which creates instances of rclcpp-specialized interface classes
@@ -87,5 +88,6 @@ private:
   std::unique_ptr<PublisherInterfaceBase> publisher_interface_;
   std::unique_ptr<ParameterInterfaceBase> parameter_interface_;
   std::unique_ptr<TfInterfaceBase> tf_interface_;
+  std::unique_ptr<LoggerInterfaceBase> logger_interface_;
 };
 } // namespace spot_ros2

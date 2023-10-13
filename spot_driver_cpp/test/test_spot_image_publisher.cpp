@@ -2,6 +2,7 @@
 
 #include <gmock/gmock.h>
 
+#include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/spot_interface_base.hpp>
@@ -15,10 +16,12 @@
 #include <optional>
 #include <tl_expected/expected.hpp>
 
+using ::testing::AllOf;
 using ::testing::AtLeast;
 using ::testing::InSequence;
 using ::testing::Property;
 using ::testing::Return;
+using ::testing::HasSubstr;
 using ::testing::_;
 
 namespace spot_ros2::testing
@@ -26,6 +29,8 @@ namespace spot_ros2::testing
 constexpr auto kExampleAddress{ "192.168.0.10"};
 constexpr auto kExampleUsername {"spot_user" };
 constexpr auto kExamplePassword { "hunter2" };
+
+constexpr auto kSomeErrorMessage = "some error message";
 
 class FakeParameterInterface : public ParameterInterfaceBase
 {
@@ -139,6 +144,16 @@ public:
   MOCK_METHOD((tl::expected<void, std::string>), publishStaticTransforms, (const std::vector<geometry_msgs::msg::TransformStamped>& transforms), (override));
 };
 
+class MockLoggerInterface : public LoggerInterfaceBase
+{
+public:
+  MOCK_METHOD(void, logDebug, (const std::string& message), (const, override));
+  MOCK_METHOD(void, logInfo, (const std::string& message), (const, override));
+  MOCK_METHOD(void, logWarn, (const std::string& message), (const, override));
+  MOCK_METHOD(void, logError, (const std::string& message), (const, override));
+  MOCK_METHOD(void, logFatal, (const std::string& message), (const, override));
+};
+
 class TestInitSpotImagePublisherParametersUnset : public ::testing::Test
 {
 public:
@@ -150,8 +165,9 @@ public:
     publisher_interface_ptr = publisher_interface.get();
     spot_interface_ptr = spot_interface.get();
     tf_interface_ptr = tf_interface.get();
+    logger_interface_ptr = logger_interface.get();
 
-    image_publisher = std::make_unique<SpotImagePublisher>(std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface), std::move(parameter_interface), std::move(tf_interface));
+    image_publisher = std::make_unique<SpotImagePublisher>(std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface), std::move(parameter_interface), std::move(tf_interface), std::move(logger_interface));
 
   }
   
@@ -169,6 +185,9 @@ public:
 
   std::unique_ptr<MockTfInterface> tf_interface = std::make_unique<MockTfInterface>();
   MockTfInterface* tf_interface_ptr;
+
+  std::unique_ptr<MockLoggerInterface> logger_interface = std::make_unique<MockLoggerInterface>();
+  MockLoggerInterface* logger_interface_ptr;
 
   std::unique_ptr<SpotImagePublisher> image_publisher;
 };
@@ -197,8 +216,9 @@ public:
     publisher_interface_ptr = publisher_interface.get();
     spot_interface_ptr = spot_interface.get();
     tf_interface_ptr = tf_interface.get();
+    logger_interface_ptr = logger_interface.get();
 
-    image_publisher = std::make_unique<SpotImagePublisher>(std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface), std::move(parameter_interface), std::move(tf_interface));
+    image_publisher = std::make_unique<SpotImagePublisher>(std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface), std::move(parameter_interface), std::move(tf_interface), std::move(logger_interface));
 
     parameter_interface_ptr->address = kExampleAddress;
     parameter_interface_ptr->username = kExampleUsername;
@@ -223,6 +243,9 @@ public:
   std::unique_ptr<MockTfInterface> tf_interface = std::make_unique<MockTfInterface>();
   MockTfInterface* tf_interface_ptr;
 
+  std::unique_ptr<MockLoggerInterface> logger_interface = std::make_unique<MockLoggerInterface>();
+  MockLoggerInterface* logger_interface_ptr;
+
   std::unique_ptr<SpotImagePublisher> image_publisher;
 };
 
@@ -232,7 +255,9 @@ TEST_F(TestInitSpotImagePublisher, InitFailsIfRobotNotCreated)
 
   // GIVEN the spot interface's createRobot function will return false to indicate that it did not succeed
   // THEN the createRobot function is called exactly once with the same address as what was provided through the parameter interface
-  EXPECT_CALL(*spot_interface_ptr, createRobot(kExampleAddress, _)).WillOnce(Return(tl::make_unexpected("dummy error message")));
+  EXPECT_CALL(*spot_interface_ptr, createRobot(kExampleAddress, _)).WillOnce(Return(tl::make_unexpected(kSomeErrorMessage)));
+  // THEN the expected error message is logged
+  EXPECT_CALL(*logger_interface_ptr, logError(AllOf(HasSubstr("Failed to create interface to robot:"), HasSubstr(kSomeErrorMessage))));
 
   // WHEN the SpotImagePublisher is initialized
   // THEN initialization fails
@@ -247,7 +272,9 @@ TEST_F(TestInitSpotImagePublisher, InitFailsIfRobotNotAuthenticated)
 
   // GIVEN the spot interface's authenticate function will return false to indicate that it failed
   // THEN the authenticate function is called exactly once with the same username and password as what was provided through the parameter interface
-  EXPECT_CALL(*spot_interface_ptr, authenticate(kExampleUsername, kExamplePassword)).WillOnce(Return(tl::make_unexpected("dummy error message")));
+  EXPECT_CALL(*spot_interface_ptr, authenticate(kExampleUsername, kExamplePassword)).WillOnce(Return(tl::make_unexpected(kSomeErrorMessage)));
+  // THEN the expected error message is logged
+  EXPECT_CALL(*logger_interface_ptr, logError(AllOf(HasSubstr("Failed to authenticate with robot:"), HasSubstr(kSomeErrorMessage))));
 
   // WHEN the SpotImagePulisher is initialized
   // THEN initialization fails
@@ -264,7 +291,9 @@ TEST_F(TestInitSpotImagePublisher, InitFailsIfHasArmFails)
 
   // GIVEN the check to determine if Spot has an arm will fail
   // THEN hasArm() will be called exactly once
-  EXPECT_CALL(*spot_interface_ptr, hasArm).WillOnce(Return(tl::make_unexpected("dummy error message")));
+  EXPECT_CALL(*spot_interface_ptr, hasArm).WillOnce(Return(tl::make_unexpected(kSomeErrorMessage)));
+  // THEN the expected error message is logged
+  EXPECT_CALL(*logger_interface_ptr, logError(AllOf(HasSubstr("Failed to determine if Spot is equipped with an arm:"), HasSubstr(kSomeErrorMessage))));
 
   // WHEN the SpotImagePulisher is initialized
   // THEN initialization fails

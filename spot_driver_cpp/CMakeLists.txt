@@ -28,6 +28,7 @@ endforeach()
 
 # Base library containing the SpotImagePublisherNode class
 add_library(spot_image_publisher
+  src/interfaces/rclcpp_logger_interface.cpp
   src/interfaces/rclcpp_parameter_interface.cpp
   src/interfaces/rclcpp_publisher_interface.cpp
   src/interfaces/rclcpp_tf_interface.cpp

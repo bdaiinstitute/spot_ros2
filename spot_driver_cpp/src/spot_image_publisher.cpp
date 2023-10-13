@@ -6,6 +6,7 @@
 #include <rmw/qos_profiles.h>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
@@ -63,17 +64,18 @@ namespace spot_ros2
     return request_message;
 }
 
-SpotImagePublisher::SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface, std::unique_ptr<SpotInterfaceBase> spot_interface, std::unique_ptr<PublisherInterfaceBase> publisher_interface, std::unique_ptr<ParameterInterfaceBase> parameter_interface, std::unique_ptr<TfInterfaceBase> tf_interface)
+SpotImagePublisher::SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface, std::unique_ptr<SpotInterfaceBase> spot_interface, std::unique_ptr<PublisherInterfaceBase> publisher_interface, std::unique_ptr<ParameterInterfaceBase> parameter_interface, std::unique_ptr<TfInterfaceBase> tf_interface, std::unique_ptr<LoggerInterfaceBase> logger_interface)
 : timer_interface_{ std::move(timer_interface) }
 , spot_interface_{ std::move(spot_interface) }
 , publisher_interface_{ std::move(publisher_interface) }
 , parameter_interface_{ std::move(parameter_interface) }
 , tf_interface_{ std::move(tf_interface) }
+, logger_interface_{ std::move(logger_interface) }
 {
 }
 
 SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node)
-: SpotImagePublisher( std::make_unique<RclcppWallTimerInterface>(node), std::make_unique<SpotInterface>(), std::make_unique<RclcppPublisherInterface>(node), std::make_unique<RclcppParameterInterface>(node), std::make_unique<RclcppTfInterface>(node))
+: SpotImagePublisher( std::make_unique<RclcppWallTimerInterface>(node), std::make_unique<SpotInterface>(), std::make_unique<RclcppPublisherInterface>(node), std::make_unique<RclcppParameterInterface>(node), std::make_unique<RclcppTfInterface>(node), std::make_unique<RclcppLoggerInterface>(node->get_logger()))
 {
 }
 
@@ -93,20 +95,20 @@ bool SpotImagePublisher::initialize()
     // Initialize the SDK client, and connect to the robot
     if (const auto result = spot_interface_->createRobot(address, spot_name); !result)
     {
-        std::cerr << "Failed to create interface to robot: " << result.error() << std::endl;
+        logger_interface_->logError(std::string{"Failed to create interface to robot: "}.append(result.error()));
         return false;
     }
 
     if (const auto result = spot_interface_->authenticate(username, password); !result)
     {
-        std::cerr << "Failed to authenticate with robot: " << result.error() << std::endl;
+        logger_interface_->logError(std::string{"Failed to authenticate with robot: "}.append(result.error()));
         return false;
     }
 
     const auto has_arm_result = spot_interface_->hasArm();
     if (!has_arm_result)
     {
-        std::cerr << "Failed to determine if Spot is equipped with an arm: " << has_arm_result.error() << std::endl;
+        logger_interface_->logError(std::string{"Failed to determine if Spot is equipped with an arm: "}.append(has_arm_result.error()));
         return false;
     }
 
@@ -135,7 +137,7 @@ void SpotImagePublisher::timerCallback()
     const auto image_result = spot_interface_->getImages(*image_request_message_);
     if(!image_result.has_value())
     {
-        std::cerr << "Failed to get images: " << image_result.error() << std::endl;
+        logger_interface_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
         return;
     }
 
