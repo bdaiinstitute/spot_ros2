@@ -330,15 +330,13 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
       const auto image_msg = toImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
       if (!image_msg)
       {
-        std::cerr << "Failed to convert SDK image response to ROS Image message: " << image_msg.error() << std::endl;
-        continue;
+        return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());
       }
 
       const auto info_msg = toCameraInfoMsg(image_response, robot_name_, clock_skew_result.value());
       if (!info_msg)
       {
-        std::cerr << "Failed to convert SDK image response to ROS CameraInfo message: " << info_msg.error() << std::endl;
-        continue;
+        return tl::make_unexpected("Failed to convert SDK image response to ROS CameraInfo message: " + info_msg.error());
       }
 
       const auto& camera_name = image_response.source().name();
@@ -348,8 +346,7 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
       }
       else
       {
-        std::cerr << "Failed to convert API image source name to ImageSource: " << result.error() << std::endl;
-        continue;
+        return tl::make_unexpected("Failed to convert API image source name to ImageSource: " + result.error());
       }
 
       if (const auto transforms_result = getImageTransforms(image_response, robot_name_, clock_skew_result.value()); transforms_result.has_value())
@@ -358,8 +355,7 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
       }
       else
       {
-        std::cerr << "Failed to get image transforms: " << transforms_result.error() << std::endl;
-        continue;
+        return tl::make_unexpected("Failed to get image transforms: " + transforms_result.error());
       }
   }
 
