@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
+#include <tl_expected/expected.hpp>
 
 namespace spot_ros2
 {
@@ -29,7 +30,7 @@ void RclcppPublisherInterface::createPublishers(const std::vector<ImageSource>& 
     }
 }
 
-void RclcppPublisherInterface::publish(const std::map<ImageSource, ImageWithCameraInfo>& images)
+tl::expected<void, std::string> RclcppPublisherInterface::publish(const std::map<ImageSource, ImageWithCameraInfo>& images)
 {
     for (const auto& [image_source, image_data] : images)
     {
@@ -40,12 +41,21 @@ void RclcppPublisherInterface::publish(const std::map<ImageSource, ImageWithCame
         try
         {
             image_publishers_.at(image_topic_name)->publish(image_data.image);
+        }
+        catch(const std::out_of_range& e)
+        {
+            return tl::make_unexpected("No publisher exists for image topic `" + image_topic_name + "`.");
+        }
+        try
+        {
             info_publishers_.at(info_topic_name)->publish(image_data.info);
         }
         catch(const std::out_of_range& e)
         {
-            std::cerr << "No publisher exists for image source." << std::endl;
+            return tl::make_unexpected("No publisher exists for camera info topic`" + info_topic_name + "`.");
         }
     }
+
+    return {};
 }
 }

@@ -20,7 +20,7 @@ public:
   explicit RclcppPublisherInterface(const std::shared_ptr<rclcpp::Node>& node);
 
   void createPublishers(const std::vector<ImageSource>& image_sources) override;
-  void publish(const std::map<ImageSource, ImageWithCameraInfo>& images) override;
+  tl::expected<void, std::string> publish(const std::map<ImageSource, ImageWithCameraInfo>& images) override;
 
 private:
   std::shared_ptr<rclcpp::Node> node_;

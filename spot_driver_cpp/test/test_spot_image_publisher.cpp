@@ -117,7 +117,7 @@ class MockPublisherInterface : public PublisherInterfaceBase
 {
 public:
   MOCK_METHOD(void, createPublishers, (const std::vector<ImageSource>& image_sources), (override));
-  MOCK_METHOD(void, publish, ((const std::map<ImageSource, ImageWithCameraInfo>&)), (override));
+  MOCK_METHOD((tl::expected<void, std::string>), publish, ((const std::map<ImageSource, ImageWithCameraInfo>&)), (override));
 };
 
 class MockSpotInterface : public SpotInterfaceBase

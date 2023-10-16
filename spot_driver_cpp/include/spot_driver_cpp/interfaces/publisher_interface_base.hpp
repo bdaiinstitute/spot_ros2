@@ -3,6 +3,9 @@
 #pragma once
 
 #include <spot_driver_cpp/spot_image_sources.hpp>
+#include <tl_expected/expected.hpp>
+
+#include <string>
 
 namespace spot_ros2
 {
@@ -15,6 +18,6 @@ public:
   virtual ~PublisherInterfaceBase() {};
 
   virtual void createPublishers(const std::vector<ImageSource>& image_sources) = 0;
-  virtual void publish(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
+  virtual tl::expected<void, std::string> publish(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
 };
 }
