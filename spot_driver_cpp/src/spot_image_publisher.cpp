@@ -93,15 +93,17 @@ bool SpotImagePublisher::initialize()
     const auto spot_name = parameter_interface_->getSpotName();
 
     // Initialize the SDK client, and connect to the robot
-    if (const auto result = spot_interface_->createRobot(address, spot_name); !result)
+    const auto create_robot_result = spot_interface_->createRobot(address, spot_name);
+    if (!create_robot_result)
     {
-        logger_interface_->logError(std::string{"Failed to create interface to robot: "}.append(result.error()));
+        logger_interface_->logError(std::string{"Failed to create interface to robot: "}.append(create_robot_result.error()));
         return false;
     }
 
-    if (const auto result = spot_interface_->authenticate(username, password); !result)
+    const auto authenticate_result = spot_interface_->authenticate(username, password);
+    if (!authenticate_result)
     {
-        logger_interface_->logError(std::string{"Failed to authenticate with robot: "}.append(result.error()));
+        logger_interface_->logError(std::string{"Failed to authenticate with robot: "}.append(authenticate_result.error()));
         return false;
     }
 

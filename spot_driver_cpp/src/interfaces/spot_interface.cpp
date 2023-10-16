@@ -340,16 +340,18 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
       }
 
       const auto& camera_name = image_response.source().name();
-      if(const auto result = fromSpotImageSourceName(camera_name); result.has_value())
+      const auto get_source_name_result = fromSpotImageSourceName(camera_name);
+      if(get_source_name_result.has_value())
       {
-        out.images_.try_emplace(result.value(), ImageWithCameraInfo{image_msg.value(), info_msg.value()});
+        out.images_.try_emplace(get_source_name_result.value(), ImageWithCameraInfo{image_msg.value(), info_msg.value()});
       }
       else
       {
-        return tl::make_unexpected("Failed to convert API image source name to ImageSource: " + result.error());
+        return tl::make_unexpected("Failed to convert API image source name to ImageSource: " + get_source_name_result.error());
       }
 
-      if (const auto transforms_result = getImageTransforms(image_response, robot_name_, clock_skew_result.value()); transforms_result.has_value())
+      const auto transforms_result = getImageTransforms(image_response, robot_name_, clock_skew_result.value());
+      if (transforms_result.has_value())
       {
         out.transforms_.insert(out.transforms_.end(), transforms_result.value().begin(), transforms_result.value().end());
       }
