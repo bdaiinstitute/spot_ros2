@@ -26,7 +26,7 @@ constexpr auto kDefaultDepthImageQuality = 100.0;
 }  // namespace
 
 namespace spot_ros2 {
-::bosdyn::api::GetImageRequest createImageRequest(const std::vector<ImageSource>& sources,
+::bosdyn::api::GetImageRequest createImageRequest(const std::set<ImageSource>& sources,
                                                   [[maybe_unused]] const bool has_rgb_cameras,
                                                   const double rgb_image_quality, const bool get_raw_rgb_images) {
   ::bosdyn::api::GetImageRequest request_message;
@@ -111,9 +111,9 @@ bool SpotImagePublisher::initialize() {
     return false;
   }
 
-  // Generate the list of image sources based on which cameras the user has requested that we publish
-  const auto sources = createImageSourcesList(publish_rgb_images, publish_depth_images, publish_depth_registered_images,
-                                              has_arm_result.value());
+  // Generate the set of image sources based on which cameras the user has requested that we publish
+  const auto sources = createImageSources(publish_rgb_images, publish_depth_images, publish_depth_registered_images,
+                                          has_arm_result.value());
 
   // Generate the image request message to capture the data from the specified image sources
   image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, false);

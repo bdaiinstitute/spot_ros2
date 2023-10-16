@@ -8,6 +8,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -26,9 +27,9 @@ class RclcppPublisherInterface : public PublisherInterfaceBase {
 
   /**
    * @brief Populates the image_publishgers_ and info_publishers_ members with image and camera info publishers.
-   * @param image_sources Vector of ImageSources. A publisher will be created for each ImageSource.
+   * @param image_sources Set of ImageSources. A publisher will be created for each ImageSource.
    */
-  void createPublishers(const std::vector<ImageSource>& image_sources) override;
+  void createPublishers(const std::set<ImageSource>& image_sources) override;
 
   /**
    * @brief Publishes image and camera info messages to ROS 2 topics.

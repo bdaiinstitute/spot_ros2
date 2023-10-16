@@ -6,6 +6,7 @@
 #include <tl_expected/expected.hpp>
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -17,7 +18,7 @@ class PublisherInterfaceBase {
  public:
   virtual ~PublisherInterfaceBase() {}
 
-  virtual void createPublishers(const std::vector<ImageSource>& image_sources) = 0;
+  virtual void createPublishers(const std::set<ImageSource>& image_sources) = 0;
   virtual tl::expected<void, std::string> publish(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
 };
 }  // namespace spot_ros2

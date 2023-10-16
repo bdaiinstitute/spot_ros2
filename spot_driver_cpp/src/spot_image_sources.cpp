@@ -97,31 +97,31 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
   }
 }
 
-std::vector<ImageSource> createImageSourcesList(const bool get_rgb_images, const bool get_depth_images,
-                                                const bool get_depth_registered_images, const bool has_hand_camera) {
-  std::vector<ImageSource> sources;
+std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
+                                         const bool get_depth_registered_images, const bool has_hand_camera) {
+  std::set<ImageSource> sources;
   if (get_rgb_images) {
     for (const auto& camera : kAllSpotBodyCameras) {
-      sources.push_back(ImageSource{camera, SpotImageType::RGB});
+      sources.insert(ImageSource{camera, SpotImageType::RGB});
     }
     if (has_hand_camera) {
-      sources.push_back(ImageSource{SpotCamera::HAND, SpotImageType::RGB});
+      sources.insert(ImageSource{SpotCamera::HAND, SpotImageType::RGB});
     }
   }
   if (get_depth_images) {
     for (const auto& camera : kAllSpotBodyCameras) {
-      sources.push_back(ImageSource{camera, SpotImageType::DEPTH});
+      sources.insert(ImageSource{camera, SpotImageType::DEPTH});
     }
     if (has_hand_camera) {
-      sources.push_back(ImageSource{SpotCamera::HAND, SpotImageType::DEPTH});
+      sources.insert(ImageSource{SpotCamera::HAND, SpotImageType::DEPTH});
     }
   }
   if (get_depth_registered_images) {
     for (const auto& camera : kAllSpotBodyCameras) {
-      sources.push_back(ImageSource{camera, SpotImageType::DEPTH_REGISTERED});
+      sources.insert(ImageSource{camera, SpotImageType::DEPTH_REGISTERED});
     }
     if (has_hand_camera) {
-      sources.push_back(ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED});
+      sources.insert(ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED});
     }
   }
 

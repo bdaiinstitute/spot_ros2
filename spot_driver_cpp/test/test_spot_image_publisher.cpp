@@ -80,7 +80,7 @@ class FakeTimerInterface : public TimerInterfaceBase {
 
 class MockPublisherInterface : public PublisherInterfaceBase {
  public:
-  MOCK_METHOD(void, createPublishers, (const std::vector<ImageSource>& image_sources), (override));
+  MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources), (override));
   MOCK_METHOD((tl::expected<void, std::string>), publish, ((const std::map<ImageSource, ImageWithCameraInfo>&)),
               (override));
 };

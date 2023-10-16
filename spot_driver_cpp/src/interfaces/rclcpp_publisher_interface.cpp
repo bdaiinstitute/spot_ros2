@@ -15,7 +15,7 @@ namespace spot_ros2 {
 
 RclcppPublisherInterface::RclcppPublisherInterface(const std::shared_ptr<rclcpp::Node>& node) : node_{node} {}
 
-void RclcppPublisherInterface::createPublishers(const std::vector<ImageSource>& image_sources) {
+void RclcppPublisherInterface::createPublishers(const std::set<ImageSource>& image_sources) {
   image_publishers_.clear();
   info_publishers_.clear();
 

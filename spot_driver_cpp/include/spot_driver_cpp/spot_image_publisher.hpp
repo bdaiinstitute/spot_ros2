@@ -15,6 +15,7 @@
 #include <spot_driver_cpp/types.hpp>
 
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -25,7 +26,7 @@ namespace spot_ros2 {
  * options.
  * @details Requests for depth images will always use FORMAT_RAW at quality 100.0.
  *
- * @param sources List of image sources. Defines which cameras to request images from.
+ * @param sources Set of image sources. Defines which cameras to request images from.
  * @param has_rgb_cameras Set this to true if Spot's 2D body cameras can capture RGB image data.
  * @param rgb_image_quality A value in the range from 0.0 to 100.0 which defines the level of compression to use when
  * requesting JPEG-compressed RGB image data.
@@ -33,7 +34,7 @@ namespace spot_ros2 {
  * images.
  * @return A GetImageRequest message equivalent to the input parameters.
  */
-::bosdyn::api::GetImageRequest createImageRequest(const std::vector<ImageSource>& sources, const bool has_rgb_cameras,
+::bosdyn::api::GetImageRequest createImageRequest(const std::set<ImageSource>& sources, const bool has_rgb_cameras,
                                                   const double rgb_image_quality, const bool get_raw_rgb_images);
 
 /**
