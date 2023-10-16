@@ -42,7 +42,7 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
  * @param get_depth_images Sets whether to request depth images.
  * @param get_depth_registered_images Sets whether to request registered depth images.
  * @param has_hand_camera Sets whether to request images from the hand camera.
- * @return ImageSources 
+ * @return A vector of ImageSources which represents all requested image and camera types.
  */
 std::vector<ImageSource> createImageSourcesList(const bool get_rgb_images, const bool get_depth_images, const bool get_depth_registered_images, const bool has_hand_camera);
 }

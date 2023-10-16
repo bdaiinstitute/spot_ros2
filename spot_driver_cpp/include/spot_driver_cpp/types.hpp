@@ -8,6 +8,17 @@
 
 namespace spot_ros2
 {
+/** @brief Represents the six different cameras on Spot. */
+enum class SpotCamera
+{
+    BACK,
+    FRONTLEFT,
+    FRONTRIGHT,
+    LEFT,
+    RIGHT,
+    HAND,
+};
+
 /** @brief Represents the three types of images Spot can capture. */
 enum class SpotImageType
 {
@@ -19,20 +30,17 @@ enum class SpotImageType
 /** @brief Defines the name and type of an image source. */
 struct ImageSource
 {
-  /**
-   * @brief Name of the image source.
-   * @details One of the following:
-   *   - "back"
-   *   - "frontleft"
-   *   - "frontright"
-   *   - "left"
-   *   - "right"
-   *   - "hand"
-   */
-  std::string name;
+  /** @brief Name of the image source. */
+  SpotCamera camera;
 
   /** @brief Type of the image source. */
   SpotImageType type;
+
+  /** @brief Allows comparing one ImageSource instance with another. */
+  bool operator==(const ImageSource& e) const
+  {
+    return e.camera == camera && e.type == type;
+  }
 };
 
 /** @brief Stores an Image message and a corresponding CameraInfo message together. */
@@ -50,10 +58,10 @@ template <> struct std::less<spot_ros2::ImageSource>
 {
   bool operator()(const spot_ros2::ImageSource& lhs, const spot_ros2::ImageSource& rhs) const
   {
-    // If the name strings are different, use them for comparison.
-    if (lhs.name != rhs.name)
+    // If the camera IDs are different, use them for comparison.
+    if (lhs.camera != rhs.camera)
     {
-      return lhs.name < rhs.name;
+      return lhs.camera < rhs.camera;
     }
     
     // Compare the type enum to break the tie if the names are identical.

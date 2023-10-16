@@ -4,3 +4,8 @@ ament_add_gmock(test_spot_image_publisher
   test_spot_image_publisher.cpp
 )
 target_link_libraries(test_spot_image_publisher spot_image_publisher)
+
+ament_add_gmock(test_spot_image_sources
+test_spot_image_sources.cpp
+)
+target_link_libraries(test_spot_image_sources spot_image_publisher)

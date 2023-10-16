@@ -44,7 +44,7 @@ void RclcppPublisherInterface::publish(const std::map<ImageSource, ImageWithCame
         }
         catch(const std::out_of_range& e)
         {
-            std::cerr << "No publisher exists for image source " << image_source.name << std::endl;
+            std::cerr << "No publisher exists for image source." << std::endl;
         }
     }
 }
