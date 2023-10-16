@@ -141,7 +141,7 @@ public:
 class MockTfInterface : public TfInterfaceBase
 {
 public:
-  MOCK_METHOD((tl::expected<void, std::string>), publishStaticTransforms, (const std::vector<geometry_msgs::msg::TransformStamped>& transforms), (override));
+  MOCK_METHOD((tl::expected<void, std::string>), updateStaticTransforms, (const std::vector<geometry_msgs::msg::TransformStamped>& transforms), (override));
 };
 
 class MockLoggerInterface : public LoggerInterfaceBase
@@ -335,9 +335,11 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm)
     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
     // (3 image types for 5 body cameras + 1 hand camera = 18 image requests)
     // THEN the images we received from the Spot interface are published
+    // THEN the static transforms to the image frames are updated
     InSequence seq;
     EXPECT_CALL(*spot_interface_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
     EXPECT_CALL(*publisher_interface_ptr, publish);
+    EXPECT_CALL(*tf_interface_ptr, updateStaticTransforms);
   }
 
   // WHEN the timer callback is triggered
@@ -361,9 +363,11 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm)
     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
     // (3 image types for 5 body cameras = 15 image requests)
     // THEN the images we received from the Spot interface are published
+    // THEN the static transforms to the image frames are updated
     InSequence seq;
     EXPECT_CALL(*spot_interface_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
     EXPECT_CALL(*publisher_interface_ptr, publish);
+    EXPECT_CALL(*tf_interface_ptr, updateStaticTransforms);
   }
 
   // WHEN the timer callback is triggered

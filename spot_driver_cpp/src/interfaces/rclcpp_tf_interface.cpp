@@ -9,22 +9,25 @@ namespace spot_ros2
   {
   }
 
-  tl::expected<void, std::string> RclcppTfInterface::publishStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms)
+  tl::expected<void, std::string> RclcppTfInterface::updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms)
   {
-    // Keep track of which transforms the static transform publisher is already publishing.
-    std::vector<geometry_msgs::msg::TransformStamped> new_transforms;
+    bool has_new_frame = false;
     for (const auto& transform : transforms)
     {
-      const auto frame_id_pair = std::make_pair(transform.header.frame_id, transform.child_frame_id);
-      // Do not publish transforms which have already previously been published.
-      if (current_static_transforms_.count(frame_id_pair) == 0)
+      // If one of the transforms is to a new child frame, flag that a new transform needs to be published and add the
+      // child frame to the set of currently-published frames.
+      if (current_static_child_frames_.count(transform.child_frame_id) == 0)
       {
-        new_transforms.push_back(transform);
-        current_static_transforms_.insert(current_static_transforms_.end(), frame_id_pair);
+        has_new_frame = true;
+        current_static_child_frames_.insert(current_static_child_frames_.end(), transform.child_frame_id);
       }
     }
-    static_tf_broadcaster_.sendTransform(new_transforms);
+
+    // Only publish if there is a new transform.
+    if (has_new_frame)
+    {
+      static_tf_broadcaster_.sendTransform(transforms);
+    }
     return {};
   }
-
 }

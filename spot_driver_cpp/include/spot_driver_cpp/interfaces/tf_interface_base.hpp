@@ -19,6 +19,6 @@ class TfInterfaceBase
 public:
   virtual ~TfInterfaceBase() {};
 
-  virtual tl::expected<void, std::string> publishStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) = 0;
+  virtual tl::expected<void, std::string> updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) = 0;
 };
 }

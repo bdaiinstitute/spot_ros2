@@ -143,6 +143,6 @@ void SpotImagePublisher::timerCallback()
 
     publisher_interface_->publish(image_result.value().images_);
 
-    tf_interface_->publishStaticTransforms(image_result.value().transforms_);
+    tf_interface_->updateStaticTransforms(image_result.value().transforms_);
 }
 } // namespace spot_ros2
