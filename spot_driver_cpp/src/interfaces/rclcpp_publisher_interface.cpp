@@ -1,7 +1,15 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <rclcpp/qos.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
 #include <tl_expected/expected.hpp>
+
+namespace {
+constexpr auto kPublisherHistoryDepth = 1;
+
+constexpr auto kImageTopicSuffix = "image";
+constexpr auto kCameraInfoTopicSuffix = "camera_info";
+}  // namespace
 
 namespace spot_ros2 {
 
@@ -17,13 +25,16 @@ void RclcppPublisherInterface::createPublishers(const std::vector<ImageSource>& 
     // ultimately appear as `/MyRobotName/camera/frontleft/image`.
     const auto topic_name_base = toRosTopic(image_source);
 
-    const auto image_topic_name = topic_name_base + "/image";
-    image_publishers_.try_emplace(image_topic_name,
-                                  node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name, rclcpp::QoS(1)));
+    const auto image_topic_name = topic_name_base + "/" + kImageTopicSuffix;
 
-    const auto info_topic_name = topic_name_base + "/camera_info";
-    info_publishers_.try_emplace(
-        info_topic_name, node_->create_publisher<sensor_msgs::msg::CameraInfo>(info_topic_name, rclcpp::QoS(1)));
+    image_publishers_.try_emplace(image_topic_name,
+                                  node_->create_publisher<sensor_msgs::msg::Image>(
+                                      image_topic_name, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth))));
+
+    const auto info_topic_name = topic_name_base + "/" + kCameraInfoTopicSuffix;
+    info_publishers_.try_emplace(info_topic_name,
+                                 node_->create_publisher<sensor_msgs::msg::CameraInfo>(
+                                     info_topic_name, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth))));
   }
 }
 
@@ -31,8 +42,8 @@ tl::expected<void, std::string> RclcppPublisherInterface::publish(
     const std::map<ImageSource, ImageWithCameraInfo>& images) {
   for (const auto& [image_source, image_data] : images) {
     const auto topic_name_base = toRosTopic(image_source);
-    const auto image_topic_name = topic_name_base + "/image";
-    const auto info_topic_name = topic_name_base + "/camera_info";
+    const auto image_topic_name = topic_name_base + "/" + kImageTopicSuffix;
+    const auto info_topic_name = topic_name_base + "/" + kCameraInfoTopicSuffix;
 
     try {
       image_publishers_.at(image_topic_name)->publish(image_data.image);
