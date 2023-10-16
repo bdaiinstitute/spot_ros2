@@ -1,10 +1,7 @@
 <launch>
-  <!-- Args for required parameters: -->
-  <arg name="address" />
-  <arg name="username" />
-  <arg name="password" />
-
-  <!-- Args for optional parameters: -->
+  <arg name="address" default="$(env SPOT_IP)"/>
+  <arg name="username" default="$(env BOSDYN_CLIENT_USERNAME)"/>
+  <arg name="password" default="$(env BOSDYN_CLIENT_PASSWORD)"/>
   <arg name="spot_name" default="" />
   <arg name="image_quality" default="70.0"/>
   <arg name="rgb_cameras" default="true"/>
