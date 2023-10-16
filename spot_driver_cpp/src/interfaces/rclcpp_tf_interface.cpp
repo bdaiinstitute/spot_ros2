@@ -18,6 +18,7 @@ tl::expected<void, std::string> RclcppTfInterface::updateStaticTransforms(
   }
 
   // Only publish if there is a new transform.
+  // Note that unlike in Python, the rclcpp StaticTransformPublisher will correctly re-publish all previous transforms.
   if (has_new_frame) {
     static_tf_broadcaster_.sendTransform(transforms);
   }

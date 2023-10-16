@@ -17,6 +17,10 @@ namespace spot_ros2 {
  */
 class RclcppTfInterface : public TfInterfaceBase {
  public:
+  /**
+   * @brief The constructor for RclcppTfInterface.
+   * @param node A shared_ptr to a rclcpp node. RclcppTfInterface shares ownership of the shared_ptr.
+   */
   explicit RclcppTfInterface(const std::shared_ptr<rclcpp::Node>& node);
 
   /**

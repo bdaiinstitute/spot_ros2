@@ -14,6 +14,10 @@ namespace spot_ros2 {
  */
 class RclcppParameterInterface : public ParameterInterfaceBase {
  public:
+  /**
+   * @brief The constructor for RclcppParameterInterface.
+   * @param node A shared_ptr to a rclcpp node. RclcppParameterInterface shares ownership of the shared_ptr.
+   */
   explicit RclcppParameterInterface(const std::shared_ptr<rclcpp::Node>& node);
   std::string getAddress() const override;
   std::string getUsername() const override;

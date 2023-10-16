@@ -33,9 +33,8 @@ static const std::set<std::string> kExcludedStaticTfFrames{
     "odom",
     "vision",
 
-    // Special case handling for hand camera frames that reference the link "arm0.link_wr1" in their
-    // transform snapshots. This name only appears in hand camera transform snapshots and appears to
-    // be a bug in this particular image callback path.
+    // Special case handling for hand camera frames that reference the link "arm0.link_wr1" in their transform
+    // snapshots. This name only appears in hand camera transform snapshots and is a known bug in the Spot API.
     // We exclude publishing a static transform from arm0.link_wr1 -> body here because it depends
     // on the arm's position and a static transform would fix it to its initial position.
     "arm0.link_wr1",

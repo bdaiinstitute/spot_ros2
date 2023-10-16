@@ -13,6 +13,11 @@ namespace spot_ros2 {
  */
 class RclcppLoggerInterface : public LoggerInterfaceBase {
  public:
+  /**
+   * @brief The constructor for RclcppLoggerInterface.
+   * @param logger An instance of a logger which will be used to generate ROS 2 logs. This will be copied into the
+   * logger_ member.
+   */
   explicit RclcppLoggerInterface(const rclcpp::Logger& logger);
 
   void logDebug(const std::string& message) const override;
@@ -22,6 +27,7 @@ class RclcppLoggerInterface : public LoggerInterfaceBase {
   void logFatal(const std::string& message) const override;
 
  private:
+  /** @brief Logger used to log messages. */
   rclcpp::Logger logger_;
 };
 }  // namespace spot_ros2

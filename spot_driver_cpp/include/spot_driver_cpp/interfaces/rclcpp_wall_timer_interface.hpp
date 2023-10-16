@@ -15,6 +15,10 @@ namespace spot_ros2 {
  */
 class RclcppWallTimerInterface : public TimerInterfaceBase {
  public:
+  /**
+   * @brief The constructor for RclcppWallTimerInterface.
+   * @param node A shared_ptr to a rclcpp node. RclcppWallTimerInterface shares ownership of the shared_ptr.
+   */
   explicit RclcppWallTimerInterface(const std::shared_ptr<rclcpp::Node>& node);
 
   void setTimer(const std::chrono::duration<double>& period, const std::function<void()>& callback) override;

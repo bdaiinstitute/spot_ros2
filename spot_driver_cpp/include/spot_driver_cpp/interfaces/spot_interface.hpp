@@ -36,7 +36,7 @@ class SpotInterface : public SpotInterfaceBase {
   * https://dev.bostondynamics.com/docs/concepts/base_services#time-sync
   *
   * @return If the clock skew was successfully calculated, return a Duration containing the difference between Spot's
-  * internal clock and the host's system clodk.
+  * internal clock and the host's system clock.
   * @return If the Spot SDK's time sync thread was not initialized, return an error message.
   * @return If the Spot SDK's time sync endpoint fails to handle the clock skew request, return an error message.
   */
