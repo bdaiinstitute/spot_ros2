@@ -4,10 +4,15 @@
 
 #include <spot_driver_cpp/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
+#include <tl_expected/expected.hpp>
 
 namespace
 {
+  using ::testing::AllOf;
+  using ::testing::Eq;
   using ::testing::IsEmpty;
+  using ::testing::Property;
+  using ::testing::IsFalse;
   using ::testing::StrEq;
   using ::testing::UnorderedElementsAre;
 }
@@ -66,6 +71,39 @@ TEST(SpotImageSources, toSpotImageSourceName)
   EXPECT_THAT(toSpotImageSourceName(ImageSource{SpotCamera::HAND, SpotImageType::RGB}), StrEq("hand_color_image"));
   EXPECT_THAT(toSpotImageSourceName(ImageSource{SpotCamera::HAND, SpotImageType::DEPTH}), StrEq("hand_depth"));
   EXPECT_THAT(toSpotImageSourceName(ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}), StrEq("hand_depth_in_hand_color_frame"));
+}
+
+TEST(SpotImageSources, fromSpotImageSourceName)
+{
+  // WHEN we try to convert an invalid source name
+  const std::string kInvalidSourceName{"this_is_an_invalid_source_name"};
+  // THEN conversion cleanly fails and returns the correct error message.
+  EXPECT_THAT(fromSpotImageSourceName(kInvalidSourceName), AllOf(Property(&tl::expected<ImageSource, std::string>::has_value, IsFalse()), Property(&tl::expected<ImageSource, std::string>::error, StrEq("Could not convert source name `" + kInvalidSourceName + "` to ImageSource."))));
+
+  // Check that all Spot API source names are converted to the correct pairing of SpotCamera and SpotImageType
+
+  EXPECT_THAT(fromSpotImageSourceName("frontleft_fisheye_image").value(), Eq(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB}));
+  EXPECT_THAT(fromSpotImageSourceName("frontright_fisheye_image").value(), Eq(ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB}));
+  EXPECT_THAT(fromSpotImageSourceName("back_fisheye_image").value(), Eq(ImageSource{SpotCamera::BACK, SpotImageType::RGB}));
+  EXPECT_THAT(fromSpotImageSourceName("left_fisheye_image").value(), Eq(ImageSource{SpotCamera::LEFT, SpotImageType::RGB}));
+  EXPECT_THAT(fromSpotImageSourceName("right_fisheye_image").value(), Eq(ImageSource{SpotCamera::RIGHT, SpotImageType::RGB}));
+
+  EXPECT_THAT(fromSpotImageSourceName("frontleft_depth").value(), Eq(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH}));
+  EXPECT_THAT(fromSpotImageSourceName("frontright_depth").value(), Eq(ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH}));
+  EXPECT_THAT(fromSpotImageSourceName("back_depth").value(), Eq(ImageSource{SpotCamera::BACK, SpotImageType::DEPTH}));
+  EXPECT_THAT(fromSpotImageSourceName("left_depth").value(), Eq(ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH}));
+  EXPECT_THAT(fromSpotImageSourceName("right_depth").value(), Eq(ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH}));
+
+  EXPECT_THAT(fromSpotImageSourceName("frontleft_depth_in_visual_frame").value(), Eq(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED}));
+  EXPECT_THAT(fromSpotImageSourceName("frontright_depth_in_visual_frame").value(), Eq(ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED}));
+  EXPECT_THAT(fromSpotImageSourceName("back_depth_in_visual_frame").value(), Eq(ImageSource{SpotCamera::BACK, SpotImageType::DEPTH_REGISTERED}));
+  EXPECT_THAT(fromSpotImageSourceName("left_depth_in_visual_frame").value(), Eq(ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED}));
+  EXPECT_THAT(fromSpotImageSourceName("right_depth_in_visual_frame").value(), Eq(ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED}));
+
+  // Note that the Spot API uses a different naming convention for the hand images than for the body images.
+  EXPECT_THAT(fromSpotImageSourceName("hand_color_image").value(), Eq(ImageSource{SpotCamera::HAND, SpotImageType::RGB}));
+  EXPECT_THAT(fromSpotImageSourceName("hand_depth").value(), Eq(ImageSource{SpotCamera::HAND, SpotImageType::DEPTH}));
+  EXPECT_THAT(fromSpotImageSourceName("hand_depth_in_hand_color_frame").value(), Eq(ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}));
 }
 
 TEST(SpotImageSources, createImageSourcesList)
