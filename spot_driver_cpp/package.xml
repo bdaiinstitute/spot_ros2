@@ -4,7 +4,7 @@
   <name>spot_driver_cpp</name>
   <version>0.0.0</version>
   <description>C++ ROS 2 driver nodes for Spot.</description>
-  <maintainer email="jschornak@theaiinstitute.com">Joe Schornak</maintainer>
+  <maintainer email="engineering@theaiinstitute.com">BD AI Institute</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -16,9 +16,6 @@
   <depend>sensor_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>tl_expected</depend>
-
-  <!-- <test_depend>ament_lint_auto</test_depend> -->
-  <!-- <test_depend>ament_lint_common</test_depend> -->
 
   <export>
     <build_type>ament_cmake</build_type>
