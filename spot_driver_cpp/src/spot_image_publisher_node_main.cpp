@@ -6,8 +6,7 @@
 
 #include <memory>
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
 
   const auto node = std::make_shared<spot_ros2::SpotImagePublisherNode>();

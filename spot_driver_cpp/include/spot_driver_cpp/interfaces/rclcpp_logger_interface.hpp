@@ -5,14 +5,14 @@
 #include <rclcpp/logger.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 
-namespace spot_ros2
-{
+#include <string>
+
+namespace spot_ros2 {
 /**
  * @brief Implementation of LoggerInterfaceBase that logs messages using rclcpp's logging utilities.
-*/
-class RclcppLoggerInterface : public LoggerInterfaceBase
-{
-public:
+ */
+class RclcppLoggerInterface : public LoggerInterfaceBase {
+ public:
   explicit RclcppLoggerInterface(const rclcpp::Logger& logger);
 
   void logDebug(const std::string& message) const override;
@@ -21,7 +21,7 @@ public:
   void logError(const std::string& message) const override;
   void logFatal(const std::string& message) const override;
 
-private:
+ private:
   rclcpp::Logger logger_;
 };
-}
+}  // namespace spot_ros2

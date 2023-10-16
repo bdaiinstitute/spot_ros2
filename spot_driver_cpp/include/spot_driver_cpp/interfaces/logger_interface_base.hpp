@@ -4,15 +4,13 @@
 
 #include <string>
 
-namespace spot_ros2
-{
+namespace spot_ros2 {
 /**
  * @brief Defines an interface for a class that logs messages at different severity levels.
  */
-class LoggerInterfaceBase
-{
-public:
-  virtual ~LoggerInterfaceBase() {};
+class LoggerInterfaceBase {
+ public:
+  virtual ~LoggerInterfaceBase() {}
 
   virtual void logDebug(const std::string& message) const = 0;
   virtual void logInfo(const std::string& message) const = 0;
@@ -20,4 +18,4 @@ public:
   virtual void logError(const std::string& message) const = 0;
   virtual void logFatal(const std::string& message) const = 0;
 };
-}
+}  // namespace spot_ros2

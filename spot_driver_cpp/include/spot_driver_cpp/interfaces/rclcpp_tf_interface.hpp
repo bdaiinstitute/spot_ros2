@@ -2,20 +2,21 @@
 
 #pragma once
 
+#include <tf2_ros/static_transform_broadcaster.h>
 #include <rclcpp/node.hpp>
 #include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
-#include <tf2_ros/static_transform_broadcaster.h>
 
 #include <memory>
+#include <set>
+#include <string>
+#include <vector>
 
-namespace spot_ros2
-{
-  /**
-   * @brief Implements TfInterfaceBase to use the rclcpp TF system.
-   */
-class RclcppTfInterface : public TfInterfaceBase
-{
-public:
+namespace spot_ros2 {
+/**
+ * @brief Implements TfInterfaceBase to use the rclcpp TF system.
+ */
+class RclcppTfInterface : public TfInterfaceBase {
+ public:
   explicit RclcppTfInterface(const std::shared_ptr<rclcpp::Node>& node);
 
   /**
@@ -23,9 +24,10 @@ public:
    * @param transforms Transforms to publish as static transforms.
    * @return Currently updating static transforms will always succeed, so this function always returns void.
    */
-  tl::expected<void, std::string> updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) override;
+  tl::expected<void, std::string> updateStaticTransforms(
+      const std::vector<geometry_msgs::msg::TransformStamped>& transforms) override;
 
-private:
+ private:
   /**
    * @brief Broadcaster for static transforms.
    * @details The rclcpp StaticTransformBroadcaster publishes onto a latched topic using the transient_local QoS
@@ -51,4 +53,4 @@ private:
    */
   std::set<std::string> current_static_child_frames_;
 };
-}
+}  // namespace spot_ros2

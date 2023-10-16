@@ -1,0 +1,32 @@
+# -*- yaml -*-
+
+# This file determines clang-format's style settings; for details, refer to
+# http://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+# See https://google.github.io/styleguide/cppguide.html for more info
+BasedOnStyle: Google
+
+Language: Cpp
+
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html#columnlimit
+# Maximum line with is 120 characters (default: 80)
+ColumnLimit : 120
+
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html#pointeralignment
+# Align pointer to the left:
+# int* a;
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html#allowshortfunctionsonasingleline
+# Compress functions onto a single line (when they fit) iff they are defined
+# inline (inside a of class) or are empty.
+AllowShortFunctionsOnASingleLine: Inline
+
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html#allowshortlambdasonasingleline
+# Compress lambdas onto a single line iff they are empty.
+AllowShortLambdasOnASingleLine: Empty
+
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html#includeblocks
+# Alphabetically sort each block of includes separately, and do not re-group.
+IncludeBlocks: Preserve

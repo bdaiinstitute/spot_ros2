@@ -3,59 +3,49 @@
 #include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
 #include <tl_expected/expected.hpp>
 
-namespace spot_ros2
-{
+namespace spot_ros2 {
 
-RclcppPublisherInterface::RclcppPublisherInterface(const std::shared_ptr<rclcpp::Node>& node)
-: node_{ node }
-{
+RclcppPublisherInterface::RclcppPublisherInterface(const std::shared_ptr<rclcpp::Node>& node) : node_{node} {}
+
+void RclcppPublisherInterface::createPublishers(const std::vector<ImageSource>& image_sources) {
+  image_publishers_.clear();
+  info_publishers_.clear();
+
+  for (const auto& image_source : image_sources) {
+    // Since these topic names do not have a leading `/` character, they will be published within the namespace of the
+    // node, which should match the name of the robot. For example, the topic for the front left RGB camera will
+    // ultimately appear as `/MyRobotName/camera/frontleft/image`.
+    const auto topic_name_base = toRosTopic(image_source);
+
+    const auto image_topic_name = topic_name_base + "/image";
+    image_publishers_.try_emplace(image_topic_name,
+                                  node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name, rclcpp::QoS(1)));
+
+    const auto info_topic_name = topic_name_base + "/camera_info";
+    info_publishers_.try_emplace(
+        info_topic_name, node_->create_publisher<sensor_msgs::msg::CameraInfo>(info_topic_name, rclcpp::QoS(1)));
+  }
 }
 
-void RclcppPublisherInterface::createPublishers(const std::vector<ImageSource>& image_sources)
-{
-    image_publishers_.clear();
-    info_publishers_.clear();
+tl::expected<void, std::string> RclcppPublisherInterface::publish(
+    const std::map<ImageSource, ImageWithCameraInfo>& images) {
+  for (const auto& [image_source, image_data] : images) {
+    const auto topic_name_base = toRosTopic(image_source);
+    const auto image_topic_name = topic_name_base + "/image";
+    const auto info_topic_name = topic_name_base + "/camera_info";
 
-    for (const auto& image_source : image_sources)
-    {
-        // Since these topic names do not have a leading `/` character, they will be published within the namespace of the node, which should match the name of the robot.
-        // For example, the topic for the front left RGB camera will ultimately appear as `/MyRobotName/camera/frontleft/image`.
-        const auto topic_name_base = toRosTopic(image_source);
-
-        const auto image_topic_name = topic_name_base + "/image";
-        image_publishers_.try_emplace(image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name, rclcpp::QoS(1)));
-
-        const auto info_topic_name = topic_name_base + "/camera_info";
-        info_publishers_.try_emplace(info_topic_name, node_->create_publisher<sensor_msgs::msg::CameraInfo>(info_topic_name, rclcpp::QoS(1)));
+    try {
+      image_publishers_.at(image_topic_name)->publish(image_data.image);
+    } catch (const std::out_of_range& e) {
+      return tl::make_unexpected("No publisher exists for image topic `" + image_topic_name + "`.");
     }
-}
-
-tl::expected<void, std::string> RclcppPublisherInterface::publish(const std::map<ImageSource, ImageWithCameraInfo>& images)
-{
-    for (const auto& [image_source, image_data] : images)
-    {
-        const auto topic_name_base = toRosTopic(image_source);
-        const auto image_topic_name = topic_name_base + "/image";
-        const auto info_topic_name = topic_name_base + "/camera_info";
-
-        try
-        {
-            image_publishers_.at(image_topic_name)->publish(image_data.image);
-        }
-        catch(const std::out_of_range& e)
-        {
-            return tl::make_unexpected("No publisher exists for image topic `" + image_topic_name + "`.");
-        }
-        try
-        {
-            info_publishers_.at(info_topic_name)->publish(image_data.info);
-        }
-        catch(const std::out_of_range& e)
-        {
-            return tl::make_unexpected("No publisher exists for camera info topic`" + info_topic_name + "`.");
-        }
+    try {
+      info_publishers_.at(info_topic_name)->publish(image_data.info);
+    } catch (const std::out_of_range& e) {
+      return tl::make_unexpected("No publisher exists for camera info topic`" + info_topic_name + "`.");
     }
+  }
 
-    return {};
+  return {};
 }
-}
+}  // namespace spot_ros2

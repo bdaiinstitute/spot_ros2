@@ -5,14 +5,15 @@
 #include <rclcpp/node.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 
-namespace spot_ros2
-{
+#include <memory>
+#include <string>
+
+namespace spot_ros2 {
 /**
  * @brief Implements ParameterInterfaceBase to declare and retrieve ROS 2 parameters.
  */
-class RclcppParameterInterface : public ParameterInterfaceBase
-{
-public:
+class RclcppParameterInterface : public ParameterInterfaceBase {
+ public:
   explicit RclcppParameterInterface(const std::shared_ptr<rclcpp::Node>& node);
   std::string getAddress() const override;
   std::string getUsername() const override;
@@ -24,7 +25,7 @@ public:
   bool getPublishDepthRegisteredImages() const override;
   std::string getSpotName() const override;
 
-private:
+ private:
   std::shared_ptr<rclcpp::Node> node_;
 };
-}
+}  // namespace spot_ros2
