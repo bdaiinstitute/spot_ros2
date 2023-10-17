@@ -1,0 +1,18 @@
+# This message is designed for bosdyn-api 3.3.0 so 
+# default message definitions aren't available. They're
+# replicated here as constants that map to appropriate enums
+# https://dev.bostondynamics.com/choreography_protos/bosdyn/api/choreography_reference.html#bosdyn-api-spot-StartRecordingStateResponse-Status
+
+# Start Replicated Enum
+uint8 STATUS_UNKNOWN=0
+uint8 STATUS_OK=1
+uint8 STATUS_UNKNOWN_RECORDING_SESSION_ID=2
+uint8 STATUS_RECORDING_BUFFER_FULL=3
+
+# Start Message
+float32 duration_seconds
+---
+bool success 
+string message
+uint8 status
+uint64 recording_session_id
