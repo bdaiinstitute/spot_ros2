@@ -115,7 +115,8 @@ std::string RclcppParameterInterface::getSpotName() const {
   try {
     return std::string{node_->get_namespace()}.substr(1);
   } catch (const std::out_of_range& e) {
-    // get_namespace() should not return an empty string, but we handle this situation just in case.
+    // get_namespace() should not return an empty string, but we handle this situation just in case.\
+    // Note that if no namespace was set when creating the node, get_namespace() will return `/`.
     return "";
   }
 }

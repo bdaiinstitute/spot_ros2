@@ -9,7 +9,9 @@
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/timestamp.pb.h>
 #include <builtin_interfaces/msg/time.hpp>
+#include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <sensor_msgs/distortion_models.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
@@ -25,6 +27,8 @@
 #include <utility>
 
 namespace {
+constexpr auto kSDKClientName = "get_image";
+
 static const std::set<std::string> kExcludedStaticTfFrames{
     // We exclude the odometry frames from static transforms since they are not static. We can ignore the body
     // frame because it is a child of odom or vision depending on the preferred_odom_frame, and will be published
@@ -194,15 +198,22 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
 
     geometry_msgs::msg::TransformStamped tform_msg;
     tform_msg.header.stamp = applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
-    tform_msg.header.frame_id = robot_name + "/" + parent_frame_id;
-    tform_msg.child_frame_id = robot_name + "/" + child_frame_id;
-    tform_msg.transform.translation.x = transform.parent_tform_child().position().x();
-    tform_msg.transform.translation.y = transform.parent_tform_child().position().y();
-    tform_msg.transform.translation.z = transform.parent_tform_child().position().z();
-    tform_msg.transform.rotation.w = transform.parent_tform_child().rotation().w();
-    tform_msg.transform.rotation.x = transform.parent_tform_child().rotation().x();
-    tform_msg.transform.rotation.y = transform.parent_tform_child().rotation().y();
-    tform_msg.transform.rotation.z = transform.parent_tform_child().rotation().z();
+
+    // If robot_name is an empty string, omit the leading `/` from the transform parent and child frame IDs.
+    tform_msg.header.frame_id = robot_name.empty() ? parent_frame_id : (robot_name + "/" + parent_frame_id);
+    tform_msg.child_frame_id = robot_name.empty() ? child_frame_id : (robot_name + "/" + child_frame_id);
+
+    const auto& position = transform.parent_tform_child().position();
+    tform_msg.transform.translation =
+        geometry_msgs::build<geometry_msgs::msg::Vector3>().x(position.x()).y(position.y()).z(position.z());
+
+    const auto& rotation = transform.parent_tform_child().rotation();
+    tform_msg.transform.rotation = geometry_msgs::build<geometry_msgs::msg::Quaternion>()
+                                       .x(rotation.x())
+                                       .y(rotation.y())
+                                       .z(rotation.z())
+                                       .w(rotation.w());
+
     out.push_back(tform_msg);
   }
   return out;
@@ -210,7 +221,7 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
 }  // namespace
 
 namespace spot_ros2 {
-SpotInterface::SpotInterface() : client_sdk_{::bosdyn::client::CreateStandardSDK("get_image")} {}
+SpotInterface::SpotInterface() : client_sdk_{::bosdyn::client::CreateStandardSDK(kSDKClientName)} {}
 
 tl::expected<void, std::string> SpotInterface::createRobot(const std::string& ip_address,
                                                            const std::string& robot_name) {
