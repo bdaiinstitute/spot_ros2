@@ -1,5 +1,7 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#pragma once
+
 #include <gtest/gtest.h>
 
 #include <rclcpp/rclcpp.hpp>
