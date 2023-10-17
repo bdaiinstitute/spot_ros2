@@ -1,4 +1,5 @@
 string choreo_file_content
+char[] choreo_sequence_serialized
 ---
 bool success 
 string message

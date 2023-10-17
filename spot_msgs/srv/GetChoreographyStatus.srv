@@ -1,0 +1,23 @@
+# This message is designed for bosdyn-api 3.3.0 so 
+# default message definitions aren't available. They're
+# replicated here as constants that map to appropriate enums
+# https://dev.bostondynamics.com/choreography_protos/bosdyn/api/choreography_reference.html#choreographystatusresponse
+
+# Start Replicated Enum
+uint8 STATUS_UNKNOWN=0
+uint8 STATUS_DANCING=1
+uint8 STATUS_COMPLETED_SEQUENCE=2
+uint8 STATUS_PREPPING=3
+uint8 STATUS_WAITING_FOR_START_TIME=4
+uint8 STATUS_VALIDATING=5
+uint8 STATUS_INTERRUPTED=6
+uint8 STATUS_FALLEN=7
+uint8 STATUS_POWERED_OFF=8
+uint8 STATUS_OTHER=9
+
+# Start Message
+---
+bool success 
+string message
+uint8 status
+int32 execution_id
