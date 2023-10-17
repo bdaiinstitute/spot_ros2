@@ -1247,8 +1247,9 @@ class SpotROS(Node):
             response.success, response.message, file_name = self.spot_wrapper.choreography_log_to_animation_file(
                 filename, temp_dir, request.has_arm
             )
-            with open(full_path + ".cha", "r") as animation_file:
-                response.animation_file_contents = animation_file.read()
+            if response.success:
+                with open(full_path + ".cha", "r") as animation_file:
+                   response.animation_file_contents = animation_file.read()
         return response
 
     def handle_start_recording_state(
