@@ -152,7 +152,13 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     elif depth_registered_mode_string == "disable":
         depth_registered_mode = DepthRegisteredMode.DISABLE
     else:
-        depth_registered_mode = DepthRegisteredMode.DISABLE
+        print(
+            "Error: Invalid option `"
+            + depth_registered_mode_string
+            + "` provided for launch argument `depth_registered_mode`. Must be one of [disable, from_spot,"
+            " from_nodelets]."
+        )
+        return
 
     publish_point_clouds = True if publish_point_clouds_config.perform(context).lower() == "true" else False
     if depth_registered_mode is DepthRegisteredMode.DISABLE:
