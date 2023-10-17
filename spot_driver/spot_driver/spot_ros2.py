@@ -1,7 +1,9 @@
 ### Debug
 # from ros_helpers import *
 import logging
+import os
 import sys
+import tempfile
 import threading
 import time
 import traceback
@@ -35,6 +37,7 @@ from bosdyn.api import (
 )
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
+from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_msgs.msg import (
@@ -108,6 +111,9 @@ from spot_msgs.msg import (  # type: ignore
     WiFiState,
 )
 from spot_msgs.srv import (  # type: ignore
+    ChoreographyRecordedStateToAnimation,
+    ChoreographyStartRecordingState,
+    ChoreographyStopRecordingState,
     ClearBehaviorFault,
     DeleteSound,
     Dock,
@@ -593,6 +599,30 @@ class SpotROS(Node):
             "list_all_moves",
             lambda request, response: self.service_wrapper(
                 "list_all_moves", self.handle_list_all_moves, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ChoreographyRecordedStateToAnimation,
+            "recorded_state_to_animation",
+            lambda request, response: self.service_wrapper(
+                "recorded_state_to_animation", self.handle_recorded_state_to_animation, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ChoreographyStartRecordingState,
+            "start_recording_state",
+            lambda request, response: self.service_wrapper(
+                "start_recording_state", self.handle_start_recording_state, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ChoreographyStopRecordingState,
+            "stop_recording_state",
+            lambda request, response: self.service_wrapper(
+                "stop_recording_state", self.handle_stop_recording_state, request, response
             ),
             callback_group=self.group,
         )
@@ -1159,7 +1189,15 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message = self.spot_wrapper.execute_dance(request.choreo_file_content)
+        if request.choreo_file_content:
+            response.success, response.message = self.spot_wrapper.execute_dance(request.choreo_file_content)
+        elif request.choreo_sequence_serialized:
+            choreography = ChoreographySequence()
+            choreography.ParseFromString(bytes(bytearray(request.choreo_sequence_serialized)))
+            response.success, response.message = self.spot_wrapper.execute_dance(choreography)
+        else:
+            response.success = False
+            response.message = "No choreography sequence found in request"
         return response
 
     def handle_list_all_dances(
@@ -1192,6 +1230,54 @@ class SpotROS(Node):
         ) = self.spot_wrapper.list_all_moves()
         return response
 
+    def handle_recorded_state_to_animation(
+        self,
+        request: ChoreographyRecordedStateToAnimation.Request,
+        response: ChoreographyRecordedStateToAnimation.Response,
+    ) -> ChoreographyRecordedStateToAnimation.Response:
+        """ROS service handler for transforming a recorded state log into an animation cha file."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            filename = "temporary_animation"
+            full_path = os.path.join(temp_dir, filename)
+            response.success, response.message, file_name = self.spot_wrapper.choreography_log_to_animation_file(
+                filename, temp_dir, request.has_arm
+            )
+            if response.success:
+                with open(full_path + ".cha", "r") as animation_file:
+                    response.animation_file_contents = animation_file.read()
+        return response
+
+    def handle_start_recording_state(
+        self, request: ChoreographyStartRecordingState.Request, response: ChoreographyStartRecordingState.Response
+    ) -> ChoreographyStartRecordingState.Response:
+        """ROS service handler to start recording a state log for later animation."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message, start_recording_response = self.spot_wrapper.start_recording_state(
+            request.duration_seconds
+        )
+        response.status = start_recording_response.status
+        response.recording_session_id = start_recording_response.recording_session_id
+        return response
+
+    def handle_stop_recording_state(
+        self, request: ChoreographyStopRecordingState.Request, response: ChoreographyStopRecordingState.Response
+    ) -> ChoreographyStopRecordingState.Response:
+        """ROS service handler to stop recording state for later animation."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message, _ = self.spot_wrapper.stop_recording_state()
+        return response
+
     def handle_upload_animation(
         self, request: UploadAnimation.Request, response: UploadAnimation.Response
     ) -> UploadAnimation.Response:
@@ -1200,9 +1286,17 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message = self.spot_wrapper.upload_animation(
-            request.animation_name, request.animation_file_content
-        )
+        if request.animation_file_content:
+            response.success, response.message = self.spot_wrapper.upload_animation(
+                request.animation_name, request.animation_file_content
+            )
+        elif request.animation_proto_serialized:
+            animation = Animation()
+            animation.ParseFromString(bytes(bytearray(request.animation_proto_serialized)))
+            response.success, response.message = self.spot_wrapper.upload_animation_proto(animation)
+        else:
+            self.message = "Error: No data passed in message"
+            response.success = False
         return response
 
     def handle_list_sounds(self, request: ListSounds.Request, response: ListSounds.Response) -> ListSounds.Response:
