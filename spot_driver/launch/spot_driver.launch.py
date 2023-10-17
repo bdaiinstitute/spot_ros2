@@ -161,7 +161,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         return
 
     publish_point_clouds = True if publish_point_clouds_config.perform(context).lower() == "true" else False
-    if depth_registered_mode is DepthRegisteredMode.DISABLE:
+    if depth_registered_mode is DepthRegisteredMode.DISABLE and publish_point_clouds:
+        print(
+            "Warning: Point cloud publisher nodelets will not be launched because depth_registered_mode is set to"
+            " `disable`. Set depth_registered_mode to `from_nodelets` or `from_spot` to enable point cloud publishing."
+        )
         publish_point_clouds = False
 
     spot_driver_params = [config_file, {"spot_name": spot_name}]
