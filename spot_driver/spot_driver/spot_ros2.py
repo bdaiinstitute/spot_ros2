@@ -1249,7 +1249,7 @@ class SpotROS(Node):
             )
             if response.success:
                 with open(full_path + ".cha", "r") as animation_file:
-                   response.animation_file_contents = animation_file.read()
+                    response.animation_file_contents = animation_file.read()
         return response
 
     def handle_start_recording_state(
