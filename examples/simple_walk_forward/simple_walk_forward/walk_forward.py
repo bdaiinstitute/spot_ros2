@@ -87,7 +87,7 @@ def cli() -> argparse.ArgumentParser:
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> int:
-    goto = WalkForward(main.node, args.robot)
+    goto = WalkForward(args.robot, main.node)
     goto.initialize_robot()
     goto.walk_forward_with_world_frame_goal()
     return 0
