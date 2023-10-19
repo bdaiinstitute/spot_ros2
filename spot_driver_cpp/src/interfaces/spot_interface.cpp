@@ -98,7 +98,9 @@ tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(
   info_msg.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
   info_msg.height = image_response.shot().image().rows();
   info_msg.width = image_response.shot().image().cols();
-  info_msg.header.frame_id = robot_name + "/" + image_response.shot().frame_name_image_sensor();
+  // Omit leading `/` from frame ID if robot_name is empty
+  info_msg.header.frame_id =
+      (robot_name.empty() ? "" : robot_name + "/") + image_response.shot().frame_name_image_sensor();
   info_msg.header.stamp = applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
 
   // We assume that the camera images have already been corrected for distortion, so the 5 distortion parameters are all
@@ -142,7 +144,8 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
   auto data = image.data();
 
   std_msgs::msg::Header header;
-  header.frame_id = robot_name + "/" + image_capture.frame_name_image_sensor();
+  // Omit leading `/` from frame ID if robot_name is empty
+  header.frame_id = (robot_name.empty() ? "" : robot_name + "/") + image_capture.frame_name_image_sensor();
   header.stamp = applyClockSkew(image_capture.acquisition_time(), clock_skew);
 
   const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
