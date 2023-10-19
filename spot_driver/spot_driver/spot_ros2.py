@@ -39,8 +39,12 @@ from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySeq
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_msgs.msg import (
+    ArmCommandFeedback,
+    FullBodyCommandFeedback,
+    GripperCommandFeedback,
     ManipulationApiFeedbackResponse,
     ManipulatorState,
+    MobilityCommandFeedback,
     RobotCommandFeedback,
 )
 from geometry_msgs.msg import (
@@ -1466,248 +1470,248 @@ class SpotROS(Node):
             response.message = f"Error: {e}"
             return response
 
+    def _process_full_body_command_feedback(self, feedback: FullBodyCommandFeedback) -> GoalResponse:
+        if feedback.status.value != feedback.status.STATUS_PROCESSING:
+            return GoalResponse.IN_PROGRESS
+        
+        match feedback.feedback.feedback_choice:
+            case feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET:
+                return GoalResponse.SUCCESS
+            case feedback.feedback.FEEDBACK_FREEZE_FEEDBACK_SET:
+                return GoalResponse.SUCCESS
+            case feedback.feedback.FEEDBACK_SELFRIGHT_FEEDBACK_SET:
+                if (
+                    feedback.feedback.selfright_feedback.status.value
+                    == feedback.feedback.selfright_feedback.status.STATUS_COMPLETED
+                ):
+                    return GoalResponse.SUCCESS 
+                return GoalResponse.IN_PROGRESS
+            
+            case feedback.feedback.FEEDBACK_SAFE_POWER_OFF_FEEDBACK_SET:
+                if (
+                    feedback.feedback.safe_power_off_feedback.status.value
+                    == feedback.feedback.safe_power_off_feedback.status.STATUS_POWERED_OFF
+                ):
+                    return GoalResponse.SUCCESS
+                return GoalResponse.IN_PROGRESS
+            
+            case feedback.feedback.FEEDBACK_BATTERY_CHANGE_POSE_FEEDBACK_SET:
+                if (
+                    feedback.feedback.battery_change_pose_feedback.status.value
+                    == feedback.feedback.battery_change_pose_feedback.status.STATUS_COMPLETED
+                ):
+                    return GoalResponse.SUCCESS
+                if (
+                    feedback.feedback.battery_change_pose_feedback.status.value
+                    == feedback.feedback.battery_change_pose_feedback.status.STATUS_FAILED
+                ):
+                    return GoalResponse.FAILED
+                return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_PAYLOAD_ESTIMATION_FEEDBACK_SET:
+                if (
+                    feedback.feedback.payload_estimation_feedback.status.value
+                    == feedback.feedback.payload_estimation_feedback.status.STATUS_COMPLETED
+                ):
+                    return GoalResponse.SUCCESS
+                if (feedback.feedback.payload_estimation_feedback.status.value
+                    == feedback.feedback.payload_estimation_feedback.status.STATUS_SMALL_MASS
+                ):
+                    return GoalResponse.SUCCESS
+                if (feedback.feedback.payload_estimation_feedback.status.value
+                    == feedback.feedback.payload_estimation_feedback.status.STATUS_ERROR
+                ):
+                    return GoalResponse.FAILED
+                return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_CONSTRAINED_MANIPULATION_FEEDBACK_SET:
+                if (feedback.feedback.constrained_manipulation_feedback.status.value
+                    == feedback.feedback.constrained_manipulation_feedback.status.STATUS_RUNNING
+                ):
+                    return GoalResponse.IN_PROGRESS
+                return GoalResponse.FAILED
+            case _:
+                return GoalResponse.IN_PROGRESS
+
+    def _process_synchronized_arm_command_feedback(
+            self, feedback: ArmCommandFeedback) -> Optional[GoalResponse]:
+        if (
+            feedback.status.value == feedback.status.STATUS_COMMAND_OVERRIDDEN
+            or feedback.status.value == feedback.status.STATUS_COMMAND_TIMED_OUT
+            or feedback.status.value == feedback.status.STATUS_ROBOT_FROZEN
+            or feedback.status.value == feedback.status.STATUS_INCOMPATIBLE_HARDWARE
+        ):
+            return GoalResponse.FAILED
+        
+        match feedback.feedback.feedback_choice:
+            case feedback.feedback.FEEDBACK_ARM_CARTESIAN_FEEDBACK_SET:
+                if (
+                    feedback.feedback.arm_cartesian_feedback.status.value
+                    != feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_COMPLETE
+                ):
+                    return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_ARM_JOINT_MOVE_FEEDBACK_SET:
+                if (
+                    feedback.feedback.arm_joint_move_feedback.status.value
+                    != feedback.feedback.arm_joint_move_feedback.status.STATUS_COMPLETE
+                ):
+                    return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_NAMED_ARM_POSITION_FEEDBACK_SET:
+                if (
+                    feedback.feedback.named_arm_position_feedback.status.value
+                    != feedback.feedback.named_arm_position_feedback.status.STATUS_COMPLETE
+                ):
+                    return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_ARM_VELOCITY_FEEDBACK_SET:
+                self.get_logger().warn("WARNING: ArmVelocityCommand provides no feedback")
+            case feedback.feedback.FEEDBACK_ARM_GAZE_FEEDBACK_SET:
+                if (
+                    feedback.feedback.arm_gaze_feedback.status.value
+                    != feedback.feedback.arm_gaze_feedback.status.STATUS_TRAJECTORY_COMPLETE
+                ):
+                    return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_ARM_STOP_FEEDBACK_SET:
+                self.get_logger().warn("WARNING: Stop command provides no feedback")
+            case feedback.feedback.FEEDBACK_ARM_DRAG_FEEDBACK_SET:
+                if (
+                    feedback.feedback.arm_drag_feedback.status.value
+                    != feedback.feedback.arm_drag_feedback.status.STATUS_DRAGGING
+                ):
+                    return GoalResponse.FAILED
+            case feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET:
+                self.get_logger().warn("WARNING: ArmImpedanceCommand provides no feedback")
+            case _:
+                self.get_logger().error("ERROR: unknown arm command type")
+                return GoalResponse.IN_PROGRESS
+        return None
+    
+    def _process_synchronized_mobility_command_feedback(
+            self, feedback: MobilityCommandFeedback) -> Optional[GoalResponse]:
+        if (
+            feedback.status.value == feedback.status.STATUS_COMMAND_OVERRIDDEN
+            or feedback.status.value == feedback.status.STATUS_COMMAND_TIMED_OUT
+            or feedback.status.value == feedback.status.STATUS_ROBOT_FROZEN
+            or feedback.status.value == feedback.status.STATUS_INCOMPATIBLE_HARDWARE
+        ):
+            return GoalResponse.FAILED
+        match feedback.feedback.feedback_choice:
+            case feedback.feedback.FEEDBACK_SE2_TRAJECTORY_FEEDBACK_SET:
+                if (
+                    feedback.feedback.se2_trajectory_feedback.status.value
+                    != feedback.feedback.se2_trajectory_feedback.status.STATUS_AT_GOAL
+                ):
+                    return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_SE2_VELOCITY_FEEDBACK_SET:
+                self.get_logger().warn("WARNING: Planar velocity commands provide no feedback")
+            case feedback.feedback.FEEDBACK_SIT_FEEDBACK_SET:
+                if (
+                    feedback.feedback.sit_feedback.status.value
+                    != feedback.feedback.sit_feedback.status.STATUS_IS_SITTING
+                ):
+                    return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_STAND_FEEDBACK_SET:
+                if (
+                    feedback.feedback.stand_feedback.status.value
+                    != feedback.feedback.stand_feedback.status.STATUS_IS_STANDING
+                ):
+                    return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_STANCE_FEEDBACK_SET:
+                if (
+                    feedback.feedback.stance_feedback.status.value
+                    == feedback.feedback.stance_feedback.status.STATUS_TOO_FAR_AWAY
+                ):
+                    return GoalResponse.FAILED
+                if (
+                    feedback.feedback.stance_feedback.status.value
+                    != feedback.feedback.stance_feedback.status.STATUS_STANCED
+                ):
+                    return GoalResponse.IN_PROGRESS
+            case feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET:
+                self.get_logger().warn("WARNING: Stop command provides no feedback")
+            case feedback.feedback.FEEDBACK_FOLLOW_ARM_FEEDBACK_SET:
+                self.get_logger().warn("WARNING: FollowArmCommand provides no feedback")
+            case feedback.feedback.FEEDBACK_NOT_SET:
+                # sync_feedback.mobility_command_feedback_is_set, feedback_choice is actually not set.
+                # This may happen when a command finishes, which means we may return SUCCESS below.
+                self.get_logger().info("mobility command feedback indicates goal has reached")
+            case _:
+                self.get_logger().error("ERROR: unknown mobility command type")
+                return GoalResponse.IN_PROGRESS
+        return None
+        
+    def _process_synchronized_gripper_command_feedback(
+            self, feedback: GripperCommandFeedback) -> Optional[GoalResponse]:
+        if (
+            feedback.status.value == feedback.status.STATUS_COMMAND_OVERRIDDEN
+            or feedback.status.value == feedback.status.STATUS_COMMAND_TIMED_OUT
+            or feedback.status.value == feedback.status.STATUS_ROBOT_FROZEN
+            or feedback.status.value == feedback.status.STATUS_INCOMPATIBLE_HARDWARE
+        ):
+            return GoalResponse.FAILED
+        
+        match feedback.command.command_choice:
+            case feedback.command.COMMAND_CLAW_GRIPPER_FEEDBACK_SET:
+                if (
+                    feedback.command.claw_gripper_feedback.status.value
+                    == feedback.command.claw_gripper_feedback.status.STATUS_IN_PROGRESS
+                ):
+                    return GoalResponse.IN_PROGRESS
+                if (
+                    feedback.command.claw_gripper_feedback.status.value
+                    == feedback.command.claw_gripper_feedback.status.STATUS_UNKNOWN
+                ):
+                    self.get_logger().error("ERROR: claw grippper status unknown")
+                    return GoalResponse.IN_PROGRESS
+                # else: STATUS_AT_GOAL or STATUS_APPLYING_FORCE
+
+            case _:
+                self.get_logger().error("ERROR: unknown gripper command type")
+                return GoalResponse.IN_PROGRESS
+        return None
+        
     def _robot_command_goal_complete(self, feedback: RobotCommandFeedback) -> GoalResponse:
         if feedback is None:
             # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
+        
+        match feedback.command.command_choice:            
+            case feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
+                full_body_feedback = feedback.command.full_body_feedback
+                return self._process_full_body_command_feedback(full_body_feedback)
+                
+            case feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET:
+                # The idea here is that a synchronized command can have arm, mobility, and/or gripper
+                # sub-commands in it.  The total command isn't done until all sub-commands are satisfied.
+                # So if any one of the sub-commands is still in progress, it short-circuits out as
+                # IN_PROGRESS.  And if it makes it to the bottom of the function, then all components
+                # must be satisfied, and it returns SUCCESS.
+                # One corner case to know about is that the commands that don't provide feedback, such
+                # as a velocity command will return SUCCESS.  This allows you to use them more effectively
+                # with other commands.  For example if you wanted to move the arm with some velocity
+                # while the mobility is going to some SE2 trajectory then that will work.
 
-        if feedback.command.command_choice == feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
-            full_body_feedback = feedback.command.full_body_feedback
-            if full_body_feedback.status.value != full_body_feedback.status.STATUS_PROCESSING:
-                return GoalResponse.IN_PROGRESS
-            if full_body_feedback.feedback.feedback_choice == full_body_feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET:
+                sync_feedback = feedback.command.synchronized_feedback
+                if sync_feedback.arm_command_feedback_is_set is True:
+                    arm_feedback = sync_feedback.arm_command_feedback
+                    response = self._process_synchronized_arm_command_feedback(arm_feedback)
+                    if response:
+                        return response
+
+                if sync_feedback.mobility_command_feedback_is_set is True:
+                    mob_feedback = sync_feedback.mobility_command_feedback
+                    response =  self._process_synchronized_mobility_command_feedback(mob_feedback)
+                    if response:
+                        return response
+
+                if sync_feedback.gripper_command_feedback_is_set is True:
+                    grip_feedback = sync_feedback.gripper_command_feedback
+                    response = self._process_synchronized_gripper_command_feedback(grip_feedback)
+                    if response:
+                        return response
+
                 return GoalResponse.SUCCESS
-            elif (
-                full_body_feedback.feedback.feedback_choice == full_body_feedback.feedback.FEEDBACK_FREEZE_FEEDBACK_SET
-            ):
-                return GoalResponse.SUCCESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_SELFRIGHT_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.selfright_feedback.status.value
-                    == full_body_feedback.feedback.selfright_feedback.status.STATUS_COMPLETED
-                ):
-                    return GoalResponse.SUCCESS
-                else:
-                    return GoalResponse.IN_PROGRESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_SAFE_POWER_OFF_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.safe_power_off_feedback.status.value
-                    == full_body_feedback.feedback.safe_power_off_feedback.status.STATUS_POWERED_OFF
-                ):
-                    return GoalResponse.SUCCESS
-                else:
-                    return GoalResponse.IN_PROGRESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_BATTERY_CHANGE_POSE_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.battery_change_pose_feedback.status.value
-                    == full_body_feedback.feedback.battery_change_pose_feedback.status.STATUS_COMPLETED
-                ):
-                    return GoalResponse.SUCCESS
-                if (
-                    full_body_feedback.feedback.battery_change_pose_feedback.status.value
-                    == full_body_feedback.feedback.battery_change_pose_feedback.status.STATUS_FAILED
-                ):
-                    return GoalResponse.FAILED
+
+            case _:
+                self.get_logger().error("ERROR: unknown robot command type")
                 return GoalResponse.IN_PROGRESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_PAYLOAD_ESTIMATION_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.payload_estimation_feedback.status.value
-                    == full_body_feedback.feedback.payload_estimation_feedback.status.STATUS_COMPLETED
-                ):
-                    return GoalResponse.SUCCESS
-                if (
-                    full_body_feedback.feedback.payload_estimation_feedback.status.value
-                    == full_body_feedback.feedback.payload_estimation_feedback.status.STATUS_SMALL_MASS
-                ):
-                    return GoalResponse.SUCCESS
-                if (
-                    full_body_feedback.feedback.payload_estimation_feedback.status.value
-                    == full_body_feedback.feedback.payload_estimation_feedback.status.STATUS_ERROR
-                ):
-                    return GoalResponse.FAILED
-                return GoalResponse.IN_PROGRESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_CONSTRAINED_MANIPULATION_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.constrained_manipulation_feedback.status.value
-                    == full_body_feedback.feedback.constrained_manipulation_feedback.status.STATUS_RUNNING
-                ):
-                    return GoalResponse.IN_PROGRESS
-                return GoalResponse.FAILED
-            else:
-                return GoalResponse.IN_PROGRESS
-
-        elif feedback.command.command_choice == feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET:
-            # The idea here is that a synchronized command can have arm, mobility, and/or gripper
-            # sub-commands in it.  The total command isn't done until all sub-commands are satisfied.
-            # So if any one of the sub-commands is still in progress, it short-circuits out as
-            # IN_PROGRESS.  And if it makes it to the bottom of the function, then all components
-            # must be satisfied, and it returns SUCCESS.
-            # One corner case to know about is that the commands that don't provide feedback, such
-            # as a velocity command will return SUCCESS.  This allows you to use them more effectively
-            # with other commands.  For example if you wanted to move the arm with some velocity
-            # while the mobility is going to some SE2 trajectory then that will work.
-
-            sync_feedback = feedback.command.synchronized_feedback
-            if sync_feedback.arm_command_feedback_is_set is True:
-                arm_feedback = sync_feedback.arm_command_feedback
-                if (
-                    arm_feedback.status.value == arm_feedback.status.STATUS_COMMAND_OVERRIDDEN
-                    or arm_feedback.status.value == arm_feedback.status.STATUS_COMMAND_TIMED_OUT
-                    or arm_feedback.status.value == arm_feedback.status.STATUS_ROBOT_FROZEN
-                    or arm_feedback.status.value == arm_feedback.status.STATUS_INCOMPATIBLE_HARDWARE
-                ):
-                    return GoalResponse.FAILED
-                if arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_CARTESIAN_FEEDBACK_SET:
-                    if (
-                        arm_feedback.feedback.arm_cartesian_feedback.status.value
-                        != arm_feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_COMPLETE
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif (
-                    arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_JOINT_MOVE_FEEDBACK_SET
-                ):
-                    if (
-                        arm_feedback.feedback.arm_joint_move_feedback.status.value
-                        != arm_feedback.feedback.arm_joint_move_feedback.status.STATUS_COMPLETE
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif (
-                    arm_feedback.feedback.feedback_choice
-                    == arm_feedback.feedback.FEEDBACK_NAMED_ARM_POSITION_FEEDBACK_SET
-                ):
-                    if (
-                        arm_feedback.feedback.named_arm_position_feedback.status.value
-                        != arm_feedback.feedback.named_arm_position_feedback.status.STATUS_COMPLETE
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_VELOCITY_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: ArmVelocityCommand provides no feedback")
-                    pass  # May return SUCCESS below
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_GAZE_FEEDBACK_SET:
-                    if (
-                        arm_feedback.feedback.arm_gaze_feedback.status.value
-                        != arm_feedback.feedback.arm_gaze_feedback.status.STATUS_TRAJECTORY_COMPLETE
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_STOP_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: Stop command provides no feedback")
-                    pass  # May return SUCCESS below
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_DRAG_FEEDBACK_SET:
-                    if (
-                        arm_feedback.feedback.arm_drag_feedback.status.value
-                        != arm_feedback.feedback.arm_drag_feedback.status.STATUS_DRAGGING
-                    ):
-                        return GoalResponse.FAILED
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: ArmImpedanceCommand provides no feedback")
-                    pass  # May return SUCCESS below
-                else:
-                    self.get_logger().error("ERROR: unknown arm command type")
-                    return GoalResponse.IN_PROGRESS
-
-            if sync_feedback.mobility_command_feedback_is_set is True:
-                mob_feedback = sync_feedback.mobility_command_feedback
-                if (
-                    mob_feedback.status.value == mob_feedback.status.STATUS_COMMAND_OVERRIDDEN
-                    or mob_feedback.status.value == mob_feedback.status.STATUS_COMMAND_TIMED_OUT
-                    or mob_feedback.status.value == mob_feedback.status.STATUS_ROBOT_FROZEN
-                    or mob_feedback.status.value == mob_feedback.status.STATUS_INCOMPATIBLE_HARDWARE
-                ):
-                    return GoalResponse.FAILED
-                if mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_SE2_TRAJECTORY_FEEDBACK_SET:
-                    if (
-                        mob_feedback.feedback.se2_trajectory_feedback.status.value
-                        != mob_feedback.feedback.se2_trajectory_feedback.status.STATUS_AT_GOAL
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_SE2_VELOCITY_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: Planar velocity commands provide no feedback")
-                    pass  # May return SUCCESS below
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_SIT_FEEDBACK_SET:
-                    if (
-                        mob_feedback.feedback.sit_feedback.status.value
-                        != mob_feedback.feedback.sit_feedback.status.STATUS_IS_SITTING
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_STAND_FEEDBACK_SET:
-                    if (
-                        mob_feedback.feedback.stand_feedback.status.value
-                        != mob_feedback.feedback.stand_feedback.status.STATUS_IS_STANDING
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_STANCE_FEEDBACK_SET:
-                    if (
-                        mob_feedback.feedback.stance_feedback.status.value
-                        == mob_feedback.feedback.stance_feedback.status.STATUS_TOO_FAR_AWAY
-                    ):
-                        return GoalResponse.FAILED
-                    if (
-                        mob_feedback.feedback.stance_feedback.status.value
-                        != mob_feedback.feedback.stance_feedback.status.STATUS_STANCED
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: Stop command provides no feedback")
-                    pass  # May return SUCCESS below
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_FOLLOW_ARM_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: FollowArmCommand provides no feedback")
-                    pass  # May return SUCCESS below
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_NOT_SET:
-                    # sync_feedback.mobility_command_feedback_is_set, feedback_choice is actually not set.
-                    # This may happen when a command finishes, which means we may return SUCCESS below.
-                    self.get_logger().info("mobility command feedback indicates goal has reached")
-                    pass
-                else:
-                    self.get_logger().error("ERROR: unknown mobility command type")
-                    return GoalResponse.IN_PROGRESS
-
-            if sync_feedback.gripper_command_feedback_is_set is True:
-                grip_feedback = sync_feedback.gripper_command_feedback
-                if (
-                    grip_feedback.status.value == grip_feedback.status.STATUS_COMMAND_OVERRIDDEN
-                    or grip_feedback.status.value == grip_feedback.status.STATUS_COMMAND_TIMED_OUT
-                    or grip_feedback.status.value == grip_feedback.status.STATUS_ROBOT_FROZEN
-                    or grip_feedback.status.value == grip_feedback.status.STATUS_INCOMPATIBLE_HARDWARE
-                ):
-                    return GoalResponse.FAILED
-                if grip_feedback.command.command_choice == grip_feedback.command.COMMAND_CLAW_GRIPPER_FEEDBACK_SET:
-                    if (
-                        grip_feedback.command.claw_gripper_feedback.status.value
-                        == grip_feedback.command.claw_gripper_feedback.status.STATUS_IN_PROGRESS
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                    elif (
-                        grip_feedback.command.claw_gripper_feedback.status.value
-                        == grip_feedback.command.claw_gripper_feedback.status.STATUS_UNKNOWN
-                    ):
-                        self.get_logger().error("ERROR: claw grippper status unknown")
-                        return GoalResponse.IN_PROGRESS
-                    # else: STATUS_AT_GOAL or STATUS_APPLYING_FORCE
-
-                else:
-                    self.get_logger().error("ERROR: unknown gripper command type")
-                    return GoalResponse.IN_PROGRESS
-
-            return GoalResponse.SUCCESS
-
-        else:
-            self.get_logger().error("ERROR: unknown robot command type")
-            return GoalResponse.IN_PROGRESS
 
     def _get_robot_command_feedback(self, goal_id: Optional[str]) -> RobotCommandFeedback:
         feedback = RobotCommandFeedback()
