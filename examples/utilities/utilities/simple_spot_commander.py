@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 import rclpy
-from bdai_ros2_wrappers.utilities import fqn, namespace
+from bdai_ros2_wrappers.utilities import fqn, namespace_with
 from rclpy.client import Client
 from rclpy.node import Node
 from std_srvs.srv import Trigger
@@ -34,7 +34,7 @@ class SimpleSpotCommander:
             raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
         self._command_map: Dict[str, Client] = {}
         for service_basename in TRIGGER_SERVICES:
-            service_name = namespace(robot_name, service_basename)
+            service_name = namespace_with(robot_name, service_basename)
             self._command_map[service_basename] = node.create_client(Trigger, service_name)
             self._logger.info(f"Waiting for service {service_basename}")
             self._command_map[service_basename].wait_for_service()
