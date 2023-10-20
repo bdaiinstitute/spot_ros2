@@ -2,7 +2,6 @@
 # from ros_helpers import *
 import logging
 import os
-import sys
 import tempfile
 import threading
 import time
@@ -13,13 +12,12 @@ from enum import Enum
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
 
+import bdai_ros2_wrappers.process as ros_process
 import builtin_interfaces.msg
 import rclpy
 import rclpy.time
 import tf2_ros
-from bdai_ros2_wrappers.logging import (
-    logs_to_ros,
-)
+from bdai_ros2_wrappers.node import Node
 from bdai_ros2_wrappers.single_goal_action_server import (
     SingleGoalActionServer,
 )
@@ -64,9 +62,7 @@ from rclpy.callback_groups import (
     ReentrantCallbackGroup,
 )
 from rclpy.clock import Clock
-from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.impl import rcutils_logger
-from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
 from sensor_msgs.msg import CameraInfo, Image, JointState
@@ -200,12 +196,12 @@ class SpotImageType(str, Enum):
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
-    def __init__(self, parameter_list: Optional[typing.List[Parameter]] = None) -> None:
+    def __init__(self, parameter_list: Optional[typing.List[Parameter]] = None, **kwargs: typing.Any) -> None:
         """
         Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.
         Holds lease from wrapper and updates all async tasks at the ROS rate
         """
-        super().__init__("spot_ros2")
+        super().__init__("spot_ros2", **kwargs)
         self.run_navigate_to: Optional[bool] = None
         self._printed_once: bool = False
 
@@ -798,25 +794,12 @@ class SpotROS(Node):
 
         self.create_timer(1 / self.async_tasks_rate, self.step, callback_group=self.group)
 
-        self.mt_executor = MultiThreadedExecutor(num_threads=8)
-        self.mt_executor.add_node(self)
-
         if self.spot_wrapper is not None and self.auto_claim.value:
             self.spot_wrapper.claim()
             if self.auto_power_on.value:
                 self.spot_wrapper.power_on()
                 if self.auto_stand.value:
                     self.spot_wrapper.stand()
-
-    def spin(self) -> None:
-        self.get_logger().info("Spinning ros2_driver")
-        sys.stdout.flush()
-        try:
-            self.mt_executor.spin()
-        except (KeyboardInterrupt, ExternalShutdownException):
-            pass
-
-        self.mt_executor.shutdown()
 
     def robot_state_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new robot state data.
@@ -2421,15 +2404,6 @@ class SpotROS(Node):
             self.camera_static_transforms.append(static_tf)
             self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
 
-    def shutdown(self, sig: Optional[Any] = None, frame: Optional[str] = None) -> None:
-        self.get_logger().info("Shutting down ROS driver for Spot")
-        if self.spot_wrapper is not None:
-            self.spot_wrapper.sit()
-        self.node_rate.sleep()
-        if self.spot_wrapper is not None:
-            self.spot_wrapper.disconnect()
-        self.destroy_node()
-
     def step(self) -> None:
         """Update spot sensors"""
         if not self._printed_once:
@@ -2487,19 +2461,19 @@ class SpotROS(Node):
                     pass
             self.mobility_params_pub.publish(mobility_params_msg)
 
+    def destroy_node(self) -> None:
+        self.get_logger().info("Shutting down ROS driver for Spot")
+        if self.spot_wrapper is not None:
+            self.spot_wrapper.sit()
+        self.node_rate.sleep()
+        if self.spot_wrapper is not None:
+            self.spot_wrapper.disconnect()
+        super().destroy_node()
 
+
+@ros_process.main(prebaked=False)
 def main(args: Optional[List[str]] = None) -> None:
-    rclpy.init(args=args)
-    spot_ros = SpotROS()
-    try:
-        with logs_to_ros(spot_ros):
-            spot_ros.spin()
-    except (KeyboardInterrupt, ExternalShutdownException):
-        pass
-    if spot_ros.spot_wrapper is not None:
-        spot_ros.spot_wrapper.disconnect()
-    spot_ros.destroy_node()
-    rclpy.try_shutdown()
+    ros_process.spin(SpotROS)
 
 
 if __name__ == "__main__":

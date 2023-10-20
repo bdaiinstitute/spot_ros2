@@ -16,6 +16,8 @@
   <exec_depend>rosidl_default_runtime</exec_depend>
   <member_of_group>rosidl_interface_packages</member_of_group>
 
+  <exec_depend>bdai_ros2_wrappers</exec_depend>
+
   <depend>nav_msgs</depend>
   <depend>sensor_msgs</depend>
   <exec_depend>depth_image_proc</exec_depend>

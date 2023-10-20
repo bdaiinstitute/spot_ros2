@@ -1,16 +1,15 @@
 import math
 import time
-from typing import Any, List, Optional
+from typing import Any, Optional
 
+import bdai_ros2_wrappers.process as ros_process
 import builtin_interfaces.msg
-import rclpy
+from bdai_ros2_wrappers.futures import wait_for_future
+from bdai_ros2_wrappers.node import Node
 from geometry_msgs.msg import Pose, PoseStamped, Twist
 from rclpy import Future
 from rclpy.action import ActionClient
-from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.duration import Duration
-from rclpy.executors import MultiThreadedExecutor
-from rclpy.node import Node
 from std_srvs.srv import SetBool, Trigger
 from tf_transformations import quaternion_from_euler
 
@@ -23,35 +22,33 @@ from spot_msgs.srv import ListGraph, SetLocomotion, SetVelocity  # type: ignore
 
 
 class CommandSpotDriver(Node):
-    def __init__(self, node_name: str) -> None:
+    def __init__(self, node_name: str, **kwargs: Any) -> None:
         try:
-            super().__init__(node_name)
+            super().__init__(node_name, **kwargs)
             self.declare_parameter("command", "")
 
             self.command = self.get_parameter("command").value
 
-            self.group = ReentrantCallbackGroup()
+            self.claim_client = self.create_client(Trigger, "claim")
+            self.release_client = self.create_client(Trigger, "release")
+            self.power_on_client = self.create_client(Trigger, "power_on")
+            self.power_off_client = self.create_client(Trigger, "power_off")
+            self.sit_client = self.create_client(Trigger, "sit")
+            self.stand_client = self.create_client(Trigger, "stand")
 
-            self.claim_client = self.create_client(Trigger, "claim", callback_group=self.group)
-            self.release_client = self.create_client(Trigger, "release", callback_group=self.group)
-            self.power_on_client = self.create_client(Trigger, "power_on", callback_group=self.group)
-            self.power_off_client = self.create_client(Trigger, "power_off", callback_group=self.group)
-            self.sit_client = self.create_client(Trigger, "sit", callback_group=self.group)
-            self.stand_client = self.create_client(Trigger, "stand", callback_group=self.group)
-
-            self.stair_mode_client = self.create_client(SetBool, "stair_mode", callback_group=self.group)
-            self.set_locomotion_client = self.create_client(SetLocomotion, "locomotion_mode", callback_group=self.group)
-            self.set_velocity_client = self.create_client(SetVelocity, "max_velocity", callback_group=self.group)
-            self.list_graph_client = self.create_client(ListGraph, "list_graph", callback_group=self.group)
+            self.stair_mode_client = self.create_client(SetBool, "stair_mode")
+            self.set_locomotion_client = self.create_client(SetLocomotion, "locomotion_mode")
+            self.set_velocity_client = self.create_client(SetVelocity, "max_velocity")
+            self.list_graph_client = self.create_client(ListGraph, "list_graph")
 
             self.trajectory_action_client = ActionClient(self, Trajectory, "trajectory")
             self.navigate_to_action_client = ActionClient(self, NavigateTo, "navigate_to")
 
-            self.stow_client = self.create_client(Trigger, "arm_stow", callback_group=self.group)
-            self.unstow_client = self.create_client(Trigger, "arm_unstow", callback_group=self.group)
-            self.open_client = self.create_client(Trigger, "gripper_open", callback_group=self.group)
-            self.close_client = self.create_client(Trigger, "gripper_close", callback_group=self.group)
-            self.carry_client = self.create_client(Trigger, "arm_carry", callback_group=self.group)
+            self.stow_client = self.create_client(Trigger, "arm_stow")
+            self.unstow_client = self.create_client(Trigger, "arm_unstow")
+            self.open_client = self.create_client(Trigger, "gripper_open")
+            self.close_client = self.create_client(Trigger, "gripper_close")
+            self.carry_client = self.create_client(Trigger, "arm_carry")
 
             # self.angle_open_client = self.create_client(
             #   GripperAngleMove,
@@ -74,21 +71,14 @@ class CommandSpotDriver(Node):
             #   callback_group=self.group
             # )
 
-            self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 1, callback_group=self.group)
-            self.body_pose_publisher = self.create_publisher(Pose, "body_pose", 1, callback_group=self.group)
+            self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 1)
+            self.body_pose_publisher = self.create_publisher(Pose, "body_pose", 1)
 
-            self.timer = self.create_timer(0.1, self.do_command, callback_group=self.group)
+            self.timer = self.create_timer(0.1, self.do_command)
 
             self.navigate_to_get_result_future: Optional[Any] = None
         except Exception as exc:
             self.get_logger().error(f"Exception: {type(exc)} - {exc}")
-
-    def wait_future(self, future: Future, print_waiting: bool = False) -> Any:
-        while True:
-            if future.done():
-                break
-        resp = future.result()
-        return resp
 
     def send_trajectory_goal(
         self, target_pose: PoseStamped, duration: builtin_interfaces.msg.Duration, precise_positioning: bool = False
@@ -165,7 +155,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.claim_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"CLAIM: {resp}")
             return resp
         except Exception as exc:
@@ -176,7 +168,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.release_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"RELEASE: {resp}")
             return resp
         except Exception as exc:
@@ -187,7 +181,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.power_on_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"POWER ON: {resp}")
             return resp
         except Exception as exc:
@@ -198,7 +194,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.power_off_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"POWER OFF: {resp}")
             return resp
         except Exception as exc:
@@ -209,7 +207,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.sit_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"SIT: {resp}")
             return resp
         except Exception as exc:
@@ -220,7 +220,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.stand_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"STAND: {resp}")
             return resp
         except Exception as exc:
@@ -233,7 +235,9 @@ class CommandSpotDriver(Node):
             req = ListGraph.Request()
             req.upload_filepath = upload_dir
             future = self.list_graph_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             return resp
         except Exception as exc:
             self.get_logger().error(f"Exception: {type(exc)} - {exc}")
@@ -244,7 +248,9 @@ class CommandSpotDriver(Node):
             req = SetLocomotion.Request()
             req.locomotion_mode = mode
             future = self.set_locomotion_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"SET LOCOMOTION: {resp}")
             return resp
         except Exception as exc:
@@ -258,7 +264,9 @@ class CommandSpotDriver(Node):
             req.velocity_limit.linear.y = y
             req.velocity_limit.angular.z = angular
             future = self.set_velocity_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"SET MAX VELOCITY: {resp}")
             return resp
         except Exception as exc:
@@ -269,7 +277,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.stow_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"STOW: {resp}")
             return resp
         except Exception as exc:
@@ -280,7 +290,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.unstow_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"UNSTOW: {resp}")
             return resp
         except Exception as exc:
@@ -291,7 +303,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.open_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"OPEN: {resp}")
             return resp
         except Exception as exc:
@@ -302,7 +316,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.close_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"CLOSE: {resp}")
             return resp
         except Exception as exc:
@@ -313,7 +329,9 @@ class CommandSpotDriver(Node):
         try:
             req = Trigger.Request()
             future = self.carry_client.call_async(req)
-            resp = self.wait_future(future, print_waiting=False)
+            if not wait_for_future(future, context=self.context):
+                return None
+            resp = future.result()
             self.get_logger().info(f"CARRY: {resp}")
             return resp
         except Exception as exc:
@@ -530,28 +548,6 @@ class CommandSpotDriver(Node):
             self.get_logger().error(f"EXCEPTION: {type(exc)} - {exc}")
 
 
-def main(args: Optional[List[str]] = None) -> None:
-    rclpy.init(args=args)
-
-    node = CommandSpotDriver("command_spot_driver")
-
-    executor = MultiThreadedExecutor(num_threads=8)
-    # minimal_client.send_request()
-
-    executor.add_node(node)
-
-    # thread = threading.Thread(target=spin_thread, args=(node,))
-    # thread.start()
-
-    # print("COMMAND:", node.command)
-    try:
-        executor.spin()
-    except KeyboardInterrupt:
-        pass
-
-    # rclpy.spin(node)
-    # node.do_command()
-
-    node.destroy_node()
-    executor.shutdown()
-    rclpy.shutdown()
+@ros_process.main(prebaked=False)
+def main() -> None:
+    ros_process.spin(CommandSpotDriver, "command_spot_driver")

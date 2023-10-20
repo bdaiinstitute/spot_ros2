@@ -1,13 +1,14 @@
 import argparse
 from typing import Optional
 
-import rclpy
+import bdai_ros2_wrappers.process as ros_process
+import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
+from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.robot_command import RobotCommandBuilder
-from rclpy.node import Node
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
@@ -15,43 +16,41 @@ import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 
 
-def hello_arm(robot_name: Optional[str]) -> bool:
+def hello_arm(robot_name: Optional[str] = None) -> bool:
     # Set up basic ROS2 utilities for communicating with the driver
-    node = Node("arm_simple")
-    name = ""
-    namespace = ""
-    if robot_name is not None:
-        name = robot_name + "/"
-        namespace = robot_name
-    tf_listener = TFListenerWrapper(
-        "arm_simple_tf", wait_for_transform=[name + ODOM_FRAME_NAME, name + GRAV_ALIGNED_BODY_FRAME_NAME]
-    )
+    node = ros_scope.node()
+    if node is None:
+        raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
+    logger = node.get_logger()
 
-    robot = SimpleSpotCommander(namespace)
-    robot_command_client = ActionClientWrapper(
-        RobotCommand, "robot_command", "arm_simple_action_node", namespace=namespace
-    )
+    odom_frame_name = namespace_with(robot_name, ODOM_FRAME_NAME)
+    grav_aligned_body_frame_name = namespace_with(robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)
+    tf_listener = TFListenerWrapper(node)
+    tf_listener.wait_for_a_tform_b(odom_frame_name, grav_aligned_body_frame_name)
+
+    robot = SimpleSpotCommander(robot_name, node)
+    robot_command_client = ActionClientWrapper(RobotCommand, namespace_with(robot_name, "robot_command"), node)
 
     # Claim robot
-    node.get_logger().info("Claiming robot")
+    logger.info("Claiming robot")
     result = robot.command("claim")
     if not result.success:
         node.get_logger().error("Unable to claim robot message was " + result.message)
         return False
-    node.get_logger().info("Claimed robot")
+    logger.info("Claimed robot")
 
     # Stand the robot up.
-    node.get_logger().info("Powering robot on")
+    logger.info("Powering robot on")
     result = robot.command("power_on")
     if not result.success:
-        node.get_logger().error("Unable to power on robot message was " + result.message)
+        logger.error("Unable to power on robot message was " + result.message)
         return False
-    node.get_logger().info("Standing robot up")
+    logger.info("Standing robot up")
     result = robot.command("stand")
     if not result.success:
-        node.get_logger().error("Robot did not stand message was " + result.message)
+        logger.error("Robot did not stand message was " + result.message)
         return False
-    node.get_logger().info("Successfully stood up.")
+    logger.info("Successfully stood up.")
 
     # Move the arm to a spot in front of the robot, and open the gripper.
 
@@ -71,7 +70,7 @@ def hello_arm(robot_name: Optional[str]) -> bool:
 
     flat_body_T_hand = geometry_pb2.SE3Pose(position=hand_ewrt_flat_body, rotation=flat_body_Q_hand)
 
-    odom_T_flat_body = tf_listener.lookup_a_tform_b(name + ODOM_FRAME_NAME, name + GRAV_ALIGNED_BODY_FRAME_NAME)
+    odom_T_flat_body = tf_listener.lookup_a_tform_b(odom_frame_name, grav_aligned_body_frame_name)
 
     odom_T_hand = odom_T_flat_body * math_helpers.SE3Pose.from_obj(flat_body_T_hand)
 
@@ -100,7 +99,7 @@ def hello_arm(robot_name: Optional[str]) -> bool:
     action_goal = RobotCommand.Goal()
     conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
     # Send the request and wait until the arm arrives at the goal
-    node.get_logger().info("Moving arm to position 1.")
+    logger.info("Moving arm to position 1.")
     robot_command_client.send_goal_and_wait("arm_move_one", action_goal)
 
     # Move the arm to a different position
@@ -136,19 +135,20 @@ def hello_arm(robot_name: Optional[str]) -> bool:
     action_goal = RobotCommand.Goal()
     conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
     # Send the request and wait until the arm arrives at the goal
-    node.get_logger().info("Moving arm to position 2.")
+    logger.info("Moving arm to position 2.")
     robot_command_client.send_goal_and_wait("arm_move_two", action_goal)
-
-    tf_listener.shutdown()
 
     return True
 
 
-def main() -> None:
-    rclpy.init()
+def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--robot", type=str, default=None)
-    args = parser.parse_args()
+    return parser
+
+
+@ros_process.main(cli())
+def main(args: argparse.Namespace) -> None:
     hello_arm(args.robot)
 
 
