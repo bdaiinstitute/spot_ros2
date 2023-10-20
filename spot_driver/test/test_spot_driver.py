@@ -619,7 +619,7 @@ class SpotDriverTest(unittest.TestCase):
 
         feedback.command.synchronized_feedback.gripper_command_feedback.command.claw_gripper_feedback.status.value = (
             gripper_feedback.command.claw_gripper_feedback.status.STATUS_APPLYING_FORCE
-        # )
+        )
         self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
 
         """ Testing unknown gripper command """
