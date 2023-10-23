@@ -98,125 +98,125 @@ class SpotDriverTest(unittest.TestCase):
         feedback.status.value = feedback.status.STATUS_UNKNOWN
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
-        feedback.command.full_body_feedback.status.value = feedback.status.STATUS_PROCESSING
+        feedback.status.value = feedback.status.STATUS_PROCESSING
 
         """ Testing STOP_FEEDBACK_SET """
-        feedback.command.full_body_feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET
+        feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.SUCCESS)
 
         """ Testing FREEZE_FEEDBACK_SET """
-        feedback.command.full_body_feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_FREEZE_FEEDBACK_SET
+        feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_FREEZE_FEEDBACK_SET
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.SUCCESS)
 
         """ Testing SELFRIGHT_FEEDBACK_SET """
-        feedback.command.full_body_feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_SELFRIGHT_FEEDBACK_SET
-        feedback.command.full_body_feedback.feedback.selfright_feedback.status.value = (
+        feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_SELFRIGHT_FEEDBACK_SET
+        feedback.feedback.selfright_feedback.status.value = (
             feedback.feedback.selfright_feedback.status.STATUS_COMPLETED
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.SUCCESS)
 
-        feedback.command.full_body_feedback.feedback.selfright_feedback.status.value = (
+        feedback.feedback.selfright_feedback.status.value = (
             feedback.feedback.selfright_feedback.status.STATUS_UNKNOWN
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
-        feedback.command.full_body_feedback.feedback.selfright_feedback.status.value = (
+        feedback.feedback.selfright_feedback.status.value = (
             feedback.feedback.selfright_feedback.status.STATUS_IN_PROGRESS
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
         """ Testing SAFE_POWER_OFF_FEEDBACK_SET """
-        feedback.command.full_body_feedback.feedback.feedback_choice = (
+        feedback.feedback.feedback_choice = (
             feedback.feedback.FEEDBACK_SAFE_POWER_OFF_FEEDBACK_SET
         )
-        feedback.command.full_body_feedback.feedback.safe_power_off_feedback.status.value = (
+        feedback.feedback.safe_power_off_feedback.status.value = (
             feedback.feedback.safe_power_off_feedback.status.STATUS_POWERED_OFF
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.SUCCESS)
 
-        feedback.command.full_body_feedback.feedback.safe_power_off_feedback.status.value = (
+        feedback.feedback.safe_power_off_feedback.status.value = (
             feedback.feedback.safe_power_off_feedback.status.STATUS_UNKNOWN
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
-        feedback.command.full_body_feedback.feedback.safe_power_off_feedback.status.value = (
+        feedback.feedback.safe_power_off_feedback.status.value = (
             feedback.feedback.safe_power_off_feedback.status.STATUS_IN_PROGRESS
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
         """ Testing BATTERY_CHANGE_POSE_FEEDBACK_SET """
-        feedback.command.full_body_feedback.feedback.feedback_choice = (
+        feedback.feedback.feedback_choice = (
             feedback.feedback.FEEDBACK_BATTERY_CHANGE_POSE_FEEDBACK_SET
         )
-        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value = (
+        feedback.feedback.battery_change_pose_feedback.status.value = (
             feedback.feedback.battery_change_pose_feedback.status.STATUS_COMPLETED
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.SUCCESS)
 
-        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value = (
+        feedback.feedback.battery_change_pose_feedback.status.value = (
             feedback.feedback.battery_change_pose_feedback.status.STATUS_UNKNOWN
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
-        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value = (
+        feedback.feedback.battery_change_pose_feedback.status.value = (
             feedback.feedback.battery_change_pose_feedback.status.STATUS_IN_PROGRESS
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
-        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value = (
+        feedback.feedback.battery_change_pose_feedback.status.value = (
             feedback.feedback.battery_change_pose_feedback.status.STATUS_FAILED
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.FAILED)
 
         """ Testing PAYLOAD_ESTIMATION_FEEDBACK_SET """
-        feedback.command.full_body_feedback.feedback.feedback_choice = (
+        feedback.feedback.feedback_choice = (
             feedback.feedback.FEEDBACK_PAYLOAD_ESTIMATION_FEEDBACK_SET
         )
-        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+        feedback.feedback.payload_estimation_feedback.status.value = (
             feedback.feedback.payload_estimation_feedback.status.STATUS_COMPLETED
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.SUCCESS)
 
-        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+        feedback.feedback.payload_estimation_feedback.status.value = (
             feedback.feedback.payload_estimation_feedback.status.STATUS_SMALL_MASS
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.SUCCESS)
 
-        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+        feedback.feedback.payload_estimation_feedback.status.value = (
             feedback.feedback.payload_estimation_feedback.status.STATUS_ERROR
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.FAILED)
 
-        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+        feedback.feedback.payload_estimation_feedback.status.value = (
             feedback.feedback.payload_estimation_feedback.status.STATUS_UNKNOWN
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
-        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+        feedback.feedback.payload_estimation_feedback.status.value = (
             feedback.feedback.payload_estimation_feedback.status.STATUS_IN_PROGRESS
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
         """ Testing CONSTRAINED_MANIPULATION_FEEDBACK_SET """
-        feedback.command.full_body_feedback.feedback.feedback_choice = (
+        feedback.feedback.feedback_choice = (
             feedback.feedback.FEEDBACK_CONSTRAINED_MANIPULATION_FEEDBACK_SET
         )
-        feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.value = (
+        feedback.feedback.constrained_manipulation_feedback.status.value = (
             feedback.feedback.constrained_manipulation_feedback.status.STATUS_RUNNING
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
-        feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.value = (
+        feedback.feedback.constrained_manipulation_feedback.status.value = (
             feedback.feedback.constrained_manipulation_feedback.status.STATUS_GRASP_IS_LOST
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.FAILED)
 
-        feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.value = (
+        feedback.feedback.constrained_manipulation_feedback.status.value = (
             feedback.feedback.constrained_manipulation_feedback.status.STATUS_ARM_IS_STUCK
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.FAILED)
 
-        feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.value = (
+        feedback.feedback.constrained_manipulation_feedback.status.value = (
             feedback.feedback.constrained_manipulation_feedback.status.STATUS_UNKNOWN
         )
         self.assertEqual(self.spot_ros2._process_full_body_command_feedback(feedback), GoalResponse.FAILED)
@@ -245,7 +245,7 @@ class SpotDriverTest(unittest.TestCase):
         feedback.feedback.arm_cartesian_feedback.status.value = (
             feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_COMPLETE
         )
-        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), GoalResponse.SUCCESS)
+        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), None)
 
         feedback.feedback.arm_cartesian_feedback.status.value = (
             feedback.feedback.arm_cartesian_feedback.status.STATUS_UNKNOWN
@@ -274,7 +274,7 @@ class SpotDriverTest(unittest.TestCase):
         feedback.feedback.arm_joint_move_feedback.status.value = (
             feedback.feedback.arm_joint_move_feedback.status.STATUS_COMPLETE
         )
-        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), GoalResponse.SUCCESS)
+        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), None)
 
         feedback.feedback.arm_joint_move_feedback.status.value = (
             feedback.feedback.arm_joint_move_feedback.status.STATUS_UNKNOWN
@@ -298,7 +298,7 @@ class SpotDriverTest(unittest.TestCase):
         feedback.feedback.named_arm_position_feedback.status.value = (
             feedback.feedback.named_arm_position_feedback.status.STATUS_COMPLETE
         )
-        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), GoalResponse.SUCCESS)
+        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), None)
 
         feedback.feedback.named_arm_position_feedback.status.value = (
             feedback.feedback.named_arm_position_feedback.status.STATUS_UNKNOWN
@@ -326,7 +326,7 @@ class SpotDriverTest(unittest.TestCase):
         feedback.feedback.arm_gaze_feedback.status.value = (
             feedback.feedback.arm_gaze_feedback.status.STATUS_TRAJECTORY_COMPLETE
         )
-        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), GoalResponse.SUCCESS)
+        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), None)
 
         feedback.feedback.arm_gaze_feedback.status.value = feedback.feedback.arm_gaze_feedback.status.STATUS_UNKNOWN
         self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), GoalResponse.IN_PROGRESS)
@@ -349,7 +349,7 @@ class SpotDriverTest(unittest.TestCase):
         feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_ARM_DRAG_FEEDBACK_SET
 
         feedback.feedback.arm_drag_feedback.status.value = feedback.feedback.arm_drag_feedback.status.STATUS_DRAGGING
-        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), GoalResponse.SUCCESS)
+        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), None)
 
         feedback.feedback.arm_drag_feedback.status.value = feedback.feedback.arm_drag_feedback.status.STATUS_UNKNOWN
         self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), GoalResponse.FAILED)
@@ -375,7 +375,7 @@ class SpotDriverTest(unittest.TestCase):
 
         feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_NOT_SET
 
-        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), None)
+        self.assertEqual(self.spot_ros2._process_synchronized_arm_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
         """ Testing unknown arm command """
         feedback.feedback.feedback_choice = FEEDBACK_INVALID
@@ -406,7 +406,7 @@ class SpotDriverTest(unittest.TestCase):
         feedback.feedback.se2_trajectory_feedback.status.value = (
             feedback.feedback.se2_trajectory_feedback.status.STATUS_AT_GOAL
         )
-        self.assertEqual(self.spot_ros2._process_synchronized_mobility_command_feedback(feedback), GoalResponse.SUCCESS)
+        self.assertEqual(self.spot_ros2._process_synchronized_mobility_command_feedback(feedback), None)
 
         feedback.feedback.se2_trajectory_feedback.status.value = (
             feedback.feedback.se2_trajectory_feedback.status.STATUS_UNKNOWN
@@ -437,7 +437,7 @@ class SpotDriverTest(unittest.TestCase):
         feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_SIT_FEEDBACK_SET
 
         feedback.feedback.sit_feedback.status.value = feedback.feedback.sit_feedback.status.STATUS_IS_SITTING
-        self.assertEqual(self.spot_ros2._process_synchronized_mobility_command_feedback(feedback), GoalResponse.SUCCESS)
+        self.assertEqual(self.spot_ros2._process_synchronized_mobility_command_feedback(feedback), None)
 
         feedback.feedback.sit_feedback.status.value = feedback.feedback.sit_feedback.status.STATUS_UNKNOWN
         self.assertEqual(
@@ -453,7 +453,7 @@ class SpotDriverTest(unittest.TestCase):
         feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_STAND_FEEDBACK_SET
 
         feedback.feedback.stand_feedback.status.value = feedback.feedback.stand_feedback.status.STATUS_IS_STANDING
-        self.assertEqual(self.spot_ros2._process_synchronized_mobility_command_feedback(feedback), GoalResponse.SUCCESS)
+        self.assertEqual(self.spot_ros2._process_synchronized_mobility_command_feedback(feedback), None)
 
         feedback.feedback.stand_feedback.status.value = feedback.feedback.stand_feedback.status.STATUS_UNKNOWN
         self.assertEqual(
@@ -472,7 +472,7 @@ class SpotDriverTest(unittest.TestCase):
         self.assertEqual(self.spot_ros2._process_synchronized_mobility_command_feedback(feedback), GoalResponse.FAILED)
 
         feedback.feedback.stance_feedback.status.value = feedback.feedback.stance_feedback.status.STATUS_STANCED
-        self.assertEqual(self.spot_ros2._process_synchronized_mobility_command_feedback(feedback), GoalResponse.SUCCESS)
+        self.assertEqual(self.spot_ros2._process_synchronized_mobility_command_feedback(feedback), None)
 
         feedback.feedback.stance_feedback.status.value = feedback.feedback.stance_feedback.status.STATUS_GOING_TO_STANCE
         self.assertEqual(
@@ -550,9 +550,9 @@ class SpotDriverTest(unittest.TestCase):
         self.assertEqual(self.spot_ros2._process_synchronized_gripper_command_feedback(feedback), None)
 
         """ Testing feedback not set"""
-        feedback.feedback.feedback_choice = feedback.feedback.FEEDBACK_NOT_SET
+        feedback.command.command_choice = feedback.command.COMMAND_NOT_SET
 
-        self.assertEqual(self.spot_ros2._process_synchronized_gripper_command_feedback(feedback), None)
+        self.assertEqual(self.spot_ros2._process_synchronized_gripper_command_feedback(feedback), GoalResponse.IN_PROGRESS)
 
         """ Testing unknown gripper command """
         feedback.command.command_choice = FEEDBACK_INVALID
