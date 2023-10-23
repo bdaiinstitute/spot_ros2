@@ -12,23 +12,6 @@ from spot_msgs.srv import (  # type: ignore
     Dock,
 )
 
-def spin_thread(executor: MultiThreadedExecutor) -> None:
-    if executor is not None:
-        try:
-            executor.spin()
-        except (ExternalShutdownException, KeyboardInterrupt):
-            pass
-
-
-def call_trigger_client(
-    client: rclpy.node.Client, executor: MultiThreadedExecutor, request: Any = Trigger.Request()
-) -> spot_driver.spot_ros2.Response:
-    req = request
-    future = client.call_async(req)
-    executor.spin_until_future_complete(future)
-    resp = future.result()
-    return resp
-
 
 class SpotDriverTest(unittest.TestCase):
     def setUp(self) -> None:
