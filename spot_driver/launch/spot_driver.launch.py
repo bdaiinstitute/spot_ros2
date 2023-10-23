@@ -308,7 +308,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(robot_state_publisher)
 
     rviz = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([FindPackageShare("spot_driver"), '/launch', '/rviz.launch.py']),
+        PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), '/launch', '/rviz.launch.py']),
         launch_arguments={
             'spot_name': spot_name,
             'rviz_config_file': rviz_config_file,
