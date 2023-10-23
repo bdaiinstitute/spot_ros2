@@ -3,9 +3,7 @@ import unittest
 
 import bdai_ros2_wrappers.scope as ros_scope
 import rclpy
-from bosdyn_msgs.msg import (
-    RobotCommandFeedback,
-)
+from bosdyn_msgs.msg import RobotCommandFeedback
 from std_srvs.srv import Trigger
 
 import spot_driver.spot_ros2
@@ -13,8 +11,6 @@ from spot_driver.spot_ros2 import GoalResponse
 from spot_msgs.srv import (  # type: ignore
     Dock,
 )
-
-FEEDBACK_INVALID = -128
 
 def spin_thread(executor: MultiThreadedExecutor) -> None:
     if executor is not None:
