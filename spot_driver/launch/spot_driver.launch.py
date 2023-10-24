@@ -12,12 +12,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
-from launch.substitutions import (
-    Command,
-    FindExecutable,
-    LaunchConfiguration,
-    PathJoinSubstitution,
-)
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 from spot_wrapper.wrapper import SpotWrapper
@@ -31,9 +26,9 @@ class DepthRegisteredMode(Enum):
     FROM_NODELETS = (2,)
 
 
-def get_camera_sources(context: launch.LaunchContext, has_arm: LaunchConfiguration) -> List[str]:
+def get_camera_sources(has_arm: bool) -> List[str]:
     camera_sources = ["frontleft", "frontright", "left", "right", "back"]
-    if has_arm.perform(context) == "true" or has_arm.perform(context) == "True":
+    if has_arm:
         camera_sources.append("hand")
     return camera_sources
 
@@ -41,14 +36,14 @@ def get_camera_sources(context: launch.LaunchContext, has_arm: LaunchConfigurati
 def create_depth_registration_nodelets(
     context: launch.LaunchContext,
     spot_name: LaunchConfiguration,
-    has_arm: LaunchConfiguration,
+    has_arm: bool,
 ) -> List[launch_ros.descriptions.ComposableNode]:
     """Create the list of depth_image_proc::RegisterNode composable nodes required to generate registered depth images
     for Spot's cameras."""
 
     composable_node_descriptions = []
 
-    for camera in get_camera_sources(context, has_arm):
+    for camera in get_camera_sources(has_arm):
         composable_node_descriptions.append(
             launch_ros.descriptions.ComposableNode(
                 package="depth_image_proc",
@@ -79,14 +74,14 @@ def create_depth_registration_nodelets(
 def create_point_cloud_nodelets(
     context: launch.LaunchContext,
     spot_name: LaunchConfiguration,
-    has_arm: LaunchConfiguration,
+    has_arm: bool,
 ) -> List[launch_ros.descriptions.ComposableNode]:
     """Create the list of depth_image_proc::PointCloudXyzrgbNode composable nodes required to generate point clouds for
     each pair of RGB and registered depth cameras."""
 
     composable_node_descriptions = []
 
-    for camera in get_camera_sources(context, has_arm):
+    for camera in get_camera_sources(has_arm):
         composable_node_descriptions.append(
             launch_ros.descriptions.ComposableNode(
                 package="depth_image_proc",
@@ -139,7 +134,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     logger = logging.getLogger("spot_driver_launch")
 
     config_file = LaunchConfiguration("config_file")
-    has_arm = LaunchConfiguration("has_arm")
     launch_rviz = LaunchConfiguration("launch_rviz")
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
@@ -154,7 +148,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     hostname = os.getenv("SPOT_IP", "hostname")
 
     spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
-    has_arm = spot_wrapper.has_arm
+    has_arm = spot_wrapper.has_arm()
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -207,7 +201,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             PathJoinSubstitution([pkg_share, "urdf", "spot.urdf.xacro"]),
             " ",
             "arm:=",
-            has_arm,
+            TextSubstitution(text=str(spot_wrapper.has_arm()).lower()),
             " ",
             "tf_prefix:=",
             tf_prefix,
