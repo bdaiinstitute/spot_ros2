@@ -1,5 +1,6 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
+import logging
 import os
 from enum import Enum
 from typing import List
@@ -18,6 +19,8 @@ from launch.substitutions import (
     PathJoinSubstitution,
 )
 from launch_ros.substitutions import FindPackageShare
+
+from spot_wrapper.wrapper import SpotWrapper
 
 THIS_PACKAGE = "spot_driver"
 
@@ -133,6 +136,8 @@ def create_rviz_config(robot_name: str) -> None:
 
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
+    logger = logging.getLogger("spot_driver_launch")
+
     config_file = LaunchConfiguration("config_file")
     has_arm = LaunchConfiguration("has_arm")
     launch_rviz = LaunchConfiguration("launch_rviz")
@@ -141,6 +146,15 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
+
+    # Get parameters from Spot.
+
+    username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
+    password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
+    hostname = os.getenv("SPOT_IP", "hostname")
+
+    spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
+    has_arm = spot_wrapper.has_arm
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -255,7 +269,6 @@ def generate_launch_description() -> launch.LaunchDescription:
             description="Path to configuration file for the driver.",
         )
     )
-    launch_args.append(DeclareLaunchArgument("has_arm", default_value="False", description="Whether spot has arm"))
     launch_args.append(
         DeclareLaunchArgument(
             "tf_prefix",
@@ -301,3 +314,18 @@ def generate_launch_description() -> launch.LaunchDescription:
     ld.add_action(OpaqueFunction(function=launch_setup, args=[ld]))
 
     return ld
+
+
+def main():
+    """P
+    This is an entry point to execute the launch file as a normal python script.
+    Useful for debugging.
+    """
+    ls = launch.LaunchService()
+    ld = generate_launch_description()
+    ls.include_launch_description(ld)
+    return ls.run()
+
+
+if __name__ == "__main__":
+    main()
