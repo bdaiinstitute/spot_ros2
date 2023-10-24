@@ -308,18 +308,3 @@ def generate_launch_description() -> launch.LaunchDescription:
     ld.add_action(OpaqueFunction(function=launch_setup, args=[ld]))
 
     return ld
-
-
-def main():
-    """
-    This is an entry point to execute the launch file as a normal python script.
-    Useful for debugging.
-    """
-    ls = launch.LaunchService()
-    ld = generate_launch_description()
-    ls.include_launch_description(ld)
-    return ls.run()
-
-
-if __name__ == "__main__":
-    main()
