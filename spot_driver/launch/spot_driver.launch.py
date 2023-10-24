@@ -317,7 +317,7 @@ def generate_launch_description() -> launch.LaunchDescription:
 
 
 def main():
-    """P
+    """
     This is an entry point to execute the launch file as a normal python script.
     Useful for debugging.
     """
