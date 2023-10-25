@@ -33,6 +33,9 @@ jobs:
         source install/local_setup.bash
     - name: Test Package
       run: |
+        # go to root folder
+        source /opt/ros/$ROS_DISTRO/setup.bash
+        cd ../../
         source install/local_setup.bash
         colcon test
     - name: Install docs dependencies & build docs
