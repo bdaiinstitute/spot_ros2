@@ -31,6 +31,10 @@ jobs:
         source /opt/ros/$ROS_DISTRO/setup.bash
         colcon build --symlink-install
         source install/local_setup.bash
+    - name: Test Package
+      run: |
+        source install/local_setup.bash
+        colcon test
     - name: Install docs dependencies & build docs
       run: |
         source /opt/ros/$ROS_DISTRO/setup.bash
