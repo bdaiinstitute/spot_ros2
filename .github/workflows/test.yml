@@ -37,7 +37,7 @@ jobs:
         source /opt/ros/$ROS_DISTRO/setup.bash
         cd ../../
         source install/local_setup.bash
-        colcon test
+        colcon test --event-handlers console_cohesion+
     - name: Install docs dependencies & build docs
       run: |
         source /opt/ros/$ROS_DISTRO/setup.bash
