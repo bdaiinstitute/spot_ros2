@@ -1,10 +1,13 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 import argparse
+import logging
 from typing import Any, Dict, Optional
 
+import bdai_ros2_wrappers.process as ros_process
+import bdai_ros2_wrappers.scope as ros_scope
 import rclpy
+from bdai_ros2_wrappers.utilities import fqn, namespace_with
 from rclpy.client import Client
-from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 
@@ -23,36 +26,37 @@ TRIGGER_SERVICES = [
 ]
 
 
-class SimpleSpotCommander(Node):
-    def __init__(self, namespace: Optional[argparse.Namespace] = None) -> None:
-        super().__init__("spot_commander", namespace=namespace)
-        self._executor = SingleThreadedExecutor()
-        self._executor.add_node(self)
+class SimpleSpotCommander:
+    def __init__(self, robot_name: Optional[str] = None, node: Optional[Node] = None) -> None:
+        self._logger = logging.getLogger(fqn(self.__class__))
+        node = node or ros_scope.node()
+        if node is None:
+            raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
         self._command_map: Dict[str, Client] = {}
-        for service in TRIGGER_SERVICES:
-            self._command_map[service] = self.create_client(Trigger, service)
-            self.get_logger().info("Waiting for service " + str(service))
-            self._command_map[service].wait_for_service()
-            self.get_logger().info("Found service " + str(service))
+        for service_basename in TRIGGER_SERVICES:
+            service_name = namespace_with(robot_name, service_basename)
+            self._command_map[service_basename] = node.create_client(Trigger, service_name)
+            self._logger.info(f"Waiting for service {service_basename}")
+            self._command_map[service_basename].wait_for_service()
+            self._logger.info(f"Found service {service_basename}")
 
     def command(self, command: str) -> Any:
         try:
-            self._future = self._command_map[command].call_async(Trigger.Request())
+            return self._command_map[command].call(Trigger.Request())
         except KeyError:
-            err = "No command " + str(command)
-            self.get_logger().error(err)
+            err = f"No command {command}"
+            self._logger.error(err)
             return Trigger.Response(success=False, message=err)
-        self._executor.spin_until_future_complete(self._future)
-        return self._future.result()
 
 
-def main() -> None:
-    rclpy.init()
-
+def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("robot", help="Name of the robot if the ROS driver is inside that namespace")
-    args = parser.parse_args()
+    return parser
 
+
+@ros_process.main(cli())
+def main(args: argparse.Namespace) -> None:
     commander = SimpleSpotCommander(args.robot)
 
     while rclpy.ok():

@@ -19,7 +19,7 @@ ros2 launch spot_driver spot_driver.launch.py
 ```
 If you want to launch with a namespace,
 ```bash
-ros2 launch spot_driver.launch.py spot_name:=<spot_name> 
+ros2 launch spot_driver.launch.py spot_name:=<spot_name>
 ```
 
 5.  Run the example:
@@ -52,15 +52,16 @@ def hello_arm(config):
 ```
 If you want to ensure you only communicate with the robot via the ROS2 driver (which is not necessary, but may simplify your life and ensures all robot commands can be echoed on ROS topics, are caught in ros bags, etc), the best way to do so is to ensure that you never call `authenticate` in any other program.  That is done by the Spot driver, which should be the only piece of code that communicates with the robot.  All other programs communicate with the Spot driver via ROS2.  Therefore, we replace the pieces of code that talk directly to Spot with their ROS counterparts:
 ```python
-    node = Node('arm_simple')
-    tf_listener = TFListenerWrapper('arm_simple_tf', wait_for_transform = [ODOM_FRAME_NAME,
-                                                                           GRAV_ALIGNED_BODY_FRAME_NAME])
+    node = ros_scope.node()
+
+    tf_listener = TFListenerWrapper(node)
+    tf_listener.wait_for_a_tform_b(ODOM_FRAME_NAME, GRAV_ALIGNED_BODY_FRAME_NAME)
 
     robot = SimpleSpotCommander()
-    robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command')
+    robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command', node)
 ```
 This gives us four components, which we'll use in many ROS2 programs:
-* A node: [ROS2 nodes](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html) are the objects that interact with [ROS2 topics](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Topics/Understanding-ROS2-Topics.html) and almost all ROS programs require them.
+* A node: [ROS2 nodes](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html) are the objects that interact with [ROS2 topics](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Topics/Understanding-ROS2-Topics.html) and almost all ROS programs require them. Here we fetch the one in scope, already instantiated and serviced in the background. Had we instantiated a node of our own, we would have had to spin it ourselves.
 * A TF listener: This handles computing transforms.  As we'll see later, it can be used in place of Spot API `RobotStateClient` to get information about where frames on the robot are.  For more information about ROS2 TF see [here](https://docs.ros.org/en/humble/Tutorials/Intermediate/Tf2/Tf2-Main.html).  For more information about our [TF wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/tf_listener_wrapper.py) and how we use it in these examples, see the [simple_walk_forward example](../simple_walk_forward/).
 * A spot commander: This is a [wrapper](../utilities/utilities/simple_spot_commander.py) around service clients that call the spot driver to do simple things like get the lease and stand.  This is used in place of calls like `blocking_stand`.
 * A robot command action client: This is the ROS2 action client that sends goals to the ROS2 action server (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)).  This is used in place of the Spot API `RobotCommandClient`.  We use a [wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/action_client.py) around the built in ROS2 action client that allows us to wait for the goal to return without risk of deadlock.
@@ -143,4 +144,3 @@ The last thing to note in this example is the line
 ```python
     tf_listener.shutdown()
 ```
-Owing to a bug in how tf threads are handled, if you want programs involving the TF listener wrapper to end cleanly, you have to make this call before the `tf_listener` is destructed.

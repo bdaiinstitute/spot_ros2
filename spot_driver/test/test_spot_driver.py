@@ -1,101 +1,41 @@
+import contextlib
 import unittest
-from threading import Thread
-from typing import Any, Optional
 
+import bdai_ros2_wrappers.scope as ros_scope
 import rclpy
-from rclpy import Context
-from rclpy.callback_groups import CallbackGroup, ReentrantCallbackGroup
-from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
+from bosdyn_msgs.msg import RobotCommandFeedback
 from std_srvs.srv import Trigger
 
 import spot_driver.spot_ros2
+from spot_driver.spot_ros2 import GoalResponse
 from spot_msgs.srv import (  # type: ignore
     Dock,
 )
 
 
-def spin_thread(executor: MultiThreadedExecutor) -> None:
-    if executor is not None:
-        try:
-            executor.spin()
-        except (ExternalShutdownException, KeyboardInterrupt):
-            pass
-
-
-def call_trigger_client(
-    client: rclpy.node.Client, executor: MultiThreadedExecutor, request: Any = Trigger.Request()
-) -> spot_driver.spot_ros2.Response:
-    req = request
-    future = client.call_async(req)
-    executor.spin_until_future_complete(future)
-    resp = future.result()
-    return resp
-
-
 class SpotDriverTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.context: Optional[Context] = Context()
-        rclpy.init()
-
+        self.fixture = contextlib.ExitStack()
+        self.ros = self.fixture.enter_context(ros_scope.top(namespace="fixture"))
         # create and run spot ros2 servers
         mock_param = rclpy.parameter.Parameter("spot_name", rclpy.Parameter.Type.STRING, "Mock_spot")
-        self.spot_ros2 = spot_driver.spot_ros2.SpotROS(parameter_list=[mock_param])
-        # set mock
-        self.spot_ros2_exec = MultiThreadedExecutor(num_threads=8)
-        self.spot_ros2_exec.add_node(self.spot_ros2)
-        self.spot_ros2_thread: Thread = Thread(target=spin_thread, args=(self.spot_ros2_exec,))
-        self.spot_ros2_thread.start()
-        self.group: CallbackGroup = ReentrantCallbackGroup()
+        self.spot_ros2 = self.ros.load(spot_driver.spot_ros2.SpotROS, parameter_list=[mock_param])
 
         # clients
-        self.client_node = rclpy.node.Node(node_name="client_tester")
-        self.command_exec: MultiThreadedExecutor = MultiThreadedExecutor(num_threads=8)
-        self.command_exec.add_node(self.client_node)
-        self.claim_client: rclpy.node.Client = self.client_node.create_client(
-            Trigger, "claim", callback_group=self.group
-        )
-        self.release_client: rclpy.node.Client = self.client_node.create_client(
-            Trigger, "release", callback_group=self.group
-        )
-        self.power_on_client: rclpy.node.Client = self.client_node.create_client(
-            Trigger, "power_on", callback_group=self.group
-        )
-        self.power_off_client: rclpy.node.Client = self.client_node.create_client(
-            Trigger, "power_off", callback_group=self.group
-        )
-        self.sit_client: rclpy.node.Client = self.client_node.create_client(Trigger, "sit", callback_group=self.group)
-        self.stand_client: rclpy.node.Client = self.client_node.create_client(
-            Trigger, "stand", callback_group=self.group
-        )
-        self.estop_gentle: rclpy.node.Client = self.client_node.create_client(
-            Trigger, "estop/gentle", callback_group=self.group
-        )
-        self.estop_hard: rclpy.node.Client = self.client_node.create_client(
-            Trigger, "estop/hard", callback_group=self.group
-        )
-        self.estop_release: rclpy.node.Client = self.client_node.create_client(
-            Trigger, "estop/release", callback_group=self.group
-        )
-        self.undock_client: rclpy.node.Client = self.client_node.create_client(
-            Trigger, "undock", callback_group=self.group
-        )
-        self.dock_client: rclpy.node.Client = self.client_node.create_client(Dock, "dock", callback_group=self.group)
+        self.claim_client: rclpy.node.Client = self.ros.node.create_client(Trigger, "claim")
+        self.release_client: rclpy.node.Client = self.ros.node.create_client(Trigger, "release")
+        self.power_on_client: rclpy.node.Client = self.ros.node.create_client(Trigger, "power_on")
+        self.power_off_client: rclpy.node.Client = self.ros.node.create_client(Trigger, "power_off")
+        self.sit_client: rclpy.node.Client = self.ros.node.create_client(Trigger, "sit")
+        self.stand_client: rclpy.node.Client = self.ros.node.create_client(Trigger, "stand")
+        self.estop_gentle: rclpy.node.Client = self.ros.node.create_client(Trigger, "estop/gentle")
+        self.estop_hard: rclpy.node.Client = self.ros.node.create_client(Trigger, "estop/hard")
+        self.estop_release: rclpy.node.Client = self.ros.node.create_client(Trigger, "estop/release")
+        self.undock_client: rclpy.node.Client = self.ros.node.create_client(Trigger, "undock")
+        self.dock_client: rclpy.node.Client = self.ros.node.create_client(Dock, "dock")
 
     def tearDown(self) -> None:
-        # shutdown and kill any nodes and threads
-        if self.command_exec is not None:
-            self.command_exec.shutdown()
-            self.command_exec.remove_node(self.client_node)
-            self.client_node.destroy_node()
-
-        if self.spot_ros2_exec is not None:
-            self.spot_ros2_exec.shutdown()
-            self.spot_ros2_exec.remove_node(self.spot_ros2)
-            self.spot_ros2_thread.join()
-            self.spot_ros2.destroy_node()
-
-        rclpy.shutdown()
-        self.context = None
+        self.fixture.close()
 
     def test_wrapped_commands(self) -> None:
         """
@@ -103,28 +43,592 @@ class SpotDriverTest(unittest.TestCase):
         When no spot_wrapper is present they return true, but this test at least tests
         communications and APIs.
         """
-        resp = call_trigger_client(self.claim_client, self.command_exec)
+        resp = self.claim_client.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.release_client, self.command_exec)
+        resp = self.release_client.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.power_on_client, self.command_exec)
+
+        resp = self.power_on_client.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.power_off_client, self.command_exec)
+        resp = self.power_off_client.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.sit_client, self.command_exec)
+        resp = self.sit_client.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.stand_client, self.command_exec)
+        resp = self.stand_client.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.estop_hard, self.command_exec)
+        resp = self.estop_hard.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.estop_gentle, self.command_exec)
+        resp = self.estop_gentle.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.estop_release, self.command_exec)
+        resp = self.estop_release.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.undock_client, self.command_exec)
+        resp = self.undock_client.call(Trigger.Request())
         self.assertEqual(resp.success, True)
-        resp = call_trigger_client(self.dock_client, self.command_exec, request=Dock.Request())
+        resp = self.dock_client.call(Dock.Request())
         self.assertEqual(resp.success, True)
+
+    # Ignore Line too long errors
+    # ruff: noqa: E501
+    def test_robot_command_goal_complete(self) -> None:
+        FEEDBACK_INVALID = -128
+
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(None), GoalResponse.IN_PROGRESS)
+
+        feedback = RobotCommandFeedback()
+
+        """ Testing FullBodyFeedback """
+
+        fullbody_feedback = feedback.command.full_body_feedback
+        feedback.command.command_choice = feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET
+
+        feedback.command.full_body_feedback.status.value = fullbody_feedback.status.STATUS_UNKNOWN
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.full_body_feedback.status.value = fullbody_feedback.status.STATUS_PROCESSING
+
+        """ Testing STOP_FEEDBACK_SET """
+        feedback.command.full_body_feedback.feedback.feedback_choice = (
+            fullbody_feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing FREEZE_FEEDBACK_SET """
+        feedback.command.full_body_feedback.feedback.feedback_choice = (
+            fullbody_feedback.feedback.FEEDBACK_FREEZE_FEEDBACK_SET
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing SELFRIGHT_FEEDBACK_SET """
+        feedback.command.full_body_feedback.feedback.feedback_choice = (
+            fullbody_feedback.feedback.FEEDBACK_SELFRIGHT_FEEDBACK_SET
+        )
+        feedback.command.full_body_feedback.feedback.selfright_feedback.status.value = (
+            fullbody_feedback.feedback.selfright_feedback.status.STATUS_COMPLETED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.full_body_feedback.feedback.selfright_feedback.status.value = (
+            fullbody_feedback.feedback.selfright_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.full_body_feedback.feedback.selfright_feedback.status.value = (
+            fullbody_feedback.feedback.selfright_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing SAFE_POWER_OFF_FEEDBACK_SET """
+        feedback.command.full_body_feedback.feedback.feedback_choice = (
+            fullbody_feedback.feedback.FEEDBACK_SAFE_POWER_OFF_FEEDBACK_SET
+        )
+        feedback.command.full_body_feedback.feedback.safe_power_off_feedback.status.value = (
+            fullbody_feedback.feedback.safe_power_off_feedback.status.STATUS_POWERED_OFF
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.full_body_feedback.feedback.safe_power_off_feedback.status.value = (
+            fullbody_feedback.feedback.safe_power_off_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.full_body_feedback.feedback.safe_power_off_feedback.status.value = (
+            fullbody_feedback.feedback.safe_power_off_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing BATTERY_CHANGE_POSE_FEEDBACK_SET """
+        feedback.command.full_body_feedback.feedback.feedback_choice = (
+            fullbody_feedback.feedback.FEEDBACK_BATTERY_CHANGE_POSE_FEEDBACK_SET
+        )
+        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value = (
+            fullbody_feedback.feedback.battery_change_pose_feedback.status.STATUS_COMPLETED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value = (
+            fullbody_feedback.feedback.battery_change_pose_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value = (
+            fullbody_feedback.feedback.battery_change_pose_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.full_body_feedback.feedback.battery_change_pose_feedback.status.value = (
+            fullbody_feedback.feedback.battery_change_pose_feedback.status.STATUS_FAILED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        """ Testing PAYLOAD_ESTIMATION_FEEDBACK_SET """
+        feedback.command.full_body_feedback.feedback.feedback_choice = (
+            fullbody_feedback.feedback.FEEDBACK_PAYLOAD_ESTIMATION_FEEDBACK_SET
+        )
+        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+            fullbody_feedback.feedback.payload_estimation_feedback.status.STATUS_COMPLETED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+            fullbody_feedback.feedback.payload_estimation_feedback.status.STATUS_SMALL_MASS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+            fullbody_feedback.feedback.payload_estimation_feedback.status.STATUS_ERROR
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+            fullbody_feedback.feedback.payload_estimation_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.full_body_feedback.feedback.payload_estimation_feedback.status.value = (
+            fullbody_feedback.feedback.payload_estimation_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing CONSTRAINED_MANIPULATION_FEEDBACK_SET """
+        feedback.command.full_body_feedback.feedback.feedback_choice = (
+            fullbody_feedback.feedback.FEEDBACK_CONSTRAINED_MANIPULATION_FEEDBACK_SET
+        )
+        feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.value = (
+            fullbody_feedback.feedback.constrained_manipulation_feedback.status.STATUS_RUNNING
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.value = (
+            fullbody_feedback.feedback.constrained_manipulation_feedback.status.STATUS_GRASP_IS_LOST
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.value = (
+            fullbody_feedback.feedback.constrained_manipulation_feedback.status.STATUS_ARM_IS_STUCK
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.full_body_feedback.feedback.constrained_manipulation_feedback.status.value = (
+            fullbody_feedback.feedback.constrained_manipulation_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        """ Testing Synchronized Feedback Command """
+        arm_command_feedback = feedback.command.synchronized_feedback.arm_command_feedback
+        feedback.command.command_choice = feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET
+
+        """ Testing arm command feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback_is_set = True
+        feedback.command.synchronized_feedback.mobility_command_feedback_is_set = False
+        feedback.command.synchronized_feedback.gripper_command_feedback_is_set = False
+
+        feedback.command.synchronized_feedback.arm_command_feedback.status.value = (
+            arm_command_feedback.status.STATUS_COMMAND_OVERRIDDEN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.status.value = (
+            arm_command_feedback.status.STATUS_COMMAND_TIMED_OUT
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.status.value = (
+            arm_command_feedback.status.STATUS_ROBOT_FROZEN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.status.value = (
+            arm_command_feedback.status.STATUS_INCOMPATIBLE_HARDWARE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.status.value = (
+            arm_command_feedback.status.STATUS_PROCESSING
+        )
+
+        """ Testing arm cartesian feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
+            arm_command_feedback.feedback.FEEDBACK_ARM_CARTESIAN_FEEDBACK_SET
+        )
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_cartesian_feedback.status.value = (
+            arm_command_feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_COMPLETE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_cartesian_feedback.status.value = (
+            arm_command_feedback.feedback.arm_cartesian_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_cartesian_feedback.status.value = (
+            arm_command_feedback.feedback.arm_cartesian_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        # should these next two test cases be failures?
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_cartesian_feedback.status.value = (
+            arm_command_feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_CANCELLED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_cartesian_feedback.status.value = (
+            arm_command_feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_STALLED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing arm joint move feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
+            arm_command_feedback.feedback.FEEDBACK_ARM_JOINT_MOVE_FEEDBACK_SET
+        )
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_joint_move_feedback.status.value = (
+            arm_command_feedback.feedback.arm_joint_move_feedback.status.STATUS_COMPLETE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_joint_move_feedback.status.value = (
+            arm_command_feedback.feedback.arm_joint_move_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_joint_move_feedback.status.value = (
+            arm_command_feedback.feedback.arm_joint_move_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        # Should this test case be a Failure?
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_joint_move_feedback.status.value = (
+            arm_command_feedback.feedback.arm_joint_move_feedback.status.STATUS_STALLED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing named arm position feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
+            arm_command_feedback.feedback.FEEDBACK_NAMED_ARM_POSITION_FEEDBACK_SET
+        )
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.named_arm_position_feedback.status.value = (
+            arm_command_feedback.feedback.named_arm_position_feedback.status.STATUS_COMPLETE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.named_arm_position_feedback.status.value = (
+            arm_command_feedback.feedback.named_arm_position_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.named_arm_position_feedback.status.value = (
+            arm_command_feedback.feedback.named_arm_position_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        # Should this test case be a Failure?
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.named_arm_position_feedback.status.value = (
+            arm_command_feedback.feedback.named_arm_position_feedback.status.STATUS_STALLED_HOLDING_ITEM
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing arm velocity feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
+            arm_command_feedback.feedback.FEEDBACK_ARM_VELOCITY_FEEDBACK_SET
+        )
+        # Arm velocity commands do not provide feedback therefore we should get a success
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing arm gaze feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
+            arm_command_feedback.feedback.FEEDBACK_ARM_GAZE_FEEDBACK_SET
+        )
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_gaze_feedback.status.value = (
+            arm_command_feedback.feedback.arm_gaze_feedback.status.STATUS_TRAJECTORY_COMPLETE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_gaze_feedback.status.value = (
+            arm_command_feedback.feedback.arm_gaze_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_gaze_feedback.status.value = (
+            arm_command_feedback.feedback.arm_gaze_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        # Should this test case be a Failure?
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_gaze_feedback.status.value = (
+            arm_command_feedback.feedback.arm_gaze_feedback.status.STATUS_TOOL_TRAJECTORY_STALLED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing arm stop feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
+            arm_command_feedback.feedback.FEEDBACK_ARM_STOP_FEEDBACK_SET
+        )
+        # Arm stop commands do not provide feedback therefore we should get a success
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing arm drag feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
+            arm_command_feedback.feedback.FEEDBACK_ARM_DRAG_FEEDBACK_SET
+        )
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_drag_feedback.status.value = (
+            arm_command_feedback.feedback.arm_drag_feedback.status.STATUS_DRAGGING
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_drag_feedback.status.value = (
+            arm_command_feedback.feedback.arm_drag_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_drag_feedback.status.value = (
+            arm_command_feedback.feedback.arm_drag_feedback.status.STATUS_GRASP_FAILED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_drag_feedback.status.value = (
+            arm_command_feedback.feedback.arm_drag_feedback.status.STATUS_OTHER_FAILURE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        """ Testing arm drag feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
+            arm_command_feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET
+        )
+        # Arm impedance commands do not provide feedback therefore we should get a success
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing arm drag feedback """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
+            arm_command_feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET
+        )
+        # Arm impedance commands do not provide feedback therefore we should get a success
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing unknown arm command """
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = FEEDBACK_INVALID
+        # Arm impedance commands do not provide feedback therefore we should get a success
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing mobility commands """
+        mobility_feedback = RobotCommandFeedback().command.synchronized_feedback.mobility_command_feedback
+
+        feedback.command.synchronized_feedback.arm_command_feedback_is_set = False
+        feedback.command.synchronized_feedback.mobility_command_feedback_is_set = True
+        feedback.command.synchronized_feedback.gripper_command_feedback_is_set = False
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.status.value = (
+            mobility_feedback.status.STATUS_COMMAND_OVERRIDDEN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.status.value = (
+            mobility_feedback.status.STATUS_COMMAND_TIMED_OUT
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.status.value = (
+            mobility_feedback.status.STATUS_ROBOT_FROZEN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.status.value = (
+            mobility_feedback.status.STATUS_INCOMPATIBLE_HARDWARE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.status.value = (
+            mobility_feedback.status.STATUS_PROCESSING
+        )
+
+        """ Testing se2 trajectory feedback """
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = (
+            mobility_feedback.feedback.FEEDBACK_SE2_TRAJECTORY_FEEDBACK_SET
+        )
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.se2_trajectory_feedback.status.value = (
+            mobility_feedback.feedback.se2_trajectory_feedback.status.STATUS_AT_GOAL
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.se2_trajectory_feedback.status.value = (
+            mobility_feedback.feedback.se2_trajectory_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.se2_trajectory_feedback.status.value = (
+            mobility_feedback.feedback.se2_trajectory_feedback.status.STATUS_NEAR_GOAL
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.se2_trajectory_feedback.status.value = (
+            mobility_feedback.feedback.se2_trajectory_feedback.status.STATUS_GOING_TO_GOAL
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing se2 velocity feedback """
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = (
+            mobility_feedback.feedback.FEEDBACK_SE2_VELOCITY_FEEDBACK_SET
+        )
+        # Planar velocity commands provide no feedback, therefore expect SUCCESS
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing sit feedback """
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = (
+            mobility_feedback.feedback.FEEDBACK_SIT_FEEDBACK_SET
+        )
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.sit_feedback.status.value = (
+            mobility_feedback.feedback.sit_feedback.status.STATUS_IS_SITTING
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.sit_feedback.status.value = (
+            mobility_feedback.feedback.sit_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.sit_feedback.status.value = (
+            mobility_feedback.feedback.sit_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing stand feedback """
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = (
+            mobility_feedback.feedback.FEEDBACK_STAND_FEEDBACK_SET
+        )
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.stand_feedback.status.value = (
+            mobility_feedback.feedback.stand_feedback.status.STATUS_IS_STANDING
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.stand_feedback.status.value = (
+            mobility_feedback.feedback.stand_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.stand_feedback.status.value = (
+            mobility_feedback.feedback.stand_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing stance feedback """
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = (
+            mobility_feedback.feedback.FEEDBACK_STANCE_FEEDBACK_SET
+        )
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.stance_feedback.status.value = (
+            mobility_feedback.feedback.stance_feedback.status.STATUS_TOO_FAR_AWAY
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.stance_feedback.status.value = (
+            mobility_feedback.feedback.stance_feedback.status.STATUS_STANCED
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.stance_feedback.status.value = (
+            mobility_feedback.feedback.stance_feedback.status.STATUS_GOING_TO_STANCE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.stance_feedback.status.value = (
+            mobility_feedback.feedback.stance_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing stop feedback """
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = (
+            mobility_feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET
+        )
+        # Stop commands provide no feedback, therefore expect SUCCESS
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing stop feedback """
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = (
+            mobility_feedback.feedback.FEEDBACK_FOLLOW_ARM_FEEDBACK_SET
+        )
+        # follow arm commands provide no feedback, therefore expect SUCCESS
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing stop feedback """
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = (
+            mobility_feedback.feedback.FEEDBACK_NOT_SET
+        )
+        # mobility command feedback is not set, this could be caused by a command that finishes and resets the feedback status.
+        # because of this case, it will return success as long as no other synchronous commands are run afterwards.
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing unknown command """
+        feedback.command.synchronized_feedback.mobility_command_feedback.feedback.feedback_choice = FEEDBACK_INVALID
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing Gripper commands """
+        gripper_feedback = RobotCommandFeedback().command.synchronized_feedback.gripper_command_feedback
+
+        feedback.command.synchronized_feedback.arm_command_feedback_is_set = False
+        feedback.command.synchronized_feedback.mobility_command_feedback_is_set = False
+        feedback.command.synchronized_feedback.gripper_command_feedback_is_set = True
+
+        feedback.command.synchronized_feedback.gripper_command_feedback.status.value = (
+            gripper_feedback.status.STATUS_COMMAND_OVERRIDDEN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.gripper_command_feedback.status.value = (
+            gripper_feedback.status.STATUS_COMMAND_TIMED_OUT
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.gripper_command_feedback.status.value = (
+            gripper_feedback.status.STATUS_ROBOT_FROZEN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.gripper_command_feedback.status.value = (
+            gripper_feedback.status.STATUS_INCOMPATIBLE_HARDWARE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
+
+        feedback.command.synchronized_feedback.gripper_command_feedback.status.value = (
+            gripper_feedback.status.STATUS_PROCESSING
+        )
+
+        """ Testing Claw Gripper feedback """
+        feedback.command.synchronized_feedback.gripper_command_feedback.command.command_choice = (
+            gripper_feedback.command.COMMAND_CLAW_GRIPPER_FEEDBACK_SET
+        )
+        feedback.command.synchronized_feedback.gripper_command_feedback.command.claw_gripper_feedback.status.value = (
+            gripper_feedback.command.claw_gripper_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.gripper_command_feedback.command.claw_gripper_feedback.status.value = (
+            gripper_feedback.command.claw_gripper_feedback.status.STATUS_UNKNOWN
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        feedback.command.synchronized_feedback.gripper_command_feedback.command.claw_gripper_feedback.status.value = (
+            gripper_feedback.command.claw_gripper_feedback.status.STATUS_AT_GOAL
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        feedback.command.synchronized_feedback.gripper_command_feedback.command.claw_gripper_feedback.status.value = (
+            gripper_feedback.command.claw_gripper_feedback.status.STATUS_APPLYING_FORCE
+        )
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.SUCCESS)
+
+        """ Testing unknown gripper command """
+        feedback.command.synchronized_feedback.gripper_command_feedback.command.command_choice = FEEDBACK_INVALID
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+
+        """ Testing unknown robot command type """
+        feedback.command.command_choice = FEEDBACK_INVALID
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
 
 
 if __name__ == "__main__":
