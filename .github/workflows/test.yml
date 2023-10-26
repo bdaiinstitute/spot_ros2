@@ -33,11 +33,11 @@ jobs:
         source install/local_setup.bash
     - name: Test Package
       run: |
-        # go to root folder
         source /opt/ros/$ROS_DISTRO/setup.bash
-        cd ../../
         source install/local_setup.bash
-        colcon test --event-handlers console_cohesion+
+        # skip testing submodules
+        colcon test --packages-skip bdai_ros2_wrappers --event-handlers console_cohesion+
+      working-directory: ${{ github.workspace }}/../../
     - name: Install docs dependencies & build docs
       run: |
         source /opt/ros/$ROS_DISTRO/setup.bash

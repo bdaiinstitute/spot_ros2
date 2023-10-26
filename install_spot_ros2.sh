@@ -22,8 +22,8 @@ fi
 # Install ROS dependencies
 sudo apt install -y ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-tf-transformations ros-$ROS_DISTRO-xacro ros-$ROS_DISTRO-depth-image-proc
 # Install the dist-utils
-sudo apt-get install python3-distutils
-sudo apt-get install python3-apt
+sudo apt-get install -y python3-distutils
+sudo apt-get install -y python3-apt
 sudo pip3 install --force-reinstall -v "setuptools==59.6.0"
 
 
