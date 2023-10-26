@@ -187,23 +187,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(spot_driver_node)
 
-    spot_image_publisher_params = {
-        "spot_name": spot_name,
-    }
-    # If using nodelets to generate registered depth images, do not retrieve and publish registered depth images using
-    # spot_image_publisher_node.
-    if depth_registered_mode is not DepthRegisteredMode.FROM_SPOT:
-        spot_image_publisher_params.update({"publish_depth_registered": False})
-
-    spot_image_publisher_node = launch_ros.actions.Node(
-        package="spot_driver_cpp",
-        executable="spot_image_publisher_node",
-        output="screen",
-        parameters=[config_file, spot_image_publisher_params],
-        namespace=spot_name,
-    )
-    ld.add_action(spot_image_publisher_node)
-
     if not tf_prefix and spot_name:
         tf_prefix = PathJoinSubstitution([spot_name, ""])
 
@@ -255,6 +238,24 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         if depth_registered_mode is DepthRegisteredMode.FROM_NODELETS
         else []
     ) + (create_point_cloud_nodelets(context, spot_name, has_arm) if publish_point_clouds else [])
+
+    spot_image_publisher_params = {
+        "spot_name": spot_name,
+    }
+    # If using nodelets to generate registered depth images, do not retrieve and publish registered depth images using
+    # spot_image_publisher_node.
+    if depth_registered_mode is not DepthRegisteredMode.FROM_SPOT:
+        spot_image_publisher_params.update({"publish_depth_registered": False})
+
+    composable_node_descriptions.append(
+        launch_ros.descriptions.ComposableNode(
+            package="spot_driver_cpp",
+            plugin="spot_ros2::SpotImagePublisherNode",
+            parameters=[config_file, spot_image_publisher_params],
+            namespace=spot_name,
+        )
+    )
+
     container = launch_ros.actions.ComposableNodeContainer(
         name="container",
         namespace=spot_name,
