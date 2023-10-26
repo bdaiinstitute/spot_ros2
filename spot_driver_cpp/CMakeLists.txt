@@ -92,9 +92,8 @@ install(
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install include and launch directories
+# Install include directory
 install(DIRECTORY include/ DESTINATION include)
-install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
