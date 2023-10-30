@@ -1,0 +1,22 @@
+[flake8]
+import-order-style = google
+
+# Report all errors starting with E, F, W or C - or Bugbear's B590 rule, which is a "pragmatic" version of E501 (line too long)
+select = E,F,W,C,B590
+
+max-line-length = 120
+
+# Ignore E501 - line too long - in favor of B590, which is more forgiving of long strings and comments that would be silly to break up.
+# Ignore E203 - whitespace before ':' - because Black includes spaces in formatting slice expressions.
+# Ignore W503 - Line break occurred before a binary operator - because this error is introduced by Black formatter.
+ignore = E501,E203,W503
+
+# conversions.py is a auto generated file. Linting it would be a bad idea
+# also exclude submodules
+exclude =
+    ./spot_driver/spot_driver/conversions.py
+    ./spot_wrapper
+    ./ros_utilities
+
+show-source = true
+statistics = true
