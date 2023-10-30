@@ -57,8 +57,7 @@ jobs:
         source /opt/ros/$ROS_DISTRO/setup.bash
         source install/local_setup.bash
         # skip testing submodules
-        colcon test --packages-skip bdai_ros2_wrappers --event-handlers console_direct+ --python-testing pytest --pytest-with-coverage
-        coverage_files=$(find . -name "coverage.xml" -type f)
+        colcon test --python-testing pytest --pytest-with-coverage --event-handlers console_direct+ --packages-skip bdai_ros2_wrappers
       working-directory: ${{ github.workspace }}/../../
     - name: Upload coverage to Coveralls
       uses: coverallsapp/github-action@v2
@@ -67,7 +66,7 @@ jobs:
         fail-on-error: true
         flag-name: unittests
         debug: true
-        files: $coverage_files
+        files: $(find ${{ github.workspace }}/../../ -name "coverage.xml" -type f)
     - if: always()
       run: colcon test-result --verbose
       working-directory: ${{ github.workspace }}/../../
