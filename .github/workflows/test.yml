@@ -64,7 +64,7 @@ jobs:
         fail-on-error: true
         flag-name: unittests
         debug: true
-        files: $(find ${{ github.workspace }}/../../ -name "coverage.xml" -type f)
+        files: $(find ../../ -name "coverage.xml" -type f)
     - if: always()
       run: colcon test-result --verbose
       working-directory: ${{ github.workspace }}/../../
