@@ -34,3 +34,14 @@ repos:
       - types-PyYAML
       - types-toml
       - types-six
+-   repo: https://github.com/ssciwr/clang-format-hook.git
+    rev: v12.0.1  # Use the sha / tag you want to point at
+    hooks:
+    -   id: clang-format
+        types_or: [c++, c, cuda]
+-   repo: https://github.com/cpplint/cpplint.git
+    rev: 1.6.1
+    hooks:
+    -   id: cpplint
+        args: ['--quiet']
+        exclude_types: [cuda]
