@@ -15,7 +15,7 @@ permissions:
 jobs:
   flake8:
     name: flake8
-    runs-on: ubuntu-latest
+    runs-on: bdaiinstitute/spot_ros2_jammy_humble
     defaults:
       run:
         shell: bash
@@ -31,7 +31,7 @@ jobs:
         run: python3 -m flake8
   build_and_test_package_and_docs:
     name: build_and_test_package_and_docs
-    runs-on: ubuntu-latest
+    runs-on: bdaiinstitute/spot_ros2_jammy_humble
     defaults:
       run:
         shell: bash
