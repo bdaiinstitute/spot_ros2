@@ -15,12 +15,11 @@ permissions:
 jobs:
   flake8:
     name: flake8
-    runs-on: bdaiinstitute/spot_ros2_jammy_humble
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-    container:
-      image: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
+    container: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
@@ -31,12 +30,11 @@ jobs:
         run: python3 -m flake8
   build_and_test_package_and_docs:
     name: build_and_test_package_and_docs
-    runs-on: bdaiinstitute/spot_ros2_jammy_humble
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-    container:
-      image: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
+    container: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
     steps:
     - name: Checkout repo and submodules
       uses: actions/checkout@v3
