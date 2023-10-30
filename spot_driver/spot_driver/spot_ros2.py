@@ -70,7 +70,7 @@ from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
 
-#DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
+# DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
 from spot_driver.ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
