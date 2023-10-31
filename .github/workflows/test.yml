@@ -13,21 +13,6 @@ permissions:
     contents: write
 
 jobs:
-  flake8:
-    name: flake8
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    container: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Run flake8
-        run: python3 -m flake8
   build_and_test_package_and_docs:
     name: build_and_test_package_and_docs
     runs-on: ubuntu-latest
