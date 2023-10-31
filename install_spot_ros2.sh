@@ -19,6 +19,8 @@ else
     exit 1
 fi
 
+sudo apt-get update
+
 # Install ROS dependencies
 # TODO(jschornak-bdai): use rosdep to install these packages by parsing dependencies listed in package.xml
 sudo apt install -y ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-tf-transformations ros-$ROS_DISTRO-xacro ros-$ROS_DISTRO-depth-image-proc ros-$ROS_DISTRO-tl-expected
