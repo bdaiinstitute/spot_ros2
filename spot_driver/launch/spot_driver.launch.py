@@ -176,20 +176,41 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         )
         publish_point_clouds = False
 
-    spot_driver_params = [config_file, {"spot_name": spot_name}]
-
-    if depth_registered_mode is not DepthRegisteredMode.FROM_SPOT:
-        spot_driver_params.append({"publish_depth_registered": False})
+    # Since spot_image_publisher_node is responsible for retrieving and publishing images, disable all image publishing
+    # in spot_driver.
+    spot_driver_params = {
+        "spot_name": spot_name,
+        "publish_depth_registered": False,
+        "publish_depth": False,
+        "publish_rgb": False,
+    }
 
     spot_driver_node = launch_ros.actions.Node(
         package="spot_driver",
         executable="spot_ros2",
         name="spot_ros2",
         output="screen",
-        parameters=spot_driver_params,
+        parameters=[config_file, spot_driver_params],
         namespace=spot_name,
     )
     ld.add_action(spot_driver_node)
+
+    spot_image_publisher_params = {
+        "spot_name": spot_name,
+    }
+    # If using nodelets to generate registered depth images, do not retrieve and publish registered depth images using
+    # spot_image_publisher_node.
+    if depth_registered_mode is not DepthRegisteredMode.FROM_SPOT:
+        spot_image_publisher_params.update({"publish_depth_registered": False})
+
+    spot_image_publisher_node = launch_ros.actions.Node(
+        package="spot_driver_cpp",
+        executable="spot_image_publisher_node",
+        output="screen",
+        parameters=[config_file, spot_image_publisher_params],
+        namespace=spot_name,
+    )
+    ld.add_action(spot_image_publisher_node)
 
     if not tf_prefix and spot_name:
         tf_prefix = PathJoinSubstitution([spot_name, ""])
