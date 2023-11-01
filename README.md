@@ -5,7 +5,7 @@
     <a href="https://github.com/MASKOR/spot_ros2/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
     </a>
-    <a href="https://coveralls.io/github/bdaiinstitute/bdai?branch=main">
+    <a href="https://coveralls.io/github/bdaiinstitute/spot_ros2?branch=main">
         <img src="https://coveralls.io/repos/github/bdaiinstitute/spot_ros2/badge.svg?branch=main" />
     </a>
     <a href="https://www.python.org/">
