@@ -266,16 +266,15 @@ class SpotDriverTest(unittest.TestCase):
         )
         self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
 
-        # should these next two test cases be failures?
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_cartesian_feedback.status.value = (
             arm_command_feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_CANCELLED
         )
-        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
 
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_cartesian_feedback.status.value = (
             arm_command_feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_STALLED
         )
-        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
 
         """ Testing arm joint move feedback """
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
@@ -297,11 +296,10 @@ class SpotDriverTest(unittest.TestCase):
         )
         self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
 
-        # Should this test case be a Failure?
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_joint_move_feedback.status.value = (
             arm_command_feedback.feedback.arm_joint_move_feedback.status.STATUS_STALLED
         )
-        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
 
         """ Testing named arm position feedback """
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
@@ -323,11 +321,10 @@ class SpotDriverTest(unittest.TestCase):
         )
         self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
 
-        # Should this test case be a Failure?
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.named_arm_position_feedback.status.value = (
             arm_command_feedback.feedback.named_arm_position_feedback.status.STATUS_STALLED_HOLDING_ITEM
         )
-        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
 
         """ Testing arm velocity feedback """
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
@@ -356,11 +353,10 @@ class SpotDriverTest(unittest.TestCase):
         )
         self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
 
-        # Should this test case be a Failure?
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_gaze_feedback.status.value = (
             arm_command_feedback.feedback.arm_gaze_feedback.status.STATUS_TOOL_TRAJECTORY_STALLED
         )
-        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.IN_PROGRESS)
+        self.assertEqual(self.spot_ros2._robot_command_goal_complete(feedback), GoalResponse.FAILED)
 
         """ Testing arm stop feedback """
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
