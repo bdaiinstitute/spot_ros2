@@ -6,7 +6,7 @@
         <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
     </a>
     <a href="https://coveralls.io/github/bdaiinstitute/bdai?branch=main">
-        <img src="https://coveralls.io/repos/github/bdaiinstitute/spot_ros2/badge.svg?branch=main&amp;t=bD2v0h" />
+        <img src="https://coveralls.io/repos/github/bdaiinstitute/spot_ros2/badge.svg?branch=main" />
     </a>
     <a href="https://www.python.org/">
         <img src="https://img.shields.io/badge/built%20with-Python3-red.svg" />
