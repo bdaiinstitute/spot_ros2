@@ -1,4 +1,4 @@
-### Debug
+# Debug
 # from ros_helpers import *
 import logging
 import os
@@ -74,7 +74,7 @@ from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
 
-#####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
+# DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
 from spot_driver.ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
@@ -367,7 +367,7 @@ class SpotROS(Node):
         if self.name is not None:
             name_str = " for " + self.name
         self.get_logger().info("Starting ROS driver for Spot" + name_str)
-        ############## testing with Robot
+        # testing with Robot
 
         if self.name == MOCK_HOSTNAME:
             self.spot_wrapper: Optional[SpotWrapper] = None
@@ -777,7 +777,7 @@ class SpotROS(Node):
             )
 
         # Register Shutdown Handle
-        # rclpy.on_shutdown(spot_ros.shutdown) ############## Shutdown Handle
+        # rclpy.on_shutdown(spot_ros.shutdown) # Shutdown Handle
 
         # Wait for an estop to be connected
         if self.spot_wrapper is not None and not self.start_estop.value:
