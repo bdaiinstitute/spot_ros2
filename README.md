@@ -3,16 +3,19 @@
   <h1 align="center">Spot ROS2 Driver</h1>
   <p align="center">
     <a href="https://github.com/MASKOR/spot_ros2/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
+        <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
+    </a>
+    <a href="https://coveralls.io/github/bdaiinstitute/bdai?branch=main">
+        <img src="https://coveralls.io/repos/github/bdaiinstitute/spot_ros2/badge.svg?branch=main&amp;t=bD2v0h" />
     </a>
     <a href="https://www.python.org/">
-    <img src="https://img.shields.io/badge/built%20with-Python3-red.svg" />
+        <img src="https://img.shields.io/badge/built%20with-Python3-red.svg" />
     </a>
     <a href="https://github.com/bdaiinstitute/spot_ros2/actions">
-    <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/test.yml/badge.svg">
+        <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/test.yml/badge.svg">
     </a>
     <a href="https://bdaiinstitute.github.io/spot_ros2">
-    <img src="https://img.shields.io/badge/docs-Python3-blue">
+        <img src="https://img.shields.io/badge/docs-Python3-blue">
     </a>
   </p>
 </p>
