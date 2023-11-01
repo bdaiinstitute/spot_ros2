@@ -28,7 +28,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     python3-pytest-cov \
     python3-rosdep \
     libpython3-dev \
-    python3-vcstool && \
+    python3-vcstool \
+    ros-humble-tl-expected && \
     rm -rf /var/lib/apt/lists/*
 
 # I added this
@@ -47,6 +48,11 @@ RUN apt-get update -q && \
 RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.2.0-frametreesnapshot/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb --output /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb --silent \
   && dpkg -i /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb \
   && rm /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
+
+# Install spot_cpp_sdk package
+RUN curl -sL https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v3.3.0-cmake-infra/spot-cpp-sdk_3.3.0_amd64.deb --output /tmp/spot-cpp-sdk_3.3.0_amd64.deb --silent \
+  && dpkg -i /tmp/spot-cpp-sdk_3.3.0_amd64.deb \
+  && rm /tmp/spot-cpp-sdk_3.3.0_amd64.deb
 
 # Install packages inside the new environment
 RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
