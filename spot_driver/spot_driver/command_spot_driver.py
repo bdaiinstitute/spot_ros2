@@ -431,7 +431,7 @@ class CommandSpotDriver(Node):
         self.stand()
         # resp = self.set_locomotion(mode=1)
         # resp = self.set_velocity(0.2, 0.2, 0.1)
-        ##            self.cmd_vel(0.1, 0.0, 0.0)
+        #             self.cmd_vel(0.1, 0.0, 0.0)
         time.sleep(15)
         self.sit()
         self.power_off()
@@ -451,7 +451,7 @@ class CommandSpotDriver(Node):
                 resp = self.release()
                 return
 
-            ## resp = self.claim()
+            # resp = self.claim()
             # if not resp.success:
             #    self.get_logger().error(f'CLAIM FAILED: {resp.message}')
             #    return
@@ -479,7 +479,7 @@ class CommandSpotDriver(Node):
             if self.command == "stop":
                 resp = self.sit()
                 # have to wait to finish
-                ##resp = self.release()
+                # resp = self.release()
 
             self.get_logger().error(f"command: {self.command}")
 
@@ -539,7 +539,7 @@ class CommandSpotDriver(Node):
             if self.command == "carry":
                 resp = self.carry()
 
-            ## resp = self.release()
+            # resp = self.release()
             # if not resp.success:
             #    self.get_logger().error(f'RELEASE FAILED: {resp.message}')
             #    return
