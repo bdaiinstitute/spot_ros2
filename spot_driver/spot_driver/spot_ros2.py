@@ -1537,7 +1537,7 @@ class SpotROS(Node):
                 return GoalResponse.IN_PROGRESS
         elif choice == fb.FEEDBACK_ARM_JOINT_MOVE_FEEDBACK_SET:
             if fb.arm_joint_move_feedback.status.value == fb.arm_joint_move_feedback.status.STATUS_STALLED:
-                return GoalResponse..FAILED
+                return GoalResponse.FAILED
             if fb.arm_joint_move_feedback.status.value != fb.arm_joint_move_feedback.status.STATUS_COMPLETE:
                 return GoalResponse.IN_PROGRESS
         elif choice == fb.FEEDBACK_NAMED_ARM_POSITION_FEEDBACK_SET:
