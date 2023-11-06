@@ -1548,7 +1548,7 @@ class SpotROS(Node):
         elif choice == fb.FEEDBACK_ARM_VELOCITY_FEEDBACK_SET:
             self.get_logger().warn("WARNING: ArmVelocityCommand provides no feedback")
         elif choice == fb.FEEDBACK_ARM_GAZE_FEEDBACK_SET:
-            if fb.arm_gaze_feedback.status.value != fb.arm_gaze_feedback.status.STATUS_TOOL_TRAJECTORY_STALLED:
+            if fb.arm_gaze_feedback.status.value == fb.arm_gaze_feedback.status.STATUS_TOOL_TRAJECTORY_STALLED:
                 return GoalResponse.FAILED
             if fb.arm_gaze_feedback.status.value != fb.arm_gaze_feedback.status.STATUS_TRAJECTORY_COMPLETE:
                 return GoalResponse.IN_PROGRESS
