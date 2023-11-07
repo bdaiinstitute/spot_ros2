@@ -67,6 +67,11 @@ def se3_pose_to_ros_transform(se3_pose: SE3Pose) -> Transform:
 # ROS <-> PROTO
 
 
+def convert_bool_to_proto(bool_val: bool, proto: wrappers_pb2.BoolValue) -> None:
+    proto.Clear()
+    proto.value = bool_val
+
+
 def convert_builtin_interfaces_duration_to_proto(
     ros_duration: builtin_interfaces.msg.Duration, proto_duration: google.protobuf.duration_pb2.Duration
 ) -> None:
