@@ -118,9 +118,9 @@ class DepthRegisteredMode(Enum):
     FROM_NODELETS = (2,)
 
 
-def get_camera_sources(context: launch.LaunchContext, has_arm: LaunchConfiguration) -> List[str]:
+def get_camera_sources(context: launch.LaunchContext, has_arm: bool) -> List[str]:
     camera_sources = ["frontleft", "frontright", "left", "right", "back"]
-    if has_arm.perform(context) == "true" or has_arm.perform(context) == "True":
+    if has_arm:
         camera_sources.append("hand")
     return camera_sources
 
@@ -128,7 +128,7 @@ def get_camera_sources(context: launch.LaunchContext, has_arm: LaunchConfigurati
 def create_depth_registration_nodelets(
     context: launch.LaunchContext,
     spot_name: LaunchConfiguration,
-    has_arm: LaunchConfiguration,
+    has_arm: bool,
 ) -> List[launch_ros.descriptions.ComposableNode]:
     """Create the list of depth_image_proc::RegisterNode composable nodes required to generate registered depth images
     for Spot's cameras."""
@@ -166,7 +166,7 @@ def create_depth_registration_nodelets(
 def create_point_cloud_nodelets(
     context: launch.LaunchContext,
     spot_name: LaunchConfiguration,
-    has_arm: LaunchConfiguration,
+    has_arm: bool,
 ) -> List[launch_ros.descriptions.ComposableNode]:
     """Create the list of depth_image_proc::PointCloudXyzrgbNode composable nodes required to generate point clouds for
     each pair of RGB and registered depth cameras."""
