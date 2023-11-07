@@ -1528,17 +1528,28 @@ class SpotROS(Node):
         choice = fb.feedback_choice
 
         if choice == fb.FEEDBACK_ARM_CARTESIAN_FEEDBACK_SET:
+            if (
+                fb.arm_cartesian_feedback.status.value == fb.arm_cartesian_feedback.status.STATUS_TRAJECTORY_CANCELLED 
+                or fb.arm_cartesian_feedback.status.value == fb.arm_cartesian_feedback.status.STATUS_TRAJECTORY_STALLED 
+            ):
+                return GoalResponse.FAILED
             if fb.arm_cartesian_feedback.status.value != fb.arm_cartesian_feedback.status.STATUS_TRAJECTORY_COMPLETE:
                 return GoalResponse.IN_PROGRESS
         elif choice == fb.FEEDBACK_ARM_JOINT_MOVE_FEEDBACK_SET:
+            if fb.arm_joint_move_feedback.status.value == fb.arm_joint_move_feedback.status.STATUS_STALLED:
+                return GoalResponse.FAILED
             if fb.arm_joint_move_feedback.status.value != fb.arm_joint_move_feedback.status.STATUS_COMPLETE:
                 return GoalResponse.IN_PROGRESS
         elif choice == fb.FEEDBACK_NAMED_ARM_POSITION_FEEDBACK_SET:
+            if fb.named_arm_position_feedback.status.value == fb.named_arm_position_feedback.status.STATUS_STALLED_HOLDING_ITEM:
+                return GoalResponse.FAILED
             if fb.named_arm_position_feedback.status.value != fb.named_arm_position_feedback.status.STATUS_COMPLETE:
                 return GoalResponse.IN_PROGRESS
         elif choice == fb.FEEDBACK_ARM_VELOCITY_FEEDBACK_SET:
             self.get_logger().warn("WARNING: ArmVelocityCommand provides no feedback")
         elif choice == fb.FEEDBACK_ARM_GAZE_FEEDBACK_SET:
+            if fb.arm_gaze_feedback.status.value == fb.arm_gaze_feedback.status.STATUS_TOOL_TRAJECTORY_STALLED:
+                return GoalResponse.FAILED
             if fb.arm_gaze_feedback.status.value != fb.arm_gaze_feedback.status.STATUS_TRAJECTORY_COMPLETE:
                 return GoalResponse.IN_PROGRESS
         elif choice == fb.FEEDBACK_ARM_STOP_FEEDBACK_SET:
