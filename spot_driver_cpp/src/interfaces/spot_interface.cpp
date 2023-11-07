@@ -361,4 +361,9 @@ tl::expected<google::protobuf::Duration, std::string> SpotInterface::getClockSke
   }
   return *get_skew_response.response;
 }
+
+void SpotInterface::inverseKinematics(::bosdyn::api::spot::InverseKinematicsRequest request) {
+
+}
+
 }  // namespace spot_ros2

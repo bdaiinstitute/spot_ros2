@@ -34,6 +34,8 @@ add_library(spot_image_publisher
   src/interfaces/rclcpp_tf_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
   src/interfaces/spot_interface.cpp
+  src/inverse_kinematic_node.cpp
+  src/inverse_kinematic_node_main.cpp
   src/spot_image_publisher.cpp
   src/spot_image_publisher_node.cpp
   src/spot_image_sources.cpp)

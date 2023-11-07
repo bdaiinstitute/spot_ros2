@@ -5,6 +5,7 @@
 #include <bosdyn/client/image/image_client.h>
 #include <bosdyn/client/sdk/client_sdk.h>
 #include <bosdyn/client/time_sync/time_sync_client.h>
+#include <bosdyn/client/inverse_kinematics/inverse_kinematics_client.h>
 #include <spot_driver_cpp/interfaces/spot_interface_base.hpp>
 
 #include <memory>
@@ -24,6 +25,8 @@ class SpotInterface : public SpotInterfaceBase {
   tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) override;
   tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(
       const google::protobuf::Timestamp& robot_timestamp) override;
+
+  void inverseKinematics(::bosdyn::api::spot::InverseKinematicsRequest request);
 
  private:
   /**
@@ -47,5 +50,6 @@ class SpotInterface : public SpotInterfaceBase {
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread_;
   std::unique_ptr<::bosdyn::client::ImageClient> image_client_;
+  std::unique_ptr<::bosdyn::client::InverseKinematicsClient> inverse_kinematic_client_;
 };
 }  // namespace spot_ros2
