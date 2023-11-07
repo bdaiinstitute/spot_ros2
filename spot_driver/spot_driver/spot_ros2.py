@@ -66,6 +66,9 @@ from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
 from sensor_msgs.msg import CameraInfo, Image, JointState
+from spot_wrapper.cam_wrapper import SpotCamWrapper
+from spot_wrapper.spot_images import CameraSource
+from spot_wrapper.wrapper import SpotWrapper
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
@@ -133,9 +136,6 @@ from spot_msgs.srv import (  # type: ignore
     SetVolume,
     UploadAnimation,
 )
-from spot_wrapper.cam_wrapper import SpotCamWrapper
-from spot_wrapper.spot_images import CameraSource
-from spot_wrapper.wrapper import SpotWrapper
 
 MAX_DURATION = 1e6
 MOCK_HOSTNAME = "Mock_spot"

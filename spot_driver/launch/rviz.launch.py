@@ -1,8 +1,6 @@
 # Copyright [2023] Boston Dynamics AI Institute, Inc.
 
 import os
-from enum import Enum
-from typing import List
 
 import launch
 import launch_ros
@@ -17,6 +15,7 @@ from launch.substitutions import (
 from launch_ros.substitutions import FindPackageShare
 
 THIS_PACKAGE = "spot_driver"
+
 
 def create_rviz_config(robot_name: str) -> None:
     """Writes a configuration file for rviz to visualize a single spot robot"""

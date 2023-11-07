@@ -7,21 +7,12 @@ from typing import List
 
 import launch
 import launch_ros
-import yaml
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
-from launch.substitutions import (
-    Command,
-    FindExecutable,
-    LaunchConfiguration,
-    PathJoinSubstitution,
-    TextSubstitution
-)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.substitutions import FindPackageShare
-
 from spot_wrapper.wrapper import SpotWrapper
 
 THIS_PACKAGE = "spot_driver"
@@ -308,10 +299,10 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(robot_state_publisher)
 
     rviz = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), '/launch', '/rviz.launch.py']),
+        PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/rviz.launch.py"]),
         launch_arguments={
-            'spot_name': spot_name,
-            'rviz_config_file': rviz_config_file,
+            "spot_name": spot_name,
+            "rviz_config_file": rviz_config_file,
         }.items(),
         condition=IfCondition(launch_rviz),
     )
