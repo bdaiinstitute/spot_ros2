@@ -25,7 +25,6 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image, JointState
-from spot_wrapper.wrapper import SpotWrapper
 from tf2_msgs.msg import TFMessage
 
 from spot_driver.conversions import convert_proto_to_bosdyn_msgs_manipulator_state
@@ -43,6 +42,7 @@ from spot_msgs.msg import (  # type: ignore
     SystemFaultState,
     WiFiState,
 )
+from spot_wrapper.wrapper import SpotWrapper
 
 try:
     from conversions import ros_transform_to_se3_pose
