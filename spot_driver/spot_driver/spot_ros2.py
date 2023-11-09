@@ -1515,7 +1515,7 @@ class SpotROS(Node):
             return GoalResponse.FAILED
         return GoalResponse.IN_PROGRESS
 
-    def _process_synchronized_arm_command_feedback(self, feedback: ArmCommandFeedback) -> Optional[GoalResponse]:
+    def _process_synchronized_arm_command_feedback(self, feedback: ArmCommandFeedback) -> GoalResponse:
         if (
             feedback.status.value == feedback.status.STATUS_COMMAND_OVERRIDDEN
             or feedback.status.value == feedback.status.STATUS_COMMAND_TIMED_OUT
@@ -1565,11 +1565,9 @@ class SpotROS(Node):
         else:
             self.get_logger().error("ERROR: unknown arm command type")
             return GoalResponse.IN_PROGRESS
-        return None
+        return GoalResponse.SUCCESS
 
-    def _process_synchronized_mobility_command_feedback(
-        self, feedback: MobilityCommandFeedback
-    ) -> Optional[GoalResponse]:
+    def _process_synchronized_mobility_command_feedback(self, feedback: MobilityCommandFeedback) -> GoalResponse:
         if (
             feedback.status.value == feedback.status.STATUS_COMMAND_OVERRIDDEN
             or feedback.status.value == feedback.status.STATUS_COMMAND_TIMED_OUT
@@ -1608,11 +1606,9 @@ class SpotROS(Node):
         else:
             self.get_logger().error("ERROR: unknown mobility command type")
             return GoalResponse.IN_PROGRESS
-        return None
+        return GoalResponse.SUCCESS
 
-    def _process_synchronized_gripper_command_feedback(
-        self, feedback: GripperCommandFeedback
-    ) -> Optional[GoalResponse]:
+    def _process_synchronized_gripper_command_feedback(self, feedback: GripperCommandFeedback) -> GoalResponse:
         if (
             feedback.status.value == feedback.status.STATUS_COMMAND_OVERRIDDEN
             or feedback.status.value == feedback.status.STATUS_COMMAND_TIMED_OUT
@@ -1633,11 +1629,17 @@ class SpotROS(Node):
             ):
                 self.get_logger().error("ERROR: claw grippper status unknown")
                 return GoalResponse.IN_PROGRESS
-            # else: STATUS_AT_GOAL or STATUS_APPLYING_FORCE
+            if (
+                feedback.command.claw_gripper_feedback.status.value
+                == feedback.command.claw_gripper_feedback.status.STATUS_AT_GOAL
+                or feedback.command.claw_gripper_feedback.status.value
+                == feedback.command.claw_gripper_feedback.status.STATUS_APPLYING_FORCE
+            ):
+                return GoalResponse.SUCCESS
         else:
             self.get_logger().error("ERROR: unknown gripper command type")
             return GoalResponse.IN_PROGRESS
-        return None
+        return GoalResponse.SUCCESS
 
     def _robot_command_goal_complete(self, feedback: RobotCommandFeedback) -> GoalResponse:
         if feedback is None:
@@ -1664,22 +1666,22 @@ class SpotROS(Node):
             if sync_feedback.arm_command_feedback_is_set is True:
                 arm_feedback = sync_feedback.arm_command_feedback
                 response = self._process_synchronized_arm_command_feedback(arm_feedback)
-                if response is not None:
+                if response is not GoalResponse.SUCCESS:
                     return response
 
             if sync_feedback.mobility_command_feedback_is_set is True:
                 mob_feedback = sync_feedback.mobility_command_feedback
                 response = self._process_synchronized_mobility_command_feedback(mob_feedback)
-                if response is not None:
+                if response is not GoalResponse.SUCCESS:
                     return response
 
             if sync_feedback.gripper_command_feedback_is_set is True:
                 grip_feedback = sync_feedback.gripper_command_feedback
                 response = self._process_synchronized_gripper_command_feedback(grip_feedback)
-                if response is not None:
+                if response is not GoalResponse.SUCCESS:
                     return response
 
-            return GoalResponse.SUCCESS
+            return response
         else:
             self.get_logger().error("ERROR: unknown robot command type")
             return GoalResponse.IN_PROGRESS
