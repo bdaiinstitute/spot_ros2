@@ -1558,7 +1558,9 @@ class SpotROS(Node):
         elif choice == fb.FEEDBACK_ARM_STOP_FEEDBACK_SET:
             self.get_logger().warn("WARNING: Stop command provides no feedback")
         elif choice == fb.FEEDBACK_ARM_DRAG_FEEDBACK_SET:
-            if fb.arm_drag_feedback.status.value != fb.arm_drag_feedback.status.STATUS_DRAGGING:
+            if fb.arm_drag_feedback.status.value == fb.arm_drag_feedback.status.STATUS_DRAGGING:
+                return GoalResponse.IN_PROGRESS
+            else:
                 return GoalResponse.FAILED
         elif choice == fb.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET:
             self.get_logger().warn("WARNING: ArmImpedanceCommand provides no feedback")
