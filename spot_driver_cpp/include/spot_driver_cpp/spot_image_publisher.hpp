@@ -5,6 +5,7 @@
 #include <rclcpp/node.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <spot_driver_cpp/api/robot.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>
@@ -54,7 +55,7 @@ class SpotImagePublisher {
    * @param parameter_interface  A unique_ptr to an instance of a class that implements ParameterInterfaceBase.
    * @param tf_interface  A unique_ptr to an instance of a class that implements TfInterfaceBase.
    */
-  SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface,
+  SpotImagePublisher(std::shared_ptr<Robot> robot, std::unique_ptr<TimerInterfaceBase> timer_interface,
                      std::unique_ptr<SpotInterfaceBase> spot_interface,
                      std::unique_ptr<PublisherInterfaceBase> publisher_interface,
                      std::unique_ptr<ParameterInterfaceBase> parameter_interface,
@@ -67,7 +68,7 @@ class SpotImagePublisher {
    *
    * @param node ROS 2 node to use when creating the interfaces.
    */
-  explicit SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node);
+  explicit SpotImagePublisher(std::shared_ptr<Robot> robot, const std::shared_ptr<rclcpp::Node>& node, );
 
   /**
    * @brief Connect to Spot and start publishing image data.
@@ -99,5 +100,7 @@ class SpotImagePublisher {
   std::unique_ptr<ParameterInterfaceBase> parameter_interface_;
   std::unique_ptr<TfInterfaceBase> tf_interface_;
   std::unique_ptr<LoggerInterfaceBase> logger_interface_;
+
+  std::shared_ptr<Robot> robot_;
 };
 }  // namespace spot_ros2

@@ -4,6 +4,8 @@
 
 #include <bosdyn/client/robot/robot.h>
 
+#include <tl_expected/expected.hpp>
+
 #include <memory>
 #include <string>
 
@@ -13,6 +15,10 @@ class Robot {
   Robot(std::unique_ptr<::bosdyn::client::Robot> robot, const std::string& robot_name);
 
   std::string name() const;
+
+  tl::expected<void, std::string> authenticate(const std::string& username, const std::string& password);
+  tl::expected<bool, std::string> hasArm() const;
+
   ::bosdyn::client::Robot& robot() const;
 
  private:

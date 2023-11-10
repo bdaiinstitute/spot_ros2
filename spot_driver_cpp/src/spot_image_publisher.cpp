@@ -59,7 +59,8 @@ namespace spot_ros2 {
   return request_message;
 }
 
-SpotImagePublisher::SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer_interface,
+SpotImagePublisher::SpotImagePublisher(std::shared_ptr<Robot> robot,
+                                       std::unique_ptr<TimerInterfaceBase> timer_interface,
                                        std::unique_ptr<SpotInterfaceBase> spot_interface,
                                        std::unique_ptr<PublisherInterfaceBase> publisher_interface,
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
@@ -70,41 +71,24 @@ SpotImagePublisher::SpotImagePublisher(std::unique_ptr<TimerInterfaceBase> timer
       publisher_interface_{std::move(publisher_interface)},
       parameter_interface_{std::move(parameter_interface)},
       tf_interface_{std::move(tf_interface)},
-      logger_interface_{std::move(logger_interface)} {}
+      logger_interface_{std::move(logger_interface)},
+      robot_{robot} {}
 
-SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node)
-    : SpotImagePublisher(std::make_unique<RclcppWallTimerInterface>(node), std::make_unique<SpotInterface>(),
+SpotImagePublisher::SpotImagePublisher(std::shared_ptr<Robot> robot, const std::shared_ptr<rclcpp::Node>& node)
+    : SpotImagePublisher(robot, std::make_unique<RclcppWallTimerInterface>(node), std::make_unique<SpotInterface>(),
                          std::make_unique<RclcppPublisherInterface>(node),
                          std::make_unique<RclcppParameterInterface>(node), std::make_unique<RclcppTfInterface>(node),
                          std::make_unique<RclcppLoggerInterface>(node->get_logger())) {}
 
 bool SpotImagePublisher::initialize() {
   // These parameters all fall back to default values if the user did not set them at runtime
-  const auto address = parameter_interface_->getAddress();
-  const auto username = parameter_interface_->getUsername();
-  const auto password = parameter_interface_->getPassword();
   const auto rgb_image_quality = parameter_interface_->getRGBImageQuality();
   const auto publish_rgb_images = parameter_interface_->getPublishRGBImages();
   const auto publish_depth_images = parameter_interface_->getPublishDepthImages();
   const auto publish_depth_registered_images = parameter_interface_->getPublishDepthRegisteredImages();
   const auto has_rgb_cameras = parameter_interface_->getHasRGBCameras();
-  const auto spot_name = parameter_interface_->getSpotName();
 
-  // Initialize the SDK client, and connect to the robot
-  const auto create_robot_result = spot_interface_->createRobot(address, spot_name);
-  if (!create_robot_result) {
-    logger_interface_->logError(
-        std::string{"Failed to create interface to robot: "}.append(create_robot_result.error()));
-    return false;
-  }
-
-  const auto authenticate_result = spot_interface_->authenticate(username, password);
-  if (!authenticate_result) {
-    logger_interface_->logError(std::string{"Failed to authenticate with robot: "}.append(authenticate_result.error()));
-    return false;
-  }
-
-  const auto has_arm_result = spot_interface_->hasArm();
+  const auto has_arm_result = robot_->hasArm();
   if (!has_arm_result) {
     logger_interface_->logError(
         std::string{"Failed to determine if Spot is equipped with an arm: "}.append(has_arm_result.error()));
