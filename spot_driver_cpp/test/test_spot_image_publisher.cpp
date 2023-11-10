@@ -85,7 +85,7 @@ class MockPublisherInterface : public PublisherInterfaceBase {
               (override));
 };
 
-class MockSpotInterface : public SpotInterfaceBase {
+class MockSpotInterface : public ImageApi {
  public:
   MOCK_METHOD((tl::expected<void, std::string>), createRobot, (const std::string&, const std::string&), (override));
   MOCK_METHOD((tl::expected<void, std::string>), authenticate,

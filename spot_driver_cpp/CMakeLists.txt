@@ -33,7 +33,9 @@ add_library(spot_image_publisher
   src/interfaces/rclcpp_publisher_interface.cpp
   src/interfaces/rclcpp_tf_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
-  src/interfaces/spot_interface.cpp
+  src/api/default_image_api.cpp
+  src/api/default_robot_api.cpp
+  src/api/robot.cpp
   src/spot_image_publisher.cpp
   src/spot_image_publisher_node.cpp
   src/spot_image_sources.cpp)

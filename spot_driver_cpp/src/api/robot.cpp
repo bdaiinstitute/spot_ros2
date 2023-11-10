@@ -32,6 +32,7 @@ tl::expected<void, std::string> Robot::authenticate(const std::string& username,
   if (!authenticate_result) {
     return tl::make_unexpected("Authentication with provided username and password did not succeed.");
   }
+  return {};
 }
 
 ::bosdyn::client::Robot& Robot::robot() const {

@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/interfaces/spot_interface.hpp>
+#include <spot_driver_cpp/api/default_image_api.hpp>
 
 #include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>
@@ -224,74 +224,9 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
 }  // namespace
 
 namespace spot_ros2 {
-SpotInterface::SpotInterface() : client_sdk_{::bosdyn::client::CreateStandardSDK(kSDKClientName)} {}
+DefaultImageApi::DefaultImageApi(std::shared_ptr<Robot> robot) : robot_{robot} {}
 
-tl::expected<void, std::string> SpotInterface::createRobot(const std::string& ip_address,
-                                                           const std::string& robot_name) {
-  robot_name_ = robot_name;
-
-  auto create_robot_result = client_sdk_->CreateRobot(ip_address);
-  if (!create_robot_result.status) {
-    return tl::make_unexpected("Received error result when creating SDK robot interface: " +
-                               create_robot_result.status.DebugString());
-  }
-
-  robot_ = std::move(create_robot_result.response);
-
-  return {};
-}
-
-tl::expected<void, std::string> SpotInterface::authenticate(const std::string& username, const std::string& password) {
-  if (!robot_) {
-    return tl::make_unexpected(
-        "Spot SDK robot interface must be initialized before attempting to authenticate with the robot.");
-  }
-
-  const auto authenticate_result = robot_->Authenticate(username, password);
-  if (!authenticate_result) {
-    return tl::make_unexpected("Authentication with provided username and password did not succeed.");
-  }
-
-  // Start time synchronization between the robot and the client system.
-  // This must be done only after a successful authentication.
-  const auto start_time_sync_response = robot_->StartTimeSync();
-  if (!start_time_sync_response) {
-    return tl::make_unexpected("Failed to start time synchronization.");
-  }
-
-  const auto get_time_sync_thread_response = robot_->GetTimeSyncThread();
-  if (!get_time_sync_thread_response) {
-    return tl::make_unexpected("Failed to get the time synchronization thread.");
-  }
-  time_sync_thread_ = get_time_sync_thread_response.response;
-
-  const auto image_client_result = robot_->EnsureServiceClient<::bosdyn::client::ImageClient>(
-      ::bosdyn::client::ImageClient::GetDefaultServiceName());
-  if (!image_client_result.status) {
-    return tl::make_unexpected("Failed to initialize the Spot SDK image client.");
-  }
-
-  image_client_.reset(std::move(image_client_result.response));
-
-  return {};
-}
-
-tl::expected<bool, std::string> SpotInterface::hasArm() const {
-  // Determine if Spot has an arm by checking if the client for gripper camera parameters exists, since Spots without
-  // arms do not have this client.
-  const auto list_result = robot_->ListServices();
-  if (!list_result.status) {
-    return tl::make_unexpected("Failed to retrieve list of Spot services.");
-  }
-
-  const auto& services = list_result.response;
-
-  return std::find_if(services.cbegin(), services.cend(), [](const ::bosdyn::api::ServiceEntry& entry) {
-           return entry.name() == ::bosdyn::client::GripperCameraParamClient::GetDefaultServiceName();
-         }) != services.cend();
-}
-
-tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::api::GetImageRequest request) {
+tl::expected<GetImagesResult, std::string> DefaultImageApi::getImages(::bosdyn::api::GetImageRequest request) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
       image_client_->GetImageAsync(request);
 
@@ -310,12 +245,12 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
     const auto& image = image_response.shot().image();
     auto data = image.data();
 
-    const auto image_msg = toImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
+    const auto image_msg = toImageMsg(image_response.shot(), robot_->name(), clock_skew_result.value());
     if (!image_msg) {
       return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());
     }
 
-    const auto info_msg = toCameraInfoMsg(image_response, robot_name_, clock_skew_result.value());
+    const auto info_msg = toCameraInfoMsg(image_response, robot_->name(), clock_skew_result.value());
     if (!info_msg) {
       return tl::make_unexpected("Failed to convert SDK image response to ROS CameraInfo message: " + info_msg.error());
     }
@@ -329,7 +264,7 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
                                  get_source_name_result.error());
     }
 
-    const auto transforms_result = getImageTransforms(image_response, robot_name_, clock_skew_result.value());
+    const auto transforms_result = getImageTransforms(image_response, robot_->name(), clock_skew_result.value());
     if (transforms_result.has_value()) {
       out.transforms_.insert(out.transforms_.end(), transforms_result.value().begin(), transforms_result.value().end());
     } else {
@@ -340,7 +275,7 @@ tl::expected<GetImagesResult, std::string> SpotInterface::getImages(::bosdyn::ap
   return out;
 }
 
-tl::expected<builtin_interfaces::msg::Time, std::string> SpotInterface::convertRobotTimeToLocalTime(
+tl::expected<builtin_interfaces::msg::Time, std::string> DefaultImageApi::convertRobotTimeToLocalTime(
     const google::protobuf::Timestamp& robot_timestamp) {
   const auto get_clock_skew_result = getClockSkew();
   if (!get_clock_skew_result) {
@@ -350,7 +285,7 @@ tl::expected<builtin_interfaces::msg::Time, std::string> SpotInterface::convertR
   return applyClockSkew(robot_timestamp, get_clock_skew_result.value());
 }
 
-tl::expected<google::protobuf::Duration, std::string> SpotInterface::getClockSkew() {
+tl::expected<google::protobuf::Duration, std::string> DefaultImageApi::getClockSkew() {
   if (!time_sync_thread_) {
     return tl::make_unexpected("Time sync thread was not initialized.");
   }

@@ -6,12 +6,12 @@
 #include <rclcpp/node.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <spot_driver_cpp/api/default_image_api.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
-#include <spot_driver_cpp/interfaces/spot_interface.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 
@@ -61,22 +61,22 @@ namespace spot_ros2 {
 
 SpotImagePublisher::SpotImagePublisher(std::shared_ptr<Robot> robot,
                                        std::unique_ptr<TimerInterfaceBase> timer_interface,
-                                       std::unique_ptr<SpotInterfaceBase> spot_interface,
+                                       std::unique_ptr<ImageApi> image_api,
                                        std::unique_ptr<PublisherInterfaceBase> publisher_interface,
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<TfInterfaceBase> tf_interface,
                                        std::unique_ptr<LoggerInterfaceBase> logger_interface)
     : timer_interface_{std::move(timer_interface)},
-      spot_interface_{std::move(spot_interface)},
+      image_api_{std::move(image_api)},
       publisher_interface_{std::move(publisher_interface)},
       parameter_interface_{std::move(parameter_interface)},
       tf_interface_{std::move(tf_interface)},
       logger_interface_{std::move(logger_interface)},
       robot_{robot} {}
 
-SpotImagePublisher::SpotImagePublisher(std::shared_ptr<Robot> robot, const std::shared_ptr<rclcpp::Node>& node)
-    : SpotImagePublisher(robot, std::make_unique<RclcppWallTimerInterface>(node), std::make_unique<SpotInterface>(),
-                         std::make_unique<RclcppPublisherInterface>(node),
+SpotImagePublisher::SpotImagePublisher(std::shared_ptr<Robot> robot, std::shared_ptr<rclcpp::Node> node)
+    : SpotImagePublisher(robot, std::make_unique<RclcppWallTimerInterface>(node),
+                         std::make_unique<DefaultImageApi>(robot), std::make_unique<RclcppPublisherInterface>(node),
                          std::make_unique<RclcppParameterInterface>(node), std::make_unique<RclcppTfInterface>(node),
                          std::make_unique<RclcppLoggerInterface>(node->get_logger())) {}
 
@@ -118,7 +118,7 @@ void SpotImagePublisher::timerCallback() {
     return;
   }
 
-  const auto image_result = spot_interface_->getImages(*image_request_message_);
+  const auto image_result = image_api_->getImages(*image_request_message_);
   if (!image_result.has_value()) {
     logger_interface_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
     return;
