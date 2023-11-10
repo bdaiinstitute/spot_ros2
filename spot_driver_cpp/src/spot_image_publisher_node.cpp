@@ -22,7 +22,7 @@ SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_o
   auto expected_robot = robot_api->createRobot(address, robot_name);
   if (!expected_robot) {
     logger->logError(std::string{"Failed to create interface to robot: "}.append(expected_robot.error()));
-    exit(1);
+    throw;
   }
 
   // Authenticate.
@@ -30,7 +30,7 @@ SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_o
   auto auth = robot->authenticate(username, password);
   if (!auth) {
     logger->logError("Authentication with provided username and password did not succeed.");
-    exit(1);
+    throw;
   }
 
   internal_ = std::make_unique<SpotImagePublisher>(robot, node_);
