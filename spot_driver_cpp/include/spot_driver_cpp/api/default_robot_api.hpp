@@ -12,8 +12,8 @@ namespace spot_ros2 {
 class DefaultRobotApi : public RobotApi {
  public:
   DefaultRobotApi();
-  tl::expected<std::unique_ptr<::bosdyn::client::Robot>, std::string> createRobot(
-      const std::string& ip_address, const std::string& robot_name) override;
+  tl::expected<std::unique_ptr<Robot>, std::string> createRobot(const std::string& ip_address,
+                                                                const std::string& robot_name) const override;
 
  private:
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
