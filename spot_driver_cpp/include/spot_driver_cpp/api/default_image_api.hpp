@@ -6,8 +6,8 @@
 #include <bosdyn/client/sdk/client_sdk.h>
 #include <bosdyn/client/time_sync/time_sync_client.h>
 
-#include <spot_driver_cpp/api/robot.hpp>
 #include <spot_driver_cpp/api/image_api.hpp>
+#include <spot_driver_cpp/api/robot.hpp>
 
 #include <memory>
 #include <string>
