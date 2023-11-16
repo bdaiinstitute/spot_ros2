@@ -51,4 +51,3 @@ else
     sudo dpkg -i /tmp/spot-cpp-sdk_3.3.0_amd64.deb
     rm /tmp/spot-cpp-sdk_3.3.0_amd64.deb
 fi
-
