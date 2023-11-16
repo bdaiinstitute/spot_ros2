@@ -18,13 +18,10 @@ struct GetImagesResult {
 };
 
 /**
- * @brief Defines an interface for a class to connect to and interact with Spot.
+ * @brief Defines an interface for a class to connect to and interact with Spot's Image client.
  */
-class ImageApi {
+class ImageClientApi {
  public:
-  virtual ~ImageApi() {}
   virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) = 0;
-  virtual tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(
-      const google::protobuf::Timestamp& robot_timestamp) = 0;
 };
 }  // namespace spot_ros2

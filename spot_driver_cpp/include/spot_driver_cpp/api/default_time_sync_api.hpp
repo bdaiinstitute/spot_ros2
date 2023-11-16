@@ -2,29 +2,24 @@
 
 #pragma once
 
-#include <bosdyn/client/image/image_client.h>
-#include <bosdyn/client/sdk/client_sdk.h>
-#include <bosdyn/client/time_sync/time_sync_client.h>
-
-#include <spot_driver_cpp/api/image_api.hpp>
-#include <spot_driver_cpp/api/robot.hpp>
+#include <tl_expected/expected.hpp>
+#include <google/protobuf/duration.pb.h>
+#include <google/protobuf/timestamp.pb.h>
+#include <builtin_interfaces/msg/time.hpp>
+#include <spot_driver_cpp/api/time_sync_api.hpp>
 
 #include <memory>
 #include <string>
 
 namespace spot_ros2 {
-/**
- * @brief Implements SpotInterfaceBase to use the Spot C++ SDK.
- */
-class DefaultImageApi : public ImageApi {
+
+class DefaultTimeSyncApi : public TimeSyncApi {
  public:
-  DefaultImageApi(std::shared_ptr<Robot> robot);
+  explicit DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread);
+  ~DefaultTimeSyncApi() = default;
 
-  tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) override;
-  tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(
-      const google::protobuf::Timestamp& robot_timestamp) override;
+  virtual tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(const google::protobuf::Timestamp& robot_timestamp) = 0;
 
- private:
   /**
   * @brief Get the current clock skew from the Spot SDK's time sync endpoint.
   * @details The clock skew is the difference between Spot's internal system clock and the host PC's system clock.
@@ -39,11 +34,8 @@ class DefaultImageApi : public ImageApi {
   * @return If the Spot SDK's time sync thread was not initialized, return an error message.
   * @return If the Spot SDK's time sync endpoint fails to handle the clock skew request, return an error message.
   */
-  tl::expected<google::protobuf::Duration, std::string> getClockSkew();
-
-  std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
-  std::shared_ptr<Robot> robot_;
+  virtual tl::expected<google::protobuf::Duration, std::string> getClockSkew() = 0;
+ private:
   std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread_;
-  std::unique_ptr<::bosdyn::client::ImageClient> image_client_;
 };
 }  // namespace spot_ros2

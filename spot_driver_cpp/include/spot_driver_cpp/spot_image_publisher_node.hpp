@@ -28,6 +28,7 @@ class SpotImagePublisherNode {
 
  private:
   std::shared_ptr<rclcpp::Node> node_;
+  std::unique_ptr<SpotApi> spot_api_;
   std::unique_ptr<SpotImagePublisher> internal_;
 };
 }  // namespace spot_ros2

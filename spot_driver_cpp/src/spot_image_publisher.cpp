@@ -59,26 +59,26 @@ namespace spot_ros2 {
   return request_message;
 }
 
-SpotImagePublisher::SpotImagePublisher(std::shared_ptr<Robot> robot,
+SpotImagePublisher::SpotImagePublisher(std::unique_ptr<ImageClientApi> image_client_api,
                                        std::unique_ptr<TimerInterfaceBase> timer_interface,
-                                       std::unique_ptr<ImageApi> image_api,
                                        std::unique_ptr<PublisherInterfaceBase> publisher_interface,
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<TfInterfaceBase> tf_interface,
-                                       std::unique_ptr<LoggerInterfaceBase> logger_interface)
+                                       std::unique_ptr<LoggerInterfaceBase> logger_interface, bool has_arm)
     : timer_interface_{std::move(timer_interface)},
-      image_api_{std::move(image_api)},
+      image_client_api_{std::move(image_client_api)},
       publisher_interface_{std::move(publisher_interface)},
       parameter_interface_{std::move(parameter_interface)},
       tf_interface_{std::move(tf_interface)},
       logger_interface_{std::move(logger_interface)},
-      robot_{robot} {}
+      has_arm_{has_arm} {}
 
-SpotImagePublisher::SpotImagePublisher(std::shared_ptr<Robot> robot, std::shared_ptr<rclcpp::Node> node)
-    : SpotImagePublisher(robot, std::make_unique<RclcppWallTimerInterface>(node),
-                         std::make_unique<DefaultImageApi>(robot), std::make_unique<RclcppPublisherInterface>(node),
+SpotImagePublisher::SpotImagePublisher(std::shared_ptr<rclcpp::Node> node,
+                                       std::unique_ptr<ImageClientApi> image_client_api, bool has_arm)
+    : SpotImagePublisher(image_client_api, std::make_unique<RclcppWallTimerInterface>(node),
+                         std::make_unique<RclcppPublisherInterface>(node),
                          std::make_unique<RclcppParameterInterface>(node), std::make_unique<RclcppTfInterface>(node),
-                         std::make_unique<RclcppLoggerInterface>(node->get_logger())) {}
+                         std::make_unique<RclcppLoggerInterface>(node->get_logger()), has_arm) {}
 
 bool SpotImagePublisher::initialize() {
   // These parameters all fall back to default values if the user did not set them at runtime
@@ -88,16 +88,9 @@ bool SpotImagePublisher::initialize() {
   const auto publish_depth_registered_images = parameter_interface_->getPublishDepthRegisteredImages();
   const auto has_rgb_cameras = parameter_interface_->getHasRGBCameras();
 
-  const auto has_arm_result = robot_->hasArm();
-  if (!has_arm_result) {
-    logger_interface_->logError(
-        std::string{"Failed to determine if Spot is equipped with an arm: "}.append(has_arm_result.error()));
-    return false;
-  }
-
   // Generate the set of image sources based on which cameras the user has requested that we publish
-  const auto sources = createImageSources(publish_rgb_images, publish_depth_images, publish_depth_registered_images,
-                                          has_arm_result.value());
+  const auto sources =
+      createImageSources(publish_rgb_images, publish_depth_images, publish_depth_registered_images, has_arm_);
 
   // Generate the image request message to capture the data from the specified image sources
   image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, false);
@@ -118,7 +111,7 @@ void SpotImagePublisher::timerCallback() {
     return;
   }
 
-  const auto image_result = image_api_->getImages(*image_request_message_);
+  const auto image_result = image_client_api_->getImages(*image_request_message_);
   if (!image_result.has_value()) {
     logger_interface_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
     return;

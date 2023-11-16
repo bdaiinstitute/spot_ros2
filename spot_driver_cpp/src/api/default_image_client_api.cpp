@@ -27,7 +27,6 @@
 #include <utility>
 
 namespace {
-constexpr auto kSDKClientName = "get_image";
 
 static const std::set<std::string> kExcludedStaticTfFrames{
     // We exclude the odometry frames from static transforms since they are not static. We can ignore the body
@@ -64,30 +63,6 @@ tl::expected<int, std::string> getCvPixelFormat(const bosdyn::api::Image_PixelFo
     default: {
       return tl::make_unexpected("Unknown pixel format.");
     }
-  }
-}
-
-builtin_interfaces::msg::Time applyClockSkew(const google::protobuf::Timestamp& timestamp,
-                                             const google::protobuf::Duration& clock_skew) {
-  int64_t seconds_unskewed = timestamp.seconds() - clock_skew.seconds();
-  int32_t nanos_unskewed = timestamp.nanos() - clock_skew.nanos();
-
-  // Carry over a second if needed
-  // Note: Since ROS Time messages store the nanoseconds component as an unsigned integer, we need to do this before
-  // converting to ROS Time.
-  if (nanos_unskewed < 0) {
-    nanos_unskewed += 1e9;
-    seconds_unskewed -= 1;
-  } else if (nanos_unskewed >= 1e9) {
-    nanos_unskewed -= 1e9;
-    seconds_unskewed += 1;
-  }
-
-  // If the timestamp contains a negative time, create an all-zero ROS Time.
-  if (seconds_unskewed < 0) {
-    return builtin_interfaces::build<builtin_interfaces::msg::Time>().sec(0).nanosec(0);
-  } else {
-    return builtin_interfaces::build<builtin_interfaces::msg::Time>().sec(seconds_unskewed).nanosec(nanos_unskewed);
   }
 }
 
@@ -224,9 +199,11 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
 }  // namespace
 
 namespace spot_ros2 {
-DefaultImageApi::DefaultImageApi(std::shared_ptr<Robot> robot) : robot_{robot} {}
+DefaultImageClientApi::DefaultImageClientApi(std::unique_ptr<::bosdyn::client::ImageClient> image_client,
+                                             std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name)
+    : image_client_{std::move(image_client), time_sync_api{time_sync_api}, robot_name_{robot_name}} {}
 
-tl::expected<GetImagesResult, std::string> DefaultImageApi::getImages(::bosdyn::api::GetImageRequest request) {
+tl::expected<GetImagesResult, std::string> DefaultImageClientApi::getImages(::bosdyn::api::GetImageRequest request) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
       image_client_->GetImageAsync(request);
 
@@ -245,12 +222,12 @@ tl::expected<GetImagesResult, std::string> DefaultImageApi::getImages(::bosdyn::
     const auto& image = image_response.shot().image();
     auto data = image.data();
 
-    const auto image_msg = toImageMsg(image_response.shot(), robot_->name(), clock_skew_result.value());
+    const auto image_msg = toImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
     if (!image_msg) {
       return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());
     }
 
-    const auto info_msg = toCameraInfoMsg(image_response, robot_->name(), clock_skew_result.value());
+    const auto info_msg = toCameraInfoMsg(image_response, robot_name_, clock_skew_result.value());
     if (!info_msg) {
       return tl::make_unexpected("Failed to convert SDK image response to ROS CameraInfo message: " + info_msg.error());
     }
@@ -264,7 +241,7 @@ tl::expected<GetImagesResult, std::string> DefaultImageApi::getImages(::bosdyn::
                                  get_source_name_result.error());
     }
 
-    const auto transforms_result = getImageTransforms(image_response, robot_->name(), clock_skew_result.value());
+    const auto transforms_result = getImageTransforms(image_response, robot_name_, clock_skew_result.value());
     if (transforms_result.has_value()) {
       out.transforms_.insert(out.transforms_.end(), transforms_result.value().begin(), transforms_result.value().end());
     } else {
@@ -275,25 +252,4 @@ tl::expected<GetImagesResult, std::string> DefaultImageApi::getImages(::bosdyn::
   return out;
 }
 
-tl::expected<builtin_interfaces::msg::Time, std::string> DefaultImageApi::convertRobotTimeToLocalTime(
-    const google::protobuf::Timestamp& robot_timestamp) {
-  const auto get_clock_skew_result = getClockSkew();
-  if (!get_clock_skew_result) {
-    return tl::make_unexpected("Failed to get clock skew: " + get_clock_skew_result.error());
-  }
-
-  return applyClockSkew(robot_timestamp, get_clock_skew_result.value());
-}
-
-tl::expected<google::protobuf::Duration, std::string> DefaultImageApi::getClockSkew() {
-  if (!time_sync_thread_) {
-    return tl::make_unexpected("Time sync thread was not initialized.");
-  }
-  const auto get_skew_response = time_sync_thread_->GetEndpoint()->GetClockSkew();
-  if (!get_skew_response) {
-    return tl::make_unexpected("Received a failure result from the TimeSyncEndpoint: " +
-                               get_skew_response.status.DebugString());
-  }
-  return *get_skew_response.response;
-}
 }  // namespace spot_ros2

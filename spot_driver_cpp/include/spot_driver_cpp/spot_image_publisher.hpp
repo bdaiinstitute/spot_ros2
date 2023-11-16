@@ -49,25 +49,29 @@ class SpotImagePublisher {
    * classes which are used by the node.
    * @details This is used to perform dependency injection in unit tests.
    *
+   * @param image_client_api  A unique_ptr to an instance of a class that implements ImageClientApi.
    * @param timer_interface A unique_ptr to an instance of a class that implements TimerInterfaceBase.
-   * @param spot_interface  A unique_ptr to an instance of a class that implements SpotInterfaceBase.
    * @param publisher_interface  A unique_ptr to an instance of a class that implements PublisherInterfaceBase.
    * @param parameter_interface  A unique_ptr to an instance of a class that implements ParameterInterfaceBase.
    * @param tf_interface  A unique_ptr to an instance of a class that implements TfInterfaceBase.
    */
-  SpotImagePublisher(std::shared_ptr<Robot> robot, std::unique_ptr<TimerInterfaceBase> timer_interface,
-                     std::unique_ptr<ImageApi> image_api, std::unique_ptr<PublisherInterfaceBase> publisher_interface,
+  SpotImagePublisher(std::unique_ptr<ImageClientApi> image_client_api,
+                     std::unique_ptr<TimerInterfaceBase> timer_interface,
+                     std::unique_ptr<PublisherInterfaceBase> publisher_interface,
                      std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                      std::unique_ptr<TfInterfaceBase> tf_interface,
-                     std::unique_ptr<LoggerInterfaceBase> logger_interface);
+                     std::unique_ptr<LoggerInterfaceBase> logger_interface, bool has_arm = false);
 
   /**
    * @brief Constuctor for SpotImagePublisher, which creates instances of rclcpp-specialized interface classes
    * using the provided node.
    *
    * @param node ROS 2 node to use when creating the interfaces.
+   * @param image_client_api Spot SDK service client that can retrieve image data from spot cameras
+   * @param has_arm get hand camera data if arm is a part of the current configuration
    */
-  explicit SpotImagePublisher(std::shared_ptr<Robot> robot, std::shared_ptr<rclcpp::Node> node);
+  explicit SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node,
+                              std::unique_ptr<ImageClientApi> image_client_api, bool has_arm = false);
 
   /**
    * @brief Connect to Spot and start publishing image data.
@@ -93,13 +97,12 @@ class SpotImagePublisher {
   std::optional<::bosdyn::api::GetImageRequest> image_request_message_;
 
   // Interface classes to interact with Spot and the middleware.
+  std::unique_ptr<ImageClientApi> image_client_api_;
   std::unique_ptr<TimerInterfaceBase> timer_interface_;
-  std::unique_ptr<ImageApi> image_api_;
   std::unique_ptr<PublisherInterfaceBase> publisher_interface_;
   std::unique_ptr<ParameterInterfaceBase> parameter_interface_;
   std::unique_ptr<TfInterfaceBase> tf_interface_;
   std::unique_ptr<LoggerInterfaceBase> logger_interface_;
-
-  std::shared_ptr<Robot> robot_;
+  bool has_arm_;
 };
 }  // namespace spot_ros2

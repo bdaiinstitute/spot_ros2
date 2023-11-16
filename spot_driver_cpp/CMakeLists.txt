@@ -26,6 +26,20 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+add_library(spot_api
+  src/api/default_image_api.cpp
+  src/api/default_robot_api.cpp
+  src/api/robot.cpp)
+
+target_include_directories(spot_api
+PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(spot_api PUBLIC bosdyn::bosdyn_client_static)
+ament_target_dependencies(spot_api PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
+
 # Base library containing the SpotImagePublisherNode class
 add_library(spot_image_publisher
   src/interfaces/rclcpp_logger_interface.cpp
@@ -33,9 +47,6 @@ add_library(spot_image_publisher
   src/interfaces/rclcpp_publisher_interface.cpp
   src/interfaces/rclcpp_tf_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
-  src/api/default_image_api.cpp
-  src/api/default_robot_api.cpp
-  src/api/robot.cpp
   src/spot_image_publisher.cpp
   src/spot_image_publisher_node.cpp
   src/spot_image_sources.cpp)
@@ -44,7 +55,7 @@ target_include_directories(spot_image_publisher
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(spot_image_publisher PUBLIC bosdyn::bosdyn_client_static)
+target_link_libraries(spot_image_publisher PUBLIC spot_api)
 set_property(TARGET spot_image_publisher PROPERTY POSITION_INDEPENDENT_CODE ON)
 ament_target_dependencies(spot_image_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
@@ -75,6 +86,7 @@ rclcpp_components_register_node(
 # Install Libraries
 install(
   TARGETS
+    spot_api
     spot_image_publisher
     spot_image_publisher_component
   EXPORT ${PROJECT_NAME}Targets
