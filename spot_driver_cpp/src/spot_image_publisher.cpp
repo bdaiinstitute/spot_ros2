@@ -6,7 +6,7 @@
 #include <rclcpp/node.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <spot_driver_cpp/api/default_image_api.hpp>
+#include <spot_driver_cpp/api/default_image_client_api.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
@@ -73,9 +73,9 @@ SpotImagePublisher::SpotImagePublisher(std::unique_ptr<ImageClientApi> image_cli
       logger_interface_{std::move(logger_interface)},
       has_arm_{has_arm} {}
 
-SpotImagePublisher::SpotImagePublisher(std::shared_ptr<rclcpp::Node> node,
+SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node,
                                        std::unique_ptr<ImageClientApi> image_client_api, bool has_arm)
-    : SpotImagePublisher(image_client_api, std::make_unique<RclcppWallTimerInterface>(node),
+    : SpotImagePublisher(std::move(image_client_api), std::make_unique<RclcppWallTimerInterface>(node),
                          std::make_unique<RclcppPublisherInterface>(node),
                          std::make_unique<RclcppParameterInterface>(node), std::make_unique<RclcppTfInterface>(node),
                          std::make_unique<RclcppLoggerInterface>(node->get_logger()), has_arm) {}

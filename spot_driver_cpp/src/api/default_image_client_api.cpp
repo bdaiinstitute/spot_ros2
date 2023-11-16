@@ -1,13 +1,11 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/api/default_image_api.hpp>
+#include <spot_driver_cpp/api/default_image_client_api.hpp>
 
 #include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>
-#include <bosdyn/client/gripper_camera_param/gripper_camera_param_client.h>
 #include <cv_bridge/cv_bridge.h>
 #include <google/protobuf/duration.pb.h>
-#include <google/protobuf/timestamp.pb.h>
 #include <builtin_interfaces/msg/time.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
@@ -16,6 +14,7 @@
 #include <sensor_msgs/distortion_models.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <spot_driver_cpp/api/default_time_sync_api.hpp>
 #include <spot_driver_cpp/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 #include <std_msgs/msg/header.hpp>
@@ -76,7 +75,7 @@ tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(
   // Omit leading `/` from frame ID if robot_name is empty
   info_msg.header.frame_id =
       (robot_name.empty() ? "" : robot_name + "/") + image_response.shot().frame_name_image_sensor();
-  info_msg.header.stamp = applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
+  info_msg.header.stamp = spot_ros2::applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
 
   // We assume that the camera images have already been corrected for distortion, so the 5 distortion parameters are all
   // zero
@@ -121,7 +120,7 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
   std_msgs::msg::Header header;
   // Omit leading `/` from frame ID if robot_name is empty
   header.frame_id = (robot_name.empty() ? "" : robot_name + "/") + image_capture.frame_name_image_sensor();
-  header.stamp = applyClockSkew(image_capture.acquisition_time(), clock_skew);
+  header.stamp = spot_ros2::applyClockSkew(image_capture.acquisition_time(), clock_skew);
 
   const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
   if (!pixel_format_cv) {
@@ -175,7 +174,7 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
         (transform.parent_frame_name() == "arm0.link_wr1") ? "link_wr1" : transform.parent_frame_name();
 
     geometry_msgs::msg::TransformStamped tform_msg;
-    tform_msg.header.stamp = applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
+    tform_msg.header.stamp = spot_ros2::applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
 
     // If robot_name is an empty string, omit the leading `/` from the transform parent and child frame IDs.
     tform_msg.header.frame_id = robot_name.empty() ? parent_frame_id : (robot_name + "/" + parent_frame_id);
@@ -199,9 +198,10 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
 }  // namespace
 
 namespace spot_ros2 {
-DefaultImageClientApi::DefaultImageClientApi(std::unique_ptr<::bosdyn::client::ImageClient> image_client,
+
+DefaultImageClientApi::DefaultImageClientApi(::bosdyn::client::ImageClient* image_client,
                                              std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name)
-    : image_client_{std::move(image_client), time_sync_api{time_sync_api}, robot_name_{robot_name}} {}
+    : image_client_{std::move(image_client)}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
 
 tl::expected<GetImagesResult, std::string> DefaultImageClientApi::getImages(::bosdyn::api::GetImageRequest request) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
@@ -212,7 +212,7 @@ tl::expected<GetImagesResult, std::string> DefaultImageClientApi::getImages(::bo
     return tl::make_unexpected("Failed to get images: " + get_image_result.status.DebugString());
   }
 
-  const auto clock_skew_result = getClockSkew();
+  const auto clock_skew_result = time_sync_api_->getClockSkew();
   if (!clock_skew_result) {
     return tl::make_unexpected("Failed to get latest clock skew: " + clock_skew_result.error());
   }

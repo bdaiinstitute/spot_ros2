@@ -2,11 +2,12 @@
 
 #pragma once
 
-#include <tl_expected/expected.hpp>
+#include <bosdyn/client/time_sync/time_sync_helpers.h>
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/timestamp.pb.h>
 #include <builtin_interfaces/msg/time.hpp>
 #include <spot_driver_cpp/api/time_sync_api.hpp>
+#include <tl_expected/expected.hpp>
 
 #include <memory>
 #include <string>
@@ -18,7 +19,8 @@ class DefaultTimeSyncApi : public TimeSyncApi {
   explicit DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread);
   ~DefaultTimeSyncApi() = default;
 
-  virtual tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(const google::protobuf::Timestamp& robot_timestamp) = 0;
+  tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(
+      const google::protobuf::Timestamp& robot_timestamp) override;
 
   /**
   * @brief Get the current clock skew from the Spot SDK's time sync endpoint.
@@ -34,7 +36,8 @@ class DefaultTimeSyncApi : public TimeSyncApi {
   * @return If the Spot SDK's time sync thread was not initialized, return an error message.
   * @return If the Spot SDK's time sync endpoint fails to handle the clock skew request, return an error message.
   */
-  virtual tl::expected<google::protobuf::Duration, std::string> getClockSkew() = 0;
+  tl::expected<google::protobuf::Duration, std::string> getClockSkew() override;
+
  private:
   std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread_;
 };

@@ -2,7 +2,7 @@
 
 #include <gmock/gmock.h>
 
-#include <spot_driver_cpp/api/robot_api.hpp>
+#include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>
@@ -85,19 +85,10 @@ class MockPublisherInterface : public PublisherInterfaceBase {
               (override));
 };
 
-class MockRobot : public RobotApi {
- public:
-  MOCK_METHOD((tl::expected<std::unique_ptr<Robot>, std::string>), createRobot,
-              (const std::string&, const std::string&), (override));
-  MOCK_METHOD((tl::expected<bool, std::string>), hasArm, (), (const, override));
-  MOCK_METHOD((tl::expected<builtin_interfaces::msg::Time, std::string>), convertRobotTimeToLocalTime,
-              (const google::protobuf::Timestamp& robot_timestamp), (const, override));
-};
-
-class MockImageApi : public ImageApi {
+class MockImageClientApi : public ImageClientApi {
  public:
   MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest), (override));
-}
+};
 
 class MockTimerInterface : public TimerInterfaceBase {
  public:
@@ -128,14 +119,15 @@ class TestInitSpotImagePublisherParametersUnset : public ::testing::Test {
     timer_interface_ptr = timer_interface.get();
 
     publisher_interface_ptr = publisher_interface.get();
-    robot_api_ptr = robot_api.get();
-    image_api_ptr = image_api.get();
+    image_client_api_ptr = image_client_api.get();
     tf_interface_ptr = tf_interface.get();
     logger_interface_ptr = logger_interface.get();
+  }
 
+  void create_image_publisher(bool has_arm) {
     image_publisher = std::make_unique<SpotImagePublisher>(
-        std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface),
-        std::move(parameter_interface), std::move(tf_interface), std::move(logger_interface));
+        std::move(image_client_api), std::move(timer_interface), std::move(publisher_interface),
+        std::move(parameter_interface), std::move(tf_interface), std::move(logger_interface), has_arm);
   }
 
   std::unique_ptr<FakeParameterInterface> parameter_interface = std::make_unique<FakeParameterInterface>();
@@ -147,11 +139,8 @@ class TestInitSpotImagePublisherParametersUnset : public ::testing::Test {
   std::unique_ptr<MockPublisherInterface> publisher_interface = std::make_unique<MockPublisherInterface>();
   MockPublisherInterface* publisher_interface_ptr;
 
-  std::unique_ptr<MockRobotApi> robot_api = std::make_unique<MockRobotApi>();
-  MockRobotApi* robot_api_ptr;
-
-  std::unique_ptr<MockImageApi> image_api = std::make_unique<MockImageApi>();
-  MockImageApi* image_api_ptr;
+  std::unique_ptr<MockImageClientApi> image_client_api = std::make_unique<MockImageClientApi>();
+  MockImageClientApi* image_client_api_ptr;
 
   std::unique_ptr<MockTfInterface> tf_interface = std::make_unique<MockTfInterface>();
   MockTfInterface* tf_interface_ptr;
@@ -180,20 +169,13 @@ class TestRunSpotImagePublisher : public TestInitSpotImagePublisher {
     timer_interface_ptr = timer_interface.get();
 
     publisher_interface_ptr = publisher_interface.get();
-    robot_api_ptr = robot_api.get();
-    image_api_ptr = image_api.get();
+    image_client_api_ptr = image_client_api.get();
     tf_interface_ptr = tf_interface.get();
     logger_interface_ptr = logger_interface.get();
-
-    image_publisher = std::make_unique<SpotImagePublisher>(
-        std::move(timer_interface), std::move(spot_interface), std::move(publisher_interface),
-        std::move(parameter_interface), std::move(tf_interface), std::move(logger_interface));
 
     parameter_interface_ptr->address = kExampleAddress;
     parameter_interface_ptr->username = kExampleUsername;
     parameter_interface_ptr->password = kExamplePassword;
-
-    ON_CALL(*robot_api_ptr, createRobot).WillByDefault(Return(tl::expected<void, std::string>{}));
   }
 
   std::unique_ptr<FakeParameterInterface> parameter_interface = std::make_unique<FakeParameterInterface>();
@@ -205,11 +187,8 @@ class TestRunSpotImagePublisher : public TestInitSpotImagePublisher {
   std::unique_ptr<MockPublisherInterface> publisher_interface = std::make_unique<MockPublisherInterface>();
   MockPublisherInterface* publisher_interface_ptr;
 
-  std::unique_ptr<MockRobotApi> robot_api = std::make_unique<MockRobotApi>();
-  MockRobotApi* robot_api_ptr;
-
-  std::unique_ptr<MockImageApi> image_api = std::make_unique<MockImageApi>();
-  MockImageApi* image_api_ptr;
+  std::unique_ptr<MockImageClientApi> image_client_api = std::make_unique<MockImageClientApi>();
+  MockImageClientApi* image_client_api_ptr;
 
   std::unique_ptr<MockTfInterface> tf_interface = std::make_unique<MockTfInterface>();
   MockTfInterface* tf_interface_ptr;
@@ -220,45 +199,11 @@ class TestRunSpotImagePublisher : public TestInitSpotImagePublisher {
   std::unique_ptr<SpotImagePublisher> image_publisher;
 };
 
-TEST_F(TestInitSpotImagePublisher, InitFailsIfRobotNotCreated) {
-  // GIVEN all required parameters are set to correct values
-
-  // GIVEN the spot interface's createRobot function will return false to indicate that it did not succeed
-  // THEN the createRobot function is called exactly once with the same address as what was provided through the
-  // parameter interface
-  EXPECT_CALL(*robot_api_ptr, createRobot(kExampleAddress, _)).WillOnce(Return(tl::make_unexpected(kSomeErrorMessage)));
-  // THEN the expected error message is logged
-  EXPECT_CALL(*logger_interface_ptr,
-              logError(AllOf(HasSubstr("Failed to create interface to robot:"), HasSubstr(kSomeErrorMessage))));
-
-  // WHEN the SpotImagePublisher is initialized
-  // THEN initialization fails
-  ASSERT_FALSE(image_publisher->initialize());
-}
-
-TEST_F(TestInitSpotImagePublisher, InitFailsIfHasArmFails) {
-  // GIVEN all required parameters are set to correct values
-  // GIVEN the createRobot function will return true to indicate that it succeeded
-  ON_CALL(*robot_api_ptr, createRobot).WillByDefault(Return(tl::expected<void, std::string>{}));
-
-  // GIVEN the check to determine if Spot has an arm will fail
-  // THEN hasArm() will be called exactly once
-  EXPECT_CALL(*robot_api_ptr, hasArm).WillOnce(Return(tl::make_unexpected(kSomeErrorMessage)));
-  // THEN the expected error message is logged
-  EXPECT_CALL(*logger_interface_ptr, logError(AllOf(HasSubstr("Failed to determine if Spot is equipped with an arm:"),
-                                                    HasSubstr(kSomeErrorMessage))));
-
-  // WHEN the SpotImagePulisher is initialized
-  // THEN initialization fails
-  ASSERT_FALSE(image_publisher->initialize());
-}
-
 TEST_F(TestInitSpotImagePublisher, InitSucceeds) {
   // GIVEN all required parameters are set to correct values
-  // GIVEN the createRobot function will return true to indicate that it succeeded
-  // GIVEn Spot has an arm
-  ON_CALL(*robot_api_ptr, createRobot).WillByDefault(Return(tl::expected<void, std::string>{}));
-  ON_CALL(*robot_api_ptr, hasArm).WillByDefault(Return(true));
+  // GIVEN an image publisher that is expected to publish gripper camera images
+  const auto has_arm{true};
+  create_image_publisher(has_arm);
 
   // THEN the timer interface's setTimer function is called once with the expected timer period
   EXPECT_CALL(*timer_interface_ptr, setTimer(std::chrono::duration<double>{1.0 / 15.0}, _)).Times(1);
@@ -274,8 +219,9 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
   parameter_interface_ptr->publish_depth_images = true;
   parameter_interface_ptr->publish_depth_registered_images = true;
 
-  // GIVEN Spot has an arm
-  ON_CALL(*robot_api_ptr, hasArm).WillByDefault(Return(true));
+  // GIVEN an image_publisher
+  const auto has_arm{true};
+  create_image_publisher(has_arm);
 
   // GIVEN the SpotImagePublisher was successfully initialized
   ASSERT_TRUE(image_publisher->initialize());
@@ -286,7 +232,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
     // THEN the images we received from the Spot interface are published
     // THEN the static transforms to the image frames are updated
     InSequence seq;
-    EXPECT_CALL(*robot_api_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
+    EXPECT_CALL(*image_client_api_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
     EXPECT_CALL(*publisher_interface_ptr, publish);
     EXPECT_CALL(*tf_interface_ptr, updateStaticTransforms);
   }
@@ -301,8 +247,9 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
   parameter_interface_ptr->publish_depth_images = true;
   parameter_interface_ptr->publish_depth_registered_images = true;
 
-  // GIVEN Spot does not have an arm
-  ON_CALL(*robot_api_ptr, hasArm).WillByDefault(Return(false));
+  // GIVEN an image publisher not expected to publish camera data
+  const auto has_arm{false};
+  create_image_publisher(has_arm);
 
   // GIVEN the SpotImagePublisher was successfully initialized
   ASSERT_TRUE(image_publisher->initialize());
@@ -313,7 +260,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
     // THEN the images we received from the Spot interface are published
     // THEN the static transforms to the image frames are updated
     InSequence seq;
-    EXPECT_CALL(*robot_api_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
+    EXPECT_CALL(*image_client_api_ptr, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
     EXPECT_CALL(*publisher_interface_ptr, publish);
     EXPECT_CALL(*tf_interface_ptr, updateStaticTransforms);
   }

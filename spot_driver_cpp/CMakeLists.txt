@@ -27,17 +27,17 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 endforeach()
 
 add_library(spot_api
-  src/api/default_image_api.cpp
-  src/api/default_robot_api.cpp
-  src/api/robot.cpp)
+  src/api/default_image_client_api.cpp
+  src/api/default_spot_api.cpp
+  src/api/default_time_sync_api.cpp)
 
-target_include_directories(spot_api
-PUBLIC
+target_include_directories(spot_api PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(spot_api PUBLIC bosdyn::bosdyn_client_static)
+set_property(TARGET spot_api PROPERTY POSITION_INDEPENDENT_CODE ON)
 ament_target_dependencies(spot_api PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
 # Base library containing the SpotImagePublisherNode class

@@ -5,8 +5,7 @@
 #include <rclcpp/node.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <spot_driver_cpp/api/image_api.hpp>
-#include <spot_driver_cpp/api/robot.hpp>
+#include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>

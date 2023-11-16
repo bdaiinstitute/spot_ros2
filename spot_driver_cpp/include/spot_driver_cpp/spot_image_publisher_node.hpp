@@ -4,7 +4,7 @@
 
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_options.hpp>
-#include <spot_driver_cpp/api/robot.hpp>
+#include <spot_driver_cpp/api/spot_api.hpp>
 #include <spot_driver_cpp/spot_image_publisher.hpp>
 
 #include <memory>
