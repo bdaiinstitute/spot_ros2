@@ -11,16 +11,16 @@ tl::expected<void, std::string> DefaultKinematicApi::init() {
   if (!kinematic_client_result.status) {
     return tl::make_unexpected("Failed to initialize the Spot SDK inverse kinematic client.");
   }
-
-  kinematic_client_.reset(std::move(kinematic_client_result.response));
+  kinematic_client_.reset(kinematic_client_result.response);
 }
 
-tl::expected<Result<InverseKinematicsResponse>, std::string> get_solution(InverseKinematicsRequest& requestrequest) {
-  // TODO: convert the ROS request into a Protobuffer request.
-  // TODO: send the protobuf request.
-  // TODO: convert the Protobuf response into a ROS response.
-
-  return {};
+tl::expected<Result<InverseKinematicsResponse>, std::string> DefaultKinematicApi::get_solutions(
+    InverseKinematicsRequest& request) {
+  auto result = kinematic_client_->InverseKinematics(request);
+  if (!result.status) {
+    return tl::make_unexpected("Failed to get solutios: " + result.status.DebugString());
+  }
+  return result;
 }
 
 }  // namespace spot_ros2

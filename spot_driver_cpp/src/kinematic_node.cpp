@@ -45,8 +45,7 @@ spot_ros2::KinematicNode::KinematicNode(const rclcpp::NodeOptions& node_options)
   }
 
   kinematic_service_ = std::make_unique<KinematicService>(std::move(kinematic_api), node_);
-
-  // TODO: create the service.
+  kinematic_service_->init();
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> spot_ros2::KinematicNode::get_node_base_interface() {

@@ -21,7 +21,7 @@ class DefaultKinematicApi : public KinematicApi {
   /**
    * Return a solution to the given request.
    */
-  tl::expected<Result<InverseKinematicsResponse>, std::string> get_solution(InverseKinematicsRequest& requestrequest);
+  tl::expected<Result<InverseKinematicsResponse>, std::string> get_solutions(InverseKinematicsRequest& requestrequest);
 
  private:
   std::shared_ptr<Robot> robot_;
