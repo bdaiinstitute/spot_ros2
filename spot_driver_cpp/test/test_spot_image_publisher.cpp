@@ -112,6 +112,15 @@ class MockLoggerInterface : public LoggerInterfaceBase {
   MOCK_METHOD(void, logFatal, (const std::string& message), (const, override));
 };
 
+class MockMiddlewareInterface : public MiddlewareInterface {
+ public:
+  MOCK_METHOD(ParameterInterfaceBase*, parameter_interface, (), (override));
+  MOCK_METHOD(LoggerInterfaceBase*, logger_interface, (), (override));
+  MOCK_METHOD(PublisherInterfaceBase*, publisher_interface, (), (override));
+  MOCK_METHOD(TfInterfaceBase*, tf_interface, (), (override));
+  MOCK_METHOD(TimerInterfaceBase*, timer_interface, (), (override));
+};
+
 class TestInitSpotImagePublisherParametersUnset : public ::testing::Test {
  public:
   void SetUp() override {
@@ -122,12 +131,16 @@ class TestInitSpotImagePublisherParametersUnset : public ::testing::Test {
     image_client_api_ptr = image_client_api.get();
     tf_interface_ptr = tf_interface.get();
     logger_interface_ptr = logger_interface.get();
+
+    ON_CALL(*middleware_interface, parameter_interface()).WillByDefault(Return(parameter_interface_ptr));
+    ON_CALL(*middleware_interface, timer_interface()).WillByDefault(Return(timer_interface_ptr));
+    ON_CALL(*middleware_interface, publisher_interface()).WillByDefault(Return(publisher_interface_ptr));
+    ON_CALL(*middleware_interface, tf_interface()).WillByDefault(Return(tf_interface_ptr));
+    ON_CALL(*middleware_interface, logger_interface()).WillByDefault(Return(logger_interface_ptr));
   }
 
   void create_image_publisher(bool has_arm) {
-    image_publisher = std::make_unique<SpotImagePublisher>(
-        std::move(image_client_api), std::move(timer_interface), std::move(publisher_interface),
-        std::move(parameter_interface), std::move(tf_interface), std::move(logger_interface), has_arm);
+    image_publisher = std::make_unique<SpotImagePublisher>(std::move(image_client_api), middleware_interface, has_arm);
   }
 
   std::unique_ptr<FakeParameterInterface> parameter_interface = std::make_unique<FakeParameterInterface>();
@@ -149,6 +162,7 @@ class TestInitSpotImagePublisherParametersUnset : public ::testing::Test {
   MockLoggerInterface* logger_interface_ptr;
 
   std::unique_ptr<SpotImagePublisher> image_publisher;
+  std::shared_ptr<MockMiddlewareInterface> middleware_interface;
 };
 
 class TestInitSpotImagePublisher : public TestInitSpotImagePublisherParametersUnset {
@@ -176,6 +190,12 @@ class TestRunSpotImagePublisher : public TestInitSpotImagePublisher {
     parameter_interface_ptr->address = kExampleAddress;
     parameter_interface_ptr->username = kExampleUsername;
     parameter_interface_ptr->password = kExamplePassword;
+
+    ON_CALL(*middleware_interface, parameter_interface()).WillByDefault(Return(parameter_interface_ptr));
+    ON_CALL(*middleware_interface, timer_interface()).WillByDefault(Return(timer_interface_ptr));
+    ON_CALL(*middleware_interface, publisher_interface()).WillByDefault(Return(publisher_interface_ptr));
+    ON_CALL(*middleware_interface, tf_interface()).WillByDefault(Return(tf_interface_ptr));
+    ON_CALL(*middleware_interface, logger_interface()).WillByDefault(Return(logger_interface_ptr));
   }
 
   std::unique_ptr<FakeParameterInterface> parameter_interface = std::make_unique<FakeParameterInterface>();
@@ -197,6 +217,7 @@ class TestRunSpotImagePublisher : public TestInitSpotImagePublisher {
   MockLoggerInterface* logger_interface_ptr;
 
   std::unique_ptr<SpotImagePublisher> image_publisher;
+  std::shared_ptr<MockMiddlewareInterface> middleware_interface;
 };
 
 TEST_F(TestInitSpotImagePublisher, InitSucceeds) {

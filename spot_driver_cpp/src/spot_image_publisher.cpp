@@ -8,6 +8,7 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/api/default_image_client_api.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_middleware_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
@@ -60,33 +61,21 @@ namespace spot_ros2 {
 }
 
 SpotImagePublisher::SpotImagePublisher(std::unique_ptr<ImageClientApi> image_client_api,
-                                       std::unique_ptr<TimerInterfaceBase> timer_interface,
-                                       std::unique_ptr<PublisherInterfaceBase> publisher_interface,
-                                       std::unique_ptr<ParameterInterfaceBase> parameter_interface,
-                                       std::unique_ptr<TfInterfaceBase> tf_interface,
-                                       std::unique_ptr<LoggerInterfaceBase> logger_interface, bool has_arm)
-    : image_client_api_{std::move(image_client_api)},
-      timer_interface_{std::move(timer_interface)},
-      publisher_interface_{std::move(publisher_interface)},
-      parameter_interface_{std::move(parameter_interface)},
-      tf_interface_{std::move(tf_interface)},
-      logger_interface_{std::move(logger_interface)},
-      has_arm_{has_arm} {}
+                                       std::shared_ptr<MiddlewareInterface> middleware_interface, bool has_arm)
+    : image_client_api_{std::move(image_client_api)}, middleware_interface_{middleware_interface}, has_arm_{has_arm} {}
 
 SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node,
                                        std::unique_ptr<ImageClientApi> image_client_api, bool has_arm)
-    : SpotImagePublisher(std::move(image_client_api), std::make_unique<RclcppWallTimerInterface>(node),
-                         std::make_unique<RclcppPublisherInterface>(node),
-                         std::make_unique<RclcppParameterInterface>(node), std::make_unique<RclcppTfInterface>(node),
-                         std::make_unique<RclcppLoggerInterface>(node->get_logger()), has_arm) {}
+    : SpotImagePublisher(std::move(image_client_api), std::make_shared<RclcppMiddlewareInterface>(node), has_arm) {}
 
 bool SpotImagePublisher::initialize() {
   // These parameters all fall back to default values if the user did not set them at runtime
-  const auto rgb_image_quality = parameter_interface_->getRGBImageQuality();
-  const auto publish_rgb_images = parameter_interface_->getPublishRGBImages();
-  const auto publish_depth_images = parameter_interface_->getPublishDepthImages();
-  const auto publish_depth_registered_images = parameter_interface_->getPublishDepthRegisteredImages();
-  const auto has_rgb_cameras = parameter_interface_->getHasRGBCameras();
+  const auto rgb_image_quality = middleware_interface_->parameter_interface()->getRGBImageQuality();
+  const auto publish_rgb_images = middleware_interface_->parameter_interface()->getPublishRGBImages();
+  const auto publish_depth_images = middleware_interface_->parameter_interface()->getPublishDepthImages();
+  const auto publish_depth_registered_images =
+      middleware_interface_->parameter_interface()->getPublishDepthRegisteredImages();
+  const auto has_rgb_cameras = middleware_interface_->parameter_interface()->getHasRGBCameras();
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources =
@@ -96,10 +85,10 @@ bool SpotImagePublisher::initialize() {
   image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, false);
 
   // Create a publisher for each image source
-  publisher_interface_->createPublishers(sources);
+  middleware_interface_->publisher_interface()->createPublishers(sources);
 
   // Create a timer to request and publish images at a fixed rate
-  timer_interface_->setTimer(kImageCallbackPeriod, [this]() {
+  middleware_interface_->timer_interface()->setTimer(kImageCallbackPeriod, [this]() {
     timerCallback();
   });
 
@@ -113,12 +102,13 @@ void SpotImagePublisher::timerCallback() {
 
   const auto image_result = image_client_api_->getImages(*image_request_message_);
   if (!image_result.has_value()) {
-    logger_interface_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
+    middleware_interface_->logger_interface()->logError(
+        std::string{"Failed to get images: "}.append(image_result.error()));
     return;
   }
 
-  publisher_interface_->publish(image_result.value().images_);
+  middleware_interface_->publisher_interface()->publish(image_result.value().images_);
 
-  tf_interface_->updateStaticTransforms(image_result.value().transforms_);
+  middleware_interface_->tf_interface()->updateStaticTransforms(image_result.value().transforms_);
 }
 }  // namespace spot_ros2

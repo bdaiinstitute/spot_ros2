@@ -7,6 +7,7 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
+#include <spot_driver_cpp/interfaces/middleware_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
@@ -55,11 +56,7 @@ class SpotImagePublisher {
    * @param tf_interface  A unique_ptr to an instance of a class that implements TfInterfaceBase.
    */
   SpotImagePublisher(std::unique_ptr<ImageClientApi> image_client_api,
-                     std::unique_ptr<TimerInterfaceBase> timer_interface,
-                     std::unique_ptr<PublisherInterfaceBase> publisher_interface,
-                     std::unique_ptr<ParameterInterfaceBase> parameter_interface,
-                     std::unique_ptr<TfInterfaceBase> tf_interface,
-                     std::unique_ptr<LoggerInterfaceBase> logger_interface, bool has_arm = false);
+                     std::shared_ptr<MiddlewareInterface> middleware_interface, bool has_arm = false);
 
   /**
    * @brief Constuctor for SpotImagePublisher, which creates instances of rclcpp-specialized interface classes
@@ -97,11 +94,7 @@ class SpotImagePublisher {
 
   // Interface classes to interact with Spot and the middleware.
   std::unique_ptr<ImageClientApi> image_client_api_;
-  std::unique_ptr<TimerInterfaceBase> timer_interface_;
-  std::unique_ptr<PublisherInterfaceBase> publisher_interface_;
-  std::unique_ptr<ParameterInterfaceBase> parameter_interface_;
-  std::unique_ptr<TfInterfaceBase> tf_interface_;
-  std::unique_ptr<LoggerInterfaceBase> logger_interface_;
+  std::shared_ptr<MiddlewareInterface> middleware_interface_;
   bool has_arm_;
 };
 }  // namespace spot_ros2

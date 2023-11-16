@@ -4,6 +4,7 @@
 
 #include <spot_driver_cpp/api/default_spot_api.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_middleware_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/spot_image_publisher.hpp>
 
@@ -12,12 +13,14 @@ constexpr auto kSDKClientName = "spot_image_publisher";
 }
 
 namespace spot_ros2 {
-SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_options) {
-  node_ = std::make_shared<rclcpp::Node>("image_publisher", node_options);
+SpotImagePublisherNode::SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> node,
+                                               std::shared_ptr<MiddlewareInterface> middleware_interface)
+    : node_{node}, middleware_interface_{middleware_interface} {
+  // TODO(abaker): Mock out spot_api_
   spot_api_ = std::make_unique<DefaultSpotApi>(kSDKClientName);
 
-  const auto logger = std::make_unique<RclcppLoggerInterface>(node_->get_logger());
-  const auto parameters = std::make_unique<RclcppParameterInterface>(node_);
+  const auto logger = middleware_interface_->logger_interface();
+  const auto parameters = middleware_interface_->parameter_interface();
 
   const auto address = parameters->getAddress();
   const auto robot_name = parameters->getSpotName();
@@ -54,7 +57,13 @@ SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_o
   internal_->initialize();
 }
 
+SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_options) {
+  auto node = std::make_shared<rclcpp::Node>("image_publisher", node_options);
+  SpotImagePublisherNode(node, std::make_shared<RclcppMiddlewareInterface>(node));
+}
+
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotImagePublisherNode::get_node_base_interface() {
   return node_->get_node_base_interface();
 }
+
 }  // namespace spot_ros2

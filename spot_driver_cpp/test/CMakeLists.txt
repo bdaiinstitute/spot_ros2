@@ -15,6 +15,11 @@ ament_add_gmock(test_spot_image_publisher
 )
 target_link_libraries(test_spot_image_publisher spot_image_publisher)
 
+# ament_add_gmock(test_spot_image_publisher_node
+#   test_spot_image_publisher_node.cpp
+# )
+# target_link_libraries(test_spot_image_publisher_node spot_image_publisher_node)
+
 ament_add_gmock(test_spot_image_sources
   test_spot_image_sources.cpp
 )
