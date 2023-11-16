@@ -41,8 +41,6 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   double getRGBImageQuality() const override { return rgb_image_quality; }
 
-  bool getHasRGBCameras() const override { return has_rgb_cameras; }
-
   bool getPublishRGBImages() const override { return publish_rgb_images; }
 
   bool getPublishDepthImages() const override { return publish_depth_images; }

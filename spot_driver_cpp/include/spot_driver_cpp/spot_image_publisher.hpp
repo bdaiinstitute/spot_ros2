@@ -27,7 +27,7 @@ namespace spot_ros2 {
  * @details Requests for depth images will always use FORMAT_RAW at quality 100.0.
  *
  * @param sources Set of image sources. Defines which cameras to request images from.
- * @param has_rgb_cameras Set this to true if Spot's 2D body cameras can capture RGB image data.
+ * @param has_rgb_cameras A bool to decide if Spot's 2D body cameras can capture RGB image data.
  * @param rgb_image_quality A value in the range from 0.0 to 100.0 which defines the level of compression to use when
  * requesting JPEG-compressed RGB image data.
  * @param get_raw_rgb_images If true, request raw images from Spot's 2D body cameras. If false, request JPEG-compressed

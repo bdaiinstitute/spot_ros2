@@ -93,10 +93,6 @@ double RclcppParameterInterface::getRGBImageQuality() const {
   return declareAndGetParameter<double>(node_, kParameterNameRGBImageQuality, kDefaultRGBImageQuality);
 }
 
-bool RclcppParameterInterface::getHasRGBCameras() const {
-  return declareAndGetParameter<bool>(node_, kParameterNameHasRGBCameras, kDefaultHasRGBCameras);
-}
-
 bool RclcppParameterInterface::getPublishRGBImages() const {
   return declareAndGetParameter<bool>(node_, kParameterNamePublishRGBImages, kDefaultPublishRGBImages);
 }

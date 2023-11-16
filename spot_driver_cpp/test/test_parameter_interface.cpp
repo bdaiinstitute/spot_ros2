@@ -168,7 +168,6 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   EXPECT_THAT(parameter_interface.getUsername(), StrEq(username_parameter));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq(password_parameter));
   EXPECT_THAT(parameter_interface.getRGBImageQuality(), Eq(rgb_image_quality_parameter));
-  EXPECT_THAT(parameter_interface.getHasRGBCameras(), Eq(has_rgb_cameras_parameter));
   EXPECT_THAT(parameter_interface.getPublishRGBImages(), Eq(publish_rgb_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), Eq(publish_depth_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), Eq(publish_depth_registered_images_parameter));
@@ -213,7 +212,6 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   EXPECT_THAT(parameter_interface.getUsername(), StrEq("user"));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq("password"));
   EXPECT_THAT(parameter_interface.getRGBImageQuality(), Eq(70.0));
-  EXPECT_THAT(parameter_interface.getHasRGBCameras(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishRGBImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), IsTrue());
