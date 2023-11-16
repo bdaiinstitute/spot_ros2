@@ -58,10 +58,10 @@ RUN curl -sL https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v3.
 RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
     && pip install --root-user-action=ignore --no-cache-dir --default-timeout=900 \
     numpy==1.24.1 \
-    bosdyn-client==3.2.1.post1 \
-    bosdyn-mission==3.2.1.post1 \
-    bosdyn-api==3.2.1.post1 \
-    bosdyn-core==3.2.1.post1  && \
+    bosdyn-client==3.3.2 \
+    bosdyn-mission==3.3.2 \
+    bosdyn-api==3.3.2 \
+    bosdyn-core==3.3.2  && \
     pip cache purge
 
 # ROS doesn't recognize the docker shells as terminals so force colored output
