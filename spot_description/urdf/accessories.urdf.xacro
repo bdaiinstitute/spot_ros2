@@ -11,17 +11,17 @@
     <link name="pack_mount">
       <visual>
         <geometry>
-          <mesh filename="file://$(find spot_description)/meshes/base/visual/pack_top.dae"/>
+          <mesh filename="package://spot_description/meshes/base/visual/pack_top.dae"/>
         </geometry>
       </visual>
       <visual>
         <geometry>
-          <mesh filename="file://$(find spot_description)/meshes/base/visual/pack_body.dae"/>
+          <mesh filename="package://spot_description/meshes/base/visual/pack_body.dae"/>
         </geometry>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="file://$(find spot_description)/meshes/base/visual/pack_body.dae"/>
+          <mesh filename="package://spot_description/meshes/base/visual/pack_body.dae"/>
         </geometry>
       </collision>
     </link>
@@ -37,12 +37,12 @@
     <link name="lidar_mount">
       <visual>
         <geometry>
-          <mesh filename="file://$(find spot_description)/meshes/base/visual/lidar_mount.dae"/>
+          <mesh filename="package://spot_description/meshes/base/visual/lidar_mount.dae"/>
         </geometry>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="file://$(find spot_description)/meshes/base/collision/lidar_mount_collision.stl"/>
+          <mesh filename="package://spot_description/meshes/base/collision/lidar_mount_collision.stl"/>
         </geometry>
       </collision>
     </link>
@@ -58,14 +58,14 @@
       <link name="velodyne_cage">
         <visual>
           <geometry>
-            <mesh filename="file://$(find spot_description)/meshes/base/collision/velodyne_cage.stl" scale="0.001 0.001 0.001" />
+            <mesh filename="package://spot_description/meshes/base/collision/velodyne_cage.stl" scale="0.001 0.001 0.001" />
           </geometry>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <material name="black" />
         </visual>
         <collision>
           <geometry>
-            <mesh filename="file://$(find spot_description)/meshes/base/collision/velodyne_cage.stl" scale="0.001 0.001 0.001" />
+            <mesh filename="package://spot_description/meshes/base/collision/velodyne_cage.stl" scale="0.001 0.001 0.001" />
           </geometry>
           <origin xyz="0 0 0" rpy="0 0 0" />
         </collision>
