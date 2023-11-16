@@ -4,8 +4,7 @@
 
 namespace spot_ros2::kinematic_utils {
 
-::bosdyn::api::spot::InverseKinematicsRequest to_proto(
-    const std::shared_ptr<GetInverseKinematicSolutions::Request> request) {
+InverseKinematicsRequest to_proto(const std::shared_ptr<GetInverseKinematicSolutions::Request> request) {
   return {};
 }
 
