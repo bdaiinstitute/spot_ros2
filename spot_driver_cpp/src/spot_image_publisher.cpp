@@ -65,8 +65,8 @@ SpotImagePublisher::SpotImagePublisher(std::unique_ptr<ImageClientApi> image_cli
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<TfInterfaceBase> tf_interface,
                                        std::unique_ptr<LoggerInterfaceBase> logger_interface, bool has_arm)
-    : timer_interface_{std::move(timer_interface)},
-      image_client_api_{std::move(image_client_api)},
+    : image_client_api_{std::move(image_client_api)},
+      timer_interface_{std::move(timer_interface)},
       publisher_interface_{std::move(publisher_interface)},
       parameter_interface_{std::move(parameter_interface)},
       tf_interface_{std::move(tf_interface)},
