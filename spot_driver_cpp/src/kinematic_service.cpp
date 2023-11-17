@@ -2,8 +2,8 @@
 
 #include <spot_driver_cpp/kinematic_service.hpp>
 
+#include <spot_driver_cpp/conversions/kinematic_utils.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
-#include <spot_driver_cpp/kinematic_utils.hpp>
 
 namespace spot_ros2 {
 
