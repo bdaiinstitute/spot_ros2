@@ -4,6 +4,8 @@
 
 #include <spot_driver_cpp/api/kinematic_api.hpp>
 
+#include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
+
 #include <spot_msgs/srv/get_inverse_kinematic_solutions.hpp>
 
 #include <rclcpp/node.hpp>
@@ -23,6 +25,15 @@ class KinematicService {
    * Create the logic for the GetInverseKinematicSolutions service.
    * @param node The ROS node.
    * @param kinematic_api The Api to interact with the Spot SDK.
+   * @param logger Logging interface.
+   */
+  explicit KinematicService(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<KinematicApi> kinematic_api,
+                            std::unique_ptr<LoggerInterfaceBase> logger);
+
+  /**
+   * Create the logic for the GetInverseKinematicSolutions service.
+   * @param node The ROS node.
+   * @param kinematic_api The Api to interact with the Spot SDK.
    */
   explicit KinematicService(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<KinematicApi> kinematic_api);
 
@@ -37,6 +48,9 @@ class KinematicService {
 
   // The service processing the Inverse Kinematic request for solutions.
   rclcpp::Service<GetInverseKinematicSolutions>::SharedPtr service_;
+
+  // Logger.
+  std::unique_ptr<LoggerInterfaceBase> logger_;
 
   // The service callback.
   void service_callback_(const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
