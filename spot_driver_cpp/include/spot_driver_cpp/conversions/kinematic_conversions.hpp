@@ -11,6 +11,10 @@
 
 namespace spot_ros2::kinematic_conversions {
 
+void convert_bosdyn_msgs_inverse_kinematics_request_one_of_stance_specification_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestOneOfStanceSpecification& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest& proto);
+
 void convert_bosdyn_msgs_inverse_kinematics_request_to_proto(const bosdyn_msgs::msg::InverseKinematicsRequest& ros_msg,
                                                              bosdyn::api::spot::InverseKinematicsRequest& proto);
 

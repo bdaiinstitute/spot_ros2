@@ -6,6 +6,19 @@
 
 namespace spot_ros2::kinematic_conversions {
 
+void convert_bosdyn_msgs_inverse_kinematics_request_one_of_stance_specification_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestOneOfStanceSpecification& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest& proto) {
+  if (ros_msg.stance_specification_choice == ros_msg.STANCE_SPECIFICATION_FIXED_STANCE_SET) {
+    //     convert_bosdyn_msgs_inverse_kinematics_request_fixed_stance_to_proto(ros_msg.fixed_stance,
+    //     proto.fixed_stance)
+  }
+  if (ros_msg.stance_specification_choice == ros_msg.STANCE_SPECIFICATION_ON_GROUND_PLANE_STANCE_SET) {
+    //     convert_bosdyn_msgs_inverse_kinematics_request_on_ground_plane_stance_to_proto(ros_msg.on_ground_plane_stance,
+    //     proto.on_ground_plane_stance)
+  }
+}
+
 void convert_bosdyn_msgs_inverse_kinematics_request_to_proto(const bosdyn_msgs::msg::InverseKinematicsRequest& ros_msg,
                                                              bosdyn::api::spot::InverseKinematicsRequest& proto) {
   if (ros_msg.header_is_set) {
@@ -32,8 +45,8 @@ void convert_bosdyn_msgs_inverse_kinematics_request_to_proto(const bosdyn_msgs::
                                                             *proto.mutable_scene_tform_body_nominal());
   }
 
-  // convert_bosdyn_msgs_inverse_kinematics_request_one_of_stance_specification_to_proto(ros_msg.stance_specification,
-  // proto)
+  convert_bosdyn_msgs_inverse_kinematics_request_one_of_stance_specification_to_proto(ros_msg.stance_specification,
+                                                                                      proto);
   // convert_bosdyn_msgs_inverse_kinematics_request_one_of_tool_specification_to_proto(ros_msg.tool_specification,
   // proto)
   // convert_bosdyn_msgs_inverse_kinematics_request_one_of_task_specification_to_proto(ros_msg.task_specification,
