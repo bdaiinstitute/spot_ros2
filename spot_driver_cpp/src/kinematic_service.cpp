@@ -2,7 +2,7 @@
 
 #include <spot_driver_cpp/kinematic_service.hpp>
 
-#include <spot_driver_cpp/conversions/kinematic_utils.hpp>
+#include <spot_driver_cpp/conversions/kinematic_conversions.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 
 namespace spot_ros2 {
@@ -28,7 +28,7 @@ void KinematicService::service_callback_(const std::shared_ptr<GetInverseKinemat
                                          std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
   auto ros_request = request->request;
   bosdyn::api::spot::InverseKinematicsRequest proto_request;
-  kinematic_utils::convert_bosdyn_msgs_inverse_kinematics_request_to_proto(ros_request, proto_request);
+  kinematic_conversions::convert_bosdyn_msgs_inverse_kinematics_request_to_proto(ros_request, proto_request);
   auto expected = kinematic_api_->get_solutions(proto_request);
   if (!expected) {
     logger_->logError(std::string{"Error searching for an InverseKinematic solution: "}.append(expected.error()));

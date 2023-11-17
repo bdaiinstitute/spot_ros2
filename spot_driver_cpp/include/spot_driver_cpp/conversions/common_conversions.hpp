@@ -2,15 +2,22 @@
 
 #pragma once
 
-#include <bosdyn/api/spot/inverse_kinematics.pb.h>
+#include <google/protobuf/timestamp.pb.h>
+#include <google/protobuf/wrappers.pb.h>
 
-#include <bosdyn_msgs/msg/inverse_kinematics_request.hpp>
-#include <bosdyn_msgs/msg/inverse_kinematics_response.hpp>
+#include <bosdyn_msgs/msg/arm_joint_position.hpp>
+#include <bosdyn_msgs/msg/quaternion.hpp>
+#include <bosdyn_msgs/msg/request_header.hpp>
 
-#include <spot_driver_cpp/kinematic_service.hpp>
+#include <bosdyn/api/arm_command.pb.h>
+#include <bosdyn/api/geometry.pb.h>
+#include <bosdyn/api/header.pb.h>
 
-namespace spot_ros2::kinematic_utils {
+#include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/quaternion.hpp>
 
+namespace spot_ros2::common_conversions {
 void convert_builtin_interfaces_time_to_proto(const builtin_interfaces::msg::Time& ros_msg,
                                               google::protobuf::Timestamp& proto);
 
@@ -29,10 +36,4 @@ void convert_float64_to_proto(const double ros_msg, google::protobuf::DoubleValu
 void convert_bosdyn_msgs_arm_joint_position_to_proto(const bosdyn_msgs::msg::ArmJointPosition& ros_msg,
                                                      bosdyn::api::ArmJointPosition& proto);
 
-void convert_bosdyn_msgs_inverse_kinematics_request_to_proto(const bosdyn_msgs::msg::InverseKinematicsRequest& ros_msg,
-                                                             bosdyn::api::spot::InverseKinematicsRequest& proto);
-
-void convert_proto_to_bosdyn_msgs_inverse_kinematics_response(const bosdyn::api::spot::InverseKinematicsResponse& proto,
-                                                              bosdyn_msgs::msg::InverseKinematicsResponse& ros_msg);
-
-}  // namespace spot_ros2::kinematic_utils
+}  // namespace spot_ros2::common_conversions
