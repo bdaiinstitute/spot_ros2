@@ -15,6 +15,13 @@ void convert_time_to_proto(const builtin_interfaces::msg::Time& ros_msg, google:
 
 void convert_request_header_to_proto(const bosdyn_msgs::msg::RequestHeader& ros_msg, bosdyn::api::RequestHeader& proto);
 
+void convert_geometry_msgs_vector3_to_proto(const geometry_msgs::msg::Point& ros_msg, bosdyn::api::Vec3& proto);
+
+void convert_geometry_msgs_quaternion_to_proto(const geometry_msgs::msg::Quaternion& ros_msg,
+                                               bosdyn::api::Quaternion& proto);
+
+void convert_geometry_msgs_pose_to_proto(const geometry_msgs::msg::Pose& ros_msg, bosdyn::api::SE3Pose& proto);
+
 void convert_inverse_kinematics_request_to_proto(const bosdyn_msgs::msg::InverseKinematicsRequest& ros_msg,
                                                  bosdyn::api::spot::InverseKinematicsRequest& proto);
 
