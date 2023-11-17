@@ -44,7 +44,7 @@ spot_ros2::KinematicNode::KinematicNode(const rclcpp::NodeOptions& node_options)
     throw;
   }
 
-  kinematic_service_ = std::make_unique<KinematicService>(std::move(kinematic_api), node_);
+  kinematic_service_ = std::make_unique<KinematicService>(node_, std::move(kinematic_api));
   kinematic_service_->init();
 }
 
