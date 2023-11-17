@@ -12,10 +12,13 @@
 namespace spot_ros2::kinematic_utils {
 
 using ::bosdyn::api::spot::InverseKinematicsRequest;
+using ::bosdyn::api::spot::InverseKinematicsResponse;
 using spot_msgs::srv::GetInverseKinematicSolutions;
 
-InverseKinematicsRequest to_proto(const std::shared_ptr<GetInverseKinematicSolutions::Request> request);
+InverseKinematicsRequest convert_inverse_kinematics_request_to_proto(
+    const std::shared_ptr<GetInverseKinematicSolutions::Request>& ros_msg);
 
-// RosResponse toRos(const ProtoResponse& response);
+std::shared_ptr<GetInverseKinematicSolutions::Response> convert_proto_to_inverse_kinematics_response(
+    const InverseKinematicsResponse& proto);
 
 }  // namespace spot_ros2::kinematic_utils

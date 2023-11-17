@@ -4,15 +4,10 @@
 
 namespace spot_ros2::kinematic_utils {
 
-InverseKinematicsRequest to_proto(const std::shared_ptr<GetInverseKinematicSolutions::Request> request) {
-  return {};
-}
+InverseKinematicsRequest convert_inverse_kinematics_request_to_proto(
+    const std::shared_ptr<GetInverseKinematicSolutions::Request>& ros_msg) {}
 
-// RosResponse toRos(const ProtoResponse& proto_response) {
-//   RosResponse response;
-//   if (proto_response.has_header()) {
-//   }
+std::shared_ptr<GetInverseKinematicSolutions::Response> convert_proto_to_inverse_kinematics_response(
+    const InverseKinematicsResponse& proto) {}
 
-//   return RosResponse();
-// }
 }  // namespace spot_ros2::kinematic_utils
