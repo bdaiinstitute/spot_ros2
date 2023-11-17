@@ -18,6 +18,7 @@ set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
   sensor_msgs
   tf2_ros
   tl_expected
+  spot_msgs
 )
 
 find_package(ament_cmake REQUIRED)
