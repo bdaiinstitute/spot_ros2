@@ -44,6 +44,13 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   time_sync_api_ = std::make_shared<DefaultTimeSyncApi>(get_time_sync_thread_response.response);
 
   return {};
+
+  const auto image_client_result = robot_->EnsureServiceClient<::bosdyn::client::ImageClient>(
+      ::bosdyn::client::ImageClient::GetDefaultServiceName());
+  if (!image_client_result.status) {
+    return tl::make_unexpected("Failed to create image client.");
+  }
+  std::make_shared<DefaultImageClientApi>(image_client_result.response, time_sync_api_, robot_name_);
 }
 
 tl::expected<bool, std::string> DefaultSpotApi::hasArm() const {
@@ -61,14 +68,9 @@ tl::expected<bool, std::string> DefaultSpotApi::hasArm() const {
          }) != services.cend();
 }
 
-tl::expected<std::unique_ptr<ImageClientApi>, std::string> DefaultSpotApi::imageClient() const {
-  const auto image_client_result = robot_->EnsureServiceClient<::bosdyn::client::ImageClient>(
-      ::bosdyn::client::ImageClient::GetDefaultServiceName());
-  if (!image_client_result.status) {
-    return tl::make_unexpected("Failed to create image client.");
-  }
+std::shared_ptr<ImageClientApi> DefaultSpotApi::image_client_api() const {
 
-  return std::make_unique<DefaultImageClientApi>(image_client_result.response, time_sync_api_, robot_name_);
+  return image_client_api_;
 }
 
 }  // namespace spot_ros2

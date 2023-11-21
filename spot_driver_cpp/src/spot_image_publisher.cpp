@@ -60,13 +60,13 @@ namespace spot_ros2 {
   return request_message;
 }
 
-SpotImagePublisher::SpotImagePublisher(std::unique_ptr<ImageClientApi> image_client_api,
+SpotImagePublisher::SpotImagePublisher(std::shared_ptr<ImageClientApi> image_client_api,
                                        std::shared_ptr<MiddlewareInterface> middleware_interface, bool has_arm)
-    : image_client_api_{std::move(image_client_api)}, middleware_interface_{middleware_interface}, has_arm_{has_arm} {}
+    : image_client_api_{image_client_api}, middleware_interface_{middleware_interface}, has_arm_{has_arm} {}
 
 SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node,
-                                       std::unique_ptr<ImageClientApi> image_client_api, bool has_arm)
-    : SpotImagePublisher(std::move(image_client_api), std::make_shared<RclcppMiddlewareInterface>(node), has_arm) {}
+                                       std::shared_ptr<ImageClientApi> image_client_api, bool has_arm)
+    : SpotImagePublisher(image_client_api, std::make_shared<RclcppMiddlewareInterface>(node), has_arm) {}
 
 bool SpotImagePublisher::initialize() {
   // These parameters all fall back to default values if the user did not set them at runtime

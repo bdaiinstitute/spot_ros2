@@ -55,7 +55,7 @@ class SpotImagePublisher {
    * @param parameter_interface  A unique_ptr to an instance of a class that implements ParameterInterfaceBase.
    * @param tf_interface  A unique_ptr to an instance of a class that implements TfInterfaceBase.
    */
-  SpotImagePublisher(std::unique_ptr<ImageClientApi> image_client_api,
+  SpotImagePublisher(std::shared_ptr<ImageClientApi> image_client_api,
                      std::shared_ptr<MiddlewareInterface> middleware_interface, bool has_arm = false);
 
   /**
@@ -67,7 +67,7 @@ class SpotImagePublisher {
    * @param has_arm get hand camera data if arm is a part of the current configuration
    */
   explicit SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node,
-                              std::unique_ptr<ImageClientApi> image_client_api, bool has_arm = false);
+                              std::shared_ptr<ImageClientApi> image_client_api, bool has_arm = false);
 
   /**
    * @brief Connect to Spot and start publishing image data.
@@ -93,7 +93,7 @@ class SpotImagePublisher {
   std::optional<::bosdyn::api::GetImageRequest> image_request_message_;
 
   // Interface classes to interact with Spot and the middleware.
-  std::unique_ptr<ImageClientApi> image_client_api_;
+  std::shared_ptr<ImageClientApi> image_client_api_;
   std::shared_ptr<MiddlewareInterface> middleware_interface_;
   bool has_arm_;
 };
