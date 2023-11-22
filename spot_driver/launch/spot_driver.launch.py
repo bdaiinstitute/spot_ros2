@@ -114,15 +114,20 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
+    mock_enable = LaunchConfiguration("mock_enable", default=False).perform(context)
 
-    # Get parameters from Spot.
+    if not mock_enable:
+        # Get parameters from Spot.
 
-    username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
-    password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
-    hostname = os.getenv("SPOT_IP", "hostname")
+        username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
+        password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
+        hostname = os.getenv("SPOT_IP", "hostname")
 
-    spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
-    has_arm = spot_wrapper.has_arm()
+        spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
+        has_arm = spot_wrapper.has_arm()
+    else:
+        # TODO if it's not a boolean, correctly errors, but does not provide launch argument name
+        has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -196,7 +201,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             PathJoinSubstitution([pkg_share, "urdf", "spot.urdf.xacro"]),
             " ",
             "arm:=",
-            TextSubstitution(text=str(spot_wrapper.has_arm()).lower()),
+            TextSubstitution(text=str(has_arm).lower()),
             " ",
             "tf_prefix:=",
             tf_prefix,
