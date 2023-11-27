@@ -19,6 +19,10 @@
 #include <geometry_msgs/msg/vector3.hpp>
 
 namespace spot_ros2::common_conversions {
+
+///////////////////////////////////////////////////////////////////////////////
+// ROS to Protobuf.
+
 void convert_builtin_interfaces_time_to_proto(const builtin_interfaces::msg::Time& ros_msg,
                                               google::protobuf::Timestamp& proto);
 
@@ -38,4 +42,11 @@ void convert_float64_to_proto(const double ros_msg, google::protobuf::DoubleValu
 
 void convert_bosdyn_msgs_arm_joint_position_to_proto(const bosdyn_msgs::msg::ArmJointPosition& ros_msg,
                                                      bosdyn::api::ArmJointPosition& proto);
+
+///////////////////////////////////////////////////////////////////////////////
+// Protobuf to ROS.
+
+void convert_proto_to_builtin_interfaces_time(const google::protobuf::Timestamp& proto,
+                                              builtin_interfaces::msg::Time& ros_msg);
+
 }  // namespace spot_ros2::common_conversions

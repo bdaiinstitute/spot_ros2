@@ -11,6 +11,9 @@
 
 namespace spot_ros2::kinematic_conversions {
 
+///////////////////////////////////////////////////////////////////////////////
+// ROS to Protobuf.
+
 void convert_bosdyn_msgs_inverse_kinematics_request_fixed_stance_to_proto(
     const bosdyn_msgs::msg::InverseKinematicsRequestFixedStance& ros_msg,
     bosdyn::api::spot::InverseKinematicsRequest::FixedStance& proto);
@@ -49,6 +52,9 @@ void convert_bosdyn_msgs_inverse_kinematics_request_one_of_task_specification_to
 
 void convert_bosdyn_msgs_inverse_kinematics_request_to_proto(const bosdyn_msgs::msg::InverseKinematicsRequest& ros_msg,
                                                              bosdyn::api::spot::InverseKinematicsRequest& proto);
+
+///////////////////////////////////////////////////////////////////////////////
+// Protobuf to ROS.
 
 void convert_proto_to_bosdyn_msgs_inverse_kinematics_response(const bosdyn::api::spot::InverseKinematicsResponse& proto,
                                                               bosdyn_msgs::msg::InverseKinematicsResponse& ros_msg);

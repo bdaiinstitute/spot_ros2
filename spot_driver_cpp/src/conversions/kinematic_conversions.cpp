@@ -6,6 +6,9 @@
 
 namespace spot_ros2::kinematic_conversions {
 
+///////////////////////////////////////////////////////////////////////////////
+// ROS to Protobuf,
+
 void convert_bosdyn_msgs_inverse_kinematics_request_fixed_stance_to_proto(
     const bosdyn_msgs::msg::InverseKinematicsRequestFixedStance& ros_msg,
     bosdyn::api::spot::InverseKinematicsRequest::FixedStance& proto) {
@@ -141,7 +144,43 @@ void convert_bosdyn_msgs_inverse_kinematics_request_to_proto(const bosdyn_msgs::
   convert_bosdyn_msgs_inverse_kinematics_request_one_of_task_specification_to_proto(ros_msg.task_specification, proto);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Protobuf to ROS.
+
+void convert_proto_to_bosdyn_msgs_request_header(const bosdyn::api::RequestHeader& proto,
+                                                 bosdyn_msgs::msg::RequestHeader& ros_msg) {
+  common_conversions::convert_proto_to_builtin_interfaces_time(proto.request_timestamp(), ros_msg.request_timestamp);
+  ros_msg.request_timestamp_is_set = proto.has_request_timestamp();
+  ros_msg.client_name = proto.client_name();
+  ros_msg.disable_rpc_logging = proto.disable_rpc_logging();
+}
+
+void convert_proto_to_bosdyn_msgs_common_error(const bosdyn::api::CommonError& proto,
+                                               bosdyn_msgs::msg::CommonError& ros_msg) {
+  ros_msg.code.value = proto.code();
+  ros_msg.message = proto.message();
+}
+
+void convert_proto_to_bosdyn_msgs_response_header(const bosdyn::api::ResponseHeader& proto,
+                                                  bosdyn_msgs::msg::ResponseHeader& ros_msg) {
+  convert_proto_to_bosdyn_msgs_request_header(proto.request_header(), ros_msg.request_header);
+  ros_msg.request_header_is_set = proto.has_request_header();
+  common_conversions::convert_proto_to_builtin_interfaces_time(proto.request_received_timestamp(),
+                                                               ros_msg.request_received_timestamp);
+  ros_msg.request_received_timestamp_is_set = proto.has_request_received_timestamp();
+  common_conversions::convert_proto_to_builtin_interfaces_time(proto.response_timestamp(), ros_msg.response_timestamp);
+  ros_msg.response_timestamp_is_set = proto.has_response_timestamp();
+  convert_proto_to_bosdyn_msgs_common_error(proto.error(), ros_msg.error);
+  ros_msg.error_is_set = proto.has_error();
+}
+
 void convert_proto_to_bosdyn_msgs_inverse_kinematics_response(const bosdyn::api::spot::InverseKinematicsResponse& proto,
-                                                              bosdyn_msgs::msg::InverseKinematicsResponse& ros_msg) {}
+                                                              bosdyn_msgs::msg::InverseKinematicsResponse& ros_msg) {
+  convert_proto_to_bosdyn_msgs_response_header(proto.header(), ros_msg.header);
+  ros_msg.header_is_set = proto.has_header();
+  ros_msg.status.value = proto.status();
+  // convert_proto_to_bosdyn_msgs_kinematic_state(proto.robot_configuration(), ros_msg.robot_configuration);
+  ros_msg.robot_configuration_is_set = proto.has_robot_configuration();
+}
 
 }  // namespace spot_ros2::kinematic_conversions
