@@ -6,16 +6,106 @@
 
 namespace spot_ros2::kinematic_conversions {
 
+void convert_bosdyn_msgs_inverse_kinematics_request_fixed_stance_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestFixedStance& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest::FixedStance& proto) {
+  if (ros_msg.fl_rt_scene_is_set) {
+    common_conversions::convert_geometry_msgs_vector3_to_proto(ros_msg.fl_rt_scene, *proto.mutable_fl_rt_scene());
+  }
+  if (ros_msg.fr_rt_scene_is_set) {
+    common_conversions::convert_geometry_msgs_vector3_to_proto(ros_msg.fr_rt_scene, *proto.mutable_fr_rt_scene());
+  }
+  if (ros_msg.hl_rt_scene_is_set) {
+    common_conversions::convert_geometry_msgs_vector3_to_proto(ros_msg.hl_rt_scene, *proto.mutable_hl_rt_scene());
+  }
+  if (ros_msg.hr_rt_scene_is_set) {
+    common_conversions::convert_geometry_msgs_vector3_to_proto(ros_msg.hr_rt_scene, *proto.mutable_hr_rt_scene());
+  }
+}
+
+void convert_bosdyn_msgs_inverse_kinematics_request_on_ground_plane_stance_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestOnGroundPlaneStance& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest::OnGroundPlaneStance& proto) {
+  if (ros_msg.scene_tform_ground_is_set) {
+    common_conversions::convert_geometry_msgs_pose_to_proto(ros_msg.scene_tform_ground,
+                                                            *proto.mutable_scene_tform_ground());
+  }
+}
+
 void convert_bosdyn_msgs_inverse_kinematics_request_one_of_stance_specification_to_proto(
     const bosdyn_msgs::msg::InverseKinematicsRequestOneOfStanceSpecification& ros_msg,
     bosdyn::api::spot::InverseKinematicsRequest& proto) {
   if (ros_msg.stance_specification_choice == ros_msg.STANCE_SPECIFICATION_FIXED_STANCE_SET) {
-    //     convert_bosdyn_msgs_inverse_kinematics_request_fixed_stance_to_proto(ros_msg.fixed_stance,
-    //     proto.fixed_stance)
+    convert_bosdyn_msgs_inverse_kinematics_request_fixed_stance_to_proto(ros_msg.fixed_stance,
+                                                                         *proto.mutable_fixed_stance());
   }
   if (ros_msg.stance_specification_choice == ros_msg.STANCE_SPECIFICATION_ON_GROUND_PLANE_STANCE_SET) {
-    //     convert_bosdyn_msgs_inverse_kinematics_request_on_ground_plane_stance_to_proto(ros_msg.on_ground_plane_stance,
-    //     proto.on_ground_plane_stance)
+    convert_bosdyn_msgs_inverse_kinematics_request_on_ground_plane_stance_to_proto(
+        ros_msg.on_ground_plane_stance, *proto.mutable_on_ground_plane_stance());
+  }
+}
+
+void convert_bosdyn_msgs_inverse_kinematics_request_wrist_mounted_tool_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestWristMountedTool& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest::WristMountedTool& proto) {
+  if (ros_msg.wrist_tform_tool_is_set) {
+    common_conversions::convert_geometry_msgs_pose_to_proto(ros_msg.wrist_tform_tool,
+                                                            *proto.mutable_wrist_tform_tool());
+  }
+}
+
+void convert_bosdyn_msgs_inverse_kinematics_request_body_mounted_tool_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestBodyMountedTool& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest::BodyMountedTool& proto) {
+  if (ros_msg.body_tform_tool_is_set) {
+    common_conversions::convert_geometry_msgs_pose_to_proto(ros_msg.body_tform_tool, *proto.mutable_body_tform_tool());
+  }
+}
+
+void convert_bosdyn_msgs_inverse_kinematics_request_one_of_tool_specification_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestOneOfToolSpecification& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest& proto) {
+  if (ros_msg.tool_specification_choice == ros_msg.TOOL_SPECIFICATION_WRIST_MOUNTED_TOOL_SET) {
+    convert_bosdyn_msgs_inverse_kinematics_request_wrist_mounted_tool_to_proto(ros_msg.wrist_mounted_tool,
+                                                                               *proto.mutable_wrist_mounted_tool());
+  }
+  if (ros_msg.tool_specification_choice == ros_msg.TOOL_SPECIFICATION_BODY_MOUNTED_TOOL_SET) {
+    convert_bosdyn_msgs_inverse_kinematics_request_body_mounted_tool_to_proto(ros_msg.body_mounted_tool,
+                                                                              *proto.mutable_body_mounted_tool());
+  }
+}
+
+void convert_bosdyn_msgs_inverse_kinematics_request_tool_pose_task_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestToolPoseTask& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest::ToolPoseTask& proto) {
+  if (ros_msg.task_tform_desired_tool_is_set) {
+    common_conversions::convert_geometry_msgs_pose_to_proto(ros_msg.task_tform_desired_tool,
+                                                            *proto.mutable_task_tform_desired_tool());
+  }
+}
+
+void convert_bosdyn_msgs_inverse_kinematics_request_tool_gaze_task_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestToolGazeTask& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest::ToolGazeTask& proto) {
+  if (ros_msg.target_in_task_is_set) {
+    common_conversions::convert_geometry_msgs_vector3_to_proto(ros_msg.target_in_task, *proto.mutable_target_in_task());
+  }
+  if (ros_msg.task_tform_desired_tool_is_set) {
+    common_conversions::convert_geometry_msgs_pose_to_proto(ros_msg.task_tform_desired_tool,
+                                                            *proto.mutable_task_tform_desired_tool());
+  }
+}
+
+void convert_bosdyn_msgs_inverse_kinematics_request_one_of_task_specification_to_proto(
+    const bosdyn_msgs::msg::InverseKinematicsRequestOneOfTaskSpecification& ros_msg,
+    bosdyn::api::spot::InverseKinematicsRequest& proto) {
+  if (ros_msg.task_specification_choice == ros_msg.TASK_SPECIFICATION_TOOL_POSE_TASK_SET) {
+    convert_bosdyn_msgs_inverse_kinematics_request_tool_pose_task_to_proto(ros_msg.tool_pose_task,
+                                                                           *proto.mutable_tool_pose_task());
+  }
+  if (ros_msg.task_specification_choice == ros_msg.TASK_SPECIFICATION_TOOL_GAZE_TASK_SET) {
+    convert_bosdyn_msgs_inverse_kinematics_request_tool_gaze_task_to_proto(ros_msg.tool_gaze_task,
+                                                                           *proto.mutable_tool_gaze_task());
   }
 }
 
@@ -47,10 +137,8 @@ void convert_bosdyn_msgs_inverse_kinematics_request_to_proto(const bosdyn_msgs::
 
   convert_bosdyn_msgs_inverse_kinematics_request_one_of_stance_specification_to_proto(ros_msg.stance_specification,
                                                                                       proto);
-  // convert_bosdyn_msgs_inverse_kinematics_request_one_of_tool_specification_to_proto(ros_msg.tool_specification,
-  // proto)
-  // convert_bosdyn_msgs_inverse_kinematics_request_one_of_task_specification_to_proto(ros_msg.task_specification,
-  // proto)
+  convert_bosdyn_msgs_inverse_kinematics_request_one_of_tool_specification_to_proto(ros_msg.tool_specification, proto);
+  convert_bosdyn_msgs_inverse_kinematics_request_one_of_task_specification_to_proto(ros_msg.task_specification, proto);
 }
 
 void convert_proto_to_bosdyn_msgs_inverse_kinematics_response(const bosdyn::api::spot::InverseKinematicsResponse& proto,

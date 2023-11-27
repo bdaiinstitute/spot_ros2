@@ -19,6 +19,12 @@ void convert_bosdyn_msgs_request_header_to_proto(const bosdyn_msgs::msg::Request
   proto.set_disable_rpc_logging(true);
 }
 
+void convert_geometry_msgs_vector3_to_proto(const geometry_msgs::msg::Vector3& ros_msg, bosdyn::api::Vec3& proto) {
+  proto.set_x(ros_msg.x);
+  proto.set_y(ros_msg.y);
+  proto.set_z(ros_msg.z);
+}
+
 void convert_geometry_msgs_vector3_to_proto(const geometry_msgs::msg::Point& ros_msg, bosdyn::api::Vec3& proto) {
   proto.set_x(ros_msg.x);
   proto.set_y(ros_msg.y);
