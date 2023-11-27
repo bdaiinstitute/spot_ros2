@@ -7,11 +7,10 @@ from typing import List
 
 import launch
 import launch_ros
-import yaml
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.substitutions import FindPackageShare
 
@@ -103,31 +102,6 @@ def create_point_cloud_nodelets(
             ),
         )
     return composable_node_descriptions
-
-
-def create_rviz_config(robot_name: str) -> None:
-    """Writes a configuration file for rviz to visualize a single spot robot"""
-
-    RVIZ_TEMPLATE_FILENAME = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot_template.yaml")
-    RVIZ_OUTPUT_FILENAME = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot.rviz")
-
-    with open(RVIZ_TEMPLATE_FILENAME, "r") as template_file:
-        config = yaml.safe_load(template_file)
-
-        if robot_name:
-            # replace fixed frame with robot body frame
-            config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{robot_name}/vision"
-            # Add robot models for each robot
-            for display in config["Visualization Manager"]["Displays"]:
-                if "RobotModel" in display["Class"]:
-                    display["Description Topic"]["Value"] = f"/{robot_name}/robot_description"
-
-                if "Image" in display["Class"]:
-                    topic_name = display["Topic"]["Value"]
-                    display["Topic"]["Value"] = f"/{robot_name}{topic_name}"
-
-    with open(RVIZ_OUTPUT_FILENAME, "w") as out_file:
-        yaml.dump(config, out_file)
 
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
@@ -240,17 +214,12 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(robot_state_publisher)
 
-    # It looks like passing an optional of value "None" gets converted to a string of value "None"
-    if not rviz_config_file or rviz_config_file == "None":
-        create_rviz_config(spot_name)
-        rviz_config_file = PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "rviz", "spot.rviz"]).perform(context)
-
-    rviz = launch_ros.actions.Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        arguments=["-d", rviz_config_file],
-        output="screen",
+    rviz = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/rviz.launch.py"]),
+        launch_arguments={
+            "spot_name": spot_name,
+            "rviz_config_file": rviz_config_file,
+        }.items(),
         condition=IfCondition(launch_rviz),
     )
 
