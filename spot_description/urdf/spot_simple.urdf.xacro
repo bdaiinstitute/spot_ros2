@@ -4,13 +4,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/body.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/body.obj"/>
       </geometry>
       <material name="body"> <color rgba="1 0.8431 0 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/body.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/body.stl" />
       </geometry>
     </collision>
   </link>
@@ -32,13 +32,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/fl_hip.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/fl_hip.obj"/>
       </geometry>
       <material name="fl_hip"> <color rgba="0.2 0.2 0.2 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/fl_hip.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/fl_hip.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -59,13 +59,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/fl_uleg.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/fl_uleg.obj"/>
       </geometry>
       <material name="fl_uleg"> <color rgba="1 0.8431 0 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/fl_uleg.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/fl_uleg.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -86,13 +86,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/fl_lleg.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/fl_lleg.obj"/>
       </geometry>
       <material name="fl_lleg"> <color rgba="0.2 0.2 0.2 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/fl_lleg.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/fl_lleg.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -113,13 +113,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/fr_hip.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/fr_hip.obj"/>
       </geometry>
       <material name="fr_hip"> <color rgba="0.2 0.2 0.2 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/fr_hip.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/fr_hip.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -140,13 +140,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/fr_uleg.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/fr_uleg.obj"/>
       </geometry>
       <material name="fr_uleg"> <color rgba="1 0.8431 0 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/fr_uleg.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/fr_uleg.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -167,13 +167,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/fr_lleg.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/fr_lleg.obj"/>
       </geometry>
       <material name="fr_lleg"> <color rgba="0.2 0.2 0.2 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/fr_lleg.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/fr_lleg.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -194,13 +194,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/hl_hip.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/hl_hip.obj"/>
       </geometry>
       <material name="hl_hip"> <color rgba="0.2 0.2 0.2 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/hl_hip.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/hl_hip.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -221,13 +221,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/hl_uleg.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/hl_uleg.obj"/>
       </geometry>
       <material name="hl_uleg"> <color rgba="1 0.8431 0 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/hl_uleg.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/hl_uleg.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -248,13 +248,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/hl_lleg.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/hl_lleg.obj"/>
       </geometry>
       <material name="hl_lleg"> <color rgba="0.2 0.2 0.2 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/hl_lleg.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/hl_lleg.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -275,13 +275,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/hr_hip.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/hr_hip.obj"/>
       </geometry>
       <material name="hr_hip"> <color rgba="0.2 0.2 0.2 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/hr_hip.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/hr_hip.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -303,13 +303,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/hr_uleg.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/hr_uleg.obj"/>
       </geometry>
       <material name="hr_uleg"> <color rgba="1 0.8431 0 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/hr_uleg.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/hr_uleg.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -330,13 +330,13 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/visual/hr_lleg.obj"/>
+        <mesh filename="package://spot_description/meshes/base_simple/visual/hr_lleg.obj"/>
       </geometry>
       <material name="hr_lleg"> <color rgba="0.2 0.2 0.2 1"/></material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find spot_description)/meshes/base_simple/collision/hr_lleg.stl" />
+        <mesh filename="package://spot_description/meshes/base_simple/collision/hr_lleg.stl" />
       </geometry>
     </collision>
     <inertial>
