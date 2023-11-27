@@ -174,12 +174,64 @@ void convert_proto_to_bosdyn_msgs_response_header(const bosdyn::api::ResponseHea
   ros_msg.error_is_set = proto.has_error();
 }
 
+void convert_proto_to_bosdyn_msgs_joint_state(const bosdyn::api::JointState& proto,
+                                              bosdyn_msgs::msg::JointState& ros_msg) {
+  ros_msg.name = proto.name();
+  ros_msg.position = proto.position().value();
+  ros_msg.position_is_set = proto.has_position();
+  ros_msg.velocity = proto.velocity().value();
+  ros_msg.velocity_is_set = proto.has_velocity();
+  ros_msg.acceleration = proto.acceleration().value();
+  ros_msg.acceleration_is_set = proto.has_acceleration();
+  ros_msg.load = proto.load().value();
+  ros_msg.load_is_set = proto.has_load();
+}
+
+void convert_proto_to_bosdyn_msgs_frame_tree_snapshot_parent_edge(
+    const bosdyn::api::FrameTreeSnapshot::ParentEdge& proto, bosdyn_msgs::msg::FrameTreeSnapshotParentEdge& ros_msg) {
+  ros_msg.parent_frame_name = proto.parent_frame_name();
+  common_conversions::convert_proto_to_geometry_msgs_pose(proto.parent_tform_child(), ros_msg.parent_tform_child);
+  ros_msg.parent_tform_child_is_set = proto.has_parent_tform_child();
+}
+
+void convert_proto_to_bosdyn_msgs_frame_tree_snapshot(const bosdyn::api::FrameTreeSnapshot& proto,
+                                                      bosdyn_msgs::msg::FrameTreeSnapshot& ros_msg) {
+  ros_msg.child_to_parent_edge_map.clear();
+  for (const auto& item : proto.child_to_parent_edge_map()) {
+    bosdyn_msgs::msg::KeyStringValueBosdynMsgsFrameTreeSnapshotParentEdge edge;
+    edge.key = item.first;
+    convert_proto_to_bosdyn_msgs_frame_tree_snapshot_parent_edge(item.second, edge.value);
+    ros_msg.child_to_parent_edge_map.push_back(edge);
+  }
+}
+
+void convert_proto_to_bosdyn_msgs_kinematic_state(const bosdyn::api::KinematicState& proto,
+                                                  bosdyn_msgs::msg::KinematicState& ros_msg) {
+  ros_msg.joint_states.clear();
+  for (const auto& item : proto.joint_states()) {
+    bosdyn_msgs::msg::JointState joint_state;
+    convert_proto_to_bosdyn_msgs_joint_state(item, joint_state);
+    ros_msg.joint_states.push_back(joint_state);
+  }
+  common_conversions::convert_proto_to_builtin_interfaces_time(proto.acquisition_timestamp(),
+                                                               ros_msg.acquisition_timestamp);
+  ros_msg.acquisition_timestamp_is_set = proto.has_acquisition_timestamp();
+  convert_proto_to_bosdyn_msgs_frame_tree_snapshot(proto.transforms_snapshot(), ros_msg.transforms_snapshot);
+  ros_msg.transforms_snapshot_is_set = proto.has_transforms_snapshot();
+  common_conversions::convert_proto_to_geometry_msgs_twist(proto.velocity_of_body_in_vision(),
+                                                           ros_msg.velocity_of_body_in_vision);
+  ros_msg.velocity_of_body_in_vision_is_set = proto.has_velocity_of_body_in_vision();
+  common_conversions::convert_proto_to_geometry_msgs_twist(proto.velocity_of_body_in_odom(),
+                                                           ros_msg.velocity_of_body_in_odom);
+  ros_msg.velocity_of_body_in_odom_is_set = proto.has_velocity_of_body_in_odom();
+}
+
 void convert_proto_to_bosdyn_msgs_inverse_kinematics_response(const bosdyn::api::spot::InverseKinematicsResponse& proto,
                                                               bosdyn_msgs::msg::InverseKinematicsResponse& ros_msg) {
   convert_proto_to_bosdyn_msgs_response_header(proto.header(), ros_msg.header);
   ros_msg.header_is_set = proto.has_header();
   ros_msg.status.value = proto.status();
-  // convert_proto_to_bosdyn_msgs_kinematic_state(proto.robot_configuration(), ros_msg.robot_configuration);
+  convert_proto_to_bosdyn_msgs_kinematic_state(proto.robot_configuration(), ros_msg.robot_configuration);
   ros_msg.robot_configuration_is_set = proto.has_robot_configuration();
 }
 

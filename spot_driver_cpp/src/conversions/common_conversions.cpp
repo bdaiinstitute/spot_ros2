@@ -82,4 +82,34 @@ void convert_proto_to_builtin_interfaces_time(const google::protobuf::Timestamp&
   ros_msg.nanosec = proto.nanos();
 }
 
+void convert_proto_to_geometry_msgs_vector3(const bosdyn::api::Vec3& proto, geometry_msgs::msg::Vector3& ros_msg) {
+  ros_msg.x = proto.x();
+  ros_msg.y = proto.y();
+  ros_msg.z = proto.z();
+}
+
+void convert_proto_to_geometry_msgs_vector3(const bosdyn::api::Vec3& proto, geometry_msgs::msg::Point& ros_msg) {
+  ros_msg.x = proto.x();
+  ros_msg.y = proto.y();
+  ros_msg.z = proto.z();
+}
+
+void convert_proto_to_geometry_msgs_quaternion(const bosdyn::api::Quaternion& proto,
+                                               geometry_msgs::msg::Quaternion& ros_msg) {
+  ros_msg.w = proto.w();
+  ros_msg.x = proto.x();
+  ros_msg.y = proto.y();
+  ros_msg.z = proto.z();
+}
+
+void convert_proto_to_geometry_msgs_pose(const bosdyn::api::SE3Pose& proto, geometry_msgs::msg::Pose& ros_msg) {
+  convert_proto_to_geometry_msgs_vector3(proto.position(), ros_msg.position);
+  convert_proto_to_geometry_msgs_quaternion(proto.rotation(), ros_msg.orientation);
+}
+
+void convert_proto_to_geometry_msgs_twist(const bosdyn::api::SE3Velocity& proto, geometry_msgs::msg::Twist& ros_msg) {
+  convert_proto_to_geometry_msgs_vector3(proto.linear(), ros_msg.linear);
+  convert_proto_to_geometry_msgs_vector3(proto.angular(), ros_msg.angular);
+}
+
 }  // namespace spot_ros2::common_conversions

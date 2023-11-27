@@ -16,6 +16,7 @@
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 
 namespace spot_ros2::common_conversions {
@@ -48,5 +49,16 @@ void convert_bosdyn_msgs_arm_joint_position_to_proto(const bosdyn_msgs::msg::Arm
 
 void convert_proto_to_builtin_interfaces_time(const google::protobuf::Timestamp& proto,
                                               builtin_interfaces::msg::Time& ros_msg);
+
+void convert_proto_to_geometry_msgs_vector3(const bosdyn::api::Vec3& proto, geometry_msgs::msg::Vector3& ros_msg);
+
+void convert_proto_to_geometry_msgs_vector3(const bosdyn::api::Vec3& proto, geometry_msgs::msg::Point& ros_msg);
+
+void convert_proto_to_geometry_msgs_quaternion(const bosdyn::api::Quaternion& proto,
+                                               geometry_msgs::msg::Quaternion& ros_msg);
+
+void convert_proto_to_geometry_msgs_pose(const bosdyn::api::SE3Pose& proto, geometry_msgs::msg::Pose& ros_msg);
+
+void convert_proto_to_geometry_msgs_twist(const bosdyn::api::SE3Velocity& proto, geometry_msgs::msg::Twist& ros_msg);
 
 }  // namespace spot_ros2::common_conversions
