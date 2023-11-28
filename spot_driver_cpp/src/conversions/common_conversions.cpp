@@ -28,7 +28,7 @@ void convert_geometry_msgs_vector3_to_proto(const geometry_msgs::msg::Vector3& r
   proto.set_z(ros_msg.z);
 }
 
-void convert_geometry_msgs_vector3_to_proto(const geometry_msgs::msg::Point& ros_msg, bosdyn::api::Vec3& proto) {
+void convert_geometry_msgs_point_to_proto(const geometry_msgs::msg::Point& ros_msg, bosdyn::api::Vec3& proto) {
   proto.set_x(ros_msg.x);
   proto.set_y(ros_msg.y);
   proto.set_z(ros_msg.z);
@@ -43,7 +43,7 @@ void convert_geometry_msgs_quaternion_to_proto(const geometry_msgs::msg::Quatern
 }
 
 void convert_geometry_msgs_pose_to_proto(const geometry_msgs::msg::Pose& ros_msg, bosdyn::api::SE3Pose& proto) {
-  convert_geometry_msgs_vector3_to_proto(ros_msg.position, *proto.mutable_position());
+  convert_geometry_msgs_point_to_proto(ros_msg.position, *proto.mutable_position());
   convert_geometry_msgs_quaternion_to_proto(ros_msg.orientation, *proto.mutable_rotation());
 }
 

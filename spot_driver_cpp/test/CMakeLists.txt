@@ -1,6 +1,6 @@
 find_package(ament_cmake_gmock REQUIRED)
-# find_package(gmock REQUIRED)
-# find_package(gtest REQUIRED)
+find_package(gmock REQUIRED)
+find_package(gtest REQUIRED)
 
 add_library(rclcpp_test src/rclcpp_test.cpp)
 target_include_directories(rclcpp_test
@@ -32,3 +32,11 @@ ament_add_gmock(test_kinematic_conversions
     src/conversions/test_kinematic_conversions.cpp
 )
 target_link_libraries(test_kinematic_conversions spot_image_publisher)
+
+###############################################################################
+# test_common_conversions
+
+ament_add_gmock(test_common_conversions
+    src/conversions/test_common_conversions.cpp
+)
+target_link_libraries(test_common_conversions spot_image_publisher)

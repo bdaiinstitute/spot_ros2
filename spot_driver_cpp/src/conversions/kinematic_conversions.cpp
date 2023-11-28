@@ -38,11 +38,13 @@ void convert_bosdyn_msgs_inverse_kinematics_request_on_ground_plane_stance_to_pr
 void convert_bosdyn_msgs_inverse_kinematics_request_one_of_stance_specification_to_proto(
     const bosdyn_msgs::msg::InverseKinematicsRequestOneOfStanceSpecification& ros_msg,
     bosdyn::api::spot::InverseKinematicsRequest& proto) {
-  if (ros_msg.stance_specification_choice == ros_msg.STANCE_SPECIFICATION_FIXED_STANCE_SET) {
+  if (ros_msg.stance_specification_choice ==
+      bosdyn_msgs::msg::InverseKinematicsRequestOneOfStanceSpecification::STANCE_SPECIFICATION_FIXED_STANCE_SET) {
     convert_bosdyn_msgs_inverse_kinematics_request_fixed_stance_to_proto(ros_msg.fixed_stance,
                                                                          *proto.mutable_fixed_stance());
   }
-  if (ros_msg.stance_specification_choice == ros_msg.STANCE_SPECIFICATION_ON_GROUND_PLANE_STANCE_SET) {
+  if (ros_msg.stance_specification_choice == bosdyn_msgs::msg::InverseKinematicsRequestOneOfStanceSpecification::
+                                                 STANCE_SPECIFICATION_ON_GROUND_PLANE_STANCE_SET) {
     convert_bosdyn_msgs_inverse_kinematics_request_on_ground_plane_stance_to_proto(
         ros_msg.on_ground_plane_stance, *proto.mutable_on_ground_plane_stance());
   }

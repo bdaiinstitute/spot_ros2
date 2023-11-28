@@ -32,7 +32,7 @@ void convert_bosdyn_msgs_request_header_to_proto(const bosdyn_msgs::msg::Request
 
 void convert_geometry_msgs_vector3_to_proto(const geometry_msgs::msg::Vector3& ros_msg, bosdyn::api::Vec3& proto);
 
-void convert_geometry_msgs_vector3_to_proto(const geometry_msgs::msg::Point& ros_msg, bosdyn::api::Vec3& proto);
+void convert_geometry_msgs_point_to_proto(const geometry_msgs::msg::Point& ros_msg, bosdyn::api::Vec3& proto);
 
 void convert_geometry_msgs_quaternion_to_proto(const geometry_msgs::msg::Quaternion& ros_msg,
                                                bosdyn::api::Quaternion& proto);
