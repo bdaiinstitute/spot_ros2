@@ -19,7 +19,7 @@ void convert_bosdyn_msgs_request_header_to_proto(const bosdyn_msgs::msg::Request
     convert_builtin_interfaces_time_to_proto(ros_msg.request_timestamp, *proto.mutable_request_timestamp());
   }
   proto.set_client_name(ros_msg.client_name);
-  proto.set_disable_rpc_logging(true);
+  proto.set_disable_rpc_logging(ros_msg.disable_rpc_logging);
 }
 
 void convert_geometry_msgs_vector3_to_proto(const geometry_msgs::msg::Vector3& ros_msg, bosdyn::api::Vec3& proto) {
