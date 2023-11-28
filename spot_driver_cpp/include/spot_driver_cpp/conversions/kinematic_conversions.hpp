@@ -7,8 +7,6 @@
 #include <bosdyn_msgs/msg/inverse_kinematics_request.hpp>
 #include <bosdyn_msgs/msg/inverse_kinematics_response.hpp>
 
-#include <spot_driver_cpp/kinematic_service.hpp>
-
 namespace spot_ros2::kinematic_conversions {
 
 ///////////////////////////////////////////////////////////////////////////////

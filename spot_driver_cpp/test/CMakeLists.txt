@@ -24,3 +24,11 @@ ament_add_gmock(test_parameter_interface
   test_parameter_interface.cpp
 )
 target_link_libraries(test_parameter_interface spot_image_publisher rclcpp_test)
+
+###############################################################################
+# test_kinematic_conversions
+
+ament_add_gmock(test_kinematic_conversions
+    src/conversions/test_kinematic_conversions.cpp
+)
+target_link_libraries(test_kinematic_conversions spot_image_publisher)
