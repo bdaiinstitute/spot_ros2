@@ -3,43 +3,42 @@
 #include <spot_driver_cpp/spot_image_publisher_node.hpp>
 
 #include <spot_driver_cpp/api/default_spot_api.hpp>
-#include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
-#include <spot_driver_cpp/interfaces/rclcpp_middleware_interface.hpp>
-#include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/images/spot_image_publisher.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 
 namespace {
 constexpr auto kSDKClientName = "spot_image_publisher";
 }
 
 namespace spot_ros2 {
-SpotImagePublisherNode::SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> node,
-                                               std::shared_ptr<MiddlewareInterface> middleware_interface,
-                                               std::unique_ptr<SpotApi> spot_api)
-    : node_{node}, middleware_interface_{middleware_interface}, spot_api_{std::move(spot_api)} {
-  const auto logger = middleware_interface_->logger_interface();
-  const auto parameters = middleware_interface_->parameter_interface();
-
-  const auto address = parameters->getAddress();
-  const auto robot_name = parameters->getSpotName();
-  const auto username = parameters->getUsername();
-  const auto password = parameters->getPassword();
+SpotImagePublisherNode::SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
+                                               const std::shared_ptr<ParameterInterfaceBase>& parameter_interface,
+                                               const std::shared_ptr<LoggerInterfaceBase>& logger_interface)
+    : node_{node}, spot_api_{std::move(spot_api)} {
+  const auto address = parameter_interface->getAddress();
+  const auto robot_name = parameter_interface->getSpotName();
+  const auto username = parameter_interface->getUsername();
+  const auto password = parameter_interface->getPassword();
 
   // create and authenticate robot
   if (const auto create_robot_result = spot_api_->createRobot(address, robot_name); !create_robot_result) {
-    logger->logError(std::string{"Failed to create interface to robot: "}.append(create_robot_result.error()));
-    throw;
+    const auto error_msg{std::string{"Failed to create interface to robot: "}.append(create_robot_result.error())};
+    logger_interface->logError(error_msg);
+    throw std::runtime_error(error_msg);
   }
 
   if (const auto authentication_result = spot_api_->authenticate(username, password); !authentication_result) {
-    logger->logError(std::string{"Failed to authenticate robot: "}.append(authentication_result.error()));
-    throw;
+    const auto error_msg{std::string{"Failed to authenticate robot: "}.append(authentication_result.error())};
+    logger_interface->logError(error_msg);
+    throw std::runtime_error(error_msg);
   }
 
   const auto expected_has_arm = spot_api_->hasArm();
   if (!expected_has_arm) {
-    logger->logError(std::string{"Failed to check availability of spot arm: "}.append(expected_has_arm.error()));
-    throw;
+    const auto error_msg{std::string{"Failed to check availability of spot arm: "}.append(expected_has_arm.error())};
+    logger_interface->logError(error_msg);
+    throw std::runtime_error(error_msg);
   }
 
   internal_ =
@@ -49,8 +48,9 @@ SpotImagePublisherNode::SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> nod
 
 SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_options) {
   auto node = std::make_shared<rclcpp::Node>("image_publisher", node_options);
-  SpotImagePublisherNode(node, std::make_shared<RclcppMiddlewareInterface>(node),
-                         std::make_unique<DefaultSpotApi>(kSDKClientName));
+  SpotImagePublisherNode(node, std::make_unique<DefaultSpotApi>(kSDKClientName),
+                         std::make_shared<RclcppParameterInterface>(node),
+                         std::make_shared<RclcppLoggerInterface>(node->get_logger()));
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotImagePublisherNode::get_node_base_interface() {

@@ -6,11 +6,11 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/api/image_client_api.hpp>
+#include <spot_driver_cpp/images/spot_image_sources.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/timer_interface_base.hpp>
-#include <spot_driver_cpp/images/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 
 #include <memory>

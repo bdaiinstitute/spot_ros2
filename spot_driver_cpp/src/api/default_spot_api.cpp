@@ -69,7 +69,6 @@ tl::expected<bool, std::string> DefaultSpotApi::hasArm() const {
 }
 
 std::shared_ptr<ImageClientApi> DefaultSpotApi::image_client_api() const {
-
   return image_client_api_;
 }
 

@@ -1,11 +1,11 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <rclcpp/node.hpp>
 #include <spot_driver_cpp/images/images_middleware_handle.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
-#include <rclcpp/node.hpp>
 
 namespace {
 constexpr auto kPublisherHistoryDepth = 1;
@@ -16,12 +16,12 @@ constexpr auto kCameraInfoTopicSuffix = "camera_info";
 
 namespace spot_ros2::images {
 
-ImagesMiddlewareHandle::ImagesMiddlewareHandle(const std::shared_ptr<rclcpp::Node> &node)
-  : node_{node},
-    parameter_interface_{std::make_unique<RclcppParameterInterface>(node)},
-    logger_interface_{std::make_unique<RclcppLoggerInterface>(node->get_logger())},
-    tf_interface_{std::make_unique<RclcppTfInterface>(node)},
-    timer_interface_{std::make_unique<RclcppWallTimerInterface>(node)} {}
+ImagesMiddlewareHandle::ImagesMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node)
+    : node_{node},
+      parameter_interface_{std::make_unique<RclcppParameterInterface>(node)},
+      logger_interface_{std::make_unique<RclcppLoggerInterface>(node->get_logger())},
+      tf_interface_{std::make_unique<RclcppTfInterface>(node)},
+      timer_interface_{std::make_unique<RclcppWallTimerInterface>(node)} {}
 
 void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image_sources) {
   image_publishers_.clear();
@@ -68,5 +68,4 @@ tl::expected<void, std::string> ImagesMiddlewareHandle::publishImages(
   return {};
 }
 
-
-} //namespace spot_ros2::images
+}  // namespace spot_ros2::images

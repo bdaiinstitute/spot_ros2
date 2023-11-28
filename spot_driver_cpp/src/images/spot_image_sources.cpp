@@ -127,4 +127,4 @@ std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool g
 
   return sources;
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::images

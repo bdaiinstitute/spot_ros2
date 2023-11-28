@@ -14,8 +14,8 @@
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::InSequence;
-using ::testing::Property;
 using ::testing::Invoke;
+using ::testing::Property;
 using ::testing::Return;
 using ::testing::Unused;
 
@@ -35,10 +35,8 @@ class MockTimerInterface : public TimerInterfaceBase {
               (override));
   MOCK_METHOD(void, clearTimer, (), (override));
 
-  void onSetTimer(const std::function<void()>& callback) {
-    m_callback = callback;
-  }
-  void trigger(){ m_callback(); }
+  void onSetTimer(const std::function<void()>& callback) { m_callback = callback; }
+  void trigger() { m_callback(); }
 
   std::function<void()> m_callback;
 };
@@ -180,9 +178,9 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
 
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto timer_interface_ptr = middleware_handle->timer_interface_.get();
-  EXPECT_CALL(*timer_interface_ptr, setTimer)
-  .Times(1)
-  .WillOnce([&](Unused, const std::function<void()>& cb){ timer_interface_ptr->onSetTimer(cb); });
+  EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
+    timer_interface_ptr->onSetTimer(cb);
+  });
 
   {
     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
@@ -217,9 +215,9 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
 
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto timer_interface_ptr = middleware_handle->timer_interface_.get();
-  EXPECT_CALL(*timer_interface_ptr, setTimer)
-  .Times(1)
-  .WillOnce([&](Unused, const std::function<void()>& cb){ timer_interface_ptr->onSetTimer(cb); });
+  EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
+    timer_interface_ptr->onSetTimer(cb);
+  });
 
   {
     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
@@ -242,4 +240,4 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
   // WHEN the timer callback is triggered
   timer_interface_ptr->trigger();
 }
-}  // namespace spot_ros2::testing
+}  // namespace spot_ros2::images::testing

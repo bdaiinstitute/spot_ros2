@@ -5,8 +5,9 @@
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_options.hpp>
 #include <spot_driver_cpp/api/spot_api.hpp>
-#include <spot_driver_cpp/interfaces/middleware_interface_base.hpp>
 #include <spot_driver_cpp/images/spot_image_publisher.hpp>
+#include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
+#include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 
 #include <memory>
 
@@ -16,8 +17,9 @@ namespace spot_ros2 {
  */
 class SpotImagePublisherNode {
  public:
-  SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<MiddlewareInterface> middleware_interface,
-                         std::unique_ptr<SpotApi> spot_api);
+  SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
+                         const std::shared_ptr<ParameterInterfaceBase>& parameter_interface,
+                         const std::shared_ptr<LoggerInterfaceBase>& logger_interface);
   explicit SpotImagePublisherNode(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
   /**
@@ -31,7 +33,6 @@ class SpotImagePublisherNode {
 
  private:
   std::shared_ptr<rclcpp::Node> node_;
-  std::shared_ptr<MiddlewareInterface> middleware_interface_;
   std::unique_ptr<SpotApi> spot_api_;
   std::unique_ptr<images::SpotImagePublisher> internal_;
 };

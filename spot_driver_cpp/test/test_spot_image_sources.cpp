@@ -234,4 +234,4 @@ TEST(SpotImageSources, createImageSources) {
           ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED},
           ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}));
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::images

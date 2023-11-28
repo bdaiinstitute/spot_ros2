@@ -2,17 +2,17 @@
 
 #pragma once
 
+#include <rclcpp/node.hpp>
 #include <spot_driver_cpp/images/spot_image_publisher.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
-#include <rclcpp/node.hpp>
 
 namespace spot_ros2::images {
 
-struct ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle{
-  explicit ImagesMiddlewareHandle(const std::shared_ptr<rclcpp::Node> &node);
+struct ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
+  explicit ImagesMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node);
   ~ImagesMiddlewareHandle() = default;
 
   void createPublishers(const std::set<ImageSource>& image_sources) override;
@@ -23,7 +23,7 @@ struct ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle{
   TfInterfaceBase* tf_interface() override { return tf_interface_.get(); }
   TimerInterfaceBase* timer_interface() override { return timer_interface_.get(); }
 
-private:
+ private:
   /** @brief Shared instance of an rclcpp node to create publishers */
   std::shared_ptr<rclcpp::Node> node_;
   /** @brief instance of ParameterInterfaceBase to get ROS parameters*/
@@ -41,4 +41,4 @@ private:
   /** @brief Map between camera info topic names and camera info publishers. */
   std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::CameraInfo>>> info_publishers_;
 };
-} //namespace spot_ros2::images
+}  // namespace spot_ros2::images
