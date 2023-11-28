@@ -12,7 +12,7 @@
 #include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/timer_interface_base.hpp>
 #include <spot_driver_cpp/types.hpp>
-
+#include <map>
 #include <memory>
 #include <set>
 #include <string>
