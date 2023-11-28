@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/spot_image_publisher.hpp>
+#include <spot_driver_cpp/images/spot_image_publisher.hpp>
 
 #include <rmw/qos_profiles.h>
 #include <rclcpp/node.hpp>
@@ -8,12 +8,11 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/api/default_image_client_api.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
-#include <spot_driver_cpp/interfaces/rclcpp_middleware_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
-#include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
-#include <spot_driver_cpp/spot_image_sources.hpp>
+#include <spot_driver_cpp/images/images_middleware_handle.hpp>
+#include <spot_driver_cpp/images/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 
 #include <iostream>
@@ -26,7 +25,7 @@ constexpr auto kImageCallbackPeriod = std::chrono::duration<double>{1.0 / 15.0};
 constexpr auto kDefaultDepthImageQuality = 100.0;
 }  // namespace
 
-namespace spot_ros2 {
+namespace spot_ros2::images {
 ::bosdyn::api::GetImageRequest createImageRequest(const std::set<ImageSource>& sources,
                                                   [[maybe_unused]] const bool has_rgb_cameras,
                                                   const double rgb_image_quality, const bool get_raw_rgb_images) {
@@ -61,21 +60,21 @@ namespace spot_ros2 {
 }
 
 SpotImagePublisher::SpotImagePublisher(std::shared_ptr<ImageClientApi> image_client_api,
-                                       std::shared_ptr<MiddlewareInterface> middleware_interface, bool has_arm)
-    : image_client_api_{image_client_api}, middleware_interface_{middleware_interface}, has_arm_{has_arm} {}
+                                       std::unique_ptr<MiddlewareHandle> middleware_handle, bool has_arm)
+    : image_client_api_{image_client_api}, middleware_handle_{std::move(middleware_handle)}, has_arm_{has_arm} {}
 
 SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node,
                                        std::shared_ptr<ImageClientApi> image_client_api, bool has_arm)
-    : SpotImagePublisher(image_client_api, std::make_shared<RclcppMiddlewareInterface>(node), has_arm) {}
+    : SpotImagePublisher(image_client_api, std::make_unique<ImagesMiddlewareHandle>(node), has_arm) {}
 
 bool SpotImagePublisher::initialize() {
   // These parameters all fall back to default values if the user did not set them at runtime
-  const auto rgb_image_quality = middleware_interface_->parameter_interface()->getRGBImageQuality();
-  const auto publish_rgb_images = middleware_interface_->parameter_interface()->getPublishRGBImages();
-  const auto publish_depth_images = middleware_interface_->parameter_interface()->getPublishDepthImages();
+  const auto rgb_image_quality = middleware_handle_->parameter_interface()->getRGBImageQuality();
+  const auto publish_rgb_images = middleware_handle_->parameter_interface()->getPublishRGBImages();
+  const auto publish_depth_images = middleware_handle_->parameter_interface()->getPublishDepthImages();
   const auto publish_depth_registered_images =
-      middleware_interface_->parameter_interface()->getPublishDepthRegisteredImages();
-  const auto has_rgb_cameras = middleware_interface_->parameter_interface()->getHasRGBCameras();
+      middleware_handle_->parameter_interface()->getPublishDepthRegisteredImages();
+  const auto has_rgb_cameras = middleware_handle_->parameter_interface()->getHasRGBCameras();
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources =
@@ -85,10 +84,10 @@ bool SpotImagePublisher::initialize() {
   image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, false);
 
   // Create a publisher for each image source
-  middleware_interface_->publisher_interface()->createPublishers(sources);
+  middleware_handle_->createPublishers(sources);
 
   // Create a timer to request and publish images at a fixed rate
-  middleware_interface_->timer_interface()->setTimer(kImageCallbackPeriod, [this]() {
+  middleware_handle_->timer_interface()->setTimer(kImageCallbackPeriod, [this]() {
     timerCallback();
   });
 
@@ -102,13 +101,13 @@ void SpotImagePublisher::timerCallback() {
 
   const auto image_result = image_client_api_->getImages(*image_request_message_);
   if (!image_result.has_value()) {
-    middleware_interface_->logger_interface()->logError(
+    middleware_handle_->logger_interface()->logError(
         std::string{"Failed to get images: "}.append(image_result.error()));
     return;
   }
 
-  middleware_interface_->publisher_interface()->publish(image_result.value().images_);
+  middleware_handle_->publishImages(image_result.value().images_);
 
-  middleware_interface_->tf_interface()->updateStaticTransforms(image_result.value().transforms_);
+  middleware_handle_->tf_interface()->updateStaticTransforms(image_result.value().transforms_);
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::images

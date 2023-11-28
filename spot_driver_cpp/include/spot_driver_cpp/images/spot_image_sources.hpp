@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace spot_ros2 {
+namespace spot_ros2::images {
 /**
  * @brief Create the ROS topic name corresponding to an ImageSource.
  *

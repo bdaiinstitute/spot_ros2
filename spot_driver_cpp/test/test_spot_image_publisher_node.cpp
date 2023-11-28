@@ -39,7 +39,7 @@ class MockSpotApi : public SpotApi {
 class SpotImagePubNodeTestFixture : public ::testing::Test {
  public:
   void SetUp() override {
-    node = std::make_shared<rclcpp::Node>("test_image_publisher_node", rclcpp::NodeOptions());
+    node = std::make_shared<rclcpp::Node>("test_image_publisher_node");
     mock_middleware_interface = std::make_shared<MockMiddlewareInterface>();
     mock_spot_api = std::make_unique<MockSpotApi>();
   }
@@ -51,35 +51,40 @@ class SpotImagePubNodeTestFixture : public ::testing::Test {
 };
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_Success) {
-  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
-  // THEN expect the following calls in sequence
-  InSequence seq;
-  EXPECT_CALL(*mock_middleware_interface, logger_interface()).Times(1);
-  EXPECT_CALL(*mock_middleware_interface, parameter_interface()).Times(1);
-  EXPECT_CALL(*mock_spot_api, createRobot(_, _)).Times(1);
-  EXPECT_CALL(*mock_spot_api, authenticate(_, _)).Times(1);
-  EXPECT_CALL(*mock_spot_api, hasArm()).Times(1);
-  EXPECT_CALL(*mock_spot_api, image_client_api()).Times(1);
+  {
+    // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
+    // THEN expect the following calls in sequence
+    InSequence seq;
+    EXPECT_CALL(*mock_middleware_interface, logger_interface()).Times(1);
+    EXPECT_CALL(*mock_middleware_interface, parameter_interface()).Times(1);
+    EXPECT_CALL(*mock_spot_api, createRobot(_, _)).Times(1);
+    EXPECT_CALL(*mock_spot_api, authenticate(_, _)).Times(1);
+    EXPECT_CALL(*mock_spot_api, hasArm()).Times(1);
+    EXPECT_CALL(*mock_spot_api, image_client_api()).Times(1);
+  }
+  
   // WHEN constructing a SpotImagePublisherNode
   EXPECT_NO_THROW(SpotImagePublisherNode(node, mock_middleware_interface, std::move(mock_spot_api)));
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_Create_Robot_failure) {
-  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
-  // THEN expect the following calls in sequence
-  InSequence seq;
-  EXPECT_CALL(*mock_middleware_interface, logger_interface()).Times(1);
-  EXPECT_CALL(*mock_middleware_interface, parameter_interface()).Times(1);
-  EXPECT_CALL(*mock_spot_api, createRobot(_, _)).Times(1).WillOnce(Return(tl::make_unexpected("Create Robot Failed")));
-  EXPECT_CALL(*mock_spot_api, authenticate(_, _)).Times(0);
-  EXPECT_CALL(*mock_spot_api, hasArm()).Times(0);
-  EXPECT_CALL(*mock_spot_api, image_client_api()).Times(0);
+  {
+    // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
+    // THEN expect the following calls in sequence
+    InSequence seq;
+    EXPECT_CALL(*mock_middleware_interface, logger_interface()).Times(1);
+    EXPECT_CALL(*mock_middleware_interface, parameter_interface()).Times(1);
+    EXPECT_CALL(*mock_spot_api, createRobot(_, _)).Times(1).WillOnce(Return(tl::make_unexpected("Create Robot Failed")));
+    EXPECT_CALL(*mock_spot_api, authenticate(_, _)).Times(0);
+    EXPECT_CALL(*mock_spot_api, hasArm()).Times(0);
+    EXPECT_CALL(*mock_spot_api, image_client_api()).Times(0);
+  }
   // WHEN constructing a SpotImagePublisherNode
   EXPECT_THROW(SpotImagePublisherNode(node, mock_middleware_interface, std::move(mock_spot_api)), std::exception);
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_Authentication_failure) {
-  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
+{  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
   // THEN expect the following calls in sequence
   InSequence seq;
   EXPECT_CALL(*mock_middleware_interface, logger_interface()).Times(1);
@@ -89,13 +94,13 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_Authentication_failure) {
       .Times(1)
       .WillOnce(Return(tl::make_unexpected("Robot Authentication Failed")));
   EXPECT_CALL(*mock_spot_api, hasArm()).Times(0);
-  EXPECT_CALL(*mock_spot_api, image_client_api()).Times(0);
+  EXPECT_CALL(*mock_spot_api, image_client_api()).Times(0);}
   // WHEN constructing a SpotImagePublisherNode
   EXPECT_THROW(SpotImagePublisherNode(node, mock_middleware_interface, std::move(mock_spot_api)), std::exception);
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_GetImageClient_failure) {
-  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
+{  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
   // THEN expect the following calls in sequence
   InSequence seq;
   EXPECT_CALL(*mock_middleware_interface, logger_interface()).Times(1);
@@ -103,13 +108,13 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_GetImageClient_failure) {
   EXPECT_CALL(*mock_spot_api, createRobot(_, _)).Times(1);
   EXPECT_CALL(*mock_spot_api, authenticate(_, _)).Times(1);
   EXPECT_CALL(*mock_spot_api, hasArm()).Times(0);
-  EXPECT_CALL(*mock_spot_api, image_client_api()).Times(0);
+  EXPECT_CALL(*mock_spot_api, image_client_api()).Times(0);}
   // WHEN constructing a SpotImagePublisherNode
   EXPECT_THROW(SpotImagePublisherNode(node, mock_middleware_interface, std::move(mock_spot_api)), std::exception);
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_hasArm_failure) {
-  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
+{  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
   // THEN expect the following calls in sequence
   InSequence seq;
   EXPECT_CALL(*mock_middleware_interface, logger_interface()).Times(1);
@@ -117,7 +122,7 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_hasArm_failure) {
   EXPECT_CALL(*mock_spot_api, createRobot(_, _)).Times(1);
   EXPECT_CALL(*mock_spot_api, authenticate(_, _)).Times(1);
   EXPECT_CALL(*mock_spot_api, hasArm()).Times(1).WillOnce(Return(tl::make_unexpected("has_arm failed")));
-  EXPECT_CALL(*mock_spot_api, image_client_api()).Times(0);
+  EXPECT_CALL(*mock_spot_api, image_client_api()).Times(0);}
   // WHEN constructing a SpotImagePublisherNode
   EXPECT_THROW(SpotImagePublisherNode(node, mock_middleware_interface, std::move(mock_spot_api)), std::exception);
 }

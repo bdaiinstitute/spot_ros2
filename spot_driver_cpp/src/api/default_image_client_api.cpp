@@ -15,7 +15,7 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/api/default_time_sync_api.hpp>
-#include <spot_driver_cpp/spot_image_sources.hpp>
+#include <spot_driver_cpp/images/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <tl_expected/expected.hpp>
@@ -233,7 +233,7 @@ tl::expected<GetImagesResult, std::string> DefaultImageClientApi::getImages(::bo
     }
 
     const auto& camera_name = image_response.source().name();
-    const auto get_source_name_result = fromSpotImageSourceName(camera_name);
+    const auto get_source_name_result = images::fromSpotImageSourceName(camera_name);
     if (get_source_name_result.has_value()) {
       out.images_.try_emplace(get_source_name_result.value(), ImageWithCameraInfo{image_msg.value(), info_msg.value()});
     } else {

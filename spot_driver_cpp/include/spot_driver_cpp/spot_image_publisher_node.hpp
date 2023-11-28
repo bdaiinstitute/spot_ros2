@@ -6,7 +6,7 @@
 #include <rclcpp/node_options.hpp>
 #include <spot_driver_cpp/api/spot_api.hpp>
 #include <spot_driver_cpp/interfaces/middleware_interface_base.hpp>
-#include <spot_driver_cpp/spot_image_publisher.hpp>
+#include <spot_driver_cpp/images/spot_image_publisher.hpp>
 
 #include <memory>
 
@@ -33,6 +33,6 @@ class SpotImagePublisherNode {
   std::shared_ptr<rclcpp::Node> node_;
   std::shared_ptr<MiddlewareInterface> middleware_interface_;
   std::unique_ptr<SpotApi> spot_api_;
-  std::unique_ptr<SpotImagePublisher> internal_;
+  std::unique_ptr<images::SpotImagePublisher> internal_;
 };
 }  // namespace spot_ros2

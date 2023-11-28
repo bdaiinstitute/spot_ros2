@@ -2,7 +2,7 @@
 
 #include <gmock/gmock.h>
 
-#include <spot_driver_cpp/spot_image_sources.hpp>
+#include <spot_driver_cpp/images/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 #include <tl_expected/expected.hpp>
 
@@ -16,7 +16,7 @@ using ::testing::StrEq;
 using ::testing::UnorderedElementsAre;
 }  // namespace
 
-namespace spot_ros2 {
+namespace spot_ros2::images {
 TEST(SpotImageSources, toRosTopic) {
   // Check that all combinations of SpotCamera and SpotImageType are converted to the correct topic name
 

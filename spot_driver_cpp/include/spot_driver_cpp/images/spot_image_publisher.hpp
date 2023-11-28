@@ -7,12 +7,10 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
-#include <spot_driver_cpp/interfaces/middleware_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
-#include <spot_driver_cpp/interfaces/publisher_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/timer_interface_base.hpp>
-#include <spot_driver_cpp/spot_image_sources.hpp>
+#include <spot_driver_cpp/images/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 
 #include <memory>
@@ -21,7 +19,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace spot_ros2 {
+namespace spot_ros2::images {
 /**
  * @brief Create a Spot API GetImageRequest message to request images from the specified sources using the specified
  * options.
@@ -44,6 +42,18 @@ namespace spot_ros2 {
  */
 class SpotImagePublisher {
  public:
+  struct MiddlewareHandle {
+    virtual void createPublishers(const std::set<ImageSource>& image_sources) = 0;
+    virtual tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
+
+    virtual ParameterInterfaceBase* parameter_interface() = 0;
+    virtual LoggerInterfaceBase* logger_interface() = 0;
+    virtual TfInterfaceBase* tf_interface() = 0;
+    virtual TimerInterfaceBase* timer_interface() = 0;
+
+    virtual ~MiddlewareHandle() = default;
+  };
+
   /**
    * @brief Constructor for SpotImagePublisher, which allows setting the specific implementation of the interface
    * classes which are used by the node.
@@ -56,7 +66,7 @@ class SpotImagePublisher {
    * @param tf_interface  A unique_ptr to an instance of a class that implements TfInterfaceBase.
    */
   SpotImagePublisher(std::shared_ptr<ImageClientApi> image_client_api,
-                     std::shared_ptr<MiddlewareInterface> middleware_interface, bool has_arm = false);
+                     std::unique_ptr<MiddlewareHandle> middleware_handle, bool has_arm = false);
 
   /**
    * @brief Constuctor for SpotImagePublisher, which creates instances of rclcpp-specialized interface classes
@@ -94,7 +104,7 @@ class SpotImagePublisher {
 
   // Interface classes to interact with Spot and the middleware.
   std::shared_ptr<ImageClientApi> image_client_api_;
-  std::shared_ptr<MiddlewareInterface> middleware_interface_;
+  std::unique_ptr<MiddlewareHandle> middleware_handle_;
   bool has_arm_;
 };
-}  // namespace spot_ros2
+}  // namespace spot_ros2::images

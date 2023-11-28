@@ -44,12 +44,12 @@ ament_target_dependencies(spot_api PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 add_library(spot_image_publisher
   src/interfaces/rclcpp_logger_interface.cpp
   src/interfaces/rclcpp_parameter_interface.cpp
-  src/interfaces/rclcpp_publisher_interface.cpp
   src/interfaces/rclcpp_tf_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
-  src/spot_image_publisher.cpp
+  src/images/spot_image_publisher.cpp
+  src/images/images_middleware_handle.cpp
   src/spot_image_publisher_node.cpp
-  src/spot_image_sources.cpp)
+  src/images/spot_image_sources.cpp)
 target_include_directories(spot_image_publisher
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

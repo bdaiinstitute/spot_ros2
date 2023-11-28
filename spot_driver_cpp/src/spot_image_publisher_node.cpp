@@ -6,7 +6,7 @@
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_middleware_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
-#include <spot_driver_cpp/spot_image_publisher.hpp>
+#include <spot_driver_cpp/images/spot_image_publisher.hpp>
 
 namespace {
 constexpr auto kSDKClientName = "spot_image_publisher";
@@ -43,7 +43,7 @@ SpotImagePublisherNode::SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> nod
   }
 
   internal_ =
-      std::make_unique<SpotImagePublisher>(node_, spot_api_->image_client_api(), expected_has_arm.value());
+      std::make_unique<images::SpotImagePublisher>(node_, spot_api_->image_client_api(), expected_has_arm.value());
   internal_->initialize();
 }
 
