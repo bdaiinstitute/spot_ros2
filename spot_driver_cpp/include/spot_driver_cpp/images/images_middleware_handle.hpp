@@ -2,17 +2,17 @@
 
 #pragma once
 
+#include <map>
+#include <memory>
 #include <rclcpp/node.hpp>
+#include <set>
 #include <spot_driver_cpp/images/spot_image_publisher.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
-#include <set>
-#include <map>
 #include <string>
 #include <tl_expected/expected.hpp>
-#include <memory>
 #include <unordered_map>
 
 namespace spot_ros2::images {

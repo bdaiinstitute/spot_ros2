@@ -84,10 +84,8 @@ class SpotImagePubNodeTestFixture : public ::testing::Test {
     mock_logger_interface = std::make_shared<MockLoggerInterface>();
     mock_spot_api = std::make_unique<MockSpotApi>();
   }
-  
-  void TearDown() override {
-    rclcpp::shutdown();
-  }
+
+  void TearDown() override { rclcpp::shutdown(); }
 
  protected:
   std::shared_ptr<rclcpp::Node> node;
@@ -104,9 +102,10 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_Success) {
   EXPECT_CALL(*mock_spot_api, authenticate).Times(1);
   EXPECT_CALL(*mock_spot_api, hasArm).Times(1);
   EXPECT_CALL(*mock_spot_api, image_client_api).Times(1);
-  
+
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_NO_THROW(SpotImagePublisherNode(node, std::move(mock_spot_api), fake_parameter_interface, mock_logger_interface));
+  EXPECT_NO_THROW(
+      SpotImagePublisherNode(node, std::move(mock_spot_api), fake_parameter_interface, mock_logger_interface));
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_Create_Robot_failure) {
@@ -117,35 +116,40 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_Create_Robot_failure) {
   EXPECT_CALL(*mock_spot_api, authenticate).Times(0);
   EXPECT_CALL(*mock_spot_api, hasArm).Times(0);
   EXPECT_CALL(*mock_spot_api, image_client_api).Times(0);
-  
+
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_THROW(SpotImagePublisherNode(node, std::move(mock_spot_api), fake_parameter_interface, mock_logger_interface), std::exception);
+  EXPECT_THROW(SpotImagePublisherNode(node, std::move(mock_spot_api), fake_parameter_interface, mock_logger_interface),
+               std::exception);
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_Authentication_failure) {
-{  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
-  // THEN expect the following calls in sequence
-  InSequence seq;
-  EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
-  EXPECT_CALL(*mock_spot_api, authenticate)
-      .Times(1)
-      .WillOnce(Return(tl::make_unexpected("Robot Authentication Failed")));
-  EXPECT_CALL(*mock_spot_api, hasArm).Times(0);
-  EXPECT_CALL(*mock_spot_api, image_client_api).Times(0);}
+  {  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
+    // THEN expect the following calls in sequence
+    InSequence seq;
+    EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
+    EXPECT_CALL(*mock_spot_api, authenticate)
+        .Times(1)
+        .WillOnce(Return(tl::make_unexpected("Robot Authentication Failed")));
+    EXPECT_CALL(*mock_spot_api, hasArm).Times(0);
+    EXPECT_CALL(*mock_spot_api, image_client_api).Times(0);
+  }
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_THROW(SpotImagePublisherNode(node, std::move(mock_spot_api), fake_parameter_interface, mock_logger_interface), std::exception);
+  EXPECT_THROW(SpotImagePublisherNode(node, std::move(mock_spot_api), fake_parameter_interface, mock_logger_interface),
+               std::exception);
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_hasArm_failure) {
-{  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
-  // THEN expect the following calls in sequence
-  InSequence seq;
-  EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
-  EXPECT_CALL(*mock_spot_api, authenticate).Times(1);
-  EXPECT_CALL(*mock_spot_api, hasArm).Times(1).WillOnce(Return(tl::make_unexpected("has_arm failed")));
-  EXPECT_CALL(*mock_spot_api, image_client_api).Times(0);}
+  {  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
+    // THEN expect the following calls in sequence
+    InSequence seq;
+    EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
+    EXPECT_CALL(*mock_spot_api, authenticate).Times(1);
+    EXPECT_CALL(*mock_spot_api, hasArm).Times(1).WillOnce(Return(tl::make_unexpected("has_arm failed")));
+    EXPECT_CALL(*mock_spot_api, image_client_api).Times(0);
+  }
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_THROW(SpotImagePublisherNode(node, std::move(mock_spot_api), fake_parameter_interface, mock_logger_interface), std::exception);
+  EXPECT_THROW(SpotImagePublisherNode(node, std::move(mock_spot_api), fake_parameter_interface, mock_logger_interface),
+               std::exception);
 }
 
 }  // namespace spot_ros2::testing
