@@ -1,0 +1,2 @@
+[run]
+omit = "spot_driver/spot_driver/conversions.py"
