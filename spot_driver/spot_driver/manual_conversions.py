@@ -67,6 +67,26 @@ def se3_pose_to_ros_transform(se3_pose: SE3Pose) -> Transform:
 # ROS <-> PROTO
 
 
+def convert_string_to_proto(string_val: str, proto: wrappers_pb2.StringValue) -> None:
+    proto.Clear()
+    proto.value = string_val
+
+
+def convert_int32_to_proto(int_val: int, proto: wrappers_pb2.Int32Value) -> None:
+    proto.Clear()
+    proto.value = int_val
+
+
+def convert_uint32_to_proto(int_val: int, proto: wrappers_pb2.UInt32Value) -> None:
+    proto.Clear()
+    proto.value = int_val
+
+
+def convert_int64_to_proto(int_val: int, proto: wrappers_pb2.Int64Value) -> None:
+    proto.Clear()
+    proto.value = int_val
+
+
 def convert_bool_to_proto(bool_val: bool, proto: wrappers_pb2.BoolValue) -> None:
     proto.Clear()
     proto.value = bool_val
