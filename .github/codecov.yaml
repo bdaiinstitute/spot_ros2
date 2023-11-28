@@ -1,0 +1,6 @@
+coverage:
+  # TODO: update when coverage improves
+  range: "15...100"
+
+ignore:
+  - "spot_driver/spot_driver/conversions.py"
