@@ -40,7 +40,7 @@ jobs:
         source /opt/ros/$ROS_DISTRO/setup.bash
         source install/local_setup.bash
         # skip testing submodules
-        colcon test --python-testing pytest --pytest-with-coverage --executor parallel --parallel-workers $(nproc) --event-handlers console_direct+ --packages-skip bdai_ros2_wrappers --pytest-args --cov-config=.coveragerc
+        colcon test --python-testing pytest --pytest-with-coverage --executor parallel --parallel-workers $(nproc) --event-handlers console_direct+ --packages-skip bdai_ros2_wrappers --pytest-args " --cov-config=.coveragerc"
       working-directory: ${{ github.workspace }}/../../
     - name: Upload coverage to Coveralls
       uses: coverallsapp/github-action@v2
