@@ -51,6 +51,8 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
     return tl::make_unexpected("Failed to create image client.");
   }
   std::make_shared<DefaultImageClientApi>(image_client_result.response, time_sync_api_, robot_name_);
+  
+  return {};
 }
 
 tl::expected<bool, std::string> DefaultSpotApi::hasArm() const {
