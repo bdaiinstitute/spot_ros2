@@ -11,7 +11,7 @@
 
 #include <memory>
 
-namespace spot_ros2 {
+namespace spot_ros2::images {
 /**
  * @brief Wraps SpotImagePublisher to allow using it like a rclcpp::Node.
  */
@@ -34,6 +34,6 @@ class SpotImagePublisherNode {
  private:
   std::shared_ptr<rclcpp::Node> node_;
   std::unique_ptr<SpotApi> spot_api_;
-  std::unique_ptr<images::SpotImagePublisher> internal_;
+  std::unique_ptr<SpotImagePublisher> internal_;
 };
 }  // namespace spot_ros2

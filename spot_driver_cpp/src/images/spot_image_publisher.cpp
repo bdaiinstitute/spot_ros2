@@ -33,6 +33,7 @@ namespace spot_ros2::images {
 
   for (const auto& source : sources) {
     const auto source_name = toSpotImageSourceName(source);
+
     if (source.type == SpotImageType::RGB) {
       bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
       image_request->set_image_source_name(source_name);
@@ -96,6 +97,7 @@ bool SpotImagePublisher::initialize() {
 
 void SpotImagePublisher::timerCallback() {
   if (!image_request_message_) {
+    middleware_handle_->logger_interface()->logError("No image request message generated. Returning.");
     return;
   }
 

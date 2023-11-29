@@ -6,7 +6,7 @@
 #include <rclcpp/node_options.hpp>
 #include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/api/spot_api.hpp>
-#include <spot_driver_cpp/spot_image_publisher_node.hpp>
+#include <spot_driver_cpp/images/spot_image_publisher_node.hpp>
 
 #include <exception>
 #include <memory>
@@ -17,7 +17,7 @@ using ::testing::_;
 using ::testing::InSequence;
 using ::testing::Return;
 
-namespace spot_ros2::testing {
+namespace spot_ros2::images::testing {
 
 class MockImageClientApi : public ImageClientApi {
  public:

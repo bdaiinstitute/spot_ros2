@@ -48,7 +48,7 @@ add_library(spot_image_publisher
   src/interfaces/rclcpp_wall_timer_interface.cpp
   src/images/spot_image_publisher.cpp
   src/images/images_middleware_handle.cpp
-  src/spot_image_publisher_node.cpp
+  src/images/spot_image_publisher_node.cpp
   src/images/spot_image_sources.cpp)
 target_include_directories(spot_image_publisher
   PUBLIC
@@ -60,7 +60,7 @@ set_property(TARGET spot_image_publisher PROPERTY POSITION_INDEPENDENT_CODE ON)
 ament_target_dependencies(spot_image_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
 # Create executable to allow running SpotImagePublisherNode directly as a ROS 2 node
-add_executable(spot_image_publisher_node src/spot_image_publisher_node_main.cpp)
+add_executable(spot_image_publisher_node src/images/spot_image_publisher_node_main.cpp)
 target_link_libraries(spot_image_publisher_node PUBLIC spot_image_publisher)
 target_include_directories(spot_image_publisher_node
   PUBLIC
@@ -69,7 +69,7 @@ target_include_directories(spot_image_publisher_node
 )
 
 # Register a composable node to allow loading SpotImagePublisherNode in a component container
-add_library(spot_image_publisher_component SHARED src/spot_image_publisher_component.cpp)
+add_library(spot_image_publisher_component SHARED src/images/spot_image_publisher_component.cpp)
 target_include_directories(spot_image_publisher_component
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -80,7 +80,7 @@ ament_target_dependencies(spot_image_publisher PUBLIC rclcpp_components)
 
 rclcpp_components_register_node(
   spot_image_publisher_component
-  PLUGIN "spot_ros2::SpotImagePublisherNode"
+  PLUGIN "spot_ros2::images::SpotImagePublisherNode"
   EXECUTABLE spot_image_publisher_node_component)
 
 # Install Libraries

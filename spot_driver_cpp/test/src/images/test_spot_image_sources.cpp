@@ -16,7 +16,7 @@ using ::testing::StrEq;
 using ::testing::UnorderedElementsAre;
 }  // namespace
 
-namespace spot_ros2::images {
+namespace spot_ros2::images::testing {
 TEST(SpotImageSources, toRosTopic) {
   // Check that all combinations of SpotCamera and SpotImageType are converted to the correct topic name
 

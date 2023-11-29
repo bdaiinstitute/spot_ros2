@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/spot_image_publisher_node.hpp>
+#include <spot_driver_cpp/images/spot_image_publisher_node.hpp>
 
 #include <spot_driver_cpp/api/default_spot_api.hpp>
 #include <spot_driver_cpp/images/spot_image_publisher.hpp>
@@ -11,7 +11,7 @@ namespace {
 constexpr auto kSDKClientName = "spot_image_publisher";
 }
 
-namespace spot_ros2 {
+namespace spot_ros2::images {
 SpotImagePublisherNode::SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
                                                const std::shared_ptr<ParameterInterfaceBase>& parameter_interface,
                                                const std::shared_ptr<LoggerInterfaceBase>& logger_interface)
@@ -42,13 +42,13 @@ SpotImagePublisherNode::SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> nod
   }
 
   internal_ =
-      std::make_unique<images::SpotImagePublisher>(node_, spot_api_->image_client_api(), expected_has_arm.value());
+      std::make_unique<SpotImagePublisher>(node_, spot_api_->image_client_api(), expected_has_arm.value());
   internal_->initialize();
 }
 
 SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_options) {
   auto node = std::make_shared<rclcpp::Node>("image_publisher", node_options);
-  SpotImagePublisherNode(node, std::make_unique<DefaultSpotApi>(kSDKClientName),
+  *this = SpotImagePublisherNode(node, std::make_unique<DefaultSpotApi>(kSDKClientName),
                          std::make_shared<RclcppParameterInterface>(node),
                          std::make_shared<RclcppLoggerInterface>(node->get_logger()));
 }
@@ -57,4 +57,4 @@ std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotImagePublisherNo
   return node_->get_node_base_interface();
 }
 
-}  // namespace spot_ros2
+}  // namespace spot_ros2::images

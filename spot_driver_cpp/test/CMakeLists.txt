@@ -11,17 +11,17 @@ target_include_directories(rclcpp_test
 target_link_libraries(rclcpp_test PUBLIC rclcpp::rclcpp)
 
 ament_add_gmock(test_spot_image_publisher
-  test_spot_image_publisher.cpp
+  src/images/test_spot_image_publisher.cpp
 )
 target_link_libraries(test_spot_image_publisher spot_image_publisher)
 
 ament_add_gmock(test_spot_image_publisher_node
-  test_spot_image_publisher_node.cpp
+  src/images/test_spot_image_publisher_node.cpp
 )
 target_link_libraries(test_spot_image_publisher_node spot_image_publisher)
 
 ament_add_gmock(test_spot_image_sources
-  test_spot_image_sources.cpp
+  src/images/test_spot_image_sources.cpp
 )
 target_link_libraries(test_spot_image_sources spot_image_publisher)
 
