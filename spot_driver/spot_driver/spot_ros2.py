@@ -138,7 +138,6 @@ from spot_wrapper.spot_images import CameraSource
 from spot_wrapper.wrapper import SpotWrapper
 
 MAX_DURATION = 1e6
-MOCK_HOSTNAME = "Mock_spot"
 COLOR_END = "\33[0m"
 COLOR_GREEN = "\33[32m"
 COLOR_YELLOW = "\33[33m"
@@ -252,6 +251,8 @@ class SpotROS(Node):
         self.declare_parameter("initialize_spot_cam", False)
 
         self.declare_parameter("spot_name", "")
+        self.declare_parameter("mock_enable", False)
+        self.declare_parameter("mock_has_arm", True)
 
         # used for setting when not using launch file
         if parameter_list is not None:
@@ -293,6 +294,11 @@ class SpotROS(Node):
         self.name: Optional[str] = self.get_parameter("spot_name").value
         if not self.name:
             self.name = None
+        self.mock: Optional[bool] = self.get_parameter("mock_enable").value
+        self.mock_has_arm: Optional[bool] = self.get_parameter("mock_has_arm").value
+        self.get_logger().info(f"self.name: {self.name}")
+        self.get_logger().info(f"self.mock: {self.mock}")
+        self.get_logger().info(f"self.mock_has_arm: {self.mock_has_arm}")
 
         self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
@@ -365,7 +371,7 @@ class SpotROS(Node):
         self.get_logger().info("Starting ROS driver for Spot" + name_str)
         # testing with Robot
 
-        if self.name == MOCK_HOSTNAME:
+        if self.mock:
             self.spot_wrapper: Optional[SpotWrapper] = None
             self.cam_wrapper: Optional[SpotCamWrapper] = None
         else:
@@ -397,7 +403,7 @@ class SpotROS(Node):
                     self.spot_cam_wrapper = None
 
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
-        has_arm = False
+        has_arm = self.mock_has_arm
         if self.spot_wrapper is not None:
             has_arm = self.spot_wrapper.has_arm()
         if has_arm:
@@ -2343,7 +2349,7 @@ class SpotROS(Node):
         # We exclude the odometry frames from static transforms since they are not static. We can ignore the body
         # frame because it is a child of odom or vision depending on the preferred_odom_frame, and will be published
         # by the non-static transform publishing that is done by the state callback
-        frame_prefix = MOCK_HOSTNAME + "/"
+        frame_prefix = ""
         if self.spot_wrapper is not None:
             frame_prefix = self.spot_wrapper.frame_prefix
         excluded_frames = [

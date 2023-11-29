@@ -114,11 +114,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
-    mock_enable = LaunchConfiguration("mock_enable", default=False).perform(context)
-
+    mock_enable = LaunchConfiguration("mock_enable").perform(context) == "True"
+    
     if not mock_enable:
         # Get parameters from Spot.
-
+        
         username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
         password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
         hostname = os.getenv("SPOT_IP", "hostname")
@@ -126,8 +126,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
         has_arm = spot_wrapper.has_arm()
     else:
-        # TODO if it's not a boolean, correctly errors, but does not provide launch argument name
-        has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
+        mock_has_arm = LaunchConfiguration("mock_has_arm", default="True").perform(context) == "True"
+        has_arm = mock_has_arm
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -159,9 +159,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     # in spot_driver.
     spot_driver_params = {
         "spot_name": spot_name,
+        "mock_enable": mock_enable,
+        "mock_has_arm": mock_has_arm,
         "publish_depth_registered": False,
         "publish_depth": False,
-        "publish_rgb": False,
+        "publish_rgb": False
     }
 
     spot_driver_node = launch_ros.actions.Node(
