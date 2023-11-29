@@ -42,6 +42,7 @@ add_library(spot_image_publisher
   src/conversions/kinematic_conversions.cpp
   src/kinematic/kinematic_node.cpp
   src/kinematic/kinematic_service.cpp
+  src/kinematic/default_kinematic_service_helper.cpp
   src/spot_image_publisher.cpp
   src/spot_image_publisher_node.cpp
   src/spot_image_sources.cpp)

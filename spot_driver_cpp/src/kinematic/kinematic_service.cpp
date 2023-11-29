@@ -4,20 +4,23 @@
 
 #include <spot_driver_cpp/conversions/kinematic_conversions.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
+#include <spot_driver_cpp/kinematic/default_kinematic_service_helper.hpp>
 
 namespace spot_ros2 {
 
 auto kServiceName = "get_inverse_kinematic_solutions";
 
 KinematicService::KinematicService(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<KinematicApi> kinematic_api,
-                                   std::unique_ptr<LoggerInterfaceBase> logger)
-    : node_{node}, kinematic_api_{kinematic_api}, logger_{std::move(logger)} {}
+                                   std::unique_ptr<LoggerInterfaceBase> logger,
+                                   std::unique_ptr<KinematicServiceHelper> service_helper)
+    : kinematic_api_{kinematic_api}, logger_{std::move(logger)}, service_helper_{std::move(service_helper)} {}
 
 KinematicService::KinematicService(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<KinematicApi> kinematic_api)
-    : KinematicService{node, kinematic_api, std::make_unique<RclcppLoggerInterface>(node->get_logger())} {}
+    : KinematicService{node, kinematic_api, std::make_unique<RclcppLoggerInterface>(node->get_logger()),
+                       std::make_unique<DefaultKinematicServiceHelper>(node)} {}
 
 void KinematicService::init() {
-  service_ = node_->create_service<GetInverseKinematicSolutions>(
+  service_ = service_helper_->create_service(
       kServiceName, [this](const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
                            std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
         this->service_callback_(request, response);

@@ -5,7 +5,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-namespace spot_ros2 {
+namespace spot_ros2::test {
 
 TEST(TestCommonConversions, convert_builtin_interfaces_time_to_proto) {
   builtin_interfaces::msg::Time ros_msg;

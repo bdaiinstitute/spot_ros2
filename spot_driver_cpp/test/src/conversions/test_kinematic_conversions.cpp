@@ -5,7 +5,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-namespace spot_ros2 {
+namespace spot_ros2::test {
 
 ///////////////////////////////////////////////////////////////////////////////
 // ROS to Protobuf.
