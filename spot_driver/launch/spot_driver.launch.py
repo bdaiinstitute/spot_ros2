@@ -114,7 +114,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
-    mock_enable = LaunchConfiguration("mock_enable").perform(context) == "True"
+    mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
     
     if not mock_enable:
         # Get parameters from Spot.
@@ -126,7 +126,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
         has_arm = spot_wrapper.has_arm()
     else:
-        mock_has_arm = LaunchConfiguration("mock_has_arm", default="True").perform(context) == "True"
+        mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm", default="True")).evaluate(context)
         has_arm = mock_has_arm
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
@@ -163,7 +163,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         "mock_has_arm": mock_has_arm,
         "publish_depth_registered": False,
         "publish_depth": False,
-        "publish_rgb": False
+        "publish_rgb": False,
     }
 
     spot_driver_node = launch_ros.actions.Node(

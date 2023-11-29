@@ -296,9 +296,6 @@ class SpotROS(Node):
             self.name = None
         self.mock: Optional[bool] = self.get_parameter("mock_enable").value
         self.mock_has_arm: Optional[bool] = self.get_parameter("mock_has_arm").value
-        self.get_logger().info(f"self.name: {self.name}")
-        self.get_logger().info(f"self.mock: {self.mock}")
-        self.get_logger().info(f"self.mock_has_arm: {self.mock_has_arm}")
 
         self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
@@ -2349,9 +2346,7 @@ class SpotROS(Node):
         # We exclude the odometry frames from static transforms since they are not static. We can ignore the body
         # frame because it is a child of odom or vision depending on the preferred_odom_frame, and will be published
         # by the non-static transform publishing that is done by the state callback
-        frame_prefix = ""
-        if self.spot_wrapper is not None:
-            frame_prefix = self.spot_wrapper.frame_prefix
+        frame_prefix = self.name + "/"
         excluded_frames = [
             self.tf_name_vision_odom.value,
             self.tf_name_kinematic_odom.value,
