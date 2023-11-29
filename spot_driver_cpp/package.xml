@@ -18,6 +18,9 @@
   <depend>tf2_ros</depend>
   <depend>tl_expected</depend>
 
+  <!-- Support for gtest and gmock-based tests in the ament buildsystem in CMake. -->
+  <test_depend>ament_cmake_gmock</test_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>

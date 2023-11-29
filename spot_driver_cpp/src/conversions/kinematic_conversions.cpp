@@ -7,7 +7,7 @@
 namespace spot_ros2::kinematic_conversions {
 
 ///////////////////////////////////////////////////////////////////////////////
-// ROS to Protobuf,
+// ROS to Protobuf.
 
 void convert_bosdyn_msgs_inverse_kinematics_request_fixed_stance_to_proto(
     const bosdyn_msgs::msg::InverseKinematicsRequestFixedStance& ros_msg,
@@ -104,11 +104,13 @@ void convert_bosdyn_msgs_inverse_kinematics_request_tool_gaze_task_to_proto(
 void convert_bosdyn_msgs_inverse_kinematics_request_one_of_task_specification_to_proto(
     const bosdyn_msgs::msg::InverseKinematicsRequestOneOfTaskSpecification& ros_msg,
     bosdyn::api::spot::InverseKinematicsRequest& proto) {
-  if (ros_msg.task_specification_choice == ros_msg.TASK_SPECIFICATION_TOOL_POSE_TASK_SET) {
+  if (ros_msg.task_specification_choice ==
+      bosdyn_msgs::msg::InverseKinematicsRequestOneOfTaskSpecification::TASK_SPECIFICATION_TOOL_POSE_TASK_SET) {
     convert_bosdyn_msgs_inverse_kinematics_request_tool_pose_task_to_proto(ros_msg.tool_pose_task,
                                                                            *proto.mutable_tool_pose_task());
   }
-  if (ros_msg.task_specification_choice == ros_msg.TASK_SPECIFICATION_TOOL_GAZE_TASK_SET) {
+  if (ros_msg.task_specification_choice ==
+      bosdyn_msgs::msg::InverseKinematicsRequestOneOfTaskSpecification::TASK_SPECIFICATION_TOOL_GAZE_TASK_SET) {
     convert_bosdyn_msgs_inverse_kinematics_request_tool_gaze_task_to_proto(ros_msg.tool_gaze_task,
                                                                            *proto.mutable_tool_gaze_task());
   }
@@ -129,7 +131,17 @@ void convert_bosdyn_msgs_inverse_kinematics_request_to_proto(const bosdyn_msgs::
                                                             *proto.mutable_scene_tform_task());
   }
 
-  // proto.nominal_arm_configuration = ros_msg.nominal_arm_configuration.value
+  switch (ros_msg.nominal_arm_configuration.value) {
+    case bosdyn_msgs::msg::InverseKinematicsRequestNamedArmConfiguration::ARM_CONFIG_UNKNOWN:
+      proto.set_nominal_arm_configuration(bosdyn::api::spot::InverseKinematicsRequest::ARM_CONFIG_UNKNOWN);
+      break;
+    case bosdyn_msgs::msg::InverseKinematicsRequestNamedArmConfiguration::ARM_CONFIG_READY:
+      proto.set_nominal_arm_configuration(bosdyn::api::spot::InverseKinematicsRequest::ARM_CONFIG_READY);
+      break;
+    case bosdyn_msgs::msg::InverseKinematicsRequestNamedArmConfiguration::ARM_CONFIG_CURRENT:
+      proto.set_nominal_arm_configuration(bosdyn::api::spot::InverseKinematicsRequest::ARM_CONFIG_CURRENT);
+      break;
+  }
 
   if (ros_msg.nominal_arm_configuration_overrides_is_set) {
     common_conversions::convert_bosdyn_msgs_arm_joint_position_to_proto(

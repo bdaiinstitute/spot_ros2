@@ -1,6 +1,4 @@
 find_package(ament_cmake_gmock REQUIRED)
-find_package(gmock REQUIRED)
-find_package(gtest REQUIRED)
 
 add_library(rclcpp_test src/rclcpp_test.cpp)
 target_include_directories(rclcpp_test
