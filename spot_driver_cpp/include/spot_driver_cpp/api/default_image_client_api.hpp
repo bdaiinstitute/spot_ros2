@@ -24,7 +24,7 @@ class DefaultImageClientApi : public ImageClientApi {
   tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) override;
 
  private:
-  std::unique_ptr<::bosdyn::client::ImageClient> image_client_;
+  ::bosdyn::client::ImageClient* image_client_;
   std::shared_ptr<TimeSyncApi> time_sync_api_;
   std::string robot_name_;
 };

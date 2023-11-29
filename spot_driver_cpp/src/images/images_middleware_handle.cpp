@@ -6,6 +6,7 @@
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
+#include <spot_driver_cpp/images/spot_image_sources.hpp>
 
 namespace {
 constexpr auto kPublisherHistoryDepth = 1;

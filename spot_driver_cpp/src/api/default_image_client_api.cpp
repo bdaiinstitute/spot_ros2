@@ -201,7 +201,7 @@ namespace spot_ros2 {
 
 DefaultImageClientApi::DefaultImageClientApi(::bosdyn::client::ImageClient* image_client,
                                              std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name)
-    : image_client_{std::move(image_client)}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
+    : image_client_{image_client}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
 
 tl::expected<GetImagesResult, std::string> DefaultImageClientApi::getImages(::bosdyn::api::GetImageRequest request) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
