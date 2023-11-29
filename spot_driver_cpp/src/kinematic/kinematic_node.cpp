@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/kinematic_node.hpp>
+#include <spot_driver_cpp/kinematic/kinematic_node.hpp>
 
 #include <spot_driver_cpp/api/default_kinematic_api.hpp>
 #include <spot_driver_cpp/api/default_robot_api.hpp>

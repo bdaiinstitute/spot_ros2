@@ -40,8 +40,8 @@ add_library(spot_image_publisher
   src/api/robot.cpp
   src/conversions/common_conversions.cpp
   src/conversions/kinematic_conversions.cpp
-  src/kinematic_node.cpp
-  src/kinematic_service.cpp
+  src/kinematic/kinematic_node.cpp
+  src/kinematic/kinematic_service.cpp
   src/spot_image_publisher.cpp
   src/spot_image_publisher_node.cpp
   src/spot_image_sources.cpp)

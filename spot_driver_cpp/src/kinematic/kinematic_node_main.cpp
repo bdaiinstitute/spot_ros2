@@ -2,7 +2,7 @@
 
 #include <rclcpp/executors.hpp>
 #include <rclcpp/utilities.hpp>
-#include <spot_driver_cpp/kinematic_node.hpp>
+#include <spot_driver_cpp/kinematic/kinematic_node.hpp>
 
 #include <memory>
 

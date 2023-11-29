@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <spot_driver_cpp/kinematic_service.hpp>
+#include <spot_driver_cpp/kinematic/kinematic_service.hpp>
 
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_options.hpp>
