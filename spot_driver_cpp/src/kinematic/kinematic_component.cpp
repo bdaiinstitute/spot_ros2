@@ -4,4 +4,4 @@
 #include <rclcpp_components/register_node_macro.hpp>
 #include <spot_driver_cpp/kinematic/kinematic_node.hpp>
 
-RCLCPP_COMPONENTS_REGISTER_NODE(spot_ros2::KinematicNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(spot_ros2::kinematic::KinematicNode)

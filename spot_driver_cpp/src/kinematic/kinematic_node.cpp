@@ -12,7 +12,7 @@ namespace {
 constexpr auto kSDKClientName = "inverse_kinematic";
 }
 
-namespace spot_ros2 {
+namespace spot_ros2::kinematic {
 
 KinematicNode::KinematicNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
                              std::shared_ptr<ParameterInterfaceBase> parameter_interface,
@@ -56,7 +56,7 @@ void KinematicNode::initialize(std::shared_ptr<rclcpp::Node> node, std::unique_p
   internal_->initialize();
 }
 
-std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> spot_ros2::KinematicNode::get_node_base_interface() {
+std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> KinematicNode::get_node_base_interface() {
   return std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>();
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::kinematic

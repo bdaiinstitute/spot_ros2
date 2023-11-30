@@ -13,7 +13,7 @@
 
 #include <memory>
 
-namespace spot_ros2 {
+namespace spot_ros2::kinematic {
 class KinematicNode {
  public:
   explicit KinematicNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,

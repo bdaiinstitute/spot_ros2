@@ -6,7 +6,7 @@
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/kinematic/default_kinematic_service_helper.hpp>
 
-namespace spot_ros2 {
+namespace spot_ros2::kinematic {
 
 auto kServiceName = "get_inverse_kinematic_solutions";
 
@@ -43,4 +43,4 @@ void KinematicService::service_callback_(const std::shared_ptr<GetInverseKinemat
   kinematic_conversions::convert_proto_to_bosdyn_msgs_inverse_kinematics_response(expected.value().response,
                                                                                   ros_response);
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::kinematic

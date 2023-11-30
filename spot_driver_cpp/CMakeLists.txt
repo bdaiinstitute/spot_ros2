@@ -91,6 +91,30 @@ rclcpp_components_register_node(
   PLUGIN "spot_ros2::images::SpotImagePublisherNode"
   EXECUTABLE spot_image_publisher_node_component)
 
+# Create executable to allow running KinematicNode directly as a ROS 2 node.
+add_executable(kinematic_node src/kinematic/kinematic_node_main.cpp)
+target_link_libraries(kinematic_node PUBLIC spot_image_publisher)
+target_include_directories(kinematic_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+# Register a composable node to allow loading KinematicNode in a component container
+add_library(kinematic_component SHARED src/kinematic/kinematic_component.cpp)
+target_include_directories(kinematic_component
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(kinematic_component PUBLIC spot_image_publisher)
+
+rclcpp_components_register_node(
+  kinematic_component
+  PLUGIN "spot_ros2::kinematic::KinematicNode"
+  EXECUTABLE kinematic_node_component)
+
+
 # Install Libraries
 install(
   TARGETS

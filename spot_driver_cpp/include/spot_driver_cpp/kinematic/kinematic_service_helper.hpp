@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 
-namespace spot_ros2 {
+namespace spot_ros2::kinematic {
 
 using spot_msgs::srv::GetInverseKinematicSolutions;
 

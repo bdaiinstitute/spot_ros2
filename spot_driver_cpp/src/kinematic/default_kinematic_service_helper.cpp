@@ -2,7 +2,7 @@
 
 #include <spot_driver_cpp/kinematic/default_kinematic_service_helper.hpp>
 
-namespace spot_ros2 {
+namespace spot_ros2::kinematic {
 
 DefaultKinematicServiceHelper::DefaultKinematicServiceHelper(std::shared_ptr<rclcpp::Node> node) : node_{node} {}
 
@@ -12,4 +12,4 @@ std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>> DefaultKinematicS
                                   callback) {
   return node_->create_service<GetInverseKinematicSolutions>(service_name, callback);
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::kinematic

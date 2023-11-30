@@ -16,7 +16,7 @@ using ::testing::StrEq;
 using ::testing::UnorderedElementsAre;
 }  // namespace
 
-namespace spot_ros2::images::testing {
+namespace spot_ros2::images::test {
 TEST(SpotImageSources, toRosTopic) {
   // Check that all combinations of SpotCamera and SpotImageType are converted to the correct topic name
 
@@ -234,4 +234,4 @@ TEST(SpotImageSources, createImageSources) {
           ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED},
           ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}));
 }
-}  // namespace spot_ros2::images
+}  // namespace spot_ros2::images::test
