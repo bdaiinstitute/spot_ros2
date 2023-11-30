@@ -16,8 +16,24 @@ namespace spot_ros2 {
 
 KinematicNode::KinematicNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
                              std::shared_ptr<ParameterInterfaceBase> parameter_interface,
-                             std::shared_ptr<LoggerInterfaceBase> logger_interface)
-    : node_{node}, spot_api_{std::move(spot_api)} {
+                             const std::shared_ptr<LoggerInterfaceBase> logger_interface) {
+  initialize(node, std::move(spot_api), parameter_interface, logger_interface);
+}
+
+KinematicNode::KinematicNode(const rclcpp::NodeOptions& node_options) {
+  auto node = std::make_shared<rclcpp::Node>("kinematic_service", node_options);
+  auto spot_api = std::make_unique<DefaultSpotApi>(kSDKClientName);
+  auto parameter_interface = std::make_shared<RclcppParameterInterface>(node);
+  auto logger_interface = std::make_shared<RclcppLoggerInterface>(node->get_logger());
+  initialize(node, std::move(spot_api), parameter_interface, logger_interface);
+}
+
+void KinematicNode::initialize(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
+                               std::shared_ptr<ParameterInterfaceBase> parameter_interface,
+                               const std::shared_ptr<LoggerInterfaceBase> logger_interface) {
+  node_ = node;
+  spot_api_ = std::move(spot_api);
+
   const auto address = parameter_interface->getAddress();
   const auto robot_name = parameter_interface->getSpotName();
   const auto username = parameter_interface->getUsername();
@@ -38,13 +54,6 @@ KinematicNode::KinematicNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr
 
   internal_ = std::make_unique<KinematicService>(node_, spot_api_->kinematic_api());
   internal_->initialize();
-}
-
-spot_ros2::KinematicNode::KinematicNode(const rclcpp::NodeOptions& node_options) {
-  auto node = std::make_shared<rclcpp::Node>("kinematic_service", node_options);
-  *this = KinematicNode(node, std::make_unique<DefaultSpotApi>(kSDKClientName),
-                        std::make_shared<RclcppParameterInterface>(node),
-                        std::make_shared<RclcppLoggerInterface>(node->get_logger()));
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> spot_ros2::KinematicNode::get_node_base_interface() {

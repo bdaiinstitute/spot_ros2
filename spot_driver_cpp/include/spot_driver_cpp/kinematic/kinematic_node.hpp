@@ -35,5 +35,9 @@ class KinematicNode {
   std::shared_ptr<rclcpp::Node> node_;
   std::unique_ptr<SpotApi> spot_api_;
   std::unique_ptr<KinematicService> internal_;
+
+  void initialize(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
+                  std::shared_ptr<ParameterInterfaceBase> parameter_interface,
+                  const std::shared_ptr<LoggerInterfaceBase> logger_interface);
 };
 }  // namespace spot_ros2
