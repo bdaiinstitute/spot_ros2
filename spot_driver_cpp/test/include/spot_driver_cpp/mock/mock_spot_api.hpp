@@ -6,6 +6,9 @@
 #include <spot_driver_cpp/api/kinematic_api.hpp>
 #include <spot_driver_cpp/api/spot_api.hpp>
 
+#include <memory>
+#include <string>
+
 namespace spot_ros2::test {
 class MockSpotApi : public SpotApi {
  public:
@@ -15,4 +18,4 @@ class MockSpotApi : public SpotApi {
   MOCK_METHOD(std::shared_ptr<ImageClientApi>, image_client_api, (), (const, override));
   MOCK_METHOD(std::shared_ptr<KinematicApi>, kinematic_api, (), (const, override));
 };
-}  // namespace spot_ros2::testing
+}  // namespace spot_ros2::test

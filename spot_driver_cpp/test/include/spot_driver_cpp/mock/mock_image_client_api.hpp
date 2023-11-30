@@ -4,6 +4,8 @@
 
 #include <spot_driver_cpp/api/image_client_api.hpp>
 
+#include <string>
+
 namespace spot_ros2::test {
 class MockImageClientApi : public ImageClientApi {
  public:

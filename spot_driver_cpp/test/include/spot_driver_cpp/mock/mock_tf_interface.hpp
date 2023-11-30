@@ -5,6 +5,7 @@
 #include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
 
 #include <string>
+#include <vector>
 
 namespace spot_ros2::test {
 class MockTfInterface : public TfInterfaceBase {

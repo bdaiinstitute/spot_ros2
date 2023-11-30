@@ -41,16 +41,15 @@ SpotImagePublisherNode::SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> nod
     throw std::runtime_error(error_msg);
   }
 
-  internal_ =
-      std::make_unique<SpotImagePublisher>(node_, spot_api_->image_client_api(), expected_has_arm.value());
+  internal_ = std::make_unique<SpotImagePublisher>(node_, spot_api_->image_client_api(), expected_has_arm.value());
   internal_->initialize();
 }
 
 SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_options) {
   auto node = std::make_shared<rclcpp::Node>("image_publisher", node_options);
   *this = SpotImagePublisherNode(node, std::make_unique<DefaultSpotApi>(kSDKClientName),
-                         std::make_shared<RclcppParameterInterface>(node),
-                         std::make_shared<RclcppLoggerInterface>(node->get_logger()));
+                                 std::make_shared<RclcppParameterInterface>(node),
+                                 std::make_shared<RclcppLoggerInterface>(node->get_logger()));
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotImagePublisherNode::get_node_base_interface() {
