@@ -40,7 +40,7 @@ class KinematicService {
   explicit KinematicService(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<KinematicApi> kinematic_api);
 
   /** Initialize the service. */
-  void init();
+  void initialize();
 
  private:
   // The API to interact with Spot SDK.

@@ -29,6 +29,7 @@ endforeach()
 
 add_library(spot_api
   src/api/default_image_client_api.cpp
+  src/api/default_kinematic_api.cpp
   src/api/default_spot_api.cpp
   src/api/default_time_sync_api.cpp)
 
@@ -47,10 +48,6 @@ add_library(spot_image_publisher
   src/interfaces/rclcpp_parameter_interface.cpp
   src/interfaces/rclcpp_tf_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
-  src/api/default_image_api.cpp
-  src/api/default_kinematic_api.cpp
-  src/api/default_robot_api.cpp
-  src/api/robot.cpp
   src/conversions/common_conversions.cpp
   src/conversions/kinematic_conversions.cpp
   src/kinematic/kinematic_node.cpp

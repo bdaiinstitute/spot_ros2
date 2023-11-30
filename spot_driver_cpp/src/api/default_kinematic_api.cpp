@@ -3,16 +3,8 @@
 #include <spot_driver_cpp/api/default_kinematic_api.hpp>
 
 namespace spot_ros2 {
-DefaultKinematicApi::DefaultKinematicApi(std::shared_ptr<Robot> robot) : robot_{robot} {}
-
-tl::expected<void, std::string> DefaultKinematicApi::init() {
-  const auto kinematic_client_result =
-      robot_->robot().EnsureServiceClient<InverseKinematicsClient>(InverseKinematicsClient::GetDefaultServiceName());
-  if (!kinematic_client_result.status) {
-    return tl::make_unexpected("Failed to initialize the Spot SDK inverse kinematic client.");
-  }
-  kinematic_client_.reset(kinematic_client_result.response);
-}
+DefaultKinematicApi::DefaultKinematicApi(bosdyn::client::InverseKinematicsClient* kinematic_client)
+    : kinematic_client_{kinematic_client} {}
 
 tl::expected<Result<InverseKinematicsResponse>, std::string> DefaultKinematicApi::get_solutions(
     InverseKinematicsRequest& request) {

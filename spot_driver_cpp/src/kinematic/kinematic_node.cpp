@@ -2,50 +2,49 @@
 
 #include <spot_driver_cpp/kinematic/kinematic_node.hpp>
 
-#include <spot_driver_cpp/api/default_kinematic_api.hpp>
-#include <spot_driver_cpp/api/default_robot_api.hpp>
+#include <spot_driver_cpp/api/default_spot_api.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 
 #include <memory>
 
+namespace {
+constexpr auto kSDKClientName = "inverse_kinematic";
+}
+
 namespace spot_ros2 {
+
+KinematicNode::KinematicNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
+                             std::shared_ptr<ParameterInterfaceBase> parameter_interface,
+                             std::shared_ptr<LoggerInterfaceBase> logger_interface)
+    : node_{node}, spot_api_{std::move(spot_api)} {
+  const auto address = parameter_interface->getAddress();
+  const auto robot_name = parameter_interface->getSpotName();
+  const auto username = parameter_interface->getUsername();
+  const auto password = parameter_interface->getPassword();
+
+  // create and authenticate robot
+  if (const auto create_robot_result = spot_api_->createRobot(address, robot_name); !create_robot_result) {
+    const auto error_msg{std::string{"Failed to create interface to robot: "}.append(create_robot_result.error())};
+    logger_interface->logError(error_msg);
+    throw std::runtime_error(error_msg);
+  }
+
+  if (const auto authentication_result = spot_api_->authenticate(username, password); !authentication_result) {
+    const auto error_msg{std::string{"Failed to authenticate robot: "}.append(authentication_result.error())};
+    logger_interface->logError(error_msg);
+    throw std::runtime_error(error_msg);
+  }
+
+  internal_ = std::make_unique<KinematicService>(node_, spot_api_->kinematic_api());
+  internal_->initialize();
+}
+
 spot_ros2::KinematicNode::KinematicNode(const rclcpp::NodeOptions& node_options) {
-  node_ = std::make_shared<rclcpp::Node>("image_publisher", node_options);
-
-  auto logger = std::make_unique<RclcppLoggerInterface>(node_->get_logger());
-
-  auto parameters = std::make_unique<RclcppParameterInterface>(node_);
-  const auto address = parameters->getAddress();
-  const auto robot_name = parameters->getSpotName();
-  const auto username = parameters->getUsername();
-  const auto password = parameters->getPassword();
-
-  // Get a robot.
-  std::shared_ptr<Robot> robot;
-  auto robot_api = std::make_unique<DefaultRobotApi>();
-  if (auto result = robot_api->createRobot(address, robot_name); !result) {
-    logger->logError(std::string{"Failed to create interface to robot: "}.append(result.error()));
-    throw;
-  } else {
-    robot = std::shared_ptr<Robot>{std::move(result.value())};
-  }
-
-  // Authenticate.
-  if (auto result = robot->authenticate(username, password); !result) {
-    logger->logError("Authentication with provided username and password did not succeed.");
-    throw;
-  }
-
-  // Create the required API.
-  auto kinematic_api = std::make_unique<DefaultKinematicApi>(robot);
-  if (auto result = kinematic_api->init(); !result) {
-    logger->logError(std::string{"Error initializing api: "}.append(result.error()));
-    throw;
-  }
-
-  kinematic_service_ = std::make_unique<KinematicService>(node_, std::move(kinematic_api));
-  kinematic_service_->init();
+  auto node = std::make_shared<rclcpp::Node>("kinematic_service", node_options);
+  *this = KinematicNode(node, std::make_unique<DefaultSpotApi>(kSDKClientName),
+                        std::make_shared<RclcppParameterInterface>(node),
+                        std::make_shared<RclcppLoggerInterface>(node->get_logger()));
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> spot_ros2::KinematicNode::get_node_base_interface() {

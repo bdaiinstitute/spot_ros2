@@ -3,20 +3,16 @@
 #pragma once
 
 #include <spot_driver_cpp/api/kinematic_api.hpp>
-#include <spot_driver_cpp/api/robot.hpp>
+
+#include <tl_expected/expected.hpp>
+
+#include <string>
 
 namespace spot_ros2 {
 
-using ::bosdyn::client::InverseKinematicsClient;
-
 class DefaultKinematicApi : public KinematicApi {
  public:
-  DefaultKinematicApi(std::shared_ptr<Robot> robot);
-
-  /**
-   * Initialize all Spot SDK clients.
-   */
-  tl::expected<void, std::string> init();
+  DefaultKinematicApi(bosdyn::client::InverseKinematicsClient* kinematic_client);
 
   /**
    * Return a solution to the given request.
@@ -24,7 +20,6 @@ class DefaultKinematicApi : public KinematicApi {
   tl::expected<Result<InverseKinematicsResponse>, std::string> get_solutions(InverseKinematicsRequest& requestrequest);
 
  private:
-  std::shared_ptr<Robot> robot_;
-  std::unique_ptr<InverseKinematicsClient> kinematic_client_;
+  bosdyn::client::InverseKinematicsClient* kinematic_client_;
 };
 }  // namespace spot_ros2

@@ -2,6 +2,7 @@
 
 #include <bosdyn/client/gripper_camera_param/gripper_camera_param_client.h>
 #include <spot_driver_cpp/api/default_image_client_api.hpp>
+#include <spot_driver_cpp/api/default_kinematic_api.hpp>
 #include <spot_driver_cpp/api/default_spot_api.hpp>
 #include <spot_driver_cpp/api/default_time_sync_api.hpp>
 
@@ -43,13 +44,25 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   }
   time_sync_api_ = std::make_shared<DefaultTimeSyncApi>(get_time_sync_thread_response.response);
 
+  // Image API.
+
   const auto image_client_result = robot_->EnsureServiceClient<::bosdyn::client::ImageClient>(
       ::bosdyn::client::ImageClient::GetDefaultServiceName());
   if (!image_client_result.status) {
-    return tl::make_unexpected("Failed to create image client.");
+    return tl::make_unexpected("Failed to create Image client.");
   }
-  image_client_api_ = std::make_shared<DefaultImageClientApi>(image_client_result.response, time_sync_api_, robot_name_);
-  
+  image_client_api_ =
+      std::make_shared<DefaultImageClientApi>(image_client_result.response, time_sync_api_, robot_name_);
+
+  // Kinematic API.
+
+  const auto kinematic_api_result = robot_->EnsureServiceClient<::bosdyn::client::InverseKinematicsClient>(
+      ::bosdyn::client::InverseKinematicsClient::GetDefaultServiceName());
+  if (!kinematic_api_result.status) {
+    return tl::make_unexpected("Failed to create Inverse Kinematic client.");
+  }
+  kinematic_api_ = std::make_shared<DefaultKinematicApi>(kinematic_api_result.response);
+
   return {};
 }
 
@@ -70,6 +83,10 @@ tl::expected<bool, std::string> DefaultSpotApi::hasArm() const {
 
 std::shared_ptr<ImageClientApi> DefaultSpotApi::image_client_api() const {
   return image_client_api_;
+}
+
+std::shared_ptr<KinematicApi> DefaultSpotApi::kinematic_api() const {
+  return kinematic_api_;
 }
 
 }  // namespace spot_ros2

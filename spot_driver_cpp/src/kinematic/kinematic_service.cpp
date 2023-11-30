@@ -19,7 +19,7 @@ KinematicService::KinematicService(std::shared_ptr<rclcpp::Node> node, std::shar
     : KinematicService{node, kinematic_api, std::make_unique<RclcppLoggerInterface>(node->get_logger()),
                        std::make_unique<DefaultKinematicServiceHelper>(node)} {}
 
-void KinematicService::init() {
+void KinematicService::initialize() {
   service_ = service_helper_->create_service(
       kServiceName, [this](const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
                            std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
