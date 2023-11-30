@@ -41,7 +41,7 @@ ament_add_gmock(test_spot_image_sources
 )
 target_link_libraries(test_spot_image_sources spot_image_publisher)
 
-# test_spot_image_sources
+# test_parameter_interface
 
 ament_add_gmock(test_parameter_interface
   src/test_parameter_interface.cpp

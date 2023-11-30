@@ -4,6 +4,7 @@
 
 #include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/api/kinematic_api.hpp>
+#include <spot_driver_cpp/api/spot_api.hpp>
 
 namespace spot_ros2::test {
 class MockSpotApi : public SpotApi {

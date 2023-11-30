@@ -88,5 +88,4 @@ std::shared_ptr<ImageClientApi> DefaultSpotApi::image_client_api() const {
 std::shared_ptr<KinematicApi> DefaultSpotApi::kinematic_api() const {
   return kinematic_api_;
 }
-
 }  // namespace spot_ros2

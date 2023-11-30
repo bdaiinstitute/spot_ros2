@@ -33,7 +33,7 @@ add_library(spot_api
   src/api/default_spot_api.cpp
   src/api/default_time_sync_api.cpp
   src/api/spot_image_sources.cpp
-  )
+)
 
 target_include_directories(spot_api PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
