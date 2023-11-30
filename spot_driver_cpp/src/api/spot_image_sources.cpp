@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <bosdyn/client/image/image_source_names.h>
-#include <spot_driver_cpp/images/spot_image_sources.hpp>
+#include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 #include <stdexcept>
 #include <tl_expected/expected.hpp>
@@ -71,7 +71,7 @@ static const std::map<std::string, ImageSource> kAPISourceNameToImageSource = []
 }();
 }  // namespace
 
-namespace spot_ros2::images {
+namespace spot_ros2 {
 std::string toRosTopic(const ImageSource& image_source) {
   const auto ros_source_name = kSpotCameraToRosString.at(image_source.camera);
 
@@ -127,4 +127,4 @@ std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool g
 
   return sources;
 }
-}  // namespace spot_ros2::images
+}  // namespace spot_ros2

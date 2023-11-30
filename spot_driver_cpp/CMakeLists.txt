@@ -31,7 +31,9 @@ add_library(spot_api
   src/api/default_image_client_api.cpp
   src/api/default_kinematic_api.cpp
   src/api/default_spot_api.cpp
-  src/api/default_time_sync_api.cpp)
+  src/api/default_time_sync_api.cpp
+  src/api/spot_image_sources.cpp
+  )
 
 target_include_directories(spot_api PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -56,7 +58,6 @@ add_library(spot_image_publisher
   src/images/spot_image_publisher.cpp
   src/images/images_middleware_handle.cpp
   src/images/spot_image_publisher_node.cpp
-  src/images/spot_image_sources.cpp
 )
 target_include_directories(spot_image_publisher
   PUBLIC

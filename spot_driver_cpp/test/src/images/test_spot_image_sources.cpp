@@ -2,7 +2,7 @@
 
 #include <gmock/gmock.h>
 
-#include <spot_driver_cpp/images/spot_image_sources.hpp>
+#include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 #include <tl_expected/expected.hpp>
 

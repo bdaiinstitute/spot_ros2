@@ -7,8 +7,8 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/api/default_image_client_api.hpp>
+#include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <spot_driver_cpp/images/images_middleware_handle.hpp>
-#include <spot_driver_cpp/images/spot_image_sources.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>

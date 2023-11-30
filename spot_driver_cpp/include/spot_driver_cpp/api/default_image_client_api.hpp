@@ -5,8 +5,8 @@
 #include <bosdyn/client/image/image_client.h>
 #include <bosdyn/client/sdk/client_sdk.h>
 #include <spot_driver_cpp/api/image_client_api.hpp>
+#include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <spot_driver_cpp/api/time_sync_api.hpp>
-#include <spot_driver_cpp/images/spot_image_sources.hpp>
 
 #include <memory>
 #include <string>

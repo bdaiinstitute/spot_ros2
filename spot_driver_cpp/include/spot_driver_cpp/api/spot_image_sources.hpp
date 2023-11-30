@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace spot_ros2::images {
+namespace spot_ros2 {
 /**
  * @brief Create the ROS topic name corresponding to an ImageSource.
  *
@@ -50,4 +50,4 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
  */
 std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
                                          const bool get_depth_registered_images, const bool has_hand_camera);
-}  // namespace spot_ros2::images
+}  // namespace spot_ros2
