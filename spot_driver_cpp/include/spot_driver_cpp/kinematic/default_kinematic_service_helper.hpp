@@ -2,6 +2,9 @@
 
 #include <spot_driver_cpp/kinematic/kinematic_service_helper.hpp>
 
+#include <memory>
+#include <string>
+
 namespace spot_ros2::kinematic {
 
 class DefaultKinematicServiceHelper : public KinematicServiceHelper {

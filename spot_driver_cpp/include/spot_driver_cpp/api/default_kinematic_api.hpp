@@ -12,7 +12,7 @@ namespace spot_ros2 {
 
 class DefaultKinematicApi : public KinematicApi {
  public:
-  DefaultKinematicApi(bosdyn::client::InverseKinematicsClient* kinematic_client);
+  explicit DefaultKinematicApi(bosdyn::client::InverseKinematicsClient* kinematic_client);
 
   /**
    * Return a solution to the given request.
