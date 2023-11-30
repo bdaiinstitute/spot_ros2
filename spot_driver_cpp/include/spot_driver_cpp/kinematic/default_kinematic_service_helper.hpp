@@ -15,4 +15,4 @@ class DefaultKinematicServiceHelper : public KinematicServiceHelper {
  private:
   std::shared_ptr<rclcpp::Node> node_;
 };
-}  // namespace spot_ros2
+}  // namespace spot_ros2::kinematic

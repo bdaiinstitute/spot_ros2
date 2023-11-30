@@ -40,4 +40,4 @@ class KinematicNode {
                   std::shared_ptr<ParameterInterfaceBase> parameter_interface,
                   const std::shared_ptr<LoggerInterfaceBase> logger_interface);
 };
-}  // namespace spot_ros2
+}  // namespace spot_ros2::kinematic

@@ -114,4 +114,4 @@ TEST(TestCommonConversions, convert_bosdyn_msgs_arm_joint_position_to_proto) {
   ASSERT_EQ(ros_msg.wr1_is_set, proto_msg.has_wr1());
   ASSERT_EQ(ros_msg.wr1, proto_msg.wr1().value());
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::test

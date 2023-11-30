@@ -248,4 +248,4 @@ TEST(TestKinematicConversions, convert_bosdyn_msgs_inverse_kinematics_request_on
             proto_msg.tool_gaze_task().task_tform_desired_tool().rotation().z());
 }
 
-}  // namespace spot_ros2
+}  // namespace spot_ros2::test

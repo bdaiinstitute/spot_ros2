@@ -22,4 +22,4 @@ class KinematicServiceHelper {
                                                    std::shared_ptr<GetInverseKinematicSolutions::Response>)>
                                     callback) = 0;
 };
-}  // namespace spot_ros2
+}  // namespace spot_ros2::kinematic
