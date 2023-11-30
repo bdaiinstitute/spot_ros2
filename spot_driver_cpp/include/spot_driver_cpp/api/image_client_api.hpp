@@ -4,7 +4,7 @@
 
 #include <builtin_interfaces/msg/time.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
-#include <spot_driver_cpp/images/spot_image_sources.hpp>
+#include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <tl_expected/expected.hpp>
 
 #include <map>

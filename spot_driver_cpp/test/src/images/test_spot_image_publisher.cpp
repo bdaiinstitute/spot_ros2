@@ -2,10 +2,15 @@
 
 #include <gmock/gmock.h>
 
+#include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/images/spot_image_publisher.hpp>
-#include <spot_driver_cpp/images/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
+
+#include <spot_driver_cpp/mock/mock_image_client_api.hpp>
+#include <spot_driver_cpp/mock/mock_logger_interface.hpp>
+#include <spot_driver_cpp/mock/mock_tf_interface.hpp>
+#include <spot_driver_cpp/mock/mock_timer_interface.hpp>
 
 #include <memory>
 #include <optional>
@@ -19,7 +24,7 @@ using ::testing::Property;
 using ::testing::Return;
 using ::testing::Unused;
 
-namespace spot_ros2::images::testing {
+namespace spot_ros2::images::test {
 
 constexpr auto kExampleAddress{"192.168.0.10"};
 constexpr auto kExampleUsername{"spot_user"};
@@ -28,33 +33,6 @@ constexpr auto kExamplePassword{"hunter2"};
 constexpr auto kSomeErrorMessage = "some error message";
 
 const GetImagesResult kEmptyImagesResults;
-
-class MockTimerInterface : public TimerInterfaceBase {
- public:
-  MOCK_METHOD(void, setTimer, (const std::chrono::duration<double>& period, const std::function<void()>& callback),
-              (override));
-  MOCK_METHOD(void, clearTimer, (), (override));
-
-  void onSetTimer(const std::function<void()>& callback) { m_callback = callback; }
-  void trigger() { m_callback(); }
-
-  std::function<void()> m_callback;
-};
-
-class MockTfInterface : public TfInterfaceBase {
- public:
-  MOCK_METHOD((tl::expected<void, std::string>), updateStaticTransforms,
-              (const std::vector<geometry_msgs::msg::TransformStamped>& transforms), (override));
-};
-
-class MockLoggerInterface : public LoggerInterfaceBase {
- public:
-  MOCK_METHOD(void, logDebug, (const std::string& message), (const, override));
-  MOCK_METHOD(void, logInfo, (const std::string& message), (const, override));
-  MOCK_METHOD(void, logWarn, (const std::string& message), (const, override));
-  MOCK_METHOD(void, logError, (const std::string& message), (const, override));
-  MOCK_METHOD(void, logFatal, (const std::string& message), (const, override));
-};
 
 class FakeParameterInterface : public ParameterInterfaceBase {
  public:
@@ -100,14 +78,12 @@ class MockMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
   TimerInterfaceBase* timer_interface() override { return timer_interface_.get(); }
 
   std::unique_ptr<FakeParameterInterface> parameter_interface_ = std::make_unique<FakeParameterInterface>();
-  std::unique_ptr<MockLoggerInterface> logger_interface_ = std::make_unique<MockLoggerInterface>();
-  std::unique_ptr<MockTfInterface> tf_interface_ = std::make_unique<MockTfInterface>();
-  std::unique_ptr<MockTimerInterface> timer_interface_ = std::make_unique<MockTimerInterface>();
-};
-
-class MockImageClientApi : public ImageClientApi {
- public:
-  MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest), (override));
+  std::unique_ptr<spot_ros2::test::MockLoggerInterface> logger_interface_ =
+      std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  std::unique_ptr<spot_ros2::test::MockTfInterface> tf_interface_ =
+      std::make_unique<spot_ros2::test::MockTfInterface>();
+  std::unique_ptr<spot_ros2::test::MockTimerInterface> timer_interface_ =
+      std::make_unique<spot_ros2::test::MockTimerInterface>();
 };
 
 class TestInitSpotImagePublisherParametersUnset : public ::testing::Test {
@@ -116,7 +92,8 @@ class TestInitSpotImagePublisherParametersUnset : public ::testing::Test {
     image_publisher = std::make_unique<SpotImagePublisher>(image_client_api, std::move(middleware_handle), has_arm);
   }
 
-  std::shared_ptr<MockImageClientApi> image_client_api = std::make_shared<MockImageClientApi>();
+  std::shared_ptr<spot_ros2::test::MockImageClientApi> image_client_api =
+      std::make_shared<spot_ros2::test::MockImageClientApi>();
   std::unique_ptr<MockMiddlewareHandle> middleware_handle = std::make_unique<MockMiddlewareHandle>();
   std::unique_ptr<SpotImagePublisher> image_publisher;
 };
@@ -146,7 +123,8 @@ class TestRunSpotImagePublisher : public TestInitSpotImagePublisher {
     image_publisher = std::make_unique<SpotImagePublisher>(image_client_api, std::move(middleware_handle), has_arm);
   }
 
-  std::shared_ptr<MockImageClientApi> image_client_api = std::make_shared<MockImageClientApi>();
+  std::shared_ptr<spot_ros2::test::MockImageClientApi> image_client_api =
+      std::make_shared<spot_ros2::test::MockImageClientApi>();
   std::unique_ptr<MockMiddlewareHandle> middleware_handle = std::make_unique<MockMiddlewareHandle>();
   std::unique_ptr<SpotImagePublisher> image_publisher;
 };
@@ -240,4 +218,4 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
   // WHEN the timer callback is triggered
   timer_interface_ptr->trigger();
 }
-}  // namespace spot_ros2::images::testing
+}  // namespace spot_ros2::images::test

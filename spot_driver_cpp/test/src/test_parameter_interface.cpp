@@ -6,7 +6,7 @@
 #include <rclcpp/node.hpp>
 #include <rclcpp/utilities.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
-#include <spot_driver_cpp/test/rclcpp_test.hpp>
+#include <spot_driver_cpp/rclcpp_test.hpp>
 
 #include <memory>
 
@@ -24,7 +24,7 @@ constexpr auto kEnvVarNameUsername = "BOSDYN_CLIENT_USERNAME";
 constexpr auto kEnvVarNamePassword = "BOSDYN_CLIENT_PASSWORD";
 }  // namespace
 
-namespace spot_ros2 {
+namespace spot_ros2::test {
 class RclcppParameterInterfaceTest : public RclcppTest {};
 
 /**
@@ -218,4 +218,4 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), IsTrue());
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::test

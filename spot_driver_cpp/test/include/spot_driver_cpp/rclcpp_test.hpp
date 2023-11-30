@@ -6,7 +6,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-namespace spot_ros2 {
+namespace spot_ros2::test {
 /**
  * @brief Test fixture that calls rclcpp::init() if needed.
  */
@@ -34,4 +34,4 @@ class RclcppTest : public ::testing::Test {
   /**  @brief Set to true if rclcpp::ok() returns true when the test fixture is created. */
   const bool is_rclcpp_initialized_;
 };
-}  // namespace spot_ros2
+}  // namespace spot_ros2::test

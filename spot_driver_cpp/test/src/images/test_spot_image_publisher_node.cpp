@@ -2,11 +2,16 @@
 
 #include <gmock/gmock.h>
 
-#include <rclcpp/node.hpp>
-#include <rclcpp/node_options.hpp>
 #include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/api/spot_api.hpp>
 #include <spot_driver_cpp/images/spot_image_publisher_node.hpp>
+
+#include <spot_driver_cpp/mock/mock_image_client_api.hpp>
+#include <spot_driver_cpp/mock/mock_logger_interface.hpp>
+#include <spot_driver_cpp/mock/mock_spot_api.hpp>
+
+#include <rclcpp/node.hpp>
+#include <rclcpp/node_options.hpp>
 
 #include <exception>
 #include <memory>
@@ -17,23 +22,7 @@ using ::testing::_;
 using ::testing::InSequence;
 using ::testing::Return;
 
-namespace spot_ros2::images::testing {
-
-class MockImageClientApi : public ImageClientApi {
- public:
-  MockImageClientApi() = default;
-  MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest request),
-              (override));
-};
-
-class MockLoggerInterface : public LoggerInterfaceBase {
- public:
-  MOCK_METHOD(void, logDebug, (const std::string& message), (const, override));
-  MOCK_METHOD(void, logInfo, (const std::string& message), (const, override));
-  MOCK_METHOD(void, logWarn, (const std::string& message), (const, override));
-  MOCK_METHOD(void, logError, (const std::string& message), (const, override));
-  MOCK_METHOD(void, logFatal, (const std::string& message), (const, override));
-};
+namespace spot_ros2::images::test {
 
 class FakeParameterInterface : public ParameterInterfaceBase {
  public:
@@ -67,22 +56,14 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   std::string spot_name;
 };
 
-class MockSpotApi : public SpotApi {
- public:
-  MOCK_METHOD((tl::expected<void, std::string>), createRobot, (const std::string&, const std::string&), (override));
-  MOCK_METHOD((tl::expected<void, std::string>), authenticate, (const std::string&, const std::string&), (override));
-  MOCK_METHOD((tl::expected<bool, std::string>), hasArm, (), (const, override));
-  MOCK_METHOD(std::shared_ptr<ImageClientApi>, image_client_api, (), (const, override));
-};
-
 class SpotImagePubNodeTestFixture : public ::testing::Test {
  public:
   void SetUp() override {
     rclcpp::init(0, nullptr);
     node = std::make_shared<rclcpp::Node>("test_image_publisher_node");
     fake_parameter_interface = std::make_shared<FakeParameterInterface>();
-    mock_logger_interface = std::make_shared<MockLoggerInterface>();
-    mock_spot_api = std::make_unique<MockSpotApi>();
+    mock_logger_interface = std::make_shared<spot_ros2::test::MockLoggerInterface>();
+    mock_spot_api = std::make_unique<spot_ros2::test::MockSpotApi>();
   }
 
   void TearDown() override { rclcpp::shutdown(); }
@@ -90,8 +71,8 @@ class SpotImagePubNodeTestFixture : public ::testing::Test {
  protected:
   std::shared_ptr<rclcpp::Node> node;
   std::shared_ptr<FakeParameterInterface> fake_parameter_interface;
-  std::shared_ptr<MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<MockSpotApi> mock_spot_api;
+  std::shared_ptr<spot_ros2::test::MockLoggerInterface> mock_logger_interface;
+  std::unique_ptr<spot_ros2::test::MockSpotApi> mock_spot_api;
 };
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_Success) {
@@ -152,4 +133,4 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_hasArm_failure) {
                std::exception);
 }
 
-}  // namespace spot_ros2::testing
+}  // namespace spot_ros2::images::test
