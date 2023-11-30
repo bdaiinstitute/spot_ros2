@@ -10,13 +10,13 @@ namespace spot_ros2::kinematic {
 
 auto kServiceName = "get_inverse_kinematic_solutions";
 
-KinematicService::KinematicService(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<KinematicApi> kinematic_api,
+KinematicService::KinematicService(std::shared_ptr<KinematicApi> kinematic_api,
                                    std::unique_ptr<LoggerInterfaceBase> logger,
                                    std::unique_ptr<KinematicServiceHelper> service_helper)
     : kinematic_api_{kinematic_api}, logger_{std::move(logger)}, service_helper_{std::move(service_helper)} {}
 
 KinematicService::KinematicService(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<KinematicApi> kinematic_api)
-    : KinematicService{node, kinematic_api, std::make_unique<RclcppLoggerInterface>(node->get_logger()),
+    : KinematicService{kinematic_api, std::make_unique<RclcppLoggerInterface>(node->get_logger()),
                        std::make_unique<DefaultKinematicServiceHelper>(node)} {}
 
 void KinematicService::initialize() {
@@ -39,8 +39,7 @@ void KinematicService::service_callback_(const std::shared_ptr<GetInverseKinemat
     logger_->logError(std::string{"Error searching for an InverseKinematic solution: "}.append(expected.error()));
   }
 
-  bosdyn_msgs::msg::InverseKinematicsResponse ros_response;
   kinematic_conversions::convert_proto_to_bosdyn_msgs_inverse_kinematics_response(expected.value().response,
-                                                                                  ros_response);
+                                                                                  response->response);
 }
 }  // namespace spot_ros2::kinematic
