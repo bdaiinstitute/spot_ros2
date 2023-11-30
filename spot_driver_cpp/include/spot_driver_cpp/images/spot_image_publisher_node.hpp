@@ -36,4 +36,4 @@ class SpotImagePublisherNode {
   std::unique_ptr<SpotApi> spot_api_;
   std::unique_ptr<SpotImagePublisher> internal_;
 };
-}  // namespace spot_ros2
+}  // namespace spot_ros2::images
