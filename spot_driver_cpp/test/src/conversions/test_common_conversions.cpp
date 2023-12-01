@@ -7,6 +7,9 @@
 
 namespace spot_ros2::test {
 
+///////////////////////////////////////////////////////////////////////////////
+// ROS to Protobuf.
+
 TEST(TestCommonConversions, convert_builtin_interfaces_time_to_proto) {
   builtin_interfaces::msg::Time ros_msg;
   google::protobuf::Timestamp proto_msg;
@@ -114,4 +117,25 @@ TEST(TestCommonConversions, convert_bosdyn_msgs_arm_joint_position_to_proto) {
   ASSERT_EQ(ros_msg.wr1_is_set, proto_msg.has_wr1());
   ASSERT_EQ(ros_msg.wr1, proto_msg.wr1().value());
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Protobuf to ROS.
+
+TEST(TestCommonConversions, convert_proto_to_geometry_msgs_quaternion) {
+  bosdyn::api::Quaternion proto_msg;
+  geometry_msgs::msg::Quaternion ros_msg;
+
+  proto_msg.set_w(0.7987);
+  proto_msg.set_x(0.1912);
+  proto_msg.set_y(0.4336);
+  proto_msg.set_z(0.3709);
+
+  common_conversions::convert_proto_to_geometry_msgs_quaternion(proto_msg, ros_msg);
+
+  ASSERT_EQ(proto_msg.w(), ros_msg.w);
+  ASSERT_EQ(proto_msg.x(), ros_msg.x);
+  ASSERT_EQ(proto_msg.y(), ros_msg.y);
+  ASSERT_EQ(proto_msg.z(), ros_msg.z);
+}
+
 }  // namespace spot_ros2::test
