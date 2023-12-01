@@ -121,6 +121,21 @@ TEST(TestCommonConversions, convert_bosdyn_msgs_arm_joint_position_to_proto) {
 ///////////////////////////////////////////////////////////////////////////////
 // Protobuf to ROS.
 
+TEST(TestCommonConversions, convert_proto_to_geometry_msgs_vector3) {
+  bosdyn::api::Vec3 proto_msg;
+  geometry_msgs::msg::Point ros_msg;
+
+  proto_msg.set_x(0.1);
+  proto_msg.set_y(0.2);
+  proto_msg.set_z(0.3);
+
+  common_conversions::convert_proto_to_geometry_msgs_vector3(proto_msg, ros_msg);
+
+  ASSERT_EQ(proto_msg.x(), ros_msg.x);
+  ASSERT_EQ(proto_msg.y(), ros_msg.y);
+  ASSERT_EQ(proto_msg.z(), ros_msg.z);
+}
+
 TEST(TestCommonConversions, convert_proto_to_geometry_msgs_quaternion) {
   bosdyn::api::Quaternion proto_msg;
   geometry_msgs::msg::Quaternion ros_msg;
