@@ -118,7 +118,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     if not mock_enable:
         # Get parameters from Spot.
-
+        # TODO this deviates from the `get_from_env_and_fall_back_to_param` logic in `spot_ros2.py`,
+        # which would pull in values in `config_file`
         username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
         password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
         hostname = os.getenv("SPOT_IP", "hostname")
@@ -160,11 +161,15 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_driver_params = {
         "spot_name": spot_name,
         "mock_enable": mock_enable,
-        "mock_has_arm": mock_has_arm,
         "publish_depth_registered": False,
         "publish_depth": False,
         "publish_rgb": False,
     }
+
+    if mock_enable:
+        mock_spot_driver_params = {"mock_has_arm": mock_has_arm}
+        # Merge the two dicts
+        spot_driver_params = {**spot_driver_params, **mock_spot_driver_params}
 
     spot_driver_node = launch_ros.actions.Node(
         package="spot_driver",

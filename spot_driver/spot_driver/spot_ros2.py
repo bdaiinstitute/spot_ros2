@@ -252,7 +252,8 @@ class SpotROS(Node):
 
         self.declare_parameter("spot_name", "")
         self.declare_parameter("mock_enable", False)
-        self.declare_parameter("mock_has_arm", True)
+        if self.get_parameter("mock_enable").value:
+            self.declare_parameter("mock_has_arm", rclpy.Parameter.Type.BOOL)
 
         # used for setting when not using launch file
         if parameter_list is not None:
@@ -294,8 +295,10 @@ class SpotROS(Node):
         self.name: Optional[str] = self.get_parameter("spot_name").value
         if not self.name:
             self.name = None
-        self.mock: Optional[bool] = self.get_parameter("mock_enable").value
-        self.mock_has_arm: Optional[bool] = self.get_parameter("mock_has_arm").value
+        self.mock: bool = self.get_parameter("mock_enable").value
+        self.mock_has_arm: Optional[bool] = None
+        if self.mock:
+            self.mock_has_arm = self.get_parameter("mock_has_arm").value
 
         self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
@@ -365,7 +368,8 @@ class SpotROS(Node):
         name_str = ""
         if self.name is not None:
             name_str = " for " + self.name
-        self.get_logger().info("Starting ROS driver for Spot" + name_str)
+        mocking_designator = " (mocked)" if self.mock else ""
+        self.get_logger().info("Starting ROS driver for Spot" + name_str + mocking_designator)
         # testing with Robot
 
         if self.mock:
