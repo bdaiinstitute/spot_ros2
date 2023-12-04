@@ -122,6 +122,8 @@ install(
     spot_api
     spot_image_publisher
     spot_image_publisher_component
+    kinematic_node
+    kinematic_node_component
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -134,6 +136,8 @@ install(
   TARGETS 
     spot_image_publisher_node
     spot_image_publisher_node_component
+    kinematic_node
+    kinematic_node_component
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
