@@ -19,7 +19,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "send_inverse_kinematic_requests = inverse_kinematics.send_inverse_kinematic_requests:main",
+            "send_inverse_kinematics_requests = inverse_kinematics.send_inverse_kinematics_requests:main",
         ],
     },
 )
