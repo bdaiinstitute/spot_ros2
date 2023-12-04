@@ -2,12 +2,11 @@
 
 #include <gmock/gmock.h>
 
-#include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <spot_driver_cpp/images/spot_image_publisher.hpp>
 #include <spot_driver_cpp/types.hpp>
 
-#include <spot_driver_cpp/mock/mock_image_client_api.hpp>
+#include <spot_driver_cpp/mock/mock_image_client.hpp>
 #include <spot_driver_cpp/mock/mock_logger_interface.hpp>
 #include <spot_driver_cpp/mock/mock_tf_interface.hpp>
 #include <spot_driver_cpp/mock/mock_timer_interface.hpp>
@@ -32,15 +31,13 @@ constexpr auto kExamplePassword{"hunter2"};
 
 constexpr auto kSomeErrorMessage = "some error message";
 
-const GetImagesResult kEmptyImagesResults;
-
 class FakeParameterInterface : public ParameterInterfaceBase {
  public:
-  std::string getAddress() const override { return address; }
+  std::string getAddress() const override { return kExampleAddress; }
 
-  std::string getUsername() const override { return username; }
+  std::string getUsername() const override { return kExampleUsername; }
 
-  std::string getPassword() const override { return password; }
+  std::string getPassword() const override { return kExamplePassword; }
 
   double getRGBImageQuality() const override { return rgb_image_quality; }
 
@@ -53,10 +50,6 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   bool getPublishDepthRegisteredImages() const override { return publish_depth_registered_images; }
 
   std::string getSpotName() const override { return spot_name; }
-
-  std::string address;
-  std::string username;
-  std::string password;
 
   double rgb_image_quality = kDefaultRGBImageQuality;
   bool has_rgb_cameras = kDefaultHasRGBCameras;
@@ -71,6 +64,7 @@ class MockMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
   MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources), (override));
   MOCK_METHOD((tl::expected<void, std::string>), publishImages, ((const std::map<ImageSource, ImageWithCameraInfo>&)),
               (override));
+  MOCK_METHOD(std::shared_ptr<rclcpp::Node>, node, (), (override));
 
   ParameterInterfaceBase* parameter_interface() override { return parameter_interface_.get(); }
   LoggerInterfaceBase* logger_interface() override { return logger_interface_.get(); }
@@ -86,47 +80,19 @@ class MockMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
       std::make_unique<spot_ros2::test::MockTimerInterface>();
 };
 
-class TestInitSpotImagePublisherParametersUnset : public ::testing::Test {
+class TestInitSpotImagePublisher : public ::testing::Test {
  public:
   void create_image_publisher(bool has_arm) {
-    image_publisher = std::make_unique<SpotImagePublisher>(image_client_api, std::move(middleware_handle), has_arm);
+    image_publisher = std::make_unique<SpotImagePublisher>(image_client_interface, std::move(middleware_handle), has_arm);
   }
 
-  std::shared_ptr<spot_ros2::test::MockImageClientApi> image_client_api =
-      std::make_shared<spot_ros2::test::MockImageClientApi>();
+  std::shared_ptr<spot_ros2::test::MockImageClient> image_client_interface =
+      std::make_shared<spot_ros2::test::MockImageClient>();
   std::unique_ptr<MockMiddlewareHandle> middleware_handle = std::make_unique<MockMiddlewareHandle>();
   std::unique_ptr<SpotImagePublisher> image_publisher;
-};
-
-class TestInitSpotImagePublisher : public TestInitSpotImagePublisherParametersUnset {
- public:
-  void SetUp() override {
-    auto parameter_interface_ptr = middleware_handle->parameter_interface_.get();
-
-    parameter_interface_ptr->address = kExampleAddress;
-    parameter_interface_ptr->username = kExampleUsername;
-    parameter_interface_ptr->password = kExamplePassword;
-  }
 };
 
 class TestRunSpotImagePublisher : public TestInitSpotImagePublisher {
- public:
-  void SetUp() override {
-    auto parameter_interface_ptr = middleware_handle->parameter_interface_.get();
-
-    parameter_interface_ptr->address = kExampleAddress;
-    parameter_interface_ptr->username = kExampleUsername;
-    parameter_interface_ptr->password = kExamplePassword;
-  }
-
-  void create_image_publisher(bool has_arm) {
-    image_publisher = std::make_unique<SpotImagePublisher>(image_client_api, std::move(middleware_handle), has_arm);
-  }
-
-  std::shared_ptr<spot_ros2::test::MockImageClientApi> image_client_api =
-      std::make_shared<spot_ros2::test::MockImageClientApi>();
-  std::unique_ptr<MockMiddlewareHandle> middleware_handle = std::make_unique<MockMiddlewareHandle>();
-  std::unique_ptr<SpotImagePublisher> image_publisher;
 };
 
 TEST_F(TestInitSpotImagePublisher, InitSucceeds) {
@@ -166,7 +132,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
     // THEN the images we received from the Spot interface are published
     // THEN the static transforms to the image frames are updated
     InSequence seq;
-    EXPECT_CALL(*image_client_api, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
+    EXPECT_CALL(*image_client_interface, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
     EXPECT_CALL(*middleware_handle, publishImages);
     EXPECT_CALL(*middleware_handle->tf_interface_, updateStaticTransforms);
   }
@@ -203,7 +169,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
     // THEN the images we received from the Spot interface are published
     // THEN the static transforms to the image frames are updated
     InSequence seq;
-    EXPECT_CALL(*image_client_api, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
+    EXPECT_CALL(*image_client_interface, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
     EXPECT_CALL(*middleware_handle, publishImages);
     EXPECT_CALL(*middleware_handle->tf_interface_, updateStaticTransforms);
   }

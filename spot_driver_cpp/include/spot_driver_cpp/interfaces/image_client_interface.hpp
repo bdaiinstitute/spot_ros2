@@ -20,7 +20,7 @@ struct GetImagesResult {
 /**
  * @brief Defines an interface for a class to connect to and interact with Spot's Image client.
  */
-class ImageClientApi {
+class ImageClientInterface {
  public:
   virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) = 0;
 };

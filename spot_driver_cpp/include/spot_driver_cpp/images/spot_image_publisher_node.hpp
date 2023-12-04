@@ -17,9 +17,9 @@ namespace spot_ros2::images {
  */
 class SpotImagePublisherNode {
  public:
-  SpotImagePublisherNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
-                         const std::shared_ptr<ParameterInterfaceBase>& parameter_interface,
-                         const std::shared_ptr<LoggerInterfaceBase>& logger_interface);
+  SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api,
+                         std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle);
+                         
   explicit SpotImagePublisherNode(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
   /**

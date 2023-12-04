@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <bosdyn/client/gripper_camera_param/gripper_camera_param_client.h>
-#include <spot_driver_cpp/api/default_image_client_api.hpp>
+#include <spot_driver_cpp/api/default_image_client.hpp>
 #include <spot_driver_cpp/api/default_spot_api.hpp>
 #include <spot_driver_cpp/api/default_time_sync_api.hpp>
 
@@ -50,8 +50,8 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   if (!image_client_result.status) {
     return tl::make_unexpected("Failed to create Image client.");
   }
-  image_client_api_ =
-      std::make_shared<DefaultImageClientApi>(image_client_result.response, time_sync_api_, robot_name_);
+  image_client_interface_ =
+      std::make_shared<DefaultImageClient>(image_client_result.response, time_sync_api_, robot_name_);
 
   return {};
 }
@@ -71,7 +71,7 @@ tl::expected<bool, std::string> DefaultSpotApi::hasArm() const {
          }) != services.cend();
 }
 
-std::shared_ptr<ImageClientApi> DefaultSpotApi::image_client_api() const {
-  return image_client_api_;
+std::shared_ptr<ImageClientInterface> DefaultSpotApi::image_client_interface() const {
+  return image_client_interface_;
 }
 }  // namespace spot_ros2

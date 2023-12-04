@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/api/default_image_client_api.hpp>
+#include <spot_driver_cpp/api/default_image_client.hpp>
 
 #include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>
@@ -199,11 +199,11 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
 
 namespace spot_ros2 {
 
-DefaultImageClientApi::DefaultImageClientApi(::bosdyn::client::ImageClient* image_client,
+DefaultImageClient::DefaultImageClient(::bosdyn::client::ImageClient* image_client,
                                              std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name)
     : image_client_{image_client}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
 
-tl::expected<GetImagesResult, std::string> DefaultImageClientApi::getImages(::bosdyn::api::GetImageRequest request) {
+tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
       image_client_->GetImageAsync(request);
 

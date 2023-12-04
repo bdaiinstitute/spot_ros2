@@ -2,12 +2,12 @@
 
 #include <gmock/gmock.h>
 
-#include <spot_driver_cpp/api/image_client_api.hpp>
+#include <spot_driver_cpp/interfaces/image_client_interface.hpp>
 
 #include <string>
 
 namespace spot_ros2::test {
-class MockImageClientApi : public ImageClientApi {
+class MockImageClient : public ImageClientInterface {
  public:
   MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest), (override));
 };
