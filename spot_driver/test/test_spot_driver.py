@@ -582,31 +582,48 @@ class SpotDriverTest(unittest.TestCase):
             "FEEDBACK_ARM_DRAG_FEEDBACK_SET | STATUS_OTHER_FAILURE",
         )
 
-        """ Testing arm drag feedback """
+        """ Testing arm impedance feedback """
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
             arm_command_feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET
         )
-        # Arm impedance commands do not provide feedback therefore we should get a success
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_impedance_feedback.status.value = (
+            arm_command_feedback.feedback.arm_impedance_feedback.status.STATUS_UNKNOWN
+        )
         self.assertEqual(
             self.spot_ros2._robot_command_goal_complete(feedback),
-            GoalResponse.SUCCESS,
-            "FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET",
+            GoalResponse.FAILED,
+            "FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET | STATUS_UNKNOWN",
         )
 
-        """ Testing arm drag feedback """
-        feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = (
-            arm_command_feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_impedance_feedback.status.value = (
+            arm_command_feedback.feedback.arm_impedance_feedback.status.STATUS_TRAJECTORY_COMPLETE
         )
-        # Arm impedance commands do not provide feedback therefore we should get a success
         self.assertEqual(
             self.spot_ros2._robot_command_goal_complete(feedback),
             GoalResponse.SUCCESS,
-            "FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET",
+            "FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET | STATUS_TRAJECTORY_COMPLETE",
+        )
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_impedance_feedback.status.value = (
+            arm_command_feedback.feedback.arm_impedance_feedback.status.STATUS_IN_PROGRESS
+        )
+        self.assertEqual(
+            self.spot_ros2._robot_command_goal_complete(feedback),
+            GoalResponse.IN_PROGRESS,
+            "FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET | STATUS_IN_PROGRESS",
+        )
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_impedance_feedback.status.value = (
+            arm_command_feedback.feedback.arm_impedance_feedback.status.STATUS_TRAJECTORY_STALLED
+        )
+        self.assertEqual(
+            self.spot_ros2._robot_command_goal_complete(feedback),
+            GoalResponse.FAILED,
+            "FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET | STATUS_TRAJECTORY_STALLED",
         )
 
         """ Testing unknown arm command """
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.feedback_choice = FEEDBACK_INVALID
-        # Arm impedance commands do not provide feedback therefore we should get a success
         self.assertEqual(
             self.spot_ros2._robot_command_goal_complete(feedback),
             GoalResponse.IN_PROGRESS,
