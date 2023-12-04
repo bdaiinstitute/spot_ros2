@@ -115,10 +115,10 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
-    
+
     if not mock_enable:
         # Get parameters from Spot.
-        
+
         username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
         password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
         hostname = os.getenv("SPOT_IP", "hostname")
@@ -126,7 +126,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
         has_arm = spot_wrapper.has_arm()
     else:
-        mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm", default="True")).evaluate(context)
+        mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
         has_arm = mock_has_arm
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
