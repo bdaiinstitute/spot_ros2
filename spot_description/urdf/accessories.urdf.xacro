@@ -11,17 +11,17 @@
     <link name="pack_mount">
       <visual>
         <geometry>
-          <mesh filename="package://spot_description/meshes/base/visual/pack_top.dae"/>
+          <mesh filename="package://spot_description/meshes/base/visual/pack_top.obj"/>
         </geometry>
       </visual>
       <visual>
         <geometry>
-          <mesh filename="package://spot_description/meshes/base/visual/pack_body.dae"/>
+          <mesh filename="package://spot_description/meshes/base/visual/pack_body.obj"/>
         </geometry>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://spot_description/meshes/base/visual/pack_body.dae"/>
+          <mesh filename="package://spot_description/meshes/base/visual/pack_body.obj"/>
         </geometry>
       </collision>
     </link>
@@ -37,7 +37,7 @@
     <link name="lidar_mount">
       <visual>
         <geometry>
-          <mesh filename="package://spot_description/meshes/base/visual/lidar_mount.dae"/>
+          <mesh filename="package://spot_description/meshes/base/visual/lidar_mount.obj"/>
         </geometry>
       </visual>
       <collision>
