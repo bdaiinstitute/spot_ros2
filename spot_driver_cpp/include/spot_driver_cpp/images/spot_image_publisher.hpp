@@ -8,8 +8,8 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <set>
-#include <spot_driver_cpp/interfaces/image_client_interface.hpp>
 #include <spot_driver_cpp/api/spot_image_sources.hpp>
+#include <spot_driver_cpp/interfaces/image_client_interface.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
@@ -44,20 +44,19 @@ class SpotImagePublisher {
  public:
   /**
    * @brief A handle class around rclcpp::Node operations for SpotImagePublisher
-  */
+   */
   class MiddlewareHandle {
-    public:
+   public:
+    virtual void createPublishers(const std::set<ImageSource>& image_sources) = 0;
+    virtual tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
 
-      virtual void createPublishers(const std::set<ImageSource>& image_sources) = 0;
-      virtual tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
+    virtual ParameterInterfaceBase* parameter_interface() = 0;
+    virtual LoggerInterfaceBase* logger_interface() = 0;
+    virtual TfInterfaceBase* tf_interface() = 0;
+    virtual TimerInterfaceBase* timer_interface() = 0;
+    virtual std::shared_ptr<rclcpp::Node> node() = 0;
 
-      virtual ParameterInterfaceBase* parameter_interface() = 0;
-      virtual LoggerInterfaceBase* logger_interface() = 0;
-      virtual TfInterfaceBase* tf_interface() = 0;
-      virtual TimerInterfaceBase* timer_interface() = 0;
-      virtual std::shared_ptr<rclcpp::Node> node() = 0;
-
-      virtual ~MiddlewareHandle() = default;
+    virtual ~MiddlewareHandle() = default;
   };
 
   /**
@@ -66,8 +65,10 @@ class SpotImagePublisher {
    * @details This can be in production and to perform dependency injection in unit tests
    *
    * @param image_client_interface  A shared_ptr to an instance of a class that implements ImageClientInterface.
-   * @param middleware_handle A unique_ptr to an instance of a class that implements SpotImagePublisher::MiddlewareHandle
-   * @param has_arm A flag indicating if the Spot in use has an arm. Needed to generate image sources during initialization.
+   * @param middleware_handle A unique_ptr to an instance of a class that implements
+   * SpotImagePublisher::MiddlewareHandle
+   * @param has_arm A flag indicating if the Spot in use has an arm. Needed to generate image sources during
+   * initialization.
    */
   SpotImagePublisher(std::shared_ptr<ImageClientInterface> image_client_interface,
                      std::unique_ptr<MiddlewareHandle> middleware_handle, bool has_arm = false);

@@ -4,9 +4,9 @@
 
 #include <bosdyn/client/image/image_client.h>
 #include <bosdyn/client/sdk/client_sdk.h>
-#include <spot_driver_cpp/interfaces/image_client_interface.hpp>
 #include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <spot_driver_cpp/api/time_sync_api.hpp>
+#include <spot_driver_cpp/interfaces/image_client_interface.hpp>
 
 #include <memory>
 #include <string>
@@ -18,7 +18,7 @@ namespace spot_ros2 {
 class DefaultImageClient : public ImageClientInterface {
  public:
   DefaultImageClient(::bosdyn::client::ImageClient* image_client, std::shared_ptr<TimeSyncApi> time_sync_api,
-                        const std::string& robot_name);
+                     const std::string& robot_name);
   ~DefaultImageClient() = default;
 
   tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) override;

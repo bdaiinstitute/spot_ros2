@@ -200,7 +200,7 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
 namespace spot_ros2 {
 
 DefaultImageClient::DefaultImageClient(::bosdyn::client::ImageClient* image_client,
-                                             std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name)
+                                       std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name)
     : image_client_{image_client}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
 
 tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request) {

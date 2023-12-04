@@ -62,7 +62,9 @@ namespace spot_ros2::images {
 
 SpotImagePublisher::SpotImagePublisher(std::shared_ptr<ImageClientInterface> image_client_interface,
                                        std::unique_ptr<MiddlewareHandle> middleware_handle, bool has_arm)
-    : image_client_interface_{image_client_interface}, middleware_handle_{std::move(middleware_handle)}, has_arm_{has_arm} {}
+    : image_client_interface_{image_client_interface},
+      middleware_handle_{std::move(middleware_handle)},
+      has_arm_{has_arm} {}
 
 bool SpotImagePublisher::initialize() {
   // These parameters all fall back to default values if the user did not set them at runtime

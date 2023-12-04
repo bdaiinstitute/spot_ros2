@@ -92,10 +92,8 @@ class SpotImagePubNodeTestFixture : public ::testing::Test {
     mock_spot_api = std::make_unique<spot_ros2::test::MockSpotApi>();
     mock_middleware_handle = std::make_unique<MockMiddlewareHandle>();
 
-    ON_CALL(*mock_middleware_handle, parameter_interface())
-      .WillByDefault(Return(fake_parameter_interface.get()));
-    ON_CALL(*mock_middleware_handle, logger_interface())
-      .WillByDefault(Return(mock_logger_interface.get()));
+    ON_CALL(*mock_middleware_handle, parameter_interface()).WillByDefault(Return(fake_parameter_interface.get()));
+    ON_CALL(*mock_middleware_handle, logger_interface()).WillByDefault(Return(mock_logger_interface.get()));
   }
 
  protected:
@@ -115,8 +113,7 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_Success) {
   EXPECT_CALL(*mock_spot_api, image_client_interface).Times(1);
 
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_NO_THROW(
-      SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)));
+  EXPECT_NO_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)));
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_Create_Robot_failure) {
@@ -129,8 +126,7 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_Create_Robot_failure) {
   EXPECT_CALL(*mock_spot_api, image_client_interface).Times(0);
 
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)),
-               std::exception);
+  EXPECT_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)), std::exception);
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_Authentication_failure) {
@@ -145,8 +141,7 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_Authentication_failure) {
     EXPECT_CALL(*mock_spot_api, image_client_interface).Times(0);
   }
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)),
-               std::exception);
+  EXPECT_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)), std::exception);
 }
 
 TEST_F(SpotImagePubNodeTestFixture, Construction_hasArm_failure) {
@@ -159,8 +154,7 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_hasArm_failure) {
     EXPECT_CALL(*mock_spot_api, image_client_interface).Times(0);
   }
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)),
-               std::exception);
+  EXPECT_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)), std::exception);
 }
 
 }  // namespace spot_ros2::images::test

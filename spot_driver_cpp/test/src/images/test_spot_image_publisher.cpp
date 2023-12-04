@@ -83,7 +83,8 @@ class MockMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
 class TestInitSpotImagePublisher : public ::testing::Test {
  public:
   void create_image_publisher(bool has_arm) {
-    image_publisher = std::make_unique<SpotImagePublisher>(image_client_interface, std::move(middleware_handle), has_arm);
+    image_publisher =
+        std::make_unique<SpotImagePublisher>(image_client_interface, std::move(middleware_handle), has_arm);
   }
 
   std::shared_ptr<spot_ros2::test::MockImageClient> image_client_interface =
@@ -92,8 +93,7 @@ class TestInitSpotImagePublisher : public ::testing::Test {
   std::unique_ptr<SpotImagePublisher> image_publisher;
 };
 
-class TestRunSpotImagePublisher : public TestInitSpotImagePublisher {
-};
+class TestRunSpotImagePublisher : public TestInitSpotImagePublisher {};
 
 TEST_F(TestInitSpotImagePublisher, InitSucceeds) {
   // THEN expect createPublishers to be invoked

@@ -19,7 +19,7 @@ class SpotImagePublisherNode {
  public:
   SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api,
                          std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle);
-                         
+
   explicit SpotImagePublisherNode(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
   /**

@@ -3,10 +3,10 @@
 #include <spot_driver_cpp/images/spot_image_publisher_node.hpp>
 
 #include <spot_driver_cpp/api/default_spot_api.hpp>
+#include <spot_driver_cpp/images/images_middleware_handle.hpp>
 #include <spot_driver_cpp/images/spot_image_publisher.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
-#include <spot_driver_cpp/images/images_middleware_handle.hpp>
 
 namespace {
 constexpr auto kSDKClientName = "spot_image_publisher";
@@ -41,13 +41,14 @@ SpotImagePublisherNode::SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api
     throw std::runtime_error(error_msg);
   }
 
-  internal_ = std::make_unique<SpotImagePublisher>(spot_api_->image_client_interface(), std::move(mw_handle), expected_has_arm.value());
+  internal_ = std::make_unique<SpotImagePublisher>(spot_api_->image_client_interface(), std::move(mw_handle),
+                                                   expected_has_arm.value());
   internal_->initialize();
 }
 
 SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_options)
-  : SpotImagePublisherNode{std::make_unique<DefaultSpotApi>(kSDKClientName),
-                           std::make_unique<ImagesMiddlewareHandle>(node_options)} {}
+    : SpotImagePublisherNode{std::make_unique<DefaultSpotApi>(kSDKClientName),
+                             std::make_unique<ImagesMiddlewareHandle>(node_options)} {}
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotImagePublisherNode::get_node_base_interface() {
   return node_->get_node_base_interface();

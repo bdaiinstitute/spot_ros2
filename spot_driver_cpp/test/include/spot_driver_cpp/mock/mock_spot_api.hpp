@@ -2,8 +2,8 @@
 
 #include <gmock/gmock.h>
 
-#include <spot_driver_cpp/interfaces/image_client_interface.hpp>
 #include <spot_driver_cpp/api/spot_api.hpp>
+#include <spot_driver_cpp/interfaces/image_client_interface.hpp>
 
 #include <memory>
 #include <string>
