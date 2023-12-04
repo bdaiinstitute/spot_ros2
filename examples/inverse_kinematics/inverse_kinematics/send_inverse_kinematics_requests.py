@@ -50,10 +50,10 @@ def send_requests(robot_name: Optional[str] = None) -> bool:
         return False
     logger.info("Successfully stood up.")
 
-
-    
-
     # TODO: send an inverse kinematic request.
+
+    # logger.info("docking robot")
+    #     self._robot.dock(527)
 
     return True
 

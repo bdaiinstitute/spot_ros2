@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = "inverse_kinematic_requests"
+package_name = "inverse_kinematics"
 
 setup(
     name=package_name,
@@ -19,7 +19,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "send_inverse_kinematic_requests = inverse_kinematic_requests.send_inverse_kinematic_requests:main",
+            "send_inverse_kinematic_requests = inverse_kinematics.send_inverse_kinematic_requests:main",
         ],
     },
 )
