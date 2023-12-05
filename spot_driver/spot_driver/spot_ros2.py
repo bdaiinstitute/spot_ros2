@@ -1563,7 +1563,13 @@ class SpotROS(Node):
             else:
                 return GoalResponse.FAILED
         elif choice == fb.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET:
-            self.get_logger().warn("WARNING: ArmImpedanceCommand provides no feedback")
+            if (
+                fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_STALLED
+                or fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_UNKNOWN
+            ):
+                return GoalResponse.FAILED
+            if fb.arm_impedance_feedback.status.value != fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_COMPLETE:
+                return GoalResponse.IN_PROGRESS
         else:
             self.get_logger().error("ERROR: unknown arm command type")
             return GoalResponse.IN_PROGRESS
