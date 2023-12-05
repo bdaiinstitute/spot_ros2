@@ -368,13 +368,11 @@ class SpotROS(Node):
         )
         self.tf_name_raw_vision: str = self.frame_prefix + "vision"
 
-        if (
-            self.preferred_odom_frame.value != self.tf_name_raw_kinematic
-            and self.preferred_odom_frame.value != self.tf_name_raw_vision
-        ):
+        preferred_odom_frame_references = [self.tf_name_raw_kinematic, self.tf_name_raw_vision]
+        if self.preferred_odom_frame.value not in preferred_odom_frame_references:
             error_msg = (
-                f'rosparam "preferred_odom_frame" should be "{self.tf_name_raw_kinematic}" or'
-                f' "{self.tf_name_raw_vision}".'
+                f'rosparam "preferred_odom_frame" should be one of {preferred_odom_frame_references}, got'
+                f' "{self.preferred_odom_frame.value}"'
             )
             self.get_logger().error(error_msg)
             raise ValueError(error_msg)
