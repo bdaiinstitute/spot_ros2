@@ -192,6 +192,14 @@ class SpotImageType(str, Enum):
     RegDepth = "depth_registered"
 
 
+def set_node_parameter_from_parameter_list(
+    node: Node, parameter_list: Optional[typing.List[Parameter]], parameter_name: str
+) -> None:
+    """Set parameters when the node starts not from a launch file."""
+    if parameter_list is not None:
+        node.set_parameters([parameter for parameter in parameter_list if parameter.name == parameter_name])
+
+
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
@@ -252,6 +260,9 @@ class SpotROS(Node):
 
         self.declare_parameter("spot_name", "")
         self.declare_parameter("mock_enable", False)
+
+        # If `mock_enable:=True`, then there are additional parameters. We must set this one separately.
+        set_node_parameter_from_parameter_list(self, parameter_list, "mock_enable")
         if self.get_parameter("mock_enable").value:
             self.declare_parameter("mock_has_arm", rclpy.Parameter.Type.BOOL)
 
