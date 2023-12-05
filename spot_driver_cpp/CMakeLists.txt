@@ -28,10 +28,15 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 endforeach()
 
 add_library(spot_api
+  src/interfaces/rclcpp_logger_interface.cpp
+  src/interfaces/rclcpp_parameter_interface.cpp
+  src/interfaces/rclcpp_tf_interface.cpp
+  src/interfaces/rclcpp_wall_timer_interface.cpp
   src/api/default_image_client.cpp
   src/api/default_spot_api.cpp
   src/api/default_time_sync_api.cpp
   src/api/spot_image_sources.cpp
+  src/api/default_robot_state_client.cpp
 )
 
 target_include_directories(spot_api PUBLIC
@@ -45,10 +50,6 @@ ament_target_dependencies(spot_api PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
 # Base library containing the SpotImagePublisherNode class
 add_library(spot_image_publisher
-  src/interfaces/rclcpp_logger_interface.cpp
-  src/interfaces/rclcpp_parameter_interface.cpp
-  src/interfaces/rclcpp_tf_interface.cpp
-  src/interfaces/rclcpp_wall_timer_interface.cpp
   src/images/spot_image_publisher.cpp
   src/images/images_middleware_handle.cpp
   src/images/spot_image_publisher_node.cpp
@@ -61,6 +62,10 @@ target_include_directories(spot_image_publisher
 target_link_libraries(spot_image_publisher PUBLIC spot_api)
 set_property(TARGET spot_image_publisher PROPERTY POSITION_INDEPENDENT_CODE ON)
 ament_target_dependencies(spot_image_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
+
+# Base library container SpotRobotStatePublisher
+# add_library(spot_robot_state_publisher
+  # src/robot_state/ )
 
 # Create executable to allow running SpotImagePublisherNode directly as a ROS 2 node
 add_executable(spot_image_publisher_node src/images/spot_image_publisher_node_main.cpp)
@@ -80,6 +85,8 @@ target_include_directories(spot_image_publisher_component
 )
 target_link_libraries(spot_image_publisher_component PUBLIC spot_image_publisher)
 ament_target_dependencies(spot_image_publisher PUBLIC rclcpp_components)
+
+
 
 rclcpp_components_register_node(
   spot_image_publisher_component

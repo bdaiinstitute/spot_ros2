@@ -2,6 +2,7 @@
 
 #include <spot_driver_cpp/api/default_image_client.hpp>
 
+#include <spot_driver_cpp/conversions/geometry.hpp>
 #include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>
 #include <cv_bridge/cv_bridge.h>
@@ -173,23 +174,10 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
     const auto parent_frame_id =
         (transform.parent_frame_name() == "arm0.link_wr1") ? "link_wr1" : transform.parent_frame_name();
 
-    geometry_msgs::msg::TransformStamped tform_msg;
-    tform_msg.header.stamp = spot_ros2::applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
-
-    // If robot_name is an empty string, omit the leading `/` from the transform parent and child frame IDs.
-    tform_msg.header.frame_id = robot_name.empty() ? parent_frame_id : (robot_name + "/" + parent_frame_id);
-    tform_msg.child_frame_id = robot_name.empty() ? child_frame_id : (robot_name + "/" + child_frame_id);
-
-    const auto& position = transform.parent_tform_child().position();
-    tform_msg.transform.translation =
-        geometry_msgs::build<geometry_msgs::msg::Vector3>().x(position.x()).y(position.y()).z(position.z());
-
-    const auto& rotation = transform.parent_tform_child().rotation();
-    tform_msg.transform.rotation = geometry_msgs::build<geometry_msgs::msg::Quaternion>()
-                                       .x(rotation.x())
-                                       .y(rotation.y())
-                                       .z(rotation.z())
-                                       .w(rotation.w());
+    const auto tform_msg = toTransformStamped(transform.parent_tform_child(),
+      robot_name.empty() ? parent_frame_id : (robot_name + "/" + parent_frame_id),
+      robot_name.empty() ? child_frame_id : (robot_name + "/" + child_frame_id),
+      spot_ros2::applyClockSkew(image_response.shot().acquisition_time(), clock_skew));
 
     out.push_back(tform_msg);
   }
