@@ -17,11 +17,58 @@ from std_srvs.srv import Trigger
 
 from spot_msgs.srv import GetInverseKinematicSolutions
 
+import bosdyn_msgs.msg
+import geometry_msgs.msg
 
-def kinematic_request() -> GetInverseKinematicSolutions.Request:
-    request = GetInverseKinematicSolutions.Request()
-    request.request.header.client_name = "kinematic_client"
-    request.request.header_is_set = True
+
+def kinematic_request() -> bosdyn_msgs.msg.InverseKinematicsRequest:
+
+    # Task frame.
+    task_frame = geometry_msgs.msg.Pose()
+    task_frame.position.x = 0.0
+    task_frame.position.y = 0.0
+    task_frame.position.z = 0.0
+    task_frame.orientation.w = 1.0
+    task_frame.orientation.x = 0.0
+    task_frame.orientation.y = 0.0
+    task_frame.orientation.z = 0.0
+
+    # Tool frame.
+    tools_specification = bosdyn_msgs.msg.InverseKinematicsRequestOneOfToolSpecification()
+    tools_specification.tool_specification_choice = (
+        bosdyn_msgs.msg.InverseKinematicsRequestOneOfToolSpecification.TOOL_SPECIFICATION_WRIST_MOUNTED_TOOL_SET
+    )
+    tools_specification.wrist_mounted_tool.wrist_tform_tool_is_set = True
+    tools_specification.wrist_mounted_tool.wrist_tform_tool.position.x = 0.0
+    tools_specification.wrist_mounted_tool.wrist_tform_tool.position.y = 0.0
+    tools_specification.wrist_mounted_tool.wrist_tform_tool.position.z = 0.0
+    tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.w = 1.0
+    tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.x = 0.0
+    tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.y = 0.0
+    tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.z = 0.0
+
+    # Task specificarion.
+    task_specification = bosdyn_msgs.msg.InverseKinematicsRequestOneOfTaskSpecification()
+    task_specification.task_specification_choice = (
+        bosdyn_msgs.msg.InverseKinematicsRequestOneOfTaskSpecification.TASK_SPECIFICATION_TOOL_POSE_TASK_SET
+    )
+    task_specification.tool_pose_task.task_tform_desired_tool_is_set = True
+    task_specification.tool_pose_task.task_tform_desired_tool.position.x = 0.0
+    task_specification.tool_pose_task.task_tform_desired_tool.position.y = 0.0
+    task_specification.tool_pose_task.task_tform_desired_tool.position.z = 0.0
+    task_specification.tool_pose_task.task_tform_desired_tool.orientation.w = 1.0
+    task_specification.tool_pose_task.task_tform_desired_tool.orientation.x = 0.0
+    task_specification.tool_pose_task.task_tform_desired_tool.orientation.y = 0.0
+    task_specification.tool_pose_task.task_tform_desired_tool.orientation.z = 0.0
+
+    # Request.
+    request = bosdyn_msgs.msg.InverseKinematicsRequest()
+    request.root_frame_name = "odom"
+    request.scene_tform_task_is_set = True
+    request.scene_tform_task = task_frame
+    request.tool_specification = tools_specification
+    request.task_specification = task_specification
+
     return request
 
 
@@ -72,20 +119,24 @@ def send_requests(robot_name: str, poses: int) -> bool:
     response = kinematics_client.call(request)
 
     # Power off robot.
-    logger.info("Powering robot off")
-    result = robot.power_off()
-    if not result:
-        logger.error("Unable to power off robot")
-        return False
+    # logger.info("Powering robot off")
+    # result = robot.power_off()
+    # if not result:
+    #     logger.error("Unable to power off robot")
+    #     return False
 
     return True
 
 
-def main() -> None:
+def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--robot", type=str, required=True, help="The robot name.")
     parser.add_argument("-n", "--poses", type=int, default=50, help="Number of desired tool poses to query.")
-    args = parser.parse_args()
+    return parser
+
+
+@ros_process.main(cli())
+def main(args: argparse.Namespace) -> None:
     send_requests(args.robot, args.poses)
 
 

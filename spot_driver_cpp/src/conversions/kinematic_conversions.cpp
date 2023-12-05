@@ -70,11 +70,13 @@ void convert_bosdyn_msgs_inverse_kinematics_request_body_mounted_tool_to_proto(
 void convert_bosdyn_msgs_inverse_kinematics_request_one_of_tool_specification_to_proto(
     const bosdyn_msgs::msg::InverseKinematicsRequestOneOfToolSpecification& ros_msg,
     bosdyn::api::spot::InverseKinematicsRequest& proto) {
-  if (ros_msg.tool_specification_choice == ros_msg.TOOL_SPECIFICATION_WRIST_MOUNTED_TOOL_SET) {
+  if (ros_msg.tool_specification_choice ==
+      bosdyn_msgs::msg::InverseKinematicsRequestOneOfToolSpecification::TOOL_SPECIFICATION_WRIST_MOUNTED_TOOL_SET) {
     convert_bosdyn_msgs_inverse_kinematics_request_wrist_mounted_tool_to_proto(ros_msg.wrist_mounted_tool,
                                                                                *proto.mutable_wrist_mounted_tool());
   }
-  if (ros_msg.tool_specification_choice == ros_msg.TOOL_SPECIFICATION_BODY_MOUNTED_TOOL_SET) {
+  if (ros_msg.tool_specification_choice ==
+      bosdyn_msgs::msg::InverseKinematicsRequestOneOfToolSpecification::TOOL_SPECIFICATION_BODY_MOUNTED_TOOL_SET) {
     convert_bosdyn_msgs_inverse_kinematics_request_body_mounted_tool_to_proto(ros_msg.body_mounted_tool,
                                                                               *proto.mutable_body_mounted_tool());
   }
