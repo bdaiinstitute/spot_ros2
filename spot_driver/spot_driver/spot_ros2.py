@@ -403,6 +403,12 @@ class SpotROS(Node):
                 except SystemError:
                     self.spot_cam_wrapper = None
 
+            if self.frame_prefix != self.spot_wrapper.frame_prefix:
+                self.get_logger().warn(
+                    f"WARNING: disagreement between `self.frame_prefix` ({self.frame_prefix}) and"
+                    f" `self.spot_wrapper.frame_prefix` ({self.spot_wrapper.frame_prefix})"
+                )
+
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
         has_arm = self.mock_has_arm
         if self.spot_wrapper is not None:
@@ -2350,11 +2356,10 @@ class SpotROS(Node):
         # We exclude the odometry frames from static transforms since they are not static. We can ignore the body
         # frame because it is a child of odom or vision depending on the preferred_odom_frame, and will be published
         # by the non-static transform publishing that is done by the state callback
-        frame_prefix = self.name + "/"
         excluded_frames = [
             self.tf_name_vision_odom.value,
             self.tf_name_kinematic_odom.value,
-            frame_prefix + "body",
+            self.frame_prefix + "body",
         ]
         excluded_frames = [f[f.rfind("/") + 1 :] for f in excluded_frames]
 
@@ -2388,8 +2393,8 @@ class SpotROS(Node):
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
             ]
             if (
-                frame_prefix + parent_frame,
-                frame_prefix + frame_name,
+                self.frame_prefix + parent_frame,
+                self.frame_prefix + frame_name,
             ) in existing_transforms:
                 # We already extracted this transform
                 continue
@@ -2404,7 +2409,7 @@ class SpotROS(Node):
                 parent_frame,
                 frame_name,
                 transform.parent_tform_child,
-                frame_prefix,
+                self.frame_prefix,
             )
             self.camera_static_transforms.append(static_tf)
             self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
