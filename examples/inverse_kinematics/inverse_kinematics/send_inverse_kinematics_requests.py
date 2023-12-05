@@ -1,3 +1,7 @@
+#!/usr/bin/python3
+
+# Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+
 import argparse
 from typing import Optional
 
@@ -6,20 +10,22 @@ import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.utilities import namespace_with
 from utilities.tf_listener_wrapper import TFListenerWrapper
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
-from utilities.simple_spot_commander import SimpleSpotCommander
 from spot_utilities.spot_basic import SpotBasic
 
 from spot_msgs.srv import Dock
 from std_srvs.srv import Trigger
 
-
-def cli() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--robot", type=str, default=None)
-    return parser
+from spot_msgs.srv import GetInverseKinematicSolutions
 
 
-def send_requests(robot_name: Optional[str] = None) -> bool:
+def kinematic_request() -> GetInverseKinematicSolutions.Request:
+    request = GetInverseKinematicSolutions.Request()
+    request.request.header.client_name = "kinematic_client"
+    request.request.header_is_set = True
+    return request
+
+
+def send_requests(robot_name: str, poses: int) -> bool:
 
     # Set up basic ROS2 utilities for communicating with the driver.
     node = ros_scope.node()
@@ -57,12 +63,13 @@ def send_requests(robot_name: Optional[str] = None) -> bool:
         return False
     logger.info("Successfully stood up.")
 
-    # # Dock robot.
-    # logger.info("docking robot")
-    # result = robot.dock(527)
-    # if not result:
-    #     logger.error("Robot did not docked succesfully")
-    #     return False
+    # Send inverse kinematic requests.
+    kinematics_client = node.create_client(GetInverseKinematicSolutions, "get_inverse_kinematics_solutions")
+    if not kinematics_client.wait_for_service():
+        logger.info("Service get_inverse_kinematics_solutions not available.")
+        return False
+    request = kinematic_request()
+    response = kinematics_client.call(request)
 
     # Power off robot.
     logger.info("Powering robot off")
@@ -74,9 +81,12 @@ def send_requests(robot_name: Optional[str] = None) -> bool:
     return True
 
 
-@ros_process.main(cli())
-def main(args: argparse.Namespace) -> None:
-    send_requests(args.robot)
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--robot", type=str, required=True, help="The robot name.")
+    parser.add_argument("-n", "--poses", type=int, default=50, help="Number of desired tool poses to query.")
+    args = parser.parse_args()
+    send_requests(args.robot, args.poses)
 
 
 if __name__ == "__main__":
