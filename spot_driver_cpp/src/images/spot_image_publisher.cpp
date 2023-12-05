@@ -6,7 +6,7 @@
 #include <rclcpp/node.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <spot_driver_cpp/api/default_image_client_api.hpp>
+#include <spot_driver_cpp/api/default_image_client.hpp>
 #include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <spot_driver_cpp/images/images_middleware_handle.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
@@ -60,13 +60,11 @@ namespace spot_ros2::images {
   return request_message;
 }
 
-SpotImagePublisher::SpotImagePublisher(std::shared_ptr<ImageClientApi> image_client_api,
+SpotImagePublisher::SpotImagePublisher(std::shared_ptr<ImageClientInterface> image_client_interface,
                                        std::unique_ptr<MiddlewareHandle> middleware_handle, bool has_arm)
-    : image_client_api_{image_client_api}, middleware_handle_{std::move(middleware_handle)}, has_arm_{has_arm} {}
-
-SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node,
-                                       std::shared_ptr<ImageClientApi> image_client_api, bool has_arm)
-    : SpotImagePublisher(image_client_api, std::make_unique<ImagesMiddlewareHandle>(node), has_arm) {}
+    : image_client_interface_{image_client_interface},
+      middleware_handle_{std::move(middleware_handle)},
+      has_arm_{has_arm} {}
 
 bool SpotImagePublisher::initialize() {
   // These parameters all fall back to default values if the user did not set them at runtime
@@ -101,7 +99,7 @@ void SpotImagePublisher::timerCallback() {
     return;
   }
 
-  const auto image_result = image_client_api_->getImages(*image_request_message_);
+  const auto image_result = image_client_interface_->getImages(*image_request_message_);
   if (!image_result.has_value()) {
     middleware_handle_->logger_interface()->logError(
         std::string{"Failed to get images: "}.append(image_result.error()));

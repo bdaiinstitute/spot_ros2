@@ -8,8 +8,8 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <set>
-#include <spot_driver_cpp/api/image_client_api.hpp>
 #include <spot_driver_cpp/api/spot_image_sources.hpp>
+#include <spot_driver_cpp/interfaces/image_client_interface.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
@@ -42,7 +42,11 @@ namespace spot_ros2::images {
  */
 class SpotImagePublisher {
  public:
-  struct MiddlewareHandle {
+  /**
+   * @brief A handle class around rclcpp::Node operations for SpotImagePublisher
+   */
+  class MiddlewareHandle {
+   public:
     virtual void createPublishers(const std::set<ImageSource>& image_sources) = 0;
     virtual tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
 
@@ -50,6 +54,7 @@ class SpotImagePublisher {
     virtual LoggerInterfaceBase* logger_interface() = 0;
     virtual TfInterfaceBase* tf_interface() = 0;
     virtual TimerInterfaceBase* timer_interface() = 0;
+    virtual std::shared_ptr<rclcpp::Node> node() = 0;
 
     virtual ~MiddlewareHandle() = default;
   };
@@ -57,27 +62,16 @@ class SpotImagePublisher {
   /**
    * @brief Constructor for SpotImagePublisher, which allows setting the specific implementation of the interface
    * classes which are used by the node.
-   * @details This is used to perform dependency injection in unit tests.
+   * @details This can be in production and to perform dependency injection in unit tests
    *
-   * @param image_client_api  A unique_ptr to an instance of a class that implements ImageClientApi.
-   * @param timer_interface A unique_ptr to an instance of a class that implements TimerInterfaceBase.
-   * @param publisher_interface  A unique_ptr to an instance of a class that implements PublisherInterfaceBase.
-   * @param parameter_interface  A unique_ptr to an instance of a class that implements ParameterInterfaceBase.
-   * @param tf_interface  A unique_ptr to an instance of a class that implements TfInterfaceBase.
+   * @param image_client_interface  A shared_ptr to an instance of a class that implements ImageClientInterface.
+   * @param middleware_handle A unique_ptr to an instance of a class that implements
+   * SpotImagePublisher::MiddlewareHandle
+   * @param has_arm A flag indicating if the Spot in use has an arm. Needed to generate image sources during
+   * initialization.
    */
-  SpotImagePublisher(std::shared_ptr<ImageClientApi> image_client_api,
+  SpotImagePublisher(std::shared_ptr<ImageClientInterface> image_client_interface,
                      std::unique_ptr<MiddlewareHandle> middleware_handle, bool has_arm = false);
-
-  /**
-   * @brief Constuctor for SpotImagePublisher, which creates instances of rclcpp-specialized interface classes
-   * using the provided node.
-   *
-   * @param node ROS 2 node to use when creating the interfaces.
-   * @param image_client_api Spot SDK service client that can retrieve image data from spot cameras
-   * @param has_arm get hand camera data if arm is a part of the current configuration
-   */
-  explicit SpotImagePublisher(const std::shared_ptr<rclcpp::Node>& node,
-                              std::shared_ptr<ImageClientApi> image_client_api, bool has_arm = false);
 
   /**
    * @brief Connect to Spot and start publishing image data.
@@ -103,7 +97,7 @@ class SpotImagePublisher {
   std::optional<::bosdyn::api::GetImageRequest> image_request_message_;
 
   // Interface classes to interact with Spot and the middleware.
-  std::shared_ptr<ImageClientApi> image_client_api_;
+  std::shared_ptr<ImageClientInterface> image_client_interface_;
   std::unique_ptr<MiddlewareHandle> middleware_handle_;
   bool has_arm_;
 };

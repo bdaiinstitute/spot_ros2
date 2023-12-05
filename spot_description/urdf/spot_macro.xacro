@@ -8,7 +8,7 @@
         <link name="${tf_prefix}body">
             <visual>
                 <geometry>
-                    <mesh filename="package://spot_description/meshes/base/visual/body.dae" />
+                    <mesh filename="package://spot_description/meshes/base/visual/body.obj" />
                 </geometry>
             </visual>
             <collision>
@@ -64,7 +64,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/front_left_hip.dae" />
+                        filename="package://spot_description/meshes/base/visual/front_left_hip.obj" />
                 </geometry>
             </visual>
             <inertial>
@@ -87,7 +87,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/front_left_upper_leg.dae" />
+                        filename="package://spot_description/meshes/base/visual/front_left_upper_leg.obj" />
                 </geometry>
             </visual>
             <collision>
@@ -116,7 +116,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/front_left_lower_leg.dae" />
+                        filename="package://spot_description/meshes/base/visual/front_left_lower_leg.obj" />
                 </geometry>
             </visual>
             <collision>
@@ -150,7 +150,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/front_right_hip.dae" />
+                        filename="package://spot_description/meshes/base/visual/front_right_hip.obj" />
                 </geometry>
             </visual>
             <inertial>
@@ -173,7 +173,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/front_right_upper_leg.dae" />
+                        filename="package://spot_description/meshes/base/visual/front_right_upper_leg.obj" />
                 </geometry>
             </visual>
             <collision>
@@ -202,7 +202,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/front_right_lower_leg.dae" />
+                        filename="package://spot_description/meshes/base/visual/front_right_lower_leg.obj" />
                 </geometry>
             </visual>
             <collision>
@@ -236,7 +236,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/rear_left_hip.dae" />
+                        filename="package://spot_description/meshes/base/visual/rear_left_hip.obj" />
                 </geometry>
             </visual>
             <inertial>
@@ -259,7 +259,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/rear_left_upper_leg.dae" />
+                        filename="package://spot_description/meshes/base/visual/rear_left_upper_leg.obj" />
                 </geometry>
             </visual>
             <collision>
@@ -288,7 +288,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/rear_left_lower_leg.dae" />
+                        filename="package://spot_description/meshes/base/visual/rear_left_lower_leg.obj" />
                 </geometry>
             </visual>
             <collision>
@@ -322,7 +322,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/rear_right_hip.dae" />
+                        filename="package://spot_description/meshes/base/visual/rear_right_hip.obj" />
                 </geometry>
             </visual>
             <inertial>
@@ -345,7 +345,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/rear_right_upper_leg.dae" />
+                        filename="package://spot_description/meshes/base/visual/rear_right_upper_leg.obj" />
                 </geometry>
             </visual>
             <collision>
@@ -374,7 +374,7 @@
             <visual>
                 <geometry>
                     <mesh
-                        filename="package://spot_description/meshes/base/visual/rear_right_lower_leg.dae" />
+                        filename="package://spot_description/meshes/base/visual/rear_right_lower_leg.obj" />
                 </geometry>
             </visual>
             <collision>

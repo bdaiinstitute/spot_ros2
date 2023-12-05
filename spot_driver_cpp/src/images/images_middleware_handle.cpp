@@ -17,12 +17,15 @@ constexpr auto kCameraInfoTopicSuffix = "camera_info";
 
 namespace spot_ros2::images {
 
-ImagesMiddlewareHandle::ImagesMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node)
+ImagesMiddlewareHandle::ImagesMiddlewareHandle(std::shared_ptr<rclcpp::Node> node)
     : node_{node},
       parameter_interface_{std::make_unique<RclcppParameterInterface>(node)},
       logger_interface_{std::make_unique<RclcppLoggerInterface>(node->get_logger())},
       tf_interface_{std::make_unique<RclcppTfInterface>(node)},
       timer_interface_{std::make_unique<RclcppWallTimerInterface>(node)} {}
+
+ImagesMiddlewareHandle::ImagesMiddlewareHandle(const rclcpp::NodeOptions& node_options)
+    : ImagesMiddlewareHandle(std::make_shared<rclcpp::Node>("image_publisher", node_options)) {}
 
 void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image_sources) {
   image_publishers_.clear();

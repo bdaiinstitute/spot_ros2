@@ -28,8 +28,8 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 endforeach()
 
 add_library(spot_api
-  src/api/default_image_client_api.cpp
   src/api/default_kinematic_api.cpp
+  src/api/default_image_client.cpp
   src/api/default_spot_api.cpp
   src/api/default_time_sync_api.cpp
   src/api/spot_image_sources.cpp
