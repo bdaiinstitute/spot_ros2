@@ -104,8 +104,8 @@ tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(
   info_msg.header.stamp = applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
 
   // We assume that the camera images have already been corrected for distortion, so the 5 distortion parameters are all
-  // zero
-  info_msg.d = std::vector<double>{5, 0.0};
+  // zero.
+  info_msg.d = std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0};
 
   // Set the rectification matrix to identity, since this is not a stereo pair.
   info_msg.r[0] = 1.0;
