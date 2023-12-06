@@ -57,6 +57,6 @@ void KinematicNode::initialize(std::shared_ptr<rclcpp::Node> node, std::unique_p
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> KinematicNode::get_node_base_interface() {
-  return std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>();
+  return node_->get_node_base_interface();
 }
 }  // namespace spot_ros2::kinematic
