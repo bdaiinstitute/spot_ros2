@@ -3,25 +3,18 @@
 # Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 import argparse
-from typing import Optional
-
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
-from bdai_ros2_wrappers.utilities import namespace_with
-from utilities.tf_listener_wrapper import TFListenerWrapper
-from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
-from spot_utilities.spot_basic import SpotBasic
-
-from spot_msgs.srv import Dock
-from std_srvs.srv import Trigger
-
-from spot_msgs.srv import GetInverseKinematicSolutions
-
 import bosdyn_msgs.msg
 import geometry_msgs.msg
+from bdai_ros2_wrappers.utilities import namespace_with
+from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
+from spot_utilities.spot_basic import SpotBasic
+from utilities.tf_listener_wrapper import TFListenerWrapper
+from spot_msgs.srv import GetInverseKinematicSolutions
 
 
-def kinematic_request() -> bosdyn_msgs.msg.InverseKinematicsRequest:
+def create_kinematic_request() -> bosdyn_msgs.msg.InverseKinematicsRequest:
 
     # Task frame.
     task_frame = geometry_msgs.msg.Pose()
@@ -110,12 +103,12 @@ def send_requests(robot_name: str, poses: int) -> bool:
         return False
     logger.info("Successfully stood up.")
 
-    # Send inverse kinematic requests.
+    # Send inverse kinematic request.
     kinematics_client = node.create_client(GetInverseKinematicSolutions, "get_inverse_kinematics_solutions")
     if not kinematics_client.wait_for_service():
         logger.info("Service get_inverse_kinematics_solutions not available.")
         return False
-    request = kinematic_request()
+    request = create_kinematic_request()
     response = kinematics_client.call(request)
 
     # Power off robot.
