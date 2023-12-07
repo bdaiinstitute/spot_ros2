@@ -3,6 +3,7 @@
 # Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 import argparse
+
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 import bosdyn_msgs.msg
@@ -11,10 +12,11 @@ from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
 from spot_utilities.spot_basic import SpotBasic
 from utilities.tf_listener_wrapper import TFListenerWrapper
-from spot_msgs.srv import GetInverseKinematicSolutions
+
+import spot_msgs.srv
 
 
-def create_kinematic_request() -> bosdyn_msgs.msg.InverseKinematicsRequest:
+def create_kinematic_request() -> spot_msgs.srv.GetInverseKinematicSolutions.Request:
 
     # Task frame.
     task_frame = geometry_msgs.msg.Pose()
@@ -62,7 +64,10 @@ def create_kinematic_request() -> bosdyn_msgs.msg.InverseKinematicsRequest:
     request.tool_specification = tools_specification
     request.task_specification = task_specification
 
-    return request
+    result = spot_msgs.srv.GetInverseKinematicSolutions.Request()
+    result.request = request
+
+    return result
 
 
 def send_requests(robot_name: str, poses: int) -> bool:
@@ -103,20 +108,24 @@ def send_requests(robot_name: str, poses: int) -> bool:
         return False
     logger.info("Successfully stood up.")
 
+    request = create_kinematic_request()
+
     # Send inverse kinematic request.
-    kinematics_client = node.create_client(GetInverseKinematicSolutions, "get_inverse_kinematics_solutions")
+    kinematics_client = node.create_client(
+        spot_msgs.srv.GetInverseKinematicSolutions, namespace_with(robot_name, "get_inverse_kinematic_solutions")
+    )
     if not kinematics_client.wait_for_service():
         logger.info("Service get_inverse_kinematics_solutions not available.")
         return False
-    request = create_kinematic_request()
+
     response = kinematics_client.call(request)
 
     # Power off robot.
-    # logger.info("Powering robot off")
-    # result = robot.power_off()
-    # if not result:
-    #     logger.error("Unable to power off robot")
-    #     return False
+    logger.info("Powering robot off")
+    result = robot.power_off()
+    if not result:
+        logger.error("Unable to power off robot")
+        return False
 
     return True
 
