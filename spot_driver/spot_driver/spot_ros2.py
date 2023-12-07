@@ -415,10 +415,12 @@ class SpotROS(Node):
                     self.spot_cam_wrapper = None
 
             if self.frame_prefix != self.spot_wrapper.frame_prefix:
-                self.get_logger().warn(
-                    f"WARNING: disagreement between `self.frame_prefix` ({self.frame_prefix}) and"
+                error_msg = (
+                    f"ERROR: disagreement between `self.frame_prefix` ({self.frame_prefix}) and"
                     f" `self.spot_wrapper.frame_prefix` ({self.spot_wrapper.frame_prefix})"
                 )
+                self.get_logger().error(error_msg)
+                raise ValueError(error_msg)
 
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
         has_arm = self.mock_has_arm
