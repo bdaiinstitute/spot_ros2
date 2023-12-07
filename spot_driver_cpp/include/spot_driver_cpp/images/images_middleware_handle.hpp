@@ -54,7 +54,6 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
   LoggerInterfaceBase* logger_interface() override { return logger_interface_.get(); }
   TfInterfaceBase* tf_interface() override { return tf_interface_.get(); }
   TimerInterfaceBase* timer_interface() override { return timer_interface_.get(); }
-
   std::shared_ptr<rclcpp::Node> node() override { return node_; }
 
  private:
