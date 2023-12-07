@@ -2,7 +2,6 @@
 
 #include <spot_driver_cpp/api/default_image_client.hpp>
 
-#include <spot_driver_cpp/conversions/geometry.hpp>
 #include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>
 #include <cv_bridge/cv_bridge.h>
@@ -17,6 +16,7 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver_cpp/api/default_time_sync_api.hpp>
 #include <spot_driver_cpp/api/spot_image_sources.hpp>
+#include <spot_driver_cpp/conversions/geometry.hpp>
 #include <spot_driver_cpp/types.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <tl_expected/expected.hpp>
@@ -174,10 +174,10 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
     const auto parent_frame_id =
         (transform.parent_frame_name() == "arm0.link_wr1") ? "link_wr1" : transform.parent_frame_name();
 
-    const auto tform_msg = toTransformStamped(transform.parent_tform_child(),
-      robot_name.empty() ? parent_frame_id : (robot_name + "/" + parent_frame_id),
-      robot_name.empty() ? child_frame_id : (robot_name + "/" + child_frame_id),
-      spot_ros2::applyClockSkew(image_response.shot().acquisition_time(), clock_skew));
+    const auto tform_msg = spot_ros2::conversions::toTransformStamped(
+        transform.parent_tform_child(), robot_name.empty() ? parent_frame_id : (robot_name + "/" + parent_frame_id),
+        robot_name.empty() ? child_frame_id : (robot_name + "/" + child_frame_id),
+        spot_ros2::applyClockSkew(image_response.shot().acquisition_time(), clock_skew));
 
     out.push_back(tform_msg);
   }

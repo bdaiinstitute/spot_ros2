@@ -19,6 +19,7 @@ set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
   tf2_ros
   tl_expected
   spot_msgs
+  nav_msgs
 )
 
 find_package(ament_cmake REQUIRED)
