@@ -6,8 +6,8 @@
 #include <spot_driver_cpp/api/time_sync_api.hpp>
 #include <spot_driver_cpp/interfaces/robot_state_client_interface.hpp>
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace spot_ros2 {
 
