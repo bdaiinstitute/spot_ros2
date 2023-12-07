@@ -8,11 +8,11 @@ DefaultKinematicApi::DefaultKinematicApi(bosdyn::client::InverseKinematicsClient
 
 tl::expected<Result<InverseKinematicsResponse>, std::string> DefaultKinematicApi::get_solutions(
     InverseKinematicsRequest& request) {
-  auto result = kinematic_client_->InverseKinematics(request);
-  if (!result.status) {
-    return tl::make_unexpected("Failed to get solutios: " + result.status.DebugString());
+  try {
+    return kinematic_client_->InverseKinematics(request);
+  } catch (const std::exception& ex) {
+    return tl::make_unexpected("Failed to query the InverseKinematics service: " + std::string{ex.what()});
   }
-  return result;
 }
 
 }  // namespace spot_ros2

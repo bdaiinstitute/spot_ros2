@@ -36,10 +36,11 @@ void KinematicService::service_callback_(const std::shared_ptr<GetInverseKinemat
 
   auto expected = kinematic_api_->get_solutions(proto_request);
   if (!expected) {
-    logger_->logError(std::string{"Error searching for an InverseKinematic solution: "}.append(expected.error()));
+    logger_->logError(std::string{"Error quering the Inverse Kinematics service: "}.append(expected.error()));
+    response->response.status.value = bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_UNKNOWN;
+  } else {
+    kinematic_conversions::convert_proto_to_bosdyn_msgs_inverse_kinematics_response(expected.value().response,
+                                                                                    response->response);
   }
-
-  kinematic_conversions::convert_proto_to_bosdyn_msgs_inverse_kinematics_response(expected.value().response,
-                                                                                  response->response);
 }
 }  // namespace spot_ros2::kinematic
