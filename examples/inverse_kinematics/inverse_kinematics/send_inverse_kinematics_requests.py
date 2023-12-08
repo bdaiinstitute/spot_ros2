@@ -156,6 +156,7 @@ class IKTest:
         self.logger.info("Successfully stood up.")
 
         # Look for known transforms.
+
         odom_T_flat_body: SE3Pose = self.tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name)
         odom_T_gpe: SE3Pose = self.tf_listener.lookup_a_tform_b(odom_frame_name, ground_plane_frame_name)
 
