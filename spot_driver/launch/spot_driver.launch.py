@@ -114,15 +114,21 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
+    mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
 
-    # Get parameters from Spot.
+    if not mock_enable:
+        # Get parameters from Spot.
+        # TODO this deviates from the `get_from_env_and_fall_back_to_param` logic in `spot_ros2.py`,
+        # which would pull in values in `config_file`
+        username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
+        password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
+        hostname = os.getenv("SPOT_IP", "hostname")
 
-    username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
-    password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
-    hostname = os.getenv("SPOT_IP", "hostname")
-
-    spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
-    has_arm = spot_wrapper.has_arm()
+        spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
+        has_arm = spot_wrapper.has_arm()
+    else:
+        mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
+        has_arm = mock_has_arm
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -154,10 +160,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     # in spot_driver.
     spot_driver_params = {
         "spot_name": spot_name,
+        "mock_enable": mock_enable,
         "publish_depth_registered": False,
         "publish_depth": False,
         "publish_rgb": False,
     }
+
+    if mock_enable:
+        mock_spot_driver_params = {"mock_has_arm": mock_has_arm}
+        # Merge the two dicts
+        spot_driver_params = {**spot_driver_params, **mock_spot_driver_params}
 
     spot_driver_node = launch_ros.actions.Node(
         package="spot_driver",
@@ -196,7 +208,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             PathJoinSubstitution([pkg_share, "urdf", "spot.urdf.xacro"]),
             " ",
             "arm:=",
-            TextSubstitution(text=str(spot_wrapper.has_arm()).lower()),
+            TextSubstitution(text=str(has_arm).lower()),
             " ",
             "tf_prefix:=",
             tf_prefix,

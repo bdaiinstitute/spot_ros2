@@ -139,7 +139,6 @@ from spot_wrapper.spot_images import CameraSource
 from spot_wrapper.wrapper import SpotWrapper
 
 MAX_DURATION = 1e6
-MOCK_HOSTNAME = "Mock_spot"
 COLOR_END = "\33[0m"
 COLOR_GREEN = "\33[32m"
 COLOR_YELLOW = "\33[33m"
@@ -192,6 +191,14 @@ class SpotImageType(str, Enum):
     RGB = "visual"
     Depth = "depth"
     RegDepth = "depth_registered"
+
+
+def set_node_parameter_from_parameter_list(
+    node: Node, parameter_list: Optional[typing.List[Parameter]], parameter_name: str
+) -> None:
+    """Set parameters when the node starts not from a launch file."""
+    if parameter_list is not None:
+        node.set_parameters([parameter for parameter in parameter_list if parameter.name == parameter_name])
 
 
 class SpotROS(Node):
@@ -253,6 +260,12 @@ class SpotROS(Node):
         self.declare_parameter("initialize_spot_cam", False)
 
         self.declare_parameter("spot_name", "")
+        self.declare_parameter("mock_enable", False)
+
+        # If `mock_enable:=True`, then there are additional parameters. We must set this one separately.
+        set_node_parameter_from_parameter_list(self, parameter_list, "mock_enable")
+        if self.get_parameter("mock_enable").value:
+            self.declare_parameter("mock_has_arm", rclpy.Parameter.Type.BOOL)
 
         # used for setting when not using launch file
         if parameter_list is not None:
@@ -294,6 +307,10 @@ class SpotROS(Node):
         self.name: Optional[str] = self.get_parameter("spot_name").value
         if not self.name:
             self.name = None
+        self.mock: bool = self.get_parameter("mock_enable").value
+        self.mock_has_arm: Optional[bool] = None
+        if self.mock:
+            self.mock_has_arm = self.get_parameter("mock_has_arm").value
 
         self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
@@ -363,10 +380,11 @@ class SpotROS(Node):
         name_str = ""
         if self.name is not None:
             name_str = " for " + self.name
-        self.get_logger().info("Starting ROS driver for Spot" + name_str)
+        mocking_designator = " (mocked)" if self.mock else ""
+        self.get_logger().info("Starting ROS driver for Spot" + name_str + mocking_designator)
         # testing with Robot
 
-        if self.name == MOCK_HOSTNAME:
+        if self.mock:
             self.spot_wrapper: Optional[SpotWrapper] = None
             self.cam_wrapper: Optional[SpotCamWrapper] = None
         else:
@@ -397,8 +415,16 @@ class SpotROS(Node):
                 except SystemError:
                     self.spot_cam_wrapper = None
 
+            if self.frame_prefix != self.spot_wrapper.frame_prefix:
+                error_msg = (
+                    f"ERROR: disagreement between `self.frame_prefix` ({self.frame_prefix}) and"
+                    f" `self.spot_wrapper.frame_prefix` ({self.spot_wrapper.frame_prefix})"
+                )
+                self.get_logger().error(error_msg)
+                raise ValueError(error_msg)
+
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
-        has_arm = False
+        has_arm = self.mock_has_arm
         if self.spot_wrapper is not None:
             has_arm = self.spot_wrapper.has_arm()
         if has_arm:
@@ -2365,13 +2391,10 @@ class SpotROS(Node):
         # We exclude the odometry frames from static transforms since they are not static. We can ignore the body
         # frame because it is a child of odom or vision depending on the preferred_odom_frame, and will be published
         # by the non-static transform publishing that is done by the state callback
-        frame_prefix = MOCK_HOSTNAME + "/"
-        if self.spot_wrapper is not None:
-            frame_prefix = self.spot_wrapper.frame_prefix
         excluded_frames = [
             self.tf_name_vision_odom.value,
             self.tf_name_kinematic_odom.value,
-            frame_prefix + "body",
+            self.frame_prefix + "body",
         ]
         excluded_frames = [f[f.rfind("/") + 1 :] for f in excluded_frames]
 
@@ -2405,8 +2428,8 @@ class SpotROS(Node):
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
             ]
             if (
-                frame_prefix + parent_frame,
-                frame_prefix + frame_name,
+                self.frame_prefix + parent_frame,
+                self.frame_prefix + frame_name,
             ) in existing_transforms:
                 # We already extracted this transform
                 continue
@@ -2421,7 +2444,7 @@ class SpotROS(Node):
                 parent_frame,
                 frame_name,
                 transform.parent_tform_child,
-                frame_prefix,
+                self.frame_prefix,
             )
             self.camera_static_transforms.append(static_tf)
             self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)

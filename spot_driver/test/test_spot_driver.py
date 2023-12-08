@@ -18,8 +18,14 @@ class SpotDriverTest(unittest.TestCase):
         self.fixture = contextlib.ExitStack()
         self.ros = self.fixture.enter_context(ros_scope.top(namespace="fixture"))
         # create and run spot ros2 servers
-        mock_param = rclpy.parameter.Parameter("spot_name", rclpy.Parameter.Type.STRING, "Mock_spot")
-        self.spot_ros2 = self.ros.load(spot_driver.spot_ros2.SpotROS, parameter_list=[mock_param])
+        self.spot_ros2 = self.ros.load(
+            spot_driver.spot_ros2.SpotROS,
+            parameter_list=[
+                rclpy.parameter.Parameter("spot_name", value="Mock_spot"),
+                rclpy.parameter.Parameter("mock_enable", value=True),
+                rclpy.parameter.Parameter("mock_has_arm", value=False),
+            ],
+        )
 
         # clients
         self.claim_client: rclpy.node.Client = self.ros.node.create_client(Trigger, "claim")
