@@ -114,6 +114,7 @@ from spot_msgs.srv import (  # type: ignore
     DeleteSound,
     Dock,
     ExecuteDance,
+    GetChoreographyStatus,
     GetGripperCameraParameters,
     GetVolume,
     GraphNavClearGraph,
@@ -619,6 +620,14 @@ class SpotROS(Node):
             "stop_recording_state",
             lambda request, response: self.service_wrapper(
                 "stop_recording_state", self.handle_stop_recording_state, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            GetChoreographyStatus,
+            "get_choreography_status",
+            lambda request, response: self.service_wrapper(
+                "get_choreography_status", self.handle_get_choreography_status, request, response
             ),
             callback_group=self.group,
         )
@@ -1259,6 +1268,19 @@ class SpotROS(Node):
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message, _ = self.spot_wrapper.stop_recording_state()
+        return response
+
+    def handle_get_choreography_status(
+        self, request: GetChoreographyStatus.Request, response: GetChoreographyStatus.Response
+    ) -> GetChoreographyStatus.Response:
+        """ROS service handler for getting current status of choreography playback."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message, choreography_status = self.spot_wrapper.get_choreography_status()
+        response.status = choreography_status.status
+        response.execution_id = choreography_status.execution_id
         return response
 
     def handle_upload_animation(
