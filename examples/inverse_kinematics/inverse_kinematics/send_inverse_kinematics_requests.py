@@ -13,13 +13,16 @@ import numpy as np
 from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, GROUND_PLANE_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE3Pose
+from bosdyn.client.robot_command import RobotCommandBuilder
 from geometry_msgs.msg import TransformStamped
 from rclpy.node import Node
 from spot_utilities.spot_basic import SpotBasic
 from tf2_ros import TransformBroadcaster
 from utilities.tf_listener_wrapper import TFListenerWrapper
-
+import spot_driver.conversions as conv
 import spot_msgs.srv
+from spot_msgs.action import RobotCommand
+from bdai_ros2_wrappers.action_client import ActionClientWrapper
 
 
 class IKTest:
@@ -35,6 +38,10 @@ class IKTest:
             spot_msgs.srv.GetInverseKinematicSolutions,
             namespace_with(self.robot_name, "get_inverse_kinematic_solutions"),
         )
+        self.robot_command_client = ActionClientWrapper(
+            RobotCommand, namespace_with(self.robot_name, "robot_command"), node
+        )
+
         self.timer = node.create_timer(0.1, self.timer_callback)
         self.transforms = []
 
@@ -175,7 +182,7 @@ class IKTest:
         self.publish_transform(link_wr1_frame_name, jaw_frame_name, wr1_T_tool)
 
         # Generate several random poses relative to the task frame.
-        np.random.seed(0)
+        # np.random.seed(0)
         x_size = 0.7  # m
         y_size = 0.8  # m
         x_rt_task = x_size * np.random.random(self.poses)
@@ -197,7 +204,41 @@ class IKTest:
             self.logger.info("Service get_inverse_kinematics_solutions not available.")
             return False
 
-        response = self.kinematics_client.call(request)
+        # response = self.kinematics_client.call(request)
+
+        seconds = 2
+        # arm_command = RobotCommandBuilder.arm_pose_command(
+        #     task_T_desired_tool.x,
+        #     task_T_desired_tool.y,
+        #     task_T_desired_tool.z,
+        #     task_T_desired_tool.rot.w,
+        #     task_T_desired_tool.rot.x,
+        #     task_T_desired_tool.rot.y,
+        #     task_T_desired_tool.rot.z,
+        #     "task_frame",
+        #     seconds,
+        # )
+
+        arm_command = RobotCommandBuilder.arm_pose_command(
+            0.0,
+            0.75,
+            2.1,
+            0.707,
+            0.0,
+            0.0,
+            0.707,
+            ODOM_FRAME_NAME,
+            seconds,
+        )
+
+        # Send the request and wait until the arm arrives at the goal
+        self.logger.info("Moving arm to position 1.")
+
+        # Convert to a ROS message
+        action_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, action_goal.command)
+
+        self.robot_command_client.send_goal_and_wait("arm_move_one", action_goal)
 
         # Power off robot.
         self.logger.info("Powering robot off")
