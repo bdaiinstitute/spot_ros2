@@ -10,6 +10,7 @@ import bdai_ros2_wrappers.scope as ros_scope
 import bosdyn_msgs.msg
 import geometry_msgs.msg
 import numpy as np
+from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, GROUND_PLANE_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE3Pose
@@ -19,10 +20,10 @@ from rclpy.node import Node
 from spot_utilities.spot_basic import SpotBasic
 from tf2_ros import TransformBroadcaster
 from utilities.tf_listener_wrapper import TFListenerWrapper
+
 import spot_driver.conversions as conv
 import spot_msgs.srv
 from spot_msgs.action import RobotCommand
-from bdai_ros2_wrappers.action_client import ActionClientWrapper
 
 
 class IKTest:
@@ -34,7 +35,7 @@ class IKTest:
         self.tf_broadcaster = TransformBroadcaster(node)
         self.tf_listener = TFListenerWrapper(node)
         self.robot = SpotBasic(self.robot_name)
-        self.kinematics_client = node.create_client(
+        self.ik_client = node.create_client(
             spot_msgs.srv.GetInverseKinematicSolutions,
             namespace_with(self.robot_name, "get_inverse_kinematic_solutions"),
         )
@@ -75,13 +76,13 @@ class IKTest:
 
         # Task frame.
         task_frame = geometry_msgs.msg.Pose()
-        task_frame.position.x = 0.0
-        task_frame.position.y = 0.0
-        task_frame.position.z = 0.0
-        task_frame.orientation.w = 1.0
-        task_frame.orientation.x = 0.0
-        task_frame.orientation.y = 0.0
-        task_frame.orientation.z = 0.0
+        task_frame.position.x = float(odom_T_task.x)
+        task_frame.position.y = float(odom_T_task.y)
+        task_frame.position.z = float(odom_T_task.z)
+        task_frame.orientation.w = float(odom_T_task.rotation.w)
+        task_frame.orientation.x = float(odom_T_task.rotation.x)
+        task_frame.orientation.y = float(odom_T_task.rotation.y)
+        task_frame.orientation.z = float(odom_T_task.rotation.z)
 
         # Tool frame.
         tools_specification = bosdyn_msgs.msg.InverseKinematicsRequestOneOfToolSpecification()
@@ -89,13 +90,13 @@ class IKTest:
             bosdyn_msgs.msg.InverseKinematicsRequestOneOfToolSpecification.TOOL_SPECIFICATION_WRIST_MOUNTED_TOOL_SET
         )
         tools_specification.wrist_mounted_tool.wrist_tform_tool_is_set = True
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.position.x = 0.0
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.position.y = 0.0
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.position.z = 0.0
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.w = 1.0
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.x = 0.0
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.y = 0.0
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.z = 0.0
+        tools_specification.wrist_mounted_tool.wrist_tform_tool.position.x = float(wr1_T_tool.x)
+        tools_specification.wrist_mounted_tool.wrist_tform_tool.position.y = float(wr1_T_tool.y)
+        tools_specification.wrist_mounted_tool.wrist_tform_tool.position.z = float(wr1_T_tool.z)
+        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.w = float(wr1_T_tool.rotation.w)
+        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.x = float(wr1_T_tool.rotation.x)
+        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.y = float(wr1_T_tool.rotation.y)
+        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.z = float(wr1_T_tool.rotation.z)
 
         # Task specificarion.
         task_specification = bosdyn_msgs.msg.InverseKinematicsRequestOneOfTaskSpecification()
@@ -103,13 +104,13 @@ class IKTest:
             bosdyn_msgs.msg.InverseKinematicsRequestOneOfTaskSpecification.TASK_SPECIFICATION_TOOL_POSE_TASK_SET
         )
         task_specification.tool_pose_task.task_tform_desired_tool_is_set = True
-        task_specification.tool_pose_task.task_tform_desired_tool.position.x = 0.0
-        task_specification.tool_pose_task.task_tform_desired_tool.position.y = 0.0
-        task_specification.tool_pose_task.task_tform_desired_tool.position.z = 0.0
-        task_specification.tool_pose_task.task_tform_desired_tool.orientation.w = 1.0
-        task_specification.tool_pose_task.task_tform_desired_tool.orientation.x = 0.0
-        task_specification.tool_pose_task.task_tform_desired_tool.orientation.y = 0.0
-        task_specification.tool_pose_task.task_tform_desired_tool.orientation.z = 0.0
+        task_specification.tool_pose_task.task_tform_desired_tool.position.x = float(task_T_desired_tool.x)
+        task_specification.tool_pose_task.task_tform_desired_tool.position.y = float(task_T_desired_tool.y)
+        task_specification.tool_pose_task.task_tform_desired_tool.position.z = float(task_T_desired_tool.z)
+        task_specification.tool_pose_task.task_tform_desired_tool.orientation.w = float(task_T_desired_tool.rotation.w)
+        task_specification.tool_pose_task.task_tform_desired_tool.orientation.x = float(task_T_desired_tool.rotation.x)
+        task_specification.tool_pose_task.task_tform_desired_tool.orientation.y = float(task_T_desired_tool.rotation.y)
+        task_specification.tool_pose_task.task_tform_desired_tool.orientation.z = float(task_T_desired_tool.rotation.z)
 
         # Request.
         request = bosdyn_msgs.msg.InverseKinematicsRequest()
@@ -181,8 +182,7 @@ class IKTest:
         wr1_T_tool: SE3Pose = SE3Pose(0.23589, 0.0, -0.03943, Quat.from_pitch(-np.pi / 2))
         self.publish_transform(link_wr1_frame_name, jaw_frame_name, wr1_T_tool)
 
-        # Generate several random poses relative to the task frame.
-        # np.random.seed(0)
+        # Generate several random poses in front of the task frame.
         x_size = 0.7  # m
         y_size = 0.8  # m
         x_rt_task = x_size * np.random.random(self.poses)
@@ -192,21 +192,38 @@ class IKTest:
             for (xi_rt_task, yi_rt_task) in zip(x_rt_task.flatten(), y_rt_task.flatten())
         ]
 
-        task_T_desired_tool = task_T_desired_tools[0]
-        self.publish_transform(task_frame_name, desired_pose_name, task_T_desired_tool)
-
-        request = self.create_kinematic_request(
-            odom_T_task=odom_T_task, wr1_T_tool=wr1_T_tool, task_T_desired_tool=task_T_desired_tool
-        )
-
         # Send inverse kinematic request.
-        if not self.kinematics_client.wait_for_service():
+        if not self.ik_client.wait_for_service():
             self.logger.info("Service get_inverse_kinematics_solutions not available.")
             return False
 
-        # response = self.kinematics_client.call(request)
+        for i, task_T_desired_tool in enumerate(task_T_desired_tools):
+            self.publish_transform(task_frame_name, desired_pose_name + str(i), task_T_desired_tool)
+            ik_request = self.create_kinematic_request(
+                odom_T_task=odom_T_task, wr1_T_tool=wr1_T_tool, task_T_desired_tool=task_T_desired_tool
+            )
+            ik_response: spot_msgs.srv.GetInverseKinematicSolutions.Response = self.ik_client.call(ik_request)
 
-        seconds = 2
+            if ik_response.response.status.value == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_OK:
+                print(
+                    "Solution found for pose ("
+                    f"pos.x:{task_T_desired_tool.x}, "
+                    f"pos.y:{task_T_desired_tool.y}, "
+                    f"pos.z:{task_T_desired_tool.z}, "
+                    f"rot.x:{task_T_desired_tool.rot.x}, "
+                    f"rot.y:{task_T_desired_tool.rot.y}, "
+                    f"rot.z:{task_T_desired_tool.rot.z}, "
+                    f"rot.w:{task_T_desired_tool.rot.w}, "
+                    ")"
+                )
+            elif (
+                ik_response.response.status.value
+                == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_NO_SOLUTION_FOUND
+            ):
+                print("No solution found")
+            else:
+                print("Status unknown")
+
         # arm_command = RobotCommandBuilder.arm_pose_command(
         #     task_T_desired_tool.x,
         #     task_T_desired_tool.y,
@@ -219,26 +236,28 @@ class IKTest:
         #     seconds,
         # )
 
-        arm_command = RobotCommandBuilder.arm_pose_command(
-            0.0,
-            0.75,
-            2.1,
-            0.707,
-            0.0,
-            0.0,
-            0.707,
-            ODOM_FRAME_NAME,
-            seconds,
-        )
+        # Duration in seconds
+        # seconds = 2
+        # arm_command = RobotCommandBuilder.arm_pose_command(
+        #     0.0,
+        #     0.9,
+        #     2.3,
+        #     0.707,
+        #     0.0,
+        #     0.0,
+        #     0.707,
+        #     ODOM_FRAME_NAME,
+        #     seconds,
+        # )
 
         # Send the request and wait until the arm arrives at the goal
-        self.logger.info("Moving arm to position 1.")
+        # self.logger.info("Moving arm to position.")
 
         # Convert to a ROS message
-        action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, action_goal.command)
+        # action_goal = RobotCommand.Goal()
+        # conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, action_goal.command)
 
-        self.robot_command_client.send_goal_and_wait("arm_move_one", action_goal)
+        # self.robot_command_client.send_goal_and_wait("arm_move_one", action_goal)
 
         # Power off robot.
         self.logger.info("Powering robot off")
