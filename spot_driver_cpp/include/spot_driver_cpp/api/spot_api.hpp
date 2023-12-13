@@ -20,6 +20,5 @@ class SpotApi {
   virtual tl::expected<bool, std::string> hasArm() const = 0;
   virtual std::shared_ptr<ImageClientInterface> image_client_interface() const = 0;
   virtual std::shared_ptr<RobotStateClientInterface> robot_state_client_interface() const = 0;
-
 };
 }  // namespace spot_ros2

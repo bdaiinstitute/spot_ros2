@@ -1,21 +1,20 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/robot_state/spot_robot_state_publisher_node.hpp>
 #include <spot_driver_cpp/robot_state/spot_robot_state_publisher.hpp>
+#include <spot_driver_cpp/robot_state/spot_robot_state_publisher_node.hpp>
 
-#include <spot_driver_cpp/robot_state/robot_middleware_handle.hpp>
 #include <spot_driver_cpp/api/default_spot_api.hpp>
+#include <spot_driver_cpp/robot_state/robot_middleware_handle.hpp>
 
-namespace{
-  constexpr auto kDefaultSDKName{"robot_state_publisher_node"};
+namespace {
+constexpr auto kDefaultSDKName{"robot_state_publisher_node"};
 }
 
-namespace spot_ros2{
+namespace spot_ros2 {
 
-SpotRobotStatePublisherNode::SpotRobotStatePublisherNode(std::unique_ptr<SpotApi> spot_api,
-                        std::unique_ptr<SpotRobotStatePublisher::MiddlewareHandle> mw_handle)
-                        : node_{mw_handle->node()}
-                        , spot_api_{std::move(spot_api)}{
+SpotRobotStatePublisherNode::SpotRobotStatePublisherNode(
+    std::unique_ptr<SpotApi> spot_api, std::unique_ptr<SpotRobotStatePublisher::MiddlewareHandle> mw_handle)
+    : node_{mw_handle->node()}, spot_api_{std::move(spot_api)} {
   const auto address = mw_handle->parameter_interface()->getAddress();
   const auto robot_name = mw_handle->parameter_interface()->getSpotName();
   const auto username = mw_handle->parameter_interface()->getUsername();
@@ -33,17 +32,18 @@ SpotRobotStatePublisherNode::SpotRobotStatePublisherNode(std::unique_ptr<SpotApi
     mw_handle->logger_interface()->logError(error_msg);
     throw std::runtime_error(error_msg);
   }
-  
-  internal_ = std::make_unique<SpotRobotStatePublisher>(spot_api_->robot_state_client_interface(), std::move(mw_handle));
+
+  internal_ =
+      std::make_unique<SpotRobotStatePublisher>(spot_api_->robot_state_client_interface(), std::move(mw_handle));
   internal_->initialize();
 }
 
 SpotRobotStatePublisherNode::SpotRobotStatePublisherNode(const rclcpp::NodeOptions& node_options)
-                        : SpotRobotStatePublisherNode{std::make_unique<DefaultSpotApi>(kDefaultSDKName),
-                                                      std::make_unique<RobotMiddlewareHandle>(node_options)} {}
+    : SpotRobotStatePublisherNode{std::make_unique<DefaultSpotApi>(kDefaultSDKName),
+                                  std::make_unique<RobotMiddlewareHandle>(node_options)} {}
 
-std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotRobotStatePublisherNode::get_node_base_interface(){
+std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotRobotStatePublisherNode::get_node_base_interface() {
   return node_->get_node_base_interface();
 }
 
-}
+}  // namespace spot_ros2

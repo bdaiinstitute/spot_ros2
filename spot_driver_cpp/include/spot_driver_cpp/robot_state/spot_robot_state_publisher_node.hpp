@@ -5,9 +5,9 @@
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_options.hpp>
 #include <spot_driver_cpp/api/spot_api.hpp>
-#include <spot_driver_cpp/robot_state/spot_robot_state_publisher.hpp>
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/parameter_interface_base.hpp>
+#include <spot_driver_cpp/robot_state/spot_robot_state_publisher.hpp>
 
 #include <memory>
 
@@ -18,7 +18,7 @@ namespace spot_ros2 {
 class SpotRobotStatePublisherNode {
  public:
   SpotRobotStatePublisherNode(std::unique_ptr<SpotApi> spot_api,
-                         std::unique_ptr<SpotRobotStatePublisher::MiddlewareHandle> mw_handle);
+                              std::unique_ptr<SpotRobotStatePublisher::MiddlewareHandle> mw_handle);
 
   explicit SpotRobotStatePublisherNode(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 

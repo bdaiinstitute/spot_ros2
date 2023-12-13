@@ -4,8 +4,8 @@
 
 #include <spot_driver_cpp/robot_state/spot_robot_state_publisher.hpp>
 
-#include <spot_driver_cpp/mock/mock_robot_state_client.hpp>
 #include <spot_driver_cpp/mock/mock_logger_interface.hpp>
+#include <spot_driver_cpp/mock/mock_robot_state_client.hpp>
 #include <spot_driver_cpp/mock/mock_tf_interface.hpp>
 #include <spot_driver_cpp/mock/mock_timer_interface.hpp>
 
@@ -57,10 +57,10 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   std::string spot_name;
 };
 
-class MockMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
+class MockRobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
  public:
   MOCK_METHOD(void, createPublishers, (), (override));
-  MOCK_METHOD(void, publishRobotState, (const RobotState &robot_state), (override));
+  MOCK_METHOD(void, publishRobotState, (const RobotState& robot_state), (override));
   MOCK_METHOD(std::shared_ptr<rclcpp::Node>, node, (), (override));
 
   ParameterInterfaceBase* parameter_interface() override { return parameter_interface_.get(); }
@@ -81,7 +81,7 @@ class TestSpotRobotStatePublisherFixture : public ::testing::Test {
  public:
   std::shared_ptr<spot_ros2::test::MockRobotStateClient> robot_state_client_interface =
       std::make_shared<spot_ros2::test::MockRobotStateClient>();
-  std::unique_ptr<MockMiddlewareHandle> middleware_handle = std::make_unique<MockMiddlewareHandle>();
+  std::unique_ptr<MockRobotMiddlewareHandle> middleware_handle = std::make_unique<MockRobotMiddlewareHandle>();
   std::unique_ptr<SpotRobotStatePublisher> robot_state_publisher;
 };
 
@@ -92,7 +92,8 @@ TEST_F(TestSpotRobotStatePublisherFixture, InitSucceeds) {
   EXPECT_CALL(*middleware_handle->timer_interface_, setTimer(std::chrono::duration<double>{1.0 / 50.0}, _)).Times(1);
 
   // GIVEN a robot state publisher
-  robot_state_publisher = std::make_unique<SpotRobotStatePublisher>(robot_state_client_interface, std::move(middleware_handle));
+  robot_state_publisher =
+      std::make_unique<SpotRobotStatePublisher>(robot_state_client_interface, std::move(middleware_handle));
 
   // WHEN the SpotRobotStatePublisher is initialized
   // THEN initialization succeeds
@@ -100,7 +101,6 @@ TEST_F(TestSpotRobotStatePublisherFixture, InitSucceeds) {
 }
 
 TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggersWithArm) {
-  
   // THEN expect createPublishers to be invoked
   EXPECT_CALL(*middleware_handle, createPublishers).Times(1);
 
@@ -120,7 +120,8 @@ TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggersWithArm) {
   }
 
   // GIVEN a robot_state_publisher
-  robot_state_publisher = std::make_unique<SpotRobotStatePublisher>(robot_state_client_interface, std::move(middleware_handle));
+  robot_state_publisher =
+      std::make_unique<SpotRobotStatePublisher>(robot_state_client_interface, std::move(middleware_handle));
 
   // GIVEN the SpotRobotStatePublisher was successfully initialized
   ASSERT_TRUE(robot_state_publisher->initialize());

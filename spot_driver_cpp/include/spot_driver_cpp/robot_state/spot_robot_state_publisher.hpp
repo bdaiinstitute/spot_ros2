@@ -12,28 +12,29 @@
 #include <spot_driver_cpp/interfaces/tf_interface_base.hpp>
 #include <spot_driver_cpp/interfaces/timer_interface_base.hpp>
 
-#include <tl_expected/expected.hpp>
 #include <rclcpp/node.hpp>
+#include <tl_expected/expected.hpp>
 
 namespace spot_ros2 {
 
 /**
- * @brief Retrieves robot state from Spot's robot state service client, converts the messages from Protobuf to ROS messages, and publishes them to the appropriate topics
-*/
+ * @brief Retrieves robot state from Spot's robot state service client, converts the messages from Protobuf to ROS
+ * messages, and publishes them to the appropriate topics
+ */
 class SpotRobotStatePublisher {
-public:
+ public:
   class MiddlewareHandle {
-    public:
-      virtual void createPublishers() = 0;
-      virtual void publishRobotState(const RobotState &robot_state) = 0;
+   public:
+    virtual void createPublishers() = 0;
+    virtual void publishRobotState(const RobotState& robot_state) = 0;
 
-      virtual std::shared_ptr<rclcpp::Node> node() = 0;
-      virtual ParameterInterfaceBase* parameter_interface() = 0;
-      virtual LoggerInterfaceBase* logger_interface() = 0;
-      virtual TfInterfaceBase* tf_interface() = 0;
-      virtual TimerInterfaceBase* timer_interface() = 0;
+    virtual std::shared_ptr<rclcpp::Node> node() = 0;
+    virtual ParameterInterfaceBase* parameter_interface() = 0;
+    virtual LoggerInterfaceBase* logger_interface() = 0;
+    virtual TfInterfaceBase* tf_interface() = 0;
+    virtual TimerInterfaceBase* timer_interface() = 0;
 
-      virtual ~MiddlewareHandle() = default;
+    virtual ~MiddlewareHandle() = default;
   };
 
   SpotRobotStatePublisher(std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
@@ -41,13 +42,12 @@ public:
 
   bool initialize();
 
-private:
+ private:
   void timerCallback();
 
   // Interface classes to interact with Spot and the middleware.
   std::shared_ptr<RobotStateClientInterface> client_interface_;
   std::unique_ptr<MiddlewareHandle> middleware_handle_;
-
 };
 
-} //namespace spot_ros2
+}  // namespace spot_ros2

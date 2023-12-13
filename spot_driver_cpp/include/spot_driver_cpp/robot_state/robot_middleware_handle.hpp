@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include <spot_driver_cpp/robot_state/spot_robot_state_publisher.hpp>
+#include <rclcpp/node.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
+#include <spot_driver_cpp/robot_state/spot_robot_state_publisher.hpp>
 #include <tl_expected/expected.hpp>
-#include <rclcpp/node.hpp>
 
 #include <memory>
 #include <string>
@@ -16,22 +16,22 @@
 namespace spot_ros2 {
 
 class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
-  public:
-    explicit RobotMiddlewareHandle(std::shared_ptr<rclcpp::Node> node);
-    explicit RobotMiddlewareHandle(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
+ public:
+  explicit RobotMiddlewareHandle(std::shared_ptr<rclcpp::Node> node);
+  explicit RobotMiddlewareHandle(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
-    ~RobotMiddlewareHandle() = default;
+  ~RobotMiddlewareHandle() = default;
 
-    void createPublishers() override;
-    void publishRobotState(const RobotState &robot_state) override;
+  void createPublishers() override;
+  void publishRobotState(const RobotState& robot_state) override;
 
-    ParameterInterfaceBase* parameter_interface() override { return parameter_interface_.get(); }
-    LoggerInterfaceBase* logger_interface() override { return logger_interface_.get(); }
-    TfInterfaceBase* tf_interface() override { return tf_interface_.get(); }
-    TimerInterfaceBase* timer_interface() override { return timer_interface_.get(); }
-    std::shared_ptr<rclcpp::Node> node() override { return node_; }
+  ParameterInterfaceBase* parameter_interface() override { return parameter_interface_.get(); }
+  LoggerInterfaceBase* logger_interface() override { return logger_interface_.get(); }
+  TfInterfaceBase* tf_interface() override { return tf_interface_.get(); }
+  TimerInterfaceBase* timer_interface() override { return timer_interface_.get(); }
+  std::shared_ptr<rclcpp::Node> node() override { return node_; }
 
-  private:
+ private:
   /** @brief Shared instance of an rclcpp node to create publishers */
   std::shared_ptr<rclcpp::Node> node_;
   /** @brief instance of ParameterInterfaceBase to get ROS parameters*/
@@ -48,7 +48,8 @@ class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::FootStateArray>> foot_states_publisher_;
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::EStopStateArray>> estop_states_publisher_;
   std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::JointState>> joint_state_publisher_;
-  std::shared_ptr<rclcpp::Publisher<tf2_msgs::msg::TFMessage>> dynamic_tf_publisher_; // TODO(abaker-bdai): maybe move to tf interface?
+  std::shared_ptr<rclcpp::Publisher<tf2_msgs::msg::TFMessage>>
+      dynamic_tf_publisher_;  // TODO(abaker-bdai): maybe move to tf interface?
   std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>> odom_twist_publisher_;
   std::shared_ptr<rclcpp::Publisher<nav_msgs::msg::Odometry>> odom_publisher_;
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::PowerState>> power_state_publisher_;
@@ -58,4 +59,4 @@ class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::BehaviorFaultState>> behavior_fault_state_publisher_;
 };
 
-}
+}  // namespace spot_ros2
