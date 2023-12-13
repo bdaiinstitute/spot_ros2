@@ -20,7 +20,7 @@ from rclpy.node import Node
 from spot_utilities.spot_basic import SpotBasic
 from tf2_ros import TransformBroadcaster
 from utilities.tf_listener_wrapper import TFListenerWrapper
-
+from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 import spot_driver.conversions as conv
 import spot_msgs.srv
 from spot_msgs.action import RobotCommand
@@ -206,8 +206,18 @@ class IKTest:
             for (xi_rt_task, yi_rt_task) in zip(x_rt_task.flatten(), y_rt_task.flatten())
         ]
 
+        # Define a stand command that we'll send if the IK service does not find a solution.
+        body_control = spot_command_pb2.BodyControlParams(
+            body_assist_for_manipulation=spot_command_pb2.BodyControlParams.BodyAssistForManipulation(
+                enable_hip_height_assist=True, enable_body_yaw_assist=True
+            )
+        )
+        body_assist_enabled_stand_command = RobotCommandBuilder.synchro_stand_command(
+            params=spot_command_pb2.MobilityParams(body_control=body_control)
+        )
+
         # Unstow the arm.
-        arm_ready_command = RobotCommandBuilder.arm_ready_command()
+        arm_ready_command = RobotCommandBuilder.arm_ready_command(build_on_command=body_assist_enabled_stand_command)
         arm_ready_command_goal = RobotCommand.Goal()
         conv.convert_proto_to_bosdyn_msgs_robot_command(arm_ready_command, arm_ready_command_goal.command)
         self.robot_command_client.send_goal_and_wait("arm_move_one", arm_ready_command_goal)
@@ -225,39 +235,36 @@ class IKTest:
             )
             ik_response: spot_msgs.srv.GetInverseKinematicSolutions.Response = self.ik_client.call(ik_request)
 
+            # Attempt to move to each of the desired tool pose to check the IK results.
+            stand_command = None
             if ik_response.response.status.value == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_OK:
-                self.logger.info(
-                    "Solution found for pose ("
-                    f"pos.x:{task_T_desired_tool.x}, "
-                    f"pos.y:{task_T_desired_tool.y}, "
-                    f"pos.z:{task_T_desired_tool.z}, "
-                    f"rot.x:{task_T_desired_tool.rot.x}, "
-                    f"rot.y:{task_T_desired_tool.rot.y}, "
-                    f"rot.z:{task_T_desired_tool.rot.z}, "
-                    f"rot.w:{task_T_desired_tool.rot.w}, "
-                    ")"
-                )
-
-                # Move the arm tool to the requested position.
-                arm_command = RobotCommandBuilder.arm_pose_command_from_pose(
-                    hand_pose=(odom_T_task * task_T_desired_tool).to_proto(), frame_name=ODOM_FRAME_NAME, seconds=1
-                )
-                arm_command.synchronized_command.arm_command.arm_cartesian_command.wrist_tform_tool.CopyFrom(
-                    wr1_T_tool.to_proto()
-                )
-                arm_command_goal = RobotCommand.Goal()
-                conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, arm_command_goal.command)
-                result = self.robot_command_client.send_goal_and_wait(
-                    action_name="arm_move_one", goal=arm_command_goal, timeout_sec=5
-                )
-
+                self.logger.info("Solution found")
+                stand_command = body_assist_enabled_stand_command
             elif (
                 ik_response.response.status.value
                 == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_NO_SOLUTION_FOUND
             ):
                 self.logger.info("No solution found")
+                stand_command = body_assist_enabled_stand_command
             else:
                 self.logger.info("Status unknown")
+                stand_command = body_assist_enabled_stand_command
+
+            # Move the arm tool to the requested position.
+            arm_command = RobotCommandBuilder.arm_pose_command_from_pose(
+                hand_pose=(odom_T_task * task_T_desired_tool).to_proto(),
+                frame_name=ODOM_FRAME_NAME,
+                seconds=1,
+                build_on_command=stand_command,
+            )
+            arm_command.synchronized_command.arm_command.arm_cartesian_command.wrist_tform_tool.CopyFrom(
+                wr1_T_tool.to_proto()
+            )
+            arm_command_goal = RobotCommand.Goal()
+            conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, arm_command_goal.command)
+            result = self.robot_command_client.send_goal_and_wait(
+                action_name="arm_move_one", goal=arm_command_goal, timeout_sec=5
+            )
 
         # Power off robot.
         self.logger.info("Powering robot off")
