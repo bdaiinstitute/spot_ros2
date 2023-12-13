@@ -20,7 +20,6 @@ class ParameterInterfaceBase {
   virtual std::string getUsername() const = 0;
   virtual std::string getPassword() const = 0;
   virtual double getRGBImageQuality() const = 0;
-  virtual bool getHasRGBCameras() const = 0;
   virtual bool getPublishRGBImages() const = 0;
   virtual bool getPublishDepthImages() const = 0;
   virtual bool getPublishDepthRegisteredImages() const = 0;

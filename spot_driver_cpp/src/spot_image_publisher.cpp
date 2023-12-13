@@ -26,8 +26,7 @@ constexpr auto kDefaultDepthImageQuality = 100.0;
 }  // namespace
 
 namespace spot_ros2 {
-::bosdyn::api::GetImageRequest createImageRequest(const std::set<ImageSource>& sources,
-                                                  [[maybe_unused]] const bool has_rgb_cameras,
+::bosdyn::api::GetImageRequest createImageRequest(const std::set<ImageSource>& sources, const bool has_rgb_cameras,
                                                   const double rgb_image_quality, const bool get_raw_rgb_images) {
   ::bosdyn::api::GetImageRequest request_message;
 
@@ -38,7 +37,8 @@ namespace spot_ros2 {
       image_request->set_image_source_name(source_name);
       // RGB images can have a user-configurable image quality setting.
       image_request->set_quality_percent(rgb_image_quality);
-      image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8);
+      image_request->set_pixel_format(has_rgb_cameras ? bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8
+                                                      : bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8);
       // RGB images can be either raw or JPEG-compressed.
       image_request->set_image_format(get_raw_rgb_images ? bosdyn::api::Image_Format_FORMAT_RAW
                                                          : bosdyn::api::Image_Format_FORMAT_JPEG);
@@ -87,7 +87,6 @@ bool SpotImagePublisher::initialize() {
   const auto publish_rgb_images = parameter_interface_->getPublishRGBImages();
   const auto publish_depth_images = parameter_interface_->getPublishDepthImages();
   const auto publish_depth_registered_images = parameter_interface_->getPublishDepthRegisteredImages();
-  const auto has_rgb_cameras = parameter_interface_->getHasRGBCameras();
   const auto spot_name = parameter_interface_->getSpotName();
 
   // Initialize the SDK client, and connect to the robot
@@ -116,7 +115,15 @@ bool SpotImagePublisher::initialize() {
                                           has_arm_result.value());
 
   // Generate the image request message to capture the data from the specified image sources
-  image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, false);
+  image_request_message_ = createImageRequest(sources, true, rgb_image_quality, false);
+
+  // Get the images once to fallback to mono cameras on Unsupported Pixel Format Requested Error
+  const auto image_result = spot_interface_->getImages(*image_request_message_);
+  if (!image_result.has_value()) {
+    if (image_result.error().find("STATUS_UNSUPPORTED_PIXEL_FORMAT_REQUESTED") != std::string::npos) {
+      image_request_message_ = createImageRequest(sources, false, rgb_image_quality, false);
+    }
+  }
 
   // Create a publisher for each image source
   publisher_interface_->createPublishers(sources);
