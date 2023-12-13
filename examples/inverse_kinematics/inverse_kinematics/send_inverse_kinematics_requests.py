@@ -4,7 +4,7 @@
 
 import argparse
 import time
-from typing import Optional
+
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 import bosdyn_msgs.msg
@@ -207,10 +207,10 @@ class IKTest:
         ]
 
         # Unstow the arm.
-        ready_command = RobotCommandBuilder.arm_ready_command()
-        ready_command_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(ready_command, ready_command_goal.command)
-        self.robot_command_client.send_goal_and_wait("arm_move_one", ready_command_goal)
+        arm_ready_command = RobotCommandBuilder.arm_ready_command()
+        arm_ready_command_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(arm_ready_command, arm_ready_command_goal.command)
+        self.robot_command_client.send_goal_and_wait("arm_move_one", arm_ready_command_goal)
 
         # Check if the IK service is available.
         if not self.ik_client.wait_for_service():
@@ -226,7 +226,7 @@ class IKTest:
             ik_response: spot_msgs.srv.GetInverseKinematicSolutions.Response = self.ik_client.call(ik_request)
 
             if ik_response.response.status.value == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_OK:
-                print(
+                self.logger.info(
                     "Solution found for pose ("
                     f"pos.x:{task_T_desired_tool.x}, "
                     f"pos.y:{task_T_desired_tool.y}, "
@@ -238,6 +238,7 @@ class IKTest:
                     ")"
                 )
 
+                # Move the arm tool to the requested position.
                 arm_command = RobotCommandBuilder.arm_pose_command_from_pose(
                     hand_pose=(odom_T_task * task_T_desired_tool).to_proto(), frame_name=ODOM_FRAME_NAME, seconds=1
                 )
@@ -247,54 +248,16 @@ class IKTest:
                 arm_command_goal = RobotCommand.Goal()
                 conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, arm_command_goal.command)
                 result = self.robot_command_client.send_goal_and_wait(
-                    action_name="arm_move_one", goal=arm_command_goal, timeout_sec=2
+                    action_name="arm_move_one", goal=arm_command_goal, timeout_sec=5
                 )
-
-                if result is not None:
-                    print(result.success)
 
             elif (
                 ik_response.response.status.value
                 == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_NO_SOLUTION_FOUND
             ):
-                print("No solution found")
+                self.logger.info("No solution found")
             else:
-                print("Status unknown")
-
-        # arm_command = RobotCommandBuilder.arm_pose_command(
-        #     task_T_desired_tool.x,
-        #     task_T_desired_tool.y,
-        #     task_T_desired_tool.z,
-        #     task_T_desired_tool.rot.w,
-        #     task_T_desired_tool.rot.x,
-        #     task_T_desired_tool.rot.y,
-        #     task_T_desired_tool.rot.z,
-        #     "task_frame",
-        #     seconds,
-        # )
-
-        # Duration in seconds
-        # seconds = 2
-        # arm_command = RobotCommandBuilder.arm_pose_command(
-        #     0.0,
-        #     0.9,
-        #     2.3,
-        #     0.707,
-        #     0.0,
-        #     0.0,
-        #     0.707,
-        #     ODOM_FRAME_NAME,
-        #     seconds,
-        # )
-
-        # Send the request and wait until the arm arrives at the goal
-        # self.logger.info("Moving arm to position.")
-
-        # Convert to a ROS message
-        # action_goal = RobotCommand.Goal()
-        # conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, action_goal.command)
-
-        # self.robot_command_client.send_goal_and_wait("arm_move_one", action_goal)
+                self.logger.info("Status unknown")
 
         # Power off robot.
         self.logger.info("Powering robot off")
