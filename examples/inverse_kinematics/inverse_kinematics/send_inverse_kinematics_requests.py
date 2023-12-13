@@ -4,7 +4,7 @@
 
 import argparse
 import time
-
+from typing import Optional
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 import bosdyn_msgs.msg
@@ -48,7 +48,7 @@ class IKTest:
 
     def publish_transform(self, parent_frame_name: str, child_frame_name: str, pose: SE3Pose) -> None:
         """
-        Cache a transform.
+        Create a transformation and add it to a list so we can display it later in RViz.
         """
         tf = TransformStamped()
         tf.header.frame_id = parent_frame_name
@@ -64,15 +64,26 @@ class IKTest:
 
     def timer_callback(self):
         """
-        Publish all cached tranformations at 10Hz.
+        Publish all cached tranformations at 10Hz so we can view
         """
         for tf in self.transforms:
             tf.header.stamp = self.node.get_clock().now().to_msg()
             self.tf_broadcaster.sendTransform(tf)
 
-    def create_kinematic_request(
+    def create_ik_request(
         self, odom_T_task: SE3Pose, wr1_T_tool: SE3Pose, task_T_desired_tool: SE3Pose
     ) -> spot_msgs.srv.GetInverseKinematicSolutions.Request:
+        """
+        Create an inverse kinematic request.
+
+        Args:
+            odom_T_task The task frame relative to the odom frame.
+            wr1_T_tool The tool frame relative to the wrist frame.
+            task_T_desired_tool The desired position of the tool frame relative to the task frame.
+
+        Returns:
+            A ROS2 IK request.
+        """
 
         # Task frame.
         task_frame = geometry_msgs.msg.Pose()
@@ -163,8 +174,7 @@ class IKTest:
             return False
         self.logger.info("Successfully stood up.")
 
-        # Look for known transforms.
-
+        # Look for known transforms published by the robot.
         odom_T_flat_body: SE3Pose = self.tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name)
         odom_T_gpe: SE3Pose = self.tf_listener.lookup_a_tform_b(odom_frame_name, ground_plane_frame_name)
 
@@ -182,7 +192,11 @@ class IKTest:
         wr1_T_tool: SE3Pose = SE3Pose(0.23589, 0.0, -0.03943, Quat.from_pitch(-np.pi / 2))
         self.publish_transform(link_wr1_frame_name, jaw_frame_name, wr1_T_tool)
 
-        # Generate several random poses in front of the task frame.
+        # Generate several random poses in front of the task frame where we want the tool to move to.
+        # The desired tool poses are defined relative to thr task frame in front of the robot and slightly
+        # above the ground. The task frame is aligned with the "gravity aligned body frame", such that
+        # the positive-x direction is to the front of the robot, the positive-y direction is to the left
+        # of the robot, and the positive-z direction is opposite to gravity.
         x_size = 0.7  # m
         y_size = 0.8  # m
         x_rt_task = x_size * np.random.random(self.poses)
@@ -192,14 +206,21 @@ class IKTest:
             for (xi_rt_task, yi_rt_task) in zip(x_rt_task.flatten(), y_rt_task.flatten())
         ]
 
-        # Send inverse kinematic request.
+        # Unstow the arm.
+        ready_command = RobotCommandBuilder.arm_ready_command()
+        ready_command_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(ready_command, ready_command_goal.command)
+        self.robot_command_client.send_goal_and_wait("arm_move_one", ready_command_goal)
+
+        # Check if the IK service is available.
         if not self.ik_client.wait_for_service():
             self.logger.info("Service get_inverse_kinematics_solutions not available.")
             return False
 
+        # Send IK requests.
         for i, task_T_desired_tool in enumerate(task_T_desired_tools):
             self.publish_transform(task_frame_name, desired_pose_name + str(i), task_T_desired_tool)
-            ik_request = self.create_kinematic_request(
+            ik_request = self.create_ik_request(
                 odom_T_task=odom_T_task, wr1_T_tool=wr1_T_tool, task_T_desired_tool=task_T_desired_tool
             )
             ik_response: spot_msgs.srv.GetInverseKinematicSolutions.Response = self.ik_client.call(ik_request)
@@ -216,6 +237,22 @@ class IKTest:
                     f"rot.w:{task_T_desired_tool.rot.w}, "
                     ")"
                 )
+
+                arm_command = RobotCommandBuilder.arm_pose_command_from_pose(
+                    hand_pose=(odom_T_task * task_T_desired_tool).to_proto(), frame_name=ODOM_FRAME_NAME, seconds=1
+                )
+                arm_command.synchronized_command.arm_command.arm_cartesian_command.wrist_tform_tool.CopyFrom(
+                    wr1_T_tool.to_proto()
+                )
+                arm_command_goal = RobotCommand.Goal()
+                conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, arm_command_goal.command)
+                result = self.robot_command_client.send_goal_and_wait(
+                    action_name="arm_move_one", goal=arm_command_goal, timeout_sec=2
+                )
+
+                if result is not None:
+                    print(result.success)
+
             elif (
                 ik_response.response.status.value
                 == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_NO_SOLUTION_FOUND
