@@ -31,7 +31,11 @@ bool SpotRobotStatePublisher::initialize() {
 }
 
 void SpotRobotStatePublisher::timerCallback() {
-  const auto robot_state_result = client_interface_->getRobotState();
+  const auto preferred_odom_frame = middleware_handle_->parameter_interface()->getPreferredOdomFrame().find("/") == std::string::npos ?
+     middleware_handle_->parameter_interface()->getSpotName() + "/" + middleware_handle_->parameter_interface()->getPreferredOdomFrame() :
+     middleware_handle_->parameter_interface()->getPreferredOdomFrame(); 
+ 
+  const auto robot_state_result = client_interface_->getRobotState(preferred_odom_frame);
   if (!robot_state_result.has_value()) {
     middleware_handle_->logger_interface()->logError(
         std::string{"Failed to get robot_state: "}.append(robot_state_result.error()));
@@ -39,8 +43,6 @@ void SpotRobotStatePublisher::timerCallback() {
   }
 
   middleware_handle_->publishRobotState(robot_state_result.value());
-
-  // middleware_handle_->tf_interface()->updateStaticTransforms(image_result.value().transforms_);
 }
 
 }  // namespace spot_ros2

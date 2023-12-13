@@ -48,6 +48,6 @@ struct RobotState {
  */
 class RobotStateClientInterface {
  public:
-  virtual tl::expected<RobotState, std::string> getRobotState() = 0;
+  virtual tl::expected<RobotState, std::string> getRobotState(const std::string& preferred_odom_frame) = 0;
 };
 }  // namespace spot_ros2

@@ -119,19 +119,19 @@ std::optional<tf2_msgs::msg::TFMessage> GetTf(const ::bosdyn::api::RobotState& r
   if (robot_state.has_kinematic_state()) {
     tf2_msgs::msg::TFMessage tf_msg;
 
-    for (const auto& [child_frame_id, transform] :
-         robot_state.kinematic_state().transforms_snapshot().child_to_parent_edge_map()) {
-      const auto local_time =
+    const auto local_time =
           spot_ros2::applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
-      if (inverse_target_frame_id == std::string(prefix + child_frame_id)) {
+
+    for (const auto& [frame_id, transform] :
+         robot_state.kinematic_state().transforms_snapshot().child_to_parent_edge_map()) {
+      if (inverse_target_frame_id == prefix + frame_id) {
         const auto inversed_tf = ~(transform.parent_tform_child());
         tf_msg.transforms.push_back(spot_ros2::conversions::toTransformStamped(
-            inversed_tf, std::string(prefix + child_frame_id), std::string(prefix + transform.parent_frame_name()),
+            inversed_tf, prefix + frame_id, prefix + transform.parent_frame_name(),
             local_time));
       } else {
         tf_msg.transforms.push_back(spot_ros2::conversions::toTransformStamped(
-            transform.parent_tform_child(), std::string(prefix + transform.parent_frame_name()),
-            std::string(prefix + child_frame_id), local_time));
+            transform.parent_tform_child(), prefix + transform.parent_frame_name(), prefix + frame_id, local_time));
       }
     }
     return tf_msg;
@@ -166,7 +166,7 @@ std::optional<nav_msgs::msg::Odometry> GetOdom(const ::bosdyn::api::RobotState& 
     nav_msgs::msg::Odometry odom_msg;
     ::bosdyn::api::SE3Pose tf_body_pose;
     geometry_msgs::msg::PoseWithCovariance pose_odom_msg;
-
+    
     odom_msg.header.stamp =
         spot_ros2::applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
     if (is_using_vision) {
@@ -337,7 +337,7 @@ DefaultRobotStateClient::DefaultRobotStateClient(::bosdyn::client::RobotStateCli
                                                  const std::string& robot_name)
     : client_{client}, time_sync_api_{time_sync_api}, frame_prefix_{robot_name.empty() ? "" : robot_name + "/"} {}
 
-tl::expected<RobotState, std::string> DefaultRobotStateClient::getRobotState() {
+tl::expected<RobotState, std::string> DefaultRobotStateClient::getRobotState(const std::string& preferred_odom_frame) {
   std::shared_future<::bosdyn::client::RobotStateResultType> get_robot_state_result_future =
       client_->GetRobotStateAsync();
 
@@ -359,16 +359,16 @@ tl::expected<RobotState, std::string> DefaultRobotStateClient::getRobotState() {
                  GetFootState(robot_state),
                  GetEstopStates(robot_state, clock_skew_result.value()),
                  GetJointStates(robot_state, clock_skew_result.value(),
-                                "Opal/"),  // TODO(abaker-bdai): This should be a parameter passed into the client
-                 GetTf(robot_state, clock_skew_result.value(), "Opal/",
-                       "body"),  // TODO(abaker-bdai): This should be a parameter passed into the client
+                                frame_prefix_),
+                 GetTf(robot_state, clock_skew_result.value(), frame_prefix_,
+                       preferred_odom_frame),
                  GetOdomTwist(robot_state, clock_skew_result.value()),
-                 GetOdom(robot_state, clock_skew_result.value(), "Opal/",
-                         true),  // TODO(abaker-bdai): This should be a parameter passed into the client
+                 GetOdom(robot_state, clock_skew_result.value(), frame_prefix_,
+                         preferred_odom_frame == frame_prefix_ + "vision"),
                  GetPowerState(robot_state, clock_skew_result.value()),
                  GetSystemFaultState(robot_state, clock_skew_result.value()),
                  GetManipulatorState(robot_state),
-                 GetEndEffectorForce(robot_state, clock_skew_result.value(), "Opal/"),
+                 GetEndEffectorForce(robot_state, clock_skew_result.value(), frame_prefix_),
                  GetBehaviorFaultState(robot_state, clock_skew_result.value())};
 
   return out;

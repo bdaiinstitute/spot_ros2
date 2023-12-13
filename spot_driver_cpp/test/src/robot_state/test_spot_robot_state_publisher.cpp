@@ -47,6 +47,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   bool getPublishDepthRegisteredImages() const override { return publish_depth_registered_images; }
 
+  std::string getPreferredOdomFrame() const override { return "odom"; }
+
   std::string getSpotName() const override { return spot_name; }
 
   double rgb_image_quality = kDefaultRGBImageQuality;
@@ -116,7 +118,7 @@ TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggersWithArm) {
     InSequence seq;
     EXPECT_CALL(*robot_state_client_interface, getRobotState);
     EXPECT_CALL(*middleware_handle, publishRobotState);
-    // EXPECT_CALL(*middleware_handle->tf_interface_, updateStaticTransforms);
+    EXPECT_CALL(*middleware_handle->tf_interface_, sendDynamicTransforms);
   }
 
   // GIVEN a robot_state_publisher

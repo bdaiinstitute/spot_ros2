@@ -16,13 +16,12 @@ class DefaultRobotStateClient : public RobotStateClientInterface {
   explicit DefaultRobotStateClient(::bosdyn::client::RobotStateClient* client,
                                    std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name);
 
-  tl::expected<RobotState, std::string> getRobotState() override;
+  tl::expected<RobotState, std::string> getRobotState(const std::string& preferred_odom_frame) override;
 
  private:
   ::bosdyn::client::RobotStateClient* client_;
   std::shared_ptr<TimeSyncApi> time_sync_api_;
   std::string frame_prefix_;
-  std::string preferred_odom_frame_;
 };
 
 }  // namespace spot_ros2

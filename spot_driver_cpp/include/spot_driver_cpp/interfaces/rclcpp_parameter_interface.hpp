@@ -27,6 +27,7 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
   bool getPublishRGBImages() const override;
   bool getPublishDepthImages() const override;
   bool getPublishDepthRegisteredImages() const override;
+  std::string getPreferredOdomFrame() const override;
   std::string getSpotName() const override;
 
  private:

@@ -49,6 +49,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   bool getPublishDepthRegisteredImages() const override { return publish_depth_registered_images; }
 
+  std::string getPreferredOdomFrame() const override { return "odom"; }
+
   std::string getSpotName() const override { return spot_name; }
 
   double rgb_image_quality = kDefaultRGBImageQuality;

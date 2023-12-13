@@ -45,7 +45,6 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   time_sync_api_ = std::make_shared<DefaultTimeSyncApi>(get_time_sync_thread_response.response);
 
   // Image API.
-
   const auto image_client_result = robot_->EnsureServiceClient<::bosdyn::client::ImageClient>(
       ::bosdyn::client::ImageClient::GetDefaultServiceName());
   if (!image_client_result.status) {
@@ -53,6 +52,13 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   }
   image_client_interface_ =
       std::make_shared<DefaultImageClient>(image_client_result.response, time_sync_api_, robot_name_);
+
+  const auto robot_state_result = robot_->EnsureServiceClient<::bosdyn::client::RobotStateClient>(
+      ::bosdyn::client::RobotStateClient::GetDefaultServiceName());
+  if(!robot_state_result.status){
+    return tl::make_unexpected("Failed to get robot state service client.");
+  }
+  robot_state_client_interface_ = std::make_shared<DefaultRobotStateClient>(robot_state_result.response, time_sync_api_, robot_name_);
 
   return {};
 }

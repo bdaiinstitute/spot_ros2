@@ -8,7 +8,6 @@ constexpr auto kNodeName{"spot_robot_state_publisher"};
 
 // ROS topic names for Spot's robot state publisher
 constexpr auto kJointStatesTopic{"joint_states"};
-constexpr auto kTransformsTopic{"tf"};
 constexpr auto kOdomTwistTopic{"odometry/twist"};
 constexpr auto kOdomTopic{"odometry"};
 constexpr auto kFeetTopic{"status/feet"};
@@ -32,7 +31,7 @@ RobotMiddlewareHandle::RobotMiddlewareHandle(std::shared_ptr<rclcpp::Node> node)
       timer_interface_{std::make_unique<RclcppWallTimerInterface>(node)} {}
 
 RobotMiddlewareHandle::RobotMiddlewareHandle(const rclcpp::NodeOptions& node_options)
-    : node_{std::make_shared<rclcpp::Node>(kNodeName, node_options)} {}
+    : RobotMiddlewareHandle(std::make_shared<rclcpp::Node>(kNodeName, node_options)) {}
 
 void RobotMiddlewareHandle::createPublishers() {
   const auto topic_prefix = parameter_interface_->getSpotName() + "/";
@@ -47,9 +46,6 @@ void RobotMiddlewareHandle::createPublishers() {
       topic_prefix + kEStopTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   joint_state_publisher_ = node_->create_publisher<sensor_msgs::msg::JointState>(
       topic_prefix + kJointStatesTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
-  dynamic_tf_publisher_ = node_->create_publisher<tf2_msgs::msg::TFMessage>(
-      topic_prefix + kTransformsTopic,
-      rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));  // TODO(abaker-bdai): maybe move to tf interface?
   odom_twist_publisher_ = node_->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
       topic_prefix + kOdomTwistTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   odom_publisher_ = node_->create_publisher<nav_msgs::msg::Odometry>(
@@ -76,7 +72,7 @@ void RobotMiddlewareHandle::publishRobotState(const RobotState& robot_state) {
     joint_state_publisher_->publish(robot_state.maybe_joint_states.value());
   }
   if (robot_state.maybe_tf) {
-    dynamic_tf_publisher_->publish(robot_state.maybe_tf.value());
+    tf_interface_->sendDynamicTransforms(robot_state.maybe_tf.value().transforms);
   }
   if (robot_state.maybe_odom_twist) {
     odom_twist_publisher_->publish(robot_state.maybe_odom_twist.value());

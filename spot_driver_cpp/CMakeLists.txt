@@ -38,6 +38,7 @@ add_library(spot_api
   src/api/default_time_sync_api.cpp
   src/api/spot_image_sources.cpp
   src/api/default_robot_state_client.cpp
+  src/conversions/geometry.cpp
 )
 
 target_include_directories(spot_api PUBLIC
@@ -135,6 +136,8 @@ install(
     spot_api
     spot_image_publisher
     spot_image_publisher_component
+    spot_robot_state_publisher
+    spot_robot_state_publisher_component
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -147,6 +150,8 @@ install(
   TARGETS 
     spot_image_publisher_node
     spot_image_publisher_node_component
+    spot_robot_state_publisher_node
+    spot_robot_state_publisher_node_component
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
