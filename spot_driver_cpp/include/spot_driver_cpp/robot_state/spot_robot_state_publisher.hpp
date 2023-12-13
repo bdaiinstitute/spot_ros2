@@ -25,13 +25,13 @@ public:
   class MiddlewareHandle {
     public:
       virtual void createPublishers() = 0;
-      virtual tl::expected<void, std::string> publishRobotState() = 0;
+      virtual void publishRobotState(const RobotState &robot_state) = 0;
 
+      virtual std::shared_ptr<rclcpp::Node> node() = 0;
       virtual ParameterInterfaceBase* parameter_interface() = 0;
       virtual LoggerInterfaceBase* logger_interface() = 0;
       virtual TfInterfaceBase* tf_interface() = 0;
       virtual TimerInterfaceBase* timer_interface() = 0;
-      virtual std::shared_ptr<rclcpp::Node> node() = 0;
 
       virtual ~MiddlewareHandle() = default;
   };

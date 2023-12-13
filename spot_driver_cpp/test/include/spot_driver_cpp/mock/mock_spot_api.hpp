@@ -4,6 +4,7 @@
 
 #include <spot_driver_cpp/api/spot_api.hpp>
 #include <spot_driver_cpp/interfaces/image_client_interface.hpp>
+#include <spot_driver_cpp/interfaces/robot_state_client_interface.hpp>
 
 #include <memory>
 #include <string>
@@ -15,5 +16,6 @@ class MockSpotApi : public SpotApi {
   MOCK_METHOD((tl::expected<void, std::string>), authenticate, (const std::string&, const std::string&), (override));
   MOCK_METHOD((tl::expected<bool, std::string>), hasArm, (), (const, override));
   MOCK_METHOD(std::shared_ptr<ImageClientInterface>, image_client_interface, (), (const, override));
+  MOCK_METHOD(std::shared_ptr<RobotStateClientInterface>, robot_state_client_interface, (), (const, override));
 };
 }  // namespace spot_ros2::test

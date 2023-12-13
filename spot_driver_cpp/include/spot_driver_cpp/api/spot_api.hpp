@@ -3,6 +3,7 @@
 #pragma once
 
 #include <spot_driver_cpp/interfaces/image_client_interface.hpp>
+#include <spot_driver_cpp/interfaces/robot_state_client_interface.hpp>
 #include <tl_expected/expected.hpp>
 
 #include <memory>
@@ -18,5 +19,7 @@ class SpotApi {
   virtual tl::expected<void, std::string> authenticate(const std::string& username, const std::string& password) = 0;
   virtual tl::expected<bool, std::string> hasArm() const = 0;
   virtual std::shared_ptr<ImageClientInterface> image_client_interface() const = 0;
+  virtual std::shared_ptr<RobotStateClientInterface> robot_state_client_interface() const = 0;
+
 };
 }  // namespace spot_ros2

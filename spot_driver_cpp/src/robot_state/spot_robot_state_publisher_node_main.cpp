@@ -9,7 +9,7 @@
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
 
-  const auto node = std::make_shared<spot_ros2::robot_state::SpotRobotStatePublisherNode>();
+  const auto node = std::make_shared<spot_ros2::SpotRobotStatePublisherNode>();
 
   // Spins the node with the default single-threaded executor.
   rclcpp::spin(node->get_node_base_interface());

@@ -64,10 +64,6 @@ target_link_libraries(spot_image_publisher PUBLIC spot_api)
 set_property(TARGET spot_image_publisher PROPERTY POSITION_INDEPENDENT_CODE ON)
 ament_target_dependencies(spot_image_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
-# Base library container SpotRobotStatePublisher
-# add_library(spot_robot_state_publisher
-  # src/robot_state/ )
-
 # Create executable to allow running SpotImagePublisherNode directly as a ROS 2 node
 add_executable(spot_image_publisher_node src/images/spot_image_publisher_node_main.cpp)
 target_link_libraries(spot_image_publisher_node PUBLIC spot_image_publisher)
@@ -87,12 +83,51 @@ target_include_directories(spot_image_publisher_component
 target_link_libraries(spot_image_publisher_component PUBLIC spot_image_publisher)
 ament_target_dependencies(spot_image_publisher PUBLIC rclcpp_components)
 
-
-
 rclcpp_components_register_node(
   spot_image_publisher_component
   PLUGIN "spot_ros2::images::SpotImagePublisherNode"
   EXECUTABLE spot_image_publisher_node_component)
+
+# Base library container SpotRobotStatePublisher
+add_library(spot_robot_state_publisher
+   src/robot_state/robot_middleware_handle.cpp
+   src/robot_state/spot_robot_state_publisher.cpp
+   src/robot_state/spot_robot_state_publisher_node.cpp
+)
+
+target_include_directories(spot_robot_state_publisher
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(spot_robot_state_publisher PUBLIC spot_api)
+set_property(TARGET spot_robot_state_publisher PROPERTY POSITION_INDEPENDENT_CODE ON)
+ament_target_dependencies(spot_robot_state_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
+
+# Create executable to allow running SpotRobotStatePublisherNode directly as a ROS 2 node
+add_executable(spot_robot_state_publisher_node src/robot_state/spot_robot_state_publisher_node_main.cpp)
+target_link_libraries(spot_robot_state_publisher_node PUBLIC spot_robot_state_publisher)
+target_include_directories(spot_robot_state_publisher_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+# Register a composable node to allow loading SpotRobotStatePublisherNode in a component container
+add_library(spot_robot_state_publisher_component SHARED src/robot_state/spot_robot_state_publisher_component.cpp)
+target_include_directories(spot_robot_state_publisher_component
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(spot_robot_state_publisher_component PUBLIC spot_robot_state_publisher)
+ament_target_dependencies(spot_robot_state_publisher PUBLIC rclcpp_components)
+
+rclcpp_components_register_node(
+  spot_robot_state_publisher_component
+  PLUGIN "spot_ros2::SpotRobotStatePublisherNode"
+  EXECUTABLE spot_robot_state_publisher_node_component)
 
 # Install Libraries
 install(

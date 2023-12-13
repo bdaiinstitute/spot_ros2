@@ -21,11 +21,13 @@ class DefaultSpotApi : public SpotApi {
   tl::expected<void, std::string> authenticate(const std::string& username, const std::string& password) override;
   tl::expected<bool, std::string> hasArm() const override;
   std::shared_ptr<ImageClientInterface> image_client_interface() const override;
+  std::shared_ptr<RobotStateClientInterface> robot_state_client_interface() const override;
 
  private:
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   std::shared_ptr<ImageClientInterface> image_client_interface_;
+  std::shared_ptr<RobotStateClientInterface> robot_state_client_interface_;
   std::shared_ptr<TimeSyncApi> time_sync_api_;
   std::string robot_name_;
 };

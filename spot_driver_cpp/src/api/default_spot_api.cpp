@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <bosdyn/client/gripper_camera_param/gripper_camera_param_client.h>
+#include <spot_driver_cpp/api/default_robot_state_client.hpp>
 #include <spot_driver_cpp/api/default_image_client.hpp>
 #include <spot_driver_cpp/api/default_spot_api.hpp>
 #include <spot_driver_cpp/api/default_time_sync_api.hpp>
@@ -73,5 +74,9 @@ tl::expected<bool, std::string> DefaultSpotApi::hasArm() const {
 
 std::shared_ptr<ImageClientInterface> DefaultSpotApi::image_client_interface() const {
   return image_client_interface_;
+}
+
+std::shared_ptr<RobotStateClientInterface> DefaultSpotApi::robot_state_client_interface() const {
+  return robot_state_client_interface_;
 }
 }  // namespace spot_ros2

@@ -23,7 +23,7 @@ class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
     ~RobotMiddlewareHandle() = default;
 
     void createPublishers() override;
-    virtual tl::expected<void, std::string> publishRobotState() = 0;
+    void publishRobotState(const RobotState &robot_state) override;
 
     ParameterInterfaceBase* parameter_interface() override { return parameter_interface_.get(); }
     LoggerInterfaceBase* logger_interface() override { return logger_interface_.get(); }
