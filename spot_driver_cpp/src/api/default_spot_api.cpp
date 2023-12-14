@@ -1,8 +1,8 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <bosdyn/client/gripper_camera_param/gripper_camera_param_client.h>
-#include <spot_driver_cpp/api/default_kinematic_api.hpp>
 #include <spot_driver_cpp/api/default_image_client.hpp>
+#include <spot_driver_cpp/api/default_kinematic_api.hpp>
 #include <spot_driver_cpp/api/default_spot_api.hpp>
 #include <spot_driver_cpp/api/default_time_sync_api.hpp>
 
