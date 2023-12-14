@@ -13,6 +13,7 @@ import geometry_msgs.msg
 import numpy as np
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
+from bosdyn.api import geometry_pb2
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client.frame_helpers import (
     BODY_FRAME_NAME,
@@ -21,7 +22,6 @@ from bosdyn.client.frame_helpers import (
     ODOM_FRAME_NAME,
     get_a_tform_b,
 )
-from bosdyn.api import geometry_pb2
 from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from geometry_msgs.msg import TransformStamped
