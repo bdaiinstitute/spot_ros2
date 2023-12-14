@@ -1491,6 +1491,8 @@ class SpotROS(Node):
             self.get_logger().warn("Command is incompatible with current hardware")
             return GoalResponse.FAILED
 
+        # if status == RobotCommandFeedbackStatusStatus.STATUS_PROCESSING,
+        # return None to continue processing the command feedback
         return None
 
     def _process_full_body_command_feedback(self, feedback: FullBodyCommandFeedback) -> GoalResponse:
