@@ -1,8 +1,8 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/test/rclcpp_test.hpp>
+#include <spot_driver_cpp/rclcpp_test.hpp>
 
-namespace spot_ros2 {
+namespace spot_ros2::test {
 RclcppTest::RclcppTest() : is_rclcpp_initialized_{rclcpp::ok()} {}
 
 void RclcppTest::SetUp() {
@@ -16,4 +16,4 @@ void RclcppTest::TearDown() {
     rclcpp::shutdown();
   }
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::test

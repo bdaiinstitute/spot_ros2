@@ -1,8 +1,12 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <rclcpp/qos.hpp>
-#include <spot_driver_cpp/interfaces/rclcpp_publisher_interface.hpp>
-#include <tl_expected/expected.hpp>
+#include <rclcpp/node.hpp>
+#include <spot_driver_cpp/api/spot_image_sources.hpp>
+#include <spot_driver_cpp/images/images_middleware_handle.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_parameter_interface.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
+#include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
 
 namespace {
 constexpr auto kPublisherHistoryDepth = 1;
@@ -11,11 +15,19 @@ constexpr auto kImageTopicSuffix = "image";
 constexpr auto kCameraInfoTopicSuffix = "camera_info";
 }  // namespace
 
-namespace spot_ros2 {
+namespace spot_ros2::images {
 
-RclcppPublisherInterface::RclcppPublisherInterface(const std::shared_ptr<rclcpp::Node>& node) : node_{node} {}
+ImagesMiddlewareHandle::ImagesMiddlewareHandle(std::shared_ptr<rclcpp::Node> node)
+    : node_{node},
+      parameter_interface_{std::make_unique<RclcppParameterInterface>(node)},
+      logger_interface_{std::make_unique<RclcppLoggerInterface>(node->get_logger())},
+      tf_interface_{std::make_unique<RclcppTfInterface>(node)},
+      timer_interface_{std::make_unique<RclcppWallTimerInterface>(node)} {}
 
-void RclcppPublisherInterface::createPublishers(const std::set<ImageSource>& image_sources) {
+ImagesMiddlewareHandle::ImagesMiddlewareHandle(const rclcpp::NodeOptions& node_options)
+    : ImagesMiddlewareHandle(std::make_shared<rclcpp::Node>("image_publisher", node_options)) {}
+
+void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image_sources) {
   image_publishers_.clear();
   info_publishers_.clear();
 
@@ -38,7 +50,7 @@ void RclcppPublisherInterface::createPublishers(const std::set<ImageSource>& ima
   }
 }
 
-tl::expected<void, std::string> RclcppPublisherInterface::publish(
+tl::expected<void, std::string> ImagesMiddlewareHandle::publishImages(
     const std::map<ImageSource, ImageWithCameraInfo>& images) {
   for (const auto& [image_source, image_data] : images) {
     const auto topic_name_base = toRosTopic(image_source);
@@ -59,4 +71,5 @@ tl::expected<void, std::string> RclcppPublisherInterface::publish(
 
   return {};
 }
-}  // namespace spot_ros2
+
+}  // namespace spot_ros2::images

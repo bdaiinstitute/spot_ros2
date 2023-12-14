@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <bosdyn/client/image/image_source_names.h>
-#include <spot_driver_cpp/spot_image_sources.hpp>
+#include <spot_driver_cpp/api/spot_image_sources.hpp>
 #include <spot_driver_cpp/types.hpp>
 #include <stdexcept>
 #include <tl_expected/expected.hpp>

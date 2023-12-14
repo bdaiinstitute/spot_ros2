@@ -2,6 +2,6 @@
 
 #include <rclcpp/node_options.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-#include <spot_driver_cpp/spot_image_publisher_node.hpp>
+#include <spot_driver_cpp/images/spot_image_publisher_node.hpp>
 
-RCLCPP_COMPONENTS_REGISTER_NODE(spot_ros2::SpotImagePublisherNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(spot_ros2::images::SpotImagePublisherNode)
