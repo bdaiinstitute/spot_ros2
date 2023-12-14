@@ -55,7 +55,6 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
       std::make_shared<DefaultImageClient>(image_client_result.response, time_sync_api_, robot_name_);
 
   // Kinematic API.
-
   const auto kinematic_api_result = robot_->EnsureServiceClient<::bosdyn::client::InverseKinematicsClient>(
       ::bosdyn::client::InverseKinematicsClient::GetDefaultServiceName());
   if (!kinematic_api_result.status) {
@@ -84,7 +83,6 @@ tl::expected<bool, std::string> DefaultSpotApi::hasArm() const {
 std::shared_ptr<ImageClientInterface> DefaultSpotApi::image_client_interface() const {
   return image_client_interface_;
 }
-
 std::shared_ptr<KinematicApi> DefaultSpotApi::kinematic_api() const {
   return kinematic_api_;
 }

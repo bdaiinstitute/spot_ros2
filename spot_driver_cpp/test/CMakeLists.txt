@@ -36,10 +36,26 @@ target_link_libraries(test_spot_image_publisher_node spot_api)
 
 # test_spot_image_sources
 
+# test_spot_image_publisher_node
+
+ament_add_gmock(test_spot_image_publisher_node
+  src/images/test_spot_image_publisher_node.cpp
+)
+target_include_directories(test_spot_image_publisher_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(test_spot_image_publisher_node spot_image_publisher)
+
+# test_spot_image_sources
+
 ament_add_gmock(test_spot_image_sources
   src/images/test_spot_image_sources.cpp
 )
 target_link_libraries(test_spot_image_sources spot_api)
+
+# test_parameter_interface
 
 # test_parameter_interface
 
