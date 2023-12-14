@@ -33,19 +33,6 @@ add_library(spot_api
   src/api/default_spot_api.cpp
   src/api/default_time_sync_api.cpp
   src/api/spot_image_sources.cpp
-)
-
-target_include_directories(spot_api PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-
-target_link_libraries(spot_api PUBLIC bosdyn::bosdyn_client_static)
-set_property(TARGET spot_api PROPERTY POSITION_INDEPENDENT_CODE ON)
-ament_target_dependencies(spot_api PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
-
-# Base library containing the SpotImagePublisherNode class
-add_library(spot_image_publisher
   src/interfaces/rclcpp_logger_interface.cpp
   src/interfaces/rclcpp_parameter_interface.cpp
   src/interfaces/rclcpp_tf_interface.cpp
@@ -59,23 +46,22 @@ add_library(spot_image_publisher
   src/images/images_middleware_handle.cpp
   src/images/spot_image_publisher_node.cpp
 )
-target_include_directories(spot_image_publisher
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+target_include_directories(spot_api PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(spot_image_publisher PUBLIC spot_api)
-set_property(TARGET spot_image_publisher PROPERTY POSITION_INDEPENDENT_CODE ON)
-ament_target_dependencies(spot_image_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
+target_link_libraries(spot_api PUBLIC bosdyn::bosdyn_client_static)
+set_property(TARGET spot_api PROPERTY POSITION_INDEPENDENT_CODE ON)
+ament_target_dependencies(spot_api PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
 # Create executable to allow running SpotImagePublisherNode directly as a ROS 2 node
 add_executable(spot_image_publisher_node src/images/spot_image_publisher_node_main.cpp)
-target_link_libraries(spot_image_publisher_node PUBLIC spot_image_publisher)
 target_include_directories(spot_image_publisher_node
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+target_link_libraries(spot_image_publisher_node PUBLIC spot_api)
 
 # Register a composable node to allow loading SpotImagePublisherNode in a component container
 add_library(spot_image_publisher_component SHARED src/images/spot_image_publisher_component.cpp)
@@ -84,8 +70,7 @@ target_include_directories(spot_image_publisher_component
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(spot_image_publisher_component PUBLIC spot_image_publisher)
-ament_target_dependencies(spot_image_publisher PUBLIC rclcpp_components)
+target_link_libraries(spot_image_publisher_component PUBLIC spot_api)
 
 rclcpp_components_register_node(
   spot_image_publisher_component
@@ -94,12 +79,12 @@ rclcpp_components_register_node(
 
 # Create executable to allow running KinematicNode directly as a ROS 2 node.
 add_executable(kinematic_node src/kinematic/kinematic_node_main.cpp)
-target_link_libraries(kinematic_node PUBLIC spot_image_publisher)
 target_include_directories(kinematic_node
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+target_link_libraries(kinematic_node PUBLIC spot_api)
 
 # Register a composable node to allow loading KinematicNode in a component container
 add_library(kinematic_component SHARED src/kinematic/kinematic_component.cpp)
@@ -108,22 +93,19 @@ target_include_directories(kinematic_component
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(kinematic_component PUBLIC spot_image_publisher)
+target_link_libraries(kinematic_component PUBLIC spot_api)
 
 rclcpp_components_register_node(
   kinematic_component
   PLUGIN "spot_ros2::kinematic::KinematicNode"
   EXECUTABLE kinematic_node_component)
 
-
 # Install Libraries
 install(
   TARGETS
     spot_api
-    spot_image_publisher
     spot_image_publisher_component
-    kinematic_node
-    kinematic_node_component
+    kinematic_component
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

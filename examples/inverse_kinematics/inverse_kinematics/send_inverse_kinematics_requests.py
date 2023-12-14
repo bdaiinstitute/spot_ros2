@@ -4,6 +4,7 @@
 
 import argparse
 import time
+from typing import List
 
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
@@ -12,6 +13,7 @@ import geometry_msgs.msg
 import numpy as np
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
+from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, GROUND_PLANE_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
@@ -20,7 +22,7 @@ from rclpy.node import Node
 from spot_utilities.spot_basic import SpotBasic
 from tf2_ros import TransformBroadcaster
 from utilities.tf_listener_wrapper import TFListenerWrapper
-from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
+
 import spot_driver.conversions as conv
 import spot_msgs.srv
 from spot_msgs.action import RobotCommand
@@ -44,7 +46,7 @@ class IKTest:
         )
 
         self.timer = node.create_timer(0.1, self.timer_callback)
-        self.transforms = []
+        self.transforms: List[TransformStamped] = []
 
     def publish_transform(self, parent_frame_name: str, child_frame_name: str, pose: SE3Pose) -> None:
         """
@@ -62,7 +64,7 @@ class IKTest:
         tf.transform.rotation.w = float(pose.rot.w)
         self.transforms.append(tf)
 
-    def timer_callback(self):
+    def timer_callback(self) -> None:
         """
         Publish all cached tranformations at 10Hz so we can view
         """
@@ -137,7 +139,6 @@ class IKTest:
         return result
 
     def send_requests(self) -> bool:
-
         # Frame names.
         odom_frame_name = namespace_with(self.robot_name, ODOM_FRAME_NAME)
         flat_body_frame_name = namespace_with(self.robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)
@@ -285,7 +286,6 @@ def cli() -> argparse.ArgumentParser:
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> None:
-
     # Set up basic ROS2 utilities for communicating with the driver.
     node = ros_scope.node()
     if node is None:
