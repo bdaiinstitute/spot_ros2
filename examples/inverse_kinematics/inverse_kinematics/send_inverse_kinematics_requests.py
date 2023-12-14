@@ -26,6 +26,7 @@ from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from geometry_msgs.msg import TransformStamped
 from rclpy.node import Node
+from spatialmath import SE2
 from spot_utilities.spot_basic import SpotBasic
 from tf2_ros import TransformBroadcaster
 from utilities.tf_listener_wrapper import TFListenerWrapper
@@ -39,6 +40,7 @@ class IKTest:
     def __init__(self, node: Node, args: argparse.Namespace):
         self.node = node
         self.robot_name: str = args.robot
+        self.docking_station: int = args.dock
         self.poses: int = args.poses
         self.logger = node.get_logger()
         self.tf_broadcaster = TransformBroadcaster(node)
@@ -182,6 +184,22 @@ class IKTest:
             return False
         self.logger.info("Successfully stood up.")
 
+        # Rotate 90 degrees.
+        self.logger.info("Walking forward")
+        result = self.robot.walk_to(SE2(0.2, 0))
+        if not result:
+            self.logger.error("Cannot walk forward")
+            return False
+        self.logger.info("Successfully walked forward.")
+
+        # Walk forward.
+        self.logger.info("Rotate 90 degrees")
+        result = self.robot.walk_to(SE2(1.5708))
+        if not result:
+            self.logger.error("Cannot rotate")
+            return False
+        self.logger.info("Successfully rotated 90 degrees.")
+
         # Look for known transforms published by the robot.
         odom_T_flat_body: SE3Pose = self.tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name)
         odom_T_gpe: SE3Pose = self.tf_listener.lookup_a_tform_b(odom_frame_name, ground_plane_frame_name)
@@ -205,8 +223,8 @@ class IKTest:
         # above the ground. The task frame is aligned with the "gravity aligned body frame", such that
         # the positive-x direction is to the front of the robot, the positive-y direction is to the left
         # of the robot, and the positive-z direction is opposite to gravity.
-        x_size = 0.6  # m
-        y_size = 0.6  # m
+        x_size = 0.8  # m
+        y_size = 0.8  # m
         x_rt_task = x_size * np.random.random(self.poses)
         y_rt_task = -y_size / 2 + y_size * np.random.random(self.poses)
         task_T_desired_tools = [
@@ -237,7 +255,6 @@ class IKTest:
 
         # Send IK requests.
         for i, task_T_desired_tool in enumerate(task_T_desired_tools):
-            self.publish_transform(task_frame_name, desired_pose_name + str(i), task_T_desired_tool)
             ik_request = self.create_ik_request(
                 odom_T_task=odom_T_task, wr1_T_tool=wr1_T_tool, task_T_desired_tool=task_T_desired_tool
             )
@@ -247,6 +264,7 @@ class IKTest:
             stand_command = None
             if ik_response.response.status.value == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_OK:
                 self.logger.info("Solution found")
+                self.publish_transform(task_frame_name, "T" + str(i) + "-YES", task_T_desired_tool)
 
                 # We don't have yet a ROS2 method to get a transform from a snapshot:
                 # we must convert the ROS2 message into Protobuf first.
@@ -265,15 +283,16 @@ class IKTest:
                     )
                 )
                 stand_command = RobotCommandBuilder.synchro_stand_command(params=mobility_params)
-                stand_command = body_assist_enabled_stand_command
             elif (
                 ik_response.response.status.value
                 == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_NO_SOLUTION_FOUND
             ):
                 self.logger.info("No solution found")
+                self.publish_transform(task_frame_name, "T" + str(i) + "-NO", task_T_desired_tool)
                 stand_command = body_assist_enabled_stand_command
             else:
                 self.logger.info("Status unknown")
+                self.publish_transform(task_frame_name, "T" + str(i) + "-NO", task_T_desired_tool)
                 stand_command = body_assist_enabled_stand_command
 
             # Move the arm tool to the requested position.
@@ -292,13 +311,12 @@ class IKTest:
                 action_name="arm_move_one", goal=arm_command_goal, timeout_sec=5
             )
 
-        # Stow the arm and reset the pose.
-        stand_command = RobotCommandBuilder.stand_command()
-        arm_stow_command = RobotCommandBuilder.arm_stow_command(build_on_command=body_assist_enabled_stand_command)
-        reset_command = RobotCommandBuilder.build_synchro_command(stand_command, arm_stow_command)
-        reset_command_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(reset_command, reset_command_goal.command)
-        self.robot_command_client.send_goal_and_wait("reset_command", reset_command_goal)
+        # Dock robot.
+        self.logger.info("Docking the robot")
+        result = self.robot.dock(self.docking_station)
+        if not result:
+            self.logger.error("Unable to dock the robot")
+            return False
 
         # Power off robot.
         self.logger.info("Powering robot off")
@@ -313,6 +331,7 @@ class IKTest:
 def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--robot", type=str, required=True, help="The robot name.")
+    parser.add_argument("--dock", type=int, required=True, help="The docking station number (527 for Spot Opal).")
     parser.add_argument("-n", "--poses", type=int, default=50, help="Number of desired tool poses to query.")
     return parser
 
