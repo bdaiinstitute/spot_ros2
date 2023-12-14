@@ -17,9 +17,21 @@ namespace spot_ros2 {
  */
 class SpotRobotStatePublisherNode {
  public:
+  /**
+   * @brief Primary constructor for SpotRobotStatePublisherNode.
+   * @details This constructor enables dependency inversion for improved testibility
+   *
+   * @param spot_api a unique_ptr of a SpotApi instance that this SpotRobotStatePublisherNode will take ownership of
+   * @param mw_handle a unique_ptr of a SpotRobotStatePublisher::MiddlewareHandle instance that this SpotRobotStatePublisherNode will take ownership of
+   */
   SpotRobotStatePublisherNode(std::unique_ptr<SpotApi> spot_api,
                               std::unique_ptr<SpotRobotStatePublisher::MiddlewareHandle> mw_handle);
 
+  /**
+   * @brief Delegating constructor used in production.
+   *
+   * @param node_options node configuration options used when creating a rclcpp::Node
+   */
   explicit SpotRobotStatePublisherNode(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
   /**

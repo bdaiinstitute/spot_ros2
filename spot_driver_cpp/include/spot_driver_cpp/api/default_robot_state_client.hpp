@@ -13,6 +13,13 @@ namespace spot_ros2 {
 
 class DefaultRobotStateClient : public RobotStateClientInterface {
  public:
+   /**
+   * @brief constructor for DefaultRobotStateClient.
+   *
+   * @param client pointer to Spot's RobotStateClient. A DefaultRobotStateClient SHOULD NOT delete this pointer since it does not take ownership.
+   * @param time_sync_api A shared_ptr to a time_sync_api. This allows the client to retreive a Spot's current time and clock skew
+   * @param robot_name Name of Spot. Used to apply frame_prefix
+   */
   explicit DefaultRobotStateClient(::bosdyn::client::RobotStateClient* client,
                                    std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name);
 

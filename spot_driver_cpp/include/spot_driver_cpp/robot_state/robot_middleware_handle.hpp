@@ -9,20 +9,45 @@
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <spot_driver_cpp/robot_state/spot_robot_state_publisher.hpp>
 #include <tl_expected/expected.hpp>
+#include <spot_driver_cpp/types.hpp>
 
 #include <memory>
 #include <string>
 
 namespace spot_ros2 {
 
+  /**
+   * @brief pProduction implementation of a SpotRobotStatePublisher::MiddlewareHandle
+   */ 
+
 class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
  public:
+
+  /**
+   * @brief Constructor for RobotMiddlewareHandle.
+   * 
+   * @param node A shared instance to a rclcpp::node
+   */ 
   explicit RobotMiddlewareHandle(std::shared_ptr<rclcpp::Node> node);
+  
+  /**
+   * @brief Delegating constructor for RobotMiddlewareHandle.
+   * 
+   * @param node_options configuration options for a rclcpp::node
+   */
   explicit RobotMiddlewareHandle(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
   ~RobotMiddlewareHandle() = default;
 
+  /**
+   * @brief Create ROS publishers for Robot State
+   */ 
   void createPublishers() override;
+
+  /**
+   * @brief Publish robot state messages
+   */ 
+
   void publishRobotState(const RobotState& robot_state) override;
 
   ParameterInterfaceBase* parameter_interface() override { return parameter_interface_.get(); }
@@ -48,8 +73,6 @@ class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::FootStateArray>> foot_states_publisher_;
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::EStopStateArray>> estop_states_publisher_;
   std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::JointState>> joint_state_publisher_;
-  std::shared_ptr<rclcpp::Publisher<tf2_msgs::msg::TFMessage>>
-      dynamic_tf_publisher_;  // TODO(abaker-bdai): maybe move to tf interface?
   std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>> odom_twist_publisher_;
   std::shared_ptr<rclcpp::Publisher<nav_msgs::msg::Odometry>> odom_publisher_;
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::PowerState>> power_state_publisher_;

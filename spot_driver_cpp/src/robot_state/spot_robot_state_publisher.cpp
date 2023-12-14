@@ -16,18 +16,14 @@ namespace spot_ros2 {
 SpotRobotStatePublisher::SpotRobotStatePublisher(
     std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
     std::unique_ptr<MiddlewareHandle> middleware_handle)
-    : client_interface_{robot_state_client_interface}, middleware_handle_{std::move(middleware_handle)} {}
-
-bool SpotRobotStatePublisher::initialize() {
-  // Create a publisher for all messages in robot state
+    : client_interface_{robot_state_client_interface}, middleware_handle_{std::move(middleware_handle)} {
+        // Create a publisher for all messages in robot state
   middleware_handle_->createPublishers();
 
   // Create a timer to request and publish robot state at a fixed rate
   middleware_handle_->timer_interface()->setTimer(kRobotStateCallbackPeriod, [this]() {
     timerCallback();
   });
-
-  return true;
 }
 
 void SpotRobotStatePublisher::timerCallback() {

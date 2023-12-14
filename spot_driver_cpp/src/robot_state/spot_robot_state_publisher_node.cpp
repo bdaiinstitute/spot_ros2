@@ -35,7 +35,6 @@ SpotRobotStatePublisherNode::SpotRobotStatePublisherNode(
 
   internal_ =
       std::make_unique<SpotRobotStatePublisher>(spot_api_->robot_state_client_interface(), std::move(mw_handle));
-  internal_->initialize();
 }
 
 SpotRobotStatePublisherNode::SpotRobotStatePublisherNode(const rclcpp::NodeOptions& node_options)

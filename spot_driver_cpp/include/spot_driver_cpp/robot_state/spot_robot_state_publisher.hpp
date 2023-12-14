@@ -23,6 +23,9 @@ namespace spot_ros2 {
  */
 class SpotRobotStatePublisher {
  public:
+   /**
+   * @brief A handle that enables dependency injection of ROS and rclcpp::node operations
+   */
   class MiddlewareHandle {
    public:
     virtual void createPublishers() = 0;
@@ -37,12 +40,21 @@ class SpotRobotStatePublisher {
     virtual ~MiddlewareHandle() = default;
   };
 
+  /**
+   * @brief Constructor for SpotRobotStatePublisher.
+   * @details As opposed to other Spot Publishers, initialization takes place inside of the constructor because initialization cannot fail.
+   *
+   * @param robot_state_client_interface a shared instance of a RobotStateClientInterface. 
+   * @param middleware_handle A unique instance of a MiddlewareHandle that SpotRobotStatePublisher will take ownership of
+   */
+
   SpotRobotStatePublisher(std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
                           std::unique_ptr<MiddlewareHandle> middleware_handle);
 
-  bool initialize();
-
  private:
+  /**
+   * @brief Callback function to retrieve and publish Spot's Robot State
+   */
   void timerCallback();
 
   // Interface classes to interact with Spot and the middleware.
