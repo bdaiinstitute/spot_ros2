@@ -46,6 +46,7 @@ from bosdyn_msgs.msg import (
     ManipulatorState,
     MobilityCommandFeedback,
     RobotCommandFeedback,
+    RobotCommandFeedbackStatusStatus,
 )
 from geometry_msgs.msg import (
     Pose,
@@ -1470,9 +1471,32 @@ class SpotROS(Node):
             response.message = f"Error: {e}"
             return response
 
-    def _process_full_body_command_feedback(self, feedback: FullBodyCommandFeedback) -> GoalResponse:
-        if feedback.status.value != feedback.status.STATUS_PROCESSING:
+    def _process_feedback_status(self, status: int) -> Optional[GoalResponse]:
+        if status == RobotCommandFeedbackStatusStatus.STATUS_UNKNOWN:
             return GoalResponse.IN_PROGRESS
+
+        if status == RobotCommandFeedbackStatusStatus.STATUS_COMMAND_OVERRIDDEN:
+            self.get_logger().warn("Command has been overwritten")
+            return GoalResponse.FAILED
+
+        if status == RobotCommandFeedbackStatusStatus.STATUS_COMMAND_TIMED_OUT:
+            self.get_logger().warn("Command has timed out")
+            return GoalResponse.FAILED
+
+        if status == RobotCommandFeedbackStatusStatus.STATUS_ROBOT_FROZEN:
+            self.get_logger().warn("Robot is in unsafe state. Will only respond to safe commands")
+            return GoalResponse.FAILED
+
+        if status == RobotCommandFeedbackStatusStatus.STATUS_INCOMPATIBLE_HARDWARE:
+            self.get_logger().warn("Command is incompatible with current hardware")
+            return GoalResponse.FAILED
+
+        return None
+
+    def _process_full_body_command_feedback(self, feedback: FullBodyCommandFeedback) -> GoalResponse:
+        maybe_goal_response = self._process_feedback_status(feedback.status.value)
+        if maybe_goal_response is not None:
+            return maybe_goal_response
 
         fb = feedback.feedback
         choice = fb.feedback_choice
@@ -1516,13 +1540,9 @@ class SpotROS(Node):
         return GoalResponse.IN_PROGRESS
 
     def _process_synchronized_arm_command_feedback(self, feedback: ArmCommandFeedback) -> GoalResponse:
-        if (
-            feedback.status.value == feedback.status.STATUS_COMMAND_OVERRIDDEN
-            or feedback.status.value == feedback.status.STATUS_COMMAND_TIMED_OUT
-            or feedback.status.value == feedback.status.STATUS_ROBOT_FROZEN
-            or feedback.status.value == feedback.status.STATUS_INCOMPATIBLE_HARDWARE
-        ):
-            return GoalResponse.FAILED
+        maybe_goal_response = self._process_feedback_status(feedback.status.value)
+        if maybe_goal_response is not None:
+            return maybe_goal_response
 
         fb = feedback.feedback
         choice = fb.feedback_choice
@@ -1576,13 +1596,9 @@ class SpotROS(Node):
         return GoalResponse.SUCCESS
 
     def _process_synchronized_mobility_command_feedback(self, feedback: MobilityCommandFeedback) -> GoalResponse:
-        if (
-            feedback.status.value == feedback.status.STATUS_COMMAND_OVERRIDDEN
-            or feedback.status.value == feedback.status.STATUS_COMMAND_TIMED_OUT
-            or feedback.status.value == feedback.status.STATUS_ROBOT_FROZEN
-            or feedback.status.value == feedback.status.STATUS_INCOMPATIBLE_HARDWARE
-        ):
-            return GoalResponse.FAILED
+        maybe_goal_response = self._process_feedback_status(feedback.status.value)
+        if maybe_goal_response is not None:
+            return maybe_goal_response
 
         fb = feedback.feedback
         choice = fb.feedback_choice
@@ -1617,13 +1633,9 @@ class SpotROS(Node):
         return GoalResponse.SUCCESS
 
     def _process_synchronized_gripper_command_feedback(self, feedback: GripperCommandFeedback) -> GoalResponse:
-        if (
-            feedback.status.value == feedback.status.STATUS_COMMAND_OVERRIDDEN
-            or feedback.status.value == feedback.status.STATUS_COMMAND_TIMED_OUT
-            or feedback.status.value == feedback.status.STATUS_ROBOT_FROZEN
-            or feedback.status.value == feedback.status.STATUS_INCOMPATIBLE_HARDWARE
-        ):
-            return GoalResponse.FAILED
+        maybe_goal_response = self._process_feedback_status(feedback.status.value)
+        if maybe_goal_response is not None:
+            return maybe_goal_response
 
         if feedback.command.command_choice == feedback.command.COMMAND_CLAW_GRIPPER_FEEDBACK_SET:
             if (
@@ -1665,7 +1677,7 @@ class SpotROS(Node):
             # So if any one of the sub-commands is still in progress, it short-circuits out as
             # IN_PROGRESS.  And if it makes it to the bottom of the function, then all components
             # must be satisfied, and it returns SUCCESS.
-            # One corner if choice == to know about is that the commands that don't provide feedback, such
+            # One corner case to know about is that the commands that don't provide feedback, such
             # as a velocity command will return SUCCESS.  This allows you to use them more effectively
             # with other commands.  For example if you wanted to move the arm with some velocity
             # while the mobility is going to some SE2 trajectory then that will work.
