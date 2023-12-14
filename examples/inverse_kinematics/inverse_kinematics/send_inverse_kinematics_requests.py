@@ -14,7 +14,14 @@ import numpy as np
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
-from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, GROUND_PLANE_FRAME_NAME, ODOM_FRAME_NAME
+from bosdyn.client.frame_helpers import (
+    BODY_FRAME_NAME,
+    GRAV_ALIGNED_BODY_FRAME_NAME,
+    GROUND_PLANE_FRAME_NAME,
+    ODOM_FRAME_NAME,
+    get_a_tform_b,
+)
+from bosdyn.api import geometry_pb2
 from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from geometry_msgs.msg import TransformStamped
@@ -198,8 +205,8 @@ class IKTest:
         # above the ground. The task frame is aligned with the "gravity aligned body frame", such that
         # the positive-x direction is to the front of the robot, the positive-y direction is to the left
         # of the robot, and the positive-z direction is opposite to gravity.
-        x_size = 0.7  # m
-        y_size = 0.8  # m
+        x_size = 0.6  # m
+        y_size = 0.6  # m
         x_rt_task = x_size * np.random.random(self.poses)
         y_rt_task = -y_size / 2 + y_size * np.random.random(self.poses)
         task_T_desired_tools = [
@@ -240,6 +247,24 @@ class IKTest:
             stand_command = None
             if ik_response.response.status.value == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_OK:
                 self.logger.info("Solution found")
+
+                # We don't have yet a ROS2 method to get a transform from a snapshot:
+                # we must convert the ROS2 message into Protobuf first.
+                frame_tree_snapshot = geometry_pb2.FrameTreeSnapshot()
+                conv.convert_bosdyn_msgs_frame_tree_snapshot_to_proto(
+                    ik_response.response.robot_configuration.transforms_snapshot, frame_tree_snapshot
+                )
+                odom_T_desired_body = get_a_tform_b(
+                    frame_tree_snapshot,
+                    ODOM_FRAME_NAME,
+                    BODY_FRAME_NAME,
+                )
+                mobility_params = spot_command_pb2.MobilityParams(
+                    body_control=spot_command_pb2.BodyControlParams(
+                        body_pose=RobotCommandBuilder.body_pose(ODOM_FRAME_NAME, odom_T_desired_body.to_proto())
+                    )
+                )
+                stand_command = RobotCommandBuilder.synchro_stand_command(params=mobility_params)
                 stand_command = body_assist_enabled_stand_command
             elif (
                 ik_response.response.status.value
@@ -266,6 +291,14 @@ class IKTest:
             result = self.robot_command_client.send_goal_and_wait(
                 action_name="arm_move_one", goal=arm_command_goal, timeout_sec=5
             )
+
+        # Stow the arm and reset the pose.
+        stand_command = RobotCommandBuilder.stand_command()
+        arm_stow_command = RobotCommandBuilder.arm_stow_command(build_on_command=body_assist_enabled_stand_command)
+        reset_command = RobotCommandBuilder.build_synchro_command(stand_command, arm_stow_command)
+        reset_command_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(reset_command, reset_command_goal.command)
+        self.robot_command_client.send_goal_and_wait("reset_command", reset_command_goal)
 
         # Power off robot.
         self.logger.info("Powering robot off")
