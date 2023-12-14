@@ -34,7 +34,7 @@ void SpotRobotStatePublisher::timerCallback() {
   const auto preferred_odom_frame = middleware_handle_->parameter_interface()->getPreferredOdomFrame().find("/") == std::string::npos ?
      middleware_handle_->parameter_interface()->getSpotName() + "/" + middleware_handle_->parameter_interface()->getPreferredOdomFrame() :
      middleware_handle_->parameter_interface()->getPreferredOdomFrame(); 
- 
+
   const auto robot_state_result = client_interface_->getRobotState(preferred_odom_frame);
   if (!robot_state_result.has_value()) {
     middleware_handle_->logger_interface()->logError(

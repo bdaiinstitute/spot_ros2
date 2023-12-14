@@ -163,8 +163,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         "mock_enable": mock_enable,
         "publish_depth_registered": False,
         "publish_depth": False,
-        "publish_rgb": False,
-        "publish_robot_state": False
+        "publish_rgb": False
     }
 
     if mock_enable:
@@ -238,7 +237,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         parameters=[config_file, spot_robot_state_publisher_params],
         namespace=spot_name,
     )
-    # ld.add_action(spot_robot_state_publisher)
+    ld.add_action(spot_robot_state_publisher)
 
     rviz = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/rviz.launch.py"]),

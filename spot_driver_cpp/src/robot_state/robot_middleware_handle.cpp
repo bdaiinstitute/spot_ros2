@@ -34,32 +34,30 @@ RobotMiddlewareHandle::RobotMiddlewareHandle(const rclcpp::NodeOptions& node_opt
     : RobotMiddlewareHandle(std::make_shared<rclcpp::Node>(kNodeName, node_options)) {}
 
 void RobotMiddlewareHandle::createPublishers() {
-  const auto topic_prefix = parameter_interface_->getSpotName() + "/";
-
   battery_states_publisher_ = node_->create_publisher<spot_msgs::msg::BatteryStateArray>(
-      topic_prefix + kBatteryStatesTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kBatteryStatesTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   wifi_state_publisher_ = node_->create_publisher<spot_msgs::msg::WiFiState>(
-      topic_prefix + kWifiTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kWifiTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   foot_states_publisher_ = node_->create_publisher<spot_msgs::msg::FootStateArray>(
-      topic_prefix + kFeetTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kFeetTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   estop_states_publisher_ = node_->create_publisher<spot_msgs::msg::EStopStateArray>(
-      topic_prefix + kEStopTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kEStopTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   joint_state_publisher_ = node_->create_publisher<sensor_msgs::msg::JointState>(
-      topic_prefix + kJointStatesTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kJointStatesTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   odom_twist_publisher_ = node_->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
-      topic_prefix + kOdomTwistTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kOdomTwistTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   odom_publisher_ = node_->create_publisher<nav_msgs::msg::Odometry>(
-      topic_prefix + kOdomTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kOdomTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   power_state_publisher_ = node_->create_publisher<spot_msgs::msg::PowerState>(
-      topic_prefix + kPowerStatesTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kPowerStatesTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   system_faults_publisher_ = node_->create_publisher<spot_msgs::msg::SystemFaultState>(
-      topic_prefix + kSystemFaultsTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kSystemFaultsTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   manipulator_state_publisher_ = node_->create_publisher<bosdyn_msgs::msg::ManipulatorState>(
-      topic_prefix + kManipulatorTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kManipulatorTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   end_effector_force_publisher_ = node_->create_publisher<geometry_msgs::msg::Vector3Stamped>(
-      topic_prefix + kEndEffectorForceTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kEndEffectorForceTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   behavior_fault_state_publisher_ = node_->create_publisher<spot_msgs::msg::BehaviorFaultState>(
-      topic_prefix + kBehaviorFaultsTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
+      kBehaviorFaultsTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
 }
 
 void RobotMiddlewareHandle::publishRobotState(const RobotState& robot_state) {

@@ -124,14 +124,23 @@ std::optional<tf2_msgs::msg::TFMessage> GetTf(const ::bosdyn::api::RobotState& r
 
     for (const auto& [frame_id, transform] :
          robot_state.kinematic_state().transforms_snapshot().child_to_parent_edge_map()) {
-      if (inverse_target_frame_id == prefix + frame_id) {
-        const auto inversed_tf = ~(transform.parent_tform_child());
+      // Do not publish frames without parents
+      if(transform.parent_frame_name().empty()){
+        continue;
+      }
+      const auto parent_frame_name = transform.parent_frame_name().find("/") == std::string::npos ?
+        prefix + transform.parent_frame_name() : transform.parent_frame_name();
+      const auto frame_name = frame_id.find("/") == std::string::npos ?
+        prefix + frame_id : frame_id;
+      
+      // set target frame(preferred odom frame) as the root node in tf tree 
+      if (inverse_target_frame_id == frame_name) {
         tf_msg.transforms.push_back(spot_ros2::conversions::toTransformStamped(
-            inversed_tf, prefix + frame_id, prefix + transform.parent_frame_name(),
+            ~(transform.parent_tform_child()), frame_name, parent_frame_name,
             local_time));
       } else {
         tf_msg.transforms.push_back(spot_ros2::conversions::toTransformStamped(
-            transform.parent_tform_child(), prefix + transform.parent_frame_name(), prefix + frame_id, local_time));
+            transform.parent_tform_child(), parent_frame_name, frame_name, local_time));
       }
     }
     return tf_msg;
