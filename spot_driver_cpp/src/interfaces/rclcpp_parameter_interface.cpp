@@ -112,8 +112,7 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const {
 }
 
 std::string RclcppParameterInterface::getPreferredOdomFrame() const {
-  return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame,
-                                      kDefaultPreferredOdomFrame);
+  return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
 }
 
 std::string RclcppParameterInterface::getSpotName() const {

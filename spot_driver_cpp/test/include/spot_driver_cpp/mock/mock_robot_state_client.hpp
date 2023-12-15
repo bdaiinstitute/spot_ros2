@@ -9,6 +9,7 @@
 namespace spot_ros2::test {
 class MockRobotStateClient : public RobotStateClientInterface {
  public:
-  MOCK_METHOD((tl::expected<RobotState, std::string>), getRobotState, (const std::string& preferred_odom_frame), (override));
+  MOCK_METHOD((tl::expected<RobotState, std::string>), getRobotState, (const std::string& preferred_odom_frame),
+              (override));
 };
 }  // namespace spot_ros2::test

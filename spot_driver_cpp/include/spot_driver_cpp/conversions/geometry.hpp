@@ -9,14 +9,14 @@
 
 namespace spot_ros2::conversions {
 
- /**
-   * @brief Convenience method to convert SE3Pose messages to ROS TransformStamped messages
-   * 
-   * @param transform Spot SE3Pose proto message
-   * @param parent_frame transform's parent frame
-   * @param child_frame transform's child frame
-   * @param tf_time transform's timestamp
-   */
+/**
+ * @brief Convenience method to convert SE3Pose messages to ROS TransformStamped messages
+ *
+ * @param transform Spot SE3Pose proto message
+ * @param parent_frame transform's parent frame
+ * @param child_frame transform's child frame
+ * @param tf_time transform's timestamp
+ */
 
 geometry_msgs::msg::TransformStamped toTransformStamped(const ::bosdyn::api::SE3Pose& transform,
                                                         const std::string& parent_frame, const std::string& child_frame,

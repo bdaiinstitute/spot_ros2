@@ -3,11 +3,11 @@
 
 #include <spot_driver_cpp/conversions/geometry.hpp>
 
-namespace spot_ros2::conversions{
+namespace spot_ros2::conversions {
 
 geometry_msgs::msg::TransformStamped toTransformStamped(const ::bosdyn::api::SE3Pose& transform,
                                                         const std::string& parent_frame, const std::string& child_frame,
-                                                        const builtin_interfaces::msg::Time& tf_time){
+                                                        const builtin_interfaces::msg::Time& tf_time) {
   geometry_msgs::msg::TransformStamped tf;
   tf.header.stamp = tf_time;
   tf.header.frame_id = parent_frame;
@@ -24,4 +24,4 @@ geometry_msgs::msg::TransformStamped toTransformStamped(const ::bosdyn::api::SE3
 
   return tf;
 }
-} // namespace spot_ros2::conversions
+}  // namespace spot_ros2::conversions

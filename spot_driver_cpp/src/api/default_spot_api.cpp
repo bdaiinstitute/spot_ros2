@@ -55,10 +55,11 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
 
   const auto robot_state_result = robot_->EnsureServiceClient<::bosdyn::client::RobotStateClient>(
       ::bosdyn::client::RobotStateClient::GetDefaultServiceName());
-  if(!robot_state_result.status){
+  if (!robot_state_result.status) {
     return tl::make_unexpected("Failed to get robot state service client.");
   }
-  robot_state_client_interface_ = std::make_shared<DefaultRobotStateClient>(robot_state_result.response, time_sync_api_, robot_name_);
+  robot_state_client_interface_ =
+      std::make_shared<DefaultRobotStateClient>(robot_state_result.response, time_sync_api_, robot_name_);
 
   return {};
 }

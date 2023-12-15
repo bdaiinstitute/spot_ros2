@@ -8,31 +8,30 @@
 #include <spot_driver_cpp/interfaces/rclcpp_tf_interface.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <spot_driver_cpp/robot_state/spot_robot_state_publisher.hpp>
-#include <tl_expected/expected.hpp>
 #include <spot_driver_cpp/types.hpp>
+#include <tl_expected/expected.hpp>
 
 #include <memory>
 #include <string>
 
 namespace spot_ros2 {
 
-  /**
-   * @brief pProduction implementation of a SpotRobotStatePublisher::MiddlewareHandle
-   */ 
+/**
+ * @brief pProduction implementation of a SpotRobotStatePublisher::MiddlewareHandle
+ */
 
 class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
  public:
-
   /**
    * @brief Constructor for RobotMiddlewareHandle.
-   * 
+   *
    * @param node A shared instance to a rclcpp::node
-   */ 
+   */
   explicit RobotMiddlewareHandle(std::shared_ptr<rclcpp::Node> node);
-  
+
   /**
    * @brief Delegating constructor for RobotMiddlewareHandle.
-   * 
+   *
    * @param node_options configuration options for a rclcpp::node
    */
   explicit RobotMiddlewareHandle(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
@@ -41,12 +40,12 @@ class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
 
   /**
    * @brief Create ROS publishers for Robot State
-   */ 
+   */
   void createPublishers() override;
 
   /**
    * @brief Publish robot state messages
-   */ 
+   */
 
   void publishRobotState(const RobotState& robot_state) override;
 

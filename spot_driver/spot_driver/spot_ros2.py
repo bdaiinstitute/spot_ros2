@@ -43,7 +43,6 @@ from bosdyn_msgs.msg import (
     FullBodyCommandFeedback,
     GripperCommandFeedback,
     ManipulationApiFeedbackResponse,
-    ManipulatorState,
     MobilityCommandFeedback,
     RobotCommandFeedback,
     RobotCommandFeedbackStatusStatus,
@@ -53,11 +52,8 @@ from geometry_msgs.msg import (
     PoseStamped,
     TransformStamped,
     Twist,
-    TwistWithCovarianceStamped,
-    Vector3Stamped,
 )
 from google.protobuf.timestamp_pb2 import Timestamp
-from nav_msgs.msg import Odometry
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -70,7 +66,7 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
-from sensor_msgs.msg import CameraInfo, Image, JointState
+from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
@@ -85,18 +81,11 @@ from spot_driver.ros_helpers import (
 )
 from spot_msgs.action import Manipulation, NavigateTo, RobotCommand, Trajectory  # type: ignore
 from spot_msgs.msg import (  # type: ignore
-    BatteryStateArray,
-    BehaviorFaultState,
-    EStopStateArray,
     Feedback,
-    FootStateArray,
     LeaseArray,
     LeaseResource,
     Metrics,
     MobilityParams,
-    PowerState,
-    SystemFaultState,
-    WiFiState,
 )
 from spot_msgs.srv import (  # type: ignore
     ChoreographyRecordedStateToAnimation,

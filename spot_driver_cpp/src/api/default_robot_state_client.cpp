@@ -120,24 +120,23 @@ std::optional<tf2_msgs::msg::TFMessage> GetTf(const ::bosdyn::api::RobotState& r
     tf2_msgs::msg::TFMessage tf_msg;
 
     const auto local_time =
-          spot_ros2::applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
+        spot_ros2::applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
 
     for (const auto& [frame_id, transform] :
          robot_state.kinematic_state().transforms_snapshot().child_to_parent_edge_map()) {
       // Do not publish frames without parents
-      if(transform.parent_frame_name().empty()){
+      if (transform.parent_frame_name().empty()) {
         continue;
       }
-      const auto parent_frame_name = transform.parent_frame_name().find("/") == std::string::npos ?
-        prefix + transform.parent_frame_name() : transform.parent_frame_name();
-      const auto frame_name = frame_id.find("/") == std::string::npos ?
-        prefix + frame_id : frame_id;
-      
-      // set target frame(preferred odom frame) as the root node in tf tree 
+      const auto parent_frame_name = transform.parent_frame_name().find("/") == std::string::npos
+                                         ? prefix + transform.parent_frame_name()
+                                         : transform.parent_frame_name();
+      const auto frame_name = frame_id.find("/") == std::string::npos ? prefix + frame_id : frame_id;
+
+      // set target frame(preferred odom frame) as the root node in tf tree
       if (inverse_target_frame_id == frame_name) {
         tf_msg.transforms.push_back(spot_ros2::conversions::toTransformStamped(
-            ~(transform.parent_tform_child()), frame_name, parent_frame_name,
-            local_time));
+            ~(transform.parent_tform_child()), frame_name, parent_frame_name, local_time));
       } else {
         tf_msg.transforms.push_back(spot_ros2::conversions::toTransformStamped(
             transform.parent_tform_child(), parent_frame_name, frame_name, local_time));
@@ -175,7 +174,7 @@ std::optional<nav_msgs::msg::Odometry> GetOdom(const ::bosdyn::api::RobotState& 
     nav_msgs::msg::Odometry odom_msg;
     ::bosdyn::api::SE3Pose tf_body_pose;
     geometry_msgs::msg::PoseWithCovariance pose_odom_msg;
-    
+
     odom_msg.header.stamp =
         spot_ros2::applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
     if (is_using_vision) {
@@ -362,23 +361,20 @@ tl::expected<RobotState, std::string> DefaultRobotStateClient::getRobotState(con
 
   const auto robot_state = get_robot_state_result.response.robot_state();
 
-  const auto out =
-      RobotState{GetBatteryStates(robot_state, clock_skew_result.value()),
-                 GetWifiState(robot_state),
-                 GetFootState(robot_state),
-                 GetEstopStates(robot_state, clock_skew_result.value()),
-                 GetJointStates(robot_state, clock_skew_result.value(),
-                                frame_prefix_),
-                 GetTf(robot_state, clock_skew_result.value(), frame_prefix_,
-                       preferred_odom_frame),
-                 GetOdomTwist(robot_state, clock_skew_result.value()),
-                 GetOdom(robot_state, clock_skew_result.value(), frame_prefix_,
-                         preferred_odom_frame == frame_prefix_ + "vision"),
-                 GetPowerState(robot_state, clock_skew_result.value()),
-                 GetSystemFaultState(robot_state, clock_skew_result.value()),
-                 GetManipulatorState(robot_state),
-                 GetEndEffectorForce(robot_state, clock_skew_result.value(), frame_prefix_),
-                 GetBehaviorFaultState(robot_state, clock_skew_result.value())};
+  const auto out = RobotState{
+      GetBatteryStates(robot_state, clock_skew_result.value()),
+      GetWifiState(robot_state),
+      GetFootState(robot_state),
+      GetEstopStates(robot_state, clock_skew_result.value()),
+      GetJointStates(robot_state, clock_skew_result.value(), frame_prefix_),
+      GetTf(robot_state, clock_skew_result.value(), frame_prefix_, preferred_odom_frame),
+      GetOdomTwist(robot_state, clock_skew_result.value()),
+      GetOdom(robot_state, clock_skew_result.value(), frame_prefix_, preferred_odom_frame == frame_prefix_ + "vision"),
+      GetPowerState(robot_state, clock_skew_result.value()),
+      GetSystemFaultState(robot_state, clock_skew_result.value()),
+      GetManipulatorState(robot_state),
+      GetEndEffectorForce(robot_state, clock_skew_result.value(), frame_prefix_),
+      GetBehaviorFaultState(robot_state, clock_skew_result.value())};
 
   return out;
 }

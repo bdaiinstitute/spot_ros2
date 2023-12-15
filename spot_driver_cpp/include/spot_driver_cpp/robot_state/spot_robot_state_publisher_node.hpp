@@ -22,7 +22,8 @@ class SpotRobotStatePublisherNode {
    * @details This constructor enables dependency inversion for improved testibility
    *
    * @param spot_api a unique_ptr of a SpotApi instance that this SpotRobotStatePublisherNode will take ownership of
-   * @param mw_handle a unique_ptr of a SpotRobotStatePublisher::MiddlewareHandle instance that this SpotRobotStatePublisherNode will take ownership of
+   * @param mw_handle a unique_ptr of a SpotRobotStatePublisher::MiddlewareHandle instance that this
+   * SpotRobotStatePublisherNode will take ownership of
    */
   SpotRobotStatePublisherNode(std::unique_ptr<SpotApi> spot_api,
                               std::unique_ptr<SpotRobotStatePublisher::MiddlewareHandle> mw_handle);

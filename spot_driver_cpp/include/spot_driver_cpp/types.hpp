@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include <sensor_msgs/msg/camera_info.hpp>
-#include <sensor_msgs/msg/image.hpp>
 #include <bosdyn_msgs/msg/manipulator_state.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
+#include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <spot_msgs/msg/battery_state_array.hpp>
 #include <spot_msgs/msg/behavior_fault_state.hpp>
@@ -19,8 +19,8 @@
 #include <tf2_msgs/msg/tf_message.hpp>
 
 #include <functional>
-#include <string>
 #include <optional>
+#include <string>
 
 namespace spot_ros2 {
 /** @brief Represents the six different cameras on Spot. */

@@ -17,7 +17,7 @@ SpotRobotStatePublisher::SpotRobotStatePublisher(
     std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
     std::unique_ptr<MiddlewareHandle> middleware_handle)
     : client_interface_{robot_state_client_interface}, middleware_handle_{std::move(middleware_handle)} {
-        // Create a publisher for all messages in robot state
+  // Create a publisher for all messages in robot state
   middleware_handle_->createPublishers();
 
   // Create a timer to request and publish robot state at a fixed rate
@@ -27,9 +27,11 @@ SpotRobotStatePublisher::SpotRobotStatePublisher(
 }
 
 void SpotRobotStatePublisher::timerCallback() {
-  const auto preferred_odom_frame = middleware_handle_->parameter_interface()->getPreferredOdomFrame().find("/") == std::string::npos ?
-     middleware_handle_->parameter_interface()->getSpotName() + "/" + middleware_handle_->parameter_interface()->getPreferredOdomFrame() :
-     middleware_handle_->parameter_interface()->getPreferredOdomFrame(); 
+  const auto preferred_odom_frame =
+      middleware_handle_->parameter_interface()->getPreferredOdomFrame().find("/") == std::string::npos
+          ? middleware_handle_->parameter_interface()->getSpotName() + "/" +
+                middleware_handle_->parameter_interface()->getPreferredOdomFrame()
+          : middleware_handle_->parameter_interface()->getPreferredOdomFrame();
 
   const auto robot_state_result = client_interface_->getRobotState(preferred_odom_frame);
   if (!robot_state_result.has_value()) {

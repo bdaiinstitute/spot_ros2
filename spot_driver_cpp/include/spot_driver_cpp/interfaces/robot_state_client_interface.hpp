@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <tl_expected/expected.hpp>
 #include <spot_driver_cpp/types.hpp>
+#include <tl_expected/expected.hpp>
 
 #include <optional>
 #include <string>

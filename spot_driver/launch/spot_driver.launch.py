@@ -163,7 +163,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         "mock_enable": mock_enable,
         "publish_depth_registered": False,
         "publish_depth": False,
-        "publish_rgb": False
+        "publish_rgb": False,
     }
 
     if mock_enable:
@@ -226,10 +226,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(robot_state_publisher)
 
-    spot_robot_state_publisher_params = {
-        "spot_name": spot_name,
-        "preferred_odom_frame": "odom"
-    }
+    spot_robot_state_publisher_params = {"spot_name": spot_name, "preferred_odom_frame": "odom"}
     spot_robot_state_publisher = launch_ros.actions.Node(
         package="spot_driver_cpp",
         executable="spot_robot_state_publisher_node",

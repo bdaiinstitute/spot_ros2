@@ -99,7 +99,6 @@ TEST_F(TestSpotRobotStatePublisherFixture, InitSucceeds) {
   // WHEN a robot state publisher is constructed
   robot_state_publisher =
       std::make_unique<SpotRobotStatePublisher>(robot_state_client_interface, std::move(middleware_handle));
-
 }
 
 TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggers) {
@@ -143,7 +142,9 @@ TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggers_Fail_GetRobot
     // THEN we request the robot state from the Spot interface
     // THEN we publish the robot state to the appropriate topics
     InSequence seq;
-    EXPECT_CALL(*robot_state_client_interface, getRobotState).Times(1).WillOnce(Return(tl::make_unexpected("Failed to get robot state")));
+    EXPECT_CALL(*robot_state_client_interface, getRobotState)
+        .Times(1)
+        .WillOnce(Return(tl::make_unexpected("Failed to get robot state")));
     EXPECT_CALL(*logger_interface_ptr, logError).Times(1);
     EXPECT_CALL(*middleware_handle, publishRobotState).Times(0);
   }
