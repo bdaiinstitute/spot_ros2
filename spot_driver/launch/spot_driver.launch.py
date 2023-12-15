@@ -7,11 +7,10 @@ from typing import List
 
 import launch
 import launch_ros
-import yaml
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.substitutions import FindPackageShare
 
@@ -105,31 +104,6 @@ def create_point_cloud_nodelets(
     return composable_node_descriptions
 
 
-def create_rviz_config(robot_name: str) -> None:
-    """Writes a configuration file for rviz to visualize a single spot robot"""
-
-    RVIZ_TEMPLATE_FILENAME = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot_template.yaml")
-    RVIZ_OUTPUT_FILENAME = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot.rviz")
-
-    with open(RVIZ_TEMPLATE_FILENAME, "r") as template_file:
-        config = yaml.safe_load(template_file)
-
-        if robot_name:
-            # replace fixed frame with robot body frame
-            config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{robot_name}/vision"
-            # Add robot models for each robot
-            for display in config["Visualization Manager"]["Displays"]:
-                if "RobotModel" in display["Class"]:
-                    display["Description Topic"]["Value"] = f"/{robot_name}/robot_description"
-
-                if "Image" in display["Class"]:
-                    topic_name = display["Topic"]["Value"]
-                    display["Topic"]["Value"] = f"/{robot_name}{topic_name}"
-
-    with open(RVIZ_OUTPUT_FILENAME, "w") as out_file:
-        yaml.dump(config, out_file)
-
-
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     logger = logging.getLogger("spot_driver_launch")
 
@@ -140,15 +114,21 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
+    mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
 
-    # Get parameters from Spot.
+    if not mock_enable:
+        # Get parameters from Spot.
+        # TODO this deviates from the `get_from_env_and_fall_back_to_param` logic in `spot_ros2.py`,
+        # which would pull in values in `config_file`
+        username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
+        password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
+        hostname = os.getenv("SPOT_IP", "hostname")
 
-    username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
-    password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
-    hostname = os.getenv("SPOT_IP", "hostname")
-
-    spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
-    has_arm = spot_wrapper.has_arm()
+        spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
+        has_arm = spot_wrapper.has_arm()
+    else:
+        mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
+        has_arm = mock_has_arm
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -180,10 +160,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     # in spot_driver.
     spot_driver_params = {
         "spot_name": spot_name,
+        "mock_enable": mock_enable,
         "publish_depth_registered": False,
         "publish_depth": False,
         "publish_rgb": False,
     }
+
+    if mock_enable:
+        mock_spot_driver_params = {"mock_has_arm": mock_has_arm}
+        # Merge the two dicts
+        spot_driver_params = {**spot_driver_params, **mock_spot_driver_params}
 
     spot_driver_node = launch_ros.actions.Node(
         package="spot_driver",
@@ -222,7 +208,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             PathJoinSubstitution([pkg_share, "urdf", "spot.urdf.xacro"]),
             " ",
             "arm:=",
-            TextSubstitution(text=str(spot_wrapper.has_arm()).lower()),
+            TextSubstitution(text=str(has_arm).lower()),
             " ",
             "tf_prefix:=",
             tf_prefix,
@@ -240,17 +226,12 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(robot_state_publisher)
 
-    # It looks like passing an optional of value "None" gets converted to a string of value "None"
-    if not rviz_config_file or rviz_config_file == "None":
-        create_rviz_config(spot_name)
-        rviz_config_file = PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "rviz", "spot.rviz"]).perform(context)
-
-    rviz = launch_ros.actions.Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        arguments=["-d", rviz_config_file],
-        output="screen",
+    rviz = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/rviz.launch.py"]),
+        launch_arguments={
+            "spot_name": spot_name,
+            "rviz_config_file": rviz_config_file,
+        }.items(),
         condition=IfCondition(launch_rviz),
     )
 

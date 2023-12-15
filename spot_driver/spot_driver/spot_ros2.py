@@ -1,4 +1,4 @@
-### Debug
+# Debug
 # from ros_helpers import *
 import logging
 import os
@@ -39,9 +39,14 @@ from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySeq
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_msgs.msg import (
+    ArmCommandFeedback,
+    FullBodyCommandFeedback,
+    GripperCommandFeedback,
     ManipulationApiFeedbackResponse,
     ManipulatorState,
+    MobilityCommandFeedback,
     RobotCommandFeedback,
+    RobotCommandFeedbackStatusStatus,
 )
 from geometry_msgs.msg import (
     Pose,
@@ -70,7 +75,7 @@ from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
 
-#####DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
+# DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
 from spot_driver.ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
@@ -114,6 +119,7 @@ from spot_msgs.srv import (  # type: ignore
     DeleteSound,
     Dock,
     ExecuteDance,
+    GetChoreographyStatus,
     GetGripperCameraParameters,
     GetVolume,
     GraphNavClearGraph,
@@ -138,7 +144,6 @@ from spot_wrapper.spot_images import CameraSource
 from spot_wrapper.wrapper import SpotWrapper
 
 MAX_DURATION = 1e6
-MOCK_HOSTNAME = "Mock_spot"
 COLOR_END = "\33[0m"
 COLOR_GREEN = "\33[32m"
 COLOR_YELLOW = "\33[33m"
@@ -191,6 +196,14 @@ class SpotImageType(str, Enum):
     RGB = "visual"
     Depth = "depth"
     RegDepth = "depth_registered"
+
+
+def set_node_parameter_from_parameter_list(
+    node: Node, parameter_list: Optional[typing.List[Parameter]], parameter_name: str
+) -> None:
+    """Set parameters when the node starts not from a launch file."""
+    if parameter_list is not None:
+        node.set_parameters([parameter for parameter in parameter_list if parameter.name == parameter_name])
 
 
 class SpotROS(Node):
@@ -252,6 +265,12 @@ class SpotROS(Node):
         self.declare_parameter("initialize_spot_cam", False)
 
         self.declare_parameter("spot_name", "")
+        self.declare_parameter("mock_enable", False)
+
+        # If `mock_enable:=True`, then there are additional parameters. We must set this one separately.
+        set_node_parameter_from_parameter_list(self, parameter_list, "mock_enable")
+        if self.get_parameter("mock_enable").value:
+            self.declare_parameter("mock_has_arm", rclpy.Parameter.Type.BOOL)
 
         # used for setting when not using launch file
         if parameter_list is not None:
@@ -293,6 +312,10 @@ class SpotROS(Node):
         self.name: Optional[str] = self.get_parameter("spot_name").value
         if not self.name:
             self.name = None
+        self.mock: bool = self.get_parameter("mock_enable").value
+        self.mock_has_arm: Optional[bool] = None
+        if self.mock:
+            self.mock_has_arm = self.get_parameter("mock_has_arm").value
 
         self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
@@ -362,10 +385,11 @@ class SpotROS(Node):
         name_str = ""
         if self.name is not None:
             name_str = " for " + self.name
-        self.get_logger().info("Starting ROS driver for Spot" + name_str)
-        ############## testing with Robot
+        mocking_designator = " (mocked)" if self.mock else ""
+        self.get_logger().info("Starting ROS driver for Spot" + name_str + mocking_designator)
+        # testing with Robot
 
-        if self.name == MOCK_HOSTNAME:
+        if self.mock:
             self.spot_wrapper: Optional[SpotWrapper] = None
             self.cam_wrapper: Optional[SpotCamWrapper] = None
         else:
@@ -396,8 +420,16 @@ class SpotROS(Node):
                 except SystemError:
                     self.spot_cam_wrapper = None
 
+            if self.frame_prefix != self.spot_wrapper.frame_prefix:
+                error_msg = (
+                    f"ERROR: disagreement between `self.frame_prefix` ({self.frame_prefix}) and"
+                    f" `self.spot_wrapper.frame_prefix` ({self.spot_wrapper.frame_prefix})"
+                )
+                self.get_logger().error(error_msg)
+                raise ValueError(error_msg)
+
         all_cameras = ["frontleft", "frontright", "left", "right", "back"]
-        has_arm = False
+        has_arm = self.mock_has_arm
         if self.spot_wrapper is not None:
             has_arm = self.spot_wrapper.has_arm()
         if has_arm:
@@ -623,6 +655,14 @@ class SpotROS(Node):
             callback_group=self.group,
         )
         self.create_service(
+            GetChoreographyStatus,
+            "get_choreography_status",
+            lambda request, response: self.service_wrapper(
+                "get_choreography_status", self.handle_get_choreography_status, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
             ListSounds,
             "list_sounds",
             lambda request, response: self.service_wrapper("list_sounds", self.handle_list_sounds, request, response),
@@ -773,7 +813,7 @@ class SpotROS(Node):
             )
 
         # Register Shutdown Handle
-        # rclpy.on_shutdown(spot_ros.shutdown) ############## Shutdown Handle
+        # rclpy.on_shutdown(spot_ros.shutdown) # Shutdown Handle
 
         # Wait for an estop to be connected
         if self.spot_wrapper is not None and not self.start_estop.value:
@@ -1261,6 +1301,19 @@ class SpotROS(Node):
         response.success, response.message, _ = self.spot_wrapper.stop_recording_state()
         return response
 
+    def handle_get_choreography_status(
+        self, request: GetChoreographyStatus.Request, response: GetChoreographyStatus.Response
+    ) -> GetChoreographyStatus.Response:
+        """ROS service handler for getting current status of choreography playback."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message, choreography_status = self.spot_wrapper.get_choreography_status()
+        response.status = choreography_status.status
+        response.execution_id = choreography_status.execution_id
+        return response
+
     def handle_upload_animation(
         self, request: UploadAnimation.Request, response: UploadAnimation.Response
     ) -> UploadAnimation.Response:
@@ -1466,92 +1519,209 @@ class SpotROS(Node):
             response.message = f"Error: {e}"
             return response
 
+    def _process_feedback_status(self, status: int) -> Optional[GoalResponse]:
+        if status == RobotCommandFeedbackStatusStatus.STATUS_UNKNOWN:
+            return GoalResponse.IN_PROGRESS
+
+        if status == RobotCommandFeedbackStatusStatus.STATUS_COMMAND_OVERRIDDEN:
+            self.get_logger().warn("Command has been overwritten")
+            return GoalResponse.FAILED
+
+        if status == RobotCommandFeedbackStatusStatus.STATUS_COMMAND_TIMED_OUT:
+            self.get_logger().warn("Command has timed out")
+            return GoalResponse.FAILED
+
+        if status == RobotCommandFeedbackStatusStatus.STATUS_ROBOT_FROZEN:
+            self.get_logger().warn("Robot is in unsafe state. Will only respond to safe commands")
+            return GoalResponse.FAILED
+
+        if status == RobotCommandFeedbackStatusStatus.STATUS_INCOMPATIBLE_HARDWARE:
+            self.get_logger().warn("Command is incompatible with current hardware")
+            return GoalResponse.FAILED
+
+        # if status == RobotCommandFeedbackStatusStatus.STATUS_PROCESSING,
+        # return None to continue processing the command feedback
+        return None
+
+    def _process_full_body_command_feedback(self, feedback: FullBodyCommandFeedback) -> GoalResponse:
+        maybe_goal_response = self._process_feedback_status(feedback.status.value)
+        if maybe_goal_response is not None:
+            return maybe_goal_response
+
+        fb = feedback.feedback
+        choice = fb.feedback_choice
+
+        if choice == fb.FEEDBACK_STOP_FEEDBACK_SET:
+            return GoalResponse.SUCCESS
+        elif choice == fb.FEEDBACK_FREEZE_FEEDBACK_SET:
+            return GoalResponse.SUCCESS
+        elif choice == fb.FEEDBACK_SELFRIGHT_FEEDBACK_SET:
+            if fb.selfright_feedback.status.value == fb.selfright_feedback.status.STATUS_COMPLETED:
+                return GoalResponse.SUCCESS
+            return GoalResponse.IN_PROGRESS
+
+        elif choice == fb.FEEDBACK_SAFE_POWER_OFF_FEEDBACK_SET:
+            if fb.safe_power_off_feedback.status.value == fb.safe_power_off_feedback.status.STATUS_POWERED_OFF:
+                return GoalResponse.SUCCESS
+            return GoalResponse.IN_PROGRESS
+
+        elif choice == fb.FEEDBACK_BATTERY_CHANGE_POSE_FEEDBACK_SET:
+            if fb.battery_change_pose_feedback.status.value == fb.battery_change_pose_feedback.status.STATUS_COMPLETED:
+                return GoalResponse.SUCCESS
+            if fb.battery_change_pose_feedback.status.value == fb.battery_change_pose_feedback.status.STATUS_FAILED:
+                return GoalResponse.FAILED
+            return GoalResponse.IN_PROGRESS
+
+        elif choice == fb.FEEDBACK_PAYLOAD_ESTIMATION_FEEDBACK_SET:
+            if fb.payload_estimation_feedback.status.value == fb.payload_estimation_feedback.status.STATUS_COMPLETED:
+                return GoalResponse.SUCCESS
+            if fb.payload_estimation_feedback.status.value == fb.payload_estimation_feedback.status.STATUS_SMALL_MASS:
+                return GoalResponse.SUCCESS
+            if fb.payload_estimation_feedback.status.value == fb.payload_estimation_feedback.status.STATUS_ERROR:
+                return GoalResponse.FAILED
+            return GoalResponse.IN_PROGRESS
+        elif choice == fb.FEEDBACK_CONSTRAINED_MANIPULATION_FEEDBACK_SET:
+            if (
+                fb.constrained_manipulation_feedback.status.value
+                == fb.constrained_manipulation_feedback.status.STATUS_RUNNING
+            ):
+                return GoalResponse.IN_PROGRESS
+            return GoalResponse.FAILED
+        return GoalResponse.IN_PROGRESS
+
+    def _process_synchronized_arm_command_feedback(self, feedback: ArmCommandFeedback) -> GoalResponse:
+        maybe_goal_response = self._process_feedback_status(feedback.status.value)
+        if maybe_goal_response is not None:
+            return maybe_goal_response
+
+        fb = feedback.feedback
+        choice = fb.feedback_choice
+
+        if choice == fb.FEEDBACK_ARM_CARTESIAN_FEEDBACK_SET:
+            if (
+                fb.arm_cartesian_feedback.status.value == fb.arm_cartesian_feedback.status.STATUS_TRAJECTORY_CANCELLED
+                or fb.arm_cartesian_feedback.status.value == fb.arm_cartesian_feedback.status.STATUS_TRAJECTORY_STALLED
+            ):
+                return GoalResponse.FAILED
+            if fb.arm_cartesian_feedback.status.value != fb.arm_cartesian_feedback.status.STATUS_TRAJECTORY_COMPLETE:
+                return GoalResponse.IN_PROGRESS
+        elif choice == fb.FEEDBACK_ARM_JOINT_MOVE_FEEDBACK_SET:
+            if fb.arm_joint_move_feedback.status.value == fb.arm_joint_move_feedback.status.STATUS_STALLED:
+                return GoalResponse.FAILED
+            if fb.arm_joint_move_feedback.status.value != fb.arm_joint_move_feedback.status.STATUS_COMPLETE:
+                return GoalResponse.IN_PROGRESS
+        elif choice == fb.FEEDBACK_NAMED_ARM_POSITION_FEEDBACK_SET:
+            if (
+                fb.named_arm_position_feedback.status.value
+                == fb.named_arm_position_feedback.status.STATUS_STALLED_HOLDING_ITEM
+            ):
+                return GoalResponse.FAILED
+            if fb.named_arm_position_feedback.status.value != fb.named_arm_position_feedback.status.STATUS_COMPLETE:
+                return GoalResponse.IN_PROGRESS
+        elif choice == fb.FEEDBACK_ARM_VELOCITY_FEEDBACK_SET:
+            self.get_logger().warn("WARNING: ArmVelocityCommand provides no feedback")
+        elif choice == fb.FEEDBACK_ARM_GAZE_FEEDBACK_SET:
+            if fb.arm_gaze_feedback.status.value == fb.arm_gaze_feedback.status.STATUS_TOOL_TRAJECTORY_STALLED:
+                return GoalResponse.FAILED
+            if fb.arm_gaze_feedback.status.value != fb.arm_gaze_feedback.status.STATUS_TRAJECTORY_COMPLETE:
+                return GoalResponse.IN_PROGRESS
+        elif choice == fb.FEEDBACK_ARM_STOP_FEEDBACK_SET:
+            self.get_logger().warn("WARNING: Stop command provides no feedback")
+        elif choice == fb.FEEDBACK_ARM_DRAG_FEEDBACK_SET:
+            if fb.arm_drag_feedback.status.value == fb.arm_drag_feedback.status.STATUS_DRAGGING:
+                return GoalResponse.IN_PROGRESS
+            else:
+                return GoalResponse.FAILED
+        elif choice == fb.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET:
+            if (
+                fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_STALLED
+                or fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_UNKNOWN
+            ):
+                return GoalResponse.FAILED
+            if fb.arm_impedance_feedback.status.value != fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_COMPLETE:
+                return GoalResponse.IN_PROGRESS
+        else:
+            self.get_logger().error("ERROR: unknown arm command type")
+            return GoalResponse.IN_PROGRESS
+        return GoalResponse.SUCCESS
+
+    def _process_synchronized_mobility_command_feedback(self, feedback: MobilityCommandFeedback) -> GoalResponse:
+        maybe_goal_response = self._process_feedback_status(feedback.status.value)
+        if maybe_goal_response is not None:
+            return maybe_goal_response
+
+        fb = feedback.feedback
+        choice = fb.feedback_choice
+
+        if choice == fb.FEEDBACK_SE2_TRAJECTORY_FEEDBACK_SET:
+            if fb.se2_trajectory_feedback.status.value != fb.se2_trajectory_feedback.status.STATUS_AT_GOAL:
+                return GoalResponse.IN_PROGRESS
+        elif choice == fb.FEEDBACK_SE2_VELOCITY_FEEDBACK_SET:
+            self.get_logger().warn("WARNING: Planar velocity commands provide no feedback")
+        elif choice == fb.FEEDBACK_SIT_FEEDBACK_SET:
+            if fb.sit_feedback.status.value != fb.sit_feedback.status.STATUS_IS_SITTING:
+                return GoalResponse.IN_PROGRESS
+        elif choice == fb.FEEDBACK_STAND_FEEDBACK_SET:
+            if fb.stand_feedback.status.value != fb.stand_feedback.status.STATUS_IS_STANDING:
+                return GoalResponse.IN_PROGRESS
+        elif choice == fb.FEEDBACK_STANCE_FEEDBACK_SET:
+            if fb.stance_feedback.status.value == fb.stance_feedback.status.STATUS_TOO_FAR_AWAY:
+                return GoalResponse.FAILED
+            if fb.stance_feedback.status.value != fb.stance_feedback.status.STATUS_STANCED:
+                return GoalResponse.IN_PROGRESS
+        elif choice == fb.FEEDBACK_STOP_FEEDBACK_SET:
+            self.get_logger().warn("WARNING: Stop command provides no feedback")
+        elif choice == fb.FEEDBACK_FOLLOW_ARM_FEEDBACK_SET:
+            self.get_logger().warn("WARNING: FollowArmCommand provides no feedback")
+        elif choice == fb.FEEDBACK_NOT_SET:
+            # sync_feedback.mobility_command_feedback_is_set, feedback_choice is actually not set.
+            # This may happen when a command finishes, which means we may return SUCCESS below.
+            self.get_logger().info("mobility command feedback indicates goal has reached")
+        else:
+            self.get_logger().error("ERROR: unknown mobility command type")
+            return GoalResponse.IN_PROGRESS
+        return GoalResponse.SUCCESS
+
+    def _process_synchronized_gripper_command_feedback(self, feedback: GripperCommandFeedback) -> GoalResponse:
+        maybe_goal_response = self._process_feedback_status(feedback.status.value)
+        if maybe_goal_response is not None:
+            return maybe_goal_response
+
+        if feedback.command.command_choice == feedback.command.COMMAND_CLAW_GRIPPER_FEEDBACK_SET:
+            if (
+                feedback.command.claw_gripper_feedback.status.value
+                == feedback.command.claw_gripper_feedback.status.STATUS_IN_PROGRESS
+            ):
+                return GoalResponse.IN_PROGRESS
+            if (
+                feedback.command.claw_gripper_feedback.status.value
+                == feedback.command.claw_gripper_feedback.status.STATUS_UNKNOWN
+            ):
+                self.get_logger().error("ERROR: claw grippper status unknown")
+                return GoalResponse.IN_PROGRESS
+            if (
+                feedback.command.claw_gripper_feedback.status.value
+                == feedback.command.claw_gripper_feedback.status.STATUS_AT_GOAL
+                or feedback.command.claw_gripper_feedback.status.value
+                == feedback.command.claw_gripper_feedback.status.STATUS_APPLYING_FORCE
+            ):
+                return GoalResponse.SUCCESS
+        else:
+            self.get_logger().error("ERROR: unknown gripper command type")
+            return GoalResponse.IN_PROGRESS
+        return GoalResponse.SUCCESS
+
     def _robot_command_goal_complete(self, feedback: RobotCommandFeedback) -> GoalResponse:
         if feedback is None:
             # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
 
-        if feedback.command.command_choice == feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
+        choice = feedback.command.command_choice
+        if choice == feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
             full_body_feedback = feedback.command.full_body_feedback
-            if full_body_feedback.status.value != full_body_feedback.status.STATUS_PROCESSING:
-                return GoalResponse.IN_PROGRESS
-            if full_body_feedback.feedback.feedback_choice == full_body_feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET:
-                return GoalResponse.SUCCESS
-            elif (
-                full_body_feedback.feedback.feedback_choice == full_body_feedback.feedback.FEEDBACK_FREEZE_FEEDBACK_SET
-            ):
-                return GoalResponse.SUCCESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_SELFRIGHT_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.selfright_feedback.status.value
-                    == full_body_feedback.feedback.selfright_feedback.status.STATUS_COMPLETED
-                ):
-                    return GoalResponse.SUCCESS
-                else:
-                    return GoalResponse.IN_PROGRESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_SAFE_POWER_OFF_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.safe_power_off_feedback.status.value
-                    == full_body_feedback.feedback.safe_power_off_feedback.status.STATUS_POWERED_OFF
-                ):
-                    return GoalResponse.SUCCESS
-                else:
-                    return GoalResponse.IN_PROGRESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_BATTERY_CHANGE_POSE_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.battery_change_pose_feedback.status.value
-                    == full_body_feedback.feedback.battery_change_pose_feedback.status.STATUS_COMPLETED
-                ):
-                    return GoalResponse.SUCCESS
-                if (
-                    full_body_feedback.feedback.battery_change_pose_feedback.status.value
-                    == full_body_feedback.feedback.battery_change_pose_feedback.status.STATUS_FAILED
-                ):
-                    return GoalResponse.FAILED
-                return GoalResponse.IN_PROGRESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_PAYLOAD_ESTIMATION_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.payload_estimation_feedback.status.value
-                    == full_body_feedback.feedback.payload_estimation_feedback.status.STATUS_COMPLETED
-                ):
-                    return GoalResponse.SUCCESS
-                if (
-                    full_body_feedback.feedback.payload_estimation_feedback.status.value
-                    == full_body_feedback.feedback.payload_estimation_feedback.status.STATUS_SMALL_MASS
-                ):
-                    return GoalResponse.SUCCESS
-                if (
-                    full_body_feedback.feedback.payload_estimation_feedback.status.value
-                    == full_body_feedback.feedback.payload_estimation_feedback.status.STATUS_ERROR
-                ):
-                    return GoalResponse.FAILED
-                return GoalResponse.IN_PROGRESS
-            elif (
-                full_body_feedback.feedback.feedback_choice
-                == full_body_feedback.feedback.FEEDBACK_CONSTRAINED_MANIPULATION_FEEDBACK_SET
-            ):
-                if (
-                    full_body_feedback.feedback.constrained_manipulation_feedback.status.value
-                    == full_body_feedback.feedback.constrained_manipulation_feedback.status.STATUS_RUNNING
-                ):
-                    return GoalResponse.IN_PROGRESS
-                return GoalResponse.FAILED
-            else:
-                return GoalResponse.IN_PROGRESS
+            return self._process_full_body_command_feedback(full_body_feedback)
 
-        elif feedback.command.command_choice == feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET:
+        elif choice == feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET:
             # The idea here is that a synchronized command can have arm, mobility, and/or gripper
             # sub-commands in it.  The total command isn't done until all sub-commands are satisfied.
             # So if any one of the sub-commands is still in progress, it short-circuits out as
@@ -1565,146 +1735,23 @@ class SpotROS(Node):
             sync_feedback = feedback.command.synchronized_feedback
             if sync_feedback.arm_command_feedback_is_set is True:
                 arm_feedback = sync_feedback.arm_command_feedback
-                if (
-                    arm_feedback.status.value == arm_feedback.status.STATUS_COMMAND_OVERRIDDEN
-                    or arm_feedback.status.value == arm_feedback.status.STATUS_COMMAND_TIMED_OUT
-                    or arm_feedback.status.value == arm_feedback.status.STATUS_ROBOT_FROZEN
-                    or arm_feedback.status.value == arm_feedback.status.STATUS_INCOMPATIBLE_HARDWARE
-                ):
-                    return GoalResponse.FAILED
-                if arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_CARTESIAN_FEEDBACK_SET:
-                    if (
-                        arm_feedback.feedback.arm_cartesian_feedback.status.value
-                        != arm_feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_COMPLETE
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif (
-                    arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_JOINT_MOVE_FEEDBACK_SET
-                ):
-                    if (
-                        arm_feedback.feedback.arm_joint_move_feedback.status.value
-                        != arm_feedback.feedback.arm_joint_move_feedback.status.STATUS_COMPLETE
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif (
-                    arm_feedback.feedback.feedback_choice
-                    == arm_feedback.feedback.FEEDBACK_NAMED_ARM_POSITION_FEEDBACK_SET
-                ):
-                    if (
-                        arm_feedback.feedback.named_arm_position_feedback.status.value
-                        != arm_feedback.feedback.named_arm_position_feedback.status.STATUS_COMPLETE
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_VELOCITY_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: ArmVelocityCommand provides no feedback")
-                    pass  # May return SUCCESS below
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_GAZE_FEEDBACK_SET:
-                    if (
-                        arm_feedback.feedback.arm_gaze_feedback.status.value
-                        != arm_feedback.feedback.arm_gaze_feedback.status.STATUS_TRAJECTORY_COMPLETE
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_STOP_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: Stop command provides no feedback")
-                    pass  # May return SUCCESS below
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_DRAG_FEEDBACK_SET:
-                    if (
-                        arm_feedback.feedback.arm_drag_feedback.status.value
-                        != arm_feedback.feedback.arm_drag_feedback.status.STATUS_DRAGGING
-                    ):
-                        return GoalResponse.FAILED
-                elif arm_feedback.feedback.feedback_choice == arm_feedback.feedback.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: ArmImpedanceCommand provides no feedback")
-                    pass  # May return SUCCESS below
-                else:
-                    self.get_logger().error("ERROR: unknown arm command type")
-                    return GoalResponse.IN_PROGRESS
+                response = self._process_synchronized_arm_command_feedback(arm_feedback)
+                if response is not GoalResponse.SUCCESS:
+                    return response
 
             if sync_feedback.mobility_command_feedback_is_set is True:
                 mob_feedback = sync_feedback.mobility_command_feedback
-                if (
-                    mob_feedback.status.value == mob_feedback.status.STATUS_COMMAND_OVERRIDDEN
-                    or mob_feedback.status.value == mob_feedback.status.STATUS_COMMAND_TIMED_OUT
-                    or mob_feedback.status.value == mob_feedback.status.STATUS_ROBOT_FROZEN
-                    or mob_feedback.status.value == mob_feedback.status.STATUS_INCOMPATIBLE_HARDWARE
-                ):
-                    return GoalResponse.FAILED
-                if mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_SE2_TRAJECTORY_FEEDBACK_SET:
-                    if (
-                        mob_feedback.feedback.se2_trajectory_feedback.status.value
-                        != mob_feedback.feedback.se2_trajectory_feedback.status.STATUS_AT_GOAL
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_SE2_VELOCITY_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: Planar velocity commands provide no feedback")
-                    pass  # May return SUCCESS below
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_SIT_FEEDBACK_SET:
-                    if (
-                        mob_feedback.feedback.sit_feedback.status.value
-                        != mob_feedback.feedback.sit_feedback.status.STATUS_IS_SITTING
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_STAND_FEEDBACK_SET:
-                    if (
-                        mob_feedback.feedback.stand_feedback.status.value
-                        != mob_feedback.feedback.stand_feedback.status.STATUS_IS_STANDING
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_STANCE_FEEDBACK_SET:
-                    if (
-                        mob_feedback.feedback.stance_feedback.status.value
-                        == mob_feedback.feedback.stance_feedback.status.STATUS_TOO_FAR_AWAY
-                    ):
-                        return GoalResponse.FAILED
-                    if (
-                        mob_feedback.feedback.stance_feedback.status.value
-                        != mob_feedback.feedback.stance_feedback.status.STATUS_STANCED
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: Stop command provides no feedback")
-                    pass  # May return SUCCESS below
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_FOLLOW_ARM_FEEDBACK_SET:
-                    self.get_logger().warn("WARNING: FollowArmCommand provides no feedback")
-                    pass  # May return SUCCESS below
-                elif mob_feedback.feedback.feedback_choice == mob_feedback.feedback.FEEDBACK_NOT_SET:
-                    # sync_feedback.mobility_command_feedback_is_set, feedback_choice is actually not set.
-                    # This may happen when a command finishes, which means we may return SUCCESS below.
-                    self.get_logger().info("mobility command feedback indicates goal has reached")
-                    pass
-                else:
-                    self.get_logger().error("ERROR: unknown mobility command type")
-                    return GoalResponse.IN_PROGRESS
+                response = self._process_synchronized_mobility_command_feedback(mob_feedback)
+                if response is not GoalResponse.SUCCESS:
+                    return response
 
             if sync_feedback.gripper_command_feedback_is_set is True:
                 grip_feedback = sync_feedback.gripper_command_feedback
-                if (
-                    grip_feedback.status.value == grip_feedback.status.STATUS_COMMAND_OVERRIDDEN
-                    or grip_feedback.status.value == grip_feedback.status.STATUS_COMMAND_TIMED_OUT
-                    or grip_feedback.status.value == grip_feedback.status.STATUS_ROBOT_FROZEN
-                    or grip_feedback.status.value == grip_feedback.status.STATUS_INCOMPATIBLE_HARDWARE
-                ):
-                    return GoalResponse.FAILED
-                if grip_feedback.command.command_choice == grip_feedback.command.COMMAND_CLAW_GRIPPER_FEEDBACK_SET:
-                    if (
-                        grip_feedback.command.claw_gripper_feedback.status.value
-                        == grip_feedback.command.claw_gripper_feedback.status.STATUS_IN_PROGRESS
-                    ):
-                        return GoalResponse.IN_PROGRESS
-                    elif (
-                        grip_feedback.command.claw_gripper_feedback.status.value
-                        == grip_feedback.command.claw_gripper_feedback.status.STATUS_UNKNOWN
-                    ):
-                        self.get_logger().error("ERROR: claw grippper status unknown")
-                        return GoalResponse.IN_PROGRESS
-                    # else: STATUS_AT_GOAL or STATUS_APPLYING_FORCE
+                response = self._process_synchronized_gripper_command_feedback(grip_feedback)
+                if response is not GoalResponse.SUCCESS:
+                    return response
 
-                else:
-                    self.get_logger().error("ERROR: unknown gripper command type")
-                    return GoalResponse.IN_PROGRESS
-
-            return GoalResponse.SUCCESS
-
+            return response
         else:
             self.get_logger().error("ERROR: unknown robot command type")
             return GoalResponse.IN_PROGRESS
@@ -2343,13 +2390,10 @@ class SpotROS(Node):
         # We exclude the odometry frames from static transforms since they are not static. We can ignore the body
         # frame because it is a child of odom or vision depending on the preferred_odom_frame, and will be published
         # by the non-static transform publishing that is done by the state callback
-        frame_prefix = MOCK_HOSTNAME + "/"
-        if self.spot_wrapper is not None:
-            frame_prefix = self.spot_wrapper.frame_prefix
         excluded_frames = [
             self.tf_name_vision_odom.value,
             self.tf_name_kinematic_odom.value,
-            frame_prefix + "body",
+            self.frame_prefix + "body",
         ]
         excluded_frames = [f[f.rfind("/") + 1 :] for f in excluded_frames]
 
@@ -2383,8 +2427,8 @@ class SpotROS(Node):
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
             ]
             if (
-                frame_prefix + parent_frame,
-                frame_prefix + frame_name,
+                self.frame_prefix + parent_frame,
+                self.frame_prefix + frame_name,
             ) in existing_transforms:
                 # We already extracted this transform
                 continue
@@ -2399,7 +2443,7 @@ class SpotROS(Node):
                 parent_frame,
                 frame_name,
                 transform.parent_tform_child,
-                frame_prefix,
+                self.frame_prefix,
             )
             self.camera_static_transforms.append(static_tf)
             self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)

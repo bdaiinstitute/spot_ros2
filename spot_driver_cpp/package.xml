@@ -9,6 +9,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>spot_msgs</depend>
   <depend>bosdyn</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
@@ -16,6 +17,9 @@
   <depend>sensor_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>tl_expected</depend>
+
+  <!-- Support for gtest and gmock-based tests in the ament buildsystem in CMake. -->
+  <test_depend>ament_cmake_gmock</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

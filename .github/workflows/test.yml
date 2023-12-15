@@ -4,18 +4,22 @@ on:
   push:
     branches:
       - main
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: true
 
 permissions:
     contents: write
 
 jobs:
-  build_package_and_docs:
+  build_and_test_package_and_docs:
+    name: build_and_test_package_and_docs
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-    container:
-      image: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
+    container: ghcr.io/bdaiinstitute/spot_ros2_jammy_humble:main
     steps:
     - name: Checkout repo and submodules
       uses: actions/checkout@v3
@@ -31,6 +35,24 @@ jobs:
         source /opt/ros/$ROS_DISTRO/setup.bash
         colcon build --symlink-install
         source install/local_setup.bash
+    - name: Test Package
+      run: |
+        source /opt/ros/$ROS_DISTRO/setup.bash
+        source install/local_setup.bash
+        # skip testing submodules
+        colcon test --python-testing pytest --pytest-with-coverage --event-handlers console_direct+ --packages-skip bdai_ros2_wrappers
+      working-directory: ${{ github.workspace }}/../../
+    - name: Upload coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        fail-on-error: true
+        flag-name: unittests
+        debug: true
+        files: $(find ../../ -name "coverage.xml" -type f)
+    - if: always()
+      run: colcon test-result --verbose
+      working-directory: ${{ github.workspace }}/../../
     - name: Install docs dependencies & build docs
       run: |
         source /opt/ros/$ROS_DISTRO/setup.bash
