@@ -156,7 +156,7 @@ class IKTest:
         task_frame_name = namespace_with(self.robot_name, "task_frame")
         link_wr1_frame_name = namespace_with(self.robot_name, "link_wr1")
         jaw_frame_name = namespace_with(self.robot_name, "jaw_frame")
-        desired_pose_name = namespace_with(self.robot_name, "desired_pose")
+        namespace_with(self.robot_name, "desired_pose")
 
         # Wait for the robot to publish the TF state.
         self.tf_listener.wait_for_a_tform_b(odom_frame_name, flat_body_frame_name)
