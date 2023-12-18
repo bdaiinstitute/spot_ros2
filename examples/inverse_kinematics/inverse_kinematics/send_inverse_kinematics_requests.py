@@ -32,8 +32,7 @@ from tf2_ros import TransformBroadcaster
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
 import spot_driver.conversions as conv
-import spot_msgs.srv
-from spot_msgs.action import RobotCommand
+from spot_msgs.action import RobotCommand  # type: ignore
 
 
 class IKTest:
