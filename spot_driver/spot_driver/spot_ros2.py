@@ -357,22 +357,29 @@ class SpotROS(Node):
             frame_prefix = self.name + "/"
         self.frame_prefix: str = frame_prefix
         self.preferred_odom_frame: Parameter = self.declare_parameter(
-            "preferred_odom_frame", frame_prefix + "odom"
+            "preferred_odom_frame", self.frame_prefix + "odom"
         )  # 'vision' or 'odom'
-        self.tf_name_kinematic_odom: Parameter = self.declare_parameter("tf_name_kinematic_odom", frame_prefix + "odom")
+        self.tf_name_kinematic_odom: Parameter = self.declare_parameter(
+            "tf_name_kinematic_odom", self.frame_prefix + "odom"
+        )
         self.tf_name_raw_kinematic: str = frame_prefix + "odom"
-        self.tf_name_vision_odom: Parameter = self.declare_parameter("tf_name_vision_odom", frame_prefix + "vision")
-        self.tf_name_raw_vision: str = frame_prefix + "vision"
+        self.tf_name_vision_odom: Parameter = self.declare_parameter(
+            "tf_name_vision_odom", self.frame_prefix + "vision"
+        )
+        self.tf_name_raw_vision: str = self.frame_prefix + "vision"
 
         if (
             self.preferred_odom_frame.value != self.tf_name_raw_kinematic
             and self.preferred_odom_frame.value != self.tf_name_raw_vision
         ):
-            error_msg = f'rosparam "preferred_odom_frame" should be "{frame_prefix}odom" or "{frame_prefix}vision".'
+            error_msg = (
+                f'rosparam "preferred_odom_frame" should be "{self.tf_name_raw_kinematic}" or'
+                f' "{self.tf_name_raw_vision}".'
+            )
             self.get_logger().error(error_msg)
             raise ValueError(error_msg)
 
-        self.tf_name_graph_nav_body: str = frame_prefix + "body"
+        self.tf_name_graph_nav_body: str = self.frame_prefix + "body"
 
         # logger for spot wrapper
         name_with_dot = ""
