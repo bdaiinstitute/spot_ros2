@@ -32,8 +32,8 @@ from tf2_ros import TransformBroadcaster
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
 import spot_driver.conversions as conv
-import spot_msgs.srv
 from spot_msgs.action import RobotCommand  # type: ignore
+from spot_msgs.srv import GetInverseKinematicSolutions
 
 
 class IKTest:
@@ -47,7 +47,7 @@ class IKTest:
         self.tf_listener = TFListenerWrapper(node)
         self.robot = SpotBasic(self.robot_name)
         self.ik_client = node.create_client(
-            spot_msgs.srv.GetInverseKinematicSolutions,
+            GetInverseKinematicSolutions,
             namespace_with(self.robot_name, "get_inverse_kinematic_solutions"),
         )
         self.robot_command_client = ActionClientWrapper(
@@ -83,7 +83,7 @@ class IKTest:
 
     def create_ik_request(
         self, odom_T_task: SE3Pose, wr1_T_tool: SE3Pose, task_T_desired_tool: SE3Pose
-    ) -> spot_msgs.srv.GetInverseKinematicSolutions.Request:
+    ) -> GetInverseKinematicSolutions.Request:
         """
         Create an inverse kinematic request.
 
@@ -142,7 +142,7 @@ class IKTest:
         request.tool_specification = tools_specification
         request.task_specification = task_specification
 
-        result = spot_msgs.srv.GetInverseKinematicSolutions.Request()
+        result = GetInverseKinematicSolutions.Request()
         result.request = request
 
         return result
@@ -260,7 +260,7 @@ class IKTest:
             ik_request = self.create_ik_request(
                 odom_T_task=odom_T_task, wr1_T_tool=wr1_T_tool, task_T_desired_tool=task_T_desired_tool
             )
-            ik_response: spot_msgs.srv.GetInverseKinematicSolutions.Response = self.ik_client.call(ik_request)
+            ik_response: GetInverseKinematicSolutions.Response = self.ik_client.call(ik_request)
 
             # Attempt to move to each of the desired tool pose to check the IK results.
             stand_command = None
