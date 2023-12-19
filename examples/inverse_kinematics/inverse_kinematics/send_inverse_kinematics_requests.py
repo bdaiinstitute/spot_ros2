@@ -37,6 +37,10 @@ from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
 
 
 class IKTest:
+    """
+    This example show how to query for IK solutions.
+    """
+
     def __init__(self, node: Node, args: argparse.Namespace):
         self.node = node
         self.robot_name: str = args.robot
@@ -148,6 +152,12 @@ class IKTest:
         return result
 
     def send_requests(self) -> bool:
+        """
+        Send one or more IK requests, evaluate them and move Spot accordingly.
+        Returns:
+            True the process runs without errors, False otherwise.
+        """
+
         # Frame names.
         odom_frame_name = namespace_with(self.robot_name, ODOM_FRAME_NAME)
         flat_body_frame_name = namespace_with(self.robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)

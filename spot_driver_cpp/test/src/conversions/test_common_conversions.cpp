@@ -121,6 +121,19 @@ TEST(TestCommonConversions, convert_bosdyn_msgs_arm_joint_position_to_proto) {
 ///////////////////////////////////////////////////////////////////////////////
 // Protobuf to ROS.
 
+TEST(TestCommonConversions, convert_proto_to_builtin_interfaces_time) {
+  google::protobuf::Timestamp proto_msg;
+  builtin_interfaces::msg::Time ros_msg;
+
+  proto_msg.set_seconds(5);
+  proto_msg.set_nanos(200);
+
+  common_conversions::convert_proto_to_builtin_interfaces_time(proto_msg, ros_msg);
+
+  ASSERT_EQ(proto_msg.seconds(), ros_msg.sec);
+  ASSERT_EQ(proto_msg.nanos(), ros_msg.nanosec);
+}
+
 TEST(TestCommonConversions, convert_proto_to_geometry_msgs_vector3) {
   bosdyn::api::Vec3 proto_msg;
   geometry_msgs::msg::Point ros_msg;
