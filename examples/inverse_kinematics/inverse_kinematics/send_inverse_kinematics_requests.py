@@ -184,17 +184,17 @@ class IKTest:
             return False
         self.logger.info("Successfully stood up.")
 
-        # Rotate 90 degrees.
+        # Walk forward 1.2m.
         self.logger.info("Walking forward")
-        result = self.robot.walk_to(SE2(0.2, 0))
+        result = self.robot.walk_to(SE2(1.2, 0, 0))
         if not result:
             self.logger.error("Cannot walk forward")
             return False
         self.logger.info("Successfully walked forward.")
 
-        # Walk forward.
+        # Rotate 90 degrees left.
         self.logger.info("Rotate 90 degrees")
-        result = self.robot.walk_to(SE2(1.5708))
+        result = self.robot.walk_to(SE2(1.2, 0, 1.5708))
         if not result:
             self.logger.error("Cannot rotate")
             return False
@@ -243,10 +243,12 @@ class IKTest:
         )
 
         # Unstow the arm.
-        arm_ready_command = RobotCommandBuilder.arm_ready_command(build_on_command=body_assist_enabled_stand_command)
-        arm_ready_command_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(arm_ready_command, arm_ready_command_goal.command)
-        self.robot_command_client.send_goal_and_wait("arm_move_one", arm_ready_command_goal)
+        self.logger.info("Unstow the arm")
+        result = self.robot.ready_arm()
+        if not result:
+            self.logger.error("Failed to unstow the arm.")
+            return False
+        self.logger.info("Arm ready.")
 
         # Check if the IK service is available.
         if not self.ik_client.wait_for_service():
