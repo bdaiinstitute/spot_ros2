@@ -126,7 +126,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         port = int(os.getenv("SPOT_PORT", "0"))
 
         spot_wrapper = SpotWrapper(
-            username=username, password=password, hostname=hostname, port=port, robot_name=spot_name, lgger=logger
+            username=username, password=password, hostname=hostname, port=port, robot_name=spot_name, logger=logger
         )
         has_arm = spot_wrapper.has_arm()
     else:
