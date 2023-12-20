@@ -12,6 +12,7 @@ from typing import List
 
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
+import geometry_msgs.msg
 import numpy as np
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
@@ -21,47 +22,55 @@ from bosdyn.client.frame_helpers import (
     GRAV_ALIGNED_BODY_FRAME_NAME,
     GROUND_PLANE_FRAME_NAME,
     ODOM_FRAME_NAME,
+    VISION_FRAME_NAME,
     get_a_tform_b,
 )
-from bosdyn.client.math_helpers import Quat, SE3Pose
+from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
-from geometry_msgs.msg import TransformStamped
 from rclpy.node import Node
-from spatialmath import SE2
-from spot_utilities.spot_basic import SpotBasic
 from tf2_ros import TransformBroadcaster
+from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
 import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
+from spot_msgs.srv import Dock, GetInverseKinematicSolutions  # type: ignore
 
 
 class IKTest:
     """
-    This example show how to query for IK solutions.
+    This example show how to query for IK solutions and move
+    the robot arm to that solution.
     """
 
     def __init__(self, node: Node, args: argparse.Namespace):
-        self.node = node
-        self.robot_name: str = args.robot
-        self.docking_station: int = args.dock
-        self.poses: int = args.poses
-        self.logger = node.get_logger()
-        self.tf_broadcaster = TransformBroadcaster(node)
-        self.tf_listener = TFListenerWrapper(node)
-        self.robot = SpotBasic(self.robot_name)
-        self.robot_command_client = ActionClientWrapper(
-            RobotCommand, namespace_with(self.robot_name, "robot_command"), node
+        self._node = node
+        self._robot_name: str = args.robot
+        self._dock_id: int = args.dock
+        self._poses: int = args.poses
+        self._logger = node.get_logger()
+        self._tf_broadcaster = TransformBroadcaster(node)
+        self._tf_listener = TFListenerWrapper(node)
+        self._robot = SimpleSpotCommander(self._robot_name)
+
+        self._robot_command_client = ActionClientWrapper(
+            RobotCommand, namespace_with(self._robot_name, "robot_command"), node
         )
 
-        self.timer = node.create_timer(0.1, self.timer_callback)
-        self.transforms: List[TransformStamped] = []
+        self._timer = node.create_timer(0.1, self._timer_callback)
+        self._transforms: List[geometry_msgs.msg.TransformStamped] = []
 
-    def publish_transform(self, parent_frame_name: str, child_frame_name: str, pose: SE3Pose) -> None:
+        self._dock_client = node.create_client(Dock, namespace_with(self._robot_name, "dock"))
+        self._ik_client = node.create_client(
+            GetInverseKinematicSolutions,
+            namespace_with(self._robot_name, "get_inverse_kinematic_solutions"),
+        )
+
+    def _publish_transform(self, parent_frame_name: str, child_frame_name: str, pose: SE3Pose) -> None:
         """
-        Create a transformation and add it to a list so we can display it later in RViz.
+        Create a transform and add it to a list so we can display it later in RViz.
         """
-        tf = TransformStamped()
+        tf = geometry_msgs.msg.TransformStamped()
         tf.header.frame_id = parent_frame_name
         tf.child_frame_id = child_frame_name
         tf.transform.translation.x = float(pose.x)
@@ -71,17 +80,76 @@ class IKTest:
         tf.transform.rotation.y = float(pose.rot.y)
         tf.transform.rotation.z = float(pose.rot.z)
         tf.transform.rotation.w = float(pose.rot.w)
-        self.transforms.append(tf)
+        self._transforms.append(tf)
 
-    def timer_callback(self) -> None:
+    def _timer_callback(self) -> None:
         """
         Publish all cached tranformations at 10Hz so we can view
         """
-        for tf in self.transforms:
-            tf.header.stamp = self.node.get_clock().now().to_msg()
-            self.tf_broadcaster.sendTransform(tf)
+        for tf in self._transforms:
+            tf.header.stamp = self._node.get_clock().now().to_msg()
+            self._tf_broadcaster.sendTransform(tf)
 
-    def send_requests(self) -> bool:
+    def _walk_to(self, pose: SE2Pose) -> bool:
+        """
+        Walk the robot to a given pose.
+        """
+        frame_t_goal = pose
+        command = RobotCommandBuilder.synchro_se2_trajectory_point_command(
+            goal_x=frame_t_goal.x,
+            goal_y=frame_t_goal.y,
+            goal_heading=frame_t_goal.angle,
+            frame_name=VISION_FRAME_NAME,
+        )
+        action_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        return self._robot_command_client.send_goal_and_wait("walk_forward", action_goal)
+
+    def _ready_arm(self) -> bool:
+        """
+        Unstow the robot arm.
+        """
+        command = RobotCommandBuilder.arm_ready_command()
+        action_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        return self._robot_command_client.send_goal_and_wait("ready_arm", action_goal)
+
+    def _dock(self, dock_id: int) -> bool:
+        """
+        Dock the robot.
+        """
+        request = Dock.Request()
+        request.dock_id = dock_id
+        response = self._dock_client.call(request)
+        return response.success
+
+    def _send_ik_request(
+        self, odom_T_task: SE3Pose, wr1_T_tool: SE3Pose, task_T_desired_tool: SE3Pose
+    ) -> GetInverseKinematicSolutions.Request:
+        """
+        Send an IK request for a given task frame, tool and tool desired pose.
+        Returns:
+            An IK solution, if any.
+        """
+        ik_request = inverse_kinematics_pb2.InverseKinematicsRequest(
+            root_frame_name=ODOM_FRAME_NAME,
+            scene_tform_task=odom_T_task.to_proto(),
+            wrist_mounted_tool=inverse_kinematics_pb2.InverseKinematicsRequest.WristMountedTool(
+                wrist_tform_tool=wr1_T_tool.to_proto()
+            ),
+            tool_pose_task=inverse_kinematics_pb2.InverseKinematicsRequest.ToolPoseTask(
+                task_tform_desired_tool=task_T_desired_tool.to_proto()
+            ),
+        )
+        request = GetInverseKinematicSolutions.Request()
+        conv.convert_proto_to_bosdyn_msgs_inverse_kinematics_request(ik_request, request.request)
+        ik_reponse = self._ik_client.call(request)
+
+        proto = inverse_kinematics_pb2.InverseKinematicsResponse()
+        conv.convert_bosdyn_msgs_inverse_kinematics_response_to_proto(ik_reponse.response, proto)
+        return proto
+
+    def execute_test(self) -> bool:
         """
         Send one or more IK requests, evaluate them and move Spot accordingly.
         Returns:
@@ -89,60 +157,67 @@ class IKTest:
         """
 
         # Frame names.
-        odom_frame_name = namespace_with(self.robot_name, ODOM_FRAME_NAME)
-        flat_body_frame_name = namespace_with(self.robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)
-        ground_plane_frame_name = namespace_with(self.robot_name, GROUND_PLANE_FRAME_NAME)
+        odom_frame_name = namespace_with(self._robot_name, ODOM_FRAME_NAME)
+        flat_body_frame_name = namespace_with(self._robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)
+        ground_plane_frame_name = namespace_with(self._robot_name, GROUND_PLANE_FRAME_NAME)
 
-        task_frame_name = namespace_with(self.robot_name, "task_frame")
-        link_wr1_frame_name = namespace_with(self.robot_name, "link_wr1")
-        jaw_frame_name = namespace_with(self.robot_name, "jaw_frame")
-        namespace_with(self.robot_name, "desired_pose")
+        task_frame_name = namespace_with(self._robot_name, "task_frame")
+        link_wr1_frame_name = namespace_with(self._robot_name, "link_wr1")
+        jaw_frame_name = namespace_with(self._robot_name, "jaw_frame")
 
         # Wait for the robot to publish the TF state.
-        self.tf_listener.wait_for_a_tform_b(odom_frame_name, flat_body_frame_name)
+        self._tf_listener.wait_for_a_tform_b(odom_frame_name, flat_body_frame_name)
 
         # Claim robot.
-        self.logger.info("Claiming robot")
-        result = self.robot.claim()
+        self._logger.info("Claiming robot")
+        result = self._robot.command("claim")
         if not result:
-            self.logger.error("Unable to claim robot")
+            self._logger.error("Unable to claim robot")
             return False
-        self.logger.info("Claimed robot")
+        self._logger.info("Claimed robot")
 
         # Power on robot.
-        self.logger.info("Powering robot on")
-        result = self.robot.power_on()
+        self._logger.info("Powering robot on")
+        result = self._robot.command("power_on")
         if not result:
-            self.logger.error("Unable to power on robot")
+            self._logger.error("Unable to power on robot")
             return False
 
         # Stand up robot.
-        self.logger.info("Standing robot up")
-        result = self.robot.stand()
+        self._logger.info("Standing robot up")
+        result = self._robot.command("stand")
         if not result:
-            self.logger.error("Robot did not stand")
+            self._logger.error("Robot did not stand")
             return False
-        self.logger.info("Successfully stood up.")
+        self._logger.info("Successfully stood up.")
 
         # Walk forward 1.2m.
-        self.logger.info("Walking forward")
-        result = self.robot.walk_to(SE2(1.2, 0, 0))
+        self._logger.info("Walking forward")
+        result = self._walk_to(SE2Pose(1.2, 0, 0))
         if not result:
-            self.logger.error("Cannot walk forward")
+            self._logger.error("Cannot walk forward")
             return False
-        self.logger.info("Successfully walked forward.")
+        self._logger.info("Successfully walked forward.")
 
         # Rotate 90 degrees left.
-        self.logger.info("Rotate 90 degrees")
-        result = self.robot.walk_to(SE2(1.2, 0, 1.5708))
+        self._logger.info("Rotate 90 degrees")
+        result = self._walk_to(SE2Pose(1.2, 0, 1.5708))
         if not result:
-            self.logger.error("Cannot rotate")
+            self._logger.error("Cannot rotate")
             return False
-        self.logger.info("Successfully rotated 90 degrees.")
+        self._logger.info("Successfully rotated 90 degrees.")
+
+        # Unstow the arm.
+        self._logger.info("Unstow the arm")
+        result = self._ready_arm()
+        if not result:
+            self._logger.error("Failed to unstow the arm.")
+            return False
+        self._logger.info("Arm ready.")
 
         # Look for known transforms published by the robot.
-        odom_T_flat_body: SE3Pose = self.tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name)
-        odom_T_gpe: SE3Pose = self.tf_listener.lookup_a_tform_b(odom_frame_name, ground_plane_frame_name)
+        odom_T_flat_body: SE3Pose = self._tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name)
+        odom_T_gpe: SE3Pose = self._tf_listener.lookup_a_tform_b(odom_frame_name, ground_plane_frame_name)
 
         # Construct the frame on the ground right underneath the center of the body.
         odom_T_ground_body: SE3Pose = odom_T_flat_body
@@ -150,13 +225,13 @@ class IKTest:
 
         # Now, construct a task frame slightly above the ground, in front of the robot.
         odom_T_task: SE3Pose = odom_T_ground_body * SE3Pose(x=0.4, y=0.0, z=0.05, rot=Quat(w=1.0, x=0.0, y=0.0, z=0.0))
-        self.publish_transform(odom_frame_name, task_frame_name, odom_T_task)
+        self._publish_transform(odom_frame_name, task_frame_name, odom_T_task)
 
         # Now, let's set our tool frame to be the tip of the robot's bottom jaw. Flip the
         # orientation so that when the hand is pointed downwards, the tool's z-axis is
         # pointed upward.
         wr1_T_tool: SE3Pose = SE3Pose(0.23589, 0.0, -0.03943, Quat.from_pitch(-np.pi / 2))
-        self.publish_transform(link_wr1_frame_name, jaw_frame_name, wr1_T_tool)
+        self._publish_transform(link_wr1_frame_name, jaw_frame_name, wr1_T_tool)
 
         # Generate several random poses in front of the task frame where we want the tool to move to.
         # The desired tool poses are defined relative to thr task frame in front of the robot and slightly
@@ -165,8 +240,8 @@ class IKTest:
         # of the robot, and the positive-z direction is opposite to gravity.
         x_size = 0.8  # m
         y_size = 0.8  # m
-        x_rt_task = x_size * np.random.random(self.poses)
-        y_rt_task = -y_size / 2 + y_size * np.random.random(self.poses)
+        x_rt_task = x_size * np.random.random(self._poses)
+        y_rt_task = -y_size / 2 + y_size * np.random.random(self._poses)
         task_T_desired_tools = [
             SE3Pose(xi_rt_task, yi_rt_task, 0.0, Quat())
             for (xi_rt_task, yi_rt_task) in zip(x_rt_task.flatten(), y_rt_task.flatten())
@@ -182,34 +257,17 @@ class IKTest:
             params=robot_command_pb2.MobilityParams(body_control=body_control)
         )
 
-        # Unstow the arm.
-        self.logger.info("Unstow the arm")
-        result = self.robot.ready_arm()
-        if not result:
-            self.logger.error("Failed to unstow the arm.")
-            return False
-        self.logger.info("Arm ready.")
-
         # Send IK requests.
         for i, task_T_desired_tool in enumerate(task_T_desired_tools):
-            ik_request = inverse_kinematics_pb2.InverseKinematicsRequest(
-                root_frame_name=ODOM_FRAME_NAME,
-                scene_tform_task=odom_T_task.to_proto(),
-                wrist_mounted_tool=inverse_kinematics_pb2.InverseKinematicsRequest.WristMountedTool(
-                    wrist_tform_tool=wr1_T_tool.to_proto()
-                ),
-                tool_pose_task=inverse_kinematics_pb2.InverseKinematicsRequest.ToolPoseTask(
-                    task_tform_desired_tool=task_T_desired_tool.to_proto()
-                ),
+            ik_response = self._send_ik_request(
+                odom_T_task=odom_T_task, wr1_T_tool=wr1_T_tool, task_T_desired_tool=task_T_desired_tool
             )
-            ik_response = self.robot.get_inverse_kinematic_solutions(ik_request)
 
             # Attempt to move to each of the desired tool pose to check the IK results.
             stand_command = None
-
             if ik_response.status == inverse_kinematics_pb2.InverseKinematicsResponse.Status.STATUS_OK:
-                self.logger.info("Solution found")
-                self.publish_transform(task_frame_name, "T" + str(i) + "-YES", task_T_desired_tool)
+                self._logger.info("Solution found")
+                self._publish_transform(task_frame_name, "T" + str(i) + "-YES", task_T_desired_tool)
 
                 odom_T_desired_body = get_a_tform_b(
                     ik_response.robot_configuration.transforms_snapshot,
@@ -223,12 +281,12 @@ class IKTest:
                 )
                 stand_command = RobotCommandBuilder.synchro_stand_command(params=mobility_params)
             elif ik_response.status == inverse_kinematics_pb2.InverseKinematicsResponse.Status.STATUS_NO_SOLUTION_FOUND:
-                self.logger.info("No solution found")
-                self.publish_transform(task_frame_name, "T" + str(i) + "-NO", task_T_desired_tool)
+                self._logger.info("No solution found")
+                self._publish_transform(task_frame_name, "T" + str(i) + "-NO", task_T_desired_tool)
                 stand_command = body_assist_enabled_stand_command
             else:
-                self.logger.info("Status unknown")
-                self.publish_transform(task_frame_name, "T" + str(i) + "-NO", task_T_desired_tool)
+                self._logger.info("Status unknown")
+                self._publish_transform(task_frame_name, "T" + str(i) + "-NO", task_T_desired_tool)
                 stand_command = body_assist_enabled_stand_command
 
             # Move the arm tool to the requested position.
@@ -243,22 +301,22 @@ class IKTest:
             )
             arm_command_goal = RobotCommand.Goal()
             conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, arm_command_goal.command)
-            result = self.robot_command_client.send_goal_and_wait(
+            result = self._robot_command_client.send_goal_and_wait(
                 action_name="arm_move_one", goal=arm_command_goal, timeout_sec=5
             )
 
         # Dock robot.
-        self.logger.info("Docking the robot")
-        result = self.robot.dock(self.docking_station)
+        self._logger.info("Docking the robot")
+        result = self._dock(self._dock_id)
         if not result:
-            self.logger.error("Unable to dock the robot")
+            self._logger.error("Unable to dock the robot")
             return False
 
         # Power off robot.
-        self.logger.info("Powering robot off")
-        result = self.robot.power_off()
+        self._logger.info("Powering robot off")
+        result = self._robot.command("power_off")
         if not result:
-            self.logger.error("Unable to power off robot")
+            self._logger.error("Unable to power off robot")
             return False
 
         return True
@@ -280,7 +338,7 @@ def main(args: argparse.Namespace) -> None:
         raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
 
     test = IKTest(node, args)
-    test.send_requests()
+    test.execute_test()
 
     time.sleep(5)
 
