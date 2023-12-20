@@ -1,6 +1,6 @@
 import os
 import time
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import builtin_interfaces.msg
 import cv2
@@ -671,14 +671,13 @@ def get_behavior_faults_from_state(state: robot_state_pb2.RobotState, spot_wrapp
     return behavior_fault_state_msg
 
 
-def get_from_env_and_fall_back_to_param(
-    env_name: str, node: Node, param_name: str, default_value: str
-) -> Optional[str]:
-    val = os.environ.get(env_name)
-    if val is None:
+def get_from_env_and_fall_back_to_param(env_name: str, node: Node, param_name: str, default_value: Any) -> Any:
+    value = os.environ.get(env_name)
+    if value is None:
         node.declare_parameter(param_name, default_value)
-        val = node.get_parameter(param_name).value
-    return val
+        value = node.get_parameter(param_name).value
+    value_type = type(default_value)
+    return value_type(value)
 
 
 # Timeout only works if your tf listener updates in a separate thread!
