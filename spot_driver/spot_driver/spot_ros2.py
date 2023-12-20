@@ -331,13 +331,10 @@ class SpotROS(Node):
 
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
 
-        self.username: Optional[str] = get_from_env_and_fall_back_to_param(
-            "BOSDYN_CLIENT_USERNAME", self, "username", "user"
-        )
-        self.password: Optional[str] = get_from_env_and_fall_back_to_param(
-            "BOSDYN_CLIENT_PASSWORD", self, "password", "password"
-        )
-        self.ip: Optional[str] = get_from_env_and_fall_back_to_param("SPOT_IP", self, "hostname", "10.0.0.3")
+        self.username: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", self, "username", "user")
+        self.password: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", self, "password", "password")
+        self.ip: str = get_from_env_and_fall_back_to_param("SPOT_IP", self, "hostname", "10.0.0.3")
+        self.port: int = get_from_env_and_fall_back_to_param("SPOT_PORT", self, "port", 0)
 
         self.camera_static_transform_broadcaster: tf2_ros.StaticTransformBroadcaster = (
             tf2_ros.StaticTransformBroadcaster(self)
@@ -400,19 +397,20 @@ class SpotROS(Node):
         else:
             # create SpotWrapper if not mocking
             self.spot_wrapper = SpotWrapper(
-                self.username,
-                self.password,
-                self.ip,
-                self.name,
-                self.wrapper_logger,
-                self.start_estop.value,
-                self.estop_timeout.value,
-                self.rates,
-                self.callbacks,
-                self.use_take_lease.value,
-                self.get_lease_on_action.value,
-                self.continually_try_stand.value,
-                self.rgb_cameras.value,
+                username=self.username,
+                password=self.password,
+                hostname=self.ip,
+                port=self.port,
+                robot_name=self.name,
+                logger=self.wrapper_logger,
+                start_estop=self.start_estop.value,
+                estop_timeout=self.estop_timeout.value,
+                rates=self.rates,
+                callbacks=self.callbacks,
+                use_take_lease=self.use_take_lease.value,
+                get_lease_on_action=self.get_lease_on_action.value,
+                continually_try_stand=self.continually_try_stand.value,
+                rgb_cameras=self.rgb_cameras.value,
             )
             if not self.spot_wrapper.is_valid:
                 return
