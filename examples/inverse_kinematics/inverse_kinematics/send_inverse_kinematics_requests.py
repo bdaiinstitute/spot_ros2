@@ -2,19 +2,20 @@
 
 # Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
+# We disable Pylint warnings for all Protobuf files which contain objects with
+# dynamically added member attributes.
+# pylint: disable=no-member
+
 import argparse
 import time
 from typing import List
 
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
-import bosdyn_msgs.msg
-import geometry_msgs.msg
 import numpy as np
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
-from bosdyn.api import geometry_pb2
-from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
+from bosdyn.api.spot import inverse_kinematics_pb2, robot_command_pb2
 from bosdyn.client.frame_helpers import (
     BODY_FRAME_NAME,
     GRAV_ALIGNED_BODY_FRAME_NAME,
@@ -33,7 +34,6 @@ from utilities.tf_listener_wrapper import TFListenerWrapper
 
 import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
-from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
 
 
 class IKTest:
@@ -50,10 +50,6 @@ class IKTest:
         self.tf_broadcaster = TransformBroadcaster(node)
         self.tf_listener = TFListenerWrapper(node)
         self.robot = SpotBasic(self.robot_name)
-        self.ik_client = node.create_client(
-            GetInverseKinematicSolutions,
-            namespace_with(self.robot_name, "get_inverse_kinematic_solutions"),
-        )
         self.robot_command_client = ActionClientWrapper(
             RobotCommand, namespace_with(self.robot_name, "robot_command"), node
         )
@@ -84,72 +80,6 @@ class IKTest:
         for tf in self.transforms:
             tf.header.stamp = self.node.get_clock().now().to_msg()
             self.tf_broadcaster.sendTransform(tf)
-
-    def create_ik_request(
-        self, odom_T_task: SE3Pose, wr1_T_tool: SE3Pose, task_T_desired_tool: SE3Pose
-    ) -> GetInverseKinematicSolutions.Request:
-        """
-        Create an inverse kinematic request.
-
-        Args:
-            odom_T_task The task frame relative to the odom frame.
-            wr1_T_tool The tool frame relative to the wrist frame.
-            task_T_desired_tool The desired position of the tool frame relative to the task frame.
-
-        Returns:
-            A ROS2 IK request.
-        """
-
-        # Task frame.
-        task_frame = geometry_msgs.msg.Pose()
-        task_frame.position.x = float(odom_T_task.x)
-        task_frame.position.y = float(odom_T_task.y)
-        task_frame.position.z = float(odom_T_task.z)
-        task_frame.orientation.w = float(odom_T_task.rotation.w)
-        task_frame.orientation.x = float(odom_T_task.rotation.x)
-        task_frame.orientation.y = float(odom_T_task.rotation.y)
-        task_frame.orientation.z = float(odom_T_task.rotation.z)
-
-        # Tool frame.
-        tools_specification = bosdyn_msgs.msg.InverseKinematicsRequestOneOfToolSpecification()
-        tools_specification.tool_specification_choice = (
-            bosdyn_msgs.msg.InverseKinematicsRequestOneOfToolSpecification.TOOL_SPECIFICATION_WRIST_MOUNTED_TOOL_SET
-        )
-        tools_specification.wrist_mounted_tool.wrist_tform_tool_is_set = True
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.position.x = float(wr1_T_tool.x)
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.position.y = float(wr1_T_tool.y)
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.position.z = float(wr1_T_tool.z)
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.w = float(wr1_T_tool.rotation.w)
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.x = float(wr1_T_tool.rotation.x)
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.y = float(wr1_T_tool.rotation.y)
-        tools_specification.wrist_mounted_tool.wrist_tform_tool.orientation.z = float(wr1_T_tool.rotation.z)
-
-        # Task specificarion.
-        task_specification = bosdyn_msgs.msg.InverseKinematicsRequestOneOfTaskSpecification()
-        task_specification.task_specification_choice = (
-            bosdyn_msgs.msg.InverseKinematicsRequestOneOfTaskSpecification.TASK_SPECIFICATION_TOOL_POSE_TASK_SET
-        )
-        task_specification.tool_pose_task.task_tform_desired_tool_is_set = True
-        task_specification.tool_pose_task.task_tform_desired_tool.position.x = float(task_T_desired_tool.x)
-        task_specification.tool_pose_task.task_tform_desired_tool.position.y = float(task_T_desired_tool.y)
-        task_specification.tool_pose_task.task_tform_desired_tool.position.z = float(task_T_desired_tool.z)
-        task_specification.tool_pose_task.task_tform_desired_tool.orientation.w = float(task_T_desired_tool.rotation.w)
-        task_specification.tool_pose_task.task_tform_desired_tool.orientation.x = float(task_T_desired_tool.rotation.x)
-        task_specification.tool_pose_task.task_tform_desired_tool.orientation.y = float(task_T_desired_tool.rotation.y)
-        task_specification.tool_pose_task.task_tform_desired_tool.orientation.z = float(task_T_desired_tool.rotation.z)
-
-        # Request.
-        request = bosdyn_msgs.msg.InverseKinematicsRequest()
-        request.root_frame_name = "odom"
-        request.scene_tform_task_is_set = True
-        request.scene_tform_task = task_frame
-        request.tool_specification = tools_specification
-        request.task_specification = task_specification
-
-        result = GetInverseKinematicSolutions.Request()
-        result.request = request
-
-        return result
 
     def send_requests(self) -> bool:
         """
@@ -243,13 +173,13 @@ class IKTest:
         ]
 
         # Define a stand command that we'll send if the IK service does not find a solution.
-        body_control = spot_command_pb2.BodyControlParams(
-            body_assist_for_manipulation=spot_command_pb2.BodyControlParams.BodyAssistForManipulation(
+        body_control = robot_command_pb2.BodyControlParams(
+            body_assist_for_manipulation=robot_command_pb2.BodyControlParams.BodyAssistForManipulation(
                 enable_hip_height_assist=True, enable_body_yaw_assist=True
             )
         )
         body_assist_enabled_stand_command = RobotCommandBuilder.synchro_stand_command(
-            params=spot_command_pb2.MobilityParams(body_control=body_control)
+            params=robot_command_pb2.MobilityParams(body_control=body_control)
         )
 
         # Unstow the arm.
@@ -260,45 +190,39 @@ class IKTest:
             return False
         self.logger.info("Arm ready.")
 
-        # Check if the IK service is available.
-        if not self.ik_client.wait_for_service():
-            self.logger.info("Service get_inverse_kinematics_solutions not available.")
-            return False
-
         # Send IK requests.
         for i, task_T_desired_tool in enumerate(task_T_desired_tools):
-            ik_request = self.create_ik_request(
-                odom_T_task=odom_T_task, wr1_T_tool=wr1_T_tool, task_T_desired_tool=task_T_desired_tool
+            ik_request = inverse_kinematics_pb2.InverseKinematicsRequest(
+                root_frame_name=ODOM_FRAME_NAME,
+                scene_tform_task=odom_T_task.to_proto(),
+                wrist_mounted_tool=inverse_kinematics_pb2.InverseKinematicsRequest.WristMountedTool(
+                    wrist_tform_tool=wr1_T_tool.to_proto()
+                ),
+                tool_pose_task=inverse_kinematics_pb2.InverseKinematicsRequest.ToolPoseTask(
+                    task_tform_desired_tool=task_T_desired_tool.to_proto()
+                ),
             )
-            ik_response: GetInverseKinematicSolutions.Response = self.ik_client.call(ik_request)
+            ik_response = self.robot.get_inverse_kinematic_solutions(ik_request)
 
             # Attempt to move to each of the desired tool pose to check the IK results.
             stand_command = None
-            if ik_response.response.status.value == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_OK:
+
+            if ik_response.status == inverse_kinematics_pb2.InverseKinematicsResponse.Status.STATUS_OK:
                 self.logger.info("Solution found")
                 self.publish_transform(task_frame_name, "T" + str(i) + "-YES", task_T_desired_tool)
 
-                # We don't have yet a ROS2 method to get a transform from a snapshot:
-                # we must convert the ROS2 message into Protobuf first.
-                frame_tree_snapshot = geometry_pb2.FrameTreeSnapshot()
-                conv.convert_bosdyn_msgs_frame_tree_snapshot_to_proto(
-                    ik_response.response.robot_configuration.transforms_snapshot, frame_tree_snapshot
-                )
                 odom_T_desired_body = get_a_tform_b(
-                    frame_tree_snapshot,
+                    ik_response.robot_configuration.transforms_snapshot,
                     ODOM_FRAME_NAME,
                     BODY_FRAME_NAME,
                 )
-                mobility_params = spot_command_pb2.MobilityParams(
-                    body_control=spot_command_pb2.BodyControlParams(
+                mobility_params = robot_command_pb2.MobilityParams(
+                    body_control=robot_command_pb2.BodyControlParams(
                         body_pose=RobotCommandBuilder.body_pose(ODOM_FRAME_NAME, odom_T_desired_body.to_proto())
                     )
                 )
                 stand_command = RobotCommandBuilder.synchro_stand_command(params=mobility_params)
-            elif (
-                ik_response.response.status.value
-                == bosdyn_msgs.msg.InverseKinematicsResponseStatus.STATUS_NO_SOLUTION_FOUND
-            ):
+            elif ik_response.status == inverse_kinematics_pb2.InverseKinematicsResponse.Status.STATUS_NO_SOLUTION_FOUND:
                 self.logger.info("No solution found")
                 self.publish_transform(task_frame_name, "T" + str(i) + "-NO", task_T_desired_tool)
                 stand_command = body_assist_enabled_stand_command
