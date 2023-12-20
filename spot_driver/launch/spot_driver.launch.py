@@ -123,8 +123,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
         password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
         hostname = os.getenv("SPOT_IP", "hostname")
+        port = int(os.getenv("SPOT_PORT", "0"))
 
-        spot_wrapper = SpotWrapper(username, password, hostname, spot_name, logger)
+        spot_wrapper = SpotWrapper(
+            username=username, password=password, hostname=hostname, port=port, robot_name=spot_name, logger=logger
+        )
         has_arm = spot_wrapper.has_arm()
     else:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
