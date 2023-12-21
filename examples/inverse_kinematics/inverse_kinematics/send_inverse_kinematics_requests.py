@@ -6,8 +6,12 @@
 # dynamically added member attributes.
 # pylint: disable=no-member
 
+"""
+This example shows how to query for IK solutions and move
+the robot arm to that solution.
+"""
+
 import argparse
-import time
 from typing import List
 
 import bdai_ros2_wrappers.process as ros_process
@@ -37,7 +41,7 @@ from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import Dock, GetInverseKinematicSolutions  # type: ignore
 
 
-class IKTest:
+class SpotRunner:
     """
     This example show how to query for IK solutions and move
     the robot arm to that solution.
@@ -149,7 +153,7 @@ class IKTest:
         conv.convert_bosdyn_msgs_inverse_kinematics_response_to_proto(ik_reponse.response, proto)
         return proto
 
-    def execute_test(self) -> bool:
+    def test_run(self) -> bool:
         """
         Send one or more IK requests, evaluate them and move Spot accordingly.
         Returns:
@@ -323,6 +327,15 @@ class IKTest:
 
 
 def cli() -> argparse.ArgumentParser:
+    """
+    Parse all arguments.
+    --robot [string]
+        The robot name e.g. Opal.
+    --dock [int]
+        The docking station number (e.g. 527 for Spot Opal).
+    -n --poses [int]
+        Number of desired tool poses to query.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--robot", type=str, required=True, help="The robot name.")
     parser.add_argument("--dock", type=int, required=True, help="The docking station number (527 for Spot Opal).")
@@ -332,15 +345,16 @@ def cli() -> argparse.ArgumentParser:
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> None:
+    """
+    Execute the example.
+    """
     # Set up basic ROS2 utilities for communicating with the driver.
     node = ros_scope.node()
     if node is None:
-        raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
+        raise ValueError("No ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
 
-    test = IKTest(node, args)
-    test.execute_test()
-
-    time.sleep(5)
+    spot_runner = SpotRunner(node, args)
+    spot_runner.test_run()
 
 
 if __name__ == "__main__":
