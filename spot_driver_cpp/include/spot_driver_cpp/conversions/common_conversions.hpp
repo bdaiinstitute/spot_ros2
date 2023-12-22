@@ -6,8 +6,10 @@
 #include <google/protobuf/wrappers.pb.h>
 
 #include <bosdyn_msgs/msg/arm_joint_position.hpp>
+#include <bosdyn_msgs/msg/common_error.hpp>
 #include <bosdyn_msgs/msg/quaternion.hpp>
 #include <bosdyn_msgs/msg/request_header.hpp>
+#include <bosdyn_msgs/msg/response_header.hpp>
 
 #include <bosdyn/api/arm_command.pb.h>
 #include <bosdyn/api/geometry.pb.h>
@@ -46,6 +48,15 @@ void convert_bosdyn_msgs_arm_joint_position_to_proto(const bosdyn_msgs::msg::Arm
 
 ///////////////////////////////////////////////////////////////////////////////
 // Protobuf to ROS.
+
+void convert_proto_to_bosdyn_msgs_request_header(const bosdyn::api::RequestHeader& proto,
+                                                 bosdyn_msgs::msg::RequestHeader& ros_msg);
+
+void convert_proto_to_bosdyn_msgs_common_error(const bosdyn::api::CommonError& proto,
+                                               bosdyn_msgs::msg::CommonError& ros_msg);
+
+void convert_proto_to_bosdyn_msgs_response_header(const bosdyn::api::ResponseHeader& proto,
+                                                  bosdyn_msgs::msg::ResponseHeader& ros_msg);
 
 void convert_proto_to_builtin_interfaces_time(const google::protobuf::Timestamp& proto,
                                               builtin_interfaces::msg::Time& ros_msg);

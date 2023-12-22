@@ -54,15 +54,6 @@ void convert_bosdyn_msgs_inverse_kinematics_request_to_proto(const bosdyn_msgs::
 ///////////////////////////////////////////////////////////////////////////////
 // Protobuf to ROS.
 
-void convert_proto_to_bosdyn_msgs_request_header(const bosdyn::api::RequestHeader& proto,
-                                                 bosdyn_msgs::msg::RequestHeader& ros_msg);
-
-void convert_proto_to_bosdyn_msgs_common_error(const bosdyn::api::CommonError& proto,
-                                               bosdyn_msgs::msg::CommonError& ros_msg);
-
-void convert_proto_to_bosdyn_msgs_response_header(const bosdyn::api::ResponseHeader& proto,
-                                                  bosdyn_msgs::msg::ResponseHeader& ros_msg);
-
 void convert_proto_to_bosdyn_msgs_joint_state(const bosdyn::api::JointState& proto,
                                               bosdyn_msgs::msg::JointState& ros_msg);
 

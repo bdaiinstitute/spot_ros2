@@ -76,6 +76,33 @@ void convert_bosdyn_msgs_arm_joint_position_to_proto(const bosdyn_msgs::msg::Arm
 ///////////////////////////////////////////////////////////////////////////////
 // Protobuf to ROS.
 
+void convert_proto_to_bosdyn_msgs_request_header(const bosdyn::api::RequestHeader& proto,
+                                                 bosdyn_msgs::msg::RequestHeader& ros_msg) {
+  common_conversions::convert_proto_to_builtin_interfaces_time(proto.request_timestamp(), ros_msg.request_timestamp);
+  ros_msg.request_timestamp_is_set = proto.has_request_timestamp();
+  ros_msg.client_name = proto.client_name();
+  ros_msg.disable_rpc_logging = proto.disable_rpc_logging();
+}
+
+void convert_proto_to_bosdyn_msgs_common_error(const bosdyn::api::CommonError& proto,
+                                               bosdyn_msgs::msg::CommonError& ros_msg) {
+  ros_msg.code.value = proto.code();
+  ros_msg.message = proto.message();
+}
+
+void convert_proto_to_bosdyn_msgs_response_header(const bosdyn::api::ResponseHeader& proto,
+                                                  bosdyn_msgs::msg::ResponseHeader& ros_msg) {
+  convert_proto_to_bosdyn_msgs_request_header(proto.request_header(), ros_msg.request_header);
+  ros_msg.request_header_is_set = proto.has_request_header();
+  common_conversions::convert_proto_to_builtin_interfaces_time(proto.request_received_timestamp(),
+                                                               ros_msg.request_received_timestamp);
+  ros_msg.request_received_timestamp_is_set = proto.has_request_received_timestamp();
+  common_conversions::convert_proto_to_builtin_interfaces_time(proto.response_timestamp(), ros_msg.response_timestamp);
+  ros_msg.response_timestamp_is_set = proto.has_response_timestamp();
+  convert_proto_to_bosdyn_msgs_common_error(proto.error(), ros_msg.error);
+  ros_msg.error_is_set = proto.has_error();
+}
+
 void convert_proto_to_builtin_interfaces_time(const google::protobuf::Timestamp& proto,
                                               builtin_interfaces::msg::Time& ros_msg) {
   ros_msg.sec = proto.seconds();
