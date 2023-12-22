@@ -959,6 +959,27 @@ class SpotROS(Node):
                 if self.auto_stand.value:
                     self.spot_wrapper.stand()
 
+        self.create_service(
+            srv_type=Trigger,
+            srv_name="take_or_acquire_lease",
+            callback=self.take_or_acquire_lease_callback,
+            callback_group=self.group,
+        )
+
+    def take_or_acquire_lease_callback(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        self.get_logger().info("Incoming request to take or acquire a new lease.")
+        if self.spot_wrapper is None:
+            response.success = True
+            response.message = "spot_ros2 is running in mock mode."
+            return response
+
+        old_lease = self.spot_wrapper._lease
+        self.spot_wrapper.getLease()
+        lease = self.spot_wrapper._lease
+        response.success = str(lease.lease_proto) != str(old_lease.lease_proto)
+        response.message = str(lease.lease_proto)
+        return response
+
     def robot_state_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new robot state data.
         Args:
