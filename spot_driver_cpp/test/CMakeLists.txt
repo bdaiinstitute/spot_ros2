@@ -61,3 +61,15 @@ ament_add_gmock(test_common_conversions
     src/conversions/test_common_conversions.cpp
 )
 target_link_libraries(test_common_conversions spot_api)
+
+# test_kinematic_service
+
+ament_add_gmock(test_kinematic_service
+    src/kinematic/test_kinematic_service.cpp
+)
+target_include_directories(test_kinematic_service
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(test_kinematic_service spot_api)
