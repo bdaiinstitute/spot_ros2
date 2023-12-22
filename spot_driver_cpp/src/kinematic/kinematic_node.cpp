@@ -1,5 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <spot_driver_cpp/kinematic/kinematic_middleware_handle.hpp>
 #include <spot_driver_cpp/kinematic/kinematic_node.hpp>
 
 #include <spot_driver_cpp/api/default_spot_api.hpp>
@@ -52,7 +53,8 @@ void KinematicNode::initialize(std::shared_ptr<rclcpp::Node> node, std::unique_p
     throw std::runtime_error(error_msg);
   }
 
-  internal_ = std::make_unique<KinematicService>(node_, spot_api_->kinematic_api());
+  internal_ = std::make_unique<KinematicService>(spot_api_->kinematic_api(), logger_interface,
+                                                 std::make_unique<KinematicMiddlewareHandle>(node_));
   internal_->initialize();
 }
 

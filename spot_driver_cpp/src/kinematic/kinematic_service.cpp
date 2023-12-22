@@ -11,16 +11,12 @@ namespace spot_ros2::kinematic {
 auto kServiceName = "get_inverse_kinematic_solutions";
 
 KinematicService::KinematicService(std::shared_ptr<KinematicApi> kinematic_api,
-                                   std::unique_ptr<LoggerInterfaceBase> logger,
-                                   std::unique_ptr<MiddlewareHandle> service_helper)
-    : kinematic_api_{kinematic_api}, logger_{std::move(logger)}, service_helper_{std::move(service_helper)} {}
-
-KinematicService::KinematicService(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<KinematicApi> kinematic_api)
-    : KinematicService{kinematic_api, std::make_unique<RclcppLoggerInterface>(node->get_logger()),
-                       std::make_unique<KinematicMiddlewareHandle>(node)} {}
+                                   std::shared_ptr<LoggerInterfaceBase> logger,
+                                   std::unique_ptr<MiddlewareHandle> middleware_handle)
+    : kinematic_api_{kinematic_api}, logger_{std::move(logger)}, middleware_handle_{std::move(middleware_handle)} {}
 
 void KinematicService::initialize() {
-  service_ = service_helper_->create_service(
+  service_ = middleware_handle_->create_service(
       kServiceName, [this](const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
                            std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
         this->service_callback_(request, response);
