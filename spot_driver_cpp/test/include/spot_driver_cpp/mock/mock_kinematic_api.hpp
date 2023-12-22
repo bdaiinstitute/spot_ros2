@@ -5,6 +5,8 @@
 #include <spot_driver_cpp/api/kinematic_api.hpp>
 #include <spot_driver_cpp/kinematic/kinematic_service.hpp>
 
+#include <string>
+
 namespace spot_ros2::test {
 
 class MockKinematicApi : public KinematicApi {

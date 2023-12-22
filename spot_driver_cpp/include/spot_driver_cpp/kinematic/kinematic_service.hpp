@@ -14,6 +14,7 @@
 #include <rclcpp/service.hpp>
 
 #include <memory>
+#include <string>
 
 namespace spot_ros2::kinematic {
 
