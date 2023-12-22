@@ -5,7 +5,6 @@
 #include <spot_driver_cpp/api/kinematic_api.hpp>
 
 #include <spot_driver_cpp/interfaces/logger_interface_base.hpp>
-#include <spot_driver_cpp/kinematic/kinematic_service_helper.hpp>
 
 #include <spot_msgs/srv/get_inverse_kinematic_solutions.hpp>
 
@@ -23,13 +22,25 @@ using spot_msgs::srv::GetInverseKinematicSolutions;
 class KinematicService {
  public:
   /**
+   * @brief A handle class around rclcpp::Node operations for SpotImagePublisher
+   */
+  class MiddlewareHandle {
+   public:
+    virtual std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>> create_service(
+        std::string service_name, std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
+                                                     std::shared_ptr<GetInverseKinematicSolutions::Response>)>
+                                      callback) = 0;
+    virtual ~MiddlewareHandle() = default;
+  };
+
+  /**
    * Create the logic for the GetInverseKinematicSolutions service.
    * @param node The ROS node.
    * @param kinematic_api The Api to interact with the Spot SDK.
    * @param logger Logging interface.
    */
   explicit KinematicService(std::shared_ptr<KinematicApi> kinematic_api, std::unique_ptr<LoggerInterfaceBase> logger,
-                            std::unique_ptr<KinematicServiceHelper> service_helper);
+                            std::unique_ptr<MiddlewareHandle> service_helper);
 
   /**
    * Create the logic for the GetInverseKinematicSolutions service.
@@ -49,7 +60,7 @@ class KinematicService {
   std::unique_ptr<LoggerInterfaceBase> logger_;
 
   // The service provider.
-  std::unique_ptr<KinematicServiceHelper> service_helper_;
+  std::unique_ptr<MiddlewareHandle> service_helper_;
 
   // The service processing the Inverse Kinematic request for solutions.
   rclcpp::Service<GetInverseKinematicSolutions>::SharedPtr service_;

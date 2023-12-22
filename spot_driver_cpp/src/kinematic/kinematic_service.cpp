@@ -4,7 +4,7 @@
 
 #include <spot_driver_cpp/conversions/kinematic_conversions.hpp>
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
-#include <spot_driver_cpp/kinematic/default_kinematic_service_helper.hpp>
+#include <spot_driver_cpp/kinematic/kinematic_middleware_handle.hpp>
 
 namespace spot_ros2::kinematic {
 
@@ -12,12 +12,12 @@ auto kServiceName = "get_inverse_kinematic_solutions";
 
 KinematicService::KinematicService(std::shared_ptr<KinematicApi> kinematic_api,
                                    std::unique_ptr<LoggerInterfaceBase> logger,
-                                   std::unique_ptr<KinematicServiceHelper> service_helper)
+                                   std::unique_ptr<MiddlewareHandle> service_helper)
     : kinematic_api_{kinematic_api}, logger_{std::move(logger)}, service_helper_{std::move(service_helper)} {}
 
 KinematicService::KinematicService(std::shared_ptr<rclcpp::Node> node, std::shared_ptr<KinematicApi> kinematic_api)
     : KinematicService{kinematic_api, std::make_unique<RclcppLoggerInterface>(node->get_logger()),
-                       std::make_unique<DefaultKinematicServiceHelper>(node)} {}
+                       std::make_unique<KinematicMiddlewareHandle>(node)} {}
 
 void KinematicService::initialize() {
   service_ = service_helper_->create_service(

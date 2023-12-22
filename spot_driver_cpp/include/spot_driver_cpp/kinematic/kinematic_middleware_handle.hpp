@@ -1,25 +1,21 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#pragma once
+#include <spot_driver_cpp/kinematic/kinematic_service.hpp>
 
-#include <spot_msgs/srv/get_inverse_kinematic_solutions.hpp>
-
-#include <rclcpp/node.hpp>
-
-#include <functional>
 #include <memory>
 #include <string>
 
 namespace spot_ros2::kinematic {
 
-using spot_msgs::srv::GetInverseKinematicSolutions;
-
-class KinematicServiceHelper {
+class KinematicMiddlewareHandle : public KinematicService::MiddlewareHandle {
  public:
-  virtual ~KinematicServiceHelper() {}
-  virtual std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>> create_service(
+  explicit KinematicMiddlewareHandle(std::shared_ptr<rclcpp::Node> node);
+  std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>> create_service(
       std::string service_name, std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
                                                    std::shared_ptr<GetInverseKinematicSolutions::Response>)>
-                                    callback) = 0;
+                                    callback) override;
+
+ private:
+  std::shared_ptr<rclcpp::Node> node_;
 };
 }  // namespace spot_ros2::kinematic
