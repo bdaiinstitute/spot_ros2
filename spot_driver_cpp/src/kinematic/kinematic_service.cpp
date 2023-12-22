@@ -6,10 +6,11 @@
 #include <spot_driver_cpp/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver_cpp/kinematic/kinematic_middleware_handle.hpp>
 
+namespace {
+constexpr auto kServiceName = "get_inverse_kinematic_solutions";
+}
+
 namespace spot_ros2::kinematic {
-
-auto kServiceName = "get_inverse_kinematic_solutions";
-
 KinematicService::KinematicService(std::shared_ptr<KinematicApi> kinematic_api,
                                    std::shared_ptr<LoggerInterfaceBase> logger,
                                    std::unique_ptr<MiddlewareHandle> middleware_handle)
