@@ -4,11 +4,13 @@
 
 In this example, we will explore the utilization of ROS2 for deriving Inverse Kinematics (IK) solutions for specified tool poses. The process involves the following steps:
 
-**Solution Identification:** When the system successfully computes an IK solution, a Transform (TF) is broadcasted to RViz. This event is clearly indicated by tagging the TF with a "YES" marker.
+**Goal Visualization:** For each requested tool pose, the system publishes a Tranform (TF) to RViz, to clearly visualize the goal.
 
-**No Solution Handling:** In scenarios where the IK solution is not found, the TF is still published to RViz but is distinctly marked with a "NO".
+**Solution Identification:** When the system successfully computes an IK solution for a given tool pose, the Transform (TF) is broadcasted to RViz tagged with a "YES" label.
 
-**Robot Movement Execution:** Upon finding a viable IK solution, the robot is commanded to relocate to the newly determined position.
+**No Solution Handling:** In scenarios where the IK solution is not found, the TF is still published to RViz but is distinctly tagged with a "NO" label.
+
+**Robot Movement Execution:** Upon finding a viable IK solution, the robot is commanded to relocate the tool to the requested pose.
 
 **Alternative Strategy for Unsolvable Positions:** If an IK solution is unachievable, the system adopts a contingency strategy. It instructs the robot to approximate the target position as closely as feasible. This is done by allowing modifications in the robot's yaw (rotational movement) and height, thus optimizing the robot's position relative to the desired pose.
 
@@ -61,7 +63,7 @@ The given Python script will:
       The number of tool poses to check (default 1).
     ```
 
-    The same command can be run directly in VSCode by adding the following to your launch configuration in `launch.json`.
+    The same command can be run/debugged in VSCode by adding the following to your launch configuration file `launch.json`.
 
     ```json
     {
@@ -84,119 +86,188 @@ The given Python script will:
 
 ## Converting Direct API Calls to ROS2
 
-While the driver provides plenty of helper services and topics, direct Spot API calls can also usually be replaced with ROS2 calls simply by converting the protobuf into a ROS message and using the `robot_command` action. This example shows how to update the [Inverse Kinematics Service](https://dev.bostondynamics.com/python/examples/inverse_kinematics/readme) to use ROS2 instead of direct API calls.  The same concepts can be applied to any code that uses the `RobotCommand` protobuf.
+While the Spot driver provides plenty of helper services and topics, direct Spot API calls can usually be replaced by ROS2 calls. This is done by replacing the protobuf messages with ROS messages and using the `robot_command` action.
 
-We'll go through the changes the [ROS2 code](inverse_kinematics/send_inverse_kinematics_requests.py) makes to the [original example provided by Boston Dynamics](https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/inverse_kinematics/reachability.py).
+The [ROS2 example](inverse_kinematics/send_inverse_kinematics_requests.py) is closely related to the [Spot SDK example](https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/inverse_kinematics/reachability.py) which is documented [here](https://dev.bostondynamics.com/python/examples/inverse_kinematics/readme).
 
-The main difference in this example is that it publishes TFs to RViz, instead of generating a plot, to show the expected tool positions respective to the tool frame.
-
-
-TODO
+The ROS2 example publishes realtime TFs to RViz instead of plotting the result. It also executes some additional steps like undocking the robot, moving it to a specified location, and docking it back.
 
 The first substantive lines of the original code are:
+
 ```python
 def reachability_queries(config):
-    """A simple example of using the Boston Dynamics API to command Spot's arm."""
+    """
+    Making reachability requests using the InverseKinematics service
+    """
 
     # See hello_spot.py for an explanation of these lines.
     bosdyn.client.util.setup_logging(config.verbose)
 
-    sdk = bosdyn.client.create_standard_sdk('HelloSpotClient')
+    sdk = bosdyn.client.create_standard_sdk("ReachabilitySDK")
     robot = sdk.create_robot(config.hostname)
     bosdyn.client.util.authenticate(robot)
     robot.time_sync.wait_for_sync()
 ```
-If you want to ensure you only communicate with the robot via the ROS2 driver, the best way to do so is to ensure that you never call `authenticate` in any other program.  That is done by the Spot driver, which should be the only piece of code that communicates with the robot.  All other programs communicate with the Spot driver via ROS2. Therefore, we replace the pieces of code that talk directly to Spot with their ROS counterparts:
+
+If you want to ensure you only communicate with the robot via the ROS2 driver, the best way to do so is to ensure that you never call `authenticate` in any other program.  That is done by the Spot driver, which should be the only piece of code that communicates with the robot.  All other programs communicate with the Spot driver via ROS2. Therefore, we replace the pieces of code that talks directly to Spot with their ROS counterparts:
+
 ```python
-    node = ros_scope.node()
+    def __init__(self, node: Node, args: argparse.Namespace):
+        self._node = node
+        self._robot_name: str = args.robot
+        self._dock_id: int = args.dock
+        self._poses: int = args.poses
+        self._logger = node.get_logger()
+        self._tf_broadcaster = TransformBroadcaster(node)
+        self._tf_listener = TFListenerWrapper(node)
+        self._robot = SimpleSpotCommander(self._robot_name)
 
-    tf_listener = TFListenerWrapper(node)
-    tf_listener.wait_for_a_tform_b(ODOM_FRAME_NAME, GRAV_ALIGNED_BODY_FRAME_NAME)
+        self._robot_command_client = ActionClientWrapper(
+            RobotCommand, namespace_with(self._robot_name, "robot_command"), node
+        )
 
-    robot = SimpleSpotCommander()
-    robot_command_client = ActionClientWrapper(RobotCommand, 'robot_command', node)
+        self._timer = node.create_timer(0.1, self._timer_callback)
+        self._transforms: List[geometry_msgs.msg.TransformStamped] = []
+
+        self._dock_client = node.create_client(Dock, namespace_with(self._robot_name, "dock"))
+        self._ik_client = node.create_client(
+            GetInverseKinematicSolutions,
+            namespace_with(self._robot_name, "get_inverse_kinematic_solutions"),
+        )
 ```
+
 This gives us four components, which we'll use in many ROS2 programs:
-* A node: [ROS2 nodes](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html) are the objects that interact with [ROS2 topics](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Topics/Understanding-ROS2-Topics.html) and almost all ROS programs require them. Here we fetch the one in scope, already instantiated and serviced in the background. Had we instantiated a node of our own, we would have had to spin it ourselves.
-* A TF listener: This handles computing transforms.  As we'll see later, it can be used in place of Spot API `RobotStateClient` to get information about where frames on the robot are.  For more information about ROS2 TF see [here](https://docs.ros.org/en/humble/Tutorials/Intermediate/Tf2/Tf2-Main.html).  For more information about our [TF wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/tf_listener_wrapper.py) and how we use it in these examples, see the [simple_walk_forward example](../simple_walk_forward/).
-* A spot commander: This is a [wrapper](../utilities/utilities/simple_spot_commander.py) around service clients that call the spot driver to do simple things like get the lease and stand.  This is used in place of calls like `blocking_stand`.
-* A robot command action client: This is the ROS2 action client that sends goals to the ROS2 action server (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)).  This is used in place of the Spot API `RobotCommandClient`.  We use a [wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/action_client.py) around the built in ROS2 action client that allows us to wait for the goal to return without risk of deadlock.
+
+* **A node:** [ROS2 nodes](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html) are the objects that interact with [ROS2 topics](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Topics/Understanding-ROS2-Topics.html) and almost all ROS programs require them. Here we fetch the one in scope, already instantiated and serviced in the background. Had we instantiated a node of our own, we would have had to spin it ourselves.
+
+* **A TF listener:** This handles computing transforms.  As we'll see later, it can be used in place of Spot API `RobotStateClient` to get information about where frames on the robot are.  For more information about ROS2 TF see [here](https://docs.ros.org/en/humble/Tutorials/Intermediate/Tf2/Tf2-Main.html). For more information about our [TF wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/tf_listener_wrapper.py) and how we use it in these examples, see the [simple_walk_forward example](../simple_walk_forward/).
+
+* **A spot commander:** This is a [wrapper](../utilities/utilities/simple_spot_commander.py) around service clients that calls the Spot driver to do simple things like get the lease and stand.  This is used in place of calls like `blocking_stand`.
+
+* **A robot command action client:** This is the ROS2 action client that sends goals to the ROS2 action server (for more information about ROS2 actions see [here](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Actions/Understanding-ROS2-Actions.html)).  This is used in place of the Spot API `RobotCommandClient`.  We use a [wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/action_client.py) around the built in ROS2 action client that allows us to wait for the goal to return without risk of deadlock.
 
 The original code uses direct calls to the API to power on and stand the robot:
-```python
-        # Now, we are ready to power on the robot. This call will block until the power
-        # is on. Commands would fail if this did not happen. We can also check that the robot is
-        # powered at any point.
-        robot.logger.info("Powering on robot... This may take a several seconds.")
-        robot.power_on(timeout_sec=20)
-        assert robot.is_powered_on(), "Robot power on failed."
-        robot.logger.info("Robot powered on.")
 
-        # Tell the robot to stand up. The command service is used to issue commands to a robot.
-        # The set of valid commands for a robot depends on hardware configuration. See
-        # RobotCommandBuilder for more detailed examples on command building. The robot
-        # command service requires timesync between the robot and the client.
-        robot.logger.info("Commanding robot to stand...")
-        command_client = robot.ensure_client(RobotCommandClient.default_service_name)
-        blocking_stand(command_client, timeout_sec=10)
-        robot.logger.info("Robot standing.")
+```python
+    # Now, we are ready to power on the robot.
+    # This call will block until the power is on. 
+    # Commands would fail if this did not happen.
+    # We can also check that the robot is powered at any point.
+    robot.logger.info("Powering on robot... This may take a several seconds.")
+    robot.power_on(timeout_sec=20)
+    assert robot.is_powered_on(), "Robot power on failed."
+    robot.logger.info("Robot powered on.")
+
+    # The command service is used to issue commands to a robot.
+    # The set of valid commands for a robot depends on hardware configuration. 
+    # See RobotCommandBuilder for more detailed examples on command building.
+    # The robot command service requires timesync between the robot and the client.
+    command_client = robot.ensure_client(RobotCommandClient.default_service_name)
+
+    # Tell the robot to stand up
+    robot.logger.info("Commanding robot to stand...")
+    blocking_stand(command_client, timeout_sec=10)
+    robot.logger.info("Robot standing.")
 ```
+
 The ROS2 code uses service calls to do the same thing:
+
 ```python
     # Claim robot
-    node.get_logger().info('Claiming robot')
-    result = robot.command('claim')
-    if not result.success:
-        node.get_logger().error('Unable to claim robot message was ' + result.message)
+    self._logger.info("Claiming robot")
+    result = self._robot.command("claim")
+    if not result:
+        self._logger.error("Unable to claim robot")
         return False
-    node.get_logger().info('Claimed robot')
+    self._logger.info("Claimed robot")
 
-    # Stand the robot up.
-    node.get_logger().info('Powering robot on')
-    result = robot.command('power_on')
-    if not result.success:
-        node.get_logger().error('Unable to power on robot message was ' + result.message)
+    # Power on robot.
+    self._logger.info("Powering robot on")
+    result = self._robot.command("power_on")
+    if not result:
+        self._logger.error("Unable to power on robot")
         return False
-    node.get_logger().info('Standing robot up')
-    result = robot.command('stand')
-    if not result.success:
-        node.get_logger().error('Robot did not stand message was ' + result.message)
+
+    # Stand up robot.
+    self._logger.info("Standing robot up")
+    result = self._robot.command("stand")
+    if not result:
+        self._logger.error("Robot did not stand")
         return False
-    node.get_logger().info('Successfully stood up.')
+    self._logger.info("Successfully stood up.")
 ```
+
 Note that we also use ROS's text logger instead of the Spot API logger.
 
-Once the robot is initialized and standing, the next change to the code comes when we need to get the robot's current position.  With direct API calls, this uses the robot state:
+Once the robot is initialized and standing, the next change to the code comes when we need to get the robot's current position. With direct API calls, this uses the robot state:
+
 ```python
-        robot_state = robot_state_client.get_robot_state()
-        odom_T_flat_body = get_a_tform_b(robot_state.kinematic_state.transforms_snapshot,
-                                         ODOM_FRAME_NAME, GRAV_ALIGNED_BODY_FRAME_NAME)
+    # Define the task frame to be in front of the robot and near the ground
+    robot_state = robot_state_client.get_robot_state()
+
+    odom_T_flat_body = get_a_tform_b(
+        robot_state.kinematic_state.transforms_snapshot,
+        ODOM_FRAME_NAME,
+        GRAV_ALIGNED_BODY_FRAME_NAME,
+    )
 ```
 With ROS2, we use TF:
+
 ```python
-    odom_T_flat_body = tf_listener.lookup_a_tform_b(ODOM_FRAME_NAME, GRAV_ALIGNED_BODY_FRAME_NAME)
+    # Look for known transforms published by the robot.
+    odom_T_flat_body: SE3Pose = self._tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name)
+
 ```
 
-The commands are built the same way after this, but we change how we send them.  The Spot API code has a function for waiting until the arm has moved to position:
-```python
-        # Send the request
-        cmd_id = command_client.robot_command(command)
-        robot.logger.info('Moving arm to position 1.')
+The ROS2 example adds some additional instructions to move the robot to a position in front of the docking station and rotate it by 90 degrees counter-clockwise.
 
-        # Wait until the arm arrives at the goal.
-        block_until_arm_arrives_with_prints(robot, command_client, cmd_id)
-```
-In ROS2, we convert the created protobuf to a ROS2 action goal and we use the action client wrapper `send_goal_and_wait` function to replace the `block_until_arm_arrives_with_prints` function (we do not get the printing, but we could echo the action feedback topic or use the non-blocking `send_goal_async` if we wanted to do that):
+The commands are built the same way after this, but we change how we send them. 
+
+With the Spot API:
+
 ```python
-    # Convert to a ROS message
-    action_goal = RobotCommand.Goal()
-    conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
-    # Send the request and wait until the arm arrives at the goal
-    node.get_logger().info('Moving arm to position 1.')
-    robot_command_client.send_goal_and_wait(action_goal)
+    # Query the IK service for the reachability of the desired tool pose.
+    # Construct the IK request for this reachability problem.
+    # Note that since `root_tform_scene` is unset, the "scene" frame is the same as the "root" frame in this case.
+    ik_request = InverseKinematicsRequest(
+        root_frame_name=ODOM_FRAME_NAME,
+        scene_tform_task=odom_T_task.to_proto(),
+        wrist_mounted_tool=InverseKinematicsRequest.WristMountedTool(
+            wrist_tform_tool=wr1_T_tool.to_proto()
+        ),
+        tool_pose_task=InverseKinematicsRequest.ToolPoseTask(
+            task_tform_desired_tool=task_T_desired_tool.to_proto()
+        ),
+    )
+    ik_responses.append(ik_client.inverse_kinematics(ik_request))
 ```
 
-The last thing to note in this example is the line
+In ROS2, we convert the created protobuf ROS2 request and call a ROS2 service.
+
 ```python
-    tf_listener.shutdown()
+    def _send_ik_request(
+        self, odom_T_task: SE3Pose, wr1_T_tool: SE3Pose, task_T_desired_tool: SE3Pose
+    ) -> GetInverseKinematicSolutions.Request:
+        """
+        Send an IK request for a given task frame, tool and tool desired pose.
+        Returns:
+            An IK solution, if any.
+        """
+        ik_request = inverse_kinematics_pb2.InverseKinematicsRequest(
+            root_frame_name=ODOM_FRAME_NAME,
+            scene_tform_task=odom_T_task.to_proto(),
+            wrist_mounted_tool=inverse_kinematics_pb2.InverseKinematicsRequest.WristMountedTool(
+                wrist_tform_tool=wr1_T_tool.to_proto()
+            ),
+            tool_pose_task=inverse_kinematics_pb2.InverseKinematicsRequest.ToolPoseTask(
+                task_tform_desired_tool=task_T_desired_tool.to_proto()
+            ),
+        )
+        request = GetInverseKinematicSolutions.Request()
+        conv.convert_proto_to_bosdyn_msgs_inverse_kinematics_request(ik_request, request.request)
+        ik_reponse = self._ik_client.call(request)
+
+        proto = inverse_kinematics_pb2.InverseKinematicsResponse()
+        conv.convert_bosdyn_msgs_inverse_kinematics_response_to_proto(ik_reponse.response, proto)
+        return proto
 ```
