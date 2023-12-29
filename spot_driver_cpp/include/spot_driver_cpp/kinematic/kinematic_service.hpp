@@ -46,6 +46,14 @@ class KinematicService {
   /** Initialize the service. */
   void initialize();
 
+  /**
+   * Invoke the Spot SDK to get IK solutions.
+   * @param request The ROS request.
+   * @param response A ROS response to be filled.
+   */
+  void get_solutions(const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
+                     std::shared_ptr<GetInverseKinematicSolutions::Response> response);
+
  private:
   // The API to interact with Spot SDK.
   std::shared_ptr<KinematicApi> kinematic_api_;
@@ -58,9 +66,5 @@ class KinematicService {
 
   // The service processing the Inverse Kinematic request for solutions.
   rclcpp::Service<GetInverseKinematicSolutions>::SharedPtr service_;
-
-  // The service callback.
-  void service_callback_(const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
-                         std::shared_ptr<GetInverseKinematicSolutions::Response> response);
 };
 }  // namespace spot_ros2::kinematic

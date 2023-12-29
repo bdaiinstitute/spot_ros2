@@ -20,12 +20,12 @@ void KinematicService::initialize() {
   service_ = middleware_handle_->create_service(
       kServiceName, [this](const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
                            std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
-        this->service_callback_(request, response);
+        this->get_solutions(request, response);
       });
 }
 
-void KinematicService::service_callback_(const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
-                                         std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
+void KinematicService::get_solutions(const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
+                                     std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
   auto ros_request = request->request;
 
   bosdyn::api::spot::InverseKinematicsRequest proto_request;
