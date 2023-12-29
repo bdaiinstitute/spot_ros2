@@ -25,29 +25,23 @@ The given Python script will:
 
 ## Running the Example
 
-1. Make sure the robot is docked, and there is approximately 2 meters free in front of the docking station.
+1.  Make sure the robot is docked, and there is approximately 2 meters free in front of the docking station.
 
-2. Make sure you've built and sourced your workspace:
-   ```bash
-   cd <ros2 workspace>
-   colcon build --symlink-install
-   source /opt/ros/humble/setup.bash
-   source ./install/local_setup.bash
-   ```
-3.  Start the driver:
+2.  Make sure you've built and sourced your workspace as described in the [README.md](../../README.md) file, and start the Spot driver.
+
     ```bash
-    bdai spot driver spot_name --launch-rviz
+    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your Spot ROS config file>] [spot_name:=<Name of Spot running the driver>] [launch_rviz:=<True|False>] 
     ```
-4.  Run the script:
+3.  Run the script.
     ```bash
     ros2 run inverse_kinematics send_inverse_kinematics_requests --robot spot_name --dock docking_station_id --poses n
     ```
-    For example:
+    Example.
     ```bash
     ros2 run inverse_kinematics send_inverse_kinematics_requests --robot Opal --dock 527 --poses 10
     ```
 
-    The following parameters are mandatory:
+    The following parameters are mandatory.
 
     ```
     --robot robot_name
@@ -56,7 +50,7 @@ The given Python script will:
     --dock docking_station_id
       The docking station where spot is docked, e.g. 527.
     ```
-    The following parameter is optional:
+    The following parameter is optional.
 
     ```
     --poses n
