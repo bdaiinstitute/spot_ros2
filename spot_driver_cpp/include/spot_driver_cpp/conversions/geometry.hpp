@@ -7,31 +7,30 @@
 #include <builtin_interfaces/msg/time.hpp>
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
-#include <geometry_msgs/msg/point.hpp>
 
 #include <string>
 
 namespace spot_ros2::conversions {
 
- /**
-   * @brief Convenience function to convert a bosdyn protobuf position message to a ROS geometry point message
-   * 
-   * @param msg Position from Spot
-   */
+/**
+ * @brief Convenience function to convert a bosdyn protobuf position message to a ROS geometry point message
+ *
+ * @param msg Position from Spot
+ */
 geometry_msgs::msg::Point toRosPoint(const ::bosdyn::api::Vec3& msg);
 
- /**
-   * @brief Convenience function to convert a bosdyn protobuf translation message to a ROS geometry translation message
-   * 
-   * @param msg Translation from Spot
-   */
+/**
+ * @brief Convenience function to convert a bosdyn protobuf translation message to a ROS geometry translation message
+ *
+ * @param msg Translation from Spot
+ */
 geometry_msgs::msg::Vector3 toRosTranslation(const ::bosdyn::api::Vec3& msg);
 
- /**
-   * @brief Convenience function to convert a bosdyn protobuf rotation message to a ROS geometry rotation message
-   * 
-   * @param msg Rotation from Spot
-   */
+/**
+ * @brief Convenience function to convert a bosdyn protobuf rotation message to a ROS geometry rotation message
+ *
+ * @param msg Rotation from Spot
+ */
 geometry_msgs::msg::Quaternion toRosRotation(const ::bosdyn::api::Quaternion& msg);
 
 /**

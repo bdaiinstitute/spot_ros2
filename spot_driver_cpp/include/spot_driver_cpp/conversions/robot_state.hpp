@@ -1,9 +1,11 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <bosdyn/api/robot_state.pb.h>
 #include <bosdyn_msgs/msg/manipulator_state.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <optional>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
@@ -14,16 +16,14 @@
 #include <spot_msgs/msg/power_state.hpp>
 #include <spot_msgs/msg/system_fault_state.hpp>
 #include <spot_msgs/msg/wi_fi_state.hpp>
-#include <tf2_msgs/msg/tf_message.hpp>
-#include <bosdyn/api/robot_state.pb.h>
 #include <string_view>
-#include <optional>
+#include <tf2_msgs/msg/tf_message.hpp>
 
-namespace spot_ros2{
+namespace spot_ros2 {
 
 /**
- * @brief Mapping of Spot joint names to descriptive joint names to be used 
- */ 
+ * @brief Mapping of Spot joint names to descriptive joint names to be used
+ */
 inline std::map<const std::string, const std::string> kFriendlyJointNames = {
     {"fl.hx", "front_left_hip_x"},  {"fl.hy", "front_left_hip_y"},  {"fl.kn", "front_left_knee"},
     {"fr.hx", "front_right_hip_x"}, {"fr.hy", "front_right_hip_y"}, {"fr.kn", "front_right_knee"},

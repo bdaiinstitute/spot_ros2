@@ -3,4 +3,3 @@
 #include <gmock/gmock.h>
 
 #include <spot_driver_cpp/conversions/robot_state.hpp>
-

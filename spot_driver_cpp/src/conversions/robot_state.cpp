@@ -1,11 +1,11 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/conversions/robot_state.hpp>
-#include <spot_driver_cpp/conversions/geometry.hpp>
-#include <spot_driver_cpp/api/time_sync_api.hpp>
-#include <builtin_interfaces/msg/duration.hpp>
 #include <bosdyn/math/frame_helpers.h>
 #include <bosdyn/math/proto_math.h>
+#include <builtin_interfaces/msg/duration.hpp>
+#include <spot_driver_cpp/api/time_sync_api.hpp>
+#include <spot_driver_cpp/conversions/geometry.hpp>
+#include <spot_driver_cpp/conversions/robot_state.hpp>
 
 namespace spot_ros2 {
 
@@ -84,8 +84,7 @@ std::optional<sensor_msgs::msg::JointState> GetJointStates(const ::bosdyn::api::
                                                            const std::string& prefix) {
   if (robot_state.has_kinematic_state()) {
     sensor_msgs::msg::JointState joint_states;
-    joint_states.header.stamp =
-        applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
+    joint_states.header.stamp = applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
 
     for (const auto& joint : robot_state.kinematic_state().joint_states()) {
       const auto joint_name = prefix + kFriendlyJointNames.at(joint.name());
@@ -106,28 +105,26 @@ std::optional<tf2_msgs::msg::TFMessage> GetTf(const ::bosdyn::api::RobotState& r
   if (robot_state.has_kinematic_state()) {
     tf2_msgs::msg::TFMessage tf_msg;
 
-    const auto local_time =
-          applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
+    const auto local_time = applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
 
     for (const auto& [frame_id, transform] :
          robot_state.kinematic_state().transforms_snapshot().child_to_parent_edge_map()) {
       // Do not publish frames without parents
-      if(transform.parent_frame_name().empty()){
+      if (transform.parent_frame_name().empty()) {
         continue;
       }
-      const auto parent_frame_name = transform.parent_frame_name().find("/") == std::string::npos ?
-        prefix + transform.parent_frame_name() : transform.parent_frame_name();
-      const auto frame_name = frame_id.find("/") == std::string::npos ?
-        prefix + frame_id : frame_id;
-      
-      // set target frame(preferred odom frame) as the root node in tf tree 
+      const auto parent_frame_name = transform.parent_frame_name().find("/") == std::string::npos
+                                         ? prefix + transform.parent_frame_name()
+                                         : transform.parent_frame_name();
+      const auto frame_name = frame_id.find("/") == std::string::npos ? prefix + frame_id : frame_id;
+
+      // set target frame(preferred odom frame) as the root node in tf tree
       if (inverse_target_frame_id == frame_name) {
-        tf_msg.transforms.push_back(conversions::toTransformStamped(
-            ~(transform.parent_tform_child()), frame_name, parent_frame_name,
-            local_time));
+        tf_msg.transforms.push_back(conversions::toTransformStamped(~(transform.parent_tform_child()), frame_name,
+                                                                    parent_frame_name, local_time));
       } else {
-        tf_msg.transforms.push_back(conversions::toTransformStamped(
-            transform.parent_tform_child(), parent_frame_name, frame_name, local_time));
+        tf_msg.transforms.push_back(
+            conversions::toTransformStamped(transform.parent_tform_child(), parent_frame_name, frame_name, local_time));
       }
     }
     return tf_msg;
@@ -162,9 +159,8 @@ std::optional<nav_msgs::msg::Odometry> GetOdom(const ::bosdyn::api::RobotState& 
     nav_msgs::msg::Odometry odom_msg;
     ::bosdyn::api::SE3Pose tf_body_pose;
     geometry_msgs::msg::PoseWithCovariance pose_odom_msg;
-    
-    odom_msg.header.stamp =
-        applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
+
+    odom_msg.header.stamp = applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
     if (is_using_vision) {
       odom_msg.header.frame_id = prefix + "vision";
       ::bosdyn::api::GetWorldTformBody(robot_state.kinematic_state().transforms_snapshot(), &tf_body_pose);
@@ -324,4 +320,4 @@ std::optional<spot_msgs::msg::BehaviorFaultState> GetBehaviorFaultState(const ::
   return {};
 }
 
-}  // namespace
+}  // namespace spot_ros2

@@ -1,39 +1,39 @@
 
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/conversions/geometry.hpp>
 #include <geometry_msgs/msg/point.hpp>
+#include <spot_driver_cpp/conversions/geometry.hpp>
 
-namespace spot_ros2::conversions{
+namespace spot_ros2::conversions {
 
-geometry_msgs::msg::Point toRosPoint(const ::bosdyn::api::Vec3& msg){
+geometry_msgs::msg::Point toRosPoint(const ::bosdyn::api::Vec3& msg) {
   geometry_msgs::msg::Point out;
-  
+
   out.x = msg.x();
   out.y = msg.y();
   out.z = msg.z();
-  
+
   return out;
 }
 
-geometry_msgs::msg::Vector3 toRosTranslation(const ::bosdyn::api::Vec3& msg){
+geometry_msgs::msg::Vector3 toRosTranslation(const ::bosdyn::api::Vec3& msg) {
   geometry_msgs::msg::Vector3 out;
-  
+
   out.x = msg.x();
   out.y = msg.y();
   out.z = msg.z();
-  
+
   return out;
 }
 
-geometry_msgs::msg::Quaternion toRosRotation(const ::bosdyn::api::Quaternion& msg){
+geometry_msgs::msg::Quaternion toRosRotation(const ::bosdyn::api::Quaternion& msg) {
   geometry_msgs::msg::Quaternion out;
-  
+
   out.x = msg.x();
   out.y = msg.y();
   out.z = msg.z();
   out.w = msg.w();
-  
+
   return out;
 }
 
