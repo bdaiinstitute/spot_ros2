@@ -39,6 +39,7 @@ add_library(spot_api
   src/api/spot_image_sources.cpp
   src/api/default_robot_state_client.cpp
   src/conversions/geometry.cpp
+  src/conversions/robot_state.cpp
 )
 
 target_include_directories(spot_api PUBLIC
