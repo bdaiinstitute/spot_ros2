@@ -23,7 +23,7 @@ using spot_msgs::srv::GetInverseKinematicSolutions;
 class KinematicService {
  public:
   /**
-   * @brief A handle class around rclcpp::Node operations for SpotImagePublisher
+   * @brief A handle class around rclcpp::Node operations for KinematicService
    */
   class MiddlewareHandle {
    public:
