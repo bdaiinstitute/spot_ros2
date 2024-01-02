@@ -9,6 +9,11 @@
 """
 This example shows how to query for IK solutions and move
 the robot arm to that solution.
+
+Original example using Spot SDK instead of ROS2:
+https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/inverse_kinematics/reachability.py
+https://dev.bostondynamics.com/python/examples/inverse_kinematics/readme
+
 """
 
 import argparse
