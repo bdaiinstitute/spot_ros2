@@ -17,15 +17,12 @@ In this example, we will explore the utilization of ROS2 for deriving Inverse Ki
 This approach ensures a robust and adaptive response to varying tool pose requests, enhancing the flexibility and efficiency of the robotic system in dynamic environments.
 
 The given Python script will:
-- undock Spot;
-- move it forward approximatively 1m;
-- rotate it 90 degrees counter-clockwise;
+- power on and stand up Spot;
 - search and test IK solutions for random tool poses;
-- dock Spot back to the given docking station.
 
 ## Running the Example
 
-1.  Make sure the robot is docked, and there is approximately 2 meters free in front of the docking station.
+1.  Make sure there is approximately 1 meter free around the robot in all directions.
 
 2.  Make sure you've built and sourced your workspace as described in the [README.md](../../README.md) file, and start the Spot driver.
 
@@ -34,21 +31,18 @@ The given Python script will:
     ```
 3.  Run the script.
     ```bash
-    ros2 run inverse_kinematics send_inverse_kinematics_requests --robot spot_name --dock docking_station_id --poses n
+    ros2 run inverse_kinematics send_inverse_kinematics_requests --robot spot_name --poses n
     ```
     Example.
     ```bash
-    ros2 run inverse_kinematics send_inverse_kinematics_requests --robot Opal --dock 527 --poses 10
+    ros2 run inverse_kinematics send_inverse_kinematics_requests --robot Opal --poses 10
     ```
 
-    The following parameters are mandatory.
+    The following parameter is mandatory.
 
     ```
     --robot robot_name
       The name of the Spot robot to use, e.g. "Opal".
-
-    --dock docking_station_id
-      The docking station where spot is docked, e.g. 527.
     ```
     The following parameter is optional.
 
@@ -68,8 +62,6 @@ The given Python script will:
         "args": [
             "--robot",
             "Opal",
-            "--dock",
-            "527",
             "--poses",
             "10"
         ],
@@ -84,7 +76,7 @@ While the Spot driver provides plenty of helper services and topics, direct Spot
 
 The [ROS2 example](inverse_kinematics/send_inverse_kinematics_requests.py) is closely related to the [Spot SDK example](https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/inverse_kinematics/reachability.py) which is documented [here](https://dev.bostondynamics.com/python/examples/inverse_kinematics/readme).
 
-The ROS2 example publishes realtime TFs to RViz instead of plotting the result. It also executes some additional steps like undocking the robot, moving it to a specified location, and docking it back.
+The ROS2 example publishes realtime TFs to RViz instead of plotting the result.
 
 The first substantive lines of the original code are:
 
@@ -109,7 +101,6 @@ If you want to ensure you only communicate with the robot via the ROS2 driver, t
     def __init__(self, node: Node, args: argparse.Namespace):
         self._node = node
         self._robot_name: str = args.robot
-        self._dock_id: int = args.dock
         self._poses: int = args.poses
         self._logger = node.get_logger()
         self._tf_broadcaster = TransformBroadcaster(node)
@@ -123,7 +114,6 @@ If you want to ensure you only communicate with the robot via the ROS2 driver, t
         self._timer = node.create_timer(0.1, self._timer_callback)
         self._transforms: List[geometry_msgs.msg.TransformStamped] = []
 
-        self._dock_client = node.create_client(Dock, namespace_with(self._robot_name, "dock"))
         self._ik_client = node.create_client(
             GetInverseKinematicSolutions,
             namespace_with(self._robot_name, "get_inverse_kinematic_solutions"),
@@ -212,8 +202,6 @@ With ROS2, we use TF:
     odom_T_flat_body: SE3Pose = self._tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name)
 
 ```
-
-The ROS2 example adds some additional instructions to move the robot to a position in front of the docking station and rotate it by 90 degrees counter-clockwise.
 
 The commands are built the same way after this, but we change how we send them. 
 
