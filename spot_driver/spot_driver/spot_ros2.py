@@ -333,6 +333,7 @@ class SpotROS(Node):
 
         self.username: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", self, "username", "user")
         self.password: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", self, "password", "password")
+
         self.ip: str = get_from_env_and_fall_back_to_param("SPOT_IP", self, "hostname", "10.0.0.3")
         self.port: int = get_from_env_and_fall_back_to_param("SPOT_PORT", self, "port", 0)
 
