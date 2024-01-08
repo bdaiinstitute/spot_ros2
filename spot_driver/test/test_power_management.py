@@ -27,16 +27,18 @@ from spot_wrapper.testing.mocks import MockSpot
 class simple_spot(MockSpot):
     """
     This is a factory that returns an instance of the class MockSpot,
-    nested inside a local GRPC server.
+    served by a local GRPC server.
     When the class is disposed, the GRPC server is shut down.
+    The MockSpot and the GRPC server are used to handle calls to a simulated
+    Spot robot.
     """
 
 
 @pytest.fixture
 def ros() -> typing.Iterator[ROSAwareScope]:
     """
-    This method is a generator function that returns a different ROS context
-    each time it is invoked.
+    This method is a generator function that returns a different ROS2 scope
+    each time it is invoked, to handle a ROS2 context lifecycle.
     """
     with domain_coordinator.domain_id() as domain_id:  # to ensure node isolation
         with ros_scope.top(global_=True, namespace="fixture", domain_id=domain_id) as top:
