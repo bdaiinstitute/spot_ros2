@@ -25,11 +25,19 @@ from spot_wrapper.testing.mocks import MockSpot
 
 @spot_wrapper.testing.fixture
 class simple_spot(MockSpot):
-    pass
+    """
+    This is a factory that returns an instance of the class MockSpot,
+    nested inside a local GRPC server.
+    When the class is disposed, the GRPC server is shut down.
+    """
 
 
 @pytest.fixture
 def ros() -> typing.Iterator[ROSAwareScope]:
+    """
+    This method is a generator function that returns a different ROS context
+    each time it is invoked.
+    """
     with domain_coordinator.domain_id() as domain_id:  # to ensure node isolation
         with ros_scope.top(global_=True, namespace="fixture", domain_id=domain_id) as top:
             yield top
@@ -37,6 +45,12 @@ def ros() -> typing.Iterator[ROSAwareScope]:
 
 @pytest.fixture
 def spot_node(ros: ROSAwareScope, simple_spot: SpotFixture) -> typing.Iterator[SpotROS]:
+    """
+    This method is a generator function that returns a different SpotROS
+    node each time it is invoked.
+    The node is assigned and executed inside the given ROS context, and it is
+    destroyed when the context goes out of scope.
+    """
     parameter_overrides = [
         rclpy.parameter.Parameter("username", rclpy.Parameter.Type.STRING, "spot"),
         rclpy.parameter.Parameter("password", rclpy.Parameter.Type.STRING, "spot"),
