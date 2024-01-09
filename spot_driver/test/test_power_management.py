@@ -1,5 +1,8 @@
 # Copyright (c) 2023 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
 
+# We disable Pylint warnings for all Protobuf files which contain objects with
+# dynamically added member attributes.
+# pylint: disable=no-member
 
 from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope

@@ -5,6 +5,15 @@ Module containing test fixtures.
 Pytest automatically discovers all fixtures defined in the file "conftest.py".
 """
 
+# We disable Pylint warnings for all Protobuf files which contain objects with
+# dynamically added member attributes.
+# pylint: disable=no-member
+
+# When a test needs a fixture, it must specify the fixture name as a parameter.
+# In doings so, Pylint raises an incorrect warning about a name being redefined,
+# warning that we want disabled.
+# pylint: disable=redefined-outer-name
+
 import typing
 
 import bdai_ros2_wrappers.scope as ros_scope
@@ -66,5 +75,5 @@ def spot_node(ros: ROSAwareScope, simple_spot: SpotFixture) -> typing.Iterator[S
         finally:
             # succeed sit command on destruction
             response = RobotCommandResponse()
-            response.status = RobotCommandResponse.Status.STATUS_OK
+            response.status = RobotCommandResponse.Status.STATUS_OK  # pylint: disable=no-member
             simple_spot.api.RobotCommand.future.returns(response)
