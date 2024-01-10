@@ -45,14 +45,14 @@ RUN apt-get update -q && \
     rm -rf /var/lib/apt/lists/*
 
 # Install bosdyn_msgs package
-RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.2.0-frametreesnapshot/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb --output /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb --silent \
-  && dpkg -i /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb \
-  && rm /tmp/ros-humble-bosdyn-msgs_3.2.0-0jammy_amd64.deb
+RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.3.2-AMD64/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb --output /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb --silent \
+  && dpkg -i /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb \
+  && rm /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb
 
 # Install spot_cpp_sdk package
-RUN curl -sL https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v3.3.0-cmake-infra/spot-cpp-sdk_3.3.0_amd64.deb --output /tmp/spot-cpp-sdk_3.3.0_amd64.deb --silent \
-  && dpkg -i /tmp/spot-cpp-sdk_3.3.0_amd64.deb \
-  && rm /tmp/spot-cpp-sdk_3.3.0_amd64.deb
+RUN curl -sL https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/3.3.2/spot-cpp-sdk_3.3.2_amd64.deb --output /tmp/spot-cpp-sdk_3.3.2_amd64.deb --silent \
+  && dpkg -i /tmp/spot-cpp-sdk_3.3.2_amd64.deb \
+  && rm /tmp/spot-cpp-sdk_3.3.2_amd64.deb
 
 # Install packages inside the new environment
 RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
