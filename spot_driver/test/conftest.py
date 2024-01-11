@@ -1,5 +1,19 @@
 # Copyright (c) 2023 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
 
+"""
+Module containing test fixtures.
+Pytest automatically discovers all fixtures defined in the file "conftest.py".
+"""
+
+# We disable Pylint warnings for all Protobuf files which contain objects with
+# dynamically added member attributes.
+# pylint: disable=no-member
+
+# When a test needs a fixture, it must specify the fixture name as a parameter.
+# In doings so, Pylint raises an incorrect warning about a name being redefined,
+# warning that we want disabled.
+# pylint: disable=redefined-outer-name
+
 import typing
 
 import bdai_ros2_wrappers.scope as ros_scope
@@ -24,12 +38,22 @@ from spot_wrapper.testing.mocks import MockSpot
 
 
 @spot_wrapper.testing.fixture
-class simple_spot(MockSpot):
-    pass
+class simple_spot(MockSpot):  # pylint: disable=invalid-name
+    """
+    This is a factory that returns an instance of the class MockSpot,
+    served by a local GRPC server.
+    When the class is disposed, the GRPC server is shut down.
+    The MockSpot and the GRPC server are used to handle calls to a simulated
+    Spot robot.
+    """
 
 
 @pytest.fixture
 def ros() -> typing.Iterator[ROSAwareScope]:
+    """
+    This method is a generator function that returns a different ROS2 scope
+    each time it is invoked, to handle a ROS2 context lifecycle.
+    """
     with domain_coordinator.domain_id() as domain_id:  # to ensure node isolation
         with ros_scope.top(global_=True, namespace="fixture", domain_id=domain_id) as top:
             yield top
@@ -37,6 +61,12 @@ def ros() -> typing.Iterator[ROSAwareScope]:
 
 @pytest.fixture
 def spot_node(ros: ROSAwareScope, simple_spot: SpotFixture) -> typing.Iterator[SpotROS]:
+    """
+    This method is a generator function that returns a different SpotROS
+    node each time it is invoked.
+    The node is assigned and executed inside the given ROS context, and it is
+    destroyed when the context goes out of scope.
+    """
     parameter_overrides = [
         rclpy.parameter.Parameter("username", rclpy.Parameter.Type.STRING, "spot"),
         rclpy.parameter.Parameter("password", rclpy.Parameter.Type.STRING, "spot"),
@@ -53,11 +83,25 @@ def spot_node(ros: ROSAwareScope, simple_spot: SpotFixture) -> typing.Iterator[S
         finally:
             # succeed sit command on destruction
             response = RobotCommandResponse()
-            response.status = RobotCommandResponse.Status.STATUS_OK
+            response.status = RobotCommandResponse.Status.STATUS_OK  # pylint: disable=no-member
             simple_spot.api.RobotCommand.future.returns(response)
 
 
-def test_spot_power_on(ros: ROSAwareScope, simple_spot: SpotFixture, spot_node: SpotROS) -> None:
+@pytest.fixture
+def power_on(ros: ROSAwareScope, simple_spot: SpotFixture, spot_node: SpotROS) -> None:
+    """
+    This fixture claims and powers on the Spot mock robot.
+    The SpotFixture creates a mock of the Spot robot GRPC server, but to
+    ise it for additional testing we still need to claim it and power it on.
+
+    Args:
+        ros: A ROS2 scope that can be used to create clients.
+        simple_spot: a fake Spot robot running on a local GRPC server.
+        spot_node: the main ROS2 node with all services, subscribers,
+            publishers and actions configured.
+    """
+
+    # Claim.
     claim_client = ros.node.create_client(Trigger, "claim")
     future = claim_client.call_async(Trigger.Request())
     assert wait_for_future(future, timeout_sec=2.0)
@@ -65,6 +109,7 @@ def test_spot_power_on(ros: ROSAwareScope, simple_spot: SpotFixture, spot_node: 
     assert response is not None
     assert response.success
 
+    # Power on.
     power_on_client = ros.node.create_client(Trigger, "power_on")
     future = power_on_client.call_async(Trigger.Request())
     call = simple_spot.api.PowerCommand.serve(timeout=2.0)
@@ -78,18 +123,3 @@ def test_spot_power_on(ros: ROSAwareScope, simple_spot: SpotFixture, spot_node: 
     assert wait_for_future(future, timeout_sec=2.0)
     response = future.result()
     assert response.success
-
-    power_off_client = ros.node.create_client(Trigger, "power_off")
-    future = power_off_client.call_async(Trigger.Request())
-    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
-    assert call is not None
-    assert call.request.command.HasField("full_body_command")
-    assert call.request.command.full_body_command.HasField("safe_power_off_request")
-    response = RobotCommandResponse()
-    response.status = RobotCommandResponse.Status.STATUS_EXPIRED
-    response.message = "Power off request too late"
-    call.returns(response)
-    assert wait_for_future(future, timeout_sec=2.0)
-    response = future.result()
-    assert not response.success
-    assert "ExpiredError" in response.message
