@@ -14,9 +14,9 @@ from spot_wrapper.testing.fixtures import SpotFixture
 
 
 @pytest.mark.usefixtures("power_on")
-def test_sit(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
+def test_stand(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
-    This integration test checks if the "sit" service infrastructure is
+    This integration test checks if the "stand" service infrastructure is
     setup correctly.
 
     Args:
@@ -25,8 +25,8 @@ def test_sit(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
             GRPC server.
     """
 
-    # Sit
-    client = ros.node.create_client(Trigger, "sit")
+    # Stand
+    client = ros.node.create_client(Trigger, "stand")
     future = client.call_async(Trigger.Request())
     call = simple_spot.api.RobotCommand.serve(timeout=2.0)
     assert call is not None

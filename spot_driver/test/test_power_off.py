@@ -16,7 +16,7 @@ from spot_wrapper.testing.fixtures import SpotFixture
 @pytest.mark.usefixtures("power_on")
 def test_spot_power_off(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
-    This integration test checks if the power off service infrastructure is
+    This integration test checks if the "power off" service infrastructure is
     setup correctly.
 
     Args:
@@ -26,8 +26,8 @@ def test_spot_power_off(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
 
     # Power off.
-    power_off_client = ros.node.create_client(Trigger, "power_off")
-    future = power_off_client.call_async(Trigger.Request())
+    client = ros.node.create_client(Trigger, "power_off")
+    future = client.call_async(Trigger.Request())
     call = simple_spot.api.RobotCommand.serve(timeout=2.0)
     assert call is not None
     assert call.request.command.HasField("full_body_command")
