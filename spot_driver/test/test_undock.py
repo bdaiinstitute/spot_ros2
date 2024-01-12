@@ -14,9 +14,9 @@ from spot_wrapper.testing.fixtures import SpotFixture
 
 
 @pytest.mark.usefixtures("power_on")
-def test_rollover(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
+def test_undock(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
-    This integration test checks if the "rollover" service infrastructure is
+    This integration test checks if the "undock" service infrastructure is
     setup correctly.
 
     Args:
@@ -26,7 +26,7 @@ def test_rollover(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
 
     # Sit
-    client = ros.node.create_client(Trigger, "rollover")
+    client = ros.node.create_client(Trigger, "undock")
     future = client.call_async(Trigger.Request())
     call = simple_spot.api.RobotCommand.serve(timeout=2.0)
     assert call is not None
