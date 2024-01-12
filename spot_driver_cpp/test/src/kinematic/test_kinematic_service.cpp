@@ -42,7 +42,13 @@ TEST(TestKinematicService, initialize) {
  * Test a happy path behavior when an IK solution is received.
  */
 TEST(TestKinematicService, get_solutions) {
+  // GIVEN an instance of the Spot IK API.
+
   auto ik_api = std::make_unique<spot_ros2::test::MockKinematicApi>();
+
+  // GIVEN the IK API will succeed and return a representative nominal result
+  // the first time it is called.
+  // THEN a single request is sent to Spot's inverse kinematics API
 
   Result<InverseKinematicsResponse> fake_response;
   fake_response.response.set_status(bosdyn::api::spot::InverseKinematicsResponse_Status_STATUS_OK);
@@ -56,9 +62,13 @@ TEST(TestKinematicService, get_solutions) {
   auto ik_service = std::make_unique<KinematicService>(std::move(ik_api), logger, std::move(middleware));
   ik_service->initialize();
 
+  // WHEN an IK request is made through the IK service.
+
   auto request = std::make_shared<GetInverseKinematicSolutions::Request>();
   auto response = std::make_shared<GetInverseKinematicSolutions::Response>();
   ik_service->getSolutions(request, response);
+
+  // THEN the IK response indicates that the request succeeds.
 
   ASSERT_EQ(response->response.status.value, bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_OK);
 }
