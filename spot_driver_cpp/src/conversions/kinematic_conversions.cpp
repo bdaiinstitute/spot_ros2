@@ -30,8 +30,7 @@ void convertBosdynMsgsInverseKinematicsRequestOnGroundPlaneStanceToProto(
     const bosdyn_msgs::msg::InverseKinematicsRequestOnGroundPlaneStance& ros_msg,
     bosdyn::api::spot::InverseKinematicsRequest::OnGroundPlaneStance& proto) {
   if (ros_msg.scene_tform_ground_is_set) {
-    common_conversions::convertGeometryMsgsPoseToProto(ros_msg.scene_tform_ground,
-                                                            *proto.mutable_scene_tform_ground());
+    common_conversions::convertGeometryMsgsPoseToProto(ros_msg.scene_tform_ground, *proto.mutable_scene_tform_ground());
   }
 }
 
@@ -40,13 +39,12 @@ void convertBosdynMsgsInverseKinematicsRequestOneOfStanceSpecificationToProto(
     bosdyn::api::spot::InverseKinematicsRequest& proto) {
   if (ros_msg.stance_specification_choice ==
       bosdyn_msgs::msg::InverseKinematicsRequestOneOfStanceSpecification::STANCE_SPECIFICATION_FIXED_STANCE_SET) {
-    convertBosdynMsgsInverseKinematicsRequestFixedStanceToProto(ros_msg.fixed_stance,
-                                                                         *proto.mutable_fixed_stance());
+    convertBosdynMsgsInverseKinematicsRequestFixedStanceToProto(ros_msg.fixed_stance, *proto.mutable_fixed_stance());
   }
   if (ros_msg.stance_specification_choice == bosdyn_msgs::msg::InverseKinematicsRequestOneOfStanceSpecification::
                                                  STANCE_SPECIFICATION_ON_GROUND_PLANE_STANCE_SET) {
-    convertBosdynMsgsInverseKinematicsRequestOnGroundPlaneStanceToProto(
-        ros_msg.on_ground_plane_stance, *proto.mutable_on_ground_plane_stance());
+    convertBosdynMsgsInverseKinematicsRequestOnGroundPlaneStanceToProto(ros_msg.on_ground_plane_stance,
+                                                                        *proto.mutable_on_ground_plane_stance());
   }
 }
 
@@ -54,8 +52,7 @@ void convertBosdynMsgsInverseKinematicsRequestWristMountedToolToProto(
     const bosdyn_msgs::msg::InverseKinematicsRequestWristMountedTool& ros_msg,
     bosdyn::api::spot::InverseKinematicsRequest::WristMountedTool& proto) {
   if (ros_msg.wrist_tform_tool_is_set) {
-    common_conversions::convertGeometryMsgsPoseToProto(ros_msg.wrist_tform_tool,
-                                                            *proto.mutable_wrist_tform_tool());
+    common_conversions::convertGeometryMsgsPoseToProto(ros_msg.wrist_tform_tool, *proto.mutable_wrist_tform_tool());
   }
 }
 
@@ -73,12 +70,12 @@ void convertBosdynMsgsInverseKinematicsRequestOneOfToolSpecificationToProto(
   if (ros_msg.tool_specification_choice ==
       bosdyn_msgs::msg::InverseKinematicsRequestOneOfToolSpecification::TOOL_SPECIFICATION_WRIST_MOUNTED_TOOL_SET) {
     convertBosdynMsgsInverseKinematicsRequestWristMountedToolToProto(ros_msg.wrist_mounted_tool,
-                                                                               *proto.mutable_wrist_mounted_tool());
+                                                                     *proto.mutable_wrist_mounted_tool());
   }
   if (ros_msg.tool_specification_choice ==
       bosdyn_msgs::msg::InverseKinematicsRequestOneOfToolSpecification::TOOL_SPECIFICATION_BODY_MOUNTED_TOOL_SET) {
     convertBosdynMsgsInverseKinematicsRequestBodyMountedToolToProto(ros_msg.body_mounted_tool,
-                                                                              *proto.mutable_body_mounted_tool());
+                                                                    *proto.mutable_body_mounted_tool());
   }
 }
 
@@ -87,7 +84,7 @@ void convertBosdynMsgsInverseKinematicsRequestToolPoseTaskToProto(
     bosdyn::api::spot::InverseKinematicsRequest::ToolPoseTask& proto) {
   if (ros_msg.task_tform_desired_tool_is_set) {
     common_conversions::convertGeometryMsgsPoseToProto(ros_msg.task_tform_desired_tool,
-                                                            *proto.mutable_task_tform_desired_tool());
+                                                       *proto.mutable_task_tform_desired_tool());
   }
 }
 
@@ -99,7 +96,7 @@ void convertBosdynMsgsInverseKinematicsRequestToolGazeTaskToProto(
   }
   if (ros_msg.task_tform_desired_tool_is_set) {
     common_conversions::convertGeometryMsgsPoseToProto(ros_msg.task_tform_desired_tool,
-                                                            *proto.mutable_task_tform_desired_tool());
+                                                       *proto.mutable_task_tform_desired_tool());
   }
 }
 
@@ -109,28 +106,26 @@ void convertBosdynMsgsInverseKinematicsRequestOneOfTaskSpecificationToProto(
   if (ros_msg.task_specification_choice ==
       bosdyn_msgs::msg::InverseKinematicsRequestOneOfTaskSpecification::TASK_SPECIFICATION_TOOL_POSE_TASK_SET) {
     convertBosdynMsgsInverseKinematicsRequestToolPoseTaskToProto(ros_msg.tool_pose_task,
-                                                                           *proto.mutable_tool_pose_task());
+                                                                 *proto.mutable_tool_pose_task());
   }
   if (ros_msg.task_specification_choice ==
       bosdyn_msgs::msg::InverseKinematicsRequestOneOfTaskSpecification::TASK_SPECIFICATION_TOOL_GAZE_TASK_SET) {
     convertBosdynMsgsInverseKinematicsRequestToolGazeTaskToProto(ros_msg.tool_gaze_task,
-                                                                           *proto.mutable_tool_gaze_task());
+                                                                 *proto.mutable_tool_gaze_task());
   }
 }
 
 void convertBosdynMsgsInverseKinematicsRequestToProto(const bosdyn_msgs::msg::InverseKinematicsRequest& ros_msg,
-                                                             bosdyn::api::spot::InverseKinematicsRequest& proto) {
+                                                      bosdyn::api::spot::InverseKinematicsRequest& proto) {
   if (ros_msg.header_is_set) {
     common_conversions::convertBosdynMsgsRequestHeaderToProto(ros_msg.header, *proto.mutable_header());
   }
   proto.set_root_frame_name(ros_msg.root_frame_name);
   if (ros_msg.root_tform_scene_is_set) {
-    common_conversions::convertGeometryMsgsPoseToProto(ros_msg.root_tform_scene,
-                                                            *proto.mutable_root_tform_scene());
+    common_conversions::convertGeometryMsgsPoseToProto(ros_msg.root_tform_scene, *proto.mutable_root_tform_scene());
   }
   if (ros_msg.scene_tform_task_is_set) {
-    common_conversions::convertGeometryMsgsPoseToProto(ros_msg.scene_tform_task,
-                                                            *proto.mutable_scene_tform_task());
+    common_conversions::convertGeometryMsgsPoseToProto(ros_msg.scene_tform_task, *proto.mutable_scene_tform_task());
   }
 
   switch (ros_msg.nominal_arm_configuration.value) {
@@ -146,16 +141,15 @@ void convertBosdynMsgsInverseKinematicsRequestToProto(const bosdyn_msgs::msg::In
   }
 
   if (ros_msg.nominal_arm_configuration_overrides_is_set) {
-    common_conversions::convertBosdynMsgsArmJointPositionToProto(
-        ros_msg.nominal_arm_configuration_overrides, *proto.mutable_nominal_arm_configuration_overrides());
+    common_conversions::convertBosdynMsgsArmJointPositionToProto(ros_msg.nominal_arm_configuration_overrides,
+                                                                 *proto.mutable_nominal_arm_configuration_overrides());
   }
   if (ros_msg.scene_tform_body_nominal_is_set) {
     common_conversions::convertGeometryMsgsPoseToProto(ros_msg.scene_tform_body_nominal,
-                                                            *proto.mutable_scene_tform_body_nominal());
+                                                       *proto.mutable_scene_tform_body_nominal());
   }
 
-  convertBosdynMsgsInverseKinematicsRequestOneOfStanceSpecificationToProto(ros_msg.stance_specification,
-                                                                                      proto);
+  convertBosdynMsgsInverseKinematicsRequestOneOfStanceSpecificationToProto(ros_msg.stance_specification, proto);
   convertBosdynMsgsInverseKinematicsRequestOneOfToolSpecificationToProto(ros_msg.tool_specification, proto);
   convertBosdynMsgsInverseKinematicsRequestOneOfTaskSpecificationToProto(ros_msg.task_specification, proto);
 }
@@ -163,8 +157,7 @@ void convertBosdynMsgsInverseKinematicsRequestToProto(const bosdyn_msgs::msg::In
 ///////////////////////////////////////////////////////////////////////////////
 // Protobuf to ROS.
 
-void convertProtoToBosdynMsgsJointState(const bosdyn::api::JointState& proto,
-                                              bosdyn_msgs::msg::JointState& ros_msg) {
+void convertProtoToBosdynMsgsJointState(const bosdyn::api::JointState& proto, bosdyn_msgs::msg::JointState& ros_msg) {
   ros_msg.name = proto.name();
   ros_msg.position = proto.position().value();
   ros_msg.position_is_set = proto.has_position();
@@ -176,15 +169,15 @@ void convertProtoToBosdynMsgsJointState(const bosdyn::api::JointState& proto,
   ros_msg.load_is_set = proto.has_load();
 }
 
-void convertProtoToBosdynMsgsFrameTreeSnapshotParentEdge(
-    const bosdyn::api::FrameTreeSnapshot::ParentEdge& proto, bosdyn_msgs::msg::FrameTreeSnapshotParentEdge& ros_msg) {
+void convertProtoToBosdynMsgsFrameTreeSnapshotParentEdge(const bosdyn::api::FrameTreeSnapshot::ParentEdge& proto,
+                                                         bosdyn_msgs::msg::FrameTreeSnapshotParentEdge& ros_msg) {
   ros_msg.parent_frame_name = proto.parent_frame_name();
   common_conversions::convertProtoToGeometryMsgsPose(proto.parent_tform_child(), ros_msg.parent_tform_child);
   ros_msg.parent_tform_child_is_set = proto.has_parent_tform_child();
 }
 
 void convertProtoToBosdynMsgsFrameTreeSnapshot(const bosdyn::api::FrameTreeSnapshot& proto,
-                                                      bosdyn_msgs::msg::FrameTreeSnapshot& ros_msg) {
+                                               bosdyn_msgs::msg::FrameTreeSnapshot& ros_msg) {
   ros_msg.child_to_parent_edge_map.clear();
   for (const auto& item : proto.child_to_parent_edge_map()) {
     bosdyn_msgs::msg::KeyStringValueBosdynMsgsFrameTreeSnapshotParentEdge edge;
@@ -195,28 +188,27 @@ void convertProtoToBosdynMsgsFrameTreeSnapshot(const bosdyn::api::FrameTreeSnaps
 }
 
 void convertProtoToBosdynMsgsKinematicState(const bosdyn::api::KinematicState& proto,
-                                                  bosdyn_msgs::msg::KinematicState& ros_msg) {
+                                            bosdyn_msgs::msg::KinematicState& ros_msg) {
   ros_msg.joint_states.clear();
   for (const auto& item : proto.joint_states()) {
     bosdyn_msgs::msg::JointState joint_state;
     convertProtoToBosdynMsgsJointState(item, joint_state);
     ros_msg.joint_states.push_back(joint_state);
   }
-  common_conversions::convertProtoToBuiltinInterfacesTime(proto.acquisition_timestamp(),
-                                                               ros_msg.acquisition_timestamp);
+  common_conversions::convertProtoToBuiltinInterfacesTime(proto.acquisition_timestamp(), ros_msg.acquisition_timestamp);
   ros_msg.acquisition_timestamp_is_set = proto.has_acquisition_timestamp();
   convertProtoToBosdynMsgsFrameTreeSnapshot(proto.transforms_snapshot(), ros_msg.transforms_snapshot);
   ros_msg.transforms_snapshot_is_set = proto.has_transforms_snapshot();
   common_conversions::convertProtoToGeometryMsgsTwist(proto.velocity_of_body_in_vision(),
-                                                           ros_msg.velocity_of_body_in_vision);
+                                                      ros_msg.velocity_of_body_in_vision);
   ros_msg.velocity_of_body_in_vision_is_set = proto.has_velocity_of_body_in_vision();
   common_conversions::convertProtoToGeometryMsgsTwist(proto.velocity_of_body_in_odom(),
-                                                           ros_msg.velocity_of_body_in_odom);
+                                                      ros_msg.velocity_of_body_in_odom);
   ros_msg.velocity_of_body_in_odom_is_set = proto.has_velocity_of_body_in_odom();
 }
 
 void convertProtoToBosdynMsgsInverseKinematicsResponse(const bosdyn::api::spot::InverseKinematicsResponse& proto,
-                                                              bosdyn_msgs::msg::InverseKinematicsResponse& ros_msg) {
+                                                       bosdyn_msgs::msg::InverseKinematicsResponse& ros_msg) {
   common_conversions::convertProtoToBosdynMsgsResponseHeader(proto.header(), ros_msg.header);
   ros_msg.header_is_set = proto.has_header();
   ros_msg.status.value = proto.status();

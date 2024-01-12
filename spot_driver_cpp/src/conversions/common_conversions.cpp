@@ -8,13 +8,13 @@ namespace spot_ros2::common_conversions {
 // ROS to Protobuf.
 
 void convertBuiltinInterfacesTimeToProto(const builtin_interfaces::msg::Time& ros_msg,
-                                              google::protobuf::Timestamp& proto) {
+                                         google::protobuf::Timestamp& proto) {
   proto.set_seconds(ros_msg.sec);
   proto.set_nanos(ros_msg.nanosec);
 }
 
 void convertBosdynMsgsRequestHeaderToProto(const bosdyn_msgs::msg::RequestHeader& ros_msg,
-                                                 bosdyn::api::RequestHeader& proto) {
+                                           bosdyn::api::RequestHeader& proto) {
   if (ros_msg.request_timestamp_is_set) {
     convertBuiltinInterfacesTimeToProto(ros_msg.request_timestamp, *proto.mutable_request_timestamp());
   }
@@ -35,7 +35,7 @@ void convertGeometryMsgsPointToProto(const geometry_msgs::msg::Point& ros_msg, b
 }
 
 void convertGeometryMsgsQuaternionToProto(const geometry_msgs::msg::Quaternion& ros_msg,
-                                               bosdyn::api::Quaternion& proto) {
+                                          bosdyn::api::Quaternion& proto) {
   proto.set_w(ros_msg.w);
   proto.set_x(ros_msg.x);
   proto.set_y(ros_msg.y);
@@ -52,7 +52,7 @@ void convertGloat64ToProto(const double ros_msg, google::protobuf::DoubleValue& 
 }
 
 void convertBosdynMsgsArmJointPositionToProto(const bosdyn_msgs::msg::ArmJointPosition& ros_msg,
-                                                     bosdyn::api::ArmJointPosition& proto) {
+                                              bosdyn::api::ArmJointPosition& proto) {
   if (ros_msg.sh0_is_set) {
     convertGloat64ToProto(ros_msg.sh0, *proto.mutable_sh0());
   }
@@ -77,7 +77,7 @@ void convertBosdynMsgsArmJointPositionToProto(const bosdyn_msgs::msg::ArmJointPo
 // Protobuf to ROS.
 
 void convertProtoToBosdynMsgsRequestHeader(const bosdyn::api::RequestHeader& proto,
-                                                 bosdyn_msgs::msg::RequestHeader& ros_msg) {
+                                           bosdyn_msgs::msg::RequestHeader& ros_msg) {
   common_conversions::convertProtoToBuiltinInterfacesTime(proto.request_timestamp(), ros_msg.request_timestamp);
   ros_msg.request_timestamp_is_set = proto.has_request_timestamp();
   ros_msg.client_name = proto.client_name();
@@ -85,17 +85,17 @@ void convertProtoToBosdynMsgsRequestHeader(const bosdyn::api::RequestHeader& pro
 }
 
 void convertProtoToBosdynMsgsCommonError(const bosdyn::api::CommonError& proto,
-                                               bosdyn_msgs::msg::CommonError& ros_msg) {
+                                         bosdyn_msgs::msg::CommonError& ros_msg) {
   ros_msg.code.value = proto.code();
   ros_msg.message = proto.message();
 }
 
 void convertProtoToBosdynMsgsResponseHeader(const bosdyn::api::ResponseHeader& proto,
-                                                  bosdyn_msgs::msg::ResponseHeader& ros_msg) {
+                                            bosdyn_msgs::msg::ResponseHeader& ros_msg) {
   convertProtoToBosdynMsgsRequestHeader(proto.request_header(), ros_msg.request_header);
   ros_msg.request_header_is_set = proto.has_request_header();
   common_conversions::convertProtoToBuiltinInterfacesTime(proto.request_received_timestamp(),
-                                                               ros_msg.request_received_timestamp);
+                                                          ros_msg.request_received_timestamp);
   ros_msg.request_received_timestamp_is_set = proto.has_request_received_timestamp();
   common_conversions::convertProtoToBuiltinInterfacesTime(proto.response_timestamp(), ros_msg.response_timestamp);
   ros_msg.response_timestamp_is_set = proto.has_response_timestamp();
@@ -104,7 +104,7 @@ void convertProtoToBosdynMsgsResponseHeader(const bosdyn::api::ResponseHeader& p
 }
 
 void convertProtoToBuiltinInterfacesTime(const google::protobuf::Timestamp& proto,
-                                              builtin_interfaces::msg::Time& ros_msg) {
+                                         builtin_interfaces::msg::Time& ros_msg) {
   ros_msg.sec = proto.seconds();
   ros_msg.nanosec = proto.nanos();
 }
@@ -122,7 +122,7 @@ void convertProtoToGeometryMsgsVector3(const bosdyn::api::Vec3& proto, geometry_
 }
 
 void convertProtoToGeometryMsgsQuaternion(const bosdyn::api::Quaternion& proto,
-                                               geometry_msgs::msg::Quaternion& ros_msg) {
+                                          geometry_msgs::msg::Quaternion& ros_msg) {
   ros_msg.w = proto.w();
   ros_msg.x = proto.x();
   ros_msg.y = proto.y();
