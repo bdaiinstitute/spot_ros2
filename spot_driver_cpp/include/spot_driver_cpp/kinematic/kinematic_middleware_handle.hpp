@@ -3,6 +3,7 @@
 #include <spot_driver_cpp/kinematic/kinematic_service.hpp>
 
 #include <memory>
+#include <rclcpp/node.hpp>
 #include <string>
 
 namespace spot_ros2::kinematic {
@@ -10,10 +11,10 @@ namespace spot_ros2::kinematic {
 class KinematicMiddlewareHandle : public KinematicService::MiddlewareHandle {
  public:
   explicit KinematicMiddlewareHandle(std::shared_ptr<rclcpp::Node> node);
-  std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>> createService(
-      std::string serviceName, std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
-                                                  std::shared_ptr<GetInverseKinematicSolutions::Response>)>
-                                   callback) override;
+  void createService(std::string serviceName,
+                     std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
+                                        std::shared_ptr<GetInverseKinematicSolutions::Response>)>
+                         callback) override;
 
  private:
   std::shared_ptr<rclcpp::Node> node_;
