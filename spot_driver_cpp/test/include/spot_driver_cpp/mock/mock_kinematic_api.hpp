@@ -11,7 +11,7 @@ namespace spot_ros2::test {
 
 class MockKinematicApi : public KinematicApi {
  public:
-  MOCK_METHOD((tl::expected<Result<InverseKinematicsResponse>, std::string>), get_solutions,
+  MOCK_METHOD((tl::expected<Result<InverseKinematicsResponse>, std::string>), getSolutions,
               (InverseKinematicsRequest & request), (override));
 };
 

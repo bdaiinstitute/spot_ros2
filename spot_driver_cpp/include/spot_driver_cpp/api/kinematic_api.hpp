@@ -20,7 +20,7 @@ class KinematicApi {
   /**
    * Return a solution to the given request.
    */
-  virtual tl::expected<Result<InverseKinematicsResponse>, std::string> get_solutions(
+  virtual tl::expected<Result<InverseKinematicsResponse>, std::string> getSolutions(
       InverseKinematicsRequest& request) = 0;
 };
 }  // namespace spot_ros2

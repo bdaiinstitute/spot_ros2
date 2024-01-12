@@ -3,13 +3,13 @@
 #include <spot_driver_cpp/api/default_kinematic_api.hpp>
 
 namespace spot_ros2 {
-DefaultKinematicApi::DefaultKinematicApi(bosdyn::client::InverseKinematicsClient* kinematic_client)
-    : kinematic_client_{kinematic_client} {}
+DefaultKinematicApi::DefaultKinematicApi(bosdyn::client::InverseKinematicsClient* kinematicClient)
+    : kinematicClient_{kinematicClient} {}
 
-tl::expected<Result<InverseKinematicsResponse>, std::string> DefaultKinematicApi::get_solutions(
+tl::expected<Result<InverseKinematicsResponse>, std::string> DefaultKinematicApi::getSolutions(
     InverseKinematicsRequest& request) {
   try {
-    return kinematic_client_->InverseKinematics(request);
+    return kinematicClient_->InverseKinematics(request);
   } catch (const std::exception& ex) {
     return tl::make_unexpected("Failed to query the InverseKinematics service: " + std::string{ex.what()});
   }

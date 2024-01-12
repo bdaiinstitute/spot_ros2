@@ -18,11 +18,10 @@ using ::testing::Return;
 
 class MockMiddlewareHandle : public KinematicService::MiddlewareHandle {
  public:
-  MOCK_METHOD((std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>>), create_service,
-              (std::string service_name,
-               std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
-                                  std::shared_ptr<GetInverseKinematicSolutions::Response>)>
-                   callback),
+  MOCK_METHOD((std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>>), createService,
+              (std::string serviceName, std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
+                                                           std::shared_ptr<GetInverseKinematicSolutions::Response>)>
+                                            callback),
               (override));
 };
 
@@ -33,7 +32,7 @@ TEST(TestKinematicService, initialize) {
   auto ik_api = std::make_unique<spot_ros2::test::MockKinematicApi>();
   auto logger = std::make_shared<spot_ros2::test::MockLoggerInterface>();
   auto middleware = std::make_unique<MockMiddlewareHandle>();
-  EXPECT_CALL(*middleware, create_service(_, _)).Times(1);
+  EXPECT_CALL(*middleware, createService(_, _)).Times(1);
 
   auto ik_service = std::make_unique<KinematicService>(std::move(ik_api), logger, std::move(middleware));
   ik_service->initialize();
@@ -49,7 +48,7 @@ TEST(TestKinematicService, get_solutions) {
   fake_response.response.set_status(bosdyn::api::spot::InverseKinematicsResponse_Status_STATUS_OK);
   tl::expected<Result<InverseKinematicsResponse>, std::string> fake_result(fake_response);
 
-  EXPECT_CALL(*ik_api, get_solutions(_)).WillOnce(Return(fake_result));
+  EXPECT_CALL(*ik_api, getSolutions(_)).WillOnce(Return(fake_result));
 
   auto logger = std::make_shared<spot_ros2::test::MockLoggerInterface>();
   auto middleware = std::make_unique<MockMiddlewareHandle>();
@@ -59,7 +58,7 @@ TEST(TestKinematicService, get_solutions) {
 
   auto request = std::make_shared<GetInverseKinematicSolutions::Request>();
   auto response = std::make_shared<GetInverseKinematicSolutions::Response>();
-  ik_service->get_solutions(request, response);
+  ik_service->getSolutions(request, response);
 
   ASSERT_EQ(response->response.status.value, bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_OK);
 }
@@ -70,7 +69,7 @@ TEST(TestKinematicService, get_solutions) {
 TEST(TestKinematicService, get_solutions_exception) {
   auto ik_api = std::make_unique<spot_ros2::test::MockKinematicApi>();
 
-  EXPECT_CALL(*ik_api, get_solutions(_)).WillOnce(Return(tl::make_unexpected("Some error")));
+  EXPECT_CALL(*ik_api, getSolutions(_)).WillOnce(Return(tl::make_unexpected("Some error")));
 
   auto logger = std::make_shared<spot_ros2::test::MockLoggerInterface>();
   auto middleware = std::make_unique<MockMiddlewareHandle>();
@@ -80,7 +79,7 @@ TEST(TestKinematicService, get_solutions_exception) {
 
   auto request = std::make_shared<GetInverseKinematicSolutions::Request>();
   auto response = std::make_shared<GetInverseKinematicSolutions::Response>();
-  ik_service->get_solutions(request, response);
+  ik_service->getSolutions(request, response);
 
   ASSERT_EQ(response->response.status.value, bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_UNKNOWN);
 }

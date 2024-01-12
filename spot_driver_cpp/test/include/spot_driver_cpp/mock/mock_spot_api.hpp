@@ -15,7 +15,7 @@ class MockSpotApi : public SpotApi {
   MOCK_METHOD((tl::expected<void, std::string>), createRobot, (const std::string&, const std::string&), (override));
   MOCK_METHOD((tl::expected<void, std::string>), authenticate, (const std::string&, const std::string&), (override));
   MOCK_METHOD((tl::expected<bool, std::string>), hasArm, (), (const, override));
-  MOCK_METHOD(std::shared_ptr<KinematicApi>, kinematic_api, (), (const, override));
+  MOCK_METHOD(std::shared_ptr<KinematicApi>, kinematicApi, (), (const, override));
   MOCK_METHOD(std::shared_ptr<ImageClientInterface>, image_client_interface, (), (const, override));
 };
 }  // namespace spot_ros2::test
