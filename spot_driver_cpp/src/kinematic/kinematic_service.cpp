@@ -17,11 +17,11 @@ KinematicService::KinematicService(std::shared_ptr<KinematicApi> kinematicApi,
     : kinematicApi_{kinematicApi}, logger_{std::move(logger)}, middlewareHandle_{std::move(middlewareHandle)} {}
 
 void KinematicService::initialize() {
-  service_ = middlewareHandle_->createService(
-      kServiceName, [this](const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
-                           std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
-        this->getSolutions(request, response);
-      });
+  middlewareHandle_->createService(kServiceName,
+                                   [this](const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
+                                          std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
+                                     this->getSolutions(request, response);
+                                   });
 }
 
 void KinematicService::getSolutions(const std::shared_ptr<GetInverseKinematicSolutions::Request> request,

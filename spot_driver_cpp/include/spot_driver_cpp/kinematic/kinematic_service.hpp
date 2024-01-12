@@ -8,11 +8,6 @@
 
 #include <spot_msgs/srv/get_inverse_kinematic_solutions.hpp>
 
-#include <rclcpp/node.hpp>
-#include <rclcpp/node_interfaces/node_base_interface.hpp>
-#include <rclcpp/node_options.hpp>
-#include <rclcpp/service.hpp>
-
 #include <memory>
 #include <string>
 
@@ -23,14 +18,16 @@ using spot_msgs::srv::GetInverseKinematicSolutions;
 class KinematicService {
  public:
   /**
-   * @brief A handle class around rclcpp::Node operations for KinematicService
+   * This middleware handle is used to register a service and assign to it a
+   * callback. In testing, it can be mocked to avoid using the ROS
+   * infrastructure.
    */
   class MiddlewareHandle {
    public:
-    virtual std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>> createService(
-        std::string serviceName, std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
-                                                    std::shared_ptr<GetInverseKinematicSolutions::Response>)>
-                                     callback) = 0;
+    virtual void createService(std::string serviceName,
+                               std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
+                                                  std::shared_ptr<GetInverseKinematicSolutions::Response>)>
+                                   callback) = 0;
     virtual ~MiddlewareHandle() = default;
   };
 
@@ -63,8 +60,5 @@ class KinematicService {
 
   // The service provider.
   std::unique_ptr<MiddlewareHandle> middlewareHandle_;
-
-  // The service processing the Inverse Kinematic request for solutions.
-  rclcpp::Service<GetInverseKinematicSolutions>::SharedPtr service_;
 };
 }  // namespace spot_ros2::kinematic

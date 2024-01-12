@@ -18,7 +18,7 @@ using ::testing::Return;
 
 class MockMiddlewareHandle : public KinematicService::MiddlewareHandle {
  public:
-  MOCK_METHOD((std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>>), createService,
+  MOCK_METHOD((void), createService,
               (std::string serviceName, std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
                                                            std::shared_ptr<GetInverseKinematicSolutions::Response>)>
                                             callback),
