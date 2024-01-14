@@ -16,7 +16,7 @@ def generate_launch_description() -> launch.LaunchDescription:
         package="robot_state_publisher",
         executable="robot_state_publisher",
         parameters=[{"robot_description": Command(
-            ["xacro ", LaunchConfiguration("model")])}],
+            ["xacro ", LaunchConfiguration("model"), " arm:=", LaunchConfiguration('arm')])}],
     )
     joint_state_publisher_node = launch_ros.actions.Node(
         package="joint_state_publisher",
@@ -49,6 +49,9 @@ def generate_launch_description() -> launch.LaunchDescription:
             ),
             launch.actions.DeclareLaunchArgument(
                 name="rvizconfig", default_value=default_rviz2_path, description="Absolute path to rviz config file"
+            ),
+            launch.actions.DeclareLaunchArgument(
+                name="arm", default_value="False", description="Flag to enable arm"
             ),
             joint_state_publisher_node,
             joint_state_publisher_gui_node,
