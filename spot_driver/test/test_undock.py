@@ -7,7 +7,7 @@
 import pytest
 from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope
-from bosdyn.api.docking.docking_pb2 import DockingCommandResponse, DockingCommandFeedbackResponse
+from bosdyn.api.docking.docking_pb2 import DockingCommandFeedbackResponse, DockingCommandResponse
 from std_srvs.srv import Trigger
 
 from spot_wrapper.testing.fixtures import SpotFixture
