@@ -25,9 +25,11 @@ def test_spot_power_off(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
             GRPC server.
     """
 
-    # Power off.
+    # Send ROS request.
     client = ros.node.create_client(Trigger, "power_off")
     future = client.call_async(Trigger.Request())
+
+    # Mock GRPC sever.
     call = simple_spot.api.RobotCommand.serve(timeout=2.0)
     assert call is not None
     assert call.request.command.HasField("full_body_command")
@@ -35,6 +37,8 @@ def test_spot_power_off(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     response = RobotCommandResponse()
     response.status = RobotCommandResponse.Status.STATUS_OK
     call.returns(response)
+
+    # Wait for ROS response.
     assert wait_for_future(future, timeout_sec=2.0)
     response = future.result()
     assert response.success

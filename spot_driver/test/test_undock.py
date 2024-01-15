@@ -7,7 +7,7 @@
 import pytest
 from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope
-from bosdyn.api.robot_command_pb2 import RobotCommandResponse
+from bosdyn.api.docking.docking_pb2 import DockingCommandResponse, DockingCommandFeedbackResponse
 from std_srvs.srv import Trigger
 
 from spot_wrapper.testing.fixtures import SpotFixture
@@ -25,14 +25,22 @@ def test_undock(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
             GRPC server.
     """
 
-    # Undock
+    # Send ROS request.
     client = ros.node.create_client(Trigger, "undock")
     future = client.call_async(Trigger.Request())
-    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
-    assert call is not None
-    response = RobotCommandResponse()
-    response.status = RobotCommandResponse.Status.STATUS_OK
-    call.returns(response)
+
+    # Mock GRPC sever.
+    undock_call = simple_spot.api.DockingCommand.serve(timeout=2.0)
+    undock_response = DockingCommandResponse()
+    undock_response.status = DockingCommandResponse.Status.STATUS_OK
+    undock_call.returns(undock_response)
+
+    undock_feedback_call = simple_spot.api.DockingCommandFeedback.serve(timeout=2.0)
+    undock_feedback_response = DockingCommandFeedbackResponse()
+    undock_feedback_response.status = DockingCommandFeedbackResponse.STATUS_AT_PREP_POSE
+    undock_feedback_call.returns(undock_feedback_response)
+
+    # Wait for ROS response.
     assert wait_for_future(future, timeout_sec=2.0)
     response = future.result()
     assert response.success

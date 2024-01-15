@@ -22,10 +22,7 @@ import grpc
 import pytest
 import rclpy
 from bdai_ros2_wrappers.scope import ROSAwareScope
-from bosdyn.api.power_pb2 import (
-    PowerCommandRequest,
-    PowerCommandResponse,
-)
+from bosdyn.api.power_pb2 import PowerCommandRequest, PowerCommandResponse, PowerCommandStatus
 from bosdyn.api.robot_command_pb2 import RobotCommandResponse
 
 import spot_wrapper.testing
@@ -49,7 +46,9 @@ class simple_spot(MockSpot):
         """
         Dummy implementation of the PowerCommand command.
         """
-        return PowerCommandResponse()
+        response = PowerCommandResponse()
+        response.status = PowerCommandStatus.STATUS_SUCCESS
+        return response
 
 
 # pylint: enable=invalid-name,unused-argument
