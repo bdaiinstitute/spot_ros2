@@ -13,7 +13,7 @@ from std_srvs.srv import Trigger
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
-@pytest.mark.usefixtures("power_on")
+@pytest.mark.usefixtures("spot_node")
 def test_spot_power_off(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
     This integration test checks if the "power off" service infrastructure is

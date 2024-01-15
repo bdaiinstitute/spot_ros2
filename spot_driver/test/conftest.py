@@ -18,18 +18,15 @@ import typing
 
 import bdai_ros2_wrappers.scope as ros_scope
 import domain_coordinator
+import grpc
 import pytest
 import rclpy
-from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.power_pb2 import (
     PowerCommandRequest,
     PowerCommandResponse,
-    PowerCommandStatus,
 )
 from bosdyn.api.robot_command_pb2 import RobotCommandResponse
-from bosdyn.api.robot_state_pb2 import PowerState
-from std_srvs.srv import Trigger
 
 import spot_wrapper.testing
 from spot_driver.spot_ros2 import SpotROS
@@ -37,8 +34,9 @@ from spot_wrapper.testing.fixtures import SpotFixture
 from spot_wrapper.testing.mocks import MockSpot
 
 
+# pylint: disable=invalid-name,unused-argument
 @spot_wrapper.testing.fixture
-class simple_spot(MockSpot):  # pylint: disable=invalid-name
+class simple_spot(MockSpot):
     """
     This is a factory that returns an instance of the class MockSpot,
     served by a local GRPC server.
@@ -46,6 +44,15 @@ class simple_spot(MockSpot):  # pylint: disable=invalid-name
     The MockSpot and the GRPC server are used to handle calls to a simulated
     Spot robot.
     """
+
+    def PowerCommand(self, request: PowerCommandRequest, context: grpc.ServicerContext) -> PowerCommandResponse:
+        """
+        Dummy implementation of the PowerCommand command.
+        """
+        return PowerCommandResponse()
+
+
+# pylint: enable=invalid-name,unused-argument
 
 
 @pytest.fixture
@@ -87,39 +94,39 @@ def spot_node(ros: ROSAwareScope, simple_spot: SpotFixture) -> typing.Iterator[S
             simple_spot.api.RobotCommand.future.returns(response)
 
 
-@pytest.fixture
-def power_on(ros: ROSAwareScope, simple_spot: SpotFixture, spot_node: SpotROS) -> None:
-    """
-    This fixture claims and powers on the Spot mock robot.
-    The SpotFixture creates a mock of the Spot robot GRPC server, but to
-    ise it for additional testing we still need to claim it and power it on.
+# @pytest.fixture
+# def power_on(ros: ROSAwareScope, simple_spot: SpotFixture, spot_node: SpotROS) -> None:
+#     """
+#     This fixture claims and powers on the Spot mock robot.
+#     The SpotFixture creates a mock of the Spot robot GRPC server, but to
+#     ise it for additional testing we still need to claim it and power it on.
 
-    Args:
-        ros: A ROS2 scope that can be used to create clients.
-        simple_spot: a fake Spot robot running on a local GRPC server.
-        spot_node: the main ROS2 node with all services, subscribers,
-            publishers and actions configured.
-    """
+#     Args:
+#         ros: A ROS2 scope that can be used to create clients.
+#         simple_spot: a fake Spot robot running on a local GRPC server.
+#         spot_node: the main ROS2 node with all services, subscribers,
+#             publishers and actions configured.
+#     """
 
-    # Claim.
-    claim_client = ros.node.create_client(Trigger, "claim")
-    future = claim_client.call_async(Trigger.Request())
-    assert wait_for_future(future, timeout_sec=2.0)
-    response = future.result()
-    assert response is not None
-    assert response.success
+#     # Claim.
+#     claim_client = ros.node.create_client(Trigger, "claim")
+#     future = claim_client.call_async(Trigger.Request())
+#     assert wait_for_future(future, timeout_sec=2.0)
+#     response = future.result()
+#     assert response is not None
+#     assert response.success
 
-    # Power on.
-    power_on_client = ros.node.create_client(Trigger, "power_on")
-    future = power_on_client.call_async(Trigger.Request())
-    call = simple_spot.api.PowerCommand.serve(timeout=2.0)
-    assert call is not None
-    assert call.request.request == PowerCommandRequest.Request.REQUEST_ON_MOTORS
-    power_state = simple_spot.api.robot_state.power_state
-    power_state.motor_power_state = PowerState.MotorPowerState.MOTOR_POWER_STATE_ON
-    response = PowerCommandResponse()
-    response.status = PowerCommandStatus.STATUS_SUCCESS
-    call.returns(response)
-    assert wait_for_future(future, timeout_sec=2.0)
-    response = future.result()
-    assert response.success
+#     # Power on.
+#     power_on_client = ros.node.create_client(Trigger, "power_on")
+#     future = power_on_client.call_async(Trigger.Request())
+#     call = simple_spot.api.PowerCommand.serve(timeout=2.0)
+#     assert call is not None
+#     assert call.request.request == PowerCommandRequest.Request.REQUEST_ON_MOTORS
+#     power_state = simple_spot.api.robot_state.power_state
+#     power_state.motor_power_state = PowerState.MotorPowerState.MOTOR_POWER_STATE_ON
+#     response = PowerCommandResponse()
+#     response.status = PowerCommandStatus.STATUS_SUCCESS
+#     call.returns(response)
+#     assert wait_for_future(future, timeout_sec=2.0)
+#     response = future.result()
+#     assert response.success

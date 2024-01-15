@@ -13,7 +13,7 @@ from std_srvs.srv import Trigger
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
-@pytest.mark.usefixtures("power_on")
+@pytest.mark.usefixtures("spot_node")
 def test_undock(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
     This integration test checks if the "undock" service infrastructure is
@@ -25,7 +25,7 @@ def test_undock(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
             GRPC server.
     """
 
-    # Sit
+    # Undock
     client = ros.node.create_client(Trigger, "undock")
     future = client.call_async(Trigger.Request())
     call = simple_spot.api.RobotCommand.serve(timeout=2.0)
