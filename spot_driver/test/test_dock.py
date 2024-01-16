@@ -11,7 +11,7 @@ from bosdyn.api.basic_command_pb2 import RobotCommandFeedbackStatus, StandComman
 from bosdyn.api.docking.docking_pb2 import DockingCommandFeedbackResponse, DockingCommandResponse
 from bosdyn.api.robot_command_pb2 import RobotCommandFeedbackResponse, RobotCommandResponse
 
-from spot_msgs.srv import Dock
+from spot_msgs.srv import Dock  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
