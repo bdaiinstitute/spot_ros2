@@ -59,6 +59,8 @@ class SpotRobotStatePublisher {
    */
   void timerCallback();
 
+  std::string full_odom_frame_id_;
+
   // Interface classes to interact with Spot and the middleware.
   std::shared_ptr<RobotStateClientInterface> client_interface_;
   std::unique_ptr<MiddlewareHandle> middleware_handle_;

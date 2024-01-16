@@ -20,6 +20,12 @@ SpotRobotStatePublisher::SpotRobotStatePublisher(
   // Create a publisher for all messages in robot state
   middleware_handle_->createPublishers();
 
+  const auto preferred_odom_frame = middleware_handle_->parameter_interface()->getPreferredOdomFrame();
+
+  full_odom_frame_id_ = preferred_odom_frame.find("/") == std::string::npos
+                            ? middleware_handle_->parameter_interface()->getSpotName() + "/" + preferred_odom_frame
+                            : preferred_odom_frame;
+
   // Create a timer to request and publish robot state at a fixed rate
   middleware_handle_->timer_interface()->setTimer(kRobotStateCallbackPeriod, [this]() {
     timerCallback();
@@ -27,13 +33,7 @@ SpotRobotStatePublisher::SpotRobotStatePublisher(
 }
 
 void SpotRobotStatePublisher::timerCallback() {
-  const auto preferred_odom_frame =
-      middleware_handle_->parameter_interface()->getPreferredOdomFrame().find("/") == std::string::npos
-          ? middleware_handle_->parameter_interface()->getSpotName() + "/" +
-                middleware_handle_->parameter_interface()->getPreferredOdomFrame()
-          : middleware_handle_->parameter_interface()->getPreferredOdomFrame();
-
-  const auto robot_state_result = client_interface_->getRobotState(preferred_odom_frame);
+  const auto robot_state_result = client_interface_->getRobotState(full_odom_frame_id_);
   if (!robot_state_result.has_value()) {
     middleware_handle_->logger_interface()->logError(
         std::string{"Failed to get robot_state: "}.append(robot_state_result.error()));
