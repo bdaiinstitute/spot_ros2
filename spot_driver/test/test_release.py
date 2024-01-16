@@ -17,7 +17,7 @@ from std_srvs.srv import Trigger
 @pytest.mark.usefixtures("spot_node", "simple_spot")
 def test_release(ros: ROSAwareScope) -> None:
     """
-    This integration test checks if the "stop" service infrastructure is
+    This integration test checks if the "release" service infrastructure is
     setup correctly.
 
     Args:
