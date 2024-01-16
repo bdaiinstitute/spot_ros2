@@ -30,19 +30,19 @@ tl::expected<RobotState, std::string> DefaultRobotStateClient::getRobotState(con
   const auto robot_state = get_robot_state_result.response.robot_state();
 
   const auto out = RobotState{
-      GetBatteryStates(robot_state, clock_skew_result.value()),
-      GetWifiState(robot_state),
-      GetFootState(robot_state),
-      GetEstopStates(robot_state, clock_skew_result.value()),
-      GetJointStates(robot_state, clock_skew_result.value(), frame_prefix_),
-      GetTf(robot_state, clock_skew_result.value(), frame_prefix_, preferred_odom_frame),
-      GetOdomTwist(robot_state, clock_skew_result.value()),
-      GetOdom(robot_state, clock_skew_result.value(), frame_prefix_, preferred_odom_frame == frame_prefix_ + "vision"),
-      GetPowerState(robot_state, clock_skew_result.value()),
-      GetSystemFaultState(robot_state, clock_skew_result.value()),
-      GetManipulatorState(robot_state),
-      GetEndEffectorForce(robot_state, clock_skew_result.value(), frame_prefix_),
-      GetBehaviorFaultState(robot_state, clock_skew_result.value())};
+      getBatteryStates(robot_state, clock_skew_result.value()),
+      getWifiState(robot_state),
+      getFootState(robot_state),
+      getEstopStates(robot_state, clock_skew_result.value()),
+      getJointStates(robot_state, clock_skew_result.value(), frame_prefix_),
+      getTf(robot_state, clock_skew_result.value(), frame_prefix_, preferred_odom_frame),
+      getOdomTwist(robot_state, clock_skew_result.value()),
+      getOdom(robot_state, clock_skew_result.value(), frame_prefix_, preferred_odom_frame == frame_prefix_ + "vision"),
+      getPowerState(robot_state, clock_skew_result.value()),
+      getSystemFaultState(robot_state, clock_skew_result.value()),
+      getManipulatorState(robot_state),
+      getEndEffectorForce(robot_state, clock_skew_result.value(), frame_prefix_),
+      getBehaviorFaultState(robot_state, clock_skew_result.value())};
 
   return out;
 }

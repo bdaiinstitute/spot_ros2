@@ -9,7 +9,7 @@
 
 namespace spot_ros2 {
 
-spot_msgs::msg::BatteryStateArray GetBatteryStates(const ::bosdyn::api::RobotState& robot_state,
+spot_msgs::msg::BatteryStateArray getBatteryStates(const ::bosdyn::api::RobotState& robot_state,
                                                    const google::protobuf::Duration& clock_skew) {
   spot_msgs::msg::BatteryStateArray battery_states;
 
@@ -34,7 +34,7 @@ spot_msgs::msg::BatteryStateArray GetBatteryStates(const ::bosdyn::api::RobotSta
   return battery_states;
 }
 
-spot_msgs::msg::WiFiState GetWifiState(const ::bosdyn::api::RobotState& robot_state) {
+spot_msgs::msg::WiFiState getWifiState(const ::bosdyn::api::RobotState& robot_state) {
   spot_msgs::msg::WiFiState wifi_state;
 
   for (const auto& comm_state : robot_state.comms_states()) {
@@ -47,7 +47,7 @@ spot_msgs::msg::WiFiState GetWifiState(const ::bosdyn::api::RobotState& robot_st
   return wifi_state;
 }
 
-spot_msgs::msg::FootStateArray GetFootState(const ::bosdyn::api::RobotState& robot_state) {
+spot_msgs::msg::FootStateArray getFootState(const ::bosdyn::api::RobotState& robot_state) {
   spot_msgs::msg::FootStateArray foot_states;
 
   for (const auto& foot : robot_state.foot_state()) {
@@ -62,7 +62,7 @@ spot_msgs::msg::FootStateArray GetFootState(const ::bosdyn::api::RobotState& rob
   return foot_states;
 }
 
-spot_msgs::msg::EStopStateArray GetEstopStates(const ::bosdyn::api::RobotState& robot_state,
+spot_msgs::msg::EStopStateArray getEstopStates(const ::bosdyn::api::RobotState& robot_state,
                                                const google::protobuf::Duration& clock_skew) {
   spot_msgs::msg::EStopStateArray estop_states;
 
@@ -79,7 +79,7 @@ spot_msgs::msg::EStopStateArray GetEstopStates(const ::bosdyn::api::RobotState& 
   return estop_states;
 }
 
-std::optional<sensor_msgs::msg::JointState> GetJointStates(const ::bosdyn::api::RobotState& robot_state,
+std::optional<sensor_msgs::msg::JointState> getJointStates(const ::bosdyn::api::RobotState& robot_state,
                                                            const google::protobuf::Duration& clock_skew,
                                                            const std::string& prefix) {
   if (robot_state.has_kinematic_state()) {
@@ -99,7 +99,7 @@ std::optional<sensor_msgs::msg::JointState> GetJointStates(const ::bosdyn::api::
   return {};
 }
 
-std::optional<tf2_msgs::msg::TFMessage> GetTf(const ::bosdyn::api::RobotState& robot_state,
+std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& robot_state,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                               const std::string& inverse_target_frame_id) {
   if (robot_state.has_kinematic_state()) {
@@ -133,26 +133,27 @@ std::optional<tf2_msgs::msg::TFMessage> GetTf(const ::bosdyn::api::RobotState& r
   return {};
 }
 
-std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> GetOdomTwist(
+std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
     const ::bosdyn::api::RobotState& robot_state, const google::protobuf::Duration& clock_skew) {
   if (robot_state.has_kinematic_state()) {
     geometry_msgs::msg::TwistWithCovarianceStamped odom_twist_msg;
 
     odom_twist_msg.header.stamp =
         spot_ros2::applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
-    odom_twist_msg.twist.twist.linear.x = robot_state.kinematic_state().velocity_of_body_in_odom().linear().x();
-    odom_twist_msg.twist.twist.linear.y = robot_state.kinematic_state().velocity_of_body_in_odom().linear().y();
-    odom_twist_msg.twist.twist.linear.z = robot_state.kinematic_state().velocity_of_body_in_odom().linear().z();
-    odom_twist_msg.twist.twist.angular.x = robot_state.kinematic_state().velocity_of_body_in_odom().linear().x();
-    odom_twist_msg.twist.twist.angular.y = robot_state.kinematic_state().velocity_of_body_in_odom().angular().y();
-    odom_twist_msg.twist.twist.angular.z = robot_state.kinematic_state().velocity_of_body_in_odom().angular().z();
+    const auto& body_velocity = robot_state.kinematic_state().velocity_of_body_in_odom();
+    odom_twist_msg.twist.twist.linear.x = body_velocity.linear().x();
+    odom_twist_msg.twist.twist.linear.y = body_velocity.linear().y();
+    odom_twist_msg.twist.twist.linear.z = body_velocity.linear().z();
+    odom_twist_msg.twist.twist.angular.x = body_velocity.linear().x();
+    odom_twist_msg.twist.twist.angular.y = body_velocity.angular().y();
+    odom_twist_msg.twist.twist.angular.z = body_velocity.angular().z();
 
     return odom_twist_msg;
   }
   return {};
 }
 
-std::optional<nav_msgs::msg::Odometry> GetOdom(const ::bosdyn::api::RobotState& robot_state,
+std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& robot_state,
                                                const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                                bool is_using_vision) {
   if (robot_state.has_kinematic_state()) {
@@ -179,13 +180,13 @@ std::optional<nav_msgs::msg::Odometry> GetOdom(const ::bosdyn::api::RobotState& 
     pose_odom_msg.pose.orientation.w = tf_body_pose.rotation().w();
 
     odom_msg.pose = pose_odom_msg;
-    odom_msg.twist = GetOdomTwist(robot_state, clock_skew).value().twist;
+    odom_msg.twist = getOdomTwist(robot_state, clock_skew).value().twist;
     return odom_msg;
   }
   return {};
 }
 
-std::optional<spot_msgs::msg::PowerState> GetPowerState(const ::bosdyn::api::RobotState& robot_state,
+std::optional<spot_msgs::msg::PowerState> getPowerState(const ::bosdyn::api::RobotState& robot_state,
                                                         const google::protobuf::Duration& clock_skew) {
   if (robot_state.has_power_state()) {
     spot_msgs::msg::PowerState power_state;
@@ -205,7 +206,7 @@ std::optional<spot_msgs::msg::PowerState> GetPowerState(const ::bosdyn::api::Rob
   return {};
 }
 
-std::optional<spot_msgs::msg::SystemFaultState> GetSystemFaultState(const ::bosdyn::api::RobotState& robot_state,
+std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosdyn::api::RobotState& robot_state,
                                                                     const google::protobuf::Duration& clock_skew) {
   if (robot_state.has_system_fault_state()) {
     spot_msgs::msg::SystemFaultState system_fault_state;
@@ -235,51 +236,39 @@ std::optional<spot_msgs::msg::SystemFaultState> GetSystemFaultState(const ::bosd
   }
   return {};
 }
-std::optional<bosdyn_msgs::msg::ManipulatorState> GetManipulatorState(const ::bosdyn::api::RobotState& robot_state) {
+std::optional<bosdyn_msgs::msg::ManipulatorState> getManipulatorState(const ::bosdyn::api::RobotState& robot_state) {
   if (robot_state.has_manipulator_state()) {
     bosdyn_msgs::msg::ManipulatorState manipulator_state;
 
     manipulator_state.gripper_open_percentage = robot_state.manipulator_state().gripper_open_percentage();
     manipulator_state.is_gripper_holding_item = robot_state.manipulator_state().is_gripper_holding_item();
 
-    manipulator_state.estimated_end_effector_force_in_hand.x =
-        robot_state.manipulator_state().estimated_end_effector_force_in_hand().x();
-    manipulator_state.estimated_end_effector_force_in_hand.y =
-        robot_state.manipulator_state().estimated_end_effector_force_in_hand().y();
-    manipulator_state.estimated_end_effector_force_in_hand.z =
-        robot_state.manipulator_state().estimated_end_effector_force_in_hand().z();
+    const auto& force_in_hand = robot_state.manipulator_state().estimated_end_effector_force_in_hand();
+    manipulator_state.estimated_end_effector_force_in_hand.x = force_in_hand.x();
+    manipulator_state.estimated_end_effector_force_in_hand.y = force_in_hand.y();
+    manipulator_state.estimated_end_effector_force_in_hand.z = force_in_hand.z();
     manipulator_state.estimated_end_effector_force_in_hand_is_set =
         robot_state.manipulator_state().has_estimated_end_effector_force_in_hand();
 
     manipulator_state.stow_state.value = robot_state.manipulator_state().stow_state();
 
-    manipulator_state.velocity_of_hand_in_vision.linear.x =
-        robot_state.manipulator_state().velocity_of_hand_in_vision().linear().x();
-    manipulator_state.velocity_of_hand_in_vision.linear.y =
-        robot_state.manipulator_state().velocity_of_hand_in_vision().linear().y();
-    manipulator_state.velocity_of_hand_in_vision.linear.z =
-        robot_state.manipulator_state().velocity_of_hand_in_vision().linear().z();
-    manipulator_state.velocity_of_hand_in_vision.angular.x =
-        robot_state.manipulator_state().velocity_of_hand_in_vision().angular().x();
-    manipulator_state.velocity_of_hand_in_vision.angular.y =
-        robot_state.manipulator_state().velocity_of_hand_in_vision().angular().y();
-    manipulator_state.velocity_of_hand_in_vision.angular.z =
-        robot_state.manipulator_state().velocity_of_hand_in_vision().angular().z();
+    const auto& velocity_of_hand_in_vision = robot_state.manipulator_state().velocity_of_hand_in_vision();
+    manipulator_state.velocity_of_hand_in_vision.linear.x = velocity_of_hand_in_vision.linear().x();
+    manipulator_state.velocity_of_hand_in_vision.linear.y = velocity_of_hand_in_vision.linear().y();
+    manipulator_state.velocity_of_hand_in_vision.linear.z = velocity_of_hand_in_vision.linear().z();
+    manipulator_state.velocity_of_hand_in_vision.angular.x = velocity_of_hand_in_vision.angular().x();
+    manipulator_state.velocity_of_hand_in_vision.angular.y = velocity_of_hand_in_vision.angular().y();
+    manipulator_state.velocity_of_hand_in_vision.angular.z = velocity_of_hand_in_vision.angular().z();
     manipulator_state.velocity_of_hand_in_vision_is_set =
         robot_state.manipulator_state().has_velocity_of_hand_in_vision();
 
-    manipulator_state.velocity_of_hand_in_odom.linear.x =
-        robot_state.manipulator_state().velocity_of_hand_in_odom().linear().x();
-    manipulator_state.velocity_of_hand_in_odom.linear.y =
-        robot_state.manipulator_state().velocity_of_hand_in_odom().linear().y();
-    manipulator_state.velocity_of_hand_in_odom.linear.z =
-        robot_state.manipulator_state().velocity_of_hand_in_odom().linear().z();
-    manipulator_state.velocity_of_hand_in_odom.angular.x =
-        robot_state.manipulator_state().velocity_of_hand_in_odom().angular().x();
-    manipulator_state.velocity_of_hand_in_odom.angular.y =
-        robot_state.manipulator_state().velocity_of_hand_in_odom().angular().y();
-    manipulator_state.velocity_of_hand_in_odom.angular.z =
-        robot_state.manipulator_state().velocity_of_hand_in_odom().angular().z();
+    const auto& velocity_of_hand_in_odom = robot_state.manipulator_state().velocity_of_hand_in_odom();
+    manipulator_state.velocity_of_hand_in_odom.linear.x = velocity_of_hand_in_odom.linear().x();
+    manipulator_state.velocity_of_hand_in_odom.linear.y = velocity_of_hand_in_odom.linear().y();
+    manipulator_state.velocity_of_hand_in_odom.linear.z = velocity_of_hand_in_odom.linear().z();
+    manipulator_state.velocity_of_hand_in_odom.angular.x = velocity_of_hand_in_odom.angular().x();
+    manipulator_state.velocity_of_hand_in_odom.angular.y = velocity_of_hand_in_odom.angular().y();
+    manipulator_state.velocity_of_hand_in_odom.angular.z = velocity_of_hand_in_odom.angular().z();
     manipulator_state.velocity_of_hand_in_odom_is_set = robot_state.manipulator_state().has_velocity_of_hand_in_odom();
 
     manipulator_state.carry_state.value = robot_state.manipulator_state().carry_state();
@@ -287,7 +276,7 @@ std::optional<bosdyn_msgs::msg::ManipulatorState> GetManipulatorState(const ::bo
   }
   return {};
 }
-std::optional<geometry_msgs::msg::Vector3Stamped> GetEndEffectorForce(const ::bosdyn::api::RobotState& robot_state,
+std::optional<geometry_msgs::msg::Vector3Stamped> getEndEffectorForce(const ::bosdyn::api::RobotState& robot_state,
                                                                       const google::protobuf::Duration& clock_skew,
                                                                       const std::string& prefix) {
   if (robot_state.has_manipulator_state()) {
@@ -302,7 +291,7 @@ std::optional<geometry_msgs::msg::Vector3Stamped> GetEndEffectorForce(const ::bo
   }
   return {};
 }
-std::optional<spot_msgs::msg::BehaviorFaultState> GetBehaviorFaultState(const ::bosdyn::api::RobotState& robot_state,
+std::optional<spot_msgs::msg::BehaviorFaultState> getBehaviorFaultState(const ::bosdyn::api::RobotState& robot_state,
                                                                         const google::protobuf::Duration& clock_skew) {
   if (robot_state.has_behavior_fault_state()) {
     spot_msgs::msg::BehaviorFaultState behavior_fault_msgs;
