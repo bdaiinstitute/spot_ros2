@@ -24,6 +24,7 @@ import rclpy
 from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.power_pb2 import PowerCommandRequest, PowerCommandResponse, PowerCommandStatus
 from bosdyn.api.robot_command_pb2 import RobotCommandResponse
+from bosdyn.api.robot_state_pb2 import PowerState
 
 import spot_wrapper.testing
 from spot_driver.spot_ros2 import SpotROS
@@ -47,7 +48,14 @@ class simple_spot(MockSpot):
         Dummy implementation of the PowerCommand command.
         """
         response = PowerCommandResponse()
-        response.status = PowerCommandStatus.STATUS_SUCCESS
+        if request.request == PowerCommandRequest.Request.REQUEST_ON_MOTORS:
+            self.robot_state.power_state.motor_power_state = PowerState.MotorPowerState.MOTOR_POWER_STATE_ON
+            response.status = PowerCommandStatus.STATUS_SUCCESS
+        elif request.request == PowerCommandRequest.Request.REQUEST_OFF_MOTORS:
+            self.robot_state.power_state.motor_power_state = PowerState.MotorPowerState.MOTOR_POWER_STATE_OFF
+            response.status = PowerCommandStatus.STATUS_SUCCESS
+        else:
+            response.status = PowerCommandStatus.STATUS_INTERNAL_ERROR
         return response
 
 
