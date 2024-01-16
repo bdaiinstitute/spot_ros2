@@ -30,6 +30,8 @@ def test_rollover(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     future = client.call_async(Trigger.Request())
 
     # Mock GRPC sever.
+
+    # Serve rollover command.
     call = simple_spot.api.RobotCommand.serve(timeout=2.0)
     assert call is not None
     response = RobotCommandResponse()

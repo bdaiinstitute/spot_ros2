@@ -30,6 +30,8 @@ def test_spot_power_off(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     future = client.call_async(Trigger.Request())
 
     # Mock GRPC sever.
+
+    # Serve power off command.
     call = simple_spot.api.RobotCommand.serve(timeout=2.0)
     assert call is not None
     assert call.request.command.HasField("full_body_command")
