@@ -1,5 +1,9 @@
 # Copyright (c) 2023 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
 
+"""
+Test for the Dock command.
+"""
+
 # We disable Pylint warnings for all Protobuf files which contain objects with
 # dynamically added member attributes.
 # pylint: disable=no-member
