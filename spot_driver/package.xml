@@ -3,7 +3,7 @@
 <package format="3">
   <name>spot_driver</name>
   <version>0.0.0</version>
-  <description>This is a ROS2 package for Boston Dynamics' Spot./description>
+  <description>This is a ROS2 package for Boston Dynamics' Spot.</description>
   <maintainer email="maximillian.kirsch@alumni.fh-aachen.de">max</maintainer>
   <license>MIT</license>
 
