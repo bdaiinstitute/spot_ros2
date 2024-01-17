@@ -21,7 +21,7 @@ from spot_wrapper.testing.fixtures import SpotFixture
 @pytest.mark.usefixtures("spot_node")
 def test_execute_dance(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
-    This integration test checks if the "execute_dancet" service infrastructure is
+    This integration test checks if the "execute_dance" service infrastructure is
     setup correctly.
 
     Args:
