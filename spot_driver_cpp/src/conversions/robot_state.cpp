@@ -3,6 +3,7 @@
 #include <bosdyn/math/frame_helpers.h>
 #include <bosdyn/math/proto_math.h>
 #include <builtin_interfaces/msg/duration.hpp>
+#include <optional>
 #include <spot_driver_cpp/api/time_sync_api.hpp>
 #include <spot_driver_cpp/conversions/geometry.hpp>
 #include <spot_driver_cpp/conversions/robot_state.hpp>
@@ -96,7 +97,7 @@ std::optional<sensor_msgs::msg::JointState> getJointStates(const ::bosdyn::api::
 
     return joint_states;
   }
-  return {};
+  return std::nullopt;
 }
 
 std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& robot_state,
@@ -130,7 +131,7 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& r
     return tf_msg;
   }
 
-  return {};
+  return std::nullopt;
 }
 
 std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
@@ -150,7 +151,7 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
 
     return odom_twist_msg;
   }
-  return {};
+  return std::nullopt;
 }
 
 std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& robot_state,
@@ -183,7 +184,7 @@ std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& 
     odom_msg.twist = getOdomTwist(robot_state, clock_skew).value().twist;
     return odom_msg;
   }
-  return {};
+  return std::nullopt;
 }
 
 std::optional<spot_msgs::msg::PowerState> getPowerState(const ::bosdyn::api::RobotState& robot_state,
@@ -203,7 +204,7 @@ std::optional<spot_msgs::msg::PowerState> getPowerState(const ::bosdyn::api::Rob
     return power_state;
   }
 
-  return {};
+  return std::nullopt;
 }
 
 std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosdyn::api::RobotState& robot_state,
@@ -234,7 +235,7 @@ std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosd
     }
     return system_fault_state;
   }
-  return {};
+  return std::nullopt;
 }
 std::optional<bosdyn_msgs::msg::ManipulatorState> getManipulatorState(const ::bosdyn::api::RobotState& robot_state) {
   if (robot_state.has_manipulator_state()) {
@@ -274,7 +275,7 @@ std::optional<bosdyn_msgs::msg::ManipulatorState> getManipulatorState(const ::bo
     manipulator_state.carry_state.value = robot_state.manipulator_state().carry_state();
     return manipulator_state;
   }
-  return {};
+  return std::nullopt;
 }
 std::optional<geometry_msgs::msg::Vector3Stamped> getEndEffectorForce(const ::bosdyn::api::RobotState& robot_state,
                                                                       const google::protobuf::Duration& clock_skew,
@@ -289,7 +290,7 @@ std::optional<geometry_msgs::msg::Vector3Stamped> getEndEffectorForce(const ::bo
 
     return force;
   }
-  return {};
+  return std::nullopt;
 }
 std::optional<spot_msgs::msg::BehaviorFaultState> getBehaviorFaultState(const ::bosdyn::api::RobotState& robot_state,
                                                                         const google::protobuf::Duration& clock_skew) {
@@ -306,7 +307,7 @@ std::optional<spot_msgs::msg::BehaviorFaultState> getBehaviorFaultState(const ::
     }
     return behavior_fault_msgs;
   }
-  return {};
+  return std::nullopt;
 }
 
 }  // namespace spot_ros2
