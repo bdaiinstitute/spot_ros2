@@ -4,12 +4,14 @@
 
 #include <bosdyn/api/robot_state.pb.h>
 #include <google/protobuf/duration.pb.h>
+#include <google/protobuf/timestamp.pb.h>
 #include <memory>
 #include <spot_driver_cpp/conversions/robot_state.hpp>
 #include <spot_msgs/msg/detail/battery_state__struct.hpp>
 #include <spot_msgs/msg/detail/battery_state_array__struct.hpp>
 #include <spot_msgs/msg/detail/wi_fi_state__struct.hpp>
 #include "gmock/gmock-matchers.h"
+#include "gmock/gmock-more-matchers.h"
 
 namespace {
 ::bosdyn::api::BatteryState createBatteryState(const std::string& id, uint32_t percentage, uint32_t current,
@@ -61,16 +63,6 @@ TEST(RobotStateConversions, TestGetBatteryStates) {
   EXPECT_THAT(first_battery_state.temperatures.at(0), testing::DoubleEq(80.0));
 }
 
-// TEST(RobotStateConversions, TestGetJointStatesHasKinematicState)
-// {
-
-// }
-
-// TEST(RobotStateConversions, TestGetJointStatesNoKinematicState)
-// {
-
-// }
-
 TEST(RobotStateConversions, TestGetWifiState) {
   // GIVEN a RobotState which contains a valid CommsState field
   ::bosdyn::api::RobotState robot_state;
@@ -85,6 +77,94 @@ TEST(RobotStateConversions, TestGetWifiState) {
   EXPECT_THAT(out.current_mode, testing::Eq(spot_msgs::msg::WiFiState::MODE_CLIENT));
   EXPECT_THAT(out.essid, testing::StrEq("some_value"));
 }
+
+TEST(RobotStateConversions, TestGetFootState) {}
+
+TEST(RobotStateConversions, TestGetEStopStates) {}
+
+TEST(RobotStateConversions, TestGetJointStates) {}
+
+TEST(RobotStateConversions, TestGetTf) {}
+
+TEST(RobotStateConversions, TestGetOdomTwist) {}
+
+TEST(RobotStateConversions, TestGetOdom) {}
+
+TEST(RobotStateConversions, TestGetPowerState) {}
+
+TEST(RobotStateConversions, TestGetSystemFaultState) {}
+
+TEST(RobotStateConversions, TestGetManipulatorState) {}
+
+TEST(RobotStateConversions, TestGetEndEffectorForce) {}
+
+TEST(RobotStateConversions, TestGetBehaviorFaultState) {
+  // GIVEN nominal timestamps and nonzero clock skew
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(10);
+  timestamp.set_nanos(0);
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // GIVEN a RobotState containing two faults
+  ::bosdyn::api::RobotState robot_state;
+  auto fault_state_first = robot_state.mutable_behavior_fault_state()->add_faults();
+  fault_state_first->set_behavior_fault_id(11);
+  fault_state_first->set_status(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_CLEARABLE);
+  fault_state_first->set_cause(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_HARDWARE);
+  fault_state_first->mutable_onset_timestamp()->CopyFrom(timestamp);
+  auto fault_state_second = robot_state.mutable_behavior_fault_state()->add_faults();
+  fault_state_second->set_behavior_fault_id(12);
+  fault_state_second->set_status(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_UNCLEARABLE);
+  fault_state_second->set_cause(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_FALL);
+  fault_state_second->mutable_onset_timestamp()->CopyFrom(timestamp);
+
+  const auto out = getBehaviorFaultState(robot_state, clock_skew);
+  // THEN the output optional contains a message
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  // THEN the message contains two faults
+  ASSERT_THAT(out->faults, testing::SizeIs(2));
+
+  // THEN the first fault matches the first one added to the RobotState, and the clock skew is applied correctly
+  const auto first_fault = out->faults.at(0);
+  EXPECT_THAT(first_fault.behavior_fault_id, testing::Eq(11));
+  EXPECT_THAT(first_fault.status,
+              testing::Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_CLEARABLE));
+  EXPECT_THAT(first_fault.cause, testing::Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_HARDWARE));
+  EXPECT_THAT(first_fault.header.stamp.sec, testing::Eq(9));
+  EXPECT_THAT(first_fault.header.stamp.nanosec, testing::Eq(0));
+
+  // THEN the second fault matches the second one added to the RobotState, and the clock skew is applied correctly
+  const auto second_fault = out->faults.at(1);
+  EXPECT_THAT(second_fault.behavior_fault_id, testing::Eq(12));
+  EXPECT_THAT(second_fault.status,
+              testing::Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_UNCLEARABLE));
+  EXPECT_THAT(second_fault.cause, testing::Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_FALL));
+  EXPECT_THAT(second_fault.header.stamp.sec, testing::Eq(9));
+  EXPECT_THAT(second_fault.header.stamp.nanosec, testing::Eq(0));
+}
+
+TEST(RobotStateConversions, TestGetBehaviorFaultStateNoFaults) {
+  // GIVEN a robot state that does not contain any behavior fault states
+  google::protobuf::Duration clock_skew;
+  ::bosdyn::api::RobotState robot_state;
+
+  // WHEN we create a BehaviorFaultState ROS message from the robot state
+  const auto out = getBehaviorFaultState(robot_state, clock_skew);
+
+  // THEN the optional which wraps the output ROS message is set to nullopt
+  EXPECT_THAT(out.has_value(), testing::IsFalse());
+}
+
+// TEST(RobotStateConversions, TestGetJointStatesHasKinematicState)
+// {
+
+// }
+
+// TEST(RobotStateConversions, TestGetJointStatesNoKinematicState)
+// {
+
+// }
 
 // TEST(RobotStateConversions, TestGetTf_has_kinematic_state) {}
 // TEST(RobotStateConversions, TestGetTf_no_kinematic_state) {}
