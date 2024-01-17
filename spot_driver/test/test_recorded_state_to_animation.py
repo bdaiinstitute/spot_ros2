@@ -8,8 +8,6 @@ Test for the Recorded State tp Animation command.
 # dynamically added member attributes.
 # pylint: disable=no-member
 
-import typing
-
 import pytest
 from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope
@@ -81,7 +79,7 @@ def test_recorded_state_to_animation(ros: ROSAwareScope, simple_spot: SpotFixtur
     message = sequence.SerializeToString()
     responses = [
         DownloadRobotStateLogResponse(
-            status=DownloadRobotStateLogResponse.Status.STATUS_NO_RECORDED_INFORMATION,
+            status=DownloadRobotStateLogResponse.Status.STATUS_OK,
             chunk=DataChunk(total_size=len(message), data=message),
         )
     ]
