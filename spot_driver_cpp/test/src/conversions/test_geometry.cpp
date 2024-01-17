@@ -15,7 +15,7 @@ bool areRotationsEqual(const geometry_msgs::msg::Quaternion ros, const ::bosdyn:
 }
 
 bool areTransformsEqual(const geometry_msgs::msg::Transform tf1, const ::bosdyn::api::SE3Pose tf2) {
-  return areRotationsEqual(tf1.rotation, tf2.rotation()) && arePositionsEqual(tf1.position, tf2.position());
+  return areRotationsEqual(tf1.rotation, tf2.rotation()) && arePositionsEqual(tf1.translation, tf2.position());
 }
 }  // namespace
 
@@ -26,10 +26,10 @@ TEST(GeometryConversion, toRosTranslation) {
   const auto position = ::bosdyn::api::CreateVec3(1, 2, 3);
 
   // WHEN converted to a ROS position msg
-  const auto ros_position = toRosTranslation(q);
+  const auto ros_position = toRosTranslation(position);
 
   // THEN expect them to be equal
-  EXPECT_TRUE(areTranslationsEqual(ros_position, position));
+  EXPECT_TRUE(arePositionsEqual(ros_position, position));
 }
 
 TEST(GeometryConversion, toRosRotation) {
@@ -52,7 +52,7 @@ TEST(GeometryConversion, toTransformStampedTest) {
   const auto tf_time = builtin_interfaces::build<::builtin_interfaces::msg::Time>().sec(10).nanosec(11);
 
   // WHEN generating a ROS TransformStamped msg
-  const auto msg = toTransformStamped(old_transform, parent_frame_name, child_frame_name, tf_time);
+  const auto msg = toTransformStamped(transform, parent_frame_name, child_frame_name, tf_time);
 
   // THEN expect the correct values
   EXPECT_EQ(msg.header.frame_id, parent_frame_name);

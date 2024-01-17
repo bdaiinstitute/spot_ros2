@@ -71,3 +71,23 @@ target_include_directories(test_spot_robot_state_publisher_node
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(test_spot_robot_state_publisher_node spot_robot_state_publisher)
+
+ament_add_gmock(test_conversions_geometry
+  src/conversions/test_geometry.cpp
+)
+target_include_directories(test_conversions_geometry
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(test_conversions_geometry spot_api)
+
+ament_add_gmock(test_conversions_robot_state
+  src/conversions/test_robot_state.cpp
+)
+target_include_directories(test_conversions_robot_state
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(test_conversions_robot_state spot_api)
