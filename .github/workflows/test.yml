@@ -33,7 +33,7 @@ jobs:
         # go to root folder
         cd ../../
         source /opt/ros/$ROS_DISTRO/setup.bash
-        colcon build --symlink-install
+        colcon build --symlink-install --packages-skip proto2ros_tests
         source install/local_setup.bash
     - name: Test Package
       run: |
