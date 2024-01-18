@@ -7,17 +7,20 @@
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/timestamp.pb.h>
 #include <bosdyn_msgs/msg/manipulator_state_carry_state.hpp>
+#include <builtin_interfaces/msg/duration.hpp>
+#include <builtin_interfaces/msg/time.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
+#include <iterator>
 #include <memory>
 #include <spot_driver_cpp/conversions/robot_state.hpp>
 #include <spot_msgs/msg/battery_state.hpp>
 #include <spot_msgs/msg/battery_state_array.hpp>
+#include <spot_msgs/msg/system_fault.hpp>
 #include <spot_msgs/msg/wi_fi_state.hpp>
 #include "gmock/gmock-matchers.h"
 #include "gmock/gmock-more-matchers.h"
 
-namespace {
 ::bosdyn::api::BatteryState createBatteryState(const std::string& id, uint32_t percentage, uint32_t current,
                                                uint32_t voltage, double temperature,
                                                ::bosdyn::api::BatteryState_Status status) {
@@ -41,7 +44,22 @@ namespace {
 
   return out;
 }
-}  // namespace
+
+void appendSystemFault(::bosdyn::api::SystemFaultState* mutable_fault_state,
+                       const google::protobuf::Timestamp& onset_timestamp, const google::protobuf::Duration& duration,
+                       const std::string& name, const int32_t code, const uint64_t uid,
+                       const std::string& error_message, const std::vector<std::string>& attributes,
+                       const ::bosdyn::api::SystemFault_Severity& severity) {
+  auto fault = mutable_fault_state->add_faults();
+  fault->mutable_onset_timestamp()->CopyFrom(onset_timestamp);
+  fault->mutable_duration()->CopyFrom(duration);
+  fault->set_name(name);
+  fault->set_code(code);
+  fault->set_uid(uid);
+  fault->set_error_message(error_message);
+  *fault->mutable_attributes() = {attributes.cbegin(), attributes.cend()};
+  fault->set_severity(severity);
+}
 
 namespace spot_ros2::conversions::test {
 
@@ -96,7 +114,99 @@ TEST(RobotStateConversions, TestGetOdom) {}
 
 TEST(RobotStateConversions, TestGetPowerState) {}
 
-TEST(RobotStateConversions, TestGetSystemFaultState) {}
+TEST(RobotStateConversions, TestGetSystemFaultState) {
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // GIVEN the robot state contains two system faults, which occur at different timestamps and contain different data
+  ::bosdyn::api::RobotState robot_state;
+  google::protobuf::Timestamp timestamp1;
+  timestamp1.set_seconds(60);
+  google::protobuf::Duration duration1;
+  duration1.set_seconds(15);
+  duration1.set_nanos(0);
+  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp1, duration1, "fault1", 19, 3, "battery is low",
+                    {"robot", "battery"}, ::bosdyn::api::SystemFault_Severity::SystemFault_Severity_SEVERITY_WARN);
+
+  google::protobuf::Timestamp timestamp2;
+  timestamp2.set_seconds(75);
+  google::protobuf::Duration duration2;
+  duration2.set_seconds(0);
+  duration2.set_nanos(0);
+  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp2, duration2, "fault2", 55, 9,
+                    "robot has departed from this plane of reality", {"robot"},
+                    ::bosdyn::api::SystemFault_Severity::SystemFault_Severity_SEVERITY_CRITICAL);
+
+  // WHEN we create a SystemFaultState ROS message from the Robot State
+  auto out = getSystemFaultState(robot_state, clock_skew);
+
+  // THEN this succeeds
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+
+  // THEN the output message contains two faults
+  // THEN each of the output faults contains fields that match the input
+  // THEN the clock skew is correctly applied
+  // TODO(schornakj): revise gross matcher so it gives more useful info on test failure
+  using SystemFault = spot_msgs::msg::SystemFault;
+  EXPECT_THAT(
+      out->faults,
+      testing::UnorderedElementsAre(
+          testing::AllOf(
+              testing::Field(
+                  "header", &SystemFault::header,
+                  testing::AllOf(testing::Field(
+                      "stamp", &std_msgs::msg::Header::stamp,
+                      testing::AllOf(
+                          testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(59)),
+                          testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0)))))),
+              testing::Field(
+                  "duration", &SystemFault::duration,
+                  testing::AllOf(
+                      testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(15)),
+                      testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0)))),
+              testing::Field("name", &SystemFault::name, testing::StrEq("fault1")),
+              testing::Field("code", &SystemFault::code, testing::Eq(19)),
+              testing::Field("uid", &SystemFault::uid, testing::Eq(3)),
+              testing::Field("error_message", &SystemFault::error_message, testing::StrEq("battery is low")),
+              testing::Field("attributes", &SystemFault::attributes,
+                             testing::UnorderedElementsAre(testing::StrEq("robot"), testing::StrEq("battery")))),
+          testing::AllOf(
+              testing::Field(
+                  "header", &SystemFault::header,
+                  testing::AllOf(testing::Field(
+                      "stamp", &std_msgs::msg::Header::stamp,
+                      testing::AllOf(
+                          testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(74)),
+                          testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0)))))),
+              testing::Field(
+                  "duration", &SystemFault::duration,
+                  testing::AllOf(
+                      testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(0)),
+                      testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0)))),
+              testing::Field("name", &SystemFault::name, testing::StrEq("fault2")),
+              testing::Field("code", &SystemFault::code, testing::Eq(55)),
+              testing::Field("uid", &SystemFault::uid, testing::Eq(9)),
+              testing::Field("error_message", &SystemFault::error_message,
+                             testing::StrEq("robot has departed from this plane of reality")),
+              testing::Field("attributes", &SystemFault::attributes,
+                             testing::UnorderedElementsAre(testing::StrEq("robot"))))));
+}
+
+TEST(RobotStateConversions, TestGetSystemFaultStateNoFault) {
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // GIVEN a RobotState that does not contain any system faults
+  ::bosdyn::api::RobotState robot_state;
+
+  // WHEN we create a SystemFaultState ROS message from the Robot State
+  auto out = getSystemFaultState(robot_state, clock_skew);
+
+  // THEN no ROS message is output
+  EXPECT_THAT(out.has_value(), testing::IsFalse());
+}
 
 TEST(RobotStateConversions, TestGetManipulatorState) {
   // GIVEN a RobotState which has all manipulator state fields populated

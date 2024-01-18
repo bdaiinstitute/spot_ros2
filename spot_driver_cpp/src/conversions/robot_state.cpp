@@ -209,7 +209,6 @@ std::optional<spot_msgs::msg::PowerState> getPowerState(const ::bosdyn::api::Rob
 std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosdyn::api::RobotState& robot_state,
                                                                     const google::protobuf::Duration& clock_skew) {
   if (robot_state.has_system_fault_state()) {
-    spot_msgs::msg::SystemFaultState system_fault_state;
     const auto create_fault_message = [&clock_skew](const ::bosdyn::api::SystemFault& fault) {
       spot_msgs::msg::SystemFault fault_msg;
       fault_msg.name = fault.name();
@@ -226,6 +225,8 @@ std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosd
       fault_msg.severity = fault.severity();
       return fault_msg;
     };
+
+    spot_msgs::msg::SystemFaultState system_fault_state;
     for (const auto& fault : robot_state.system_fault_state().faults()) {
       system_fault_state.faults.push_back(create_fault_message(fault));
     }
