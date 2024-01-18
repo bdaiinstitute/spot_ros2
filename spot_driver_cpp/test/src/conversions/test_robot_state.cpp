@@ -2,6 +2,7 @@
 
 #include <gmock/gmock.h>
 
+#include <bosdyn/api/geometry.pb.h>
 #include <bosdyn/api/robot_state.pb.h>
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/timestamp.pb.h>
@@ -96,7 +97,49 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {}
 
 TEST(RobotStateConversions, TestGetManipulatorState) {}
 
-TEST(RobotStateConversions, TestGetEndEffectorForce) {}
+TEST(RobotStateConversions, TestGetEndEffectorForce) {
+  // GIVEN nominal timestamps and nonzero clock skew
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(10);
+  timestamp.set_nanos(0);
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+  const auto prefix = "prefix/";
+
+  // GIVEN a RobotState containing the estimated end effector force
+  ::bosdyn::api::RobotState robot_state;
+  ::bosdyn::api::Vec3 force;
+  force.set_x(1.0);
+  force.set_y(2.0);
+  force.set_z(3.0);
+  robot_state.mutable_manipulator_state()->mutable_estimated_end_effector_force_in_hand()->CopyFrom(force);
+  robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp()->CopyFrom(timestamp);
+
+  // WHEN we create a Vector3Stamped ROS message to represent the estimated end effector force
+  const auto out = getEndEffectorForce(robot_state, clock_skew, prefix);
+
+  // THEN the fields match
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  EXPECT_THAT(out->header.frame_id, testing::StrEq("prefix/hand"));
+  EXPECT_THAT(out->header.stamp.sec, testing::Eq(9));
+  EXPECT_THAT(out->vector.x, testing::Eq(force.x()));
+  EXPECT_THAT(out->vector.y, testing::Eq(force.y()));
+  EXPECT_THAT(out->vector.z, testing::Eq(force.z()));
+}
+
+TEST(RobotStateConversions, TestGetEndEffectorForceNoEndEffectorForce) {
+  // GIVEN an empty RobotState
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+  const auto prefix = "prefix/";
+  ::bosdyn::api::RobotState robot_state;
+
+  // WHEN we call getEndEffectorForce()
+  const auto out = getEndEffectorForce(robot_state, clock_skew, prefix);
+
+  // THEN the conversion does not succeed
+  EXPECT_THAT(out.has_value(), testing::IsFalse());
+}
 
 TEST(RobotStateConversions, TestGetBehaviorFaultState) {
   // GIVEN nominal timestamps and nonzero clock skew
@@ -119,12 +162,13 @@ TEST(RobotStateConversions, TestGetBehaviorFaultState) {
   fault_state_second->set_cause(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_FALL);
   fault_state_second->mutable_onset_timestamp()->CopyFrom(timestamp);
 
+  // WHEN we create a BehaviorFaultState ROS message from the robot state
   const auto out = getBehaviorFaultState(robot_state, clock_skew);
+
   // THEN the output optional contains a message
   ASSERT_THAT(out.has_value(), testing::IsTrue());
   // THEN the message contains two faults
   ASSERT_THAT(out->faults, testing::SizeIs(2));
-
   // THEN the first fault matches the first one added to the RobotState, and the clock skew is applied correctly
   const auto first_fault = out->faults.at(0);
   EXPECT_THAT(first_fault.behavior_fault_id, testing::Eq(11));
@@ -133,7 +177,6 @@ TEST(RobotStateConversions, TestGetBehaviorFaultState) {
   EXPECT_THAT(first_fault.cause, testing::Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_HARDWARE));
   EXPECT_THAT(first_fault.header.stamp.sec, testing::Eq(9));
   EXPECT_THAT(first_fault.header.stamp.nanosec, testing::Eq(0));
-
   // THEN the second fault matches the second one added to the RobotState, and the clock skew is applied correctly
   const auto second_fault = out->faults.at(1);
   EXPECT_THAT(second_fault.behavior_fault_id, testing::Eq(12));
