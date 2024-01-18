@@ -13,6 +13,7 @@ from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.data_chunk_pb2 import DataChunk
 from bosdyn.api.geometry_pb2 import Quaternion, SE3Pose, Vec3
+from bosdyn.api.header_pb2 import CommonError, ResponseHeader
 from bosdyn.api.spot.choreography_sequence_pb2 import (
     ArmJointAngles,
     ChoreographyStateLog,
@@ -48,6 +49,13 @@ def test_recorded_state_to_animation(ros: ROSAwareScope, simple_spot: SpotFixtur
 
     # Mock GRPC sever.
 
+    # We create a ChoreographyStateLog, which represents a sequence of
+    # positions (frames) assumed by the robot over time.
+    # We serialize it and return it in the response.
+    # The response is a stream, and we could chunk the serialized log
+    # into multiple payloads. For simplicity, we return a stream with
+    # one single payload.
+
     sequence = ChoreographyStateLog(
         key_frames=[
             LoggedStateKeyFrame(
@@ -79,6 +87,7 @@ def test_recorded_state_to_animation(ros: ROSAwareScope, simple_spot: SpotFixtur
     message = sequence.SerializeToString()
     responses = [
         DownloadRobotStateLogResponse(
+            header=ResponseHeader(error=CommonError(code=CommonError.Code.CODE_OK, message="Code OK")),
             status=DownloadRobotStateLogResponse.Status.STATUS_OK,
             chunk=DataChunk(total_size=len(message), data=message),
         )
