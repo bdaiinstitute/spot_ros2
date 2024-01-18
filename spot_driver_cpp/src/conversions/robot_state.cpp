@@ -138,7 +138,6 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
     const ::bosdyn::api::RobotState& robot_state, const google::protobuf::Duration& clock_skew) {
   if (robot_state.has_kinematic_state()) {
     geometry_msgs::msg::TwistWithCovarianceStamped odom_twist_msg;
-
     odom_twist_msg.header.stamp =
         spot_ros2::applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
     const auto& body_velocity = robot_state.kinematic_state().velocity_of_body_in_odom();
@@ -159,10 +158,9 @@ std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& 
                                                bool is_using_vision) {
   if (robot_state.has_kinematic_state()) {
     nav_msgs::msg::Odometry odom_msg;
-    ::bosdyn::api::SE3Pose tf_body_pose;
-    geometry_msgs::msg::PoseWithCovariance pose_odom_msg;
-
     odom_msg.header.stamp = applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
+
+    ::bosdyn::api::SE3Pose tf_body_pose;
     if (is_using_vision) {
       odom_msg.header.frame_id = prefix + "vision";
       ::bosdyn::api::GetWorldTformBody(robot_state.kinematic_state().transforms_snapshot(), &tf_body_pose);
@@ -172,6 +170,7 @@ std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& 
     }
     odom_msg.child_frame_id = prefix + "body";
 
+    geometry_msgs::msg::PoseWithCovariance pose_odom_msg;
     pose_odom_msg.pose.position.x = tf_body_pose.position().x();
     pose_odom_msg.pose.position.y = tf_body_pose.position().y();
     pose_odom_msg.pose.position.z = tf_body_pose.position().z();
