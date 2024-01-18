@@ -103,7 +103,57 @@ TEST(RobotStateConversions, TestGetWifiState) {
 
 TEST(RobotStateConversions, TestGetFootState) {}
 
-TEST(RobotStateConversions, TestGetEStopStates) {}
+TEST(RobotStateConversions, TestGetEStopStates) {
+  // GIVEN a RobotState that contains two different EStopStates
+  ::bosdyn::api::RobotState robot_state;
+
+  ::bosdyn::api::EStopState estop_state_first;
+  estop_state_first.mutable_timestamp()->set_seconds(13);
+  estop_state_first.mutable_timestamp()->set_nanos(0);
+  estop_state_first.set_name("estop_name");
+  estop_state_first.set_type(::bosdyn::api::EStopState_Type::EStopState_Type_TYPE_HARDWARE);
+  estop_state_first.set_state(::bosdyn::api::EStopState_State::EStopState_State_STATE_ESTOPPED);
+  estop_state_first.set_state_description("some_text");
+  robot_state.mutable_estop_states()->Add(std::move(estop_state_first));
+
+  ::bosdyn::api::EStopState estop_state_second;
+  estop_state_second.mutable_timestamp()->set_seconds(12);
+  estop_state_second.mutable_timestamp()->set_nanos(0);
+  estop_state_second.set_name("second_estop_name");
+  estop_state_second.set_type(::bosdyn::api::EStopState_Type::EStopState_Type_TYPE_SOFTWARE);
+  estop_state_second.set_state(::bosdyn::api::EStopState_State::EStopState_State_STATE_NOT_ESTOPPED);
+  estop_state_second.set_state_description("other_text");
+  robot_state.mutable_estop_states()->Add(std::move(estop_state_second));
+
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // WHEN we create an EStopStatesArray ROS message from the RobotState
+  const auto out = getEstopStates(robot_state, clock_skew);
+
+  // THEN the output message contains both estop states
+  ASSERT_THAT(out.estop_states, testing::SizeIs(2));
+
+  // THEN each output estop state contains equivalent data to its corresponding input
+  // TODO(schornakj): validate timestamps too
+  EXPECT_THAT(
+      out.estop_states,
+      testing::Contains(testing::AllOf(
+          testing::Field("name", &spot_msgs::msg::EStopState::name, testing::StrEq("estop_name")),
+          testing::Field("type", &spot_msgs::msg::EStopState::type, spot_msgs::msg::EStopState::TYPE_HARDWARE),
+          testing::Field("state", &spot_msgs::msg::EStopState::state, spot_msgs::msg::EStopState::STATE_ESTOPPED),
+          testing::Field("state_description", &spot_msgs::msg::EStopState::state_description,
+                         testing::StrEq("some_text")))));
+  EXPECT_THAT(
+      out.estop_states,
+      testing::Contains(testing::AllOf(
+          testing::Field("name", &spot_msgs::msg::EStopState::name, testing::StrEq("second_estop_name")),
+          testing::Field("type", &spot_msgs::msg::EStopState::type, spot_msgs::msg::EStopState::TYPE_SOFTWARE),
+          testing::Field("state", &spot_msgs::msg::EStopState::state, spot_msgs::msg::EStopState::STATE_NOT_ESTOPPED),
+          testing::Field("state_description", &spot_msgs::msg::EStopState::state_description,
+                         testing::StrEq("other_text")))));
+}
 
 TEST(RobotStateConversions, TestGetJointStates) {}
 
