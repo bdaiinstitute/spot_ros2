@@ -1,7 +1,7 @@
 # Copyright (c) 2023 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
 
 """
-Test for the Recorded State tp Animation command.
+Test for the Recorded State to Animation command.
 """
 
 # We disable Pylint warnings for all Protobuf files which contain objects with
