@@ -138,6 +138,7 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
     const ::bosdyn::api::RobotState& robot_state, const google::protobuf::Duration& clock_skew) {
   if (robot_state.has_kinematic_state() && robot_state.kinematic_state().has_velocity_of_body_in_odom()) {
     geometry_msgs::msg::TwistWithCovarianceStamped odom_twist_msg;
+    // TODO(schornakj): need to add the frame ID here?
     odom_twist_msg.header.stamp =
         spot_ros2::applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
     const auto& body_velocity = robot_state.kinematic_state().velocity_of_body_in_odom();

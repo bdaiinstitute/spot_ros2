@@ -109,7 +109,61 @@ TEST(RobotStateConversions, TestGetJointStates) {}
 
 TEST(RobotStateConversions, TestGetTf) {}
 
-TEST(RobotStateConversions, TestGetOdomTwist) {}
+TEST(RobotStateConversions, TestGetOdomTwist) {
+  // GIVEN a RobotState that contains info about the velocity of the body in the odom frame
+  ::bosdyn::api::RobotState robot_state;
+  auto acquisition_timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
+  acquisition_timestamp->set_seconds(99);
+  acquisition_timestamp->set_nanos(0);
+  auto velocity_angular = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_angular();
+  velocity_angular->set_x(1.0);
+  velocity_angular->set_y(2.0);
+  velocity_angular->set_z(3.0);
+  auto velocity_linear = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_linear();
+  velocity_linear->set_x(4.0);
+  velocity_linear->set_y(5.0);
+  velocity_linear->set_z(6.0);
+
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // WHEN we create a TwistWithCovarianceStamped ROS message
+  const auto out = getOdomTwist(robot_state, clock_skew);
+
+  // THEN this succeeds
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+
+  // THEN the output twist matches the velocity in the robot state
+  EXPECT_THAT(out->twist.twist.angular.x, testing::DoubleEq(1.0));
+  EXPECT_THAT(out->twist.twist.angular.y, testing::DoubleEq(2.0));
+  EXPECT_THAT(out->twist.twist.angular.z, testing::DoubleEq(3.0));
+  EXPECT_THAT(out->twist.twist.linear.x, testing::DoubleEq(4.0));
+  EXPECT_THAT(out->twist.twist.linear.y, testing::DoubleEq(5.0));
+  EXPECT_THAT(out->twist.twist.linear.z, testing::DoubleEq(6.0));
+  EXPECT_THAT(out->header.stamp,
+              testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(98)),
+                             testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0))));
+}
+
+TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
+  // GIVEN a RobotState where there is some kinematic state info but no info about the velocity of the body in the odom
+  // frame
+  ::bosdyn::api::RobotState robot_state;
+  auto acquisition_timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
+  acquisition_timestamp->set_seconds(99);
+  acquisition_timestamp->set_nanos(0);
+
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // WHEN we attempt to create a TwistWithCovarianceStamped ROS message
+  const auto out = getOdomTwist(robot_state, clock_skew);
+
+  // THEN no message is output
+  ASSERT_THAT(out.has_value(), testing::IsFalse());
+}
 
 TEST(RobotStateConversions, TestGetOdom) {}
 
