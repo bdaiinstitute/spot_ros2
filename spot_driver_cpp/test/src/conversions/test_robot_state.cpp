@@ -16,6 +16,7 @@
 #include <spot_driver_cpp/conversions/robot_state.hpp>
 #include <spot_msgs/msg/battery_state.hpp>
 #include <spot_msgs/msg/battery_state_array.hpp>
+#include <spot_msgs/msg/power_state.hpp>
 #include <spot_msgs/msg/system_fault.hpp>
 #include <spot_msgs/msg/wi_fi_state.hpp>
 #include "gmock/gmock-matchers.h"
@@ -112,7 +113,61 @@ TEST(RobotStateConversions, TestGetOdomTwist) {}
 
 TEST(RobotStateConversions, TestGetOdom) {}
 
-TEST(RobotStateConversions, TestGetPowerState) {}
+TEST(RobotStateConversions, TestGetPowerState) {
+  // GIVEN a RobotState that contains a fully-populated power state
+  ::bosdyn::api::RobotState robot_state;
+  robot_state.mutable_power_state()->set_robot_power_state(
+      ::bosdyn::api::PowerState_RobotPowerState::PowerState_RobotPowerState_ROBOT_POWER_STATE_ON);
+  robot_state.mutable_power_state()->set_motor_power_state(
+      ::bosdyn::api::PowerState_MotorPowerState::PowerState_MotorPowerState_MOTOR_POWER_STATE_ON);
+  robot_state.mutable_power_state()->set_shore_power_state(
+      ::bosdyn::api::PowerState_ShorePowerState::PowerState_ShorePowerState_SHORE_POWER_STATE_ON);
+  robot_state.mutable_power_state()->set_payload_ports_power_state(
+      ::bosdyn::api::PowerState_PayloadPortsPowerState::PowerState_PayloadPortsPowerState_PAYLOAD_PORTS_POWER_STATE_ON);
+  robot_state.mutable_power_state()->set_wifi_radio_power_state(
+      ::bosdyn::api::PowerState_WifiRadioPowerState::PowerState_WifiRadioPowerState_WIFI_RADIO_POWER_STATE_ON);
+  robot_state.mutable_power_state()->mutable_locomotion_charge_percentage()->set_value(75.0);
+  google::protobuf::Duration estimated_runtime;
+  estimated_runtime.set_seconds(255);
+  estimated_runtime.set_nanos(0);
+  robot_state.mutable_power_state()->mutable_locomotion_estimated_runtime()->CopyFrom(estimated_runtime);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(60);
+  robot_state.mutable_power_state()->mutable_timestamp()->CopyFrom(timestamp);
+
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // WHEN we create a PowerState ROS message
+  const auto out = getPowerState(robot_state, clock_skew);
+
+  // THEN a message is output
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+
+  // THEN the fields in the output message match their corresponding inputs
+  EXPECT_THAT(out->motor_power_state, testing::Eq(spot_msgs::msg::PowerState::STATE_ON));
+  EXPECT_THAT(out->shore_power_state, testing::Eq(spot_msgs::msg::PowerState::STATE_ON_SHORE_POWER));
+  EXPECT_THAT(out->locomotion_charge_percentage, testing::DoubleEq(75.0));
+  EXPECT_THAT(out->locomotion_estimated_runtime,
+              testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(255)),
+                             testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0))));
+}
+
+TEST(RobotStateConversions, TestGetPowerStateNoPowerState) {
+  // GIVEN a RobotState that does not contain a power state
+  ::bosdyn::api::RobotState robot_state;
+
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // WHEN we create a PowerState ROS message
+  const auto out = getPowerState(robot_state, clock_skew);
+
+  // THEN no message is output
+  ASSERT_THAT(out.has_value(), testing::IsFalse());
+}
 
 TEST(RobotStateConversions, TestGetSystemFaultState) {
   // GIVEN some nominal clock skew
