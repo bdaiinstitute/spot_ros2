@@ -152,6 +152,9 @@ TEST(RobotStateConversions, TestGetPowerState) {
   EXPECT_THAT(out->locomotion_estimated_runtime,
               testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(255)),
                              testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0))));
+  EXPECT_THAT(out->header.stamp,
+              testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(59)),
+                             testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0))));
 }
 
 TEST(RobotStateConversions, TestGetPowerStateNoPowerState) {
