@@ -36,7 +36,7 @@ def test_get_choreography_status(ros: ROSAwareScope, simple_spot: SpotFixture) -
 
     # Mock GRPC sever.
 
-    # Serve "stop_recording_state" command.
+    # Serve "get_choreography_status" command.
     call = simple_spot.api.ChoreographyStatus.serve(timeout=2.0)
     assert call is not None
     response = ChoreographyStatusResponse()
