@@ -55,6 +55,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ChoreographyStopRecordingState.srv"
   "srv/GetChoreographyStatus.srv"
   "srv/ListGraph.srv"
+  "srv/ListCameras.srv"
   "srv/ListWorldObjects.srv"
   "srv/SetLocomotion.srv"
   "srv/SetVelocity.srv"

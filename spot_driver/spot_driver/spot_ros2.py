@@ -1452,17 +1452,20 @@ class SpotROS(Node):
     def handle_list_cameras(self, request: ListCameras.Request, response: ListCameras.Response) -> ListCameras.Response:
         """Ros service handler to list cameras on Spot CAM"""
         if self.spot_cam_wrapper is None:
+            response.names = []
             response.success = False
             response.message = "Spot CAM has not been initialized"
             return response
         
         try: 
             names = self.spot_cam_wrapper.media_log.list_cameras()
+            print(names)
             response.names = names
             response.success = True
             response.message = "Success"
             return response
         except Exception as e:
+            response.names = []
             response.success = False
             response.message = f"Error: {e}"
             return response

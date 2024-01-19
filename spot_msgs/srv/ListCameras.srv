@@ -1,4 +1,4 @@
 ---
-string[] names
+bosdyn_msgs/Camera[] response 
 bool success
-string mesesage
+string message
