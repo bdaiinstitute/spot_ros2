@@ -131,6 +131,7 @@ from spot_msgs.srv import (  # type: ignore
     ListGraph,
     ListSounds,
     ListWorldObjects,
+    ListCameras,
     LoadSound,
     PlaySound,
     SetGripperCameraParameters,
@@ -700,6 +701,12 @@ class SpotROS(Node):
             SetVolume,
             "set_volume",
             lambda request, response: self.service_wrapper("set_volume", self.handle_set_volume, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ListCameras,
+            "list_cameras",
+            lambda request, response: self.service_wrapper("list_cameras", self.handle_list_cameras, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -1434,6 +1441,24 @@ class SpotROS(Node):
 
         try:
             self.spot_cam_wrapper.audio.set_volume(request.volume)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+    
+    def handle_list_cameras(self, request: ListCameras.Request, response: ListCameras.Response) -> ListCameras.Response:
+        """Ros service handler to list cameras on Spot CAM"""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+        
+        try: 
+            names = self.spot_cam_wrapper.media_log.list_cameras()
+            response.names = names
             response.success = True
             response.message = "Success"
             return response
