@@ -13,7 +13,7 @@ from rclpy.node import Node
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
-import spot_driver.conversions as conv
+from bosdyn_msgs.conversions import convert
 from spot_msgs.action import RobotCommand  # type: ignore
 
 # Where we want the robot to walk to relative to itself
@@ -74,7 +74,7 @@ class WalkForward:
             frame_name=VISION_FRAME_NAME,  # use Boston Dynamics' frame conventions
         )
         action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(proto_goal, action_goal.command)
+        convert(proto_goal, action_goal.command)
         self._robot_command_client.send_goal_and_wait("walk_forward", action_goal)
         self._logger.info("Successfully walked forward")
 
