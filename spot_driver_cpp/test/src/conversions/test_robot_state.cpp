@@ -62,6 +62,23 @@ void appendSystemFault(::bosdyn::api::SystemFaultState* mutable_fault_state,
   fault->set_severity(severity);
 }
 
+void setFootState(::bosdyn::api::FootState* foot_state, const double x, const double y, const double z,
+                  const ::bosdyn::api::FootState_Contact contact) {
+  foot_state->mutable_foot_position_rt_body()->set_x(x);
+  foot_state->mutable_foot_position_rt_body()->set_y(y);
+  foot_state->mutable_foot_position_rt_body()->set_z(z);
+  foot_state->set_contact(contact);
+}
+
+void setJointState(::bosdyn::api::JointState* joint_state, const std::string& name, const double position,
+                   const double velocity, const double acceleration, const double load) {
+  *joint_state->mutable_name() = name;
+  joint_state->mutable_position()->set_value(position);
+  joint_state->mutable_velocity()->set_value(velocity);
+  joint_state->mutable_acceleration()->set_value(acceleration);
+  joint_state->mutable_load()->set_value(load);
+}
+
 namespace spot_ros2::conversions::test {
 
 TEST(RobotStateConversions, TestGetBatteryStates) {
@@ -88,20 +105,67 @@ TEST(RobotStateConversions, TestGetBatteryStates) {
 
 TEST(RobotStateConversions, TestGetWifiState) {
   // GIVEN a RobotState which contains a valid CommsState field
+  constexpr auto input_mode = ::bosdyn::api::WiFiState_Mode::WiFiState_Mode_MODE_CLIENT;
+  constexpr auto input_essid = "some_value";
   ::bosdyn::api::RobotState robot_state;
   auto comms_state = robot_state.add_comms_states();
-  comms_state->mutable_wifi_state()->CopyFrom(
-      createWifiState(::bosdyn::api::WiFiState_Mode::WiFiState_Mode_MODE_CLIENT, "some_value"));
+  comms_state->mutable_wifi_state()->CopyFrom(createWifiState(input_mode, input_essid));
 
   // WHEN we create a WiFiState ROS message from the RobotState
   const spot_msgs::msg::WiFiState out = getWifiState(robot_state);
 
   // THEN the ROS message contains the same values for the ESSID and mode fields as were set in the input RobotState
-  EXPECT_THAT(out.current_mode, testing::Eq(spot_msgs::msg::WiFiState::MODE_CLIENT));
-  EXPECT_THAT(out.essid, testing::StrEq("some_value"));
+  EXPECT_THAT(out.current_mode, testing::Eq(input_mode));
+  EXPECT_THAT(out.essid, testing::StrEq(input_essid));
 }
 
-TEST(RobotStateConversions, TestGetFootState) {}
+TEST(RobotStateConversions, TestGetFootState) {
+  // GIVEN a RobotState that contains four unique foot states
+  ::bosdyn::api::RobotState robot_state;
+  setFootState(robot_state.add_foot_state(), 1.0, 2.0, 3.0, ::bosdyn::api::FootState::CONTACT_MADE);
+  setFootState(robot_state.add_foot_state(), 4.0, 5.0, 6.0, ::bosdyn::api::FootState::CONTACT_LOST);
+  setFootState(robot_state.add_foot_state(), 7.0, 8.0, 9.0, ::bosdyn::api::FootState::CONTACT_MADE);
+  setFootState(robot_state.add_foot_state(), 10.0, 11.0, 12.0, ::bosdyn::api::FootState::CONTACT_LOST);
+
+  // WHEN we create a FootStateArray ROS message from the RobotState
+  const auto out = getFootState(robot_state);
+
+  // THEN the output message contains four foot states
+  ASSERT_THAT(out.states, testing::SizeIs(4));
+
+  // THEN each output foot state matches the corresponding input, and is listed in the same order
+  const auto& first_foot_state = out.states.at(0);
+  EXPECT_THAT(first_foot_state.contact, testing::Eq(spot_msgs::msg::FootState::CONTACT_MADE));
+  EXPECT_THAT(first_foot_state.foot_position_rt_body.x, testing::DoubleEq(1.0));
+  EXPECT_THAT(first_foot_state.foot_position_rt_body.y, testing::DoubleEq(2.0));
+  EXPECT_THAT(first_foot_state.foot_position_rt_body.z, testing::DoubleEq(3.0));
+  const auto& second_foot_state = out.states.at(1);
+  EXPECT_THAT(second_foot_state.contact, testing::Eq(spot_msgs::msg::FootState::CONTACT_LOST));
+  EXPECT_THAT(second_foot_state.foot_position_rt_body.x, testing::DoubleEq(4.0));
+  EXPECT_THAT(second_foot_state.foot_position_rt_body.y, testing::DoubleEq(5.0));
+  EXPECT_THAT(second_foot_state.foot_position_rt_body.z, testing::DoubleEq(6.0));
+  const auto& third_foot_state = out.states.at(2);
+  EXPECT_THAT(third_foot_state.contact, testing::Eq(spot_msgs::msg::FootState::CONTACT_MADE));
+  EXPECT_THAT(third_foot_state.foot_position_rt_body.x, testing::DoubleEq(7.0));
+  EXPECT_THAT(third_foot_state.foot_position_rt_body.y, testing::DoubleEq(8.0));
+  EXPECT_THAT(third_foot_state.foot_position_rt_body.z, testing::DoubleEq(9.0));
+  const auto& fourth_foot_state = out.states.at(3);
+  EXPECT_THAT(fourth_foot_state.contact, testing::Eq(spot_msgs::msg::FootState::CONTACT_LOST));
+  EXPECT_THAT(fourth_foot_state.foot_position_rt_body.x, testing::DoubleEq(10.0));
+  EXPECT_THAT(fourth_foot_state.foot_position_rt_body.y, testing::DoubleEq(11.0));
+  EXPECT_THAT(fourth_foot_state.foot_position_rt_body.z, testing::DoubleEq(12.0));
+}
+
+TEST(RobotStateConversions, TestGetFootStateNoFootStates) {
+  // GIVEN a RobotState that does not contain foot states
+  ::bosdyn::api::RobotState robot_state;
+
+  // WHEN we create a FootStateArray ROS message from the RobotState
+  const auto out = getFootState(robot_state);
+
+  // THEN the output message contains an empty array
+  ASSERT_THAT(out.states, testing::IsEmpty());
+}
 
 TEST(RobotStateConversions, TestGetEStopStates) {
   // GIVEN a RobotState that contains two different EStopStates
@@ -155,7 +219,75 @@ TEST(RobotStateConversions, TestGetEStopStates) {
                          testing::StrEq("other_text")))));
 }
 
-TEST(RobotStateConversions, TestGetJointStates) {}
+TEST(RobotStateConversions, TestGetJointStates) {
+  // GIVEN a RobotState containing two unique joint states
+  ::bosdyn::api::RobotState robot_state;
+  auto timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
+  timestamp->set_seconds(15);
+  timestamp->set_nanos(0);
+  setJointState(robot_state.mutable_kinematic_state()->add_joint_states(), "fl.hx", 0.1, 0.2, 0.3, 0.4);
+  setJointState(robot_state.mutable_kinematic_state()->add_joint_states(), "arm0.wr0", 0.5, 0.6, 0.7, 0.8);
+
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // GIVEN a prefix
+  constexpr auto prefix = "my_prefix/";
+
+  // WHEN we create an JointState ROS message from the RobotState
+  const auto out = getJointStates(robot_state, clock_skew, prefix);
+
+  // THEN a message is created
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+
+  // THEN each vector element of the joint state contains a number of elements matching the number of input joint states
+  ASSERT_THAT(out->name, testing::SizeIs(2));
+  ASSERT_THAT(out->position, testing::SizeIs(2));
+  ASSERT_THAT(out->velocity, testing::SizeIs(2));
+  ASSERT_THAT(out->effort, testing::SizeIs(2));
+
+  // THEN the joint names were converted to the "friendly" names used in the URDF
+  ASSERT_THAT(out->name, testing::UnorderedElementsAre("my_prefix/front_left_hip_x", "my_prefix/arm_wr0"));
+
+  // THEN the position, velocity, and effort corresponding to each named joint match the input joint states
+  const std::size_t index1 =
+      std::distance(out->name.cbegin(), std::find(out->name.cbegin(), out->name.cend(), "my_prefix/front_left_hip_x"));
+  EXPECT_THAT(out->position.at(index1), testing::Eq(0.1));
+  EXPECT_THAT(out->velocity.at(index1), testing::Eq(0.2));
+  EXPECT_THAT(out->effort.at(index1), testing::Eq(0.4));
+
+  const std::size_t index2 =
+      std::distance(out->name.cbegin(), std::find(out->name.cbegin(), out->name.cend(), "my_prefix/arm_wr0"));
+  EXPECT_THAT(out->position.at(index2), testing::Eq(0.5));
+  EXPECT_THAT(out->velocity.at(index2), testing::Eq(0.6));
+  EXPECT_THAT(out->effort.at(index2), testing::Eq(0.8));
+}
+
+TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
+  // GIVEN a RobotState that does not contain any joint states, but does contains some other kinematic state info
+  ::bosdyn::api::RobotState robot_state;
+  auto timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
+  timestamp->set_seconds(15);
+  timestamp->set_nanos(0);
+
+  // GIVEN some nominal clock skew and prefix
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+  constexpr auto prefix = "prefix/";
+
+  // WHEN we create a JointState ROS message from the RobotState
+  const auto out = getJointStates(robot_state, clock_skew, prefix);
+
+  // THEN the message is created and contains a timestamp, but does not contain any joint state data
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  EXPECT_THAT(out->header.stamp.sec, testing::Eq(14));
+  EXPECT_THAT(out->header.stamp.nanosec, testing::Eq(0));
+  EXPECT_THAT(out->name, testing::IsEmpty());
+  EXPECT_THAT(out->position, testing::IsEmpty());
+  EXPECT_THAT(out->velocity, testing::IsEmpty());
+  EXPECT_THAT(out->effort, testing::IsEmpty());
+}
 
 TEST(RobotStateConversions, TestGetTf) {}
 
