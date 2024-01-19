@@ -30,9 +30,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash"
 
 # Install bosdyn_msgs package
-RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.3.2-AMD64/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb --output /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb --silent \
-  && dpkg -i /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb \
-  && rm /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb
+RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/3.3.2/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run --output /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run --silent \
+  && chmod +x /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run \
+  && /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run \
+  && rm /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run
 
 # Install spot_cpp_sdk package
 RUN curl -sL https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/3.3.2/spot-cpp-sdk_3.3.2_amd64.deb --output /tmp/spot-cpp-sdk_3.3.2_amd64.deb --silent \
