@@ -45,9 +45,9 @@ from bosdyn_msgs.msg import (
     ManipulationApiFeedbackResponse,
     ManipulatorState,
     MobilityCommandFeedback,
+    PtzDescription,
     RobotCommandFeedback,
     RobotCommandFeedbackStatusStatus,
-    PtzDescription,
 )
 from geometry_msgs.msg import (
     Pose,
@@ -122,24 +122,24 @@ from spot_msgs.srv import (  # type: ignore
     ExecuteDance,
     GetChoreographyStatus,
     GetGripperCameraParameters,
+    GetPtzPosition,
     GetVolume,
     GraphNavClearGraph,
     GraphNavGetLocalizationPose,
     GraphNavSetLocalization,
     GraphNavUploadGraph,
+    InitializeLens,
     ListAllDances,
     ListAllMoves,
     ListGraph,
-    ListSounds,
     ListPtz,
-    GetPtzPosition,
-    SetPtzPosition,
-    InitializeLens,
+    ListSounds,
     ListWorldObjects,
     LoadSound,
     PlaySound,
     SetGripperCameraParameters,
     SetLocomotion,
+    SetPtzPosition,
     SetVelocity,
     SetVolume,
     UploadAnimation,
@@ -716,20 +716,26 @@ class SpotROS(Node):
         self.create_service(
             GetPtzPosition,
             "get_ptz_position",
-            lambda request, response: self.service_wrapper("get_ptz_position", self.handle_get_ptz_position, request, response),
-            callback_group = self.group,
+            lambda request, response: self.service_wrapper(
+                "get_ptz_position", self.handle_get_ptz_position, request, response
+            ),
+            callback_group=self.group,
         )
         self.create_service(
             SetPtzPosition,
             "set_ptz_position",
-            lambda request, response: self.service_wrapper("set_ptz_position", self.handle_set_ptz_position, request, response),
-            callback_group = self.group,
+            lambda request, response: self.service_wrapper(
+                "set_ptz_position", self.handle_set_ptz_position, request, response
+            ),
+            callback_group=self.group,
         )
         self.create_service(
             InitializeLens,
             "initialize_lens",
-            lambda request, response: self.service_wrapper("initialize_lens", self.handle_initialize_lens, request, response),
-            callback_group = self.group
+            lambda request, response: self.service_wrapper(
+                "initialize_lens", self.handle_initialize_lens, request, response
+            ),
+            callback_group=self.group,
         )
         self.create_service(
             ListGraph,
@@ -1470,7 +1476,7 @@ class SpotROS(Node):
             response.success = False
             response.message = f"Error: {e}"
             return response
-    
+
     def handle_list_ptz(self, request: ListPtz.Request, response: ListPtz.Response):
         """Ros service handler for getting descriptions of any ptz"""
         if self.spot_cam_wrapper is None:
@@ -1493,53 +1499,50 @@ class SpotROS(Node):
             response.success = False
             response.message = f"Error: {e}"
             return response
-        
+
     def handle_get_ptz_position(self, request: GetPtzPosition.Request, response: GetPtzPosition.Response):
         """Ros service handler to get the position of a ptz camera"""
         if self.spot_cam_wrapper is None:
             response.success = False
             response.message = "Spot CAM has not been initialized"
             return response
-        
+
         try:
             proto_position = self.spot_cam_wrapper.ptz.get_ptz_position(request.name)
             conv.convert_proto_to_bosdyn_msgs_ptz_position(proto_position, response.position)
-            response.success=True
+            response.success = True
             response.message = "Success"
             return response
         except Exception as e:
             response.success = False
             response.message = f"Error: {e}"
             return response
-    
+
     def handle_set_ptz_position(self, request: SetPtzPosition.Request, response: SetPtzPosition.Response):
         if self.spot_cam_wrapper is None:
             response.success = False
             response.message = "Spot CAM has not been initialized"
             return response
-        
+
         try:
-            # pan = conv.convert_float32_to_proto(request.pan)
-            # tilt = conv.convert_float32_to_proto(request.tilt)
-            # zoom = conv.convert_float32_to_proto(request.zoom)
             self.spot_cam_wrapper.ptz.set_ptz_position(request.name, request.pan, request.tilt, request.zoom)
-            response.success=True
+            response.success = True
             response.message = "Success"
             return response
         except Exception as e:
             response.success = False
             response.message = f"Error: {e}"
             return response
-    
+
     def handle_initialize_lens(self, request: InitializeLens.Request, response: InitializeLens.Response):
         if self.spot_cam_wrapper is None:
             response.success = False
             response.message = "Spot CAM has not been initialized"
             return response
-        
+
         try:
             self.spot_cam_wrapper.ptz.initialise_lens()  # British spelling?
-            response.success=True
+            response.success = True
             response.message = "Success"
             return response
         except Exception as e:
