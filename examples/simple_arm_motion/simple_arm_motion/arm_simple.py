@@ -9,10 +9,10 @@ from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.robot_command import RobotCommandBuilder
+from bosdyn_msgs.conversions import convert
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
-from bosdyn_msgs.conversions import convert
 from spot_msgs.action import RobotCommand  # type: ignore
 
 
