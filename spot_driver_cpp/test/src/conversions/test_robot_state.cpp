@@ -289,6 +289,22 @@ TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
   EXPECT_THAT(out->effort, testing::IsEmpty());
 }
 
+TEST(RobotStateConversions, TestGetJointStatesNoKinematicState) {
+  // GIVEN a RobotState that does not contain any kinematic state data whatsoever
+  ::bosdyn::api::RobotState robot_state;
+
+  // GIVEN some nominal clock skew and prefix
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+  constexpr auto prefix = "prefix/";
+
+  // WHEN we attempt to create a JointState ROS message from the RobotState
+  const auto out = getJointStates(robot_state, clock_skew, prefix);
+
+  // THEN no ROS message is output
+  ASSERT_THAT(out.has_value(), testing::IsFalse());
+}
+
 TEST(RobotStateConversions, TestGetTf) {}
 
 TEST(RobotStateConversions, TestGetOdomTwist) {
