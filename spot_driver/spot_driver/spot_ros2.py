@@ -40,8 +40,10 @@ from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
+    Camera,
     FullBodyCommandFeedback,
     GripperCommandFeedback,
+    Logpoint,
     ManipulationApiFeedbackResponse,
     ManipulatorState,
     MobilityCommandFeedback,
@@ -117,11 +119,13 @@ from spot_msgs.srv import (  # type: ignore
     ChoreographyStartRecordingState,
     ChoreographyStopRecordingState,
     ClearBehaviorFault,
+    DeleteLogpoint,
     DeleteSound,
     Dock,
     ExecuteDance,
     GetChoreographyStatus,
     GetGripperCameraParameters,
+    GetLogpointStatus,
     GetPtzPosition,
     GetVolume,
     GraphNavClearGraph,
@@ -131,17 +135,22 @@ from spot_msgs.srv import (  # type: ignore
     InitializeLens,
     ListAllDances,
     ListAllMoves,
+    ListCameras,
     ListGraph,
+    ListLogpoints,
     ListPtz,
     ListSounds,
     ListWorldObjects,
     LoadSound,
     PlaySound,
+    RetrieveLogpoint,
     SetGripperCameraParameters,
     SetLocomotion,
     SetPtzPosition,
     SetVelocity,
     SetVolume,
+    StoreLogpoint,
+    TagLogpoint,
     UploadAnimation,
 )
 from spot_wrapper.cam_wrapper import SpotCamWrapper
@@ -735,6 +744,58 @@ class SpotROS(Node):
             lambda request, response: self.service_wrapper(
                 "initialize_lens", self.handle_initialize_lens, request, response
             ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ListCameras,
+            "list_cameras",
+            lambda request, response: self.service_wrapper("list_cameras", self.handle_list_cameras, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            ListLogpoints,
+            "list_logpoints",
+            lambda request, response: self.service_wrapper(
+                "list_logpoints", self.handle_list_logpoints, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            RetrieveLogpoint,
+            "retrieve_logpoint",
+            lambda request, response: self.service_wrapper(
+                "retrieve_logpoint", self.handle_retrieve_logpoint, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            GetLogpointStatus,
+            "get_logpoint_status",
+            lambda request, response: self.service_wrapper(
+                "get_logpoint_status", self.handle_get_logpoint_status, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            DeleteLogpoint,
+            "delete_logpoint",
+            lambda request, response: self.service_wrapper(
+                "get_logpoint_status", self.handle_delete_logpoint, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            StoreLogpoint,
+            "store_logpoint",
+            lambda request, response: self.service_wrapper(
+                "store_logpoint", self.handle_store_logpoint, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            TagLogpoint,
+            "tag_logpoint",
+            lambda request, response: self.service_wrapper("tag_logpoint", self.handle_tag_logpoint, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -1523,6 +1584,7 @@ class SpotROS(Node):
     def handle_set_ptz_position(
         self, request: SetPtzPosition.Request, response: SetPtzPosition.Response
     ) -> SetPtzPosition.Response:
+        """Ros service handler for setting the position of a ptz camera"""
         if self.spot_cam_wrapper is None:
             response.success = False
             response.message = "Spot CAM has not been initialized"
@@ -1541,6 +1603,7 @@ class SpotROS(Node):
     def handle_initialize_lens(
         self, request: InitializeLens.Request, response: InitializeLens.Response
     ) -> InitializeLens.Response:
+        """Ros service handler for initializing the lens"""
         if self.spot_cam_wrapper is None:
             response.success = False
             response.message = "Spot CAM has not been initialized"
@@ -1548,6 +1611,151 @@ class SpotROS(Node):
 
         try:
             self.spot_cam_wrapper.ptz.initialise_lens()  # British spelling?
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_list_cameras(self, request: ListCameras.Request, response: ListCameras.Response) -> ListCameras.Response:
+        """Ros service handler for listing all cameras on SpotCAM"""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+
+        try:
+            proto_cameras = self.spot_cam_wrapper.media_log.list_cameras()
+            cameras = []
+            for proto_camera in proto_cameras:
+                ros_msg = Camera()
+                conv.convert_proto_to_bosdyn_msgs_camera(proto_camera, ros_msg)
+                cameras.append(ros_msg)
+            response.success = True
+            response.message = "Success"
+            response.cameras = cameras
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_list_logpoints(
+        self, request: ListLogpoints.Request, response: ListLogpoints.Response
+    ) -> ListLogpoints.Response:
+        """Ros service handler for listing all logpoints saved on SpotCAM"""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+
+        try:
+            proto_logpoints = self.spot_cam_wrapper.media_log.list_logpoints()
+            logpoints = []
+            for proto_logpoint in proto_logpoints:
+                ros_msg = Logpoint()
+                conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, ros_msg)
+                logpoints.append(ros_msg)
+            response.success = True
+            response.message = "Success"
+            response.logpoints = logpoints
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_retrieve_logpoint(
+        self, request: RetrieveLogpoint.Request, response: RetrieveLogpoint.Response
+    ) -> RetrieveLogpoint.Response:
+        """Ros service handler for retrieving a logpoint from SpotCAM"""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            proto_logpoint, proto_data_chunk = self.spot_cam_wrapper.media_log.retrieve_logpoint(
+                request.name, request.raw
+            )
+            conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
+            conv.convert_proto_to_bosdyn_msgs_data_chunk(proto_data_chunk, response.data_chunk)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_get_logpoint_status(
+        self, request: GetLogpointStatus.Request, response: GetLogpointStatus.Response
+    ) -> GetLogpointStatus.Response:
+        """Ros service handler for getting the status of a logpoint from SpotCAM"""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            proto_logstatus = self.spot_cam_wrapper.media_log.get_logpoint_status(request.name)
+            conv.convert_proto_to_bosdyn_msgs_logpoint_log_status(proto_logstatus, response.status)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_delete_logpoint(
+        self, request: DeleteLogpoint.Request, response: DeleteLogpoint.Response
+    ) -> DeleteLogpoint.Response:
+        """Ros service handler for deleting a logpoint from SpotCAM"""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            self.spot_cam_wrapper.media_log.delete_logpoint(request.name)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_store_logpoint(
+        self, request: StoreLogpoint.Request, response: StoreLogpoint.Response
+    ) -> StoreLogpoint.Response:
+        """Ros service handler for storing current camera data as a logpoint on SpotCAM"""
+        # I think this one might break
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+
+        try:
+            tag = None if request.tag == "" else request.tag
+            proto_logpoint = self.spot_cam_wrapper.media_log.store(request.name, tag)
+            conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_tag_logpoint(self, request: TagLogpoint.Request, response: TagLogpoint.Response) -> TagLogpoint.Response:
+        """Ros service handler for adding a tag to a logpoint on SpotCAM"""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            self.spot_cam_wrapper.media_log.tag(request.name, request.tag)
             response.success = True
             response.message = "Success"
             return response

@@ -1,0 +1,5 @@
+string name
+bool raw # True to get raw data 
+---
+bosdyn_msgs/Logpoint logpoint
+bosdyn_msgs/DataChunk data_chunk

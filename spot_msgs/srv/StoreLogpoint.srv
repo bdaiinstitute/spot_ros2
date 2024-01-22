@@ -1,0 +1,6 @@
+string name # pano, ptz, ir, c0, c1, c2, c3, c4
+string tag
+---
+bool success
+string message
+bosdyn_msgs/LogPoint logpoint
