@@ -1681,8 +1681,8 @@ class SpotROS(Node):
             )
             conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
             # Data is actually a bytes object, not DataChunk as the SpotCAM wrapper states...
-            # response.data = proto_data_chunk  # TODO
-            conv.convert_proto_to_bosdyn_msgs_data_chunk(proto_data_chunk, response.data)
+            response.data = proto_data_chunk  # TODO
+            # conv.convert_proto_to_bosdyn_msgs_data_chunk(proto_data_chunk, response.data)
             response.success = True
             response.message = "Success"
             return response
