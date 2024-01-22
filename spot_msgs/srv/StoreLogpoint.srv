@@ -3,4 +3,4 @@ string tag
 ---
 bool success
 string message
-bosdyn_msgs/LogPoint logpoint
+bosdyn_msgs/Logpoint logpoint

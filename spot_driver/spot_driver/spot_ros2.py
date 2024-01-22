@@ -153,7 +153,7 @@ from spot_msgs.srv import (  # type: ignore
     TagLogpoint,
     UploadAnimation,
 )
-from spot_wrapper.cam_wrapper import SpotCamWrapper
+from spot_wrapper.cam_wrapper import SpotCamCamera, SpotCamWrapper
 from spot_wrapper.spot_images import CameraSource
 from spot_wrapper.wrapper import SpotWrapper
 
@@ -1680,13 +1680,15 @@ class SpotROS(Node):
                 request.name, request.raw
             )
             conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
-            conv.convert_proto_to_bosdyn_msgs_data_chunk(proto_data_chunk, response.data_chunk)
+            # Data is actually a bytes object, not DataChunk as the SpotCAM wrapper states...
+            # response.data = proto_data_chunk  # TODO
+            conv.convert_proto_to_bosdyn_msgs_data_chunk(proto_data_chunk, response.data)
             response.success = True
             response.message = "Success"
             return response
         except Exception as e:
             response.success = False
-            response.message = f"Error: {e}"
+            response.message = f"Error: {e} {type(proto_data_chunk)}"
             return response
 
     def handle_get_logpoint_status(
@@ -1699,7 +1701,7 @@ class SpotROS(Node):
             return response
         try:
             proto_logstatus = self.spot_cam_wrapper.media_log.get_logpoint_status(request.name)
-            conv.convert_proto_to_bosdyn_msgs_logpoint_log_status(proto_logstatus, response.status)
+            response.status.value = proto_logstatus.status  # Manual proto conversion
             response.success = True
             response.message = "Success"
             return response
@@ -1738,7 +1740,8 @@ class SpotROS(Node):
 
         try:
             tag = None if request.tag == "" else request.tag
-            proto_logpoint = self.spot_cam_wrapper.media_log.store(request.name, tag)
+            camera_name = SpotCamCamera(request.name)  # Silly but don't want to modify cam wrapper.
+            proto_logpoint = self.spot_cam_wrapper.media_log.store(camera_name, tag)
             conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
             response.success = True
             response.message = "Success"
