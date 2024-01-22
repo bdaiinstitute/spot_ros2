@@ -1477,7 +1477,7 @@ class SpotROS(Node):
             response.message = f"Error: {e}"
             return response
 
-    def handle_list_ptz(self, request: ListPtz.Request, response: ListPtz.Response):
+    def handle_list_ptz(self, request: ListPtz.Request, response: ListPtz.Response) -> ListPtz.Response:
         """Ros service handler for getting descriptions of any ptz"""
         if self.spot_cam_wrapper is None:
             response.success = False
@@ -1500,7 +1500,9 @@ class SpotROS(Node):
             response.message = f"Error: {e}"
             return response
 
-    def handle_get_ptz_position(self, request: GetPtzPosition.Request, response: GetPtzPosition.Response):
+    def handle_get_ptz_position(
+        self, request: GetPtzPosition.Request, response: GetPtzPosition.Response
+    ) -> GetPtzPosition.Response:
         """Ros service handler to get the position of a ptz camera"""
         if self.spot_cam_wrapper is None:
             response.success = False
@@ -1518,7 +1520,9 @@ class SpotROS(Node):
             response.message = f"Error: {e}"
             return response
 
-    def handle_set_ptz_position(self, request: SetPtzPosition.Request, response: SetPtzPosition.Response):
+    def handle_set_ptz_position(
+        self, request: SetPtzPosition.Request, response: SetPtzPosition.Response
+    ) -> SetPtzPosition.Response:
         if self.spot_cam_wrapper is None:
             response.success = False
             response.message = "Spot CAM has not been initialized"
@@ -1534,7 +1538,9 @@ class SpotROS(Node):
             response.message = f"Error: {e}"
             return response
 
-    def handle_initialize_lens(self, request: InitializeLens.Request, response: InitializeLens.Response):
+    def handle_initialize_lens(
+        self, request: InitializeLens.Request, response: InitializeLens.Response
+    ) -> InitializeLens.Response:
         if self.spot_cam_wrapper is None:
             response.success = False
             response.message = "Spot CAM has not been initialized"
