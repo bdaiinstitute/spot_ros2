@@ -37,6 +37,7 @@ from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence
 from bosdyn.client import math_helpers
+from bosdyn.client.lease import LeaseKeepAlive
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
@@ -961,22 +962,22 @@ class SpotROS(Node):
 
         self.create_service(
             srv_type=Trigger,
-            srv_name="take_or_acquire_lease",
-            callback=self.take_or_acquire_lease_callback,
+            srv_name="take_lease",
+            callback=self.take_lease_callback,
             callback_group=self.group,
         )
 
-    def take_or_acquire_lease_callback(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        self.get_logger().info("Incoming request to take or acquire a new lease.")
+    def take_lease_callback(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        self.get_logger().info("Incoming request to take a new lease.")
         if self.spot_wrapper is None:
             response.success = True
             response.message = "spot_ros2 is running in mock mode."
             return response
 
-        old_lease = self.spot_wrapper._lease
-        self.spot_wrapper.getLease()
-        lease = self.spot_wrapper._lease
-        response.success = str(lease.lease_proto) != str(old_lease.lease_proto)
+        old_lease = self.spot_wrapper.lease2
+        lease = self.spot_wrapper._lease_client.take()
+        self.spot_wrapper._lease_keepalive = LeaseKeepAlive(self.spot_wrapper._lease_client)
+        response.success = True if old_lease is None else str(lease.lease_proto) != str(old_lease.lease_proto)
         response.message = str(lease.lease_proto)
         return response
 
