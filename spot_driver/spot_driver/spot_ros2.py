@@ -1681,8 +1681,9 @@ class SpotROS(Node):
             )
             conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
             # Data is actually a bytes object, not DataChunk as the SpotCAM wrapper states...
+            # Therefore, we use a uint8[] buffer in srv message and directly set that
+            # to the bytes object.
             response.data = proto_data_chunk  # TODO
-            # conv.convert_proto_to_bosdyn_msgs_data_chunk(proto_data_chunk, response.data)
             response.success = True
             response.message = "Success"
             return response
@@ -1732,7 +1733,6 @@ class SpotROS(Node):
         self, request: StoreLogpoint.Request, response: StoreLogpoint.Response
     ) -> StoreLogpoint.Response:
         """Ros service handler for storing current camera data as a logpoint on SpotCAM"""
-        # I think this one might break
         if self.spot_cam_wrapper is None:
             response.success = False
             response.message = "Spot CAM has not been initialized"
