@@ -23,7 +23,7 @@ from spot_wrapper.testing.fixtures import SpotFixture
 @pytest.mark.usefixtures("spot_node")
 def test_robot_command(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
-    This integration test checks if the "robot_command" service infrastructure is
+    This integration test checks if the "robot_command" action infrastructure is
     setup correctly.
 
     Args:
@@ -32,7 +32,7 @@ def test_robot_command(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
             GRPC server.
     """
 
-    # Send ROS request.
+    # Send a ROS goal.
 
     action_client = ActionClient(ros.node, RobotCommand, "robot_command")
     goal = RobotCommand.Goal()
