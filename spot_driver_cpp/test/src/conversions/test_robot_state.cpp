@@ -4,6 +4,7 @@
 
 #include <bosdyn/api/geometry.pb.h>
 #include <bosdyn/api/robot_state.pb.h>
+#include <bosdyn/math/frame_helpers.h>
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/timestamp.pb.h>
 #include <bosdyn_msgs/msg/manipulator_state_carry_state.hpp>
@@ -363,7 +364,150 @@ TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
   ASSERT_THAT(out.has_value(), testing::IsFalse());
 }
 
-TEST(RobotStateConversions, TestGetOdom) {}
+void addTransform(::bosdyn::api::FrameTreeSnapshot* mutable_frame_tree_snapshot, const std::string& child_name,
+                  const std::string& parent_name, const double x, const double y, const double z, const double qw,
+                  const double qx, const double qy, const double qz) {
+  auto edge_map = mutable_frame_tree_snapshot->mutable_child_to_parent_edge_map();
+  ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
+  *edge.mutable_parent_frame_name() = parent_name;
+  auto pos = edge.mutable_parent_tform_child()->mutable_position();
+  pos->set_x(x);
+  pos->set_y(y);
+  pos->set_z(z);
+  auto rot = edge.mutable_parent_tform_child()->mutable_rotation();
+  rot->set_w(qw);
+  rot->set_x(qx);
+  rot->set_y(qy);
+  rot->set_z(qz);
+  (*edge_map)[child_name] = std::move(edge);
+}
+
+void addBodyVelocityOdom(::bosdyn::api::KinematicState* mutable_kinematic_state, double x, double y, double z,
+                         double rx, double ry, double rz) {
+  auto velocity_angular = mutable_kinematic_state->mutable_velocity_of_body_in_odom()->mutable_angular();
+  velocity_angular->set_x(x);
+  velocity_angular->set_y(y);
+  velocity_angular->set_z(z);
+  auto velocity_linear = mutable_kinematic_state->mutable_velocity_of_body_in_odom()->mutable_linear();
+  velocity_linear->set_x(rx);
+  velocity_linear->set_y(ry);
+  velocity_linear->set_z(rz);
+}
+
+void addAcquisitionTimestamp(::bosdyn::api::KinematicState* mutable_kinematic_state, int64_t seconds, int nanoseconds) {
+  mutable_kinematic_state->mutable_acquisition_timestamp()->set_seconds(seconds);
+  mutable_kinematic_state->mutable_acquisition_timestamp()->set_nanos(nanoseconds);
+}
+
+TEST(RobotStateConversions, TestGetOdomInOdomFrame) {
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  ::bosdyn::api::RobotState robot_state;
+
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+
+  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
+               0.0, 0.0, 0.0);
+
+  ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.mutable_kinematic_state()->transforms_snapshot()),
+              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
+
+  const auto out = getOdom(robot_state, clock_skew, "prefix/", false);
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+
+  EXPECT_THAT(out->header.frame_id, testing::StrEq("prefix/odom"));
+  EXPECT_THAT(out->child_frame_id, testing::StrEq("prefix/body"));
+  EXPECT_THAT(out->pose.pose.position.x, testing::DoubleEq(1.0));
+  EXPECT_THAT(out->pose.pose.position.y, testing::DoubleEq(2.0));
+  EXPECT_THAT(out->pose.pose.position.z, testing::DoubleEq(3.0));
+  EXPECT_THAT(out->pose.pose.orientation.w, testing::DoubleEq(1.0));
+  EXPECT_THAT(out->pose.pose.orientation.x, testing::DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose.orientation.y, testing::DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose.orientation.z, testing::DoubleEq(0.0));
+  EXPECT_THAT(out->twist.twist.angular.x, testing::DoubleEq(1.0));
+  EXPECT_THAT(out->twist.twist.angular.y, testing::DoubleEq(2.0));
+  EXPECT_THAT(out->twist.twist.angular.z, testing::DoubleEq(3.0));
+  EXPECT_THAT(out->twist.twist.linear.x, testing::DoubleEq(4.0));
+  EXPECT_THAT(out->twist.twist.linear.y, testing::DoubleEq(5.0));
+  EXPECT_THAT(out->twist.twist.linear.z, testing::DoubleEq(6.0));
+}
+
+TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  ::bosdyn::api::RobotState robot_state;
+
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+
+  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
+               1.0, 0.0, 0.0, 0.0);
+
+  const auto out = getOdom(robot_state, clock_skew, "prefix/", true);
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+
+  EXPECT_THAT(out->header.frame_id, testing::StrEq("prefix/vision"));
+  EXPECT_THAT(out->child_frame_id, testing::StrEq("prefix/body"));
+  EXPECT_THAT(out->pose.pose.position.x, testing::DoubleEq(1.0));
+  EXPECT_THAT(out->pose.pose.position.y, testing::DoubleEq(2.0));
+  EXPECT_THAT(out->pose.pose.position.z, testing::DoubleEq(3.0));
+  EXPECT_THAT(out->pose.pose.orientation.w, testing::DoubleEq(1.0));
+  EXPECT_THAT(out->pose.pose.orientation.x, testing::DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose.orientation.y, testing::DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose.orientation.z, testing::DoubleEq(0.0));
+  EXPECT_THAT(out->twist.twist.angular.x, testing::DoubleEq(1.0));
+  EXPECT_THAT(out->twist.twist.angular.y, testing::DoubleEq(2.0));
+  EXPECT_THAT(out->twist.twist.angular.z, testing::DoubleEq(3.0));
+  EXPECT_THAT(out->twist.twist.linear.x, testing::DoubleEq(4.0));
+  EXPECT_THAT(out->twist.twist.linear.y, testing::DoubleEq(5.0));
+  EXPECT_THAT(out->twist.twist.linear.z, testing::DoubleEq(6.0));
+}
+
+TEST(RobotStateConversions, TestGetOdomMissingAcquisitionTimestamp) {
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  ::bosdyn::api::RobotState robot_state;
+  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
+               1.0, 0.0, 0.0, 0.0);
+
+  const auto out = getOdom(robot_state, clock_skew, "prefix/", false);
+  ASSERT_THAT(out.has_value(), testing::IsFalse());
+}
+
+TEST(RobotStateConversions, TestGetOdomMissingBodyVelocityOdom) {
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  ::bosdyn::api::RobotState robot_state;
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
+               1.0, 0.0, 0.0, 0.0);
+
+  const auto out = getOdom(robot_state, clock_skew, "prefix/", true);
+  ASSERT_THAT(out.has_value(), testing::IsFalse());
+}
+
+TEST(RobotStateConversions, TestGetOdomMissingTransforms) {
+  ::bosdyn::api::RobotState robot_state;
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  const auto out = getOdom(robot_state, clock_skew, "prefix/", false);
+  ASSERT_THAT(out.has_value(), testing::IsFalse());
+}
 
 TEST(RobotStateConversions, TestGetPowerState) {
   // GIVEN a RobotState that contains a fully-populated power state

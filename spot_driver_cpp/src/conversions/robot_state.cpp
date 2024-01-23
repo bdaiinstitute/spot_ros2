@@ -157,17 +157,23 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
 std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& robot_state,
                                                const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                                bool is_using_vision) {
-  if (robot_state.has_kinematic_state()) {
+  if (robot_state.has_kinematic_state() && robot_state.kinematic_state().has_acquisition_timestamp() &&
+      robot_state.kinematic_state().has_transforms_snapshot() &&
+      robot_state.kinematic_state().has_velocity_of_body_in_odom()) {
     nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.stamp = applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
 
     ::bosdyn::api::SE3Pose tf_body_pose;
     if (is_using_vision) {
       odom_msg.header.frame_id = prefix + "vision";
-      ::bosdyn::api::GetWorldTformBody(robot_state.kinematic_state().transforms_snapshot(), &tf_body_pose);
+      if (!::bosdyn::api::GetWorldTformBody(robot_state.kinematic_state().transforms_snapshot(), &tf_body_pose)) {
+        return std::nullopt;
+      }
     } else {
       odom_msg.header.frame_id = prefix + "odom";
-      ::bosdyn::api::GetOdomTformBody(robot_state.kinematic_state().transforms_snapshot(), &tf_body_pose);
+      if (!::bosdyn::api::GetOdomTformBody(robot_state.kinematic_state().transforms_snapshot(), &tf_body_pose)) {
+        return std::nullopt;
+      }
     }
     odom_msg.child_frame_id = prefix + "body";
 
