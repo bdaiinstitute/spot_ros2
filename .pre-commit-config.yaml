@@ -27,6 +27,7 @@ repos:
   -   id: mypy
       pass_filenames: false
       additional_dependencies:
+      - protobuf
       - types-protobuf
       - types-requests
       - types-simplejson
