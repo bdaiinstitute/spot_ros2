@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>inverse_kinematics</name>
+  <name>inverse_kinematics_example</name>
   <version>0.0.0</version>
-  <description>Example of inverse kinematic requests.</description>
+  <description>This package contains an example on how to send Spot an Inverse Kinematic request to move a tool attached to the arm into a given position.</description>
   <maintainer email="gremigi@theaiinstitute.com">BD AI Institute</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <exec_depend>bdai_ros2_wrappers</exec_depend>
 
