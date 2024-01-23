@@ -1,4 +1,5 @@
 ARCH="amd64"
+VERSION="3.3.2"
 ROS_DISTRO=humble
 HELP=$'--arm64: Installs ARM64 version'
 REQUIREMENTS_FILE=spot_wrapper/requirements.txt
@@ -30,12 +31,12 @@ sudo apt-get install -y python3-apt
 sudo pip3 install --force-reinstall -v "setuptools==59.6.0"
 
 # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
-wget -q -O /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_${ARCH}.run https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/3.3.2/ros-humble-bosdyn_msgs_3.3.2-jammy_${ARCH}.run
-chmod +x /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_${ARCH}.run
-sudo /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_${ARCH}.run
-rm /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_${ARCH}.run
+wget -q -O /tmp/ros-humble-bosdyn_msgs_${VERSION}-jammy_${ARCH}.run https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/${VERSION}/ros-humble-bosdyn_msgs_${VERSION}-jammy_${ARCH}.run
+chmod +x /tmp/ros-humble-bosdyn_msgs_${VERSION}-jammy_${ARCH}.run
+sudo /tmp/ros-humble-bosdyn_msgs_${VERSION}-jammy_${ARCH}.run
+rm /tmp/ros-humble-bosdyn_msgs_${VERSION}-jammy_${ARCH}.run
 
 # Install spot-cpp-sdk
-wget -q -O /tmp/spot-cpp-sdk_3.3.2_${ARCH}.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/3.3.2/spot-cpp-sdk_3.3.2_${ARCH}.deb
-sudo dpkg -i /tmp/spot-cpp-sdk_3.3.2_${ARCH}.deb
-rm /tmp/spot-cpp-sdk_3.3.2_${ARCH}.deb
+wget -q -O /tmp/spot-cpp-sdk_${VERSION}_${ARCH}.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/${VERSION}/spot-cpp-sdk_${VERSION}_${ARCH}.deb
+sudo dpkg -i /tmp/spot-cpp-sdk_${VERSION}_${ARCH}.deb
+rm /tmp/spot-cpp-sdk_${VERSION}_${ARCH}.deb
