@@ -96,10 +96,10 @@ TEST(RobotStateConversions, TestGetBatteryStates) {
   ASSERT_THAT(out.battery_states, testing::SizeIs(1));
   const auto& first_battery_state = out.battery_states.at(0);
   EXPECT_THAT(first_battery_state.identifier, testing::StrEq("test_battery"));
-  EXPECT_THAT(first_battery_state.charge_percentage, testing::Eq(50));
-  EXPECT_THAT(first_battery_state.current, testing::Eq(10));
-  EXPECT_THAT(first_battery_state.voltage, testing::Eq(12));
-  ASSERT_THAT(first_battery_state.temperatures, testing::SizeIs(1));
+  EXPECT_THAT(first_battery_state.charge_percentage, testing::DoubleEq(50.0));
+  EXPECT_THAT(first_battery_state.current, testing::DoubleEq(10.0));
+  EXPECT_THAT(first_battery_state.voltage, testing::DoubleEq(12.0));
+  ASSERT_THAT(first_battery_state.temperatures, testing::SizeIs(1ul));
   EXPECT_THAT(first_battery_state.temperatures.at(0), testing::DoubleEq(80.0));
 }
 
@@ -253,15 +253,15 @@ TEST(RobotStateConversions, TestGetJointStates) {
   // THEN the position, velocity, and effort corresponding to each named joint match the input joint states
   const std::size_t index1 =
       std::distance(out->name.cbegin(), std::find(out->name.cbegin(), out->name.cend(), "my_prefix/front_left_hip_x"));
-  EXPECT_THAT(out->position.at(index1), testing::Eq(0.1));
-  EXPECT_THAT(out->velocity.at(index1), testing::Eq(0.2));
-  EXPECT_THAT(out->effort.at(index1), testing::Eq(0.4));
+  EXPECT_THAT(out->position.at(index1), testing::DoubleEq(0.1));
+  EXPECT_THAT(out->velocity.at(index1), testing::DoubleEq(0.2));
+  EXPECT_THAT(out->effort.at(index1), testing::DoubleEq(0.4));
 
   const std::size_t index2 =
       std::distance(out->name.cbegin(), std::find(out->name.cbegin(), out->name.cend(), "my_prefix/arm_wr0"));
-  EXPECT_THAT(out->position.at(index2), testing::Eq(0.5));
-  EXPECT_THAT(out->velocity.at(index2), testing::Eq(0.6));
-  EXPECT_THAT(out->effort.at(index2), testing::Eq(0.8));
+  EXPECT_THAT(out->position.at(index2), testing::DoubleEq(0.5));
+  EXPECT_THAT(out->velocity.at(index2), testing::DoubleEq(0.6));
+  EXPECT_THAT(out->effort.at(index2), testing::DoubleEq(0.8));
 }
 
 TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
@@ -282,7 +282,7 @@ TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
   // THEN the message is created and contains a timestamp, but does not contain any joint state data
   ASSERT_THAT(out.has_value(), testing::IsTrue());
   EXPECT_THAT(out->header.stamp.sec, testing::Eq(14));
-  EXPECT_THAT(out->header.stamp.nanosec, testing::Eq(0));
+  EXPECT_THAT(out->header.stamp.nanosec, testing::Eq(0u));
   EXPECT_THAT(out->name, testing::IsEmpty());
   EXPECT_THAT(out->position, testing::IsEmpty());
   EXPECT_THAT(out->velocity, testing::IsEmpty());
@@ -341,7 +341,7 @@ TEST(RobotStateConversions, TestGetOdomTwist) {
   EXPECT_THAT(out->twist.twist.linear.z, testing::DoubleEq(6.0));
   EXPECT_THAT(out->header.stamp,
               testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(98)),
-                             testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0))));
+                             testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0u))));
 }
 
 TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
@@ -403,10 +403,10 @@ TEST(RobotStateConversions, TestGetPowerState) {
   EXPECT_THAT(out->locomotion_charge_percentage, testing::DoubleEq(75.0));
   EXPECT_THAT(out->locomotion_estimated_runtime,
               testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(255)),
-                             testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0))));
+                             testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0u))));
   EXPECT_THAT(out->header.stamp,
               testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(59)),
-                             testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0))));
+                             testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0u))));
 }
 
 TEST(RobotStateConversions, TestGetPowerStateNoPowerState) {
@@ -469,15 +469,15 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
                       "stamp", &std_msgs::msg::Header::stamp,
                       testing::AllOf(
                           testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(59)),
-                          testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0)))))),
+                          testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0u)))))),
               testing::Field(
                   "duration", &SystemFault::duration,
                   testing::AllOf(
                       testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(15)),
-                      testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0)))),
+                      testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0u)))),
               testing::Field("name", &SystemFault::name, testing::StrEq("fault1")),
               testing::Field("code", &SystemFault::code, testing::Eq(19)),
-              testing::Field("uid", &SystemFault::uid, testing::Eq(3)),
+              testing::Field("uid", &SystemFault::uid, testing::Eq(3ul)),
               testing::Field("error_message", &SystemFault::error_message, testing::StrEq("battery is low")),
               testing::Field("attributes", &SystemFault::attributes,
                              testing::UnorderedElementsAre(testing::StrEq("robot"), testing::StrEq("battery")))),
@@ -488,15 +488,15 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
                       "stamp", &std_msgs::msg::Header::stamp,
                       testing::AllOf(
                           testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(74)),
-                          testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0)))))),
+                          testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0u)))))),
               testing::Field(
                   "duration", &SystemFault::duration,
                   testing::AllOf(
                       testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(0)),
-                      testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0)))),
+                      testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0u)))),
               testing::Field("name", &SystemFault::name, testing::StrEq("fault2")),
               testing::Field("code", &SystemFault::code, testing::Eq(55)),
-              testing::Field("uid", &SystemFault::uid, testing::Eq(9)),
+              testing::Field("uid", &SystemFault::uid, testing::Eq(9ul)),
               testing::Field("error_message", &SystemFault::error_message,
                              testing::StrEq("robot has departed from this plane of reality")),
               testing::Field("attributes", &SystemFault::attributes,
@@ -559,7 +559,7 @@ TEST(RobotStateConversions, TestGetManipulatorState) {
   ASSERT_THAT(out.has_value(), testing::IsTrue());
 
   // THEN all the output fields are set, and contain the same values as the inputs
-  EXPECT_THAT(out->gripper_open_percentage, testing::Eq(50.0));
+  EXPECT_THAT(out->gripper_open_percentage, testing::DoubleEq(50.0));
   EXPECT_THAT(out->is_gripper_holding_item, testing::IsTrue());
   EXPECT_THAT(out->carry_state.value,
               testing::Eq(bosdyn_msgs::msg::ManipulatorStateCarryState::CARRY_STATE_NOT_CARRIABLE));
@@ -666,9 +666,9 @@ TEST(RobotStateConversions, TestGetEndEffectorForce) {
   ASSERT_THAT(out.has_value(), testing::IsTrue());
   EXPECT_THAT(out->header.frame_id, testing::StrEq("prefix/hand"));
   EXPECT_THAT(out->header.stamp.sec, testing::Eq(9));
-  EXPECT_THAT(out->vector.x, testing::Eq(force.x()));
-  EXPECT_THAT(out->vector.y, testing::Eq(force.y()));
-  EXPECT_THAT(out->vector.z, testing::Eq(force.z()));
+  EXPECT_THAT(out->vector.x, testing::DoubleEq(force.x()));
+  EXPECT_THAT(out->vector.y, testing::DoubleEq(force.y()));
+  EXPECT_THAT(out->vector.z, testing::DoubleEq(force.z()));
 }
 
 TEST(RobotStateConversions, TestGetEndEffectorForceNoEndEffectorForce) {
@@ -715,20 +715,20 @@ TEST(RobotStateConversions, TestGetBehaviorFaultState) {
   ASSERT_THAT(out->faults, testing::SizeIs(2));
   // THEN the first fault matches the first one added to the RobotState, and the clock skew is applied correctly
   const auto first_fault = out->faults.at(0);
-  EXPECT_THAT(first_fault.behavior_fault_id, testing::Eq(11));
+  EXPECT_THAT(first_fault.behavior_fault_id, testing::Eq(11u));
   EXPECT_THAT(first_fault.status,
               testing::Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_CLEARABLE));
   EXPECT_THAT(first_fault.cause, testing::Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_HARDWARE));
   EXPECT_THAT(first_fault.header.stamp.sec, testing::Eq(9));
-  EXPECT_THAT(first_fault.header.stamp.nanosec, testing::Eq(0));
+  EXPECT_THAT(first_fault.header.stamp.nanosec, testing::Eq(0u));
   // THEN the second fault matches the second one added to the RobotState, and the clock skew is applied correctly
   const auto second_fault = out->faults.at(1);
-  EXPECT_THAT(second_fault.behavior_fault_id, testing::Eq(12));
+  EXPECT_THAT(second_fault.behavior_fault_id, testing::Eq(12u));
   EXPECT_THAT(second_fault.status,
               testing::Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_UNCLEARABLE));
   EXPECT_THAT(second_fault.cause, testing::Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_FALL));
   EXPECT_THAT(second_fault.header.stamp.sec, testing::Eq(9));
-  EXPECT_THAT(second_fault.header.stamp.nanosec, testing::Eq(0));
+  EXPECT_THAT(second_fault.header.stamp.nanosec, testing::Eq(0u));
 }
 
 TEST(RobotStateConversions, TestGetBehaviorFaultStateNoFaults) {
