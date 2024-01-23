@@ -1701,13 +1701,13 @@ class SpotROS(Node):
             # Data is actually a bytes object, not DataChunk as the SpotCAM wrapper states...
             # Therefore, we use a uint8[] buffer in srv message and directly set that
             # to the bytes object.
-            response.data = proto_data_chunk  # TODO
+            response.data = proto_data_chunk
             response.success = True
             response.message = "Success"
             return response
         except Exception as e:
             response.success = False
-            response.message = f"Error: {e} {type(proto_data_chunk)}"
+            response.message = f"Error: {e}"
             return response
 
     def handle_get_logpoint_status(
@@ -1797,7 +1797,7 @@ class SpotROS(Node):
             proto_brightness_list = self.spot_cam_wrapper.lighting.get_led_brightness()
             response.success = True
             response.message = "Success"
-            response.brightness = proto_brightness_list  # TODO: See if this errors
+            response.brightness = proto_brightness_list
             return response
         except Exception as e:
             response.success = False
