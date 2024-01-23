@@ -125,6 +125,7 @@ from spot_msgs.srv import (  # type: ignore
     ExecuteDance,
     GetChoreographyStatus,
     GetGripperCameraParameters,
+    GetLEDBrightness,
     GetLogpointStatus,
     GetPtzPosition,
     GetVolume,
@@ -145,6 +146,7 @@ from spot_msgs.srv import (  # type: ignore
     PlaySound,
     RetrieveLogpoint,
     SetGripperCameraParameters,
+    SetLEDBrightness,
     SetLocomotion,
     SetPtzPosition,
     SetVelocity,
@@ -796,6 +798,22 @@ class SpotROS(Node):
             TagLogpoint,
             "tag_logpoint",
             lambda request, response: self.service_wrapper("tag_logpoint", self.handle_tag_logpoint, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            GetLEDBrightness,
+            "get_led_brightness",
+            lambda request, response: self.service_wrapper(
+                "get_led_brightness", self.handle_get_led_brightness, request, response
+            ),
+            callback_group=self.group,
+        )
+        self.create_service(
+            SetLEDBrightness,
+            "set_led_brightness",
+            lambda request, response: self.service_wrapper(
+                "set_led_brightness", self.handle_set_led_brightness, request, response
+            ),
             callback_group=self.group,
         )
         self.create_service(
@@ -1759,6 +1777,43 @@ class SpotROS(Node):
             return response
         try:
             self.spot_cam_wrapper.media_log.tag(request.name, request.tag)
+            response.success = True
+            response.message = "Success"
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_get_led_brightness(
+        self, request: GetLEDBrightness.Request, response: GetLEDBrightness.Response
+    ) -> GetLEDBrightness.Response:
+        """Ros service handler for getting the current brightness of the Spot CAM onboard LEDs"""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            proto_brightness_list = self.spot_cam_wrapper.lighting.get_led_brightness()
+            response.success = True
+            response.message = "Success"
+            response.brightness = proto_brightness_list  # TODO: See if this errors
+            return response
+        except Exception as e:
+            response.success = False
+            response.message = f"Error: {e}"
+            return response
+
+    def handle_set_led_brightness(
+        self, request: SetLEDBrightness.Request, response: SetLEDBrightness.Response
+    ) -> SetLEDBrightness.Response:
+        """Ros service handler to set the brightness of Spot CAM's onboard LEDS"""
+        if self.spot_cam_wrapper is None:
+            response.success = False
+            response.message = "Spot CAM has not been initialized"
+            return response
+        try:
+            self.spot_cam_wrapper.lighting.set_led_brightness(request.brightness)
             response.success = True
             response.message = "Success"
             return response

@@ -80,6 +80,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/RetrieveLogpoint.srv"
   "srv/StoreLogpoint.srv"
   "srv/TagLogpoint.srv"
+  "srv/GetLEDBrightness.srv"
+  "srv/SetLEDBrightness.srv"
   "srv/GraphNavUploadGraph.srv"
   "srv/GraphNavClearGraph.srv"
   "srv/GraphNavSetLocalization.srv"
