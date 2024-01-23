@@ -12,7 +12,7 @@ import pytest
 from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope
 
-from spot_msgs.srv import SetLocomotion
+from spot_msgs.srv import SetLocomotion  # type: ignore
 
 
 @pytest.mark.usefixtures("spot_node")
