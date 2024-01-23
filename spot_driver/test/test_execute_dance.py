@@ -11,8 +11,12 @@ Test for the Execute Dance command.
 import pytest
 from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope
-from bosdyn.api.spot.choreography_sequence_pb2 import ExecuteChoreographyResponse, UploadChoreographyResponse
-from bosdyn.choreography.client.choreography import load_choreography_sequence_from_txt_file
+from bosdyn.api.spot.choreography_sequence_pb2 import (
+    ChoreographySequence,
+    ExecuteChoreographyResponse,
+    UploadChoreographyResponse,
+)
+from google.protobuf import text_format
 
 from spot_msgs.srv import ExecuteDance  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
@@ -30,10 +34,33 @@ def test_execute_dance(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
             GRPC server.
     """
 
+    # For test purposes, this choreography must be as fast as possible.
+    # Internally, the code calculates the time required to execute
+    # all moves and sleeps for the corresponding amount of time.
+    # If the choreography takes too long, the test times out.
+    data = """
+        name: "Line Dance"
+        slices_per_minute: 520.0
+        moves {
+            type: "rotate_body"
+            requested_slices: 1
+            rotate_body_params {
+                rotation {
+                    roll {
+                        value: -0.1
+                    }
+                }
+                return_to_start_pose {
+                }
+            }
+        }
+    """
+
     # Send ROS request.
     client = ros.node.create_client(ExecuteDance, "execute_dance")
     request = ExecuteDance.Request()
-    choreography_sequence = load_choreography_sequence_from_txt_file("./resources/line_dance.csq")
+    choreography_sequence = ChoreographySequence()
+    text_format.Merge(data, choreography_sequence)
     request.choreo_sequence_serialized = choreography_sequence.SerializeToString()
     future = client.call_async(request)
 
