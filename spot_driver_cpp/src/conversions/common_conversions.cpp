@@ -47,29 +47,29 @@ void convertGeometryMsgsPoseToProto(const geometry_msgs::msg::Pose& ros_msg, bos
   convertGeometryMsgsQuaternionToProto(ros_msg.orientation, *proto.mutable_rotation());
 }
 
-void convertGloat64ToProto(const double ros_msg, google::protobuf::DoubleValue& proto) {
+void convertfloat64ToProto(const double ros_msg, google::protobuf::DoubleValue& proto) {
   proto.set_value(ros_msg);
 }
 
 void convertBosdynMsgsArmJointPositionToProto(const bosdyn_msgs::msg::ArmJointPosition& ros_msg,
                                               bosdyn::api::ArmJointPosition& proto) {
   if (ros_msg.sh0_is_set) {
-    convertGloat64ToProto(ros_msg.sh0, *proto.mutable_sh0());
+    convertfloat64ToProto(ros_msg.sh0, *proto.mutable_sh0());
   }
   if (ros_msg.sh1_is_set) {
-    convertGloat64ToProto(ros_msg.sh1, *proto.mutable_sh1());
+    convertfloat64ToProto(ros_msg.sh1, *proto.mutable_sh1());
   }
   if (ros_msg.el0_is_set) {
-    convertGloat64ToProto(ros_msg.el0, *proto.mutable_el0());
+    convertfloat64ToProto(ros_msg.el0, *proto.mutable_el0());
   }
   if (ros_msg.el1_is_set) {
-    convertGloat64ToProto(ros_msg.el1, *proto.mutable_el1());
+    convertfloat64ToProto(ros_msg.el1, *proto.mutable_el1());
   }
   if (ros_msg.wr0_is_set) {
-    convertGloat64ToProto(ros_msg.wr0, *proto.mutable_wr0());
+    convertfloat64ToProto(ros_msg.wr0, *proto.mutable_wr0());
   }
   if (ros_msg.wr1_is_set) {
-    convertGloat64ToProto(ros_msg.wr1, *proto.mutable_wr1());
+    convertfloat64ToProto(ros_msg.wr1, *proto.mutable_wr1());
   }
 }
 

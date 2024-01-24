@@ -41,7 +41,7 @@ void convertGeometryMsgsQuaternionToProto(const geometry_msgs::msg::Quaternion& 
 
 void convertGeometryMsgsPoseToProto(const geometry_msgs::msg::Pose& ros_msg, bosdyn::api::SE3Pose& proto);
 
-void convertGloat64ToProto(const double ros_msg, google::protobuf::DoubleValue& proto);
+void convertfloat64ToProto(const double ros_msg, google::protobuf::DoubleValue& proto);
 
 void convertBosdynMsgsArmJointPositionToProto(const bosdyn_msgs::msg::ArmJointPosition& ros_msg,
                                               bosdyn::api::ArmJointPosition& proto);

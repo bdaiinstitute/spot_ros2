@@ -24,7 +24,7 @@ class KinematicService {
    */
   class MiddlewareHandle {
    public:
-    virtual void createService(std::string serviceName,
+    virtual void createService(std::string service_name,
                                std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
                                                   std::shared_ptr<GetInverseKinematicSolutions::Response>)>
                                    callback) = 0;
@@ -34,11 +34,11 @@ class KinematicService {
   /**
    * Create the logic for the GetInverseKinematicSolutions service.
    * @param node The ROS node.
-   * @param kinematicApi The Api to interact with the Spot SDK.
+   * @param kinematic_api The Api to interact with the Spot SDK.
    * @param logger Logging interface.
    */
-  explicit KinematicService(std::shared_ptr<KinematicApi> kinematicApi, std::shared_ptr<LoggerInterfaceBase> logger,
-                            std::unique_ptr<MiddlewareHandle> middlewareHandle);
+  explicit KinematicService(std::shared_ptr<KinematicApi> kinematic_api, std::shared_ptr<LoggerInterfaceBase> logger,
+                            std::unique_ptr<MiddlewareHandle> middleware_Handle);
 
   /** Initialize the service. */
   void initialize();
@@ -53,12 +53,12 @@ class KinematicService {
 
  private:
   // The API to interact with Spot SDK.
-  std::shared_ptr<KinematicApi> kinematicApi_;
+  std::shared_ptr<KinematicApi> kinematic_api_;
 
   // Logger.
   std::shared_ptr<LoggerInterfaceBase> logger_;
 
   // The service provider.
-  std::unique_ptr<MiddlewareHandle> middlewareHandle_;
+  std::unique_ptr<MiddlewareHandle> middleware_handle_;
 };
 }  // namespace spot_ros2::kinematic

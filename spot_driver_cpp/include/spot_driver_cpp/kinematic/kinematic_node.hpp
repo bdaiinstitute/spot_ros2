@@ -17,11 +17,11 @@
 namespace spot_ros2::kinematic {
 class KinematicNode {
  public:
-  explicit KinematicNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spotApi,
-                         std::shared_ptr<ParameterInterfaceBase> parameterInterface,
-                         std::shared_ptr<LoggerInterfaceBase> loggerInterface);
+  explicit KinematicNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
+                         std::shared_ptr<ParameterInterfaceBase> parameter_interface,
+                         std::shared_ptr<LoggerInterfaceBase> logger_interface);
 
-  explicit KinematicNode(const rclcpp::NodeOptions& nodeOptions = rclcpp::NodeOptions{});
+  explicit KinematicNode(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
   /**
    * @brief Returns the NodeBaseInterface of this class's node.
@@ -34,11 +34,11 @@ class KinematicNode {
 
  private:
   std::shared_ptr<rclcpp::Node> node_;
-  std::unique_ptr<SpotApi> spotApi_;
+  std::unique_ptr<SpotApi> spot_api_;
   std::unique_ptr<KinematicService> internal_;
 
-  void initialize(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spotApi,
-                  std::shared_ptr<ParameterInterfaceBase> parameterInterface,
-                  const std::shared_ptr<LoggerInterfaceBase> loggerInterface);
+  void initialize(std::shared_ptr<rclcpp::Node> node, std::unique_ptr<SpotApi> spot_api,
+                  std::shared_ptr<ParameterInterfaceBase> parameter_interface,
+                  const std::shared_ptr<LoggerInterfaceBase> logger_interface);
 };
 }  // namespace spot_ros2::kinematic

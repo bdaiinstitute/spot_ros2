@@ -11,17 +11,17 @@ constexpr auto kServiceName = "get_inverse_kinematic_solutions";
 }
 
 namespace spot_ros2::kinematic {
-KinematicService::KinematicService(std::shared_ptr<KinematicApi> kinematicApi,
+KinematicService::KinematicService(std::shared_ptr<KinematicApi> kinematic_api,
                                    std::shared_ptr<LoggerInterfaceBase> logger,
-                                   std::unique_ptr<MiddlewareHandle> middlewareHandle)
-    : kinematicApi_{kinematicApi}, logger_{std::move(logger)}, middlewareHandle_{std::move(middlewareHandle)} {}
+                                   std::unique_ptr<MiddlewareHandle> middleware_handle)
+    : kinematic_api_{kinematic_api}, logger_{std::move(logger)}, middleware_handle_{std::move(middleware_handle)} {}
 
 void KinematicService::initialize() {
-  middlewareHandle_->createService(kServiceName,
-                                   [this](const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
-                                          std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
-                                     this->getSolutions(request, response);
-                                   });
+  middleware_handle_->createService(kServiceName,
+                                    [this](const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
+                                           std::shared_ptr<GetInverseKinematicSolutions::Response> response) {
+                                      this->getSolutions(request, response);
+                                    });
 }
 
 void KinematicService::getSolutions(const std::shared_ptr<GetInverseKinematicSolutions::Request> request,
@@ -31,7 +31,7 @@ void KinematicService::getSolutions(const std::shared_ptr<GetInverseKinematicSol
   bosdyn::api::spot::InverseKinematicsRequest proto_request;
   kinematic_conversions::convertBosdynMsgsInverseKinematicsRequestToProto(ros_request, proto_request);
 
-  auto expected = kinematicApi_->getSolutions(proto_request);
+  auto expected = kinematic_api_->getSolutions(proto_request);
   if (!expected) {
     logger_->logError(std::string{"Error quering the Inverse Kinematics service: "}.append(expected.error()));
     response->response.status.value = bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_UNKNOWN;

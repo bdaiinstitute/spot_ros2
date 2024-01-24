@@ -7,9 +7,9 @@ namespace spot_ros2::kinematic {
 KinematicMiddlewareHandle::KinematicMiddlewareHandle(std::shared_ptr<rclcpp::Node> node) : node_{node} {}
 
 void KinematicMiddlewareHandle::createService(
-    std::string serviceName, std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
+    std::string service_name, std::function<void(const std::shared_ptr<GetInverseKinematicSolutions::Request>,
                                                 std::shared_ptr<GetInverseKinematicSolutions::Response>)>
                                  callback) {
-  node_->create_service<GetInverseKinematicSolutions>(serviceName, callback);
+  node_->create_service<GetInverseKinematicSolutions>(service_name, callback);
 }
 }  // namespace spot_ros2::kinematic
