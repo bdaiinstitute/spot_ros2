@@ -1558,12 +1558,10 @@ class SpotROS(Node):
 
     def handle_list_ptz(self, request: ListPtz.Request, response: ListPtz.Response) -> ListPtz.Response:
         """Ros service handler for getting descriptions of any ptz"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
-
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             proto_descriptions = self.spot_cam_wrapper.ptz.list_ptz()
             descriptions = []
             for proto_description in proto_descriptions:
@@ -1583,12 +1581,10 @@ class SpotROS(Node):
         self, request: GetPtzPosition.Request, response: GetPtzPosition.Response
     ) -> GetPtzPosition.Response:
         """Ros service handler to get the position of a ptz camera"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
-
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             proto_position = self.spot_cam_wrapper.ptz.get_ptz_position(request.name)
             conv.convert_proto_to_bosdyn_msgs_ptz_position(proto_position, response.position)
             response.success = True
@@ -1603,12 +1599,10 @@ class SpotROS(Node):
         self, request: SetPtzPosition.Request, response: SetPtzPosition.Response
     ) -> SetPtzPosition.Response:
         """Ros service handler for setting the position of a ptz camera"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
-
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             self.spot_cam_wrapper.ptz.set_ptz_position(request.name, request.pan, request.tilt, request.zoom)
             response.success = True
             response.message = "Success"
@@ -1622,12 +1616,10 @@ class SpotROS(Node):
         self, request: InitializeLens.Request, response: InitializeLens.Response
     ) -> InitializeLens.Response:
         """Ros service handler for initializing the lens"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
-
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             self.spot_cam_wrapper.ptz.initialise_lens()  # British spelling?
             response.success = True
             response.message = "Success"
@@ -1639,12 +1631,10 @@ class SpotROS(Node):
 
     def handle_list_cameras(self, request: ListCameras.Request, response: ListCameras.Response) -> ListCameras.Response:
         """Ros service handler for listing all cameras on SpotCAM"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
-
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             proto_cameras = self.spot_cam_wrapper.media_log.list_cameras()
             cameras = []
             for proto_camera in proto_cameras:
@@ -1664,12 +1654,10 @@ class SpotROS(Node):
         self, request: ListLogpoints.Request, response: ListLogpoints.Response
     ) -> ListLogpoints.Response:
         """Ros service handler for listing all logpoints saved on SpotCAM"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
-
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             proto_logpoints = self.spot_cam_wrapper.media_log.list_logpoints()
             logpoints = []
             for proto_logpoint in proto_logpoints:
@@ -1689,11 +1677,10 @@ class SpotROS(Node):
         self, request: RetrieveLogpoint.Request, response: RetrieveLogpoint.Response
     ) -> RetrieveLogpoint.Response:
         """Ros service handler for retrieving a logpoint from SpotCAM"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             proto_logpoint, proto_data_chunk = self.spot_cam_wrapper.media_log.retrieve_logpoint(
                 request.name, request.raw
             )
@@ -1714,11 +1701,10 @@ class SpotROS(Node):
         self, request: GetLogpointStatus.Request, response: GetLogpointStatus.Response
     ) -> GetLogpointStatus.Response:
         """Ros service handler for getting the status of a logpoint from SpotCAM"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             proto_logstatus = self.spot_cam_wrapper.media_log.get_logpoint_status(request.name)
             response.status.value = proto_logstatus.status  # Manual proto conversion
             response.success = True
@@ -1733,11 +1719,10 @@ class SpotROS(Node):
         self, request: DeleteLogpoint.Request, response: DeleteLogpoint.Response
     ) -> DeleteLogpoint.Response:
         """Ros service handler for deleting a logpoint from SpotCAM"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             self.spot_cam_wrapper.media_log.delete_logpoint(request.name)
             response.success = True
             response.message = "Success"
@@ -1751,12 +1736,10 @@ class SpotROS(Node):
         self, request: StoreLogpoint.Request, response: StoreLogpoint.Response
     ) -> StoreLogpoint.Response:
         """Ros service handler for storing current camera data as a logpoint on SpotCAM"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
-
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             tag = None if request.tag == "" else request.tag
             camera_name = SpotCamCamera(request.name)  # Silly but don't want to modify cam wrapper.
             proto_logpoint = self.spot_cam_wrapper.media_log.store(camera_name, tag)
@@ -1771,11 +1754,10 @@ class SpotROS(Node):
 
     def handle_tag_logpoint(self, request: TagLogpoint.Request, response: TagLogpoint.Response) -> TagLogpoint.Response:
         """Ros service handler for adding a tag to a logpoint on SpotCAM"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             self.spot_cam_wrapper.media_log.tag(request.name, request.tag)
             response.success = True
             response.message = "Success"
@@ -1789,11 +1771,10 @@ class SpotROS(Node):
         self, request: GetLEDBrightness.Request, response: GetLEDBrightness.Response
     ) -> GetLEDBrightness.Response:
         """Ros service handler for getting the current brightness of the Spot CAM onboard LEDs"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             proto_brightness_list = self.spot_cam_wrapper.lighting.get_led_brightness()
             response.success = True
             response.message = "Success"
@@ -1808,11 +1789,10 @@ class SpotROS(Node):
         self, request: SetLEDBrightness.Request, response: SetLEDBrightness.Response
     ) -> SetLEDBrightness.Response:
         """Ros service handler to set the brightness of Spot CAM's onboard LEDS"""
-        if self.spot_cam_wrapper is None:
-            response.success = False
-            response.message = "Spot CAM has not been initialized"
-            return response
         try:
+            if self.spot_cam_wrapper is None:
+                raise Exception("Spot CAM has not been initialized")
+
             self.spot_cam_wrapper.lighting.set_led_brightness(request.brightness)
             response.success = True
             response.message = "Success"
