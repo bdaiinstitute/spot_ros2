@@ -975,16 +975,25 @@ class SpotROS(Node):
             return response
 
         old_lease = self.spot_wrapper.lease2
-        # take() can technically raise an exception (haven't observed it, very rare),
+        # take() can technically raise an exception (although the two possibilities
+        # in the documentation don't seem to apply when take() is not given an argument),
         # but handling exceptions inside a ROS callback is overcomplicated,
         # so we ignore this for now.
         lease = self.spot_wrapper._lease_client.take()
         self.spot_wrapper._lease_keepalive = LeaseKeepAlive(self.spot_wrapper._lease_client)
         # There is no evidence that take() can give the same lease as before,
-        # but because many aspects of the spot sdk have been surprising and
+        # but because aspects of the spot sdk have been surprising and
         # undocumented, we do this check to be extra safe.
-        response.success = True if old_lease is None else str(lease.lease_proto) != str(old_lease.lease_proto)
-        response.message = str(lease.lease_proto)
+        have_new_lease = (old_lease is None and lease is not None) or (
+            str(lease.lease_proto) != str(old_lease.lease_proto)
+        )
+        if have_new_lease:
+            response.success = True
+            response.message = str(lease.lease_proto)
+        else:
+            response.success = False
+            response.message = ""
+
         return response
 
     def robot_state_callback(self, results: Any) -> None:
