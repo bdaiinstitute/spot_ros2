@@ -37,8 +37,8 @@ from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence
 from bosdyn.client import math_helpers
-from bosdyn.client.lease import LeaseKeepAlive
 from bosdyn.client.exceptions import InternalServerError
+from bosdyn.client.lease import LeaseKeepAlive
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
     Camera,
