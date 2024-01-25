@@ -33,7 +33,7 @@ void KinematicService::getSolutions(const std::shared_ptr<GetInverseKinematicSol
 
   auto expected = kinematic_api_->getSolutions(proto_request);
   if (!expected) {
-    logger_->logError(std::string{"Error quering the Inverse Kinematics service: "}.append(expected.error()));
+    logger_->logError(std::string{"Error querying the Inverse Kinematics service: "}.append(expected.error()));
     response->response.status.value = bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_UNKNOWN;
   } else {
     kinematic_conversions::convertToRos(expected.value(), response->response);
