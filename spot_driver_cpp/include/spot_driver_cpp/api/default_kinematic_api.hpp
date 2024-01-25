@@ -12,12 +12,13 @@ namespace spot_ros2 {
 
 class DefaultKinematicApi : public KinematicApi {
  public:
+  virtual ~DefaultKinematicApi() = default;
   explicit DefaultKinematicApi(bosdyn::client::InverseKinematicsClient* kinematic_client);
 
   /**
    * Return a solution to the given request.
    */
-  tl::expected<Result<InverseKinematicsResponse>, std::string> getSolutions(InverseKinematicsRequest& request);
+  tl::expected<InverseKinematicsResponse, std::string> getSolutions(InverseKinematicsRequest& request) override;
 
  private:
   bosdyn::client::InverseKinematicsClient* kinematic_client_;

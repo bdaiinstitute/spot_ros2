@@ -17,10 +17,11 @@ using ::bosdyn::client::Result;
 
 class KinematicApi {
  public:
+  virtual ~KinematicApi() = default;
+
   /**
    * Return a solution to the given request.
    */
-  virtual tl::expected<Result<InverseKinematicsResponse>, std::string> getSolutions(
-      InverseKinematicsRequest& request) = 0;
+  virtual tl::expected<InverseKinematicsResponse, std::string> getSolutions(InverseKinematicsRequest& request) = 0;
 };
 }  // namespace spot_ros2

@@ -121,7 +121,8 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfToo
   bosdyn::api::spot::InverseKinematicsRequest protoMsg;
 
   rosMsg.wrist_mounted_tool.wrist_tform_tool_is_set = true;
-  rosMsg.tool_specification_choice = rosMsg.TOOL_SPECIFICATION_WRIST_MOUNTED_TOOL_SET;
+  rosMsg.tool_specification_choice =
+      bosdyn_msgs::msg::InverseKinematicsRequestOneOfToolSpecification.TOOL_SPECIFICATION_WRIST_MOUNTED_TOOL_SET;
   rosMsg.wrist_mounted_tool.wrist_tform_tool.position.x = 0.1;
   rosMsg.wrist_mounted_tool.wrist_tform_tool.position.y = 0.2;
   rosMsg.wrist_mounted_tool.wrist_tform_tool.position.z = 0.3;
@@ -152,7 +153,8 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfToo
   bosdyn::api::spot::InverseKinematicsRequest protoMsg;
 
   rosMsg.body_mounted_tool.body_tform_tool_is_set = true;
-  rosMsg.tool_specification_choice = rosMsg.TOOL_SPECIFICATION_BODY_MOUNTED_TOOL_SET;
+  rosMsg.tool_specification_choice =
+      bosdyn_msgs::msg::InverseKinematicsRequestOneOfToolSpecification.TOOL_SPECIFICATION_BODY_MOUNTED_TOOL_SET;
   rosMsg.body_mounted_tool.body_tform_tool.position.x = 0.1;
   rosMsg.body_mounted_tool.body_tform_tool.position.y = 0.2;
   rosMsg.body_mounted_tool.body_tform_tool.position.z = 0.3;
@@ -178,7 +180,7 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfToo
             protoMsg.body_mounted_tool().body_tform_tool().rotation().z());
 }
 
-TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfTaskSpecificationToProto_pose) {
+TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfTaskSpecificationToProto) {
   bosdyn_msgs::msg::InverseKinematicsRequestOneOfTaskSpecification rosMsg;
   bosdyn::api::spot::InverseKinematicsRequest protoMsg;
 

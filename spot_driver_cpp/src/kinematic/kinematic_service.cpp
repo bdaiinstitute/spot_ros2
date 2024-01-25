@@ -36,7 +36,7 @@ void KinematicService::getSolutions(const std::shared_ptr<GetInverseKinematicSol
     logger_->logError(std::string{"Error quering the Inverse Kinematics service: "}.append(expected.error()));
     response->response.status.value = bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_UNKNOWN;
   } else {
-    kinematic_conversions::convertProtoToBosdynMsgsInverseKinematicsResponse(expected.value().response,
+    kinematic_conversions::convertProtoToBosdynMsgsInverseKinematicsResponse(expected.value(),
                                                                              response->response);
   }
 }

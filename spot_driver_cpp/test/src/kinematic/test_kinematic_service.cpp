@@ -41,7 +41,7 @@ TEST(TestKinematicService, initialize) {
 /**
  * Test a happy path behavior when an IK solution is received.
  */
-TEST(TestKinematicService, get_solutions) {
+TEST(TestKinematicService, getSolutions) {
   // GIVEN an instance of the Spot IK API.
 
   auto ik_api = std::make_unique<spot_ros2::test::MockKinematicApi>();
@@ -50,9 +50,9 @@ TEST(TestKinematicService, get_solutions) {
   // the first time it is called.
   // THEN a single request is sent to Spot's inverse kinematics API
 
-  Result<InverseKinematicsResponse> fake_response;
-  fake_response.response.set_status(bosdyn::api::spot::InverseKinematicsResponse_Status_STATUS_OK);
-  tl::expected<Result<InverseKinematicsResponse>, std::string> fake_result(fake_response);
+  InverseKinematicsResponse fake_response;
+  fake_response.set_status(bosdyn::api::spot::InverseKinematicsResponse_Status_STATUS_OK);
+  tl::expected<InverseKinematicsResponse, std::string> fake_result(fake_response);
 
   EXPECT_CALL(*ik_api, getSolutions(_)).WillOnce(Return(fake_result));
 
@@ -76,7 +76,7 @@ TEST(TestKinematicService, get_solutions) {
 /**
  * Test the behavior of the service when an exception is thrown during an IK request.
  */
-TEST(TestKinematicService, get_solutions_exception) {
+TEST(TestKinematicService, getSolutionsException) {
   auto ik_api = std::make_unique<spot_ros2::test::MockKinematicApi>();
 
   EXPECT_CALL(*ik_api, getSolutions(_)).WillOnce(Return(tl::make_unexpected("Some error")));
