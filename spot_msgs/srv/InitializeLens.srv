@@ -1,0 +1,4 @@
+# Initialize or reset ptz autofocus
+---
+bool success
+string message
