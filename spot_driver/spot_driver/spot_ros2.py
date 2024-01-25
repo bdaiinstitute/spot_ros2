@@ -38,6 +38,7 @@ from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
+from bosdyn.client.lease import LeaseKeepAlive
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
     Camera,
@@ -958,6 +959,41 @@ class SpotROS(Node):
                 self.spot_wrapper.power_on()
                 if self.auto_stand.value:
                     self.spot_wrapper.stand()
+
+        self.create_service(
+            srv_type=Trigger,
+            srv_name="take_lease",
+            callback=self.take_lease_callback,
+            callback_group=self.group,
+        )
+
+    def take_lease_callback(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        self.get_logger().info("Incoming request to take a new lease.")
+        if self.spot_wrapper is None:
+            response.success = True
+            response.message = "spot_ros2 is running in mock mode."
+            return response
+
+        old_lease = self.spot_wrapper.lease2
+        # `take()` can technically raise an exception (although the two possibilities
+        # in the documentation don't seem to apply when take() is not given an argument),
+        # but handling exceptions inside a ROS callback is overcomplicated,
+        # so we ignore this for now.
+        lease = self.spot_wrapper._lease_client.take()
+        self.spot_wrapper._lease_keepalive = LeaseKeepAlive(self.spot_wrapper._lease_client)
+        # There is no clear evidence that take() could return the same lease as before,
+        # but we do this check to be extra safe.
+        have_new_lease = (old_lease is None and lease is not None) or (
+            str(lease.lease_proto) != str(old_lease.lease_proto)
+        )
+        if have_new_lease:
+            response.success = True
+            response.message = str(lease.lease_proto)
+        else:
+            response.success = False
+            response.message = ""
+
+        return response
 
     def robot_state_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new robot state data.
