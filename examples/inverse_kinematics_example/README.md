@@ -35,7 +35,7 @@ The given Python script will:
     ```
     Example.
     ```bash
-    ros2 run inverse_kinematics send_inverse_kinematics_requests --robot Opal --poses 10
+    ros2 run inverse_kinematics_example send_inverse_kinematics_requests --robot Opal --poses 10
     ```
 
     The following parameter is mandatory.
