@@ -31,7 +31,7 @@ The given Python script will:
     ```
 3.  Run the script.
     ```bash
-    ros2 run inverse_kinematics send_inverse_kinematics_requests --robot spot_name --poses n
+    ros2 run inverse_kinematics_example send_inverse_kinematics_requests --robot spot_name --poses n
     ```
     Example.
     ```bash
