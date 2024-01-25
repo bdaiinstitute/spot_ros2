@@ -1,4 +1,4 @@
-# Angles are probably in degrees
+# Angles are in degrees
 string name
 float32 pan
 float32 tilt
