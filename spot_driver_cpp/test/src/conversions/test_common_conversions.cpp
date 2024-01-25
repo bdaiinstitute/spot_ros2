@@ -17,7 +17,7 @@ TEST(TestCommonConversions, convert_builtin_interfaces_time_to_proto) {
   rosMsg.sec = 2;
   rosMsg.nanosec = 200;
 
-  common_conversions::convertBuiltinInterfacesTimeToProto(rosMsg, protoMsg);
+  common_conversions::convertToProto(rosMsg, protoMsg);
 
   ASSERT_EQ(rosMsg.sec, protoMsg.seconds());
   ASSERT_EQ(rosMsg.nanosec, protoMsg.nanos());
@@ -31,7 +31,7 @@ TEST(TestCommonConversions, convertGeometryMsgsVector3ToProto) {
   rosMsg.y = 0.2;
   rosMsg.z = 0.3;
 
-  common_conversions::convertGeometryMsgsVector3ToProto(rosMsg, protoMsg);
+  common_conversions::convertToProto(rosMsg, protoMsg);
 
   ASSERT_EQ(rosMsg.x, protoMsg.x());
   ASSERT_EQ(rosMsg.y, protoMsg.y());
@@ -46,7 +46,7 @@ TEST(TestCommonConversions, convertGeometryMsgsPointToProto) {
   rosMsg.y = 0.2;
   rosMsg.z = 0.3;
 
-  common_conversions::convertGeometryMsgsPointToProto(rosMsg, protoMsg);
+  common_conversions::convertToProto(rosMsg, protoMsg);
 
   ASSERT_EQ(rosMsg.x, protoMsg.x());
   ASSERT_EQ(rosMsg.y, protoMsg.y());
@@ -62,7 +62,7 @@ TEST(TestCommonConversions, convertGeometryMsgsQuaternionToProto) {
   rosMsg.y = 0.4336;
   rosMsg.z = 0.3709;
 
-  common_conversions::convertGeometryMsgsQuaternionToProto(rosMsg, protoMsg);
+  common_conversions::convertToProto(rosMsg, protoMsg);
 
   ASSERT_EQ(rosMsg.w, protoMsg.w());
   ASSERT_EQ(rosMsg.x, protoMsg.x());
@@ -78,7 +78,7 @@ TEST(TestCommonConversions, convertBosdynMsgsRequestHeaderToProto) {
   rosMsg.client_name = "client_name";
   rosMsg.disable_rpc_logging = true;
 
-  common_conversions::convertBosdynMsgsRequestHeaderToProto(rosMsg, protoMsg);
+  common_conversions::convertToProto(rosMsg, protoMsg);
 
   ASSERT_EQ(rosMsg.request_timestamp_is_set, protoMsg.has_request_timestamp());
   ASSERT_EQ(rosMsg.client_name = "client_name", protoMsg.client_name());
@@ -102,7 +102,7 @@ TEST(TestCommonConversions, convertBosdynMsgsArmJointPositionToProto) {
   rosMsg.wr1_is_set = true;
   rosMsg.wr1 = 0.6;
 
-  common_conversions::convertBosdynMsgsArmJointPositionToProto(rosMsg, protoMsg);
+  common_conversions::convertToProto(rosMsg, protoMsg);
 
   ASSERT_EQ(rosMsg.sh0_is_set, protoMsg.has_sh0());
   ASSERT_EQ(rosMsg.sh0, protoMsg.sh0().value());
@@ -128,7 +128,7 @@ TEST(TestCommonConversions, convertProtoToBuiltinInterfacesTime) {
   protoMsg.set_seconds(5);
   protoMsg.set_nanos(200);
 
-  common_conversions::convertProtoToBuiltinInterfacesTime(protoMsg, rosMsg);
+  common_conversions::convertToRos(protoMsg, rosMsg);
 
   ASSERT_EQ(protoMsg.seconds(), rosMsg.sec);
   ASSERT_EQ(protoMsg.nanos(), rosMsg.nanosec);
@@ -142,7 +142,7 @@ TEST(TestCommonConversions, convertProtoToGeometryMsgsVector3) {
   protoMsg.set_y(0.2);
   protoMsg.set_z(0.3);
 
-  common_conversions::convertProtoToGeometryMsgsVector3(protoMsg, rosMsg);
+  common_conversions::convertToRos(protoMsg, rosMsg);
 
   ASSERT_EQ(protoMsg.x(), rosMsg.x);
   ASSERT_EQ(protoMsg.y(), rosMsg.y);
@@ -158,7 +158,7 @@ TEST(TestCommonConversions, convertProtoToGeometryMsgsQuaternion) {
   protoMsg.set_y(0.4336);
   protoMsg.set_z(0.3709);
 
-  common_conversions::convertProtoToGeometryMsgsQuaternion(protoMsg, rosMsg);
+  common_conversions::convertToRos(protoMsg, rosMsg);
 
   ASSERT_EQ(protoMsg.w(), rosMsg.w);
   ASSERT_EQ(protoMsg.x(), rosMsg.x);
