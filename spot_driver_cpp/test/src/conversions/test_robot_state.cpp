@@ -345,7 +345,81 @@ TEST(RobotStateConversions, TestGetJointStatesNoKinematicState) {
   ASSERT_THAT(out.has_value(), testing::IsFalse());
 }
 
-TEST(RobotStateConversions, TestGetTf) {}
+TEST(RobotStateConversions, TestGetTf) {
+  // GIVEN a RobotState containing a valid transform snapshot
+  ::bosdyn::api::RobotState robot_state;
+  // GIVEN a nonzero acquisition timestamp
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  // GIVEN the odom frame is the root of the frame tree
+  addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "odom");
+  // GIVEN the body frame is at a nonzero pose relative to the odom frame
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
+               0.0, 0.0, 0.0);
+  ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
+              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
+
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // WHEN we create a TF tree from the RobotState
+  const auto out = getTf(robot_state, clock_skew, "prefix/", "odom");
+  // THEN this succeeds
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+
+  // THEN the tree contains one frame
+  ASSERT_THAT(out->transforms, testing::SizeIs(1));
+
+  // THEN this frame matches the transform from the odom frame to the body frame
+  const auto& transform = out->transforms.at(0);
+  EXPECT_THAT(transform.header.frame_id, testing::StrEq("prefix/odom"));
+  EXPECT_THAT(transform.child_frame_id, testing::StrEq("prefix/body"));
+  EXPECT_THAT(transform.transform.translation.x, testing::DoubleEq(1.0));
+  EXPECT_THAT(transform.transform.translation.y, testing::DoubleEq(2.0));
+  EXPECT_THAT(transform.transform.translation.z, testing::DoubleEq(3.0));
+  EXPECT_THAT(transform.transform.rotation.w, testing::DoubleEq(1.0));
+  EXPECT_THAT(transform.transform.rotation.x, testing::DoubleEq(0.0));
+  EXPECT_THAT(transform.transform.rotation.y, testing::DoubleEq(0.0));
+  EXPECT_THAT(transform.transform.rotation.z, testing::DoubleEq(0.0));
+}
+
+TEST(RobotStateConversions, TestGetTfInverted) {
+  // GIVEN a RobotState containing a valid transform snapshot
+  ::bosdyn::api::RobotState robot_state;
+  // GIVEN a nonzero acquisition timestamp
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  // GIVEN the odom frame is the root of the frame tree
+  addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "odom");
+  // GIVEN the body frame is at a nonzero pose relative to the odom frame
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
+               0.0, 0.0, 0.0);
+  ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
+              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
+
+  // GIVEN some nominal clock skew
+  google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(1);
+
+  // WHEN we create a TF tree from the RobotState
+  const auto out = getTf(robot_state, clock_skew, "prefix/", "prefix/body");
+  // THEN this succeeds
+  ASSERT_THAT(out.has_value(), testing::IsTrue());
+
+  // THEN the tree contains one frame
+  ASSERT_THAT(out->transforms, testing::SizeIs(1));
+
+  // THEN this frame is the inverse of the transform from the odom frame to the body frame
+  const auto& transform = out->transforms.at(0);
+  EXPECT_THAT(transform.header.frame_id, testing::StrEq("prefix/body"));
+  EXPECT_THAT(transform.child_frame_id, testing::StrEq("prefix/odom"));
+  EXPECT_THAT(transform.transform.translation.x, testing::DoubleEq(-1.0));
+  EXPECT_THAT(transform.transform.translation.y, testing::DoubleEq(-2.0));
+  EXPECT_THAT(transform.transform.translation.z, testing::DoubleEq(-3.0));
+  EXPECT_THAT(transform.transform.rotation.w, testing::DoubleEq(1.0));
+  EXPECT_THAT(transform.transform.rotation.x, testing::DoubleEq(0.0));
+  EXPECT_THAT(transform.transform.rotation.y, testing::DoubleEq(0.0));
+  EXPECT_THAT(transform.transform.rotation.z, testing::DoubleEq(0.0));
+}
 
 TEST(RobotStateConversions, TestGetOdomTwist) {
   // GIVEN a RobotState that contains info about the velocity of the body in the odom frame

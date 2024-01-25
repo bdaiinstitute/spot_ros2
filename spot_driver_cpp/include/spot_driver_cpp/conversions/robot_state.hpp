@@ -54,7 +54,7 @@ std::optional<sensor_msgs::msg::JointState> getJointStates(const ::bosdyn::api::
 
 std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& robot_state,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
-                                              const std::string& inverse_target_frame_id);
+                                              const std::string& preferred_base_frame_id);
 
 std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
     const ::bosdyn::api::RobotState& robot_state, const google::protobuf::Duration& clock_skew);

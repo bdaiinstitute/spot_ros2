@@ -102,7 +102,7 @@ std::optional<sensor_msgs::msg::JointState> getJointStates(const ::bosdyn::api::
 
 std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& robot_state,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
-                                              const std::string& inverse_target_frame_id) {
+                                              const std::string& preferred_base_frame_id) {
   if (robot_state.has_kinematic_state()) {
     tf2_msgs::msg::TFMessage tf_msg;
 
@@ -114,13 +114,13 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& r
       if (transform.parent_frame_name().empty()) {
         continue;
       }
-      const auto parent_frame_name = transform.parent_frame_name().find("/") == std::string::npos
+      const auto parent_frame_name = transform.parent_frame_name().find('/') == std::string::npos
                                          ? prefix + transform.parent_frame_name()
                                          : transform.parent_frame_name();
-      const auto frame_name = frame_id.find("/") == std::string::npos ? prefix + frame_id : frame_id;
+      const auto frame_name = frame_id.find('/') == std::string::npos ? prefix + frame_id : frame_id;
 
       // set target frame(preferred odom frame) as the root node in tf tree
-      if (inverse_target_frame_id == frame_name) {
+      if (preferred_base_frame_id == frame_name) {
         tf_msg.transforms.push_back(conversions::toTransformStamped(~(transform.parent_tform_child()), frame_name,
                                                                     parent_frame_name, local_time));
       } else {
