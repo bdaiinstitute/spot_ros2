@@ -1,0 +1,7 @@
+string name
+bool raw # True to get raw data 
+---
+bool success
+string message
+bosdyn_msgs/Logpoint logpoint
+uint8[] data # Data comes in as byte buffer.

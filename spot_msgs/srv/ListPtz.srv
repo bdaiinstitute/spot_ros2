@@ -1,0 +1,4 @@
+---
+bool success
+string message
+bosdyn_msgs/PtzDescription[] descriptions

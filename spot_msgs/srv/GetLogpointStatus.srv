@@ -1,0 +1,5 @@
+string name
+---
+bool success
+string message
+bosdyn_msgs/LogpointLogStatus status
