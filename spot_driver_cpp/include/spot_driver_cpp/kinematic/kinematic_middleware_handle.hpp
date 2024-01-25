@@ -18,5 +18,6 @@ class KinematicMiddlewareHandle : public KinematicService::MiddlewareHandle {
 
  private:
   std::shared_ptr<rclcpp::Node> node_;
+  std::shared_ptr<rclcpp::Service<GetInverseKinematicSolutions>> service_;
 };
 }  // namespace spot_ros2::kinematic
