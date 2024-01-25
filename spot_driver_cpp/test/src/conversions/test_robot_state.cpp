@@ -77,7 +77,6 @@ void setJointState(::bosdyn::api::JointState* joint_state, const std::string& na
   joint_state->mutable_load()->set_value(load);
 }
 
-
 void addTransform(::bosdyn::api::FrameTreeSnapshot* mutable_frame_tree_snapshot, const std::string& child_name,
                   const std::string& parent_name, const double x, const double y, const double z, const double qw,
                   const double qx, const double qy, const double qz) {
@@ -97,8 +96,7 @@ void addTransform(::bosdyn::api::FrameTreeSnapshot* mutable_frame_tree_snapshot,
   edge_map->insert(google::protobuf::MapPair{child_name, edge});
 }
 
-void addRootFrame(::bosdyn::api::FrameTreeSnapshot* mutable_frame_tree_snapshot, const std::string& root_frame)
-{
+void addRootFrame(::bosdyn::api::FrameTreeSnapshot* mutable_frame_tree_snapshot, const std::string& root_frame) {
   auto edge_map = mutable_frame_tree_snapshot->mutable_child_to_parent_edge_map();
   ::bosdyn::api::FrameTreeSnapshot_ParentEdge root_edge;
   edge_map->insert(google::protobuf::MapPair{root_frame, root_edge});
@@ -431,11 +429,12 @@ TEST(RobotStateConversions, TestGetOdomInOdomFrame) {
   // THEN this succeeds
   ASSERT_THAT(out.has_value(), testing::IsTrue());
 
-  // THEN the parent and child frame IDs of the Odometry pose refer to the correct frames and prepend the prefix to the frame IDs
+  // THEN the parent and child frame IDs of the Odometry pose refer to the correct frames and prepend the prefix to the
+  // frame IDs
   EXPECT_THAT(out->header.frame_id, testing::StrEq("prefix/odom"));
   EXPECT_THAT(out->child_frame_id, testing::StrEq("prefix/body"));
 
-  //THEN the Odometry ROS message contains the same pose and twist data as the RobotState
+  // THEN the Odometry ROS message contains the same pose and twist data as the RobotState
   EXPECT_THAT(out->pose.pose.position.x, testing::DoubleEq(1.0));
   EXPECT_THAT(out->pose.pose.position.y, testing::DoubleEq(2.0));
   EXPECT_THAT(out->pose.pose.position.z, testing::DoubleEq(3.0));
@@ -456,7 +455,8 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(1);
 
-  // GIVEN a RobotState that is fully populated with the required data about the robot's pose and velocity in the vision frame
+  // GIVEN a RobotState that is fully populated with the required data about the robot's pose and velocity in the vision
+  // frame
   ::bosdyn::api::RobotState robot_state;
   addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
   addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
@@ -472,7 +472,8 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   // THEN this succeeds
   ASSERT_THAT(out.has_value(), testing::IsTrue());
 
-  // THEN the parent and child frame IDs of the Odometry pose refer to the correct frames and prepend the prefix to the frame IDs
+  // THEN the parent and child frame IDs of the Odometry pose refer to the correct frames and prepend the prefix to the
+  // frame IDs
   EXPECT_THAT(out->header.frame_id, testing::StrEq("prefix/vision"));
   EXPECT_THAT(out->child_frame_id, testing::StrEq("prefix/body"));
 
@@ -496,13 +497,12 @@ TEST(RobotStateConversions, TestGetOdomMissingAcquisitionTimestamp) {
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(1);
 
-
   // GIVEN a RobotState that contains some odom info, but does not contain an acquisition timestamp
   ::bosdyn::api::RobotState robot_state;
   addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "odom");
-  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0,
-               1.0, 0.0, 0.0, 0.0);
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
+               0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
               testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
 
@@ -522,8 +522,8 @@ TEST(RobotStateConversions, TestGetOdomMissingBodyVelocityOdom) {
   ::bosdyn::api::RobotState robot_state;
   addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "odom");
-  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0,
-               1.0, 0.0, 0.0, 0.0);
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
+               0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
               testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
 
