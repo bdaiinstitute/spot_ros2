@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>inverse_kinematics_example</name>
+  <version>0.0.0</version>
+  <description>This package contains an example on how to send Spot an Inverse Kinematic request to move a tool attached to the arm into a given position.</description>
+  <maintainer email="gremigi@theaiinstitute.com">BD AI Institute</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>bdai_ros2_wrappers</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
