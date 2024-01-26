@@ -31,7 +31,8 @@ def test_dock(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
             GRPC server.
     """
 
-    random_dock_id = 1
+    # This is just a docking station random id for testing purposes.
+    random_dock_id = 500
 
     # Send ROS request.
     client = ros.node.create_client(Dock, "dock")
