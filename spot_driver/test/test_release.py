@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
+# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
 
 """
 Test for the Release command.
