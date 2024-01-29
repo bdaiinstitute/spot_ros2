@@ -32,7 +32,7 @@ RUN source "/opt/ros/${ROS_DISTRO}/setup.bash"
 # Install bosdyn_msgs package
 RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/3.3.2/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run --output /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run --silent \
   && chmod +x /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run \
-  && /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run \
+  && ((yes || true) | /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run) \
   && rm /tmp/ros-humble-bosdyn_msgs_3.3.2-jammy_amd64.run
 
 # Install spot_cpp_sdk package
