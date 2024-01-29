@@ -204,6 +204,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if not tf_prefix and spot_name:
         tf_prefix = PathJoinSubstitution([spot_name, ""])
 
+    kinematc_node_params = {"spot_name": spot_name}
+    kinematic_node = launch_ros.actions.Node(
+        package="spot_driver_cpp",
+        executable="kinematic_node",
+        output="screen",
+        parameters=[config_file, kinematc_node_params],
+        namespace=spot_name,
+    )
+    ld.add_action(kinematic_node)
+
     robot_description = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),

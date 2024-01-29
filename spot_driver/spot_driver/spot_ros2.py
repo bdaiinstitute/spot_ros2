@@ -2420,7 +2420,7 @@ class SpotROS(Node):
             while rclpy.ok() and not self.spot_wrapper.at_goal and goal_handle.is_active:
                 feedback = Trajectory.Feedback()
                 if self.spot_wrapper.near_goal:
-                    if self.spot_wrapper._last_trajectory_command_precise:
+                    if self.spot_wrapper.last_trajectory_command_precise:
                         feedback.feedback = "Near goal, performing final adjustments"
                     else:
                         feedback.feedback = "Near goal"
