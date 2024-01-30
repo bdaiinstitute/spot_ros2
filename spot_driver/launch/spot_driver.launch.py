@@ -116,12 +116,12 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
 
-    # parameters can be set either through the configuration file or by setting environment variables. 
-    # Want to throw an exception if setting params through config file and the config file does not exist. 
+    # parameters can be set either through the configuration file or by setting environment variables.
+    # Want to throw an exception if setting params through config file and the config file does not exist.
 
     # config file has been set if it is not equal to the default (empty string)
     # TODO would be nice to have some way to access the default value, or a better way of checking if it was set by user
-    if (config_file.perform(context) != ""):
+    if config_file.perform(context) != "":
         config_file_exists = os.path.isfile(config_file.perform(context))
         if not config_file_exists:
             raise Exception("Configuration file '{}' does not exist!".format(config_file.perform(context)))
