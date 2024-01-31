@@ -117,7 +117,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
 
     # if config_file has been set (and is not the default empty string) and is also not a file, do not launch anything.
-    # TODO is there a better way to check the default value of this launch argument or check if it was set by the user?
     config_file_path = config_file.perform(context)
     if (config_file_path != "") and (not os.path.isfile(config_file_path)):
         raise Exception("Configuration file '{}' does not exist!".format(config_file_path))
