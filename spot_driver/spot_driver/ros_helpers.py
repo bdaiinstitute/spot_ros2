@@ -26,6 +26,7 @@ from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image, JointState
 from tf2_msgs.msg import TFMessage
+from tkinter import messagebox
 
 from spot_driver.conversions import convert_proto_to_bosdyn_msgs_manipulator_state
 from spot_msgs.msg import (  # type: ignore
@@ -555,6 +556,14 @@ def get_battery_states_from_state(state: robot_state_pb2.RobotState, spot_wrappe
             battery_msg.temperatures.append(temp)
         battery_msg.status = battery.status
         battery_states_array_msg.battery_states.append(battery_msg)
+
+        if battery_msg.charge_percentage <= 0.1:
+            messagebox.showwarning(
+                title="Warning: Low Battery {}".format(battery_msg.identifier),
+                message=(
+                    "Battery is at {}. Approximately {} minutes remaining.\n Please charge your Spot soon."
+                ).format(battery_msg.charge_percentage * 100, battery_msg.estimated_runtime.sec / 60),
+            )
 
     return battery_states_array_msg
 
