@@ -19,23 +19,23 @@ namespace spot_ros2 {
  * @brief Production implementation of a SpotRobotStatePublisher::MiddlewareHandle
  */
 
-class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
+class SpotRobotStateMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
  public:
   /**
-   * @brief Constructor for RobotMiddlewareHandle.
+   * @brief Constructor for SpotRobotStateMiddlewareHandle.
    *
    * @param node A shared instance to a rclcpp::node
    */
-  explicit RobotMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node);
+  explicit SpotRobotStateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node);
 
   /**
-   * @brief Delegating constructor for RobotMiddlewareHandle.
+   * @brief Delegating constructor for SpotRobotStateMiddlewareHandle.
    *
    * @param node_options configuration options for a rclcpp::node
    */
-  explicit RobotMiddlewareHandle(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
+  explicit SpotRobotStateMiddlewareHandle(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
-  ~RobotMiddlewareHandle() override = default;
+  ~SpotRobotStateMiddlewareHandle() override = default;
 
   /**
    * @brief Create ROS publishers for Robot State

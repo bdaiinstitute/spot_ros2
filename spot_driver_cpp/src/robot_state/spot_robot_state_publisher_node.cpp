@@ -4,7 +4,7 @@
 #include <spot_driver_cpp/robot_state/spot_robot_state_publisher_node.hpp>
 
 #include <spot_driver_cpp/api/default_spot_api.hpp>
-#include <spot_driver_cpp/robot_state/robot_middleware_handle.hpp>
+#include <spot_driver_cpp/robot_state/spot_robot_state_middleware_handle.hpp>
 
 namespace {
 constexpr auto kDefaultSDKName{"robot_state_publisher_node"};
@@ -39,7 +39,7 @@ SpotRobotStatePublisherNode::SpotRobotStatePublisherNode(
 
 SpotRobotStatePublisherNode::SpotRobotStatePublisherNode(const rclcpp::NodeOptions& node_options)
     : SpotRobotStatePublisherNode{std::make_unique<DefaultSpotApi>(kDefaultSDKName),
-                                  std::make_unique<RobotMiddlewareHandle>(node_options)} {}
+                                  std::make_unique<SpotRobotStateMiddlewareHandle>(node_options)} {}
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotRobotStatePublisherNode::get_node_base_interface() {
   return node_->get_node_base_interface();

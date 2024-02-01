@@ -105,7 +105,7 @@ rclcpp_components_register_node(
 
 # Base library container SpotRobotStatePublisher
 add_library(spot_robot_state_publisher
-   src/robot_state/robot_middleware_handle.cpp
+   src/robot_state/spot_robot_state_middleware_handle.cpp
    src/robot_state/spot_robot_state_publisher.cpp
    src/robot_state/spot_robot_state_publisher_node.cpp
 )

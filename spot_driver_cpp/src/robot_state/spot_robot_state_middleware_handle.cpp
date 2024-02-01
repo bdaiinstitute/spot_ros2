@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver_cpp/robot_state/robot_middleware_handle.hpp>
+#include <spot_driver_cpp/robot_state/spot_robot_state_middleware_handle.hpp>
 
 namespace {
 constexpr auto kPublisherHistoryDepth = 1;
@@ -23,17 +23,17 @@ constexpr auto kManipulatorTopic{"manipulation_state"};
 
 namespace spot_ros2 {
 
-RobotMiddlewareHandle::RobotMiddlewareHandle(std::shared_ptr<rclcpp::Node> node)
+SpotRobotStateMiddlewareHandle::SpotRobotStateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node)
     : node_{node},
       parameter_interface_{std::make_unique<RclcppParameterInterface>(node)},
       logger_interface_{std::make_unique<RclcppLoggerInterface>(node->get_logger())},
       tf_interface_{std::make_unique<RclcppTfInterface>(node)},
       timer_interface_{std::make_unique<RclcppWallTimerInterface>(node)} {}
 
-RobotMiddlewareHandle::RobotMiddlewareHandle(const rclcpp::NodeOptions& node_options)
-    : RobotMiddlewareHandle(std::make_shared<rclcpp::Node>(kNodeName, node_options)) {}
+SpotRobotStateMiddlewareHandle::SpotRobotStateMiddlewareHandle(const rclcpp::NodeOptions& node_options)
+    : SpotRobotStateMiddlewareHandle(std::make_shared<rclcpp::Node>(kNodeName, node_options)) {}
 
-void RobotMiddlewareHandle::createPublishers() {
+void SpotRobotStateMiddlewareHandle::createPublishers() {
   battery_states_publisher_ = node_->create_publisher<spot_msgs::msg::BatteryStateArray>(
       kBatteryStatesTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
   wifi_state_publisher_ = node_->create_publisher<spot_msgs::msg::WiFiState>(
@@ -60,7 +60,7 @@ void RobotMiddlewareHandle::createPublishers() {
       kBehaviorFaultsTopic, rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth)));
 }
 
-void RobotMiddlewareHandle::publishRobotState(const RobotState& robot_state) {
+void SpotRobotStateMiddlewareHandle::publishRobotState(const RobotState& robot_state) {
   battery_states_publisher_->publish(robot_state.battery_states);
   wifi_state_publisher_->publish(robot_state.wifi_state);
   foot_states_publisher_->publish(robot_state.foot_state);
