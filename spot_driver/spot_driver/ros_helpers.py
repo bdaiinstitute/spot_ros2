@@ -1,5 +1,6 @@
 import os
 import time
+from tkinter import messagebox
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import builtin_interfaces.msg
@@ -27,7 +28,6 @@ from rclpy.node import Node
 from rclpy.parameter import Parameter
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image, JointState
 from tf2_msgs.msg import TFMessage
-from tkinter import messagebox
 
 from spot_driver.conversions import convert_proto_to_bosdyn_msgs_manipulator_state
 from spot_msgs.msg import (  # type: ignore
@@ -532,7 +532,9 @@ def get_tf_from_world_objects(
     return tf_msg
 
 
-def get_battery_states_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper, node: Node) -> BatteryStateArray:
+def get_battery_states_from_state(
+    state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper, node: Node
+) -> BatteryStateArray:
     """Maps battery state data from robot state proto to ROS BatteryStateArray message
     Args:
         state: Robot State proto
@@ -559,11 +561,7 @@ def get_battery_states_from_state(state: robot_state_pb2.RobotState, spot_wrappe
         battery_states_array_msg.battery_states.append(battery_msg)
 
         if battery_msg.charge_percentage <= 10 and not node.get_parameter("low_battery").value:
-            low_battery_param = Parameter(
-                'low_battery',
-                Parameter.Type.BOOL,
-                True
-            )
+            low_battery_param = Parameter("low_battery", Parameter.Type.BOOL, True)
             node.set_parameters([low_battery_param])
             messagebox.showwarning(
                 title="Warning: Low Battery {}".format(battery_msg.identifier),
