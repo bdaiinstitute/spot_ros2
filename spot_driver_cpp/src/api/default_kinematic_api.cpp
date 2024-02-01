@@ -13,6 +13,7 @@ tl::expected<InverseKinematicsResponse, std::string> DefaultKinematicApi::getSol
     if (result) {
       return result.response;
     }
+
     const auto error_code = result.status.code().value();
     const auto error_message = result.status.message();
     return tl::make_unexpected("The InverseKinematics service returned with error code " + std::to_string(error_code) +

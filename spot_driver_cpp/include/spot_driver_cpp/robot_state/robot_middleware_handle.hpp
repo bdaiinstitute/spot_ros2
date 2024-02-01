@@ -12,12 +12,11 @@
 #include <tl_expected/expected.hpp>
 
 #include <memory>
-#include <string>
 
 namespace spot_ros2 {
 
 /**
- * @brief pProduction implementation of a SpotRobotStatePublisher::MiddlewareHandle
+ * @brief Production implementation of a SpotRobotStatePublisher::MiddlewareHandle
  */
 
 class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
@@ -27,7 +26,7 @@ class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
    *
    * @param node A shared instance to a rclcpp::node
    */
-  explicit RobotMiddlewareHandle(std::shared_ptr<rclcpp::Node> node);
+  explicit RobotMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node);
 
   /**
    * @brief Delegating constructor for RobotMiddlewareHandle.
@@ -36,7 +35,7 @@ class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
    */
   explicit RobotMiddlewareHandle(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
-  ~RobotMiddlewareHandle() = default;
+  ~RobotMiddlewareHandle() override = default;
 
   /**
    * @brief Create ROS publishers for Robot State
@@ -46,7 +45,6 @@ class RobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
   /**
    * @brief Publish robot state messages
    */
-
   void publishRobotState(const RobotState& robot_state) override;
 
   ParameterInterfaceBase* parameter_interface() override { return parameter_interface_.get(); }

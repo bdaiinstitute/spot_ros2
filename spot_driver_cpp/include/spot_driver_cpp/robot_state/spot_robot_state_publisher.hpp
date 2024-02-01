@@ -28,6 +28,8 @@ class SpotRobotStatePublisher {
    */
   class MiddlewareHandle {
    public:
+    virtual ~MiddlewareHandle() = default;
+
     virtual void createPublishers() = 0;
     virtual void publishRobotState(const RobotState& robot_state) = 0;
 
@@ -36,8 +38,6 @@ class SpotRobotStatePublisher {
     virtual LoggerInterfaceBase* logger_interface() = 0;
     virtual TfInterfaceBase* tf_interface() = 0;
     virtual TimerInterfaceBase* timer_interface() = 0;
-
-    virtual ~MiddlewareHandle() = default;
   };
 
   /**
