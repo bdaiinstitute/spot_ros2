@@ -5,6 +5,7 @@
 #include <spot_driver_cpp/api/spot_api.hpp>
 #include <spot_driver_cpp/robot_state/spot_robot_state_publisher_node.hpp>
 
+#include <spot_driver_cpp/fake/fake_parameter_interface.hpp>
 #include <spot_driver_cpp/mock/mock_logger_interface.hpp>
 #include <spot_driver_cpp/mock/mock_robot_state_client.hpp>
 #include <spot_driver_cpp/mock/mock_spot_api.hpp>
@@ -16,7 +17,6 @@
 
 #include <exception>
 #include <memory>
-#include <optional>
 #include <tl_expected/expected.hpp>
 
 using ::testing::_;
@@ -24,46 +24,6 @@ using ::testing::InSequence;
 using ::testing::Return;
 
 namespace spot_ros2::test {
-
-constexpr auto kExampleAddress{"192.168.0.10"};
-constexpr auto kExampleUsername{"spot_user"};
-constexpr auto kExamplePassword{"hunter2"};
-
-constexpr auto kSomeErrorMessage = "some error message";
-
-class FakeParameterInterface : public ParameterInterfaceBase {
- public:
-  std::string getAddress() const override { return address; }
-
-  std::string getUsername() const override { return username; }
-
-  std::string getPassword() const override { return password; }
-
-  double getRGBImageQuality() const override { return rgb_image_quality; }
-
-  bool getHasRGBCameras() const override { return has_rgb_cameras; }
-
-  bool getPublishRGBImages() const override { return publish_rgb_images; }
-
-  bool getPublishDepthImages() const override { return publish_depth_images; }
-
-  bool getPublishDepthRegisteredImages() const override { return publish_depth_registered_images; }
-
-  std::string getPreferredOdomFrame() const override { return "odom"; }
-
-  std::string getSpotName() const override { return spot_name; }
-
-  std::string address;
-  std::string username;
-  std::string password;
-
-  double rgb_image_quality = kDefaultRGBImageQuality;
-  bool has_rgb_cameras = kDefaultHasRGBCameras;
-  bool publish_rgb_images = kDefaultPublishRGBImages;
-  bool publish_depth_images = kDefaultPublishDepthImages;
-  bool publish_depth_registered_images = kDefaultPublishDepthRegisteredImages;
-  std::string spot_name;
-};
 
 class MockRobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
  public:
@@ -98,7 +58,6 @@ class SpotRobotStatePubNodeTestFixture : public ::testing::Test {
     ON_CALL(*mock_middleware_handle, logger_interface()).WillByDefault(Return(mock_logger_interface.get()));
   }
 
- protected:
   std::shared_ptr<FakeParameterInterface> fake_parameter_interface;
   std::shared_ptr<spot_ros2::test::MockLoggerInterface> mock_logger_interface;
   std::unique_ptr<spot_ros2::test::MockSpotApi> mock_spot_api;
@@ -118,7 +77,7 @@ TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionSuccessful) {
   EXPECT_NO_THROW(SpotRobotStatePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)));
 }
 
-TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailed_CreateRobotFailure) {
+TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailedCreateRobotFailure) {
   // GIVEN MiddlewareInterface and a SpotApi
   // THEN expect the following calls in sequence
   InSequence seq;
@@ -132,7 +91,7 @@ TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailed_CreateRobotFailure) 
                std::exception);
 }
 
-TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailed_AuthenticateFailure) {
+TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailedAuthenticateFailure) {
   // GIVEN a MiddlewareInterface and a SpotApi
   // THEN expect the following calls in sequence
   InSequence seq;
