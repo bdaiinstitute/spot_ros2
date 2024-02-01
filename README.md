@@ -19,31 +19,31 @@
 
 # Overview
 This is a ROS2 package for Boston Dynamics' Spot. The package contains all necessary topics, services and actions to teleoperate or navigate Spot.
-This package is derived of this [ROS1 package](https://github.com/heuristicus/spot_ros). This package currently corresponds to version 3.3.2 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v3.3.2)
+This package is derived from this [ROS1 package](https://github.com/heuristicus/spot_ros). This package currently corresponds to version 3.3.2 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v3.3.2).
 
 ## Prerequisites
-    - Tested for Ubuntu 22.04 + Humble
+This package is tested for Ubuntu 22.04 and ROS 2 Humble, which can be installed following [this guide](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html). 
 
-## Install
-In your ROS2 workspace `src` directory, clone the repo:
+## Installation
+In your ROS2 workspace `src` directory, clone the repository:
 ```bash
 git clone https://github.com/bdaiinstitute/spot_ros2.git
 ```
-and initialize and install the submodules
+and initialize and install the submodules:
 ```bash
 cd spot_ros2
 git submodule init
 git submodule update
 ```
 
-Then run the install script. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system 
+Then run the install script to install the necessary ROS dependencies. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system:
 ```bash
 cd <path to spot_ros2>
 ./install_spot_ros2.sh
 or
 ./install_spot_ros2.sh --arm64
 ```
-From here, set up the ROS2 workspace
+From here, build and source the ROS2 workspace:
 ```
 cd <ros2 ws>
 source /opt/ros/humble/setup.bash
