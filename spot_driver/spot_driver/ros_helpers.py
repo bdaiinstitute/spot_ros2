@@ -24,6 +24,7 @@ from geometry_msgs.msg import (
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image, JointState
 from tf2_msgs.msg import TFMessage
 from tkinter import messagebox
@@ -531,7 +532,7 @@ def get_tf_from_world_objects(
     return tf_msg
 
 
-def get_battery_states_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> BatteryStateArray:
+def get_battery_states_from_state(state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper, node: Node) -> BatteryStateArray:
     """Maps battery state data from robot state proto to ROS BatteryStateArray message
     Args:
         state: Robot State proto
@@ -557,12 +558,18 @@ def get_battery_states_from_state(state: robot_state_pb2.RobotState, spot_wrappe
         battery_msg.status = battery.status
         battery_states_array_msg.battery_states.append(battery_msg)
 
-        if battery_msg.charge_percentage <= 0.1:
+        if battery_msg.charge_percentage <= 10 and not node.get_parameter("low_battery").value:
+            low_battery_param = Parameter(
+                'low_battery',
+                Parameter.Type.BOOL,
+                True
+            )
+            node.set_parameters([low_battery_param])
             messagebox.showwarning(
                 title="Warning: Low Battery {}".format(battery_msg.identifier),
                 message=(
-                    "Battery is at {}. Approximately {} minutes remaining.\n Please charge your Spot soon."
-                ).format(battery_msg.charge_percentage * 100, battery_msg.estimated_runtime.sec / 60),
+                    "Battery is at {} %. Approximately {} minutes remaining.\n Please charge your Spot soon."
+                ).format(battery_msg.charge_percentage, round(battery_msg.estimated_runtime.sec / 60)),
             )
 
     return battery_states_array_msg
