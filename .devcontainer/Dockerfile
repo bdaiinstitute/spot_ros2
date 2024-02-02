@@ -20,6 +20,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     apt-get update -q && \
     apt-get install -yq --no-install-recommends \
+    lcov \
     python3-pip \
     python-is-python3 \
     python3-argcomplete \
