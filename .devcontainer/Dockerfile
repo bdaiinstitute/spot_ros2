@@ -62,7 +62,9 @@ RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
     bosdyn-client==3.3.2 \
     bosdyn-mission==3.3.2 \
     bosdyn-api==3.3.2 \
-    bosdyn-core==3.3.2  && \
+    bosdyn-core==3.3.2 \
+    bosdyn-choreography-client==3.3.2 \
+    bosdyn-choreography-protos==3.3.2 && \
     pip cache purge
 
 # ROS doesn't recognize the docker shells as terminals so force colored output
