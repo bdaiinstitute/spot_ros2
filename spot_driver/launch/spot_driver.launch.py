@@ -7,6 +7,7 @@ from typing import List
 
 import launch
 import launch_ros
+import yaml
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
@@ -123,12 +124,30 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     if not mock_enable:
         # Get parameters from Spot.
-        # TODO this deviates from the `get_from_env_and_fall_back_to_param` logic in `spot_ros2.py`,
-        # which would pull in values in `config_file`
-        username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
-        password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
-        hostname = os.getenv("SPOT_IP", "hostname")
-        port = int(os.getenv("SPOT_PORT", "0"))
+        username = os.getenv("BOSDYN_CLIENT_USERNAME")
+        password = os.getenv("BOSDYN_CLIENT_PASSWORD")
+        hostname = os.getenv("SPOT_IP")
+        port = int(os.getenv("SPOT_PORT", "0"))  # TODO should the user be able to specify a port via config file?
+        if os.path.isfile(config_file_path):
+            with open(config_file_path, "r") as config_yaml:
+                try:
+                    config_dict = yaml.safe_load(config_yaml)
+                    if ("/**" in config_dict) and ("ros__parameters" in config_dict["/**"]):
+                        ros_params = config_dict["/**"]["ros__parameters"]
+                        # only set username/password/hostname if they were not already set as environment variables.
+                        if (username is None) and ("username" in ros_params):
+                            username = ros_params["username"]
+                        if (password is None) and ("password" in ros_params):
+                            password = ros_params["password"]
+                        if (hostname is None) and ("hostname" in ros_params):
+                            hostname = ros_params["hostname"]
+                except yaml.YAMLError as exc:
+                    print(exc)
+        if (username is None) or (password is None) or (hostname is None):
+            raise ValueError(
+                "Login to Spot failed using [Username: {} Password: {} Hostname: {}]. Update your config_file yaml or"
+                " ensure that your environment variables are set.".format(username, password, hostname)
+            )
 
         spot_wrapper = SpotWrapper(
             username=username, password=password, hostname=hostname, port=port, robot_name=spot_name, logger=logger
