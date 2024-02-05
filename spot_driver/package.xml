@@ -3,37 +3,42 @@
 <package format="3">
   <name>spot_driver</name>
   <version>0.0.0</version>
-  <description>This is a ROS2 package for Boston Dynamics' Spot.</description>
-  <maintainer email="maximillian.kirsch@alumni.fh-aachen.de">max</maintainer>
+  <description>ROS 2 driver nodes for Spot.</description>
+  <maintainer email="engineering@theaiinstitute.com">BD AI Institute</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
-  <exec_depend>bdai_ros2_wrappers</exec_depend>
-  <exec_depend>common_interfaces</exec_depend>
-  <exec_depend>depth_image_proc</exec_depend>
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>protobuf</exec_depend>
-  <exec_depend>python3-protobuf</exec_depend>
-  <exec_depend>rclcpp_components</exec_depend>
-  <exec_depend>robot_state_publisher</exec_depend>
-  <exec_depend>rosidl_default_runtime</exec_depend>
-  <exec_depend>rviz2</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>spot_description</exec_depend>
-  <exec_depend>spot_driver_cpp</exec_depend>
-  <exec_depend>spot_msgs</exec_depend>
-  <exec_depend>spot_wrapper</exec_depend>
-  <exec_depend>xacro</exec_depend>
+  <depend>bdai_ros2_wrappers</depend>
+  <depend>bosdyn</depend>
+  <depend>common_interfaces</depend>
+  <depend>depth_image_proc</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>protobuf</depend>
+  <depend>python3-protobuf</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>rclpy</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>rosidl_default_runtime</depend>
+  <depend>rviz2</depend>
+  <depend>sensor_msgs</depend>
+  <depend>spot_description</depend>
+  <depend>spot_msgs</depend>
+  <depend>spot_wrapper</depend>
+  <depend>tf2_ros</depend>
+  <depend>tl_expected</depend>
+  <depend>xacro</depend>
 
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_pep257</test_depend>
+
+  <!-- Support for gtest and gmock-based tests in the ament buildsystem in CMake. -->
+  <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_cmake_pytest</test_depend>
 
-  <member_of_group>rosidl_interface_packages</member_of_group>
-
   <export>
-    <build_type>ament_python</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
