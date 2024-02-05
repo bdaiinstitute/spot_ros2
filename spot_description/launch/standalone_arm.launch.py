@@ -6,25 +6,22 @@ from launch.substitutions import Command, LaunchConfiguration
 
 
 def generate_launch_description() -> launch.LaunchDescription:
-    pkg_share = launch_ros.substitutions.FindPackageShare(
-        package="spot_description").find("spot_description")
-    default_model_path = os.path.join(
-        pkg_share, "urdf/standalone_arm.urdf.xacro")
+    pkg_share = launch_ros.substitutions.FindPackageShare(package="spot_description").find("spot_description")
+    default_model_path = os.path.join(pkg_share, "urdf/standalone_arm.urdf.xacro")
     print("default model path is \n", default_model_path)
     default_rviz2_path = os.path.join(pkg_share, "rviz/standalone_arm.rviz")
+    # default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
 
     robot_state_publisher_node = launch_ros.actions.Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
-        parameters=[{"robot_description": Command(
-            ["xacro ", LaunchConfiguration("model")])}],
+        parameters=[{"robot_description": Command(["xacro ", LaunchConfiguration("model")])}],
     )
     joint_state_publisher_node = launch_ros.actions.Node(
         package="joint_state_publisher",
         executable="joint_state_publisher",
         name="joint_state_publisher",
-        condition=launch.conditions.UnlessCondition(
-            LaunchConfiguration("gui")),
+        condition=launch.conditions.UnlessCondition(LaunchConfiguration("gui")),
     )
     joint_state_publisher_gui_node = launch_ros.actions.Node(
         package="joint_state_publisher_gui",
