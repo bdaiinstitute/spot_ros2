@@ -119,7 +119,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     # if config_file has been set (and is not the default empty string) and is also not a file, do not launch anything.
     config_file_path = config_file.perform(context)
     if (config_file_path != "") and (not os.path.isfile(config_file_path)):
-        raise Exception("Configuration file '{}' does not exist!".format(config_file_path))
+        raise FileNotFoundError("Configuration file '{}' does not exist!".format(config_file_path))
 
     if not mock_enable:
         # Get parameters from Spot.
