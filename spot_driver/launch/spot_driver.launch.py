@@ -116,6 +116,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
 
+    # if config_file has been set (and is not the default empty string) and is also not a file, do not launch anything.
+    config_file_path = config_file.perform(context)
+    if (config_file_path != "") and (not os.path.isfile(config_file_path)):
+        raise FileNotFoundError("Configuration file '{}' does not exist!".format(config_file_path))
+
     if not mock_enable:
         # Get parameters from Spot.
         # TODO this deviates from the `get_from_env_and_fall_back_to_param` logic in `spot_ros2.py`,
