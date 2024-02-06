@@ -1,6 +1,5 @@
 import os
 import time
-from tkinter import messagebox
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import builtin_interfaces.msg
@@ -25,7 +24,6 @@ from geometry_msgs.msg import (
 from google.protobuf.timestamp_pb2 import Timestamp
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
-from rclpy.parameter import Parameter
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image, JointState
 from tf2_msgs.msg import TFMessage
 

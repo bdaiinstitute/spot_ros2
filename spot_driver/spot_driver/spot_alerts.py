@@ -1,25 +1,28 @@
-import numpy as np
-from rclpy.parameter import Parameter
 from tkinter import messagebox
+
 import bdai_ros2_wrappers.process as ros_process
 from bdai_ros2_wrappers.node import Node
+from rclpy.parameter import Parameter
 
 from spot_msgs.msg import (  # type: ignore
-    BatteryState,
     BatteryStateArray,
 )
 
+
 class SpotAlerts(Node):
     """Monitors spot states and will generate a pop-up message to alert the user of warnings"""
-    def __init__(self):
+
+    def __init__(self) -> None:
         super().__init__("spot_alerts_pop_up_node")
         # Subscribers #
-        self.battery_states = self.create_subscription(BatteryStateArray, "status/battery_states", self.battery_callback)
+        self.battery_states = self.create_subscription(
+            BatteryStateArray, "status/battery_states", self.battery_callback
+        )
 
         # Parameters #
         self.declare_parameter("low_battery", False)
-    
-    def battery_callback(self, battery_array_msg: BatteryStateArray) -> None: 
+
+    def battery_callback(self, battery_array_msg: BatteryStateArray) -> None:
         """A callback function to check the battery percentage and send a pop-up alert when <= 10%
         Args:
             battery_array_msg: BatteryStateArray message received from the publisher containing BatteryState messages
@@ -37,9 +40,11 @@ class SpotAlerts(Node):
                     ).format(battery_msg.charge_percentage, round(battery_msg.estimated_runtime.sec / 60)),
                 )
 
+
 @ros_process.main(prebaked=False)
 def main() -> None:
     ros_process.spin(SpotAlerts)
+
 
 if __name__ == "__main__":
     main()
