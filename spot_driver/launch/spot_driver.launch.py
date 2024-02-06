@@ -3,7 +3,7 @@
 import logging
 import os
 from enum import Enum
-from typing import List
+from typing import List, Tuple
 
 import launch
 import launch_ros
@@ -105,16 +105,16 @@ def create_point_cloud_nodelets(
     return composable_node_descriptions
 
 
-def spot_has_arm(context: LaunchContext) -> bool:
-    """Check if spot has an arm by logging in and instantiating a SpotWrapper"""
-    config_file_path = LaunchConfiguration("config_file").perform(context)
-    spot_name = LaunchConfiguration("spot_name").perform(context)
-    logger = logging.getLogger("spot_driver_launch")
+def get_login_parameters(context: LaunchContext) -> Tuple[str, str, str, int]:
+    """Obtain the username, password, hostname, and port of Spot from the environment variables or, if they are not
+    set, the configuration file yaml."""
+    # Get value from environment variables
     username = os.getenv("BOSDYN_CLIENT_USERNAME")
     password = os.getenv("BOSDYN_CLIENT_PASSWORD")
     hostname = os.getenv("SPOT_IP")
     port = int(os.getenv("SPOT_PORT", "0"))  # TODO should the user be able to specify a port via config file?
     # parse the yaml to determine if login information is set there
+    config_file_path = LaunchConfiguration("config_file").perform(context)
     if os.path.isfile(config_file_path):
         with open(config_file_path, "r") as config_yaml:
             try:
@@ -132,9 +132,18 @@ def spot_has_arm(context: LaunchContext) -> bool:
                 print("Parsing config_file yaml failed with: {}".format(exc))
     if (username is None) or (password is None) or (hostname is None):
         raise ValueError(
-            "Login to Spot failed using [Username: '{}' Password: '{}' Hostname: '{}']. Update your config_file yaml"
-            " or ensure that your environment variables are set.".format(username, password, hostname)
+            "One or more of your login credentials has not been specified! Got invalid values of "
+            "[Username: '{}' Password: '{}' Hostname: '{}']. Ensure that your environment variables are set or "
+            "update your config_file yaml.".format(username, password, hostname)
         )
+    return username, password, hostname, port
+
+
+def spot_has_arm(context: LaunchContext) -> bool:
+    """Check if Spot has an arm by logging in and instantiating a SpotWrapper"""
+    spot_name = LaunchConfiguration("spot_name").perform(context)
+    logger = logging.getLogger("spot_driver_launch")
+    username, password, hostname, port = get_login_parameters(context)
     spot_wrapper = SpotWrapper(
         username=username, password=password, hostname=hostname, port=port, robot_name=spot_name, logger=logger
     )
