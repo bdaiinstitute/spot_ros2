@@ -106,7 +106,7 @@ def create_point_cloud_nodelets(
 
 
 def spot_has_arm(context: LaunchContext) -> bool:
-    # Check if spot has an arm by logging in and instantiating a SpotWrapper
+    """Check if spot has an arm by logging in and instantiating a SpotWrapper"""
     config_file_path = LaunchConfiguration("config_file").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
     logger = logging.getLogger("spot_driver_launch")
@@ -122,11 +122,11 @@ def spot_has_arm(context: LaunchContext) -> bool:
                 if ("/**" in config_dict) and ("ros__parameters" in config_dict["/**"]):
                     ros_params = config_dict["/**"]["ros__parameters"]
                     # only set username/password/hostname if they were not already set as environment variables.
-                    if (username is None) and ("username" in ros_params):
+                    if (not username) and ("username" in ros_params):
                         username = ros_params["username"]
-                    if (password is None) and ("password" in ros_params):
+                    if (not password) and ("password" in ros_params):
                         password = ros_params["password"]
-                    if (hostname is None) and ("hostname" in ros_params):
+                    if (not hostname) and ("hostname" in ros_params):
                         hostname = ros_params["hostname"]
             except yaml.YAMLError as exc:
                 print("Parsing config_file yaml failed with: {}".format(exc))
@@ -156,11 +156,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if (config_file_path != "") and (not os.path.isfile(config_file_path)):
         raise FileNotFoundError("Configuration file '{}' does not exist!".format(config_file_path))
 
-    if not mock_enable:
-        has_arm = spot_has_arm(context)
-    else:
+    if mock_enable:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
         has_arm = mock_has_arm
+    else:
+        has_arm = spot_has_arm(context)
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
