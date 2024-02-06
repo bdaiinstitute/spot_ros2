@@ -1041,7 +1041,7 @@ class SpotROS(Node):
             self.wifi_pub.publish(wifi_msg)
 
             # Battery States #
-            battery_states_array_msg = get_battery_states_from_state(state, self.spot_wrapper, self)
+            battery_states_array_msg = get_battery_states_from_state(state, self.spot_wrapper)
             self.battery_pub.publish(battery_states_array_msg)
 
             # Power State #
