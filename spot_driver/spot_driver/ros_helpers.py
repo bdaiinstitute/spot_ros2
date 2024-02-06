@@ -560,16 +560,6 @@ def get_battery_states_from_state(
         battery_msg.status = battery.status
         battery_states_array_msg.battery_states.append(battery_msg)
 
-        if battery_msg.charge_percentage <= 10 and not node.get_parameter("low_battery").value:
-            low_battery_param = Parameter("low_battery", Parameter.Type.BOOL, True)
-            node.set_parameters([low_battery_param])
-            messagebox.showwarning(
-                title="Warning: Low Battery {}".format(battery_msg.identifier),
-                message=(
-                    "Battery is at {} %. Approximately {} minutes remaining.\n Please charge your Spot soon."
-                ).format(battery_msg.charge_percentage, round(battery_msg.estimated_runtime.sec / 60)),
-            )
-
     return battery_states_array_msg
 
 

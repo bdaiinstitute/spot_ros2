@@ -285,8 +285,6 @@ class SpotROS(Node):
         self.declare_parameter("spot_name", "")
         self.declare_parameter("mock_enable", False)
 
-        self.declare_parameter("low_battery", False)
-
         # If `mock_enable:=True`, then there are additional parameters. We must set this one separately.
         set_node_parameter_from_parameter_list(self, parameter_list, "mock_enable")
         if self.get_parameter("mock_enable").value:
