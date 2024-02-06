@@ -1,0 +1,4 @@
+float32 brightness # In range [0, 1]
+---
+bool success
+string message

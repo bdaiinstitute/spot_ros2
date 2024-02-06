@@ -33,14 +33,14 @@ jobs:
         # go to root folder
         cd ../../
         source /opt/ros/$ROS_DISTRO/setup.bash
-        colcon build --symlink-install
+        colcon build --symlink-install --packages-skip proto2ros_tests
         source install/local_setup.bash
     - name: Test Package
       run: |
         source /opt/ros/$ROS_DISTRO/setup.bash
         source install/local_setup.bash
         # skip testing submodules
-        colcon test --python-testing pytest --pytest-with-coverage --event-handlers console_direct+ --packages-skip bdai_ros2_wrappers
+        colcon test --python-testing pytest --pytest-with-coverage --event-handlers console_direct+ --packages-skip bdai_ros2_wrappers proto2ros_tests
       working-directory: ${{ github.workspace }}/../../
     - name: Upload coverage to Coveralls
       uses: coverallsapp/github-action@v2

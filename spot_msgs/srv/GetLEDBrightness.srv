@@ -1,0 +1,4 @@
+---
+bool success
+string message
+float32[] brightness # In order REAR_LEFT, FRONT_LEFT, FRONT_RIGHT, REAR_RIGHT

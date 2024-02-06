@@ -116,6 +116,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
 
+    # if config_file has been set (and is not the default empty string) and is also not a file, do not launch anything.
+    config_file_path = config_file.perform(context)
+    if (config_file_path != "") and (not os.path.isfile(config_file_path)):
+        raise FileNotFoundError("Configuration file '{}' does not exist!".format(config_file_path))
+
     if not mock_enable:
         # Get parameters from Spot.
         # TODO this deviates from the `get_from_env_and_fall_back_to_param` logic in `spot_ros2.py`,
@@ -193,7 +198,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         spot_image_publisher_params.update({"publish_depth_registered": False})
 
     spot_image_publisher_node = launch_ros.actions.Node(
-        package="spot_driver_cpp",
+        package="spot_driver",
         executable="spot_image_publisher_node",
         output="screen",
         parameters=[config_file, spot_image_publisher_params],
@@ -203,6 +208,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     if not tf_prefix and spot_name:
         tf_prefix = PathJoinSubstitution([spot_name, ""])
+
+    kinematc_node_params = {"spot_name": spot_name}
+    kinematic_node = launch_ros.actions.Node(
+        package="spot_driver",
+        executable="kinematic_node",
+        output="screen",
+        parameters=[config_file, kinematc_node_params],
+        namespace=spot_name,
+    )
+    ld.add_action(kinematic_node)
 
     robot_description = Command(
         [
