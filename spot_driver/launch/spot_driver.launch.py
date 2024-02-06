@@ -198,7 +198,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         spot_image_publisher_params.update({"publish_depth_registered": False})
 
     spot_image_publisher_node = launch_ros.actions.Node(
-        package="spot_driver_cpp",
+        package="spot_driver",
         executable="spot_image_publisher_node",
         output="screen",
         parameters=[config_file, spot_image_publisher_params],
@@ -211,7 +211,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     kinematc_node_params = {"spot_name": spot_name}
     kinematic_node = launch_ros.actions.Node(
-        package="spot_driver_cpp",
+        package="spot_driver",
         executable="kinematic_node",
         output="screen",
         parameters=[config_file, kinematc_node_params],
