@@ -130,7 +130,7 @@ def get_login_parameters(context: LaunchContext) -> Tuple[str, str, str, int]:
                         hostname = ros_params["hostname"]
             except yaml.YAMLError as exc:
                 print("Parsing config_file yaml failed with: {}".format(exc))
-    if (username is None) or (password is None) or (hostname is None):
+    if (not username) or (not password) or (not hostname):
         raise ValueError(
             "One or more of your login credentials has not been specified! Got invalid values of "
             "[Username: '{}' Password: '{}' Hostname: '{}']. Ensure that your environment variables are set or "
