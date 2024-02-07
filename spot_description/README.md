@@ -54,14 +54,14 @@ To get the plain URDF files, use the following commands in the package root:
 
 ```
 # for simple spot
-rosrun xacro xacro -o ./urdf/out/spot.urdf ./urdf/spot_simple.urdf.xacro
+ros2 run xacro xacro -o ./urdf/out/spot_simple.urdf ./urdf/spot_simple.urdf.xacro
 
-# for simple spot_with_arm
-rosrun xacro xacro -o ./urdf/out/spot_with_arm.urdf ./urdf/spot_with_arm.urdf.xacro
+# for standalone arm
+ros2 run xacro xacro -o ./urdf/out/standalone_arm.urdf ./urdf/standalone_arm.urdf.xacro
 ```
 
 To visualize and inspect the joint range, use the following command:
 
 ```
-roslaunch spot_description urdf_viz.launch
+ros2 launch spot_description description.launch.py
 ```
