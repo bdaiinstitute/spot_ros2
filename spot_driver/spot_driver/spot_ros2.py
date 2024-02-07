@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Debug
 # from ros_helpers import *
 import logging

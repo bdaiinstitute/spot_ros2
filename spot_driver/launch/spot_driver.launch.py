@@ -1,12 +1,13 @@
-# Copyright [2023] Boston Dynamics AI Institute, Inc.
+# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 import logging
 import os
 from enum import Enum
-from typing import List
+from typing import List, Tuple
 
 import launch
 import launch_ros
+import yaml
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
@@ -104,9 +105,52 @@ def create_point_cloud_nodelets(
     return composable_node_descriptions
 
 
-def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
-    logger = logging.getLogger("spot_driver_launch")
+def get_login_parameters(context: LaunchContext) -> Tuple[str, str, str, int]:
+    """Obtain the username, password, hostname, and port of Spot from the environment variables or, if they are not
+    set, the configuration file yaml."""
+    # Get value from environment variables
+    username = os.getenv("BOSDYN_CLIENT_USERNAME")
+    password = os.getenv("BOSDYN_CLIENT_PASSWORD")
+    hostname = os.getenv("SPOT_IP")
+    port = int(os.getenv("SPOT_PORT", "0"))  # TODO should the user be able to specify a port via config file?
+    # parse the yaml to determine if login information is set there
+    config_file_path = LaunchConfiguration("config_file").perform(context)
+    if os.path.isfile(config_file_path):
+        with open(config_file_path, "r") as config_yaml:
+            try:
+                config_dict = yaml.safe_load(config_yaml)
+                if ("/**" in config_dict) and ("ros__parameters" in config_dict["/**"]):
+                    ros_params = config_dict["/**"]["ros__parameters"]
+                    # only set username/password/hostname if they were not already set as environment variables.
+                    if (not username) and ("username" in ros_params):
+                        username = ros_params["username"]
+                    if (not password) and ("password" in ros_params):
+                        password = ros_params["password"]
+                    if (not hostname) and ("hostname" in ros_params):
+                        hostname = ros_params["hostname"]
+            except yaml.YAMLError as exc:
+                print("Parsing config_file yaml failed with: {}".format(exc))
+    if (not username) or (not password) or (not hostname):
+        raise ValueError(
+            "One or more of your login credentials has not been specified! Got invalid values of "
+            "[Username: '{}' Password: '{}' Hostname: '{}']. Ensure that your environment variables are set or "
+            "update your config_file yaml.".format(username, password, hostname)
+        )
+    return username, password, hostname, port
 
+
+def spot_has_arm(context: LaunchContext) -> bool:
+    """Check if Spot has an arm by logging in and instantiating a SpotWrapper"""
+    spot_name = LaunchConfiguration("spot_name").perform(context)
+    logger = logging.getLogger("spot_driver_launch")
+    username, password, hostname, port = get_login_parameters(context)
+    spot_wrapper = SpotWrapper(
+        username=username, password=password, hostname=hostname, port=port, robot_name=spot_name, logger=logger
+    )
+    return spot_wrapper.has_arm()
+
+
+def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     config_file = LaunchConfiguration("config_file")
     launch_rviz = LaunchConfiguration("launch_rviz")
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
@@ -116,22 +160,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
 
-    if not mock_enable:
-        # Get parameters from Spot.
-        # TODO this deviates from the `get_from_env_and_fall_back_to_param` logic in `spot_ros2.py`,
-        # which would pull in values in `config_file`
-        username = os.getenv("BOSDYN_CLIENT_USERNAME", "username")
-        password = os.getenv("BOSDYN_CLIENT_PASSWORD", "password")
-        hostname = os.getenv("SPOT_IP", "hostname")
-        port = int(os.getenv("SPOT_PORT", "0"))
+    # if config_file has been set (and is not the default empty string) and is also not a file, do not launch anything.
+    config_file_path = config_file.perform(context)
+    if (config_file_path != "") and (not os.path.isfile(config_file_path)):
+        raise FileNotFoundError("Configuration file '{}' does not exist!".format(config_file_path))
 
-        spot_wrapper = SpotWrapper(
-            username=username, password=password, hostname=hostname, port=port, robot_name=spot_name, logger=logger
-        )
-        has_arm = spot_wrapper.has_arm()
-    else:
+    if mock_enable:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
         has_arm = mock_has_arm
+    else:
+        has_arm = spot_has_arm(context)
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
 
@@ -193,7 +231,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         spot_image_publisher_params.update({"publish_depth_registered": False})
 
     spot_image_publisher_node = launch_ros.actions.Node(
-        package="spot_driver_cpp",
+        package="spot_driver",
         executable="spot_image_publisher_node",
         output="screen",
         parameters=[config_file, spot_image_publisher_params],
@@ -206,7 +244,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     kinematc_node_params = {"spot_name": spot_name}
     kinematic_node = launch_ros.actions.Node(
-        package="spot_driver_cpp",
+        package="spot_driver",
         executable="kinematic_node",
         output="screen",
         parameters=[config_file, kinematc_node_params],
@@ -241,7 +279,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     spot_robot_state_publisher_params = {"spot_name": spot_name, "preferred_odom_frame": "odom"}
     spot_robot_state_publisher = launch_ros.actions.Node(
-        package="spot_driver_cpp",
+        package="spot_driver",
         executable="spot_robot_state_publisher_node",
         output="screen",
         parameters=[config_file, spot_robot_state_publisher_params],
