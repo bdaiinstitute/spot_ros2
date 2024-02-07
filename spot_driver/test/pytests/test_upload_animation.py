@@ -52,3 +52,39 @@ def test_upload_animation(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     assert wait_for_future(future, timeout_sec=2.0)
     response = future.result()
     assert response.success
+
+
+@pytest.mark.usefixtures("spot_node")
+def test_upload_animation_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
+    """
+    Test what happens when the "upload animation" command fails.
+
+    Args:
+        ros: A ROS2 scope that can be used to create clients.
+        simple_spot: a programmable fake Spot robot running on a local
+            GRPC server.
+    """
+
+    # Send ROS request.
+    client = ros.node.create_client(UploadAnimation, "upload_animation")
+
+    animation = Animation(name="my_animation", animation_keyframes=[], controls_legs=True)
+    message = animation.SerializeToString()
+
+    request = UploadAnimation.Request()
+    request.animation_proto_serialized = message
+    future = client.call_async(request)
+
+    # Mock GRPC sever.
+
+    # Serve upload_animated_move command with an unknonw error.
+    call = simple_spot.api.UploadAnimatedMove.serve(timeout=2.0)
+    assert call is not None
+    response = UploadAnimatedMoveResponse()
+    response.status = UploadAnimatedMoveResponse.Status.STATUS_UNKNOWN
+    call.returns(response)
+
+    # Wait for ROS response.
+    assert wait_for_future(future, timeout_sec=2.0)
+    response = future.result()
+    assert not response.success

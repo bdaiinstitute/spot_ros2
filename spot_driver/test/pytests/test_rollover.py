@@ -46,3 +46,33 @@ def test_rollover(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     assert wait_for_future(future, timeout_sec=2.0)
     response = future.result()
     assert response.success
+
+
+@pytest.mark.usefixtures("spot_node")
+def test_rollover_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
+    """
+    Test what happens when a "rollover" command fails.
+
+    Args:
+        ros: A ROS2 scope that can be used to create clients.
+        simple_spot: a programmable fake Spot robot running on a local
+            GRPC server.
+    """
+
+    # Send ROS request.
+    client = ros.node.create_client(Trigger, "rollover")
+    future = client.call_async(Trigger.Request())
+
+    # Mock GRPC sever.
+
+    # Serve rollover command with an unknown status.
+    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    assert call is not None
+    response = RobotCommandResponse()
+    response.status = RobotCommandResponse.Status.STATUS_UNKNOWN
+    call.returns(response)
+
+    # Wait for ROS response.
+    assert wait_for_future(future, timeout_sec=2.0)
+    response = future.result()
+    assert not response.success
