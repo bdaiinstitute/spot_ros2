@@ -52,7 +52,7 @@ def test_robot_command(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     assert wait_for_future(future, timeout_sec=2.0)
     goal_handle = future.result()
 
-    # Serve stand command feedback.
+    # Serve command feedback.
     feedback_call = simple_spot.api.RobotCommandFeedback.serve(timeout=2.0)
     assert feedback_call is not None
     feedback_response = RobotCommandFeedbackResponse(
@@ -71,3 +71,42 @@ def test_robot_command(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
 
     action_result = result_future.result()
     assert action_result.result.success
+
+
+@pytest.mark.usefixtures("spot_node")
+def test_robot_command_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
+    """
+    Test what happens when the "robot command" goal fails.
+
+    Args:
+        ros: A ROS2 scope that can be used to create clients.
+        simple_spot: a programmable fake Spot robot running on a local
+            GRPC server.
+    """
+
+    # Send a ROS goal.
+
+    action_client = ActionClient(ros.node, RobotCommand, "robot_command")
+    goal = RobotCommand.Goal()
+    future = action_client.send_goal_async(goal)
+
+    # Mock GRPC sever.
+
+    # Serve robot command with an unknown error.
+    command_call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    assert command_call is not None
+    command_response = RobotCommandResponse()
+    command_response.robot_command_id = 5
+    command_response.status = RobotCommandResponse.Status.STATUS_UNKNOWN
+    command_call.returns(command_response)
+
+    # Wait for the goal.
+    assert wait_for_future(future, timeout_sec=2.0)
+    goal_handle = future.result()
+
+    # Query and wait for the action result.
+    result_future = goal_handle.get_result_async()
+    assert wait_for_future(result_future, timeout_sec=2.0)
+
+    action_result = result_future.result()
+    assert not action_result.result.success
