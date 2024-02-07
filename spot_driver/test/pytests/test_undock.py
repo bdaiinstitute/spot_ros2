@@ -53,3 +53,33 @@ def test_undock(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     assert wait_for_future(future, timeout_sec=2.0)
     response = future.result()
     assert response.success
+
+
+@pytest.mark.usefixtures("spot_node")
+def test_undock_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
+    """
+    Test what happens when the "undock" command returns an unknown error.
+
+    Args:
+        ros: A ROS2 scope that can be used to create clients.
+        simple_spot: a programmable fake Spot robot running on a local
+            GRPC server.
+    """
+
+    # Send ROS request.
+    client = ros.node.create_client(Trigger, "undock")
+    future = client.call_async(Trigger.Request())
+
+    # Mock GRPC sever.
+
+    # Serve undock command.
+    undock_call = simple_spot.api.DockingCommand.serve(timeout=2.0)
+    assert undock_call is not None
+    undock_response = DockingCommandResponse()
+    undock_response.status = DockingCommandResponse.Status.STATUS_UNKNOWN
+    undock_call.returns(undock_response)
+
+    # Wait for ROS response.
+    assert wait_for_future(future, timeout_sec=2.0)
+    response = future.result()
+    assert not response.success

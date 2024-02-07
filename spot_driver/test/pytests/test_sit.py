@@ -46,3 +46,33 @@ def test_sit(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     assert wait_for_future(future, timeout_sec=2.0)
     response = future.result()
     assert response.success
+
+
+@pytest.mark.usefixtures("spot_node")
+def test_sit_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
+    """
+    Test what happens when the "sit" command returns an unknown error.
+
+    Args:
+        ros: A ROS2 scope that can be used to create clients.
+        simple_spot: a programmable fake Spot robot running on a local
+            GRPC server.
+    """
+
+    # Send ROS request.
+    client = ros.node.create_client(Trigger, "sit")
+    future = client.call_async(Trigger.Request())
+
+    # Mock GRPC sever.
+
+    # Serve sit command with an unknown error.
+    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    assert call is not None
+    response = RobotCommandResponse()
+    response.status = RobotCommandResponse.Status.STATUS_UNKNOWN
+    call.returns(response)
+
+    # Wait for ROS response.
+    assert wait_for_future(future, timeout_sec=2.0)
+    response = future.result()
+    assert not response.success
