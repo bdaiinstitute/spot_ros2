@@ -164,27 +164,27 @@ set_property(TARGET spot_inverse_kinematics PROPERTY POSITION_INDEPENDENT_CODE O
 ament_target_dependencies(spot_inverse_kinematics PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 
 # Create executable to allow running KinematicNode directly as a ROS 2 node.
-add_executable(kinematic_node src/kinematic/kinematic_node_main.cpp)
-target_include_directories(kinematic_node
+add_executable(spot_inverse_kinematics_node src/kinematic/kinematic_node_main.cpp)
+target_include_directories(spot_inverse_kinematics_node
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(kinematic_node PUBLIC spot_inverse_kinematics)
+target_link_libraries(spot_inverse_kinematics_node PUBLIC spot_inverse_kinematics)
 
 # Register a composable node to allow loading KinematicNode in a component container
-add_library(kinematic_component SHARED src/kinematic/kinematic_component.cpp)
-target_include_directories(kinematic_component
+add_library(spot_inverse_kinematics_component SHARED src/kinematic/kinematic_component.cpp)
+target_include_directories(spot_inverse_kinematics_component
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(kinematic_component PUBLIC spot_inverse_kinematics)
+target_link_libraries(spot_inverse_kinematics_component PUBLIC spot_inverse_kinematics)
 
 rclcpp_components_register_node(
-  kinematic_component
+  spot_inverse_kinematics_component
   PLUGIN "spot_ros2::kinematic::KinematicNode"
-  EXECUTABLE kinematic_node_component)
+  EXECUTABLE spot_inverse_kinematics_node_component)
 
 ament_python_install_package(${PROJECT_NAME})
 install(
@@ -209,8 +209,12 @@ install(
 install(
   TARGETS
     spot_api
+    spot_image_publisher
     spot_image_publisher_component
-    kinematic_component
+    spot_inverse_kinematics
+    spot_inverse_kinematics_component
+    spot_robot_state_publisher
+    spot_robot_state_publisher_component
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -218,27 +222,16 @@ install(
   INCLUDES DESTINATION include
 )
 
-# Install Binaries
+# Install Executables
 install(
   TARGETS 
-    spot_api
-    spot_image_publisher
-    spot_image_publisher_component
     spot_image_publisher_node
     spot_image_publisher_node_component
-    spot_inverse_kinematics
-    kinematic_component
-    kinematic_node
-    kinematic_node_component
-    spot_robot_state_publisher
-    spot_robot_state_publisher_component
+    spot_inverse_kinematics_node
+    spot_inverse_kinematics_node_component
     spot_robot_state_publisher_node
     spot_robot_state_publisher_node_component
-  EXPORT ${PROJECT_NAME}Targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
-  INCLUDES DESTINATION include
 )
 
 # Install include directory
