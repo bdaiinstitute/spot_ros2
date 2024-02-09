@@ -66,12 +66,18 @@ class SpotRobotStatePubNodeTestFixture : public ::testing::Test {
 
 TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionSuccessful) {
   // GIVEN a MiddlewareInterface and a SpotApi
-  // THEN expect the following calls in sequence
-  InSequence seq;
-  EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
-  EXPECT_CALL(*mock_spot_api, authenticate).Times(1);
-  EXPECT_CALL(*mock_spot_api, robot_state_client_interface).Times(1);
-  EXPECT_CALL(*mock_logger_interface, logError).Times(0);
+  // GIVEN all steps to connect to the robot will succeed
+  {
+    InSequence seq;
+    // THEN createRobot is called
+    EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
+    // THEN we authenticate with the robot
+    EXPECT_CALL(*mock_spot_api, authenticate).Times(1);
+    // THEN we access the robot state client interface
+    EXPECT_CALL(*mock_spot_api, robot_state_client_interface).Times(1);
+    // THEN no error messages are logged
+    EXPECT_CALL(*mock_logger_interface, logError).Times(0);
+  }
 
   // WHEN constructing a SpotRobotStatePublisherNode
   EXPECT_NO_THROW(SpotRobotStatePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)));
@@ -79,12 +85,18 @@ TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionSuccessful) {
 
 TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailedCreateRobotFailure) {
   // GIVEN MiddlewareInterface and a SpotApi
-  // THEN expect the following calls in sequence
-  InSequence seq;
-  EXPECT_CALL(*mock_spot_api, createRobot).Times(1).WillOnce(Return(tl::make_unexpected("Create Robot Failed")));
-  EXPECT_CALL(*mock_logger_interface, logError).Times(1);
-  EXPECT_CALL(*mock_spot_api, authenticate).Times(0);
-  EXPECT_CALL(*mock_spot_api, robot_state_client_interface).Times(0);
+  {
+    InSequence seq;
+    // GIVEN creating the interface to the robot will fail
+    // THEN createRobot is called
+    EXPECT_CALL(*mock_spot_api, createRobot).Times(1).WillOnce(Return(tl::make_unexpected("Create Robot Failed")));
+    // THEN an error message is logged
+    EXPECT_CALL(*mock_logger_interface, logError).Times(1);
+    // THEN we do not attempt to authenticate with the robot
+    EXPECT_CALL(*mock_spot_api, authenticate).Times(0);
+    // THEN we do not access the robot state client interface
+    EXPECT_CALL(*mock_spot_api, robot_state_client_interface).Times(0);
+  }
 
   // WHEN constructing a SpotRobotStatePublisherNode
   EXPECT_THROW(SpotRobotStatePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)),
@@ -93,12 +105,18 @@ TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailedCreateRobotFailure) {
 
 TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailedAuthenticateFailure) {
   // GIVEN a MiddlewareInterface and a SpotApi
-  // THEN expect the following calls in sequence
-  InSequence seq;
-  EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
-  EXPECT_CALL(*mock_spot_api, authenticate).Times(1).WillOnce(Return(tl::make_unexpected("Authenication Failed")));
-  EXPECT_CALL(*mock_logger_interface, logError).Times(1);
-  EXPECT_CALL(*mock_spot_api, robot_state_client_interface).Times(0);
+  {
+    InSequence seq;
+    // THEN createRobot is called
+    EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
+    // GIVEN authentication will fail
+    // THEN we attempt to authenticate with the robot
+    EXPECT_CALL(*mock_spot_api, authenticate).Times(1).WillOnce(Return(tl::make_unexpected("Authenication Failed")));
+    // THEN an error message is logged
+    EXPECT_CALL(*mock_logger_interface, logError).Times(1);
+    // THEN we do not access the robot state client interface
+    EXPECT_CALL(*mock_spot_api, robot_state_client_interface).Times(0);
+  }
 
   // WHEN constructing a SpotRobotStatePublisherNode
   EXPECT_THROW(SpotRobotStatePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)),

@@ -6,35 +6,23 @@
 
 namespace spot_ros2::conversions {
 
-geometry_msgs::msg::Point toRosPoint(const ::bosdyn::api::Vec3& msg) {
-  geometry_msgs::msg::Point out;
-
-  out.x = msg.x();
-  out.y = msg.y();
-  out.z = msg.z();
-
-  return out;
+void convertToRos(const ::bosdyn::api::Vec3& proto, geometry_msgs::msg::Point& ros_msg) {
+  ros_msg.x = proto.x();
+  ros_msg.y = proto.y();
+  ros_msg.z = proto.z();
 }
 
-geometry_msgs::msg::Vector3 toRosTranslation(const ::bosdyn::api::Vec3& msg) {
-  geometry_msgs::msg::Vector3 out;
-
-  out.x = msg.x();
-  out.y = msg.y();
-  out.z = msg.z();
-
-  return out;
+void convertToRos(const ::bosdyn::api::Vec3& proto, geometry_msgs::msg::Vector3& ros_msg) {
+  ros_msg.x = proto.x();
+  ros_msg.y = proto.y();
+  ros_msg.z = proto.z();
 }
 
-geometry_msgs::msg::Quaternion toRosRotation(const ::bosdyn::api::Quaternion& msg) {
-  geometry_msgs::msg::Quaternion out;
-
-  out.x = msg.x();
-  out.y = msg.y();
-  out.z = msg.z();
-  out.w = msg.w();
-
-  return out;
+void convertToRos(const ::bosdyn::api::Quaternion& proto, geometry_msgs::msg::Quaternion& ros_msg) {
+  ros_msg.x = proto.x();
+  ros_msg.y = proto.y();
+  ros_msg.z = proto.z();
+  ros_msg.w = proto.w();
 }
 
 geometry_msgs::msg::TransformStamped toTransformStamped(const ::bosdyn::api::SE3Pose& transform,
@@ -45,8 +33,8 @@ geometry_msgs::msg::TransformStamped toTransformStamped(const ::bosdyn::api::SE3
   tf.header.frame_id = parent_frame;
   tf.child_frame_id = child_frame;
 
-  tf.transform.translation = toRosTranslation(transform.position());
-  tf.transform.rotation = toRosRotation(transform.rotation());
+  convertToRos(transform.position(), tf.transform.translation);
+  convertToRos(transform.rotation(), tf.transform.rotation);
 
   return tf;
 }

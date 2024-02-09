@@ -75,10 +75,10 @@ TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggers) {
   });
 
   {
-    // THEN we request the robot state from the Spot interface
-    // THEN we publish the robot state to the appropriate topics
     InSequence seq;
+    // THEN we request the robot state from the Spot interface
     EXPECT_CALL(*robot_state_client_interface, getRobotState);
+    // THEN we publish the robot state to the appropriate topics
     EXPECT_CALL(*middleware_handle, publishRobotState);
   }
 
@@ -102,13 +102,15 @@ TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggersFailGetRobotSt
 
   auto* logger_interface_ptr = middleware_handle->logger_interface_.get();
   {
-    // THEN we request the robot state from the Spot interface
-    // THEN we publish the robot state to the appropriate topics
     InSequence seq;
+    // GIVEN the request to retrieve the robot state will fail
+    // THEN we request the robot state from the Spot interface
     EXPECT_CALL(*robot_state_client_interface, getRobotState)
         .Times(1)
         .WillOnce(Return(tl::make_unexpected("Failed to get robot state")));
+    // THEN an error message is logged
     EXPECT_CALL(*logger_interface_ptr, logError).Times(1);
+    // THEN we publish the robot state to the appropriate topics
     EXPECT_CALL(*middleware_handle, publishRobotState).Times(0);
   }
 

@@ -13,28 +13,31 @@
 namespace spot_ros2::conversions {
 
 /**
- * @brief Convenience function to convert a bosdyn protobuf position message to a ROS geometry point message
+ * @brief Convert a bosdyn protobuf position message to a ROS geometry point message
  *
- * @param msg Position from Spot
+ * @param proto Position from Spot
+ * @param ros_msg Output ROS message
  */
-geometry_msgs::msg::Point toRosPoint(const ::bosdyn::api::Vec3& msg);
+void convertToRos(const ::bosdyn::api::Vec3& proto, geometry_msgs::msg::Point& ros_msg);
 
 /**
- * @brief Convenience function to convert a bosdyn protobuf translation message to a ROS geometry translation message
+ * @brief Convert a bosdyn protobuf translation message to a ROS geometry translation message
  *
- * @param msg Translation from Spot
+ * @param proto Translation from Spot
+ * @param ros_msg Output ROS message
  */
-geometry_msgs::msg::Vector3 toRosTranslation(const ::bosdyn::api::Vec3& msg);
+void convertToRos(const ::bosdyn::api::Vec3& proto, geometry_msgs::msg::Vector3& ros_msg);
 
 /**
- * @brief Convenience function to convert a bosdyn protobuf rotation message to a ROS geometry rotation message
+ * @brief Convert a bosdyn protobuf rotation message to a ROS geometry rotation message
  *
- * @param msg Rotation from Spot
+ * @param proto Rotation from Spot
+ * @param ros_msg Output ROS message
  */
-geometry_msgs::msg::Quaternion toRosRotation(const ::bosdyn::api::Quaternion& msg);
+void convertToRos(const ::bosdyn::api::Quaternion& proto, geometry_msgs::msg::Quaternion& ros_msg);
 
 /**
- * @brief Convenience method to convert SE3Pose messages to ROS TransformStamped messages
+ * @brief Convert SE3Pose messages to ROS TransformStamped messages
  *
  * @param transform Spot SE3Pose proto message
  * @param parent_frame transform's parent frame

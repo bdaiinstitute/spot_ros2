@@ -26,7 +26,8 @@ TEST(GeometryConversion, toRosTranslation) {
   const auto position = ::bosdyn::api::CreateVec3(1, 2, 3);
 
   // WHEN converted to a ROS position msg
-  const auto ros_position = toRosTranslation(position);
+  geometry_msgs::msg::Vector3 ros_position;
+  convertToRos(position, ros_position);
 
   // THEN expect them to be equal
   EXPECT_TRUE(arePositionsEqual(ros_position, position));
@@ -37,7 +38,8 @@ TEST(GeometryConversion, toRosRotation) {
   const auto q = ::bosdyn::api::CreateQuaternion(1, 2, 3, 4);
 
   // WHEN converted to a ROS quaternion msg
-  const auto ros_q = toRosRotation(q);
+  geometry_msgs::msg::Quaternion ros_q;
+  convertToRos(q, ros_q);
 
   // THEN expect them to be equal
   EXPECT_TRUE(areRotationsEqual(ros_q, q));
