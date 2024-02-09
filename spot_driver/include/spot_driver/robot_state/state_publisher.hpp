@@ -21,7 +21,7 @@ namespace spot_ros2 {
  * @brief Retrieves robot state from Spot's robot state service client, converts the messages from Protobuf to ROS
  * messages, and publishes them to the appropriate topics
  */
-class SpotRobotStatePublisher {
+class StatePublisher {
  public:
   /**
    * @brief A handle that enables dependency injection of ROS and rclcpp::node operations
@@ -33,21 +33,20 @@ class SpotRobotStatePublisher {
   };
 
   /**
-   * @brief Constructor for SpotRobotStatePublisher.
+   * @brief Constructor for StatePublisher.
    * @details As opposed to other Spot Publishers, initialization takes place inside of the constructor because
    * initialization cannot fail.
    *
    * @param robot_state_client_interface a shared instance of a RobotStateClientInterface.
-   * @param middleware_handle A unique instance of a MiddlewareHandle that SpotRobotStatePublisher will take ownership
+   * @param middleware_handle A unique instance of a MiddlewareHandle that StatePublisher will take ownership
    * of
    */
 
-  SpotRobotStatePublisher(std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
-                          std::unique_ptr<MiddlewareHandle> middleware_handle,
-                          std::unique_ptr<ParameterInterfaceBase> parameter_interface,
-                          std::unique_ptr<LoggerInterfaceBase> logger_interface,
-                          std::unique_ptr<TfInterfaceBase> tf_interface,
-                          std::unique_ptr<TimerInterfaceBase> timer_interface);
+  StatePublisher(std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
+                 std::unique_ptr<MiddlewareHandle> middleware_handle,
+                 std::unique_ptr<ParameterInterfaceBase> parameter_interface,
+                 std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,
+                 std::unique_ptr<TimerInterfaceBase> timer_interface);
 
  private:
   /**

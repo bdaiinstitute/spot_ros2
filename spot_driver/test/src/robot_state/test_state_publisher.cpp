@@ -2,7 +2,7 @@
 
 #include <gmock/gmock.h>
 
-#include <spot_driver/robot_state/spot_robot_state_publisher.hpp>
+#include <spot_driver/robot_state/state_publisher.hpp>
 
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
@@ -23,12 +23,12 @@ using ::testing::Return;
 using ::testing::Unused;
 
 namespace spot_ros2::test {
-class MockRobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
+class MockStateMiddlewareHandle : public StatePublisher::MiddlewareHandle {
  public:
   MOCK_METHOD(void, publishRobotState, (const RobotState& robot_state), (override));
 };
 
-class TestSpotRobotStatePublisherFixture : public ::testing::Test {
+class StatePublisherNodeTest : public ::testing::Test {
  public:
   void SetUp() override {
     mock_node_interface = std::make_unique<MockNodeInterface>();
@@ -47,24 +47,24 @@ class TestSpotRobotStatePublisherFixture : public ::testing::Test {
 
   std::shared_ptr<spot_ros2::test::MockRobotStateClient> robot_state_client_interface =
       std::make_shared<spot_ros2::test::MockRobotStateClient>();
-  std::unique_ptr<MockRobotMiddlewareHandle> mock_middleware_handle = std::make_unique<MockRobotMiddlewareHandle>();
-  std::unique_ptr<SpotRobotStatePublisher> robot_state_publisher;
+  std::unique_ptr<MockStateMiddlewareHandle> mock_middleware_handle = std::make_unique<MockStateMiddlewareHandle>();
+  std::unique_ptr<StatePublisher> robot_state_publisher;
 };
 
-TEST_F(TestSpotRobotStatePublisherFixture, InitSucceeds) {
-  // GIVEN a RobotStateClientInterface and a SpotRobotStatePublisher::MiddlewareHandle
+TEST_F(StatePublisherNodeTest, InitSucceeds) {
+  // GIVEN a RobotStateClientInterface and a StatePublisher::MiddlewareHandle
 
   // THEN the timer interface's setTimer function is called once with the expected timer period
   auto* timer_interface_ptr = mock_timer_interface.get();
   EXPECT_CALL(*timer_interface_ptr, setTimer(std::chrono::duration<double>{1.0 / 50.0}, _)).Times(1);
 
   // WHEN a robot state publisher is constructed
-  robot_state_publisher = std::make_unique<SpotRobotStatePublisher>(
+  robot_state_publisher = std::make_unique<StatePublisher>(
       robot_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
       std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 }
 
-TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggers) {
+TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
   // THEN expect createPublishers to be invoked
 
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
@@ -82,7 +82,7 @@ TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggers) {
   }
 
   // GIVEN a robot_state_publisher
-  robot_state_publisher = std::make_unique<SpotRobotStatePublisher>(
+  robot_state_publisher = std::make_unique<StatePublisher>(
       robot_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
       std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 
@@ -90,7 +90,7 @@ TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggers) {
   timer_interface_ptr->trigger();
 }
 
-TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggersFailGetRobotState) {
+TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetRobotState) {
   // THEN expect createPublishers to be invoked
 
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
@@ -114,7 +114,7 @@ TEST_F(TestSpotRobotStatePublisherFixture, PublishCallbackTriggersFailGetRobotSt
   }
 
   // GIVEN a robot_state_publisher
-  robot_state_publisher = std::make_unique<SpotRobotStatePublisher>(
+  robot_state_publisher = std::make_unique<StatePublisher>(
       robot_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
       std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 

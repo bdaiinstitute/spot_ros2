@@ -5,7 +5,7 @@
 #include <rmw/qos_profiles.h>
 #include <rclcpp/node.hpp>
 #include <rclcpp/qos.hpp>
-#include <spot_driver/robot_state/spot_robot_state_publisher.hpp>
+#include <spot_driver/robot_state/state_publisher.hpp>
 #include <spot_driver/types.hpp>
 #include <tl_expected/expected.hpp>
 
@@ -14,26 +14,26 @@
 namespace spot_ros2 {
 
 /**
- * @brief Production implementation of a SpotRobotStatePublisher::MiddlewareHandle
+ * @brief Production implementation of a StatePublisher::MiddlewareHandle
  */
 
-class SpotRobotStateMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
+class StateMiddlewareHandle : public StatePublisher::MiddlewareHandle {
  public:
   /**
-   * @brief Constructor for SpotRobotStateMiddlewareHandle.
+   * @brief Constructor for StateMiddlewareHandle.
    *
    * @param node A shared instance to a rclcpp::node
    */
-  explicit SpotRobotStateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node);
+  explicit StateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node);
 
   /**
-   * @brief Delegating constructor for SpotRobotStateMiddlewareHandle.
+   * @brief Delegating constructor for StateMiddlewareHandle.
    *
    * @param node_options configuration options for a rclcpp::node
    */
-  explicit SpotRobotStateMiddlewareHandle(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
+  explicit StateMiddlewareHandle(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
-  ~SpotRobotStateMiddlewareHandle() override = default;
+  ~StateMiddlewareHandle() override = default;
 
   /**
    * @brief Publish robot state messages

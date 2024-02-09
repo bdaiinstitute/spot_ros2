@@ -51,27 +51,27 @@ target_link_libraries(test_parameter_interface spot_api rclcpp_test)
 
 # test_spot_robot_state_publisher
 
-ament_add_gmock(test_spot_robot_state_publisher
-  src/robot_state/test_spot_robot_state_publisher.cpp
+ament_add_gmock(test_state_publisher
+  src/robot_state/test_state_publisher.cpp
 )
-target_include_directories(test_spot_robot_state_publisher
+target_include_directories(test_state_publisher
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(test_spot_robot_state_publisher spot_robot_state_publisher)
+target_link_libraries(test_state_publisher state_publisher)
 
 # test_spot_robot_state_publisher_node
 
-ament_add_gmock(test_spot_robot_state_publisher_node
-  src/robot_state/test_spot_robot_state_publisher_node.cpp
+ament_add_gmock(test_state_publisher_node
+  src/robot_state/test_state_publisher_node.cpp
 )
-target_include_directories(test_spot_robot_state_publisher_node
+target_include_directories(test_state_publisher_node
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(test_spot_robot_state_publisher_node spot_robot_state_publisher)
+target_link_libraries(test_state_publisher_node state_publisher)
 
 ament_add_gmock(test_conversions_geometry
   src/conversions/test_geometry.cpp

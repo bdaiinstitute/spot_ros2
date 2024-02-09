@@ -4,7 +4,7 @@
 #include <rclcpp/node.hpp>
 #include <spot_driver/api/default_robot_state_client.hpp>
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
-#include <spot_driver/robot_state/spot_robot_state_publisher.hpp>
+#include <spot_driver/robot_state/state_publisher.hpp>
 #include <utility>
 
 namespace {
@@ -13,11 +13,12 @@ constexpr auto kRobotStateCallbackPeriod = std::chrono::duration<double>{1.0 / 5
 
 namespace spot_ros2 {
 
-SpotRobotStatePublisher::SpotRobotStatePublisher(
-    std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
-    std::unique_ptr<MiddlewareHandle> middleware_handle, std::unique_ptr<ParameterInterfaceBase> parameter_interface,
-    std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,
-    std::unique_ptr<TimerInterfaceBase> timer_interface)
+StatePublisher::StatePublisher(std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
+                               std::unique_ptr<MiddlewareHandle> middleware_handle,
+                               std::unique_ptr<ParameterInterfaceBase> parameter_interface,
+                               std::unique_ptr<LoggerInterfaceBase> logger_interface,
+                               std::unique_ptr<TfInterfaceBase> tf_interface,
+                               std::unique_ptr<TimerInterfaceBase> timer_interface)
     : client_interface_{std::move(robot_state_client_interface)},
       middleware_handle_{std::move(middleware_handle)},
       parameter_interface_{std::move(parameter_interface)},
@@ -36,7 +37,7 @@ SpotRobotStatePublisher::SpotRobotStatePublisher(
   });
 }
 
-void SpotRobotStatePublisher::timerCallback() {
+void StatePublisher::timerCallback() {
   const auto robot_state_result = client_interface_->getRobotState(full_odom_frame_id_);
   if (!robot_state_result.has_value()) {
     logger_interface_->logError(std::string{"Failed to get robot_state: "}.append(robot_state_result.error()));

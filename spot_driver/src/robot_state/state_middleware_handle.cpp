@@ -1,10 +1,10 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <spot_driver/robot_state/spot_robot_state_middleware_handle.hpp>
+#include <spot_driver/robot_state/state_middleware_handle.hpp>
 
 namespace {
 constexpr auto kPublisherHistoryDepth = 1;
-constexpr auto kNodeName{"spot_robot_state_publisher"};
+constexpr auto kNodeName{"spot_state_publisher"};
 
 // ROS topic names for Spot's robot state publisher
 constexpr auto kJointStatesTopic{"joint_states"};
@@ -27,7 +27,7 @@ rclcpp::QoS makeQoS() {
 
 namespace spot_ros2 {
 
-SpotRobotStateMiddlewareHandle::SpotRobotStateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node)
+StateMiddlewareHandle::StateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node)
     : node_{node},
       battery_states_publisher_{
           node_->create_publisher<spot_msgs::msg::BatteryStateArray>(kBatteryStatesTopic, makeQoS())},
@@ -48,10 +48,10 @@ SpotRobotStateMiddlewareHandle::SpotRobotStateMiddlewareHandle(const std::shared
       behavior_fault_state_publisher_{
           node_->create_publisher<spot_msgs::msg::BehaviorFaultState>(kBehaviorFaultsTopic, makeQoS())} {}
 
-SpotRobotStateMiddlewareHandle::SpotRobotStateMiddlewareHandle(const rclcpp::NodeOptions& node_options)
-    : SpotRobotStateMiddlewareHandle(std::make_shared<rclcpp::Node>(kNodeName, node_options)) {}
+StateMiddlewareHandle::StateMiddlewareHandle(const rclcpp::NodeOptions& node_options)
+    : StateMiddlewareHandle(std::make_shared<rclcpp::Node>(kNodeName, node_options)) {}
 
-void SpotRobotStateMiddlewareHandle::publishRobotState(const RobotState& robot_state) {
+void StateMiddlewareHandle::publishRobotState(const RobotState& robot_state) {
   battery_states_publisher_->publish(robot_state.battery_states);
   wifi_state_publisher_->publish(robot_state.wifi_state);
   foot_states_publisher_->publish(robot_state.foot_state);
