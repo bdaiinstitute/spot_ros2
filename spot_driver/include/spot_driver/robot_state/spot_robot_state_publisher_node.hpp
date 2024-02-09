@@ -10,6 +10,7 @@
 #include <spot_driver/robot_state/spot_robot_state_publisher.hpp>
 
 #include <memory>
+#include "spot_driver/interfaces/node_interface_base.hpp"
 
 namespace spot_ros2 {
 /**
@@ -25,8 +26,12 @@ class SpotRobotStatePublisherNode {
    * @param mw_handle a unique_ptr of a SpotRobotStatePublisher::MiddlewareHandle instance that this
    * SpotRobotStatePublisherNode will take ownership of
    */
-  SpotRobotStatePublisherNode(std::unique_ptr<SpotApi> spot_api,
-                              std::unique_ptr<SpotRobotStatePublisher::MiddlewareHandle> mw_handle);
+  SpotRobotStatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_base_interface, std::unique_ptr<SpotApi> spot_api,
+                              std::unique_ptr<SpotRobotStatePublisher::MiddlewareHandle> mw_handle,
+                              std::unique_ptr<ParameterInterfaceBase> parameter_interface,
+                              std::unique_ptr<LoggerInterfaceBase> logger_interface,
+                              std::unique_ptr<TfInterfaceBase> tf_interface,
+                              std::unique_ptr<TimerInterfaceBase> timer_interface);
 
   /**
    * @brief Delegating constructor used in production.
@@ -45,7 +50,13 @@ class SpotRobotStatePublisherNode {
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> get_node_base_interface();
 
  private:
-  std::shared_ptr<rclcpp::Node> node_;
+  void initialize(std::unique_ptr<SpotApi> spot_api,
+                  std::unique_ptr<SpotRobotStatePublisher::MiddlewareHandle> mw_handle,
+                  std::unique_ptr<ParameterInterfaceBase> parameter_interface,
+                  std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,
+                  std::unique_ptr<TimerInterfaceBase> timer_interface);
+
+  std::unique_ptr<NodeInterfaceBase> node_base_interface_;
   std::unique_ptr<SpotApi> spot_api_;
   std::unique_ptr<SpotRobotStatePublisher> internal_;
 };

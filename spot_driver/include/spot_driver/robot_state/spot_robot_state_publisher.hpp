@@ -29,15 +29,7 @@ class SpotRobotStatePublisher {
   class MiddlewareHandle {
    public:
     virtual ~MiddlewareHandle() = default;
-
-    virtual void createPublishers() = 0;
     virtual void publishRobotState(const RobotState& robot_state) = 0;
-
-    virtual std::shared_ptr<rclcpp::Node> node() = 0;
-    virtual ParameterInterfaceBase* parameter_interface() = 0;
-    virtual LoggerInterfaceBase* logger_interface() = 0;
-    virtual TfInterfaceBase* tf_interface() = 0;
-    virtual TimerInterfaceBase* timer_interface() = 0;
   };
 
   /**
@@ -51,7 +43,11 @@ class SpotRobotStatePublisher {
    */
 
   SpotRobotStatePublisher(std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
-                          std::unique_ptr<MiddlewareHandle> middleware_handle);
+                          std::unique_ptr<MiddlewareHandle> middleware_handle,
+                          std::unique_ptr<ParameterInterfaceBase> parameter_interface,
+                          std::unique_ptr<LoggerInterfaceBase> logger_interface,
+                          std::unique_ptr<TfInterfaceBase> tf_interface,
+                          std::unique_ptr<TimerInterfaceBase> timer_interface);
 
  private:
   /**
@@ -64,6 +60,15 @@ class SpotRobotStatePublisher {
   // Interface classes to interact with Spot and the middleware.
   std::shared_ptr<RobotStateClientInterface> client_interface_;
   std::unique_ptr<MiddlewareHandle> middleware_handle_;
+
+  /** @brief instance of ParameterInterfaceBase to get ROS parameters*/
+  std::unique_ptr<ParameterInterfaceBase> parameter_interface_;
+  /** @brief instance of LoggerInterfaceBase to send ROS log messages*/
+  std::unique_ptr<LoggerInterfaceBase> logger_interface_;
+  /** @brief instance of TfInterfaceBase to update static transforms*/
+  std::unique_ptr<TfInterfaceBase> tf_interface_;
+  /** @brief instance of TimerInterfaceBase to create callback timer*/
+  std::unique_ptr<TimerInterfaceBase> timer_interface_;
 };
 
 }  // namespace spot_ros2

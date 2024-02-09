@@ -45,6 +45,7 @@ add_library(spot_api
   src/conversions/kinematic_conversions.cpp
   src/conversions/robot_state.cpp
   src/interfaces/rclcpp_logger_interface.cpp
+  src/interfaces/rclcpp_node_interface.cpp
   src/interfaces/rclcpp_parameter_interface.cpp
   src/interfaces/rclcpp_tf_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp

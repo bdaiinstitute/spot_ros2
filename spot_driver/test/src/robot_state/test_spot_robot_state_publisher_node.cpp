@@ -7,6 +7,7 @@
 
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
+#include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_robot_state_client.hpp>
 #include <spot_driver/mock/mock_spot_api.hpp>
 #include <spot_driver/mock/mock_tf_interface.hpp>
@@ -27,41 +28,31 @@ namespace spot_ros2::test {
 
 class MockRobotMiddlewareHandle : public SpotRobotStatePublisher::MiddlewareHandle {
  public:
-  MOCK_METHOD(void, createPublishers, (), (override));
   MOCK_METHOD(void, publishRobotState, (const RobotState& robot_state), (override));
-
-  MOCK_METHOD(std::shared_ptr<rclcpp::Node>, node, (), (override));
-  MOCK_METHOD(ParameterInterfaceBase*, parameter_interface, (), (override));
-  MOCK_METHOD(LoggerInterfaceBase*, logger_interface, (), (override));
-
-  TfInterfaceBase* tf_interface() override { return tf_interface_.get(); }
-  TimerInterfaceBase* timer_interface() override { return timer_interface_.get(); }
-
-  std::unique_ptr<FakeParameterInterface> parameter_interface_ = std::make_unique<FakeParameterInterface>();
-  std::unique_ptr<spot_ros2::test::MockLoggerInterface> logger_interface_ =
-      std::make_unique<spot_ros2::test::MockLoggerInterface>();
-  std::unique_ptr<spot_ros2::test::MockTfInterface> tf_interface_ =
-      std::make_unique<spot_ros2::test::MockTfInterface>();
-  std::unique_ptr<spot_ros2::test::MockTimerInterface> timer_interface_ =
-      std::make_unique<spot_ros2::test::MockTimerInterface>();
 };
 
 class SpotRobotStatePubNodeTestFixture : public ::testing::Test {
  public:
   void SetUp() override {
-    fake_parameter_interface = std::make_shared<FakeParameterInterface>();
-    mock_logger_interface = std::make_shared<spot_ros2::test::MockLoggerInterface>();
+    mock_node_interface = std::make_unique<MockNodeInterface>();
+
+    fake_parameter_interface = std::make_unique<FakeParameterInterface>();
+    mock_logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+    mock_tf_interface = std::make_unique<spot_ros2::test::MockTfInterface>();
+    mock_timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
+
     mock_spot_api = std::make_unique<spot_ros2::test::MockSpotApi>();
     mock_middleware_handle = std::make_unique<MockRobotMiddlewareHandle>();
-
-    ON_CALL(*mock_middleware_handle, parameter_interface()).WillByDefault(Return(fake_parameter_interface.get()));
-    ON_CALL(*mock_middleware_handle, logger_interface()).WillByDefault(Return(mock_logger_interface.get()));
   }
 
-  std::shared_ptr<FakeParameterInterface> fake_parameter_interface;
-  std::shared_ptr<spot_ros2::test::MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<spot_ros2::test::MockSpotApi> mock_spot_api;
-  std::unique_ptr<spot_ros2::test::MockRobotMiddlewareHandle> mock_middleware_handle;
+  std::unique_ptr<MockNodeInterface> mock_node_interface;
+  std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
+  std::unique_ptr<MockLoggerInterface> mock_logger_interface;
+  std::unique_ptr<MockTfInterface> mock_tf_interface;
+  std::unique_ptr<MockTimerInterface> mock_timer_interface;
+
+  std::unique_ptr<MockSpotApi> mock_spot_api;
+  std::unique_ptr<MockRobotMiddlewareHandle> mock_middleware_handle;
 };
 
 TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionSuccessful) {
@@ -80,7 +71,10 @@ TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionSuccessful) {
   }
 
   // WHEN constructing a SpotRobotStatePublisherNode
-  EXPECT_NO_THROW(SpotRobotStatePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)));
+  EXPECT_NO_THROW(SpotRobotStatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
+                                              std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+                                              std::move(mock_logger_interface), std::move(mock_tf_interface),
+                                              std::move(mock_timer_interface)));
 }
 
 TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailedCreateRobotFailure) {
@@ -99,7 +93,11 @@ TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailedCreateRobotFailure) {
   }
 
   // WHEN constructing a SpotRobotStatePublisherNode
-  EXPECT_THROW(SpotRobotStatePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)),
+  // THEN the constructor throws
+  EXPECT_THROW(SpotRobotStatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
+                                           std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+                                           std::move(mock_logger_interface), std::move(mock_tf_interface),
+                                           std::move(mock_timer_interface)),
                std::exception);
 }
 
@@ -119,7 +117,11 @@ TEST_F(SpotRobotStatePubNodeTestFixture, ConstructionFailedAuthenticateFailure) 
   }
 
   // WHEN constructing a SpotRobotStatePublisherNode
-  EXPECT_THROW(SpotRobotStatePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)),
+  // THEN the constructor throws
+  EXPECT_THROW(SpotRobotStatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
+                                           std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+                                           std::move(mock_logger_interface), std::move(mock_tf_interface),
+                                           std::move(mock_timer_interface)),
                std::exception);
 }
 

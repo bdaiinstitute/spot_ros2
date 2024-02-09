@@ -5,7 +5,6 @@
 #include <spot_driver/types.hpp>
 #include <tl_expected/expected.hpp>
 
-#include <optional>
 #include <string>
 
 namespace spot_ros2 {
@@ -15,6 +14,7 @@ namespace spot_ros2 {
  */
 class RobotStateClientInterface {
  public:
+  virtual ~RobotStateClientInterface() = default;
   virtual tl::expected<RobotState, std::string> getRobotState(const std::string& preferred_odom_frame) = 0;
 };
 }  // namespace spot_ros2
