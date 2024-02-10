@@ -41,7 +41,7 @@ class StatePublisher {
    * of
    */
 
-  StatePublisher(const std::shared_ptr<StateClientInterface>& state_api,
+  StatePublisher(const std::shared_ptr<StateClientInterface>& state_client_interface,
                  std::unique_ptr<MiddlewareHandle> middleware_handle,
                  std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                  std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,

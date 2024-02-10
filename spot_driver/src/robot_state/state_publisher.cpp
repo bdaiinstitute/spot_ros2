@@ -25,10 +25,10 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
       tf_interface_{std::move(tf_interface)},
       timer_interface_{std::move(timer_interface)} {
   const auto preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
+  const auto spot_name = parameter_interface_->getSpotName();
 
-  full_odom_frame_id_ = preferred_odom_frame.find('/') == std::string::npos
-                            ? parameter_interface_->getSpotName() + "/" + preferred_odom_frame
-                            : preferred_odom_frame;
+  full_odom_frame_id_ = preferred_odom_frame.find('/') == std::string::npos ? spot_name + "/" + preferred_odom_frame
+                                                                            : preferred_odom_frame;
 
   // Create a timer to request and publish robot state at a fixed rate
   timer_interface_->setTimer(kRobotStateCallbackPeriod, [this]() {

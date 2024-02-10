@@ -2,17 +2,19 @@
 
 #include <gmock/gmock.h>
 
-#include <spot_driver/robot_state/state_publisher.hpp>
-
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
 #include <spot_driver/mock/mock_tf_interface.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
+#include <spot_driver/robot_state/state_publisher.hpp>
+#include <spot_driver/types.hpp>
+#include <tf2_msgs/msg/tf_message.hpp>
+#include <tl_expected/expected.hpp>
 
 #include <memory>
-#include <tl_expected/expected.hpp>
 
 using ::testing::_;
 using ::testing::AllOf;
@@ -51,6 +53,17 @@ class StatePublisherNodeTest : public ::testing::Test {
   std::unique_ptr<StatePublisher> robot_state_publisher;
 };
 
+RobotState makeRobotState(const bool has_valid_tf = true) {
+  RobotState out;
+  if (has_valid_tf) {
+    tf2_msgs::msg::TFMessage tf_msg;
+    geometry_msgs::msg::TransformStamped transform;
+    tf_msg.transforms.push_back(transform);
+    out.maybe_tf = tf_msg;
+  }
+  return out;
+}
+
 TEST_F(StatePublisherNodeTest, InitSucceeds) {
   // GIVEN a RobotStateClientInterface and a StatePublisher::MiddlewareHandle
 
@@ -75,10 +88,44 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
 
   {
     InSequence seq;
+    // GIVNE the robot state will contain transforms
     // THEN we request the robot state from the Spot interface
-    EXPECT_CALL(*mock_state_client_interface, getRobotState);
+    EXPECT_CALL(*mock_state_client_interface, getRobotState)
+        .WillOnce(Return(tl::expected<RobotState, std::string>{makeRobotState(true)}));
     // THEN we publish the robot state to the appropriate topics
-    EXPECT_CALL(*mock_middleware_handle, publishRobotState);
+    EXPECT_CALL(*mock_middleware_handle, publishRobotState).Times(1);
+    // THEN the robot transforms are published to TF
+    EXPECT_CALL(*mock_tf_interface, sendDynamicTransforms).Times(1);
+  }
+
+  // GIVEN a robot_state_publisher
+  robot_state_publisher = std::make_unique<StatePublisher>(
+      mock_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+      std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
+
+  // WHEN the timer callback is triggered
+  timer_interface_ptr->trigger();
+}
+
+TEST_F(StatePublisherNodeTest, PublishCallbackTriggersNoTfData) {
+  // THEN expect createPublishers to be invoked
+
+  // THEN the timer interface's setTimer function is called once and the timer_callback is set
+  auto* timer_interface_ptr = mock_timer_interface.get();
+  EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
+    timer_interface_ptr->onSetTimer(cb);
+  });
+
+  {
+    InSequence seq;
+    // GIVEN the robot state does not contain any transforms
+    // THEN we request the robot state from the Spot interface
+    EXPECT_CALL(*mock_state_client_interface, getRobotState)
+        .WillOnce(Return(tl::expected<RobotState, std::string>(makeRobotState(false))));
+    // THEN we publish the robot state to the appropriate topics
+    EXPECT_CALL(*mock_middleware_handle, publishRobotState).Times(1);
+    // THEN no transforms are published to TF
+    EXPECT_CALL(*mock_tf_interface, sendDynamicTransforms).Times(0);
   }
 
   // GIVEN a robot_state_publisher
@@ -109,8 +156,10 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetRobotState) {
         .WillOnce(Return(tl::make_unexpected("Failed to get robot state")));
     // THEN an error message is logged
     EXPECT_CALL(*logger_interface_ptr, logError).Times(1);
-    // THEN we publish the robot state to the appropriate topics
+    // THEN we do not publish a robot state
     EXPECT_CALL(*mock_middleware_handle, publishRobotState).Times(0);
+    // THEN we do not publish to TF
+    EXPECT_CALL(*mock_tf_interface, sendDynamicTransforms).Times(0);
   }
 
   // GIVEN a robot_state_publisher
