@@ -12,9 +12,9 @@ namespace spot_ros2 {
 /**
  * @brief Interface class to interact with Spot SDK's Robot State Client
  */
-class RobotStateClientInterface {
+class StateClientInterface {
  public:
-  virtual ~RobotStateClientInterface() = default;
+  virtual ~StateClientInterface() = default;
   virtual tl::expected<RobotState, std::string> getRobotState(const std::string& preferred_odom_frame) = 0;
 };
 }  // namespace spot_ros2

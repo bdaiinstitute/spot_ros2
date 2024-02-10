@@ -9,6 +9,6 @@
 namespace spot_ros2::test {
 class MockNodeInterface : public NodeInterfaceBase {
  public:
-  MOCK_METHOD(std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>, get_node_base_interface, (), (override));
+  MOCK_METHOD(std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>, getNodeBaseInterface, (), (override));
 };
 }  // namespace spot_ros2::test

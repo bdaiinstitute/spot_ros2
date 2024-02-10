@@ -6,8 +6,8 @@
 
 #include <spot_driver/api/kinematic_api.hpp>
 #include <spot_driver/api/spot_api.hpp>
+#include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/interfaces/image_client_interface.hpp>
-#include <spot_driver/interfaces/robot_state_client_interface.hpp>
 
 #include <memory>
 #include <string>
@@ -20,6 +20,6 @@ class MockSpotApi : public SpotApi {
   MOCK_METHOD((tl::expected<bool, std::string>), hasArm, (), (const, override));
   MOCK_METHOD(std::shared_ptr<KinematicApi>, kinematicApi, (), (const, override));
   MOCK_METHOD(std::shared_ptr<ImageClientInterface>, image_client_interface, (), (const, override));
-  MOCK_METHOD(std::shared_ptr<RobotStateClientInterface>, robot_state_client_interface, (), (const, override));
+  MOCK_METHOD(std::shared_ptr<StateClientInterface>, state_client_interface, (), (const, override));
 };
 }  // namespace spot_ros2::test

@@ -72,7 +72,7 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
     throw std::runtime_error(error_msg);
   }
 
-  internal_ = std::make_unique<StatePublisher>(spot_api_->robot_state_client_interface(), std::move(mw_handle),
+  internal_ = std::make_unique<StatePublisher>(spot_api_->state_client_interface(), std::move(mw_handle),
                                                std::move(parameter_interface), std::move(logger_interface),
                                                std::move(tf_interface), std::move(timer_interface));
 }

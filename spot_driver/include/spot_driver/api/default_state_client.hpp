@@ -3,15 +3,15 @@
 #pragma once
 
 #include <bosdyn/client/robot_state/robot_state_client.h>
+#include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/api/time_sync_api.hpp>
-#include <spot_driver/interfaces/robot_state_client_interface.hpp>
 
 #include <memory>
 #include <string>
 
 namespace spot_ros2 {
 
-class DefaultRobotStateClient : public RobotStateClientInterface {
+class DefaultStateClient : public StateClientInterface {
  public:
   /**
    * @brief constructor for DefaultRobotStateClient.
@@ -22,8 +22,8 @@ class DefaultRobotStateClient : public RobotStateClientInterface {
    * clock skew
    * @param robot_name Name of Spot. Used to apply frame_prefix
    */
-  explicit DefaultRobotStateClient(::bosdyn::client::RobotStateClient* client,
-                                   std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name);
+  explicit DefaultStateClient(::bosdyn::client::RobotStateClient* client,
+                              const std::shared_ptr<TimeSyncApi>& time_sync_api, const std::string& robot_name);
 
   tl::expected<RobotState, std::string> getRobotState(const std::string& preferred_odom_frame) override;
 

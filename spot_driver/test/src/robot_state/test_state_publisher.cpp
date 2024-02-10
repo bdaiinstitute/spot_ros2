@@ -7,7 +7,7 @@
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
-#include <spot_driver/mock/mock_robot_state_client.hpp>
+#include <spot_driver/mock/mock_state_client.hpp>
 #include <spot_driver/mock/mock_tf_interface.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
 
@@ -45,8 +45,8 @@ class StatePublisherNodeTest : public ::testing::Test {
   std::unique_ptr<MockTfInterface> mock_tf_interface;
   std::unique_ptr<MockTimerInterface> mock_timer_interface;
 
-  std::shared_ptr<spot_ros2::test::MockRobotStateClient> robot_state_client_interface =
-      std::make_shared<spot_ros2::test::MockRobotStateClient>();
+  std::shared_ptr<spot_ros2::test::MockStateClient> mock_state_client_interface =
+      std::make_shared<spot_ros2::test::MockStateClient>();
   std::unique_ptr<MockStateMiddlewareHandle> mock_middleware_handle = std::make_unique<MockStateMiddlewareHandle>();
   std::unique_ptr<StatePublisher> robot_state_publisher;
 };
@@ -60,7 +60,7 @@ TEST_F(StatePublisherNodeTest, InitSucceeds) {
 
   // WHEN a robot state publisher is constructed
   robot_state_publisher = std::make_unique<StatePublisher>(
-      robot_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+      mock_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
       std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 }
 
@@ -76,14 +76,14 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
   {
     InSequence seq;
     // THEN we request the robot state from the Spot interface
-    EXPECT_CALL(*robot_state_client_interface, getRobotState);
+    EXPECT_CALL(*mock_state_client_interface, getRobotState);
     // THEN we publish the robot state to the appropriate topics
     EXPECT_CALL(*mock_middleware_handle, publishRobotState);
   }
 
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
-      robot_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+      mock_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
       std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered
@@ -104,7 +104,7 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetRobotState) {
     InSequence seq;
     // GIVEN the request to retrieve the robot state will fail
     // THEN we request the robot state from the Spot interface
-    EXPECT_CALL(*robot_state_client_interface, getRobotState)
+    EXPECT_CALL(*mock_state_client_interface, getRobotState)
         .Times(1)
         .WillOnce(Return(tl::make_unexpected("Failed to get robot state")));
     // THEN an error message is logged
@@ -115,7 +115,7 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetRobotState) {
 
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
-      robot_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+      mock_state_client_interface, std::move(mock_middleware_handle), std::move(fake_parameter_interface),
       std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered

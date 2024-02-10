@@ -3,8 +3,8 @@
 #pragma once
 
 #include <spot_driver/api/kinematic_api.hpp>
+#include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/interfaces/image_client_interface.hpp>
-#include <spot_driver/interfaces/robot_state_client_interface.hpp>
 #include <tl_expected/expected.hpp>
 
 #include <memory>
@@ -21,6 +21,6 @@ class SpotApi {
   virtual tl::expected<bool, std::string> hasArm() const = 0;
   virtual std::shared_ptr<KinematicApi> kinematicApi() const = 0;
   virtual std::shared_ptr<ImageClientInterface> image_client_interface() const = 0;
-  virtual std::shared_ptr<RobotStateClientInterface> robot_state_client_interface() const = 0;
+  virtual std::shared_ptr<StateClientInterface> state_client_interface() const = 0;
 };
 }  // namespace spot_ros2

@@ -5,8 +5,7 @@
 #include <memory>
 #include <string>
 
-#include <spot_driver/interfaces/robot_state_client_interface.hpp>
-
+#include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 #include <spot_driver/interfaces/tf_interface_base.hpp>
@@ -42,7 +41,7 @@ class StatePublisher {
    * of
    */
 
-  StatePublisher(std::shared_ptr<RobotStateClientInterface> robot_state_client_interface,
+  StatePublisher(const std::shared_ptr<StateClientInterface>& state_api,
                  std::unique_ptr<MiddlewareHandle> middleware_handle,
                  std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                  std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,
@@ -57,7 +56,7 @@ class StatePublisher {
   std::string full_odom_frame_id_;
 
   // Interface classes to interact with Spot and the middleware.
-  std::shared_ptr<RobotStateClientInterface> client_interface_;
+  std::shared_ptr<StateClientInterface> state_client_interface_;
   std::unique_ptr<MiddlewareHandle> middleware_handle_;
 
   /** @brief instance of ParameterInterfaceBase to get ROS parameters*/
