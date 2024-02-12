@@ -21,7 +21,7 @@ target_include_directories(test_spot_image_publisher
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(test_spot_image_publisher spot_image_publisher)
+target_link_libraries(test_spot_image_publisher spot_api)
 
 # test_spot_image_publisher_node
 
@@ -33,7 +33,7 @@ target_include_directories(test_spot_image_publisher_node
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(test_spot_image_publisher_node spot_image_publisher)
+target_link_libraries(test_spot_image_publisher_node spot_api)
 
 # test_spot_image_sources
 
@@ -59,7 +59,7 @@ target_include_directories(test_state_publisher
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(test_state_publisher state_publisher)
+target_link_libraries(test_state_publisher spot_api)
 
 # test_spot_robot_state_publisher_node
 
@@ -71,7 +71,7 @@ target_include_directories(test_state_publisher_node
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(test_state_publisher_node state_publisher)
+target_link_libraries(test_state_publisher_node spot_api)
 
 ament_add_gmock(test_conversions_geometry
   src/conversions/test_geometry.cpp
@@ -118,7 +118,7 @@ target_include_directories(test_kinematic_service
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(test_kinematic_service spot_inverse_kinematics)
+target_link_libraries(test_kinematic_service spot_api)
 
 #rclpy_test
 

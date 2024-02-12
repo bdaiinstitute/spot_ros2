@@ -44,11 +44,20 @@ add_library(spot_api
   src/conversions/geometry.cpp
   src/conversions/kinematic_conversions.cpp
   src/conversions/robot_state.cpp
+  src/images/spot_image_publisher.cpp
+  src/images/images_middleware_handle.cpp
+  src/images/spot_image_publisher_node.cpp
   src/interfaces/rclcpp_logger_interface.cpp
   src/interfaces/rclcpp_node_interface.cpp
   src/interfaces/rclcpp_parameter_interface.cpp
   src/interfaces/rclcpp_tf_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
+  src/kinematic/kinematic_node.cpp
+  src/kinematic/kinematic_service.cpp
+  src/kinematic/kinematic_middleware_handle.cpp
+  src/robot_state/state_middleware_handle.cpp
+  src/robot_state/state_publisher.cpp
+  src/robot_state/state_publisher_node.cpp
 )
 
 target_include_directories(spot_api PUBLIC
@@ -64,20 +73,6 @@ ament_target_dependencies(spot_api PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
 # Spot image publisher
 ###
 
-# Base library containing the SpotImagePublisherNode class
-add_library(spot_image_publisher
-  src/images/spot_image_publisher.cpp
-  src/images/images_middleware_handle.cpp
-  src/images/spot_image_publisher_node.cpp
-)
-target_include_directories(spot_image_publisher PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(spot_image_publisher PUBLIC spot_api)
-set_property(TARGET spot_image_publisher PROPERTY POSITION_INDEPENDENT_CODE ON)
-ament_target_dependencies(spot_image_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
-
 # Create executable to allow running SpotImagePublisherNode directly as a ROS 2 node
 add_executable(spot_image_publisher_node src/images/spot_image_publisher_node_main.cpp)
 target_include_directories(spot_image_publisher_node
@@ -85,7 +80,7 @@ target_include_directories(spot_image_publisher_node
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(spot_image_publisher_node PUBLIC spot_image_publisher)
+target_link_libraries(spot_image_publisher_node PUBLIC spot_api)
 
 # Register a composable node to allow loading SpotImagePublisherNode in a component container
 add_library(spot_image_publisher_component SHARED src/images/spot_image_publisher_component.cpp)
@@ -94,7 +89,7 @@ target_include_directories(spot_image_publisher_component
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(spot_image_publisher_component PUBLIC spot_image_publisher)
+target_link_libraries(spot_image_publisher_component PUBLIC spot_api)
 
 rclcpp_components_register_node(
   spot_image_publisher_component
@@ -105,26 +100,9 @@ rclcpp_components_register_node(
 # Spot state publisher
 ###
 
-# Base library container StatePublisher
-add_library(state_publisher
-   src/robot_state/state_middleware_handle.cpp
-   src/robot_state/state_publisher.cpp
-   src/robot_state/state_publisher_node.cpp
-)
-
-target_include_directories(state_publisher
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-
-target_link_libraries(state_publisher PUBLIC spot_api)
-set_property(TARGET state_publisher PROPERTY POSITION_INDEPENDENT_CODE ON)
-ament_target_dependencies(state_publisher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
-
 # Create executable to allow running StatePublisherNode directly as a ROS 2 node
 add_executable(state_publisher_node src/robot_state/state_publisher_node_main.cpp)
-target_link_libraries(state_publisher_node PUBLIC state_publisher)
+target_link_libraries(state_publisher_node PUBLIC spot_api)
 target_include_directories(state_publisher_node
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -138,7 +116,7 @@ target_include_directories(state_publisher_component
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(state_publisher_component PUBLIC state_publisher)
+target_link_libraries(state_publisher_component PUBLIC spot_api)
 ament_target_dependencies(state_publisher_component PUBLIC rclcpp_components)
 
 rclcpp_components_register_node(
@@ -150,20 +128,6 @@ rclcpp_components_register_node(
 # Spot IK
 ###
 
-# Base library containing the SpotInverseKinematics class
-add_library(spot_inverse_kinematics
-  src/kinematic/kinematic_node.cpp
-  src/kinematic/kinematic_service.cpp
-  src/kinematic/kinematic_middleware_handle.cpp
-)
-target_include_directories(spot_inverse_kinematics PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(spot_inverse_kinematics PUBLIC spot_api)
-set_property(TARGET spot_inverse_kinematics PROPERTY POSITION_INDEPENDENT_CODE ON)
-ament_target_dependencies(spot_inverse_kinematics PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
-
 # Create executable to allow running KinematicNode directly as a ROS 2 node.
 add_executable(spot_inverse_kinematics_node src/kinematic/kinematic_node_main.cpp)
 target_include_directories(spot_inverse_kinematics_node
@@ -171,7 +135,7 @@ target_include_directories(spot_inverse_kinematics_node
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(spot_inverse_kinematics_node PUBLIC spot_inverse_kinematics)
+target_link_libraries(spot_inverse_kinematics_node PUBLIC spot_api)
 
 # Register a composable node to allow loading KinematicNode in a component container
 add_library(spot_inverse_kinematics_component SHARED src/kinematic/kinematic_component.cpp)
@@ -180,7 +144,7 @@ target_include_directories(spot_inverse_kinematics_component
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(spot_inverse_kinematics_component PUBLIC spot_inverse_kinematics)
+target_link_libraries(spot_inverse_kinematics_component PUBLIC spot_api)
 
 rclcpp_components_register_node(
   spot_inverse_kinematics_component
@@ -210,11 +174,8 @@ install(
 install(
   TARGETS
     spot_api
-    spot_image_publisher
     spot_image_publisher_component
-    spot_inverse_kinematics
     spot_inverse_kinematics_component
-    state_publisher
     state_publisher_component
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
