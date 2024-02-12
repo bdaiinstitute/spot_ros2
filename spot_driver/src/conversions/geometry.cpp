@@ -1,5 +1,5 @@
 
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <geometry_msgs/msg/point.hpp>
 #include <spot_driver/conversions/geometry.hpp>

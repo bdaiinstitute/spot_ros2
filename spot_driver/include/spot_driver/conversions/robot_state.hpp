@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <bosdyn/api/robot_state.pb.h>
 #include <bosdyn_msgs/msg/manipulator_state.hpp>
@@ -18,7 +18,6 @@
 #include <spot_msgs/msg/system_fault_state.hpp>
 #include <spot_msgs/msg/wi_fi_state.hpp>
 #include <string>
-#include <string_view>
 #include <tf2_msgs/msg/tf_message.hpp>
 
 namespace spot_ros2 {

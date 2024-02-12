@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <chrono>
 #include <spot_driver/api/state_client_interface.hpp>
