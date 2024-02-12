@@ -1,3 +1,5 @@
+# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
+
 import contextlib
 import unittest
 

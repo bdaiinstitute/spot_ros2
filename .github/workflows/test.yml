@@ -33,7 +33,7 @@ jobs:
         # go to root folder
         cd ../../
         source /opt/ros/$ROS_DISTRO/setup.bash
-        colcon build --symlink-install --packages-skip proto2ros_tests
+        colcon build --symlink-install --packages-skip proto2ros_tests --cmake-args -DCMAKE_CXX_FLAGS="--coverage"
         source install/local_setup.bash
     - name: Test Package
       run: |
@@ -42,14 +42,33 @@ jobs:
         # skip testing submodules
         colcon test --python-testing pytest --pytest-with-coverage --event-handlers console_direct+ --packages-skip bdai_ros2_wrappers proto2ros_tests
       working-directory: ${{ github.workspace }}/../../
-    - name: Upload coverage to Coveralls
+    - name: Generate coverage report
+      run: lcov -c -d build/spot_driver/ -o coverage_spot_driver.info --include "*/spot_driver/*" --exclude "*/test/*"
+      working-directory: ${{ github.workspace }}/../../
+    - name: Upload python coverage to Coveralls
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         fail-on-error: true
-        flag-name: unittests
+        flag-name: unittests-python
+        parallel: true
         debug: true
-        files: $(find ../../ -name "coverage.xml" -type f)
+        files: $(find ../../ -name "coverage.xml" -type f) 
+    - name: Upload cpp coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        fail-on-error: true
+        flag-name: unittests-cpp
+        parallel: true
+        debug: true
+        files: ../../coverage_spot_driver.info
+        format: lcov
+    - name: Aggregate coverage 
+      uses: coverallsapp/github-action@v2
+      with:
+        parallel-finished: true 
+        carryforward: "unittests-python, unittests-cpp"
     - if: always()
       run: colcon test-result --verbose
       working-directory: ${{ github.workspace }}/../../
