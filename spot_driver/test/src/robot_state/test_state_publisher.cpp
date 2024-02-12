@@ -78,8 +78,6 @@ TEST_F(StatePublisherNodeTest, InitSucceeds) {
 }
 
 TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
-  // THEN expect createPublishers to be invoked
-
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
   EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
@@ -88,7 +86,7 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
 
   {
     InSequence seq;
-    // GIVNE the robot state will contain transforms
+    // GIVEN the robot state will contain transforms
     // THEN we request the robot state from the Spot interface
     EXPECT_CALL(*mock_state_client_interface, getRobotState)
         .WillOnce(Return(tl::expected<RobotState, std::string>{makeRobotState(true)}));
@@ -108,8 +106,6 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
 }
 
 TEST_F(StatePublisherNodeTest, PublishCallbackTriggersNoTfData) {
-  // THEN expect createPublishers to be invoked
-
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
   EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
@@ -138,8 +134,6 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggersNoTfData) {
 }
 
 TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetRobotState) {
-  // THEN expect createPublishers to be invoked
-
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
   EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
