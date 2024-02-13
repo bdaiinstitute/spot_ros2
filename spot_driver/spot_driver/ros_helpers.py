@@ -531,8 +531,7 @@ def get_tf_from_world_objects(
 
 
 def get_battery_states_from_state(
-    state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper, node: Node
-) -> BatteryStateArray:
+    state: robot_state_pb2.RobotState, spot_wrapper: SpotWrapper) -> BatteryStateArray:
     """Maps battery state data from robot state proto to ROS BatteryStateArray message
     Args:
         state: Robot State proto
