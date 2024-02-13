@@ -65,7 +65,7 @@ TEST_F(StatePublisherNodeTest, ConstructionSuccessful) {
     // THEN we authenticate with the robot
     EXPECT_CALL(*mock_spot_api, authenticate).Times(1);
     // THEN we access the robot state client interface
-    EXPECT_CALL(*mock_spot_api, state_client_interface).Times(1);
+    EXPECT_CALL(*mock_spot_api, stateClientInterface).Times(1);
     // THEN no error messages are logged
     EXPECT_CALL(*mock_logger_interface, logError).Times(0);
   }
@@ -89,7 +89,7 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedCreateRobotFailure) {
     // THEN we do not attempt to authenticate with the robot
     EXPECT_CALL(*mock_spot_api, authenticate).Times(0);
     // THEN we do not access the robot state client interface
-    EXPECT_CALL(*mock_spot_api, state_client_interface).Times(0);
+    EXPECT_CALL(*mock_spot_api, stateClientInterface).Times(0);
   }
 
   // WHEN constructing a StatePublisherNodeTest
@@ -113,7 +113,7 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedAuthenticateFailure) {
     // THEN an error message is logged
     EXPECT_CALL(*mock_logger_interface, logError).Times(1);
     // THEN we do not access the robot state client interface
-    EXPECT_CALL(*mock_spot_api, state_client_interface).Times(0);
+    EXPECT_CALL(*mock_spot_api, stateClientInterface).Times(0);
   }
 
   // WHEN constructing a StatePublisherNodeTest
