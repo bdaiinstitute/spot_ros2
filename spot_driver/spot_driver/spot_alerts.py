@@ -13,7 +13,7 @@ class SpotAlerts(Node):
     """Monitors spot states and will generate a pop-up message to alert the user of warnings"""
 
     def __init__(self) -> None:
-        super().__init__("spot_alerts_pop_up_node")
+        super().__init__("spot_alerts")
         # Subscribers #
         self.battery_states = self.create_subscription(
             BatteryStateArray, "status/battery_states", self.battery_callback

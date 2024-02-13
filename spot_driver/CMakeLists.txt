@@ -124,7 +124,7 @@ install(
   PROGRAMS
   spot_driver/spot_alerts.py
   DESTINATION lib/${PROJECT_NAME}
-  RENAME spot_alerts_pop_up_node
+  RENAME spot_alerts
   )
 # Install Libraries
 install(
