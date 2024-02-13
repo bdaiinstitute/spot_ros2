@@ -1,4 +1,4 @@
-# Copyright [2023] Boston Dynamics AI Institute, Inc.
+# Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 import os
 
