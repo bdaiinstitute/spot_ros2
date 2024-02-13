@@ -24,7 +24,7 @@ class DefaultSpotApi : public SpotApi {
   tl::expected<bool, std::string> hasArm() const override;
   std::shared_ptr<KinematicApi> kinematicApi() const override;
   std::shared_ptr<ImageClientInterface> image_client_interface() const override;
-  std::shared_ptr<StateClientInterface> state_client_interface() const override;
+  std::shared_ptr<StateClientInterface> stateClientInterface() const override;
 
  private:
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;

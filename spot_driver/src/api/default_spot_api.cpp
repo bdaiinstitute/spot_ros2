@@ -93,7 +93,7 @@ std::shared_ptr<ImageClientInterface> DefaultSpotApi::image_client_interface() c
   return image_client_interface_;
 }
 
-std::shared_ptr<StateClientInterface> DefaultSpotApi::state_client_interface() const {
+std::shared_ptr<StateClientInterface> DefaultSpotApi::stateClientInterface() const {
   return state_client_interface_;
 }
 
