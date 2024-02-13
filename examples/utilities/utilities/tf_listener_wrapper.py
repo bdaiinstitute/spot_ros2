@@ -1,4 +1,5 @@
-# Copyright [2023] Boston Dynamics AI Institute, Inc.
+# Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+
 from typing import Optional
 
 import bdai_ros2_wrappers.tf_listener_wrapper as tfl

@@ -1,4 +1,5 @@
-# Copyright [2023] Boston Dynamics AI Institute, Inc.
+# Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+
 import argparse
 import logging
 from typing import Any, Dict, Optional
