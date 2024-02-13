@@ -37,10 +37,16 @@ class StatePublisher {
    * initialization cannot fail.
    *
    * @param robot_state_client_interface a shared instance of a RobotStateClientInterface.
-   * @param middleware_handle A unique instance of a MiddlewareHandle that StatePublisher will take ownership
-   * of
+   * @param middleware_handle A unique_ptr to an instance of a class derived from StatePublisher::MiddlewareHandle which
+   * will be used to publish robot state messages. StatePublisherNode will take ownership of this unique_ptr.
+   * @param logger_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used to
+   * log info and error messages. StatePublisherNode will take ownership of this unique_ptr.
+   * @param tf_interface A unique_ptr to an instance of a class derived from TfInterfaceBase which will be used to
+   * publish the transforms contained in Spot's robot state. StatePublisherNode will take ownership of this unique_ptr.
+   * @param timer_interface A unique_ptr to an instance of a class derived from TimerInterfaceBase which will be used to
+   * repeatedly trigger requests for updated robot states. StatePublisherNode will take ownership of this unique_ptr.
+   *
    */
-
   StatePublisher(const std::shared_ptr<StateClientInterface>& state_client_interface,
                  std::unique_ptr<MiddlewareHandle> middleware_handle,
                  std::unique_ptr<ParameterInterfaceBase> parameter_interface,
