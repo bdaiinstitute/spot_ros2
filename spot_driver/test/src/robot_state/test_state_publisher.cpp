@@ -10,6 +10,7 @@
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
+#include <spot_driver/mock/mock_state_publisher_middleware_handle.hpp>
 #include <spot_driver/mock/mock_tf_interface.hpp>
 #include <spot_driver/mock/mock_time_sync_api.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
@@ -33,11 +34,6 @@ using ::testing::Unused;
 constexpr auto kErrorMessage = "Some error message.";
 
 namespace spot_ros2::test {
-class MockStateMiddlewareHandle : public StatePublisher::MiddlewareHandle {
- public:
-  MOCK_METHOD(void, publishRobotState, (const RobotState& robot_state), (override));
-};
-
 class StatePublisherNodeTest : public ::testing::Test {
  public:
   void SetUp() override {
