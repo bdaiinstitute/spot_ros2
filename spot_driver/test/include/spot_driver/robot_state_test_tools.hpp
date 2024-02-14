@@ -104,14 +104,14 @@ inline void addRootFrame(::bosdyn::api::FrameTreeSnapshot* mutable_frame_tree_sn
 
 inline void addBodyVelocityOdom(::bosdyn::api::KinematicState* mutable_kinematic_state, double x, double y, double z,
                                 double rx, double ry, double rz) {
-  auto* velocity_angular = mutable_kinematic_state->mutable_velocity_of_body_in_odom()->mutable_angular();
-  velocity_angular->set_x(x);
-  velocity_angular->set_y(y);
-  velocity_angular->set_z(z);
   auto* velocity_linear = mutable_kinematic_state->mutable_velocity_of_body_in_odom()->mutable_linear();
-  velocity_linear->set_x(rx);
-  velocity_linear->set_y(ry);
-  velocity_linear->set_z(rz);
+  velocity_linear->set_x(x);
+  velocity_linear->set_y(y);
+  velocity_linear->set_z(z);
+  auto* velocity_angular = mutable_kinematic_state->mutable_velocity_of_body_in_odom()->mutable_angular();
+  velocity_angular->set_x(rx);
+  velocity_angular->set_y(ry);
+  velocity_angular->set_z(rz);
 }
 
 inline void addAcquisitionTimestamp(::bosdyn::api::KinematicState* mutable_kinematic_state, int64_t seconds,

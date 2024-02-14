@@ -11,6 +11,8 @@
 #include <bosdyn_msgs/msg/manipulator_state_carry_state.hpp>
 #include <builtin_interfaces/msg/duration.hpp>
 #include <builtin_interfaces/msg/time.hpp>
+#include <geometry_msgs/msg/quaternion.hpp>
+#include <geometry_msgs/msg/transform.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 #include <iterator>
@@ -19,14 +21,28 @@
 #include <spot_driver/robot_state_test_tools.hpp>
 #include <spot_msgs/msg/battery_state.hpp>
 #include <spot_msgs/msg/battery_state_array.hpp>
+#include <spot_msgs/msg/e_stop_state.hpp>
 #include <spot_msgs/msg/power_state.hpp>
 #include <spot_msgs/msg/system_fault.hpp>
 #include <spot_msgs/msg/wi_fi_state.hpp>
 #include "gmock/gmock-matchers.h"
 #include "gmock/gmock-more-matchers.h"
 
-namespace spot_ros2::test {
+namespace {
+using ::testing::AllOf;
+using ::testing::Contains;
+using ::testing::DoubleEq;
+using ::testing::Eq;
+using ::testing::Field;
+using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
+using ::testing::SizeIs;
+using ::testing::StrEq;
+using ::testing::UnorderedElementsAre;
+}  // namespace
 
+namespace spot_ros2::test {
 TEST(RobotStateConversions, TestGetBatteryStates) {
   // GIVEN a clock skew and a RobotState containing a BatteryState, a WifiState, FootState, and an EstopState
   google::protobuf::Duration clock_skew;
@@ -39,14 +55,14 @@ TEST(RobotStateConversions, TestGetBatteryStates) {
   const spot_msgs::msg::BatteryStateArray out = getBatteryStates(robot_state, clock_skew);
 
   // THEN the ROS message contains the same values as were set in the input RobotState
-  ASSERT_THAT(out.battery_states, testing::SizeIs(1));
+  ASSERT_THAT(out.battery_states, SizeIs(1));
   const auto& first_battery_state = out.battery_states.at(0);
-  EXPECT_THAT(first_battery_state.identifier, testing::StrEq("test_battery"));
-  EXPECT_THAT(first_battery_state.charge_percentage, testing::DoubleEq(50.0));
-  EXPECT_THAT(first_battery_state.current, testing::DoubleEq(10.0));
-  EXPECT_THAT(first_battery_state.voltage, testing::DoubleEq(12.0));
-  ASSERT_THAT(first_battery_state.temperatures, testing::SizeIs(1ul));
-  EXPECT_THAT(first_battery_state.temperatures.at(0), testing::DoubleEq(80.0));
+  EXPECT_THAT(first_battery_state.identifier, StrEq("test_battery"));
+  EXPECT_THAT(first_battery_state.charge_percentage, DoubleEq(50.0));
+  EXPECT_THAT(first_battery_state.current, DoubleEq(10.0));
+  EXPECT_THAT(first_battery_state.voltage, DoubleEq(12.0));
+  ASSERT_THAT(first_battery_state.temperatures, SizeIs(1ul));
+  EXPECT_THAT(first_battery_state.temperatures.at(0), DoubleEq(80.0));
 }
 
 TEST(RobotStateConversions, TestGetWifiState) {
@@ -61,8 +77,8 @@ TEST(RobotStateConversions, TestGetWifiState) {
   const spot_msgs::msg::WiFiState out = getWifiState(robot_state);
 
   // THEN the ROS message contains the same values for the ESSID and mode fields as were set in the input RobotState
-  EXPECT_THAT(out.current_mode, testing::Eq(input_mode));
-  EXPECT_THAT(out.essid, testing::StrEq(input_essid));
+  EXPECT_THAT(out.current_mode, Eq(input_mode));
+  EXPECT_THAT(out.essid, StrEq(input_essid));
 }
 
 TEST(RobotStateConversions, TestGetFootState) {
@@ -77,29 +93,24 @@ TEST(RobotStateConversions, TestGetFootState) {
   const auto out = getFootState(robot_state);
 
   // THEN the output message contains four foot states
-  ASSERT_THAT(out.states, testing::SizeIs(4));
+  ASSERT_THAT(out.states, SizeIs(4));
 
   // THEN each output foot state matches the corresponding input, and is listed in the same order
   const auto& first_foot_state = out.states.at(0);
-  EXPECT_THAT(first_foot_state.contact, testing::Eq(spot_msgs::msg::FootState::CONTACT_MADE));
-  EXPECT_THAT(first_foot_state.foot_position_rt_body.x, testing::DoubleEq(1.0));
-  EXPECT_THAT(first_foot_state.foot_position_rt_body.y, testing::DoubleEq(2.0));
-  EXPECT_THAT(first_foot_state.foot_position_rt_body.z, testing::DoubleEq(3.0));
+  EXPECT_THAT(first_foot_state.contact, Eq(spot_msgs::msg::FootState::CONTACT_MADE));
+  EXPECT_THAT(first_foot_state.foot_position_rt_body, GeometryMsgsPointEq(1.0, 2.0, 3.0));
+
   const auto& second_foot_state = out.states.at(1);
-  EXPECT_THAT(second_foot_state.contact, testing::Eq(spot_msgs::msg::FootState::CONTACT_LOST));
-  EXPECT_THAT(second_foot_state.foot_position_rt_body.x, testing::DoubleEq(4.0));
-  EXPECT_THAT(second_foot_state.foot_position_rt_body.y, testing::DoubleEq(5.0));
-  EXPECT_THAT(second_foot_state.foot_position_rt_body.z, testing::DoubleEq(6.0));
+  EXPECT_THAT(second_foot_state.contact, Eq(spot_msgs::msg::FootState::CONTACT_LOST));
+  EXPECT_THAT(second_foot_state.foot_position_rt_body, GeometryMsgsPointEq(4.0, 5.0, 6.0));
+
   const auto& third_foot_state = out.states.at(2);
-  EXPECT_THAT(third_foot_state.contact, testing::Eq(spot_msgs::msg::FootState::CONTACT_MADE));
-  EXPECT_THAT(third_foot_state.foot_position_rt_body.x, testing::DoubleEq(7.0));
-  EXPECT_THAT(third_foot_state.foot_position_rt_body.y, testing::DoubleEq(8.0));
-  EXPECT_THAT(third_foot_state.foot_position_rt_body.z, testing::DoubleEq(9.0));
+  EXPECT_THAT(third_foot_state.contact, Eq(spot_msgs::msg::FootState::CONTACT_MADE));
+  EXPECT_THAT(third_foot_state.foot_position_rt_body, GeometryMsgsPointEq(7.0, 8.0, 9.0));
+
   const auto& fourth_foot_state = out.states.at(3);
-  EXPECT_THAT(fourth_foot_state.contact, testing::Eq(spot_msgs::msg::FootState::CONTACT_LOST));
-  EXPECT_THAT(fourth_foot_state.foot_position_rt_body.x, testing::DoubleEq(10.0));
-  EXPECT_THAT(fourth_foot_state.foot_position_rt_body.y, testing::DoubleEq(11.0));
-  EXPECT_THAT(fourth_foot_state.foot_position_rt_body.z, testing::DoubleEq(12.0));
+  EXPECT_THAT(fourth_foot_state.contact, Eq(spot_msgs::msg::FootState::CONTACT_LOST));
+  EXPECT_THAT(fourth_foot_state.foot_position_rt_body, GeometryMsgsPointEq(10.0, 11.0, 12.0));
 }
 
 TEST(RobotStateConversions, TestGetFootStateNoFootStates) {
@@ -110,7 +121,7 @@ TEST(RobotStateConversions, TestGetFootStateNoFootStates) {
   const auto out = getFootState(robot_state);
 
   // THEN the output message contains an empty array
-  ASSERT_THAT(out.states, testing::IsEmpty());
+  ASSERT_THAT(out.states, IsEmpty());
 }
 
 TEST(RobotStateConversions, TestGetEStopStates) {
@@ -143,26 +154,21 @@ TEST(RobotStateConversions, TestGetEStopStates) {
   const auto out = getEstopStates(robot_state, clock_skew);
 
   // THEN the output message contains both estop states
-  ASSERT_THAT(out.estop_states, testing::SizeIs(2));
+  ASSERT_THAT(out.estop_states, SizeIs(2));
 
   // THEN each output estop state contains equivalent data to its corresponding input
-  // TODO(schornakj): validate timestamps too
   EXPECT_THAT(
       out.estop_states,
-      testing::Contains(testing::AllOf(
-          testing::Field("name", &spot_msgs::msg::EStopState::name, testing::StrEq("estop_name")),
-          testing::Field("type", &spot_msgs::msg::EStopState::type, spot_msgs::msg::EStopState::TYPE_HARDWARE),
-          testing::Field("state", &spot_msgs::msg::EStopState::state, spot_msgs::msg::EStopState::STATE_ESTOPPED),
-          testing::Field("state_description", &spot_msgs::msg::EStopState::state_description,
-                         testing::StrEq("some_text")))));
+      Contains(AllOf(Field("name", &spot_msgs::msg::EStopState::name, StrEq("estop_name")),
+                     Field("type", &spot_msgs::msg::EStopState::type, spot_msgs::msg::EStopState::TYPE_HARDWARE),
+                     Field("state", &spot_msgs::msg::EStopState::state, spot_msgs::msg::EStopState::STATE_ESTOPPED),
+                     Field("state_description", &spot_msgs::msg::EStopState::state_description, StrEq("some_text")))));
   EXPECT_THAT(
       out.estop_states,
-      testing::Contains(testing::AllOf(
-          testing::Field("name", &spot_msgs::msg::EStopState::name, testing::StrEq("second_estop_name")),
-          testing::Field("type", &spot_msgs::msg::EStopState::type, spot_msgs::msg::EStopState::TYPE_SOFTWARE),
-          testing::Field("state", &spot_msgs::msg::EStopState::state, spot_msgs::msg::EStopState::STATE_NOT_ESTOPPED),
-          testing::Field("state_description", &spot_msgs::msg::EStopState::state_description,
-                         testing::StrEq("other_text")))));
+      Contains(AllOf(Field("name", &spot_msgs::msg::EStopState::name, StrEq("second_estop_name")),
+                     Field("type", &spot_msgs::msg::EStopState::type, spot_msgs::msg::EStopState::TYPE_SOFTWARE),
+                     Field("state", &spot_msgs::msg::EStopState::state, spot_msgs::msg::EStopState::STATE_NOT_ESTOPPED),
+                     Field("state_description", &spot_msgs::msg::EStopState::state_description, StrEq("other_text")))));
 }
 
 TEST(RobotStateConversions, TestGetJointStates) {
@@ -185,29 +191,29 @@ TEST(RobotStateConversions, TestGetJointStates) {
   const auto out = getJointStates(robot_state, clock_skew, prefix);
 
   // THEN a message is created
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
 
   // THEN each vector element of the joint state contains a number of elements matching the number of input joint states
-  ASSERT_THAT(out->name, testing::SizeIs(2));
-  ASSERT_THAT(out->position, testing::SizeIs(2));
-  ASSERT_THAT(out->velocity, testing::SizeIs(2));
-  ASSERT_THAT(out->effort, testing::SizeIs(2));
+  ASSERT_THAT(out->name, SizeIs(2));
+  ASSERT_THAT(out->position, SizeIs(2));
+  ASSERT_THAT(out->velocity, SizeIs(2));
+  ASSERT_THAT(out->effort, SizeIs(2));
 
   // THEN the joint names were converted to the "friendly" names used in the URDF
-  ASSERT_THAT(out->name, testing::UnorderedElementsAre("my_prefix/front_left_hip_x", "my_prefix/arm_wr0"));
+  ASSERT_THAT(out->name, UnorderedElementsAre("my_prefix/front_left_hip_x", "my_prefix/arm_wr0"));
 
   // THEN the position, velocity, and effort corresponding to each named joint match the input joint states
   const std::size_t index1 =
       std::distance(out->name.cbegin(), std::find(out->name.cbegin(), out->name.cend(), "my_prefix/front_left_hip_x"));
-  EXPECT_THAT(out->position.at(index1), testing::DoubleEq(0.1));
-  EXPECT_THAT(out->velocity.at(index1), testing::DoubleEq(0.2));
-  EXPECT_THAT(out->effort.at(index1), testing::DoubleEq(0.4));
+  EXPECT_THAT(out->position.at(index1), DoubleEq(0.1));
+  EXPECT_THAT(out->velocity.at(index1), DoubleEq(0.2));
+  EXPECT_THAT(out->effort.at(index1), DoubleEq(0.4));
 
   const std::size_t index2 =
       std::distance(out->name.cbegin(), std::find(out->name.cbegin(), out->name.cend(), "my_prefix/arm_wr0"));
-  EXPECT_THAT(out->position.at(index2), testing::DoubleEq(0.5));
-  EXPECT_THAT(out->velocity.at(index2), testing::DoubleEq(0.6));
-  EXPECT_THAT(out->effort.at(index2), testing::DoubleEq(0.8));
+  EXPECT_THAT(out->position.at(index2), DoubleEq(0.5));
+  EXPECT_THAT(out->velocity.at(index2), DoubleEq(0.6));
+  EXPECT_THAT(out->effort.at(index2), DoubleEq(0.8));
 }
 
 TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
@@ -226,16 +232,16 @@ TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
   const auto out = getJointStates(robot_state, clock_skew, prefix);
 
   // THEN the message is created and contains a timestamp, but does not contain any joint state data
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
-  EXPECT_THAT(out->header.stamp.sec, testing::Eq(14));
-  EXPECT_THAT(out->header.stamp.nanosec, testing::Eq(0U));
+  ASSERT_THAT(out.has_value(), IsTrue());
+  EXPECT_THAT(out->header.stamp.sec, Eq(14));
+  EXPECT_THAT(out->header.stamp.nanosec, Eq(0U));
 
   EXPECT_THAT(out->header,
               ClockSkewIsAppliedToHeader(robot_state.kinematic_state().acquisition_timestamp(), clock_skew));
-  EXPECT_THAT(out->name, testing::IsEmpty());
-  EXPECT_THAT(out->position, testing::IsEmpty());
-  EXPECT_THAT(out->velocity, testing::IsEmpty());
-  EXPECT_THAT(out->effort, testing::IsEmpty());
+  EXPECT_THAT(out->name, IsEmpty());
+  EXPECT_THAT(out->position, IsEmpty());
+  EXPECT_THAT(out->velocity, IsEmpty());
+  EXPECT_THAT(out->effort, IsEmpty());
 }
 
 TEST(RobotStateConversions, TestGetJointStatesNoKinematicState) {
@@ -251,7 +257,7 @@ TEST(RobotStateConversions, TestGetJointStatesNoKinematicState) {
   const auto out = getJointStates(robot_state, clock_skew, prefix);
 
   // THEN no ROS message is output
-  ASSERT_THAT(out.has_value(), testing::IsFalse());
+  ASSERT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetTf) {
@@ -265,7 +271,7 @@ TEST(RobotStateConversions, TestGetTf) {
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
                0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
-              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
+              Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
 
   // GIVEN some nominal clock skew
   google::protobuf::Duration clock_skew;
@@ -274,22 +280,16 @@ TEST(RobotStateConversions, TestGetTf) {
   // WHEN we create a TF tree from the RobotState
   const auto out = getTf(robot_state, clock_skew, "prefix/", "odom");
   // THEN this succeeds
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
 
   // THEN the tree contains one frame
-  ASSERT_THAT(out->transforms, testing::SizeIs(1));
+  ASSERT_THAT(out->transforms, SizeIs(1));
 
   // THEN this frame matches the transform from the odom frame to the body frame
   const auto& transform = out->transforms.at(0);
-  EXPECT_THAT(transform.header.frame_id, testing::StrEq("prefix/odom"));
-  EXPECT_THAT(transform.child_frame_id, testing::StrEq("prefix/body"));
-  EXPECT_THAT(transform.transform.translation.x, testing::DoubleEq(1.0));
-  EXPECT_THAT(transform.transform.translation.y, testing::DoubleEq(2.0));
-  EXPECT_THAT(transform.transform.translation.z, testing::DoubleEq(3.0));
-  EXPECT_THAT(transform.transform.rotation.w, testing::DoubleEq(1.0));
-  EXPECT_THAT(transform.transform.rotation.x, testing::DoubleEq(0.0));
-  EXPECT_THAT(transform.transform.rotation.y, testing::DoubleEq(0.0));
-  EXPECT_THAT(transform.transform.rotation.z, testing::DoubleEq(0.0));
+  EXPECT_THAT(transform.header.frame_id, StrEq("prefix/odom"));
+  EXPECT_THAT(transform.child_frame_id, StrEq("prefix/body"));
+  EXPECT_THAT(transform.transform, GeometryMsgsTransformEq(1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0));
 }
 
 TEST(RobotStateConversions, TestGetTfInverted) {
@@ -303,7 +303,7 @@ TEST(RobotStateConversions, TestGetTfInverted) {
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
                0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
-              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
+              Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
 
   // GIVEN some nominal clock skew
   google::protobuf::Duration clock_skew;
@@ -312,22 +312,16 @@ TEST(RobotStateConversions, TestGetTfInverted) {
   // WHEN we create a TF tree from the RobotState
   const auto out = getTf(robot_state, clock_skew, "prefix/", "prefix/body");
   // THEN this succeeds
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
 
   // THEN the tree contains one frame
-  ASSERT_THAT(out->transforms, testing::SizeIs(1));
+  ASSERT_THAT(out->transforms, SizeIs(1));
 
   // THEN this frame is the inverse of the transform from the odom frame to the body frame
   const auto& transform = out->transforms.at(0);
-  EXPECT_THAT(transform.header.frame_id, testing::StrEq("prefix/body"));
-  EXPECT_THAT(transform.child_frame_id, testing::StrEq("prefix/odom"));
-  EXPECT_THAT(transform.transform.translation.x, testing::DoubleEq(-1.0));
-  EXPECT_THAT(transform.transform.translation.y, testing::DoubleEq(-2.0));
-  EXPECT_THAT(transform.transform.translation.z, testing::DoubleEq(-3.0));
-  EXPECT_THAT(transform.transform.rotation.w, testing::DoubleEq(1.0));
-  EXPECT_THAT(transform.transform.rotation.x, testing::DoubleEq(0.0));
-  EXPECT_THAT(transform.transform.rotation.y, testing::DoubleEq(0.0));
-  EXPECT_THAT(transform.transform.rotation.z, testing::DoubleEq(0.0));
+  EXPECT_THAT(transform.header.frame_id, StrEq("prefix/body"));
+  EXPECT_THAT(transform.child_frame_id, StrEq("prefix/odom"));
+  EXPECT_THAT(transform.transform, GeometryMsgsTransformEq(-1.0, -2.0, -3.0, 1.0, 0.0, 0.0, 0.0));
 }
 
 TEST(RobotStateConversions, TestGetOdomTwist) {
@@ -336,14 +330,14 @@ TEST(RobotStateConversions, TestGetOdomTwist) {
   auto* acquisition_timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
   acquisition_timestamp->set_seconds(99);
   acquisition_timestamp->set_nanos(0);
+  auto* velocity_linear = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_linear();
+  velocity_linear->set_x(1.0);
+  velocity_linear->set_y(2.0);
+  velocity_linear->set_z(3.0);
   auto* velocity_angular = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_angular();
   velocity_angular->set_x(1.0);
   velocity_angular->set_y(2.0);
   velocity_angular->set_z(3.0);
-  auto* velocity_linear = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_linear();
-  velocity_linear->set_x(4.0);
-  velocity_linear->set_y(5.0);
-  velocity_linear->set_z(6.0);
 
   // GIVEN some nominal clock skew
   google::protobuf::Duration clock_skew;
@@ -353,18 +347,12 @@ TEST(RobotStateConversions, TestGetOdomTwist) {
   const auto out = getOdomTwist(robot_state, clock_skew);
 
   // THEN this succeeds
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
 
   // THEN the output twist matches the velocity in the robot state
-  EXPECT_THAT(out->twist.twist.angular.x, testing::DoubleEq(1.0));
-  EXPECT_THAT(out->twist.twist.angular.y, testing::DoubleEq(2.0));
-  EXPECT_THAT(out->twist.twist.angular.z, testing::DoubleEq(3.0));
-  EXPECT_THAT(out->twist.twist.linear.x, testing::DoubleEq(4.0));
-  EXPECT_THAT(out->twist.twist.linear.y, testing::DoubleEq(5.0));
-  EXPECT_THAT(out->twist.twist.linear.z, testing::DoubleEq(6.0));
-  EXPECT_THAT(out->header.stamp,
-              testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(98)),
-                             testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0u))));
+  EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(1.0, 2.0, 3.0, 1.0, 2.0, 3.0));
+  EXPECT_THAT(out->header.stamp, AllOf(Field("sec", &builtin_interfaces::msg::Time::sec, Eq(98)),
+                                       Field("nanosec", &builtin_interfaces::msg::Time::nanosec, Eq(0u))));
 }
 
 TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
@@ -383,7 +371,7 @@ TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
   const auto out = getOdomTwist(robot_state, clock_skew);
 
   // THEN no message is output
-  ASSERT_THAT(out.has_value(), testing::IsFalse());
+  ASSERT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetOdomInOdomFrame) {
@@ -404,33 +392,28 @@ TEST(RobotStateConversions, TestGetOdomInOdomFrame) {
   addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
   // GIVEN the frame tree snapshot is valid
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
-              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
+              Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
 
   // WHEN we create a nav_msgs::msg::Odometry ROS message from the RobotState
   const auto out = getOdom(robot_state, clock_skew, "prefix/", false);
 
   // THEN this succeeds
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
 
   // THEN the parent and child frame IDs of the Odometry pose refer to the correct frames and prepend the prefix to the
   // frame IDs
-  EXPECT_THAT(out->header.frame_id, testing::StrEq("prefix/odom"));
-  EXPECT_THAT(out->child_frame_id, testing::StrEq("prefix/body"));
+  EXPECT_THAT(out->header.frame_id, StrEq("prefix/odom"));
+  EXPECT_THAT(out->child_frame_id, StrEq("prefix/body"));
 
   // THEN the Odometry ROS message contains the same pose and twist data as the RobotState
-  EXPECT_THAT(out->pose.pose.position.x, testing::DoubleEq(1.0));
-  EXPECT_THAT(out->pose.pose.position.y, testing::DoubleEq(2.0));
-  EXPECT_THAT(out->pose.pose.position.z, testing::DoubleEq(3.0));
-  EXPECT_THAT(out->pose.pose.orientation.w, testing::DoubleEq(1.0));
-  EXPECT_THAT(out->pose.pose.orientation.x, testing::DoubleEq(0.0));
-  EXPECT_THAT(out->pose.pose.orientation.y, testing::DoubleEq(0.0));
-  EXPECT_THAT(out->pose.pose.orientation.z, testing::DoubleEq(0.0));
-  EXPECT_THAT(out->twist.twist.angular.x, testing::DoubleEq(1.0));
-  EXPECT_THAT(out->twist.twist.angular.y, testing::DoubleEq(2.0));
-  EXPECT_THAT(out->twist.twist.angular.z, testing::DoubleEq(3.0));
-  EXPECT_THAT(out->twist.twist.linear.x, testing::DoubleEq(4.0));
-  EXPECT_THAT(out->twist.twist.linear.y, testing::DoubleEq(5.0));
-  EXPECT_THAT(out->twist.twist.linear.z, testing::DoubleEq(6.0));
+  EXPECT_THAT(out->pose.pose.position.x, DoubleEq(1.0));
+  EXPECT_THAT(out->pose.pose.position.y, DoubleEq(2.0));
+  EXPECT_THAT(out->pose.pose.position.z, DoubleEq(3.0));
+  EXPECT_THAT(out->pose.pose.orientation.w, DoubleEq(1.0));
+  EXPECT_THAT(out->pose.pose.orientation.x, DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose.orientation.y, DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose.orientation.z, DoubleEq(0.0));
+  EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
 }
 
 TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
@@ -447,33 +430,28 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
                1.0, 0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
-              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
+              Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
 
   // WHEN we create a nav_msgs::msg::Odometry ROS message from the RobotState
   const auto out = getOdom(robot_state, clock_skew, "prefix/", true);
 
   // THEN this succeeds
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
 
   // THEN the parent and child frame IDs of the Odometry pose refer to the correct frames and prepend the prefix to the
   // frame IDs
-  EXPECT_THAT(out->header.frame_id, testing::StrEq("prefix/vision"));
-  EXPECT_THAT(out->child_frame_id, testing::StrEq("prefix/body"));
+  EXPECT_THAT(out->header.frame_id, StrEq("prefix/vision"));
+  EXPECT_THAT(out->child_frame_id, StrEq("prefix/body"));
 
   // THEN the Odometry ROS message contains the same pose and twist data as the RobotState
-  EXPECT_THAT(out->pose.pose.position.x, testing::DoubleEq(1.0));
-  EXPECT_THAT(out->pose.pose.position.y, testing::DoubleEq(2.0));
-  EXPECT_THAT(out->pose.pose.position.z, testing::DoubleEq(3.0));
-  EXPECT_THAT(out->pose.pose.orientation.w, testing::DoubleEq(1.0));
-  EXPECT_THAT(out->pose.pose.orientation.x, testing::DoubleEq(0.0));
-  EXPECT_THAT(out->pose.pose.orientation.y, testing::DoubleEq(0.0));
-  EXPECT_THAT(out->pose.pose.orientation.z, testing::DoubleEq(0.0));
-  EXPECT_THAT(out->twist.twist.angular.x, testing::DoubleEq(1.0));
-  EXPECT_THAT(out->twist.twist.angular.y, testing::DoubleEq(2.0));
-  EXPECT_THAT(out->twist.twist.angular.z, testing::DoubleEq(3.0));
-  EXPECT_THAT(out->twist.twist.linear.x, testing::DoubleEq(4.0));
-  EXPECT_THAT(out->twist.twist.linear.y, testing::DoubleEq(5.0));
-  EXPECT_THAT(out->twist.twist.linear.z, testing::DoubleEq(6.0));
+  EXPECT_THAT(out->pose.pose.position.x, DoubleEq(1.0));
+  EXPECT_THAT(out->pose.pose.position.y, DoubleEq(2.0));
+  EXPECT_THAT(out->pose.pose.position.z, DoubleEq(3.0));
+  EXPECT_THAT(out->pose.pose.orientation.w, DoubleEq(1.0));
+  EXPECT_THAT(out->pose.pose.orientation.x, DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose.orientation.y, DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose.orientation.z, DoubleEq(0.0));
+  EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
 }
 
 TEST(RobotStateConversions, TestGetOdomMissingAcquisitionTimestamp) {
@@ -487,13 +465,13 @@ TEST(RobotStateConversions, TestGetOdomMissingAcquisitionTimestamp) {
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
                0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
-              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
+              Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
 
   // WHEN we try to create an Odometry message from the RobotState
   const auto out = getOdom(robot_state, clock_skew, "prefix/", false);
 
   // THEN this does not succeed
-  ASSERT_THAT(out.has_value(), testing::IsFalse());
+  ASSERT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetOdomMissingBodyVelocityOdom) {
@@ -508,13 +486,13 @@ TEST(RobotStateConversions, TestGetOdomMissingBodyVelocityOdom) {
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
                0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
-              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
+              Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
 
   // WHEN we try to create an Odometry message from the RobotState
   const auto out = getOdom(robot_state, clock_skew, "prefix/", true);
 
   // THEN this does not succeed
-  ASSERT_THAT(out.has_value(), testing::IsFalse());
+  ASSERT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetOdomMissingTransforms) {
@@ -530,7 +508,7 @@ TEST(RobotStateConversions, TestGetOdomMissingTransforms) {
   const auto out = getOdom(robot_state, clock_skew, "prefix/", false);
 
   // THEN this does not succeed
-  ASSERT_THAT(out.has_value(), testing::IsFalse());
+  ASSERT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetOdomInvalidTransformSnapshot) {
@@ -545,13 +523,13 @@ TEST(RobotStateConversions, TestGetOdomInvalidTransformSnapshot) {
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
                1.0, 0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
-              testing::Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::UNKNOWN_PARENT_FRAME_NAME));
+              Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::UNKNOWN_PARENT_FRAME_NAME));
 
   // WHEN we try to create an Odometry message from the RobotState
   const auto out = getOdom(robot_state, clock_skew, "prefix/", true);
 
   // THEN this does not succeed
-  ASSERT_THAT(out.has_value(), testing::IsFalse());
+  ASSERT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetPowerState) {
@@ -584,15 +562,15 @@ TEST(RobotStateConversions, TestGetPowerState) {
   const auto out = getPowerState(robot_state, clock_skew);
 
   // THEN a message is output
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
 
   // THEN the fields in the output message match their corresponding inputs
-  EXPECT_THAT(out->motor_power_state, testing::Eq(spot_msgs::msg::PowerState::STATE_ON));
-  EXPECT_THAT(out->shore_power_state, testing::Eq(spot_msgs::msg::PowerState::STATE_ON_SHORE_POWER));
-  EXPECT_THAT(out->locomotion_charge_percentage, testing::DoubleEq(75.0));
+  EXPECT_THAT(out->motor_power_state, Eq(spot_msgs::msg::PowerState::STATE_ON));
+  EXPECT_THAT(out->shore_power_state, Eq(spot_msgs::msg::PowerState::STATE_ON_SHORE_POWER));
+  EXPECT_THAT(out->locomotion_charge_percentage, DoubleEq(75.0));
   EXPECT_THAT(out->locomotion_estimated_runtime,
-              testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(255)),
-                             testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0u))));
+              AllOf(Field("sec", &builtin_interfaces::msg::Duration::sec, Eq(255)),
+                    Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, Eq(0u))));
   EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(robot_state.power_state().timestamp(), clock_skew));
 }
 
@@ -608,7 +586,7 @@ TEST(RobotStateConversions, TestGetPowerStateNoPowerState) {
   const auto out = getPowerState(robot_state, clock_skew);
 
   // THEN no message is output
-  ASSERT_THAT(out.has_value(), testing::IsFalse());
+  ASSERT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetSystemFaultState) {
@@ -639,7 +617,7 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
   auto out = getSystemFaultState(robot_state, clock_skew);
 
   // THEN this succeeds
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
 
   // THEN the output message contains two faults
   // THEN each of the output faults contains fields that match the input
@@ -648,46 +626,30 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
   using SystemFault = spot_msgs::msg::SystemFault;
   EXPECT_THAT(
       out->faults,
-      testing::UnorderedElementsAre(
-          testing::AllOf(
-              testing::Field(
-                  "header", &SystemFault::header,
-                  testing::AllOf(testing::Field(
-                      "stamp", &std_msgs::msg::Header::stamp,
-                      testing::AllOf(
-                          testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(59)),
-                          testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0u)))))),
-              testing::Field(
-                  "duration", &SystemFault::duration,
-                  testing::AllOf(
-                      testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(15)),
-                      testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0u)))),
-              testing::Field("name", &SystemFault::name, testing::StrEq("fault1")),
-              testing::Field("code", &SystemFault::code, testing::Eq(19)),
-              testing::Field("uid", &SystemFault::uid, testing::Eq(3ul)),
-              testing::Field("error_message", &SystemFault::error_message, testing::StrEq("battery is low")),
-              testing::Field("attributes", &SystemFault::attributes,
-                             testing::UnorderedElementsAre(testing::StrEq("robot"), testing::StrEq("battery")))),
-          testing::AllOf(
-              testing::Field(
-                  "header", &SystemFault::header,
-                  testing::AllOf(testing::Field(
-                      "stamp", &std_msgs::msg::Header::stamp,
-                      testing::AllOf(
-                          testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(74)),
-                          testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0u)))))),
-              testing::Field(
-                  "duration", &SystemFault::duration,
-                  testing::AllOf(
-                      testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(0)),
-                      testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0u)))),
-              testing::Field("name", &SystemFault::name, testing::StrEq("fault2")),
-              testing::Field("code", &SystemFault::code, testing::Eq(55)),
-              testing::Field("uid", &SystemFault::uid, testing::Eq(9ul)),
-              testing::Field("error_message", &SystemFault::error_message,
-                             testing::StrEq("robot has departed from this plane of reality")),
-              testing::Field("attributes", &SystemFault::attributes,
-                             testing::UnorderedElementsAre(testing::StrEq("robot"))))));
+      UnorderedElementsAre(
+          AllOf(Field("header", &SystemFault::header,
+                      AllOf(Field("stamp", &std_msgs::msg::Header::stamp,
+                                  AllOf(Field("sec", &builtin_interfaces::msg::Time::sec, Eq(59)),
+                                        Field("nanosec", &builtin_interfaces::msg::Time::nanosec, Eq(0u)))))),
+                Field("duration", &SystemFault::duration,
+                      AllOf(Field("sec", &builtin_interfaces::msg::Duration::sec, Eq(15)),
+                            Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, Eq(0u)))),
+                Field("name", &SystemFault::name, StrEq("fault1")), Field("code", &SystemFault::code, Eq(19)),
+                Field("uid", &SystemFault::uid, Eq(3ul)),
+                Field("error_message", &SystemFault::error_message, StrEq("battery is low")),
+                Field("attributes", &SystemFault::attributes, UnorderedElementsAre(StrEq("robot"), StrEq("battery")))),
+          AllOf(Field("header", &SystemFault::header,
+                      AllOf(Field("stamp", &std_msgs::msg::Header::stamp,
+                                  AllOf(Field("sec", &builtin_interfaces::msg::Time::sec, Eq(74)),
+                                        Field("nanosec", &builtin_interfaces::msg::Time::nanosec, Eq(0u)))))),
+                Field("duration", &SystemFault::duration,
+                      AllOf(Field("sec", &builtin_interfaces::msg::Duration::sec, Eq(0)),
+                            Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, Eq(0u)))),
+                Field("name", &SystemFault::name, StrEq("fault2")), Field("code", &SystemFault::code, Eq(55)),
+                Field("uid", &SystemFault::uid, Eq(9ul)),
+                Field("error_message", &SystemFault::error_message,
+                      StrEq("robot has departed from this plane of reality")),
+                Field("attributes", &SystemFault::attributes, UnorderedElementsAre(StrEq("robot"))))));
 }
 
 TEST(RobotStateConversions, TestGetSystemFaultStateNoFault) {
@@ -702,7 +664,7 @@ TEST(RobotStateConversions, TestGetSystemFaultStateNoFault) {
   auto out = getSystemFaultState(robot_state, clock_skew);
 
   // THEN no ROS message is output
-  EXPECT_THAT(out.has_value(), testing::IsFalse());
+  EXPECT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetManipulatorState) {
@@ -743,65 +705,29 @@ TEST(RobotStateConversions, TestGetManipulatorState) {
   const auto out = getManipulatorState(robot_state);
 
   // THEN this succeeds
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
 
   // THEN all the output fields are set, and contain the same values as the inputs
-  EXPECT_THAT(out->gripper_open_percentage, testing::DoubleEq(50.0));
-  EXPECT_THAT(out->is_gripper_holding_item, testing::IsTrue());
-  EXPECT_THAT(out->carry_state.value,
-              testing::Eq(bosdyn_msgs::msg::ManipulatorStateCarryState::CARRY_STATE_NOT_CARRIABLE));
-  EXPECT_THAT(out->stow_state.value, testing::Eq(bosdyn_msgs::msg::ManipulatorStateStowState::STOWSTATE_DEPLOYED));
+  EXPECT_THAT(out->gripper_open_percentage, DoubleEq(50.0));
+  EXPECT_THAT(out->is_gripper_holding_item, IsTrue());
+  EXPECT_THAT(out->carry_state.value, Eq(bosdyn_msgs::msg::ManipulatorStateCarryState::CARRY_STATE_NOT_CARRIABLE));
+  EXPECT_THAT(out->stow_state.value, Eq(bosdyn_msgs::msg::ManipulatorStateStowState::STOWSTATE_DEPLOYED));
 
-  using Vector3 = geometry_msgs::msg::Vector3;
-  using Twist = geometry_msgs::msg::Twist;
-
-  EXPECT_THAT(out->estimated_end_effector_force_in_hand_is_set, testing::IsTrue());
+  EXPECT_THAT(out->estimated_end_effector_force_in_hand_is_set, IsTrue());
   EXPECT_THAT(out->estimated_end_effector_force_in_hand,
-              testing::Field(&Vector3::x, testing::DoubleEq(force_in_hand.x())));
-  EXPECT_THAT(out->estimated_end_effector_force_in_hand,
-              testing::Field(&Vector3::y, testing::DoubleEq(force_in_hand.y())));
-  EXPECT_THAT(out->estimated_end_effector_force_in_hand,
-              testing::Field(&Vector3::z, testing::DoubleEq(force_in_hand.z())));
+              GeometryMsgsVector3Eq(force_in_hand.x(), force_in_hand.y(), force_in_hand.z()));
 
-  EXPECT_THAT(out->velocity_of_hand_in_vision_is_set, testing::IsTrue());
+  EXPECT_THAT(out->velocity_of_hand_in_vision_is_set, IsTrue());
   EXPECT_THAT(out->velocity_of_hand_in_vision,
-              testing::Field(&Twist::linear,
-                             testing::Field(&Vector3::x, testing::DoubleEq(velocity_hand_vision.linear().x()))));
-  EXPECT_THAT(out->velocity_of_hand_in_vision,
-              testing::Field(&Twist::linear,
-                             testing::Field(&Vector3::y, testing::DoubleEq(velocity_hand_vision.linear().y()))));
-  EXPECT_THAT(out->velocity_of_hand_in_vision,
-              testing::Field(&Twist::linear,
-                             testing::Field(&Vector3::z, testing::DoubleEq(velocity_hand_vision.linear().z()))));
-  EXPECT_THAT(out->velocity_of_hand_in_vision,
-              testing::Field(&Twist::angular,
-                             testing::Field(&Vector3::x, testing::DoubleEq(velocity_hand_vision.angular().x()))));
-  EXPECT_THAT(out->velocity_of_hand_in_vision,
-              testing::Field(&Twist::angular,
-                             testing::Field(&Vector3::y, testing::DoubleEq(velocity_hand_vision.angular().y()))));
-  EXPECT_THAT(out->velocity_of_hand_in_vision,
-              testing::Field(&Twist::angular,
-                             testing::Field(&Vector3::z, testing::DoubleEq(velocity_hand_vision.angular().z()))));
+              GeometryMsgsTwistEq(velocity_hand_vision.linear().x(), velocity_hand_vision.linear().y(),
+                                  velocity_hand_vision.linear().z(), velocity_hand_vision.angular().x(),
+                                  velocity_hand_vision.angular().y(), velocity_hand_vision.angular().z()));
 
-  EXPECT_THAT(out->velocity_of_hand_in_odom_is_set, testing::IsTrue());
-  EXPECT_THAT(
-      out->velocity_of_hand_in_odom,
-      testing::Field(&Twist::linear, testing::Field(&Vector3::x, testing::DoubleEq(velocity_hand_odom.linear().x()))));
-  EXPECT_THAT(
-      out->velocity_of_hand_in_odom,
-      testing::Field(&Twist::linear, testing::Field(&Vector3::y, testing::DoubleEq(velocity_hand_odom.linear().y()))));
-  EXPECT_THAT(
-      out->velocity_of_hand_in_odom,
-      testing::Field(&Twist::linear, testing::Field(&Vector3::z, testing::DoubleEq(velocity_hand_odom.linear().z()))));
+  EXPECT_THAT(out->velocity_of_hand_in_odom_is_set, IsTrue());
   EXPECT_THAT(out->velocity_of_hand_in_odom,
-              testing::Field(&Twist::angular,
-                             testing::Field(&Vector3::x, testing::DoubleEq(velocity_hand_odom.angular().x()))));
-  EXPECT_THAT(out->velocity_of_hand_in_odom,
-              testing::Field(&Twist::angular,
-                             testing::Field(&Vector3::y, testing::DoubleEq(velocity_hand_odom.angular().y()))));
-  EXPECT_THAT(out->velocity_of_hand_in_odom,
-              testing::Field(&Twist::angular,
-                             testing::Field(&Vector3::z, testing::DoubleEq(velocity_hand_odom.angular().z()))));
+              GeometryMsgsTwistEq(velocity_hand_odom.linear().x(), velocity_hand_odom.linear().y(),
+                                  velocity_hand_odom.linear().z(), velocity_hand_odom.angular().x(),
+                                  velocity_hand_odom.angular().y(), velocity_hand_odom.angular().z()));
 }
 
 TEST(RobotStateConversions, TestGetManipulatorStateNoManipulatorState) {
@@ -811,7 +737,7 @@ TEST(RobotStateConversions, TestGetManipulatorStateNoManipulatorState) {
   // WHEN we call getEndEffectorForce()
   const auto out = getManipulatorState(robot_state);
   // THEN the conversion does not succeed
-  EXPECT_THAT(out.has_value(), testing::IsFalse());
+  EXPECT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetManipulatorStateNoForceInHand) {
@@ -823,9 +749,9 @@ TEST(RobotStateConversions, TestGetManipulatorStateNoForceInHand) {
   // WHEN we call getEndEffectorForce()
   const auto out = getManipulatorState(robot_state);
   // THEN the conversion does not succeed
-  EXPECT_THAT(out.has_value(), testing::IsTrue());
+  EXPECT_THAT(out.has_value(), IsTrue());
 
-  EXPECT_THAT(out->estimated_end_effector_force_in_hand_is_set, testing::IsFalse());
+  EXPECT_THAT(out->estimated_end_effector_force_in_hand_is_set, IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetEndEffectorForce) {
@@ -850,12 +776,12 @@ TEST(RobotStateConversions, TestGetEndEffectorForce) {
   const auto out = getEndEffectorForce(robot_state, clock_skew, prefix);
 
   // THEN the fields match
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
-  EXPECT_THAT(out->header.frame_id, testing::StrEq("prefix/hand"));
-  EXPECT_THAT(out->header.stamp.sec, testing::Eq(9));
-  EXPECT_THAT(out->vector.x, testing::DoubleEq(force.x()));
-  EXPECT_THAT(out->vector.y, testing::DoubleEq(force.y()));
-  EXPECT_THAT(out->vector.z, testing::DoubleEq(force.z()));
+  ASSERT_THAT(out.has_value(), IsTrue());
+  EXPECT_THAT(out->header.frame_id, StrEq("prefix/hand"));
+  EXPECT_THAT(out->header.stamp.sec, Eq(9));
+  EXPECT_THAT(out->vector.x, DoubleEq(force.x()));
+  EXPECT_THAT(out->vector.y, DoubleEq(force.y()));
+  EXPECT_THAT(out->vector.z, DoubleEq(force.z()));
 }
 
 TEST(RobotStateConversions, TestGetEndEffectorForceNoEndEffectorForce) {
@@ -869,7 +795,7 @@ TEST(RobotStateConversions, TestGetEndEffectorForceNoEndEffectorForce) {
   const auto out = getEndEffectorForce(robot_state, clock_skew, prefix);
 
   // THEN the conversion does not succeed
-  EXPECT_THAT(out.has_value(), testing::IsFalse());
+  EXPECT_THAT(out.has_value(), IsFalse());
 }
 
 TEST(RobotStateConversions, TestGetBehaviorFaultState) {
@@ -897,25 +823,23 @@ TEST(RobotStateConversions, TestGetBehaviorFaultState) {
   const auto out = getBehaviorFaultState(robot_state, clock_skew);
 
   // THEN the output optional contains a message
-  ASSERT_THAT(out.has_value(), testing::IsTrue());
+  ASSERT_THAT(out.has_value(), IsTrue());
   // THEN the message contains two faults
-  ASSERT_THAT(out->faults, testing::SizeIs(2));
+  ASSERT_THAT(out->faults, SizeIs(2));
   // THEN the first fault matches the first one added to the RobotState, and the clock skew is applied correctly
   const auto first_fault = out->faults.at(0);
-  EXPECT_THAT(first_fault.behavior_fault_id, testing::Eq(11u));
-  EXPECT_THAT(first_fault.status,
-              testing::Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_CLEARABLE));
-  EXPECT_THAT(first_fault.cause, testing::Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_HARDWARE));
-  EXPECT_THAT(first_fault.header.stamp.sec, testing::Eq(9));
-  EXPECT_THAT(first_fault.header.stamp.nanosec, testing::Eq(0u));
+  EXPECT_THAT(first_fault.behavior_fault_id, Eq(11u));
+  EXPECT_THAT(first_fault.status, Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_CLEARABLE));
+  EXPECT_THAT(first_fault.cause, Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_HARDWARE));
+  EXPECT_THAT(first_fault.header.stamp.sec, Eq(9));
+  EXPECT_THAT(first_fault.header.stamp.nanosec, Eq(0u));
   // THEN the second fault matches the second one added to the RobotState, and the clock skew is applied correctly
   const auto second_fault = out->faults.at(1);
-  EXPECT_THAT(second_fault.behavior_fault_id, testing::Eq(12u));
-  EXPECT_THAT(second_fault.status,
-              testing::Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_UNCLEARABLE));
-  EXPECT_THAT(second_fault.cause, testing::Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_FALL));
-  EXPECT_THAT(second_fault.header.stamp.sec, testing::Eq(9));
-  EXPECT_THAT(second_fault.header.stamp.nanosec, testing::Eq(0u));
+  EXPECT_THAT(second_fault.behavior_fault_id, Eq(12u));
+  EXPECT_THAT(second_fault.status, Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_UNCLEARABLE));
+  EXPECT_THAT(second_fault.cause, Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_FALL));
+  EXPECT_THAT(second_fault.header.stamp.sec, Eq(9));
+  EXPECT_THAT(second_fault.header.stamp.nanosec, Eq(0u));
 }
 
 TEST(RobotStateConversions, TestGetBehaviorFaultStateNoFaults) {
@@ -927,6 +851,6 @@ TEST(RobotStateConversions, TestGetBehaviorFaultStateNoFaults) {
   const auto out = getBehaviorFaultState(robot_state, clock_skew);
 
   // THEN the optional which wraps the output ROS message is set to nullopt
-  EXPECT_THAT(out.has_value(), testing::IsFalse());
+  EXPECT_THAT(out.has_value(), IsFalse());
 }
 }  // namespace spot_ros2::test
