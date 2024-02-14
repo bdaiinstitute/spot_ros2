@@ -406,13 +406,7 @@ TEST(RobotStateConversions, TestGetOdomInOdomFrame) {
   EXPECT_THAT(out->child_frame_id, StrEq("prefix/body"));
 
   // THEN the Odometry ROS message contains the same pose and twist data as the RobotState
-  EXPECT_THAT(out->pose.pose.position.x, DoubleEq(1.0));
-  EXPECT_THAT(out->pose.pose.position.y, DoubleEq(2.0));
-  EXPECT_THAT(out->pose.pose.position.z, DoubleEq(3.0));
-  EXPECT_THAT(out->pose.pose.orientation.w, DoubleEq(1.0));
-  EXPECT_THAT(out->pose.pose.orientation.x, DoubleEq(0.0));
-  EXPECT_THAT(out->pose.pose.orientation.y, DoubleEq(0.0));
-  EXPECT_THAT(out->pose.pose.orientation.z, DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose, GeometryMsgsPoseEq(1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0));
   EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
 }
 
@@ -444,13 +438,7 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   EXPECT_THAT(out->child_frame_id, StrEq("prefix/body"));
 
   // THEN the Odometry ROS message contains the same pose and twist data as the RobotState
-  EXPECT_THAT(out->pose.pose.position.x, DoubleEq(1.0));
-  EXPECT_THAT(out->pose.pose.position.y, DoubleEq(2.0));
-  EXPECT_THAT(out->pose.pose.position.z, DoubleEq(3.0));
-  EXPECT_THAT(out->pose.pose.orientation.w, DoubleEq(1.0));
-  EXPECT_THAT(out->pose.pose.orientation.x, DoubleEq(0.0));
-  EXPECT_THAT(out->pose.pose.orientation.y, DoubleEq(0.0));
-  EXPECT_THAT(out->pose.pose.orientation.z, DoubleEq(0.0));
+  EXPECT_THAT(out->pose.pose, GeometryMsgsPoseEq(1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0));
   EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
 }
 
@@ -627,10 +615,7 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
   EXPECT_THAT(
       out->faults,
       UnorderedElementsAre(
-          AllOf(Field("header", &SystemFault::header,
-                      AllOf(Field("stamp", &std_msgs::msg::Header::stamp,
-                                  AllOf(Field("sec", &builtin_interfaces::msg::Time::sec, Eq(59)),
-                                        Field("nanosec", &builtin_interfaces::msg::Time::nanosec, Eq(0u)))))),
+          AllOf(Field("header", &SystemFault::header, ClockSkewIsAppliedToHeader(timestamp1, clock_skew)),
                 Field("duration", &SystemFault::duration,
                       AllOf(Field("sec", &builtin_interfaces::msg::Duration::sec, Eq(15)),
                             Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, Eq(0u)))),
@@ -638,10 +623,7 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
                 Field("uid", &SystemFault::uid, Eq(3ul)),
                 Field("error_message", &SystemFault::error_message, StrEq("battery is low")),
                 Field("attributes", &SystemFault::attributes, UnorderedElementsAre(StrEq("robot"), StrEq("battery")))),
-          AllOf(Field("header", &SystemFault::header,
-                      AllOf(Field("stamp", &std_msgs::msg::Header::stamp,
-                                  AllOf(Field("sec", &builtin_interfaces::msg::Time::sec, Eq(74)),
-                                        Field("nanosec", &builtin_interfaces::msg::Time::nanosec, Eq(0u)))))),
+          AllOf(Field("header", &SystemFault::header, ClockSkewIsAppliedToHeader(timestamp2, clock_skew)),
                 Field("duration", &SystemFault::duration,
                       AllOf(Field("sec", &builtin_interfaces::msg::Duration::sec, Eq(0)),
                             Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, Eq(0u)))),
@@ -779,9 +761,7 @@ TEST(RobotStateConversions, TestGetEndEffectorForce) {
   ASSERT_THAT(out.has_value(), IsTrue());
   EXPECT_THAT(out->header.frame_id, StrEq("prefix/hand"));
   EXPECT_THAT(out->header.stamp.sec, Eq(9));
-  EXPECT_THAT(out->vector.x, DoubleEq(force.x()));
-  EXPECT_THAT(out->vector.y, DoubleEq(force.y()));
-  EXPECT_THAT(out->vector.z, DoubleEq(force.z()));
+  EXPECT_THAT(out->vector, GeometryMsgsVector3Eq(force.x(), force.y(), force.z()));
 }
 
 TEST(RobotStateConversions, TestGetEndEffectorForceNoEndEffectorForce) {

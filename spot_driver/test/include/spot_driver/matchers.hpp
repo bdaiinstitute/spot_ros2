@@ -6,6 +6,7 @@
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/transform.hpp>
 #include <geometry_msgs/msg/twist.hpp>
@@ -43,6 +44,14 @@ MATCHER_P4(GeometryMsgsQuaternionEq, qw, qx, qy, qz, "") {
                      testing::Field("y", &geometry_msgs::msg::Quaternion::y, testing::DoubleEq(qy)),
                      testing::Field("z", &geometry_msgs::msg::Quaternion::z, testing::DoubleEq(qz)),
                      testing::Field("w", &geometry_msgs::msg::Quaternion::w, testing::DoubleEq(qw))),
+      arg, result_listener);
+}
+
+MATCHER_P7(GeometryMsgsPoseEq, x, y, z, qw, qx, qy, qz, "") {
+  return testing::ExplainMatchResult(
+      testing::AllOf(testing::Field("position", &geometry_msgs::msg::Pose::position, GeometryMsgsPointEq(x, y, z)),
+                     testing::Field("orientation", &geometry_msgs::msg::Pose::orientation,
+                                    GeometryMsgsQuaternionEq(qw, qx, qy, qz))),
       arg, result_listener);
 }
 
