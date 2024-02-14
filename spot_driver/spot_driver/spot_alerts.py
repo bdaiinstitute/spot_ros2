@@ -32,7 +32,7 @@ class SpotAlerts(Node):
             None
         """
         for battery_msg in battery_array_msg.battery_states:
-            if battery_msg.charge_percentage <= 85 and not self.get_parameter("low_battery").value:
+            if battery_msg.charge_percentage <= 10 and not self.get_parameter("low_battery").value:
                 low_battery_param = Parameter("low_battery", Parameter.Type.BOOL, True)
                 self.set_parameters([low_battery_param])
                 messagebox.showwarning(
