@@ -25,6 +25,7 @@ class DefaultSpotApi : public SpotApi {
   std::shared_ptr<KinematicApi> kinematicApi() const override;
   std::shared_ptr<ImageClientInterface> image_client_interface() const override;
   std::shared_ptr<StateClientInterface> stateClientInterface() const override;
+  std::shared_ptr<TimeSyncApi> timeSyncInterface() const override;
 
  private:
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;

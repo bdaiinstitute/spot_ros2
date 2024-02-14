@@ -11,6 +11,7 @@
 #include <spot_driver/mock/mock_spot_api.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
 #include <spot_driver/mock/mock_tf_interface.hpp>
+#include <spot_driver/mock/mock_time_sync_api.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
 
 #include <rclcpp/node.hpp>
@@ -37,11 +38,12 @@ class StatePublisherNodeTest : public ::testing::Test {
     mock_node_interface = std::make_unique<MockNodeInterface>();
 
     fake_parameter_interface = std::make_unique<FakeParameterInterface>();
-    mock_logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
-    mock_tf_interface = std::make_unique<spot_ros2::test::MockTfInterface>();
-    mock_timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
+    mock_logger_interface = std::make_unique<MockLoggerInterface>();
+    mock_tf_interface = std::make_unique<MockTfInterface>();
+    mock_timer_interface = std::make_unique<MockTimerInterface>();
 
-    mock_spot_api = std::make_unique<spot_ros2::test::MockSpotApi>();
+    mock_spot_api = std::make_unique<MockSpotApi>();
+    mock_time_sync_api = std::make_unique<MockTimeSyncApi>();
     mock_middleware_handle = std::make_unique<MockStateMiddlewareHandle>();
   }
 
@@ -52,6 +54,7 @@ class StatePublisherNodeTest : public ::testing::Test {
   std::unique_ptr<MockTimerInterface> mock_timer_interface;
 
   std::unique_ptr<MockSpotApi> mock_spot_api;
+  std::unique_ptr<MockTimeSyncApi> mock_time_sync_api;
   std::unique_ptr<MockStateMiddlewareHandle> mock_middleware_handle;
 };
 
@@ -62,13 +65,16 @@ TEST_F(StatePublisherNodeTest, ConstructionSuccessful) {
     InSequence seq;
     // THEN createRobot is called
     EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
-    // THEN we authenticate with the robot
+    // AND THEN we authenticate with the robot
     EXPECT_CALL(*mock_spot_api, authenticate).Times(1);
-    // THEN we access the robot state client interface
-    EXPECT_CALL(*mock_spot_api, stateClientInterface).Times(1);
-    // THEN no error messages are logged
-    EXPECT_CALL(*mock_logger_interface, logError).Times(0);
   }
+
+  // THEN we access the Spot API's client interface
+  EXPECT_CALL(*mock_spot_api, stateClientInterface).Times(1);
+  EXPECT_CALL(*mock_spot_api, timeSyncInterface).Times(1);
+
+  // THEN no error messages are logged
+  EXPECT_CALL(*mock_logger_interface, logError).Times(0);
 
   // WHEN constructing a StatePublisherNodeTest
   EXPECT_NO_THROW(StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
@@ -88,9 +94,11 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedCreateRobotFailure) {
     EXPECT_CALL(*mock_logger_interface, logError).Times(1);
     // THEN we do not attempt to authenticate with the robot
     EXPECT_CALL(*mock_spot_api, authenticate).Times(0);
-    // THEN we do not access the robot state client interface
-    EXPECT_CALL(*mock_spot_api, stateClientInterface).Times(0);
   }
+
+  // THEN we do not access the Spot API's client interface
+  EXPECT_CALL(*mock_spot_api, stateClientInterface).Times(0);
+  EXPECT_CALL(*mock_spot_api, timeSyncInterface).Times(0);
 
   // WHEN constructing a StatePublisherNodeTest
   // THEN the constructor throws
@@ -112,9 +120,11 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedAuthenticateFailure) {
     EXPECT_CALL(*mock_spot_api, authenticate).Times(1).WillOnce(Return(tl::make_unexpected("Authenication Failed")));
     // THEN an error message is logged
     EXPECT_CALL(*mock_logger_interface, logError).Times(1);
-    // THEN we do not access the robot state client interface
-    EXPECT_CALL(*mock_spot_api, stateClientInterface).Times(0);
   }
+
+  // THEN we do not access the Spot API's client interface
+  EXPECT_CALL(*mock_spot_api, stateClientInterface).Times(0);
+  EXPECT_CALL(*mock_spot_api, timeSyncInterface).Times(0);
 
   // WHEN constructing a StatePublisherNodeTest
   // THEN the constructor throws

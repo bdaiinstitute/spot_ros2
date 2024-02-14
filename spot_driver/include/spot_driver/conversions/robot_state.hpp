@@ -1,5 +1,7 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#pragma once
+
 #include <bosdyn/api/robot_state.pb.h>
 #include <bosdyn_msgs/msg/manipulator_state.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <spot_driver/types.hpp>
+#include <bosdyn/api/robot_state.pb.h>
 #include <tl_expected/expected.hpp>
 
 #include <string>
@@ -15,6 +15,6 @@ namespace spot_ros2 {
 class StateClientInterface {
  public:
   virtual ~StateClientInterface() = default;
-  virtual tl::expected<RobotState, std::string> getRobotState(const std::string& preferred_odom_frame) = 0;
+  virtual tl::expected<bosdyn::api::RobotState, std::string> getRobotState() = 0;
 };
 }  // namespace spot_ros2

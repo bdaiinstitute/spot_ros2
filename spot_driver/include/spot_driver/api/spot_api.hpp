@@ -4,6 +4,7 @@
 
 #include <spot_driver/api/kinematic_api.hpp>
 #include <spot_driver/api/state_client_interface.hpp>
+#include <spot_driver/api/time_sync_api.hpp>
 #include <spot_driver/interfaces/image_client_interface.hpp>
 #include <tl_expected/expected.hpp>
 
@@ -22,5 +23,6 @@ class SpotApi {
   virtual std::shared_ptr<KinematicApi> kinematicApi() const = 0;
   virtual std::shared_ptr<ImageClientInterface> image_client_interface() const = 0;
   virtual std::shared_ptr<StateClientInterface> stateClientInterface() const = 0;
+  virtual std::shared_ptr<TimeSyncApi> timeSyncInterface() const = 0;
 };
 }  // namespace spot_ros2

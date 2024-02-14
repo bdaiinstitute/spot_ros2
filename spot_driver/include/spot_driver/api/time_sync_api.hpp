@@ -38,6 +38,8 @@ inline builtin_interfaces::msg::Time applyClockSkew(const google::protobuf::Time
 
 class TimeSyncApi {
  public:
+  virtual ~TimeSyncApi() = default;
+
   virtual tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(
       const google::protobuf::Timestamp& robot_timestamp) = 0;
 

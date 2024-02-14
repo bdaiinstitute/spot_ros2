@@ -6,10 +6,12 @@
 #include <string>
 
 #include <spot_driver/api/state_client_interface.hpp>
+#include <spot_driver/api/time_sync_api.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 #include <spot_driver/interfaces/tf_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
+#include <spot_driver/types.hpp>
 
 #include <rclcpp/node.hpp>
 #include <tl_expected/expected.hpp>
@@ -36,7 +38,8 @@ class StatePublisher {
    * @details As opposed to other Spot Publishers, initialization takes place inside of the constructor because
    * initialization cannot fail.
    *
-   * @param robot_state_client_interface a shared instance of a RobotStateClientInterface.
+   * @param state_client_interface A shared_ptr to a StateClientInterface.
+   * @param time_sync_api  A shared_ptr to a TymeSyncApi.
    * @param middleware_handle A unique_ptr to an instance of a class derived from StatePublisher::MiddlewareHandle which
    * will be used to publish robot state messages. StatePublisherNode will take ownership of this unique_ptr.
    * @param logger_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used to
@@ -48,7 +51,7 @@ class StatePublisher {
    *
    */
   StatePublisher(const std::shared_ptr<StateClientInterface>& state_client_interface,
-                 std::unique_ptr<MiddlewareHandle> middleware_handle,
+                 const std::shared_ptr<TimeSyncApi>& time_sync_api, std::unique_ptr<MiddlewareHandle> middleware_handle,
                  std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                  std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,
                  std::unique_ptr<TimerInterfaceBase> timer_interface);
@@ -61,8 +64,13 @@ class StatePublisher {
 
   std::string full_odom_frame_id_;
 
+  std::string frame_prefix_;
+
+  bool is_using_vision_;
+
   // Interface classes to interact with Spot and the middleware.
   std::shared_ptr<StateClientInterface> state_client_interface_;
+  std::shared_ptr<TimeSyncApi> time_sync_interface_;
   std::unique_ptr<MiddlewareHandle> middleware_handle_;
 
   /** @brief instance of ParameterInterfaceBase to get ROS parameters*/

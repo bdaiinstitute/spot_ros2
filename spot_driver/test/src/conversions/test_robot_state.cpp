@@ -14,8 +14,9 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 #include <iterator>
-#include <memory>
 #include <spot_driver/conversions/robot_state.hpp>
+#include <spot_driver/matchers.hpp>
+#include <spot_driver/robot_state_test_tools.hpp>
 #include <spot_msgs/msg/battery_state.hpp>
 #include <spot_msgs/msg/battery_state_array.hpp>
 #include <spot_msgs/msg/power_state.hpp>
@@ -24,108 +25,13 @@
 #include "gmock/gmock-matchers.h"
 #include "gmock/gmock-more-matchers.h"
 
-::bosdyn::api::BatteryState createBatteryState(const std::string& id, uint32_t percentage, uint32_t current,
-                                               uint32_t voltage, double temperature,
-                                               ::bosdyn::api::BatteryState_Status status) {
-  ::bosdyn::api::BatteryState out;
-  out.set_identifier(id);
-  out.set_status(status);
-  out.add_temperatures(temperature);
-  out.mutable_charge_percentage()->set_value(percentage);
-  out.mutable_current()->set_value(current);
-  out.mutable_voltage()->set_value(voltage);
-  return out;
-}
-
-::bosdyn::api::WiFiState createWifiState(::bosdyn::api::WiFiState_Mode mode, const std::string& essid) {
-  ::bosdyn::api::WiFiState out;
-  out.set_current_mode(mode);
-  *out.mutable_essid() = essid;
-  return out;
-}
-
-void appendSystemFault(::bosdyn::api::SystemFaultState* mutable_fault_state,
-                       const google::protobuf::Timestamp& onset_timestamp, const google::protobuf::Duration& duration,
-                       const std::string& name, const int32_t code, const uint64_t uid,
-                       const std::string& error_message, const std::vector<std::string>& attributes,
-                       const ::bosdyn::api::SystemFault_Severity& severity) {
-  auto fault = mutable_fault_state->add_faults();
-  fault->mutable_onset_timestamp()->CopyFrom(onset_timestamp);
-  fault->mutable_duration()->CopyFrom(duration);
-  fault->set_name(name);
-  fault->set_code(code);
-  fault->set_uid(uid);
-  fault->set_error_message(error_message);
-  *fault->mutable_attributes() = {attributes.cbegin(), attributes.cend()};
-  fault->set_severity(severity);
-}
-
-void setFootState(::bosdyn::api::FootState* foot_state, const double x, const double y, const double z,
-                  const ::bosdyn::api::FootState_Contact contact) {
-  foot_state->mutable_foot_position_rt_body()->set_x(x);
-  foot_state->mutable_foot_position_rt_body()->set_y(y);
-  foot_state->mutable_foot_position_rt_body()->set_z(z);
-  foot_state->set_contact(contact);
-}
-
-void setJointState(::bosdyn::api::JointState* joint_state, const std::string& name, const double position,
-                   const double velocity, const double acceleration, const double load) {
-  *joint_state->mutable_name() = name;
-  joint_state->mutable_position()->set_value(position);
-  joint_state->mutable_velocity()->set_value(velocity);
-  joint_state->mutable_acceleration()->set_value(acceleration);
-  joint_state->mutable_load()->set_value(load);
-}
-
-void addTransform(::bosdyn::api::FrameTreeSnapshot* mutable_frame_tree_snapshot, const std::string& child_name,
-                  const std::string& parent_name, const double x, const double y, const double z, const double qw,
-                  const double qx, const double qy, const double qz) {
-  auto edge_map = mutable_frame_tree_snapshot->mutable_child_to_parent_edge_map();
-  ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
-  *edge.mutable_parent_frame_name() = parent_name;
-  auto pos = edge.mutable_parent_tform_child()->mutable_position();
-  pos->set_x(x);
-  pos->set_y(y);
-  pos->set_z(z);
-  auto rot = edge.mutable_parent_tform_child()->mutable_rotation();
-  rot->set_w(qw);
-  rot->set_x(qx);
-  rot->set_y(qy);
-  rot->set_z(qz);
-  // (*edge_map)[child_name] = std::move(edge);
-  edge_map->insert(google::protobuf::MapPair{child_name, edge});
-}
-
-void addRootFrame(::bosdyn::api::FrameTreeSnapshot* mutable_frame_tree_snapshot, const std::string& root_frame) {
-  auto edge_map = mutable_frame_tree_snapshot->mutable_child_to_parent_edge_map();
-  ::bosdyn::api::FrameTreeSnapshot_ParentEdge root_edge;
-  edge_map->insert(google::protobuf::MapPair{root_frame, root_edge});
-}
-
-void addBodyVelocityOdom(::bosdyn::api::KinematicState* mutable_kinematic_state, double x, double y, double z,
-                         double rx, double ry, double rz) {
-  auto velocity_angular = mutable_kinematic_state->mutable_velocity_of_body_in_odom()->mutable_angular();
-  velocity_angular->set_x(x);
-  velocity_angular->set_y(y);
-  velocity_angular->set_z(z);
-  auto velocity_linear = mutable_kinematic_state->mutable_velocity_of_body_in_odom()->mutable_linear();
-  velocity_linear->set_x(rx);
-  velocity_linear->set_y(ry);
-  velocity_linear->set_z(rz);
-}
-
-void addAcquisitionTimestamp(::bosdyn::api::KinematicState* mutable_kinematic_state, int64_t seconds, int nanoseconds) {
-  mutable_kinematic_state->mutable_acquisition_timestamp()->set_seconds(seconds);
-  mutable_kinematic_state->mutable_acquisition_timestamp()->set_nanos(nanoseconds);
-}
-
-namespace spot_ros2::conversions::test {
+namespace spot_ros2::test {
 
 TEST(RobotStateConversions, TestGetBatteryStates) {
   // GIVEN a clock skew and a RobotState containing a BatteryState, a WifiState, FootState, and an EstopState
   google::protobuf::Duration clock_skew;
   ::bosdyn::api::RobotState robot_state;
-  auto battery_state = robot_state.add_battery_states();
+  auto* battery_state = robot_state.add_battery_states();
   battery_state->CopyFrom(createBatteryState(
       "test_battery", 50, 10, 12, 80.0, ::bosdyn::api::BatteryState_Status::BatteryState_Status_STATUS_DISCHARGING));
 
@@ -148,7 +54,7 @@ TEST(RobotStateConversions, TestGetWifiState) {
   constexpr auto input_mode = ::bosdyn::api::WiFiState_Mode::WiFiState_Mode_MODE_CLIENT;
   constexpr auto input_essid = "some_value";
   ::bosdyn::api::RobotState robot_state;
-  auto comms_state = robot_state.add_comms_states();
+  auto* comms_state = robot_state.add_comms_states();
   comms_state->mutable_wifi_state()->CopyFrom(createWifiState(input_mode, input_essid));
 
   // WHEN we create a WiFiState ROS message from the RobotState
@@ -262,7 +168,7 @@ TEST(RobotStateConversions, TestGetEStopStates) {
 TEST(RobotStateConversions, TestGetJointStates) {
   // GIVEN a RobotState containing two unique joint states
   ::bosdyn::api::RobotState robot_state;
-  auto timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
+  auto* timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
   timestamp->set_seconds(15);
   timestamp->set_nanos(0);
   setJointState(robot_state.mutable_kinematic_state()->add_joint_states(), "fl.hx", 0.1, 0.2, 0.3, 0.4);
@@ -307,7 +213,7 @@ TEST(RobotStateConversions, TestGetJointStates) {
 TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
   // GIVEN a RobotState that does not contain any joint states, but does contains some other kinematic state info
   ::bosdyn::api::RobotState robot_state;
-  auto timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
+  auto* timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
   timestamp->set_seconds(15);
   timestamp->set_nanos(0);
 
@@ -323,6 +229,9 @@ TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
   ASSERT_THAT(out.has_value(), testing::IsTrue());
   EXPECT_THAT(out->header.stamp.sec, testing::Eq(14));
   EXPECT_THAT(out->header.stamp.nanosec, testing::Eq(0U));
+
+  EXPECT_THAT(out->header,
+              ClockSkewIsAppliedToHeader(robot_state.kinematic_state().acquisition_timestamp(), clock_skew));
   EXPECT_THAT(out->name, testing::IsEmpty());
   EXPECT_THAT(out->position, testing::IsEmpty());
   EXPECT_THAT(out->velocity, testing::IsEmpty());
@@ -424,14 +333,14 @@ TEST(RobotStateConversions, TestGetTfInverted) {
 TEST(RobotStateConversions, TestGetOdomTwist) {
   // GIVEN a RobotState that contains info about the velocity of the body in the odom frame
   ::bosdyn::api::RobotState robot_state;
-  auto acquisition_timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
+  auto* acquisition_timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
   acquisition_timestamp->set_seconds(99);
   acquisition_timestamp->set_nanos(0);
-  auto velocity_angular = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_angular();
+  auto* velocity_angular = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_angular();
   velocity_angular->set_x(1.0);
   velocity_angular->set_y(2.0);
   velocity_angular->set_z(3.0);
-  auto velocity_linear = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_linear();
+  auto* velocity_linear = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_linear();
   velocity_linear->set_x(4.0);
   velocity_linear->set_y(5.0);
   velocity_linear->set_z(6.0);
@@ -462,7 +371,7 @@ TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
   // GIVEN a RobotState where there is some kinematic state info but no info about the velocity of the body in the odom
   // frame
   ::bosdyn::api::RobotState robot_state;
-  auto acquisition_timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
+  auto* acquisition_timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
   acquisition_timestamp->set_seconds(99);
   acquisition_timestamp->set_nanos(0);
 
@@ -684,9 +593,7 @@ TEST(RobotStateConversions, TestGetPowerState) {
   EXPECT_THAT(out->locomotion_estimated_runtime,
               testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(255)),
                              testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(0u))));
-  EXPECT_THAT(out->header.stamp,
-              testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Time::sec, testing::Eq(59)),
-                             testing::Field("nanosec", &builtin_interfaces::msg::Time::nanosec, testing::Eq(0u))));
+  EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(robot_state.power_state().timestamp(), clock_skew));
 }
 
 TEST(RobotStateConversions, TestGetPowerStateNoPowerState) {
@@ -928,7 +835,7 @@ TEST(RobotStateConversions, TestGetEndEffectorForce) {
   timestamp.set_nanos(0);
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(1);
-  const auto prefix = "prefix/";
+  const auto* const prefix = "prefix/";
 
   // GIVEN a RobotState containing the estimated end effector force
   ::bosdyn::api::RobotState robot_state;
@@ -955,7 +862,7 @@ TEST(RobotStateConversions, TestGetEndEffectorForceNoEndEffectorForce) {
   // GIVEN an empty RobotState
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(1);
-  const auto prefix = "prefix/";
+  const auto* const prefix = "prefix/";
   ::bosdyn::api::RobotState robot_state;
 
   // WHEN we call getEndEffectorForce()
@@ -975,12 +882,12 @@ TEST(RobotStateConversions, TestGetBehaviorFaultState) {
 
   // GIVEN a RobotState containing two faults
   ::bosdyn::api::RobotState robot_state;
-  auto fault_state_first = robot_state.mutable_behavior_fault_state()->add_faults();
+  auto* fault_state_first = robot_state.mutable_behavior_fault_state()->add_faults();
   fault_state_first->set_behavior_fault_id(11);
   fault_state_first->set_status(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_CLEARABLE);
   fault_state_first->set_cause(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_HARDWARE);
   fault_state_first->mutable_onset_timestamp()->CopyFrom(timestamp);
-  auto fault_state_second = robot_state.mutable_behavior_fault_state()->add_faults();
+  auto* fault_state_second = robot_state.mutable_behavior_fault_state()->add_faults();
   fault_state_second->set_behavior_fault_id(12);
   fault_state_second->set_status(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_UNCLEARABLE);
   fault_state_second->set_cause(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_FALL);
@@ -1022,4 +929,4 @@ TEST(RobotStateConversions, TestGetBehaviorFaultStateNoFaults) {
   // THEN the optional which wraps the output ROS message is set to nullopt
   EXPECT_THAT(out.has_value(), testing::IsFalse());
 }
-}  // namespace spot_ros2::conversions::test
+}  // namespace spot_ros2::test

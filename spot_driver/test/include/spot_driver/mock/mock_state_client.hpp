@@ -4,14 +4,13 @@
 
 #include <gmock/gmock.h>
 
+#include <bosdyn/api/robot_state.pb.h>
 #include <spot_driver/api/state_client_interface.hpp>
-
 #include <string>
 
 namespace spot_ros2::test {
 class MockStateClient : public StateClientInterface {
  public:
-  MOCK_METHOD((tl::expected<RobotState, std::string>), getRobotState, (const std::string& preferred_odom_frame),
-              (override));
+  MOCK_METHOD((tl::expected<bosdyn::api::RobotState, std::string>), getRobotState, (), (override));
 };
 }  // namespace spot_ros2::test

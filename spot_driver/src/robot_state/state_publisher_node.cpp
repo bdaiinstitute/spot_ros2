@@ -72,9 +72,9 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
     throw std::runtime_error(error_msg);
   }
 
-  internal_ = std::make_unique<StatePublisher>(spot_api_->stateClientInterface(), std::move(mw_handle),
-                                               std::move(parameter_interface), std::move(logger_interface),
-                                               std::move(tf_interface), std::move(timer_interface));
+  internal_ = std::make_unique<StatePublisher>(
+      spot_api_->stateClientInterface(), spot_api_->timeSyncInterface(), std::move(mw_handle),
+      std::move(parameter_interface), std::move(logger_interface), std::move(tf_interface), std::move(timer_interface));
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> StatePublisherNode::get_node_base_interface() {

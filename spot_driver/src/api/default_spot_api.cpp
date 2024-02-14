@@ -52,6 +52,7 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   if (!image_client_result.status) {
     return tl::make_unexpected("Failed to create Image client.");
   }
+  // TODO(jschornak-bdai): apply clock skew in the image publisher instead of in DefaultImageClient
   image_client_interface_ =
       std::make_shared<DefaultImageClient>(image_client_result.response, time_sync_api_, robot_name_);
 
@@ -60,8 +61,7 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   if (!robot_state_result.status) {
     return tl::make_unexpected("Failed to get robot state service client.");
   }
-  state_client_interface_ =
-      std::make_shared<DefaultStateClient>(robot_state_result.response, time_sync_api_, robot_name_);
+  state_client_interface_ = std::make_shared<DefaultStateClient>(robot_state_result.response);
 
   // Kinematic API.
   const auto kinematic_api_result = robot_->EnsureServiceClient<::bosdyn::client::InverseKinematicsClient>(
@@ -100,4 +100,9 @@ std::shared_ptr<StateClientInterface> DefaultSpotApi::stateClientInterface() con
 std::shared_ptr<KinematicApi> DefaultSpotApi::kinematicApi() const {
   return kinematicApi_;
 }
+
+std::shared_ptr<TimeSyncApi> DefaultSpotApi::timeSyncInterface() const {
+  return time_sync_api_;
+}
+
 }  // namespace spot_ros2

@@ -22,15 +22,12 @@ class DefaultStateClient : public StateClientInterface {
    * clock skew
    * @param robot_name Name of Spot. Used to apply frame_prefix
    */
-  explicit DefaultStateClient(::bosdyn::client::RobotStateClient* client,
-                              const std::shared_ptr<TimeSyncApi>& time_sync_api, const std::string& robot_name);
+  explicit DefaultStateClient(::bosdyn::client::RobotStateClient* client);
 
-  tl::expected<RobotState, std::string> getRobotState(const std::string& preferred_odom_frame) override;
+  tl::expected<bosdyn::api::RobotState, std::string> getRobotState() override;
 
  private:
   ::bosdyn::client::RobotStateClient* client_;
-  std::shared_ptr<TimeSyncApi> time_sync_api_;
-  std::string frame_prefix_;
 };
 
 }  // namespace spot_ros2

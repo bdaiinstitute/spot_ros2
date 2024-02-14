@@ -103,7 +103,8 @@ std::optional<sensor_msgs::msg::JointState> getJointStates(const ::bosdyn::api::
 std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& robot_state,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                               const std::string& preferred_base_frame_id) {
-  if (robot_state.has_kinematic_state()) {
+  if (robot_state.has_kinematic_state() && robot_state.kinematic_state().has_transforms_snapshot() &&
+      robot_state.kinematic_state().transforms_snapshot().child_to_parent_edge_map_size() > 0) {
     tf2_msgs::msg::TFMessage tf_msg;
 
     const auto local_time = applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);

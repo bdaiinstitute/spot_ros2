@@ -21,5 +21,6 @@ class MockSpotApi : public SpotApi {
   MOCK_METHOD(std::shared_ptr<KinematicApi>, kinematicApi, (), (const, override));
   MOCK_METHOD(std::shared_ptr<ImageClientInterface>, image_client_interface, (), (const, override));
   MOCK_METHOD(std::shared_ptr<StateClientInterface>, stateClientInterface, (), (const, override));
+  MOCK_METHOD(std::shared_ptr<TimeSyncApi>, timeSyncInterface, (), (const, override));
 };
 }  // namespace spot_ros2::test
