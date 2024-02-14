@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from tkinter import messagebox
+from typing import Any, List, Optional
 
 import bdai_ros2_wrappers.process as ros_process
 from bdai_ros2_wrappers.node import Node
 from rclpy.parameter import Parameter
-from typing import List, Optional, Any
 
 from spot_msgs.msg import (  # type: ignore
     BatteryStateArray,
