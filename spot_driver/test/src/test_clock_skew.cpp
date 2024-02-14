@@ -5,7 +5,7 @@
 
 #include <spot_driver/api/time_sync_api.hpp>
 
-namespace spot_ros2 {
+namespace spot_ros2::test {
 TEST(TestClockSkew, ZeroSkew) {
   // GIVEN a positive timestamp and an all-zero clock skew
   google::protobuf::Timestamp timestamp;
@@ -145,4 +145,4 @@ TEST(TestClockSkew, HandleNegativeUnskewedTimestampFromNanoseconds) {
   EXPECT_THAT(out.sec, testing::Eq(0));
   EXPECT_THAT(out.nanosec, testing::Eq(0));
 }
-}  // namespace spot_ros2
+}  // namespace spot_ros2::test
