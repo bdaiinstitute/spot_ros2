@@ -11,6 +11,16 @@ target_include_directories(rclcpp_test
 )
 target_link_libraries(rclcpp_test PUBLIC rclcpp::rclcpp)
 
+ament_add_gmock(test_clock_skew
+  src/test_clock_skew.cpp
+)
+target_include_directories(test_clock_skew
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(test_clock_skew spot_api)
+
 # test_spot_image_publisher
 
 ament_add_gmock(test_spot_image_publisher
