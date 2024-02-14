@@ -51,35 +51,35 @@ StateMiddlewareHandle::StateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>
 StateMiddlewareHandle::StateMiddlewareHandle(const rclcpp::NodeOptions& node_options)
     : StateMiddlewareHandle(std::make_shared<rclcpp::Node>(kNodeName, node_options)) {}
 
-void StateMiddlewareHandle::publishRobotState(const RobotState& robot_state) {
-  battery_states_publisher_->publish(robot_state.battery_states);
-  wifi_state_publisher_->publish(robot_state.wifi_state);
-  foot_states_publisher_->publish(robot_state.foot_state);
-  estop_states_publisher_->publish(robot_state.estop_states);
+void StateMiddlewareHandle::publishRobotState(const RobotStateMessages& robot_state_msgs) {
+  battery_states_publisher_->publish(robot_state_msgs.battery_states);
+  wifi_state_publisher_->publish(robot_state_msgs.wifi_state);
+  foot_states_publisher_->publish(robot_state_msgs.foot_state);
+  estop_states_publisher_->publish(robot_state_msgs.estop_states);
 
-  if (robot_state.maybe_joint_states) {
-    joint_state_publisher_->publish(robot_state.maybe_joint_states.value());
+  if (robot_state_msgs.maybe_joint_states) {
+    joint_state_publisher_->publish(robot_state_msgs.maybe_joint_states.value());
   }
-  if (robot_state.maybe_odom_twist) {
-    odom_twist_publisher_->publish(robot_state.maybe_odom_twist.value());
+  if (robot_state_msgs.maybe_odom_twist) {
+    odom_twist_publisher_->publish(robot_state_msgs.maybe_odom_twist.value());
   }
-  if (robot_state.maybe_odom) {
-    odom_publisher_->publish(robot_state.maybe_odom.value());
+  if (robot_state_msgs.maybe_odom) {
+    odom_publisher_->publish(robot_state_msgs.maybe_odom.value());
   }
-  if (robot_state.maybe_power_state) {
-    power_state_publisher_->publish(robot_state.maybe_power_state.value());
+  if (robot_state_msgs.maybe_power_state) {
+    power_state_publisher_->publish(robot_state_msgs.maybe_power_state.value());
   }
-  if (robot_state.maybe_system_fault_state) {
-    system_faults_publisher_->publish(robot_state.maybe_system_fault_state.value());
+  if (robot_state_msgs.maybe_system_fault_state) {
+    system_faults_publisher_->publish(robot_state_msgs.maybe_system_fault_state.value());
   }
-  if (robot_state.maybe_manipulator_state) {
-    manipulator_state_publisher_->publish(robot_state.maybe_manipulator_state.value());
+  if (robot_state_msgs.maybe_manipulator_state) {
+    manipulator_state_publisher_->publish(robot_state_msgs.maybe_manipulator_state.value());
   }
-  if (robot_state.maybe_end_effector_force) {
-    end_effector_force_publisher_->publish(robot_state.maybe_end_effector_force.value());
+  if (robot_state_msgs.maybe_end_effector_force) {
+    end_effector_force_publisher_->publish(robot_state_msgs.maybe_end_effector_force.value());
   }
-  if (robot_state.maybe_behavior_fault_state) {
-    behavior_fault_state_publisher_->publish(robot_state.maybe_behavior_fault_state.value());
+  if (robot_state_msgs.maybe_behavior_fault_state) {
+    behavior_fault_state_publisher_->publish(robot_state_msgs.maybe_behavior_fault_state.value());
   }
 }
 

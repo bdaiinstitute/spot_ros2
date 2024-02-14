@@ -60,19 +60,20 @@ void StatePublisher::timerCallback() {
   const auto& clock_skew = clock_skew_result.value();
   const auto& robot_state = robot_state_result.value();
 
-  const auto robot_state_messages = RobotState{getBatteryStates(*robot_state_result, clock_skew),
-                                               getWifiState(robot_state),
-                                               getFootState(robot_state),
-                                               getEstopStates(robot_state, clock_skew),
-                                               getJointStates(robot_state, clock_skew, frame_prefix_),
-                                               getTf(robot_state, clock_skew, frame_prefix_, full_odom_frame_id_),
-                                               getOdomTwist(robot_state, clock_skew),
-                                               getOdom(robot_state, clock_skew, frame_prefix_, is_using_vision_),
-                                               getPowerState(robot_state, clock_skew),
-                                               getSystemFaultState(robot_state, clock_skew),
-                                               getManipulatorState(robot_state),
-                                               getEndEffectorForce(robot_state, clock_skew, frame_prefix_),
-                                               getBehaviorFaultState(robot_state, clock_skew)};
+  const auto robot_state_messages =
+      RobotStateMessages{getBatteryStates(*robot_state_result, clock_skew),
+                         getWifiState(robot_state),
+                         getFootState(robot_state),
+                         getEstopStates(robot_state, clock_skew),
+                         getJointStates(robot_state, clock_skew, frame_prefix_),
+                         getTf(robot_state, clock_skew, frame_prefix_, full_odom_frame_id_),
+                         getOdomTwist(robot_state, clock_skew),
+                         getOdom(robot_state, clock_skew, frame_prefix_, is_using_vision_),
+                         getPowerState(robot_state, clock_skew),
+                         getSystemFaultState(robot_state, clock_skew),
+                         getManipulatorState(robot_state),
+                         getEndEffectorForce(robot_state, clock_skew, frame_prefix_),
+                         getBehaviorFaultState(robot_state, clock_skew)};
 
   middleware_handle_->publishRobotState(robot_state_messages);
 

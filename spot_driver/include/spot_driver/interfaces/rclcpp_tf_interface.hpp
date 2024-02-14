@@ -33,9 +33,9 @@ class RclcppTfInterface : public TfInterfaceBase {
       const std::vector<geometry_msgs::msg::TransformStamped>& transforms) override;
 
   /**
-   * @brief Update dynamic transform
-   * @param transforms Transforms to broadcast
-   * @return Currently updating dynamic transforms will always succeed, so this function always returns void.
+   * @brief Broadcast TF messages for dynamic transforms.
+   * @param transforms Vector of transforms to broadcast.
+   * @return Send dynamic transforms will always succeed, so this function always returns void.
    */
   tl::expected<void, std::string> sendDynamicTransforms(
       const std::vector<geometry_msgs::msg::TransformStamped>& transforms) override;

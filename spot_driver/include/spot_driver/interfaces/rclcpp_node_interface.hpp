@@ -8,14 +8,14 @@
 
 namespace spot_ros2 {
 /**
- * @brief Implementation of LoggerInterfaceBase that logs messages using rclcpp's logging utilities.
+ * @brief Implementation of NodeInterfaceBase that provides the node base interface of a rclcpp Node.
  */
 class RclcppNodeInterface : public NodeInterfaceBase {
  public:
   /**
    * @brief The constructor for RclcppNodeInterface.
-   * @param logger An instance of a logger which will be used to generate ROS 2 logs. This will be copied into the
-   * logger_ member.
+   * @param node_base_interface A shared_ptr to the NodeBaseInterface of a rclcpp Node. The RclcppNodeInterface class
+   * will share ownership of this pointer through its node_base_interface_ member.
    */
   explicit RclcppNodeInterface(const std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>& node_base_interface);
 

@@ -30,7 +30,7 @@ class StatePublisher {
   class MiddlewareHandle {
    public:
     virtual ~MiddlewareHandle() = default;
-    virtual void publishRobotState(const RobotState& robot_state) = 0;
+    virtual void publishRobotState(const RobotStateMessages& robot_state_msgs) = 0;
   };
 
   /**

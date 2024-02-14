@@ -78,7 +78,7 @@ struct std::less<spot_ros2::ImageSource> {
 /**
  * @brief A struct of ROS message types that define Spot's Robot State
  */
-struct RobotState {
+struct RobotStateMessages {
   spot_msgs::msg::BatteryStateArray battery_states;
   spot_msgs::msg::WiFiState wifi_state;
   spot_msgs::msg::FootStateArray foot_state;
