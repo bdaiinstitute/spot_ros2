@@ -280,6 +280,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_alert_node = launch_ros.actions.Node(
         package="spot_driver",
         executable="spot_alerts",
+        name="spot_alerts",
         output="screen",
         namespace=spot_name,
     )
