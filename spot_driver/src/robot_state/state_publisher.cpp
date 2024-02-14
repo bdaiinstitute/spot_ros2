@@ -29,13 +29,11 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
       logger_interface_{std::move(logger_interface)},
       tf_interface_{std::move(tf_interface)},
       timer_interface_{std::move(timer_interface)} {
-  const auto preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
   const auto spot_name = parameter_interface_->getSpotName();
-
-  is_using_vision_ = preferred_odom_frame == "vision";
-
   frame_prefix_ = spot_name.empty() ? "" : spot_name + "/";
 
+  const auto preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
+  is_using_vision_ = preferred_odom_frame == "vision";
   full_odom_frame_id_ = preferred_odom_frame.find('/') == std::string::npos ? spot_name + "/" + preferred_odom_frame
                                                                             : preferred_odom_frame;
 
