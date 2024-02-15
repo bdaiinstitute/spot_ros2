@@ -1,5 +1,7 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <gmock/gmock-matchers.h>
+#include <gmock/gmock-more-matchers.h>
 #include <gmock/gmock.h>
 
 #include <bosdyn/api/geometry.pb.h>
@@ -25,8 +27,6 @@
 #include <spot_msgs/msg/power_state.hpp>
 #include <spot_msgs/msg/system_fault.hpp>
 #include <spot_msgs/msg/wi_fi_state.hpp>
-#include "gmock/gmock-matchers.h"
-#include "gmock/gmock-more-matchers.h"
 
 namespace {
 using ::testing::AllOf;

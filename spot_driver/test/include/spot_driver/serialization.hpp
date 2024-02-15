@@ -22,6 +22,9 @@
 #include <string>
 #include <vector>
 
+// This header defines the << operator for message types which appear as inputs or outputs in this package's unit tests.
+// This makes the test output from GMock's matchers much more human-legible than it would be by default.
+
 namespace std {
 inline std::ostream& operator<<(std::ostream& os, const google::protobuf::Timestamp& obj) {
   return os << "(google::protobuf::Timestamp: "
