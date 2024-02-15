@@ -128,18 +128,22 @@ TEST(RobotStateConversions, TestGetEStopStates) {
   // GIVEN a RobotState that contains two different EStopStates
   ::bosdyn::api::RobotState robot_state;
 
+  google::protobuf::Timestamp timestamp_first;
+  timestamp_first.set_seconds(13);
+  timestamp_first.set_nanos(0);
   ::bosdyn::api::EStopState estop_state_first;
-  estop_state_first.mutable_timestamp()->set_seconds(13);
-  estop_state_first.mutable_timestamp()->set_nanos(0);
+  estop_state_first.mutable_timestamp()->CopyFrom(timestamp_first);
   estop_state_first.set_name("estop_name");
   estop_state_first.set_type(::bosdyn::api::EStopState_Type::EStopState_Type_TYPE_HARDWARE);
   estop_state_first.set_state(::bosdyn::api::EStopState_State::EStopState_State_STATE_ESTOPPED);
   estop_state_first.set_state_description("some_text");
   robot_state.mutable_estop_states()->Add(std::move(estop_state_first));
 
+  google::protobuf::Timestamp timestamp_second;
+  timestamp_second.set_seconds(12);
+  timestamp_second.set_nanos(0);
   ::bosdyn::api::EStopState estop_state_second;
-  estop_state_second.mutable_timestamp()->set_seconds(12);
-  estop_state_second.mutable_timestamp()->set_nanos(0);
+  estop_state_second.mutable_timestamp()->CopyFrom(timestamp_second);
   estop_state_second.set_name("second_estop_name");
   estop_state_second.set_type(::bosdyn::api::EStopState_Type::EStopState_Type_TYPE_SOFTWARE);
   estop_state_second.set_state(::bosdyn::api::EStopState_State::EStopState_State_STATE_NOT_ESTOPPED);
@@ -157,26 +161,21 @@ TEST(RobotStateConversions, TestGetEStopStates) {
   ASSERT_THAT(out.estop_states, SizeIs(2));
 
   // THEN each output estop state contains equivalent data to its corresponding input
-  EXPECT_THAT(
-      out.estop_states,
-      Contains(AllOf(Field("name", &spot_msgs::msg::EStopState::name, StrEq("estop_name")),
-                     Field("type", &spot_msgs::msg::EStopState::type, spot_msgs::msg::EStopState::TYPE_HARDWARE),
-                     Field("state", &spot_msgs::msg::EStopState::state, spot_msgs::msg::EStopState::STATE_ESTOPPED),
-                     Field("state_description", &spot_msgs::msg::EStopState::state_description, StrEq("some_text")))));
-  EXPECT_THAT(
-      out.estop_states,
-      Contains(AllOf(Field("name", &spot_msgs::msg::EStopState::name, StrEq("second_estop_name")),
-                     Field("type", &spot_msgs::msg::EStopState::type, spot_msgs::msg::EStopState::TYPE_SOFTWARE),
-                     Field("state", &spot_msgs::msg::EStopState::state, spot_msgs::msg::EStopState::STATE_NOT_ESTOPPED),
-                     Field("state_description", &spot_msgs::msg::EStopState::state_description, StrEq("other_text")))));
+  EXPECT_THAT(out.estop_states, EStopStatesContains("estop_name", spot_msgs::msg::EStopState::TYPE_HARDWARE,
+                                                    spot_msgs::msg::EStopState::STATE_ESTOPPED, "some_text",
+                                                    timestamp_first, clock_skew));
+  EXPECT_THAT(out.estop_states, EStopStatesContains("second_estop_name", spot_msgs::msg::EStopState::TYPE_SOFTWARE,
+                                                    spot_msgs::msg::EStopState::STATE_NOT_ESTOPPED, "other_text",
+                                                    timestamp_second, clock_skew));
 }
 
 TEST(RobotStateConversions, TestGetJointStates) {
   // GIVEN a RobotState containing two unique joint states
   ::bosdyn::api::RobotState robot_state;
-  auto* timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
-  timestamp->set_seconds(15);
-  timestamp->set_nanos(0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(15);
+  timestamp.set_nanos(0);
+  robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp()->CopyFrom(timestamp);
   setJointState(robot_state.mutable_kinematic_state()->add_joint_states(), "fl.hx", 0.1, 0.2, 0.3, 0.4);
   setJointState(robot_state.mutable_kinematic_state()->add_joint_states(), "arm0.wr0", 0.5, 0.6, 0.7, 0.8);
 
@@ -219,9 +218,10 @@ TEST(RobotStateConversions, TestGetJointStates) {
 TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
   // GIVEN a RobotState that does not contain any joint states, but does contains some other kinematic state info
   ::bosdyn::api::RobotState robot_state;
-  auto* timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
-  timestamp->set_seconds(15);
-  timestamp->set_nanos(0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(15);
+  timestamp.set_nanos(0);
+  robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp()->CopyFrom(timestamp);
 
   // GIVEN some nominal clock skew and prefix
   google::protobuf::Duration clock_skew;
@@ -233,11 +233,7 @@ TEST(RobotStateConversions, TestGetJointStatesNoJointStates) {
 
   // THEN the message is created and contains a timestamp, but does not contain any joint state data
   ASSERT_THAT(out.has_value(), IsTrue());
-  EXPECT_THAT(out->header.stamp.sec, Eq(14));
-  EXPECT_THAT(out->header.stamp.nanosec, Eq(0U));
-
-  EXPECT_THAT(out->header,
-              ClockSkewIsAppliedToHeader(robot_state.kinematic_state().acquisition_timestamp(), clock_skew));
+  EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
   EXPECT_THAT(out->name, IsEmpty());
   EXPECT_THAT(out->position, IsEmpty());
   EXPECT_THAT(out->velocity, IsEmpty());
@@ -610,28 +606,14 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
   // THEN the output message contains two faults
   // THEN each of the output faults contains fields that match the input
   // THEN the clock skew is correctly applied
-  // TODO(schornakj): revise gross matcher so it gives more useful info on test failure
-  using SystemFault = spot_msgs::msg::SystemFault;
-  EXPECT_THAT(
-      out->faults,
-      UnorderedElementsAre(
-          AllOf(Field("header", &SystemFault::header, ClockSkewIsAppliedToHeader(timestamp1, clock_skew)),
-                Field("duration", &SystemFault::duration,
-                      AllOf(Field("sec", &builtin_interfaces::msg::Duration::sec, Eq(15)),
-                            Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, Eq(0u)))),
-                Field("name", &SystemFault::name, StrEq("fault1")), Field("code", &SystemFault::code, Eq(19)),
-                Field("uid", &SystemFault::uid, Eq(3ul)),
-                Field("error_message", &SystemFault::error_message, StrEq("battery is low")),
-                Field("attributes", &SystemFault::attributes, UnorderedElementsAre(StrEq("robot"), StrEq("battery")))),
-          AllOf(Field("header", &SystemFault::header, ClockSkewIsAppliedToHeader(timestamp2, clock_skew)),
-                Field("duration", &SystemFault::duration,
-                      AllOf(Field("sec", &builtin_interfaces::msg::Duration::sec, Eq(0)),
-                            Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, Eq(0u)))),
-                Field("name", &SystemFault::name, StrEq("fault2")), Field("code", &SystemFault::code, Eq(55)),
-                Field("uid", &SystemFault::uid, Eq(9ul)),
-                Field("error_message", &SystemFault::error_message,
-                      StrEq("robot has departed from this plane of reality")),
-                Field("attributes", &SystemFault::attributes, UnorderedElementsAre(StrEq("robot"))))));
+  EXPECT_THAT(out->faults,
+              UnorderedElementsAre(
+                  SystemFaultIs(ClockSkewIsAppliedToHeader(timestamp1, clock_skew), DurationEq(15, 0U), StrEq("fault1"),
+                                Eq(3UL), Eq(19), StrEq("battery is low"),
+                                UnorderedElementsAre(StrEq("robot"), StrEq("battery"))),
+                  SystemFaultIs(ClockSkewIsAppliedToHeader(timestamp2, clock_skew), DurationEq(0, 0U), StrEq("fault2"),
+                                Eq(9UL), Eq(55), StrEq("robot has departed from this plane of reality"),
+                                UnorderedElementsAre(StrEq("robot")))));
 }
 
 TEST(RobotStateConversions, TestGetSystemFaultStateNoFault) {
@@ -811,15 +793,13 @@ TEST(RobotStateConversions, TestGetBehaviorFaultState) {
   EXPECT_THAT(first_fault.behavior_fault_id, Eq(11u));
   EXPECT_THAT(first_fault.status, Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_CLEARABLE));
   EXPECT_THAT(first_fault.cause, Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_HARDWARE));
-  EXPECT_THAT(first_fault.header.stamp.sec, Eq(9));
-  EXPECT_THAT(first_fault.header.stamp.nanosec, Eq(0u));
+  EXPECT_THAT(first_fault.header, ClockSkewIsAppliedToHeader(fault_state_first->onset_timestamp(), clock_skew));
   // THEN the second fault matches the second one added to the RobotState, and the clock skew is applied correctly
   const auto second_fault = out->faults.at(1);
   EXPECT_THAT(second_fault.behavior_fault_id, Eq(12u));
   EXPECT_THAT(second_fault.status, Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_UNCLEARABLE));
   EXPECT_THAT(second_fault.cause, Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_FALL));
-  EXPECT_THAT(second_fault.header.stamp.sec, Eq(9));
-  EXPECT_THAT(second_fault.header.stamp.nanosec, Eq(0u));
+  EXPECT_THAT(second_fault.header, ClockSkewIsAppliedToHeader(fault_state_second->onset_timestamp(), clock_skew));
 }
 
 TEST(RobotStateConversions, TestGetBehaviorFaultStateNoFaults) {
