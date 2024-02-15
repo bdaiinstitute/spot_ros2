@@ -608,12 +608,10 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
   // THEN the clock skew is correctly applied
   EXPECT_THAT(out->faults,
               UnorderedElementsAre(
-                  SystemFaultIs(ClockSkewIsAppliedToHeader(timestamp1, clock_skew), DurationEq(15, 0U), StrEq("fault1"),
-                                Eq(3UL), Eq(19), StrEq("battery is low"),
-                                UnorderedElementsAre(StrEq("robot"), StrEq("battery"))),
-                  SystemFaultIs(ClockSkewIsAppliedToHeader(timestamp2, clock_skew), DurationEq(0, 0U), StrEq("fault2"),
-                                Eq(9UL), Eq(55), StrEq("robot has departed from this plane of reality"),
-                                UnorderedElementsAre(StrEq("robot")))));
+                  SystemFaultEq(timestamp1, clock_skew, duration1, "fault1", 3UL, 19, "battery is low",
+                                std::vector<std::string>{"robot", "battery"}),
+                  SystemFaultEq(timestamp2, clock_skew, duration2, "fault2", 9UL, 55,
+                                "robot has departed from this plane of reality", std::vector<std::string>{"robot"})));
 }
 
 TEST(RobotStateConversions, TestGetSystemFaultStateNoFault) {

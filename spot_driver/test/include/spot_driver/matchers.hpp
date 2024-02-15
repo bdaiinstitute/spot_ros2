@@ -5,6 +5,9 @@
 #include <gmock/gmock-generated-matchers.h>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
+#include <google/protobuf/timestamp.pb.h>
+#include <builtin_interfaces/msg/duration.hpp>
+#include <builtin_interfaces/msg/time.hpp>
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
@@ -12,8 +15,15 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 #include <spot_driver/api/time_sync_api.hpp>
+#include <spot_driver/serialization.hpp>
+#include <spot_msgs/msg/battery_state.hpp>
+#include <spot_msgs/msg/battery_state_array.hpp>
 #include <spot_msgs/msg/e_stop_state.hpp>
+#include <spot_msgs/msg/power_state.hpp>
 #include <spot_msgs/msg/system_fault.hpp>
+#include <spot_msgs/msg/wi_fi_state.hpp>
+#include <sstream>
+#include <std_msgs/msg/header.hpp>
 
 namespace spot_ros2::test {
 /**
@@ -93,24 +103,23 @@ MATCHER_P6(EStopStatesContains, name, type, state, state_description, timestamp,
       result_listener);
 }
 
-MATCHER_P2(DurationEq, sec, nanosec, "") {
+MATCHER_P(DurationEq, duration, "") {
   return testing::ExplainMatchResult(
-      testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(sec)),
-                     testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(nanosec))),
+      testing::AllOf(
+          testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(duration.seconds())),
+          testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(duration.nanos()))),
       arg, result_listener);
 }
 
-MATCHER_P7(SystemFaultIs, header_matcher, duration_matcher, name_matcher, uid_matcher, code_matcher, error_msg_matcher,
-           attributes_matcher, "") {
+MATCHER_P8(SystemFaultEq, timestamp, clock_skew, duration, name, uid, code, error_msg, attributes, "") {
   using SystemFault = spot_msgs::msg::SystemFault;
   return testing::ExplainMatchResult(
-      testing::AllOf(testing::Field("header", &SystemFault::header, header_matcher),
-                     testing::Field("duration", &SystemFault::duration, duration_matcher),
-                     testing::Field("name", &SystemFault::name, name_matcher),
-                     testing::Field("code", &SystemFault::code, code_matcher),
-                     testing::Field("uid", &SystemFault::uid, uid_matcher),
-                     testing::Field("error_message", &SystemFault::error_message, error_msg_matcher),
-                     testing::Field("attributes", &SystemFault::attributes, attributes_matcher)),
+      testing::AllOf(testing::Field("header", &SystemFault::header, ClockSkewIsAppliedToHeader(timestamp, clock_skew)),
+                     testing::Field("duration", &SystemFault::duration, DurationEq(duration)),
+                     testing::Field("name", &SystemFault::name, testing::StrEq(name)),
+                     testing::Field("code", &SystemFault::code, code), testing::Field("uid", &SystemFault::uid, uid),
+                     testing::Field("error_message", &SystemFault::error_message, testing::StrEq(error_msg)),
+                     testing::Field("attributes", &SystemFault::attributes, testing::ContainerEq(attributes))),
       arg, result_listener);
 }
 }  // namespace spot_ros2::test
