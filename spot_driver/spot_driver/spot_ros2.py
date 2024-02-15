@@ -145,6 +145,7 @@ from spot_msgs.srv import (  # type: ignore
     ListSounds,
     ListWorldObjects,
     LoadSound,
+    MutateWorldObject,
     PlaySound,
     RetrieveLogpoint,
     SetGripperCameraParameters,
@@ -833,6 +834,13 @@ class SpotROS(Node):
 
         # This doesn't use the service wrapper because it's not a trigger, and we want different mock responses
         self.create_service(ListWorldObjects, "list_world_objects", self.handle_list_world_objects)
+
+        self.create_service(
+            MutateWorldObject,
+            "mutate_world_object",
+            self.handle_mutate_world_objects,
+            callback_group=self.group,
+        )
 
         self.create_service(
             GraphNavUploadGraph,
@@ -2669,6 +2677,12 @@ class SpotROS(Node):
         else:
             proto_response = self.spot_wrapper.spot_world_objects.list_world_objects(object_types, time_start_point)
         conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
+        return response
+
+    def handle_mutate_world_object(
+        self, request: MutateWorldObject.Request, response: MutateWorldObject.Response
+    ) -> Optional[MutateWorldObject.Response]:
+        # TODO
         return response
 
     def handle_navigate_to_feedback(self) -> None:
