@@ -39,6 +39,7 @@ add_library(spot_api
   src/api/default_spot_api.cpp
   src/api/default_state_client.cpp
   src/api/default_time_sync_api.cpp
+  src/api/default_world_object_client.cpp
   src/api/spot_image_sources.cpp
   src/conversions/common_conversions.cpp
   src/conversions/geometry.cpp
@@ -52,6 +53,7 @@ add_library(spot_api
   src/interfaces/rclcpp_node_interface.cpp
   src/interfaces/rclcpp_parameter_interface.cpp
   src/interfaces/rclcpp_tf_interface.cpp
+  src/interfaces/rclcpp_tf_listener_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
   src/kinematic/kinematic_node.cpp
   src/kinematic/kinematic_service.cpp
