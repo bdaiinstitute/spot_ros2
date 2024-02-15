@@ -41,6 +41,9 @@ class SpotAlerts(Node):
                         "Battery is at {} %. Approximately {} minutes remaining.\n Please charge your Spot soon."
                     ).format(battery_msg.charge_percentage, round(battery_msg.estimated_runtime.sec / 60)),
                 )
+            elif battery_msg.charge_percentage > 10 and self.get_parameter("low_battery").value:
+                low_battery_param = Parameter("low_battery", Parameter.Type.BOOL, False)
+                self.set_parameters([low_battery_param])
 
 
 @ros_process.main(prebaked=False)
