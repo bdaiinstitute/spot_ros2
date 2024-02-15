@@ -4,6 +4,7 @@
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/duration.pb.h>
+#include <google/protobuf/timestamp.pb.h>
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <spot_driver/fake/fake_parameter_interface.hpp>
@@ -59,8 +60,11 @@ class StatePublisherNodeTest : public ::testing::Test {
 };
 
 bosdyn::api::RobotState makeRobotState(const bool has_valid_transforms = true) {
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(100);
+  timestamp.set_nanos(0);
   bosdyn::api::RobotState out;
-  addAcquisitionTimestamp(out.mutable_kinematic_state(), 100, 0);
+  addAcquisitionTimestamp(out.mutable_kinematic_state(), timestamp);
 
   if (has_valid_transforms) {
     addTransform(out.mutable_kinematic_state()->mutable_transforms_snapshot(), "some_frame", "some_other_frame", 0, 0,

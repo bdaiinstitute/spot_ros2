@@ -24,11 +24,13 @@
 #include <vector>
 
 namespace spot_ros2::test {
-inline ::bosdyn::api::BatteryState createBatteryState(const std::string& id, uint32_t percentage, uint32_t current,
-                                                      uint32_t voltage, double temperature,
+inline ::bosdyn::api::BatteryState createBatteryState(const std::string& id,
+                                                      const google::protobuf::Timestamp& timestamp, uint32_t percentage,
+                                                      uint32_t current, uint32_t voltage, double temperature,
                                                       ::bosdyn::api::BatteryState_Status status) {
   ::bosdyn::api::BatteryState out;
   out.set_identifier(id);
+  out.mutable_timestamp()->CopyFrom(timestamp);
   out.set_status(status);
   out.add_temperatures(temperature);
   out.mutable_charge_percentage()->set_value(percentage);
@@ -114,9 +116,8 @@ inline void addBodyVelocityOdom(::bosdyn::api::KinematicState* mutable_kinematic
   velocity_angular->set_z(rz);
 }
 
-inline void addAcquisitionTimestamp(::bosdyn::api::KinematicState* mutable_kinematic_state, int64_t seconds,
-                                    int nanoseconds) {
-  mutable_kinematic_state->mutable_acquisition_timestamp()->set_seconds(seconds);
-  mutable_kinematic_state->mutable_acquisition_timestamp()->set_nanos(nanoseconds);
+inline void addAcquisitionTimestamp(::bosdyn::api::KinematicState* mutable_kinematic_state,
+                                    const google::protobuf::Timestamp& timestamp) {
+  mutable_kinematic_state->mutable_acquisition_timestamp()->CopyFrom(timestamp);
 }
 }  // namespace spot_ros2::test

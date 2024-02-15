@@ -46,10 +46,14 @@ namespace spot_ros2::test {
 TEST(RobotStateConversions, TestGetBatteryStates) {
   // GIVEN a clock skew and a RobotState containing a BatteryState, a WifiState, FootState, and an EstopState
   google::protobuf::Duration clock_skew;
+  clock_skew.set_seconds(5);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(15);
   ::bosdyn::api::RobotState robot_state;
   auto* battery_state = robot_state.add_battery_states();
-  battery_state->CopyFrom(createBatteryState(
-      "test_battery", 50, 10, 12, 80.0, ::bosdyn::api::BatteryState_Status::BatteryState_Status_STATUS_DISCHARGING));
+  battery_state->CopyFrom(
+      createBatteryState("test_battery", timestamp, 50, 10, 12, 80.0,
+                         ::bosdyn::api::BatteryState_Status::BatteryState_Status_STATUS_DISCHARGING));
 
   // WHEN we create a BatteryStateArray ROS message from the RobotState
   const spot_msgs::msg::BatteryStateArray out = getBatteryStates(robot_state, clock_skew);
@@ -57,11 +61,12 @@ TEST(RobotStateConversions, TestGetBatteryStates) {
   // THEN the ROS message contains the same values as were set in the input RobotState
   ASSERT_THAT(out.battery_states, SizeIs(1));
   const auto& first_battery_state = out.battery_states.at(0);
+  EXPECT_THAT(first_battery_state.header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
   EXPECT_THAT(first_battery_state.identifier, StrEq("test_battery"));
   EXPECT_THAT(first_battery_state.charge_percentage, DoubleEq(50.0));
   EXPECT_THAT(first_battery_state.current, DoubleEq(10.0));
   EXPECT_THAT(first_battery_state.voltage, DoubleEq(12.0));
-  ASSERT_THAT(first_battery_state.temperatures, SizeIs(1ul));
+  ASSERT_THAT(first_battery_state.temperatures, SizeIs(1UL));
   EXPECT_THAT(first_battery_state.temperatures.at(0), DoubleEq(80.0));
 }
 
@@ -198,6 +203,8 @@ TEST(RobotStateConversions, TestGetJointStates) {
   ASSERT_THAT(out->velocity, SizeIs(2));
   ASSERT_THAT(out->effort, SizeIs(2));
 
+  EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
+
   // THEN the joint names were converted to the "friendly" names used in the URDF
   ASSERT_THAT(out->name, UnorderedElementsAre("my_prefix/front_left_hip_x", "my_prefix/arm_wr0"));
 
@@ -260,7 +267,10 @@ TEST(RobotStateConversions, TestGetTf) {
   // GIVEN a RobotState containing a valid transform snapshot
   ::bosdyn::api::RobotState robot_state;
   // GIVEN a nonzero acquisition timestamp
-  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(99);
+  timestamp.set_nanos(0);
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
   // GIVEN the odom frame is the root of the frame tree
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "odom");
   // GIVEN the body frame is at a nonzero pose relative to the odom frame
@@ -283,6 +293,7 @@ TEST(RobotStateConversions, TestGetTf) {
 
   // THEN this frame matches the transform from the odom frame to the body frame
   const auto& transform = out->transforms.at(0);
+  EXPECT_THAT(transform.header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
   EXPECT_THAT(transform.header.frame_id, StrEq("prefix/odom"));
   EXPECT_THAT(transform.child_frame_id, StrEq("prefix/body"));
   EXPECT_THAT(transform.transform, GeometryMsgsTransformEq(1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0));
@@ -292,7 +303,10 @@ TEST(RobotStateConversions, TestGetTfInverted) {
   // GIVEN a RobotState containing a valid transform snapshot
   ::bosdyn::api::RobotState robot_state;
   // GIVEN a nonzero acquisition timestamp
-  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(99);
+  timestamp.set_nanos(0);
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
   // GIVEN the odom frame is the root of the frame tree
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "odom");
   // GIVEN the body frame is at a nonzero pose relative to the odom frame
@@ -315,6 +329,7 @@ TEST(RobotStateConversions, TestGetTfInverted) {
 
   // THEN this frame is the inverse of the transform from the odom frame to the body frame
   const auto& transform = out->transforms.at(0);
+  EXPECT_THAT(transform.header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
   EXPECT_THAT(transform.header.frame_id, StrEq("prefix/body"));
   EXPECT_THAT(transform.child_frame_id, StrEq("prefix/odom"));
   EXPECT_THAT(transform.transform, GeometryMsgsTransformEq(-1.0, -2.0, -3.0, 1.0, 0.0, 0.0, 0.0));
@@ -323,9 +338,11 @@ TEST(RobotStateConversions, TestGetTfInverted) {
 TEST(RobotStateConversions, TestGetOdomTwist) {
   // GIVEN a RobotState that contains info about the velocity of the body in the odom frame
   ::bosdyn::api::RobotState robot_state;
-  auto* acquisition_timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
-  acquisition_timestamp->set_seconds(99);
-  acquisition_timestamp->set_nanos(0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(99);
+  timestamp.set_nanos(0);
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
+
   auto* velocity_linear = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_linear();
   velocity_linear->set_x(1.0);
   velocity_linear->set_y(2.0);
@@ -347,17 +364,13 @@ TEST(RobotStateConversions, TestGetOdomTwist) {
 
   // THEN the output twist matches the velocity in the robot state
   EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(1.0, 2.0, 3.0, 1.0, 2.0, 3.0));
-  EXPECT_THAT(out->header.stamp, AllOf(Field("sec", &builtin_interfaces::msg::Time::sec, Eq(98)),
-                                       Field("nanosec", &builtin_interfaces::msg::Time::nanosec, Eq(0u))));
+  EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
 }
 
 TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
   // GIVEN a RobotState where there is some kinematic state info but no info about the velocity of the body in the odom
   // frame
   ::bosdyn::api::RobotState robot_state;
-  auto* acquisition_timestamp = robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp();
-  acquisition_timestamp->set_seconds(99);
-  acquisition_timestamp->set_nanos(0);
 
   // GIVEN some nominal clock skew
   google::protobuf::Duration clock_skew;
@@ -378,7 +391,10 @@ TEST(RobotStateConversions, TestGetOdomInOdomFrame) {
   // GIVEN a RobotState
   ::bosdyn::api::RobotState robot_state;
   // GIVEN a nonzero acquisition timestamp
-  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(99);
+  timestamp.set_nanos(0);
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
   // GIVEN the odom frame is the root of the frame tree
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "odom");
   // GIVEN the body frame is at a nonzero pose relative to the odom frame
@@ -400,6 +416,7 @@ TEST(RobotStateConversions, TestGetOdomInOdomFrame) {
   // frame IDs
   EXPECT_THAT(out->header.frame_id, StrEq("prefix/odom"));
   EXPECT_THAT(out->child_frame_id, StrEq("prefix/body"));
+  EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
 
   // THEN the Odometry ROS message contains the same pose and twist data as the RobotState
   EXPECT_THAT(out->pose.pose, GeometryMsgsPoseEq(1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0));
@@ -414,7 +431,10 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   // GIVEN a RobotState that is fully populated with the required data about the robot's pose and velocity in the vision
   // frame
   ::bosdyn::api::RobotState robot_state;
-  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(99);
+  timestamp.set_nanos(0);
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
   addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "vision");
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
@@ -432,6 +452,7 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   // frame IDs
   EXPECT_THAT(out->header.frame_id, StrEq("prefix/vision"));
   EXPECT_THAT(out->child_frame_id, StrEq("prefix/body"));
+  EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
 
   // THEN the Odometry ROS message contains the same pose and twist data as the RobotState
   EXPECT_THAT(out->pose.pose, GeometryMsgsPoseEq(1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0));
@@ -465,7 +486,10 @@ TEST(RobotStateConversions, TestGetOdomMissingBodyVelocityOdom) {
 
   // GIVEN a RobotState that does not contain info about the body velocity
   ::bosdyn::api::RobotState robot_state;
-  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(99);
+  timestamp.set_nanos(0);
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "odom");
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
                0.0, 0.0, 0.0);
@@ -482,7 +506,10 @@ TEST(RobotStateConversions, TestGetOdomMissingBodyVelocityOdom) {
 TEST(RobotStateConversions, TestGetOdomMissingTransforms) {
   // GIVEN a RobotState that does not contain a transform snapshot
   ::bosdyn::api::RobotState robot_state;
-  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(99);
+  timestamp.set_nanos(0);
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
   addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
 
   google::protobuf::Duration clock_skew;
@@ -502,7 +529,10 @@ TEST(RobotStateConversions, TestGetOdomInvalidTransformSnapshot) {
 
   // GIVEN a RobotState that contains a transform snapshot which is invalid because it does not have a root frame
   ::bosdyn::api::RobotState robot_state;
-  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), 99, 0);
+  google::protobuf::Timestamp timestamp;
+  timestamp.set_seconds(99);
+  timestamp.set_nanos(0);
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
   addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
                1.0, 0.0, 0.0, 0.0);
@@ -552,9 +582,7 @@ TEST(RobotStateConversions, TestGetPowerState) {
   EXPECT_THAT(out->motor_power_state, Eq(spot_msgs::msg::PowerState::STATE_ON));
   EXPECT_THAT(out->shore_power_state, Eq(spot_msgs::msg::PowerState::STATE_ON_SHORE_POWER));
   EXPECT_THAT(out->locomotion_charge_percentage, DoubleEq(75.0));
-  EXPECT_THAT(out->locomotion_estimated_runtime,
-              AllOf(Field("sec", &builtin_interfaces::msg::Duration::sec, Eq(255)),
-                    Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, Eq(0u))));
+  EXPECT_THAT(out->locomotion_estimated_runtime, DurationEq(estimated_runtime));
   EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(robot_state.power_state().timestamp(), clock_skew));
 }
 
@@ -733,6 +761,7 @@ TEST(RobotStateConversions, TestGetEndEffectorForce) {
   force.set_z(3.0);
   robot_state.mutable_manipulator_state()->mutable_estimated_end_effector_force_in_hand()->CopyFrom(force);
   robot_state.mutable_kinematic_state()->mutable_acquisition_timestamp()->CopyFrom(timestamp);
+  addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
 
   // WHEN we create a Vector3Stamped ROS message to represent the estimated end effector force
   const auto out = getEndEffectorForce(robot_state, clock_skew, prefix);
@@ -741,6 +770,7 @@ TEST(RobotStateConversions, TestGetEndEffectorForce) {
   ASSERT_THAT(out.has_value(), IsTrue());
   EXPECT_THAT(out->header.frame_id, StrEq("prefix/hand"));
   EXPECT_THAT(out->header.stamp.sec, Eq(9));
+  EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
   EXPECT_THAT(out->vector, GeometryMsgsVector3Eq(force.x(), force.y(), force.z()));
 }
 
@@ -788,13 +818,13 @@ TEST(RobotStateConversions, TestGetBehaviorFaultState) {
   ASSERT_THAT(out->faults, SizeIs(2));
   // THEN the first fault matches the first one added to the RobotState, and the clock skew is applied correctly
   const auto first_fault = out->faults.at(0);
-  EXPECT_THAT(first_fault.behavior_fault_id, Eq(11u));
+  EXPECT_THAT(first_fault.behavior_fault_id, Eq(11U));
   EXPECT_THAT(first_fault.status, Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_CLEARABLE));
   EXPECT_THAT(first_fault.cause, Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_HARDWARE));
   EXPECT_THAT(first_fault.header, ClockSkewIsAppliedToHeader(fault_state_first->onset_timestamp(), clock_skew));
   // THEN the second fault matches the second one added to the RobotState, and the clock skew is applied correctly
   const auto second_fault = out->faults.at(1);
-  EXPECT_THAT(second_fault.behavior_fault_id, Eq(12u));
+  EXPECT_THAT(second_fault.behavior_fault_id, Eq(12U));
   EXPECT_THAT(second_fault.status, Eq(::bosdyn::api::BehaviorFault_Status::BehaviorFault_Status_STATUS_UNCLEARABLE));
   EXPECT_THAT(second_fault.cause, Eq(::bosdyn::api::BehaviorFault_Cause::BehaviorFault_Cause_CAUSE_FALL));
   EXPECT_THAT(second_fault.header, ClockSkewIsAppliedToHeader(fault_state_second->onset_timestamp(), clock_skew));
