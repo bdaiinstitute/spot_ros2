@@ -4,7 +4,7 @@
   <name>spot_driver</name>
   <version>0.0.0</version>
   <description>ROS 2 driver nodes for Spot.</description>
-  <maintainer email="engineering@theaiinstitute.com">BD AI Institute</maintainer>
+  <maintainer email="engineering@theaiinstitute.com">AI Institute</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
