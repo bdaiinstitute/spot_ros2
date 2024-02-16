@@ -9,12 +9,13 @@ from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.utilities import fqn, namespace_with
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import SE2Pose
+from bosdyn_msgs.msg import MutateWorldObjectRequestAction
 from rclpy.node import Node
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
 from spot_msgs.action import RobotCommand  # type: ignore
-from spot_msgs.srv import ListWorldObjects  # type: ignore
+from spot_msgs.srv import ListWorldObjects, MutateWorldObject  # type: ignore
 
 # Where we want the robot to walk to relative to itself
 ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
@@ -42,6 +43,10 @@ class NoGoRegion:
             ListWorldObjects, namespace_with(self._robot_name, "list_world_objects")
         )
 
+        self._mutuate_wo_client = node.create_client(
+            MutateWorldObject, namespace_with(self._robot_name, "mutate_world_object")
+        )
+
     def initialize_robot(self) -> bool:
         self._logger.info(f"Robot name: {self._robot_name}")
         self._logger.info("Claiming robot")
@@ -59,14 +64,33 @@ class NoGoRegion:
 
     def list_current_world_objects(self) -> None:
         request = ListWorldObjects.Request()
-        print("Calling list world object")
+        print("Listing world objects:")
         future = self._list_wo_client.call_async(request)
         if not wait_for_future(future, context=self.node.context):
             return
-        print("Getting result")
         response = future.result()
         for wo in response.response.world_objects:
-            print(f"\n\nID: {wo.id} name: {wo.name}\n{wo}")
+            print(f"ID: {wo.id} name: {wo.name}")
+            # print out nogo properties
+            if wo.nogo_region_properties_is_set:
+                print(f"Nogo properties set to:{wo.nogo_region_properties}\n\n")
+
+    def add_nogo_region(self, name: str = "nogo_world_object", lifetime: int = 10) -> bool:
+        request = MutateWorldObject.Request()
+        request.request.mutation.action.value = MutateWorldObjectRequestAction.ACTION_ADD
+        request.request.mutation_is_set = True  # TODO If this is false, driver will crash. should handle in driver
+        request.request.mutation.object.name = name  # TODO this doesn't seem to actually get set when listing
+        # TODO figure out how to make it persist infinitely
+        request.request.mutation.object.object_lifetime.sec = lifetime
+        request.request.mutation.object.object_lifetime_is_set = True
+        # set NOGO properties
+        future = self._mutuate_wo_client.call_async(request)
+        if not wait_for_future(future, context=self.node.context):
+            return False
+        response = future.result()
+        print(f"Added a world object with ID {response.response.mutated_object_id}")
+        # TODO check if the world object was added successfully
+        return True
 
 
 def cli() -> argparse.ArgumentParser:
@@ -79,6 +103,8 @@ def cli() -> argparse.ArgumentParser:
 def main(args: argparse.Namespace) -> int:
     nogo = NoGoRegion(args.robot, main.node)
     nogo.initialize_robot()
+    nogo.list_current_world_objects()
+    nogo.add_nogo_region()
     nogo.list_current_world_objects()
     return 0
 
