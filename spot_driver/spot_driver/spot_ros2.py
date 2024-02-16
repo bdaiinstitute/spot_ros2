@@ -2684,10 +2684,9 @@ class SpotROS(Node):
     ) -> MutateWorldObject.Response:
         proto_request = world_object_pb2.MutateWorldObjectRequest()
         conv.convert_bosdyn_msgs_mutate_world_object_request_to_proto(request.request, proto_request)
-        self.get_logger().info(f"Request: {proto_request}")
+        self.get_logger().info("Requesting world object mutation")
         if self.spot_wrapper:
             proto_response = self.spot_wrapper.mutate_world_object(proto_request)
-            self.get_logger().info(f"Response: {proto_response}")
             conv.convert_proto_to_bosdyn_msgs_mutate_world_object_response(proto_response, response.response)
         return response
 
