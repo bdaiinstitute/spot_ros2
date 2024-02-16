@@ -838,7 +838,7 @@ class SpotROS(Node):
         self.create_service(
             MutateWorldObject,
             "mutate_world_object",
-            self.handle_mutate_world_objects,
+            self.handle_mutate_world_object,
             callback_group=self.group,
         )
 
@@ -2681,8 +2681,14 @@ class SpotROS(Node):
 
     def handle_mutate_world_object(
         self, request: MutateWorldObject.Request, response: MutateWorldObject.Response
-    ) -> Optional[MutateWorldObject.Response]:
-        # TODO
+    ) -> MutateWorldObject.Response:
+        proto_request = world_object_pb2.MutateWorldObjectRequest()
+        conv.convert_bosdyn_msgs_mutate_world_object_request_to_proto(request.request, proto_request)
+        self.get_logger().info(f"Request: {proto_request}")
+        if self.spot_wrapper:
+            proto_response = self.spot_wrapper.mutate_world_object(proto_request)
+            self.get_logger().info(f"Response: {proto_response}")
+            conv.convert_proto_to_bosdyn_msgs_mutate_world_object_response(proto_response, response.response)
         return response
 
     def handle_navigate_to_feedback(self) -> None:
