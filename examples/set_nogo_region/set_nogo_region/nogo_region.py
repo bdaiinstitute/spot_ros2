@@ -20,6 +20,9 @@ from spot_msgs.srv import ListWorldObjects, MutateWorldObject  # type: ignore
 # Where we want the robot to walk to relative to itself
 ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
 
+# relevant example from the spot SDK:
+# https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/user_nogo_regions/user_nogo_regions.py
+
 
 class NoGoRegion:
     def __init__(self, robot_name: Optional[str] = None, node: Optional[Node] = None) -> None:
@@ -73,17 +76,27 @@ class NoGoRegion:
             print(f"ID: {wo.id} name: {wo.name}")
             # print out nogo properties
             if wo.nogo_region_properties_is_set:
-                print(f"Nogo properties set to:{wo.nogo_region_properties}\n\n")
+                print(f"\tNogo properties set to: {wo.nogo_region_properties}")
 
-    def add_nogo_region(self, name: str = "nogo_world_object", lifetime: int = 10) -> bool:
+    def add_nogo_region(self, name: str = "nogo_region", lifetime: int = 10) -> bool:
         request = MutateWorldObject.Request()
         request.request.mutation.action.value = MutateWorldObjectRequestAction.ACTION_ADD
         request.request.mutation_is_set = True  # TODO If this is false, driver will crash. should handle in driver
-        request.request.mutation.object.name = name  # TODO this doesn't seem to actually get set when listing
+        request.request.mutation.object.name = name
         # TODO figure out how to make it persist infinitely
         request.request.mutation.object.object_lifetime.sec = lifetime
         request.request.mutation.object.object_lifetime_is_set = True
-        # set NOGO properties
+        # set NOGO properties. this should set a 1x1 nogo region 2m in front of Spot
+        request.request.mutation.object.nogo_region_properties.region.box.box.size.x = 1.0
+        request.request.mutation.object.nogo_region_properties.region.box.box.size.y = 1.0
+        request.request.mutation.object.nogo_region_properties.region.box.box.size_is_set = True
+        request.request.mutation.object.nogo_region_properties.region.box.frame_name = VISION_FRAME_NAME
+        request.request.mutation.object.nogo_region_properties.region.box.frame_name_tform_box.position.x = 2.0
+        request.request.mutation.object.nogo_region_properties.region.box.frame_name_tform_box_is_set = True
+        request.request.mutation.object.nogo_region_properties.region.region_choice = 1  # TODO 1=set 0=unset
+        request.request.mutation.object.nogo_region_properties_is_set = True
+        request.request.mutation.object_is_set = True
+        request.request.mutation_is_set = True
         future = self._mutuate_wo_client.call_async(request)
         if not wait_for_future(future, context=self.node.context):
             return False
