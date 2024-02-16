@@ -277,6 +277,15 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(robot_state_publisher)
 
+    spot_alert_node = launch_ros.actions.Node(
+        package="spot_driver",
+        executable="spot_alerts",
+        name="spot_alerts",
+        output="screen",
+        namespace=spot_name,
+    )
+    ld.add_action(spot_alert_node)
+
     rviz = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/rviz.launch.py"]),
         launch_arguments={
