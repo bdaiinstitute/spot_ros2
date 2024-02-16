@@ -58,6 +58,7 @@ add_library(spot_api
   src/kinematic/kinematic_node.cpp
   src/kinematic/kinematic_service.cpp
   src/kinematic/kinematic_middleware_handle.cpp
+  src/object_sync/object_synchronizer.cpp
   src/robot_state/state_middleware_handle.cpp
   src/robot_state/state_publisher.cpp
   src/robot_state/state_publisher_node.cpp
