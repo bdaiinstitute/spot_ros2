@@ -1,7 +1,9 @@
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/imgcodecs.hpp>
 // #include "opencv2/highgui.hpp"
 #include <opencv2/stitching.hpp>
 #include <iostream>
-#include <opencv2/imgcodecs.hpp>
+#include <opencv2/stitching/detail/camera.hpp>
 using namespace std;
 using namespace cv;
 bool divide_images = false;
@@ -10,16 +12,42 @@ vector<Mat> imgs;
 string result_name = "result.jpg";
 void printUsage(char** argv);
 int parseCmdArgs(int argc, char** argv);
+/*
+- Translation: [-0.003, 0.061, 0.040]
+- Rotation: in Quaternion [0.519, -0.033, 0.013, 0.854]
+- Rotation: in RPY (radian) [1.093, -0.069, -0.012]
+- Rotation: in RPY (degree) [62.613, -3.978, -0.690]
+- Matrix:
+  0.998 -0.056 -0.043 -0.003
+ -0.012  0.461 -0.887  0.061
+  0.069  0.886  0.459  0.040
+  0.000  0.000  0.000  1.000
+*/
+cv::detail::CameraParams frontleft;
+std::vector<double> r = {0.998, -0.056, -0.043, -0.012,  0.461, -0.887,  0.069,  0.886,  0.459 };
+frontleft.R = cv::Mat(3, 3, CV_32F, r.data());
+frontleft.t =  {-0.003, 0.061, 0.040}; 
+cv::detail::CameraParams frontright;
+
+std::vector<cv::detail::CameraParams> cameras = {frontleft, frontright};
 int main(int argc, char* argv[])
 {
     int retval = parseCmdArgs(argc, argv);
     if (retval) return EXIT_FAILURE;
     Mat pano;
     Ptr<Stitcher> stitcher = Stitcher::create(mode);
-    Stitcher::Status status = stitcher->stitch(imgs, pano);
-    if (status != Stitcher::OK)
+    // Stitcher::Status status = stitcher->stitch(imgs, pano);
+    auto const status_tf = stitcher->setTransform(imgs, cameras);
+    if (status_tf != Stitcher::OK)
     {
-        cout << "Can't stitch images, error code = " << int(status) << endl;
+        cout << "Can't set transform, error code = " << int(status_tf) << endl;
+        return EXIT_FAILURE;
+    }
+
+    auto const status_pa = stitcher->composePanorama(pano);
+    if (status_pa != Stitcher::OK)
+    {
+        cout << "Can't compose pano, error code = " << int(status_pa) << endl;
         return EXIT_FAILURE;
     }
     imwrite(result_name, pano);
@@ -84,6 +112,9 @@ int parseCmdArgs(int argc, char** argv)
             {
                 cout << "Can't read image '" << argv[i] << "'\n";
                 return EXIT_FAILURE;
+            }
+            else {
+                cout << "Image read: " << argv[i] << "'\n";
             }
             if (divide_images)
             {
