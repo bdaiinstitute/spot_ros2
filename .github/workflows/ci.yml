@@ -104,7 +104,7 @@ jobs:
           flag-name: unittests-python
           parallel: true
           debug: true
-          files: $(find ../../ -name "coverage.xml" -type f)       
+          files: $(find ../../ -name "coverage.xml" -type f)
       - name: Upload cpp coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
@@ -114,10 +114,10 @@ jobs:
           debug: true
           files: ../../coverage_spot_driver.info
           format: lcov
-      - name: Aggregate coverage 
+      - name: Aggregate coverage
         uses: coverallsapp/github-action@v2
         with:
-          parallel-finished: true 
+          parallel-finished: true
           carryforward: "unittests-python, unittests-cpp"
       - name: Report on test results
         run: colcon test-result --all --verbose
