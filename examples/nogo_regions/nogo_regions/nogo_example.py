@@ -43,6 +43,9 @@ class NoGoRegion:
         self._vision_frame_name = namespace_with(self._robot_name, VISION_FRAME_NAME)
         self._tf_listener = TFListenerWrapper(node)
         self._tf_listener.wait_for_a_tform_b(self._body_frame_name, self._vision_frame_name)
+        self.world_t_robot_init = self._tf_listener.lookup_a_tform_b(
+            self._vision_frame_name, self._body_frame_name
+        ).get_closest_se2_transform()
 
         self._robot = SimpleSpotCommander(self._robot_name, node)
         self._robot_command_client = ActionClientWrapper(
@@ -51,14 +54,9 @@ class NoGoRegion:
         self._list_wo_client = node.create_client(
             ListWorldObjects, namespace_with(self._robot_name, "list_world_objects")
         )
-
         self._mutuate_wo_client = node.create_client(
             MutateWorldObject, namespace_with(self._robot_name, "mutate_world_object")
         )
-
-        self.world_t_robot_init = self._tf_listener.lookup_a_tform_b(
-            self._vision_frame_name, self._body_frame_name
-        ).get_closest_se2_transform()
 
     def initialize_robot(self) -> bool:
         self._logger.info(f"Robot name: {self._robot_name}")
@@ -92,8 +90,6 @@ class NoGoRegion:
         response = future.result()
         for wo in response.response.world_objects:
             print(f"\tID: {wo.id} name: {wo.name}")
-            if wo.nogo_region_properties_is_set:
-                print(wo.nogo_region_properties)
 
     def add_nogo_region(
         self,
@@ -178,16 +174,12 @@ class NoGoRegion:
             print(f"Deleting the nogo region failed with response status {response.response.status.value}")
             return False
 
-    def try_walking_forward(self, distance: float = 2.0) -> None:
+    def try_walking_forward(self, x_offset: float) -> None:
         if not self._walk:
             print("Not attempting to walk forward")
             return None
         print("Try walking forward")
-        # world_t_robot = self._tf_listener.lookup_a_tform_b(
-        #     self._vision_frame_name, self._body_frame_name
-        # ).get_closest_se2_transform()
-        # walk forward 2m
-        world_t_goal = self.world_t_robot_init * SE2Pose(x=distance, y=0.0, angle=0.0)
+        world_t_goal = self.world_t_robot_init * SE2Pose(x=x_offset, y=0.0, angle=0.0)
         print(f"World t goal {world_t_goal}")
         proto_goal = RobotCommandBuilder.synchro_se2_trajectory_point_command(
             goal_x=world_t_goal.x,
@@ -223,13 +215,13 @@ def main(args: argparse.Namespace) -> int:
     # list objects to see if it was added successfully
     nogo.list_current_world_objects()
     # try walking forward
-    nogo.try_walking_forward(distance=1.0)
+    nogo.try_walking_forward(x_offset=1.0)
     # if the nogo region was set successfully, delete it
     nogo.delete_nogo_region(nogo_id)
     # list objects one final time to make sure that it was deleted
     nogo.list_current_world_objects()
     # try walking forward again
-    nogo.try_walking_forward(distance=2.0)
+    nogo.try_walking_forward(x_offset=2.0)
     return 0
 
 

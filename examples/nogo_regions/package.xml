@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>set_nogo_region</name>
+  <name>nogo_regions</name>
   <version>0.0.0</version>
-  <description>Example setting a no-go region for Spot</description>
+  <description>Example of using no-go regions with Spot</description>
   <maintainer email="engineering@theaiinstitute.com">The AI Institute</maintainer>
   <license>MIT</license>
 

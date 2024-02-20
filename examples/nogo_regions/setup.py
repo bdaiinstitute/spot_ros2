@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = "set_nogo_region"
+package_name = "nogo_regions"
 
 setup(
     name=package_name,
@@ -14,12 +14,12 @@ setup(
     zip_safe=True,
     maintainer="The AI Institute",
     maintainer_email="engineering@theaiinstitute.com",
-    description="Setting a no-go region for Spot",
+    description="Example of using no-go regions with Spot",
     license="MIT",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "set_nogo = set_nogo_region.nogo_region:main",
+            "nogo_example = nogo_regions.nogo_example:main",
         ],
     },
 )
