@@ -25,7 +25,7 @@ namespace spot_ros2 {
 class StatePublisher {
  public:
   /**
-   * @brief A handle that enables dependency injection of ROS and rclcpp::node operations
+   * @brief A handle that enables dependency injection of ROS and rclcpp::Node operations
    */
   class MiddlewareHandle {
    public:
@@ -38,18 +38,15 @@ class StatePublisher {
    * @details As opposed to other Spot Publishers, initialization takes place inside of the constructor because
    * initialization cannot fail.
    *
-   * @param state_client_interface A shared_ptr to a StateClientInterface used to request robot state information from
-   * Spot through the Spot API.
-   * @param time_sync_api  A shared_ptr to a TymeSyncApi used to convert message timestamps which are relative to Spot's
-   * clock to be relative to the host's clock.
-   * @param middleware_handle A unique_ptr to an instance of a class derived from StatePublisher::MiddlewareHandle which
-   * will be used to publish robot state messages.
-   * @param logger_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used to
-   * log info and error messages.
-   * @param tf_interface A unique_ptr to an instance of a class derived from TfInterfaceBase which will be used to
-   * publish the transforms contained in Spot's robot state.
-   * @param timer_interface A unique_ptr to an instance of a class derived from TimerInterfaceBase which will be used to
-   * repeatedly trigger requests for updated robot states.
+   * @param state_client_interface Requests robot state information from Spot through the Spot API.
+   * @param time_sync_api  Converts message timestamps which are relative to Spot's clock to be relative to the host's
+   * clock.
+   * @param middleware_handle Publishes robot state info to the middleware.
+   * @param parameter_interface Retrieves runtime-configurable settings, such as the preferred base frame.
+   * @param logger_interface Logs error messages if requesting, processing, and publishing the robot state info does not
+   * succeed.
+   * @param tf_interface Publishes the dynamic transforms in Spot's robot state to TF.
+   * @param timer_interface Repeatedly triggers timerCallback() using the middleware's clock.
    *
    */
   StatePublisher(const std::shared_ptr<StateClientInterface>& state_client_interface,
@@ -74,15 +71,9 @@ class StatePublisher {
   std::shared_ptr<StateClientInterface> state_client_interface_;
   std::shared_ptr<TimeSyncApi> time_sync_interface_;
   std::unique_ptr<MiddlewareHandle> middleware_handle_;
-
-  /** @brief instance of ParameterInterfaceBase to get ROS parameters*/
   std::unique_ptr<ParameterInterfaceBase> parameter_interface_;
-  /** @brief instance of LoggerInterfaceBase to send ROS log messages*/
   std::unique_ptr<LoggerInterfaceBase> logger_interface_;
-  /** @brief instance of TfInterfaceBase to update static transforms*/
   std::unique_ptr<TfInterfaceBase> tf_interface_;
-  /** @brief instance of TimerInterfaceBase to create callback timer*/
   std::unique_ptr<TimerInterfaceBase> timer_interface_;
 };
-
 }  // namespace spot_ros2

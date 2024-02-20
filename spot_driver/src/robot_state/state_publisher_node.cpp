@@ -21,14 +21,14 @@ namespace spot_ros2 {
 
 StatePublisherNode::StatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_base_interface,
                                        std::unique_ptr<SpotApi> spot_api,
-                                       std::unique_ptr<StatePublisher::MiddlewareHandle> mw_handle,
+                                       std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                        std::unique_ptr<TfInterfaceBase> tf_interface,
                                        std::unique_ptr<TimerInterfaceBase> timer_interface)
     : node_base_interface_{std::move(node_base_interface)} {
-  initialize(std::move(spot_api), std::move(mw_handle), std::move(parameter_interface), std::move(logger_interface),
-             std::move(tf_interface), std::move(timer_interface));
+  initialize(std::move(spot_api), std::move(middleware_handle), std::move(parameter_interface),
+             std::move(logger_interface), std::move(tf_interface), std::move(timer_interface));
 }
 
 StatePublisherNode::StatePublisherNode(const rclcpp::NodeOptions& node_options) {
@@ -47,7 +47,7 @@ StatePublisherNode::StatePublisherNode(const rclcpp::NodeOptions& node_options) 
 }
 
 void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
-                                    std::unique_ptr<StatePublisher::MiddlewareHandle> mw_handle,
+                                    std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
                                     std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                     std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                     std::unique_ptr<TfInterfaceBase> tf_interface,
@@ -73,7 +73,7 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
   }
 
   internal_ = std::make_unique<StatePublisher>(
-      spot_api_->stateClientInterface(), spot_api_->timeSyncInterface(), std::move(mw_handle),
+      spot_api_->stateClientInterface(), spot_api_->timeSyncInterface(), std::move(middleware_handle),
       std::move(parameter_interface), std::move(logger_interface), std::move(tf_interface), std::move(timer_interface));
 }
 

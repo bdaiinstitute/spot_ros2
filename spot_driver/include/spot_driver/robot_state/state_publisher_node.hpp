@@ -21,23 +21,21 @@ class StatePublisherNode {
   /**
    * @brief Constructor for StatePublisherNode.
    * @details This constructor takes each interface as a pointer to the interface's base class, which enables dependency
-   * inversion for improved testability
+   * inversion for improved testability.
    *
-   * @param node_base_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used
-   * to access StatePublisherNode's ROS node when it's being spun by an executor. StatePublisherNode will take ownership
-   * of this unique_ptr.
-   * @param spot_api A unique_ptr to an instance of a class derived from SpotApi which will be used to connect to Spot.
-   * @param mw_handle A unique_ptr to an instance of a class derived from StatePublisher::MiddlewareHandle which will be
-   * used to publish robot state messages.
-   * @param logger_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used to
-   * log info and error messages.
-   * @param tf_interface A unique_ptr to an instance of a class derived from TfInterfaceBase which will be used to
-   * publish the transforms contained in Spot's robot state.
-   * @param timer_interface A unique_ptr to an instance of a class derived from TimerInterfaceBase which will be used to
-   * repeatedly trigger requests for updated robot states.
+   * @param node_base_interface Exposes the NodeBaseInterface of this class's rclcpp::Node so this class can be spun by
+   * an rclcpp executor.
+   * @param spot_api Connects to Spot and exposes interfaces to request data from it.
+   * @param middleware_handle Publishes robot state info to the middleware.
+   * @param parameter_interface Retrieves runtime configuration settings needed to connect to and communicate with Spot.
+   * @param logger_interface Logs error messages if requesting, processing, and publishing the robot state info does not
+   * succeed.
+   * @param tf_interface Publishes the dynamic transforms in Spot's robot state to TF.
+   * @param timer_interface Repeatedly triggers timerCallback() using the middleware's clock.
+   *
    */
   StatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_base_interface, std::unique_ptr<SpotApi> spot_api,
-                     std::unique_ptr<StatePublisher::MiddlewareHandle> mw_handle,
+                     std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
                      std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                      std::unique_ptr<LoggerInterfaceBase> logger_interface,
                      std::unique_ptr<TfInterfaceBase> tf_interface,
@@ -65,21 +63,20 @@ class StatePublisherNode {
   /**
    * @brief Connect to and authenticate with Spot, and then create the StatePublisher class member.
    *
-   * @param node_base_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used
-   * to access StatePublisherNode's ROS node when it's being spun by an executor.
-   * @param spot_api A unique_ptr to an instance of a class derived from SpotApi which will be used to connect to Spot.
-   * @param mw_handle A unique_ptr to an instance of a class derived from StatePublisher::MiddlewareHandle which will be
-   * used to publish robot state messages.
-   * @param logger_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used to
-   * log info and error messages.
-   * @param tf_interface A unique_ptr to an instance of a class derived from TfInterfaceBase which will be used to
-   * publish the transforms contained in Spot's robot state.
-   * @param timer_interface A unique_ptr to an instance of a class derived from TimerInterfaceBase which will be used to
-   * repeatedly trigger requests for updated robot states.
+   * @param node_base_interface Exposes the NodeBaseInterface of this class's rclcpp::Node so this class can be spun by
+   * an rclcpp executor.
+   * @param spot_api Connects to Spot and exposes interfaces to request data from it.
+   * @param middleware_handle Publishes robot state info to the middleware.
+   * @param parameter_interface Retrieves runtime configuration settings needed to connect to and communicate with Spot.
+   * @param logger_interface Logs error messages if requesting, processing, and publishing the robot state info does not
+   * succeed.
+   * @param tf_interface Publishes the dynamic transforms in Spot's robot state to TF.
+   * @param timer_interface Repeatedly triggers timerCallback() using the middleware's clock.
    *
    * @throw std::runtime_error if the Spot API fails to create a connection to Spot or fails to authenticate with Spot.
    */
-  void initialize(std::unique_ptr<SpotApi> spot_api, std::unique_ptr<StatePublisher::MiddlewareHandle> mw_handle,
+  void initialize(std::unique_ptr<SpotApi> spot_api,
+                  std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
                   std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                   std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,
                   std::unique_ptr<TimerInterfaceBase> timer_interface);
