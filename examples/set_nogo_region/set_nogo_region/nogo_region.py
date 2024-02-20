@@ -9,6 +9,7 @@ from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.utilities import fqn, namespace_with
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import SE2Pose
+from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.msg import (
     MutateWorldObjectRequestAction,
     MutateWorldObjectResponseStatus,
@@ -20,24 +21,23 @@ from rclpy.node import Node
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
+import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import ListWorldObjects, MutateWorldObject  # type: ignore
-
-# Where we are placing the NOGO region relative to the starting pose of the robot
-ROBOT_T_NOGO = SE2Pose(1.0, 0.0, 0.0)
 
 # relevant example from the spot SDK:
 # https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/user_nogo_regions/user_nogo_regions.py
 
 
 class NoGoRegion:
-    def __init__(self, robot_name: Optional[str] = None, node: Optional[Node] = None) -> None:
+    def __init__(self, robot_name: Optional[str] = None, walk: bool = False, node: Optional[Node] = None) -> None:
         self._logger = logging.getLogger(fqn(self.__class__))
         node = node or ros_scope.node()
         if node is None:
             raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
         self.node = node
         self._robot_name = robot_name
+        self._walk = walk
 
         self._body_frame_name = namespace_with(self._robot_name, BODY_FRAME_NAME)
         self._vision_frame_name = namespace_with(self._robot_name, VISION_FRAME_NAME)
@@ -69,6 +69,14 @@ class NoGoRegion:
         if not result.success:
             self._logger.error("Unable to power on robot message was " + result.message)
             return False
+        # if we are testing with walking, stand the robot up
+        if self._walk:
+            result = self._robot.command("stand")
+            if not result.success:
+                self._logger.error("Robot did not stand message was " + result.message)
+                return False
+            self._logger.info("Successfully stood up.")
+            return True
         return True
 
     def list_current_world_objects(self) -> None:
@@ -104,6 +112,10 @@ class NoGoRegion:
             the id of the newly created world object, or None if the request failed
         """
         request = MutateWorldObject.Request()
+        # try setting the header?
+        request.request.header.request_timestamp = self.node.get_clock().now().to_msg()
+        request.request.header.request_timestamp_is_set = True
+        # fill in mutation action
         request.request.mutation.action.value = MutateWorldObjectRequestAction.ACTION_ADD
         request.request.mutation_is_set = True  # TODO If this is false, driver will crash. should handle in driver?
         # create the fake world object
@@ -113,6 +125,9 @@ class NoGoRegion:
         # see https://dev.bostondynamics.com/protos/bosdyn/api/proto_reference#bosdyn-api-WorldObject
         wo.object_lifetime.sec = lifetime
         wo.object_lifetime_is_set = True
+        # set aquisition time
+        wo.acquisition_time = self.node.get_clock().now().to_msg()
+        wo.acquisition_time_is_set = True
         # set no-go box
         wo.nogo_region_properties.region.box.box.size.x = box_x
         wo.nogo_region_properties.region.box.box.size.y = box_y
@@ -159,30 +174,57 @@ class NoGoRegion:
             print(f"Deleting the nogo region failed with response status {response.response.status.value}")
             return False
 
+    def try_walking_forward(self, distance: float = 2.0) -> None:
+        if not self._walk:
+            print("Not attempting to walk forward")
+            return None
+        print("Try walking forward")
+        world_t_robot = self._tf_listener.lookup_a_tform_b(
+            self._vision_frame_name, self._body_frame_name
+        ).get_closest_se2_transform()
+        # walk forward 2m
+        world_t_goal = world_t_robot * SE2Pose(x=distance, y=0.0, angle=0.0)
+        proto_goal = RobotCommandBuilder.synchro_se2_trajectory_point_command(
+            goal_x=world_t_goal.x,
+            goal_y=world_t_goal.y,
+            goal_heading=world_t_goal.angle,
+            frame_name=VISION_FRAME_NAME,
+        )
+        action_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(proto_goal, action_goal.command)
+        self._robot_command_client.send_goal_and_wait("walk_forward", action_goal)
+        self._logger.info("Successfully walked forward")
+
 
 def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--robot", type=str, default=None)
+    parser.add_argument("--walk", type=bool, default=False)
     return parser
 
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> int:
-    nogo = NoGoRegion(args.robot, main.node)
+    nogo = NoGoRegion(args.robot, args.walk, main.node)
     nogo.initialize_robot()
     # list the world objects before we make any modification
     nogo.list_current_world_objects()
-    # add nogo region that is a 1x1 box that is 2m in front of Spot's vision frame.
+    # add nogo region that is a 1mx1m box that is 2m in front of Spot's vision frame.
     nogo_id = nogo.add_nogo_region(
-        box_x=1.0, box_y=1.0, frame_name=VISION_FRAME_NAME, frame_t_box=Pose(position=Point(x=2.0))
+        box_x=0.2, box_y=10.0, frame_name=VISION_FRAME_NAME, frame_t_box=Pose(position=Point(x=0.2))
     )
+    if not nogo_id:
+        return 0
     # list objects to see if it was added successfully
     nogo.list_current_world_objects()
-    if nogo_id:
-        # if the nogo region was set successfully, delete it
-        nogo.delete_nogo_region(nogo_id)
-        # list objects one final time to make sure that it was deleted
-        nogo.list_current_world_objects()
+    # try walking forward
+    nogo.try_walking_forward(distance=1.0)
+    # if the nogo region was set successfully, delete it
+    nogo.delete_nogo_region(nogo_id)
+    # list objects one final time to make sure that it was deleted
+    nogo.list_current_world_objects()
+    # try walking forward again
+    nogo.try_walking_forward(distance=1.0)
     return 0
 
 
