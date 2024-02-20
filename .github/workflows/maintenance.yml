@@ -1,0 +1,26 @@
+name: spot_ros2 CI maintenance
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"  # once a week
+
+env:
+  ORG_NAME: bdaiinstitute
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: spot_ros2_jammy_humble
+
+jobs:
+  clean-ghcr:
+    name: Prune old images from Github Container Registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old pull request images
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: ${{ env.IMAGE_NAME }}
+          skip-tags: main
+          cut-off: One week ago UTC
+          org-name: ${{ env.ORG_NAME }}
+          account-type: org
+          token: ${{ secrets.GITHUB_TOKEN }}
+          token-type: github-token
