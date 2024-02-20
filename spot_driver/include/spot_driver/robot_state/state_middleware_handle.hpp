@@ -2,9 +2,22 @@
 
 #pragma once
 
+#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/vector3_stamped.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/node.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
 #include <spot_driver/robot_state/state_publisher.hpp>
 #include <spot_driver/types.hpp>
+#include <spot_msgs/msg/battery_state_array.hpp>
+#include <spot_msgs/msg/behavior_fault_state.hpp>
+#include <spot_msgs/msg/e_stop_state_array.hpp>
+#include <spot_msgs/msg/foot_state_array.hpp>
+#include <spot_msgs/msg/power_state.hpp>
+#include <spot_msgs/msg/system_fault_state.hpp>
+#include <spot_msgs/msg/wi_fi_state.hpp>
 
 #include <memory>
 

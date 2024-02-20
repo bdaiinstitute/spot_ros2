@@ -4,6 +4,7 @@
 
 #include <gmock/gmock.h>
 
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <spot_driver/interfaces/tf_interface_base.hpp>
 #include <tl_expected/expected.hpp>
 
