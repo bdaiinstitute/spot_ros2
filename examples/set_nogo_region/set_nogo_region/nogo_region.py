@@ -15,6 +15,7 @@ from bosdyn_msgs.msg import (
     NoGoRegionPropertiesOneOfRegion,
     WorldObject,
 )
+from geometry_msgs.msg import Point, Pose
 from rclpy.node import Node
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
@@ -22,8 +23,8 @@ from utilities.tf_listener_wrapper import TFListenerWrapper
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import ListWorldObjects, MutateWorldObject  # type: ignore
 
-# Where we want the robot to walk to relative to itself
-ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
+# Where we are placing the NOGO region relative to the starting pose of the robot
+ROBOT_T_NOGO = SE2Pose(1.0, 0.0, 0.0)
 
 # relevant example from the spot SDK:
 # https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/user_nogo_regions/user_nogo_regions.py
@@ -79,25 +80,45 @@ class NoGoRegion:
         response = future.result()
         for wo in response.response.world_objects:
             print(f"\tID: {wo.id} name: {wo.name}")
+            if wo.nogo_region_properties_is_set:
+                print(wo.nogo_region_properties)
 
-    def add_nogo_region(self, name: str = "nogo_region", lifetime: int = 10) -> Optional[int]:
+    def add_nogo_region(
+        self,
+        box_x: float,
+        box_y: float,
+        frame_name: str,
+        frame_t_box: Pose,
+        region_name: str = "nogo_region",
+        lifetime: int = 300,
+    ) -> Optional[int]:
+        """Set a nogo region for Spot using the MutateWorldObject service
+
+        Args:
+            box_x, box_y: Dimensions of the nogo box, in meters
+            frame_name: Frame that the nogo box is located relative to
+            frame_t_box: The transform from frame_name to the nogo box
+            region_name: Name of the new world object created
+            lifetime: How long the nogo region will persist, in seconds
+        Returns:
+            the id of the newly created world object, or None if the request failed
+        """
         request = MutateWorldObject.Request()
         request.request.mutation.action.value = MutateWorldObjectRequestAction.ACTION_ADD
         request.request.mutation_is_set = True  # TODO If this is false, driver will crash. should handle in driver?
         # create the fake world object
         wo = WorldObject()
-        wo.name = name
-        # There is no "infinite lifetime" option unfortunately. If it is unset, there is a default.
+        wo.name = region_name
+        # There is no "infinite lifetime" option. If it is unset, there is a default.
         # see https://dev.bostondynamics.com/protos/bosdyn/api/proto_reference#bosdyn-api-WorldObject
         wo.object_lifetime.sec = lifetime
         wo.object_lifetime_is_set = True
-        # set no-go box, here choose a 1x1 region
-        wo.nogo_region_properties.region.box.box.size.x = 1.0
-        wo.nogo_region_properties.region.box.box.size.y = 1.0
+        # set no-go box
+        wo.nogo_region_properties.region.box.box.size.x = box_x
+        wo.nogo_region_properties.region.box.box.size.y = box_y
         wo.nogo_region_properties.region.box.box.size_is_set = True
-        # set box's offset to be 2m in front of Spot's vision frame
-        wo.nogo_region_properties.region.box.frame_name = VISION_FRAME_NAME
-        wo.nogo_region_properties.region.box.frame_name_tform_box.position.x = 2.0
+        wo.nogo_region_properties.region.box.frame_name = frame_name
+        wo.nogo_region_properties.region.box.frame_name_tform_box = frame_t_box
         wo.nogo_region_properties.region.box.frame_name_tform_box_is_set = True
         wo.nogo_region_properties.region.box.box_is_set = True
         # final flags
@@ -149,11 +170,18 @@ def cli() -> argparse.ArgumentParser:
 def main(args: argparse.Namespace) -> int:
     nogo = NoGoRegion(args.robot, main.node)
     nogo.initialize_robot()
+    # list the world objects before we make any modification
     nogo.list_current_world_objects()
-    nogo_id = nogo.add_nogo_region()
+    # add nogo region that is a 1x1 box that is 2m in front of Spot's vision frame.
+    nogo_id = nogo.add_nogo_region(
+        box_x=1.0, box_y=1.0, frame_name=VISION_FRAME_NAME, frame_t_box=Pose(position=Point(x=2.0))
+    )
+    # list objects to see if it was added successfully
     nogo.list_current_world_objects()
     if nogo_id:
+        # if the nogo region was set successfully, delete it
         nogo.delete_nogo_region(nogo_id)
+        # list objects one final time to make sure that it was deleted
         nogo.list_current_world_objects()
     return 0
 
