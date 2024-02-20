@@ -11,7 +11,7 @@
 
 namespace spot_ros2 {
 
-class DefaultStateClient : public StateClientInterface {
+class DefaultStateClient final : public StateClientInterface {
  public:
   /**
    * @brief constructor for DefaultRobotStateClient.

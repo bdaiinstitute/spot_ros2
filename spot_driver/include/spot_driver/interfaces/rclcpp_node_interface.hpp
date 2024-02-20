@@ -10,7 +10,7 @@ namespace spot_ros2 {
 /**
  * @brief Implementation of NodeInterfaceBase that provides the node base interface of a rclcpp Node.
  */
-class RclcppNodeInterface : public NodeInterfaceBase {
+class RclcppNodeInterface final : public NodeInterfaceBase {
  public:
   /**
    * @brief The constructor for RclcppNodeInterface.
