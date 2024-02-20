@@ -31,7 +31,6 @@ StateMiddlewareHandle::StateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>
     : node_{node},
       battery_states_publisher_{
           node_->create_publisher<spot_msgs::msg::BatteryStateArray>(kBatteryStatesTopic, makeQoS())},
-      wifi_state_publisher_{node_->create_publisher<spot_msgs::msg::WiFiState>(kWifiTopic, makeQoS())},
       foot_states_publisher_{node_->create_publisher<spot_msgs::msg::FootStateArray>(kFeetTopic, makeQoS())},
       estop_states_publisher_{node_->create_publisher<spot_msgs::msg::EStopStateArray>(kEStopTopic, makeQoS())},
       joint_state_publisher_{node_->create_publisher<sensor_msgs::msg::JointState>(kJointStatesTopic, makeQoS())},
@@ -53,7 +52,6 @@ StateMiddlewareHandle::StateMiddlewareHandle(const rclcpp::NodeOptions& node_opt
 
 void StateMiddlewareHandle::publishRobotState(const RobotStateMessages& robot_state_msgs) {
   battery_states_publisher_->publish(robot_state_msgs.battery_states);
-  wifi_state_publisher_->publish(robot_state_msgs.wifi_state);
   foot_states_publisher_->publish(robot_state_msgs.foot_state);
   estop_states_publisher_->publish(robot_state_msgs.estop_states);
 

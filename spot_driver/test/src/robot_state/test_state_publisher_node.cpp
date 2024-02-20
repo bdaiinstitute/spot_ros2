@@ -8,6 +8,7 @@
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
+#include <spot_driver/mock/mock_publisher_interface.hpp>
 #include <spot_driver/mock/mock_spot_api.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
 #include <spot_driver/mock/mock_state_publisher_middleware_handle.hpp>
@@ -20,6 +21,7 @@
 
 #include <exception>
 #include <memory>
+#include <spot_msgs/msg/wi_fi_state.hpp>
 #include <tl_expected/expected.hpp>
 
 using ::testing::_;
@@ -41,6 +43,7 @@ class StatePublisherNodeTest : public ::testing::Test {
     mock_spot_api = std::make_unique<MockSpotApi>();
     mock_time_sync_api = std::make_unique<MockTimeSyncApi>();
     mock_middleware_handle = std::make_unique<MockStateMiddlewareHandle>();
+    mock_wi_fi_state_publisher_interface = std::make_unique<MockPublisherInterface<spot_msgs::msg::WiFiState>>();
   }
 
   std::unique_ptr<MockNodeInterface> mock_node_interface;
@@ -52,6 +55,7 @@ class StatePublisherNodeTest : public ::testing::Test {
   std::unique_ptr<MockSpotApi> mock_spot_api;
   std::unique_ptr<MockTimeSyncApi> mock_time_sync_api;
   std::unique_ptr<MockStateMiddlewareHandle> mock_middleware_handle;
+  std::unique_ptr<MockPublisherInterface<spot_msgs::msg::WiFiState>> mock_wi_fi_state_publisher_interface;
 };
 
 TEST_F(StatePublisherNodeTest, ConstructionSuccessful) {
@@ -74,9 +78,9 @@ TEST_F(StatePublisherNodeTest, ConstructionSuccessful) {
 
   // WHEN constructing a StatePublisherNodeTest
   EXPECT_NO_THROW(StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
-                                     std::move(mock_middleware_handle), std::move(fake_parameter_interface),
-                                     std::move(mock_logger_interface), std::move(mock_tf_interface),
-                                     std::move(mock_timer_interface)));
+                                     std::move(mock_middleware_handle), std::move(mock_wi_fi_state_publisher_interface),
+                                     std::move(fake_parameter_interface), std::move(mock_logger_interface),
+                                     std::move(mock_tf_interface), std::move(mock_timer_interface)));
 }
 
 TEST_F(StatePublisherNodeTest, ConstructionFailedCreateRobotFailure) {
@@ -98,11 +102,11 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedCreateRobotFailure) {
 
   // WHEN constructing a StatePublisherNodeTest
   // THEN the constructor throws
-  EXPECT_THROW(
-      StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api), std::move(mock_middleware_handle),
-                         std::move(fake_parameter_interface), std::move(mock_logger_interface),
-                         std::move(mock_tf_interface), std::move(mock_timer_interface)),
-      std::exception);
+  EXPECT_THROW(StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
+                                  std::move(mock_middleware_handle), std::move(mock_wi_fi_state_publisher_interface),
+                                  std::move(fake_parameter_interface), std::move(mock_logger_interface),
+                                  std::move(mock_tf_interface), std::move(mock_timer_interface)),
+               std::exception);
 }
 
 TEST_F(StatePublisherNodeTest, ConstructionFailedAuthenticateFailure) {
@@ -124,11 +128,11 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedAuthenticateFailure) {
 
   // WHEN constructing a StatePublisherNodeTest
   // THEN the constructor throws
-  EXPECT_THROW(
-      StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api), std::move(mock_middleware_handle),
-                         std::move(fake_parameter_interface), std::move(mock_logger_interface),
-                         std::move(mock_tf_interface), std::move(mock_timer_interface)),
-      std::exception);
+  EXPECT_THROW(StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
+                                  std::move(mock_middleware_handle), std::move(mock_wi_fi_state_publisher_interface),
+                                  std::move(fake_parameter_interface), std::move(mock_logger_interface),
+                                  std::move(mock_tf_interface), std::move(mock_timer_interface)),
+               std::exception);
 }
 
 }  // namespace spot_ros2::test

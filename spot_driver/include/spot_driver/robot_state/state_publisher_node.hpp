@@ -7,6 +7,7 @@
 #include <spot_driver/api/spot_api.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
+#include <spot_driver/interfaces/publisher_interface_base.hpp>
 #include <spot_driver/robot_state/state_publisher.hpp>
 
 #include <memory>
@@ -36,6 +37,7 @@ class StatePublisherNode {
    */
   StatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_base_interface, std::unique_ptr<SpotApi> spot_api,
                      std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
+                     std::unique_ptr<PublisherInterfaceBase<spot_msgs::msg::WiFiState>> wi_fi_state_publisher,
                      std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                      std::unique_ptr<LoggerInterfaceBase> logger_interface,
                      std::unique_ptr<TfInterfaceBase> tf_interface,
@@ -77,6 +79,7 @@ class StatePublisherNode {
    */
   void initialize(std::unique_ptr<SpotApi> spot_api,
                   std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
+                  std::unique_ptr<PublisherInterfaceBase<spot_msgs::msg::WiFiState>> wi_fi_state_publisher,
                   std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                   std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,
                   std::unique_ptr<TimerInterfaceBase> timer_interface);

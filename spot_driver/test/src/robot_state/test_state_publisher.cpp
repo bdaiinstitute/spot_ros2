@@ -10,6 +10,7 @@
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
+#include <spot_driver/mock/mock_publisher_interface.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
 #include <spot_driver/mock/mock_state_publisher_middleware_handle.hpp>
 #include <spot_driver/mock/mock_tf_interface.hpp>
@@ -44,6 +45,7 @@ class StatePublisherNodeTest : public ::testing::Test {
     mock_logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
     mock_tf_interface = std::make_unique<spot_ros2::test::MockTfInterface>();
     mock_timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
+    mock_wi_fi_state_publisher_interface = std::make_unique<MockPublisherInterface<spot_msgs::msg::WiFiState>>();
   }
 
   std::unique_ptr<MockNodeInterface> mock_node_interface;
@@ -57,6 +59,7 @@ class StatePublisherNodeTest : public ::testing::Test {
   std::shared_ptr<MockTimeSyncApi> mock_time_sync_api = std::make_shared<MockTimeSyncApi>();
   std::unique_ptr<MockStateMiddlewareHandle> mock_middleware_handle = std::make_unique<MockStateMiddlewareHandle>();
   std::unique_ptr<StatePublisher> robot_state_publisher;
+  std::unique_ptr<MockPublisherInterface<spot_msgs::msg::WiFiState>> mock_wi_fi_state_publisher_interface;
 };
 
 bosdyn::api::RobotState makeRobotState(const bool has_valid_transforms = true) {
@@ -85,8 +88,8 @@ TEST_F(StatePublisherNodeTest, InitSucceeds) {
   // WHEN a robot state publisher is constructed
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
-      std::move(mock_timer_interface));
+      std::move(mock_wi_fi_state_publisher_interface), std::move(fake_parameter_interface),
+      std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 }
 
 TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
@@ -106,6 +109,7 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
         .WillOnce(Return(tl::expected<bosdyn::api::RobotState, std::string>{makeRobotState(true)}));
     // AND THEN we publish the robot state to the appropriate topics
     EXPECT_CALL(*mock_middleware_handle, publishRobotState).Times(1);
+    EXPECT_CALL(*mock_wi_fi_state_publisher_interface, publish).Times(1);
     // AND THEN the robot transforms are published to TF
     EXPECT_CALL(*mock_tf_interface, sendDynamicTransforms).Times(1);
   }
@@ -113,8 +117,8 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
-      std::move(mock_timer_interface));
+      std::move(mock_wi_fi_state_publisher_interface), std::move(fake_parameter_interface),
+      std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered
   timer_interface_ptr->trigger();
@@ -145,8 +149,8 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggersNoTfData) {
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
-      std::move(mock_timer_interface));
+      std::move(mock_wi_fi_state_publisher_interface), std::move(fake_parameter_interface),
+      std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered
   timer_interface_ptr->trigger();
@@ -182,8 +186,8 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetRobotState) {
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
-      std::move(mock_timer_interface));
+      std::move(mock_wi_fi_state_publisher_interface), std::move(fake_parameter_interface),
+      std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered
   timer_interface_ptr->trigger();
@@ -214,8 +218,8 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetClockSkew) {
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
-      std::move(mock_timer_interface));
+      std::move(mock_wi_fi_state_publisher_interface), std::move(fake_parameter_interface),
+      std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered
   timer_interface_ptr->trigger();

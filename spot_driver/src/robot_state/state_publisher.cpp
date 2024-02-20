@@ -4,6 +4,7 @@
 #include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/conversions/geometry.hpp>
 #include <spot_driver/conversions/robot_state.hpp>
+#include <spot_driver/interfaces/rclcpp_publisher_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <spot_driver/robot_state/state_publisher.hpp>
 #include <spot_driver/types.hpp>
@@ -18,13 +19,16 @@ namespace spot_ros2 {
 StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& state_client_interface,
                                const std::shared_ptr<TimeSyncApi>& time_sync_api,
                                std::unique_ptr<MiddlewareHandle> middleware_handle,
+                               std::unique_ptr<PublisherInterfaceBase<spot_msgs::msg::WiFiState>> wi_fi_state_publisher,
                                std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                std::unique_ptr<TfInterfaceBase> tf_interface,
                                std::unique_ptr<TimerInterfaceBase> timer_interface)
-    : state_client_interface_{state_client_interface},
+    : is_using_vision_{false},
+      state_client_interface_{state_client_interface},
       time_sync_interface_{time_sync_api},
       middleware_handle_{std::move(middleware_handle)},
+      wi_fi_state_publisher_{std::move(wi_fi_state_publisher)},
       parameter_interface_{std::move(parameter_interface)},
       logger_interface_{std::move(logger_interface)},
       tf_interface_{std::move(tf_interface)},
@@ -38,7 +42,7 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
                                                                             : preferred_odom_frame;
 
   // Create a timer to request and publish robot state at a fixed rate
-  timer_interface_->setTimer(kRobotStateCallbackPeriod, [this]() {
+  timer_interface_->setTimer(kRobotStateCallbackPeriod, [this] {
     timerCallback();
   });
 }
@@ -76,6 +80,8 @@ void StatePublisher::timerCallback() {
                          getBehaviorFaultState(robot_state, clock_skew)};
 
   middleware_handle_->publishRobotState(robot_state_messages);
+
+  wi_fi_state_publisher_->publish(getWifiState(robot_state));
 
   if (robot_state_messages.maybe_tf) {
     tf_interface_->sendDynamicTransforms(robot_state_messages.maybe_tf->transforms);
