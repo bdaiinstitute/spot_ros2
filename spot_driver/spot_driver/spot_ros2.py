@@ -1494,7 +1494,7 @@ class SpotROS(Node):
             descriptions = []
             for proto_description in proto_descriptions:
                 ros_msg = PtzDescription()
-                conv.convert_proto_to_bosdyn_msgs_ptz_description(proto_description, ros_msg)
+                convert(proto_description, ros_msg)
                 descriptions.append(ros_msg)
             response.success = True
             response.message = "Success"
@@ -1514,7 +1514,7 @@ class SpotROS(Node):
                 raise Exception("Spot CAM has not been initialized")
 
             proto_position = self.spot_cam_wrapper.ptz.get_ptz_position(request.name)
-            conv.convert_proto_to_bosdyn_msgs_ptz_position(proto_position, response.position)
+            convert(proto_position, response.position)
             response.success = True
             response.message = "Success"
             return response
@@ -1567,7 +1567,7 @@ class SpotROS(Node):
             cameras = []
             for proto_camera in proto_cameras:
                 ros_msg = Camera()
-                conv.convert_proto_to_bosdyn_msgs_camera(proto_camera, ros_msg)
+                convert(proto_camera, ros_msg)
                 cameras.append(ros_msg)
             response.success = True
             response.message = "Success"
@@ -1590,7 +1590,7 @@ class SpotROS(Node):
             logpoints = []
             for proto_logpoint in proto_logpoints:
                 ros_msg = Logpoint()
-                conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, ros_msg)
+                convert(proto_logpoint, ros_msg)
                 logpoints.append(ros_msg)
             response.success = True
             response.message = "Success"
@@ -1612,7 +1612,7 @@ class SpotROS(Node):
             proto_logpoint, proto_data_chunk = self.spot_cam_wrapper.media_log.retrieve_logpoint(
                 request.name, request.raw
             )
-            conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
+            convert(proto_logpoint, response.logpoint)
             # Data is actually a bytes object, not DataChunk as the SpotCAM wrapper states...
             # Therefore, we use a uint8[] buffer in srv message and directly set that
             # to the bytes object.
@@ -1671,7 +1671,7 @@ class SpotROS(Node):
             tag = None if request.tag == "" else request.tag
             camera_name = SpotCamCamera(request.name)  # Silly but don't want to modify cam wrapper.
             proto_logpoint = self.spot_cam_wrapper.media_log.store(camera_name, tag)
-            conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
+            convert(proto_logpoint, response.logpoint)
             response.success = True
             response.message = "Success"
             return response
