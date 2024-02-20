@@ -23,7 +23,6 @@
   <depend>rosidl_default_runtime</depend>
   <depend>sensor_msgs</depend>
   <depend>spot_msgs</depend>
-  <depend>spot_driver_cpp</depend>
   <depend>tf2_ros</depend>
   <depend>tl_expected</depend>
 
