@@ -4,8 +4,8 @@
   <name>simple_walk_forward</name>
   <version>0.0.0</version>
   <description>Example of making the robot walk forward with ROS2</description>
-  <maintainer email="engineering@theaiinstitute.com">BD AI Institute</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="engineering@theaiinstitute.com">AI Institute</maintainer>
+  <license>MIT</license>
 
   <exec_depend>bdai_ros2_wrappers</exec_depend>
 

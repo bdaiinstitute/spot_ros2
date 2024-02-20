@@ -3,9 +3,9 @@
 <package format="3">
   <name>spot_msgs</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="maximillian.kirsch@alumni.fh-aachen.de">max</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Custom ROS messages, actions, and services for Spot</description>
+  <maintainer email="engineering@theaiinstitute.com">AI Institute</maintainer>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
