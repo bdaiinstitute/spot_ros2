@@ -12,9 +12,9 @@ namespace spot_ros2 {
 class DefaultStateClient final : public StateClientInterface {
  public:
   /**
-   * @brief constructor for DefaultRobotStateClient.
+   * @brief constructor for DefaultStateClient.
    *
-   * @param client pointer to Spot's RobotStateClient. A DefaultRobotStateClient SHOULD NOT delete this pointer since it
+   * @param client pointer to Spot's RobotStateClient. A DefaultStateClient SHOULD NOT delete this pointer since it
    * does not take ownership.
    */
   explicit DefaultStateClient(::bosdyn::client::RobotStateClient* client);

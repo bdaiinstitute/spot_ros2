@@ -38,16 +38,18 @@ class StatePublisher {
    * @details As opposed to other Spot Publishers, initialization takes place inside of the constructor because
    * initialization cannot fail.
    *
-   * @param state_client_interface A shared_ptr to a StateClientInterface.
-   * @param time_sync_api  A shared_ptr to a TymeSyncApi.
+   * @param state_client_interface A shared_ptr to a StateClientInterface used to request robot state information from
+   * Spot through the Spot API.
+   * @param time_sync_api  A shared_ptr to a TymeSyncApi used to convert message timestamps which are relative to Spot's
+   * clock to be relative to the host's clock.
    * @param middleware_handle A unique_ptr to an instance of a class derived from StatePublisher::MiddlewareHandle which
-   * will be used to publish robot state messages. StatePublisherNode will take ownership of this unique_ptr.
+   * will be used to publish robot state messages.
    * @param logger_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used to
-   * log info and error messages. StatePublisherNode will take ownership of this unique_ptr.
+   * log info and error messages.
    * @param tf_interface A unique_ptr to an instance of a class derived from TfInterfaceBase which will be used to
-   * publish the transforms contained in Spot's robot state. StatePublisherNode will take ownership of this unique_ptr.
+   * publish the transforms contained in Spot's robot state.
    * @param timer_interface A unique_ptr to an instance of a class derived from TimerInterfaceBase which will be used to
-   * repeatedly trigger requests for updated robot states. StatePublisherNode will take ownership of this unique_ptr.
+   * repeatedly trigger requests for updated robot states.
    *
    */
   StatePublisher(const std::shared_ptr<StateClientInterface>& state_client_interface,

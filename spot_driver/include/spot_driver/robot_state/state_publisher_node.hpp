@@ -19,22 +19,22 @@ namespace spot_ros2 {
 class StatePublisherNode {
  public:
   /**
-   * @brief Primary constructor for StatePublisherNode.
-   * @details This constructor enables dependency inversion for improved testibility
+   * @brief Constructor for StatePublisherNode.
+   * @details This constructor takes each interface as a pointer to the interface's base class, which enables dependency
+   * inversion for improved testability
    *
    * @param node_base_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used
    * to access StatePublisherNode's ROS node when it's being spun by an executor. StatePublisherNode will take ownership
    * of this unique_ptr.
    * @param spot_api A unique_ptr to an instance of a class derived from SpotApi which will be used to connect to Spot.
-   * StatePublisherNode will take ownership of this unique_ptr.
    * @param mw_handle A unique_ptr to an instance of a class derived from StatePublisher::MiddlewareHandle which will be
-   * used to publish robot state messages. StatePublisherNode will take ownership of this unique_ptr.
+   * used to publish robot state messages.
    * @param logger_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used to
-   * log info and error messages. StatePublisherNode will take ownership of this unique_ptr.
+   * log info and error messages.
    * @param tf_interface A unique_ptr to an instance of a class derived from TfInterfaceBase which will be used to
-   * publish the transforms contained in Spot's robot state. StatePublisherNode will take ownership of this unique_ptr.
+   * publish the transforms contained in Spot's robot state.
    * @param timer_interface A unique_ptr to an instance of a class derived from TimerInterfaceBase which will be used to
-   * repeatedly trigger requests for updated robot states. StatePublisherNode will take ownership of this unique_ptr.
+   * repeatedly trigger requests for updated robot states.
    */
   StatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_base_interface, std::unique_ptr<SpotApi> spot_api,
                      std::unique_ptr<StatePublisher::MiddlewareHandle> mw_handle,
@@ -44,7 +44,7 @@ class StatePublisherNode {
                      std::unique_ptr<TimerInterfaceBase> timer_interface);
 
   /**
-   * @brief Delegating constructor used in production.
+   * @brief Constructor for StatePublisherNode.
    * @details This constructor creates an rclcpp::Node and rclcpp-specialized implementations of the middleware
    * interfaces.
    *
@@ -66,22 +66,16 @@ class StatePublisherNode {
    * @brief Connect to and authenticate with Spot, and then create the StatePublisher class member.
    *
    * @param node_base_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used
-   * to access StatePublisherNode's ROS node when it's being spun by an executor. StatePublisherNode's StatePublisher
-   * member will take ownership of this unique_ptr within this function.
+   * to access StatePublisherNode's ROS node when it's being spun by an executor.
    * @param spot_api A unique_ptr to an instance of a class derived from SpotApi which will be used to connect to Spot.
-   * StatePublisherNode's StatePublisher member will take ownership of this unique_ptr within this function.
    * @param mw_handle A unique_ptr to an instance of a class derived from StatePublisher::MiddlewareHandle which will be
-   * used to publish robot state messages. StatePublisherNode's StatePublisher member will take ownership of this
-   * unique_ptr within this function.
+   * used to publish robot state messages.
    * @param logger_interface A unique_ptr to an instance of a class derived from NodeInterfaceBase which will be used to
-   * log info and error messages. StatePublisherNode's StatePublisher member will take ownership of this unique_ptr
-   * within this function.
+   * log info and error messages.
    * @param tf_interface A unique_ptr to an instance of a class derived from TfInterfaceBase which will be used to
-   * publish the transforms contained in Spot's robot state. StatePublisherNode's StatePublisher member will take
-   * ownership of this unique_ptr within this function.
+   * publish the transforms contained in Spot's robot state.
    * @param timer_interface A unique_ptr to an instance of a class derived from TimerInterfaceBase which will be used to
-   * repeatedly trigger requests for updated robot states. StatePublisherNode's StatePublisher member will take
-   * ownership of this unique_ptr within this function.
+   * repeatedly trigger requests for updated robot states.
    *
    * @throw std::runtime_error if the Spot API fails to create a connection to Spot or fails to authenticate with Spot.
    */
