@@ -6,7 +6,6 @@
 #include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/api/time_sync_api.hpp>
 
-#include <memory>
 #include <string>
 
 namespace spot_ros2 {

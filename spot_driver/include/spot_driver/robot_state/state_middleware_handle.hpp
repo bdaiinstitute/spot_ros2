@@ -2,12 +2,9 @@
 
 #pragma once
 
-#include <rmw/qos_profiles.h>
 #include <rclcpp/node.hpp>
-#include <rclcpp/qos.hpp>
 #include <spot_driver/robot_state/state_publisher.hpp>
 #include <spot_driver/types.hpp>
-#include <tl_expected/expected.hpp>
 
 #include <memory>
 

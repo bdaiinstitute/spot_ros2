@@ -20,7 +20,6 @@
 
 #include <functional>
 #include <optional>
-#include <string>
 
 namespace spot_ros2 {
 /** @brief Represents the six different cameras on Spot. */

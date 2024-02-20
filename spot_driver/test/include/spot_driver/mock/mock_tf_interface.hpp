@@ -5,6 +5,7 @@
 #include <gmock/gmock.h>
 
 #include <spot_driver/interfaces/tf_interface_base.hpp>
+#include <tl_expected/expected.hpp>
 
 #include <string>
 #include <vector>

@@ -1,10 +1,7 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <rclcpp/executors.hpp>
-#include <rclcpp/utilities.hpp>
 #include <spot_driver/robot_state/state_publisher_node.hpp>
-
-#include <memory>
 
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);

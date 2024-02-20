@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <gmock/gmock.h>
-
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
 #include <string>

@@ -7,6 +7,7 @@
 #include <spot_driver/api/kinematic_api.hpp>
 #include <spot_driver/api/spot_api.hpp>
 #include <spot_driver/api/state_client_interface.hpp>
+#include <spot_driver/api/time_sync_api.hpp>
 #include <spot_driver/interfaces/image_client_interface.hpp>
 
 #include <memory>
