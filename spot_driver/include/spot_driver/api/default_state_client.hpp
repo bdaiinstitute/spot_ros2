@@ -4,7 +4,6 @@
 
 #include <bosdyn/client/robot_state/robot_state_client.h>
 #include <spot_driver/api/state_client_interface.hpp>
-#include <spot_driver/api/time_sync_api.hpp>
 
 #include <string>
 
