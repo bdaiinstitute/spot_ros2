@@ -9,7 +9,12 @@ from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.utilities import fqn, namespace_with
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import SE2Pose
-from bosdyn_msgs.msg import MutateWorldObjectRequestAction, MutateWorldObjectResponseStatus
+from bosdyn_msgs.msg import (
+    MutateWorldObjectRequestAction,
+    MutateWorldObjectResponseStatus,
+    NoGoRegionPropertiesOneOfRegion,
+    WorldObject,
+)
 from rclpy.node import Node
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
@@ -73,33 +78,34 @@ class NoGoRegion:
             return
         response = future.result()
         for wo in response.response.world_objects:
-            print(f"ID: {wo.id} name: {wo.name}")
-            # print out nogo properties
-            # if wo.nogo_region_properties_is_set:
-            #     print(f"\tNogo properties set to: {wo.nogo_region_properties}")
+            print(f"\tID: {wo.id} name: {wo.name}")
 
     def add_nogo_region(self, name: str = "nogo_region", lifetime: int = 10) -> Optional[int]:
         request = MutateWorldObject.Request()
         request.request.mutation.action.value = MutateWorldObjectRequestAction.ACTION_ADD
-        request.request.mutation_is_set = True  # TODO If this is false, driver will crash. should handle in driver
-        request.request.mutation.object.name = name
-        # TODO figure out how to make it persist infinitely
-        request.request.mutation.object.object_lifetime.sec = lifetime
-        request.request.mutation.object.object_lifetime_is_set = True
-        # set no-go box, here it is a 1x1 region 2m in front of Spot
-        request.request.mutation.object.nogo_region_properties.region.box.box.size.x = 1.0
-        request.request.mutation.object.nogo_region_properties.region.box.box.size.y = 1.0
-        request.request.mutation.object.nogo_region_properties.region.box.box.size_is_set = True
-        # set box's offset from Spot
-        request.request.mutation.object.nogo_region_properties.region.box.frame_name = VISION_FRAME_NAME
-        request.request.mutation.object.nogo_region_properties.region.box.frame_name_tform_box.position.x = 2.0
-        request.request.mutation.object.nogo_region_properties.region.box.frame_name_tform_box_is_set = True
-        request.request.mutation.object.nogo_region_properties.region.box.box_is_set = True
+        request.request.mutation_is_set = True  # TODO If this is false, driver will crash. should handle in driver?
+        # create the fake world object
+        wo = WorldObject()
+        wo.name = name
+        # There is no "infinite lifetime" option unfortunately. If it is unset, there is a default.
+        # see https://dev.bostondynamics.com/protos/bosdyn/api/proto_reference#bosdyn-api-WorldObject
+        wo.object_lifetime.sec = lifetime
+        wo.object_lifetime_is_set = True
+        # set no-go box, here choose a 1x1 region
+        wo.nogo_region_properties.region.box.box.size.x = 1.0
+        wo.nogo_region_properties.region.box.box.size.y = 1.0
+        wo.nogo_region_properties.region.box.box.size_is_set = True
+        # set box's offset to be 2m in front of Spot's vision frame
+        wo.nogo_region_properties.region.box.frame_name = VISION_FRAME_NAME
+        wo.nogo_region_properties.region.box.frame_name_tform_box.position.x = 2.0
+        wo.nogo_region_properties.region.box.frame_name_tform_box_is_set = True
+        wo.nogo_region_properties.region.box.box_is_set = True
         # final flags
-        request.request.mutation.object.nogo_region_properties.region.region_choice = 1  # TODO 1=set 0=unset
-        request.request.mutation.object.nogo_region_properties_is_set = True
+        wo.nogo_region_properties.region.region_choice = NoGoRegionPropertiesOneOfRegion.REGION_BOX_SET
+        wo.nogo_region_properties_is_set = True
+        # attach the object to the request
+        request.request.mutation.object = wo
         request.request.mutation.object_is_set = True
-        request.request.mutation_is_set = True
         # call request
         future = self._mutuate_wo_client.call_async(request)
         if not wait_for_future(future, context=self.node.context):
@@ -110,6 +116,7 @@ class NoGoRegion:
         if response.response.status.value == MutateWorldObjectResponseStatus.STATUS_OK:
             return response.response.mutated_object_id
         else:
+            print(f"Adding the nogo region failed with response status {response.response.status.value}")
             return None
 
     def delete_nogo_region(self, nogo_id: int) -> bool:
@@ -128,6 +135,7 @@ class NoGoRegion:
         if response.response.status.value == MutateWorldObjectResponseStatus.STATUS_OK:
             return True
         else:
+            print(f"Deleting the nogo region failed with response status {response.response.status.value}")
             return False
 
 
