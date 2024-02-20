@@ -55,7 +55,7 @@ class NoGoRegion:
             ListWorldObjects, namespace_with(self._robot_name, "list_world_objects")
         )
         self._mutuate_wo_client = node.create_client(
-            MutateWorldObject, namespace_with(self._robot_name, "mutate_world_object")
+            MutateWorldObject, namespace_with(self._robot_name, "mutate_world_objects")
         )
 
     def initialize_robot(self) -> bool:
