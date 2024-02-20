@@ -29,7 +29,7 @@ namespace spot_ros2 {
  * @details As an example, "fl.hx" is the name of the joint in the Spot API, and "front_left_hip_x" is the name used for
  * this joint within the URDF.
  */
-static const std::map<const std::string, const std::string> kFriendlyJointNames = {
+inline const std::map<const std::string, const std::string> kFriendlyJointNames = {
     {"fl.hx", "front_left_hip_x"},  {"fl.hy", "front_left_hip_y"},  {"fl.kn", "front_left_knee"},
     {"fr.hx", "front_right_hip_x"}, {"fr.hy", "front_right_hip_y"}, {"fr.kn", "front_right_knee"},
     {"hl.hx", "rear_left_hip_x"},   {"hl.hy", "rear_left_hip_y"},   {"hl.kn", "rear_left_knee"},
