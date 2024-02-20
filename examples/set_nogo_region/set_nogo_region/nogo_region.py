@@ -56,6 +56,10 @@ class NoGoRegion:
             MutateWorldObject, namespace_with(self._robot_name, "mutate_world_object")
         )
 
+        self.world_t_robot_init = self._tf_listener.lookup_a_tform_b(
+            self._vision_frame_name, self._body_frame_name
+        ).get_closest_se2_transform()
+
     def initialize_robot(self) -> bool:
         self._logger.info(f"Robot name: {self._robot_name}")
         self._logger.info("Claiming robot")
@@ -179,11 +183,12 @@ class NoGoRegion:
             print("Not attempting to walk forward")
             return None
         print("Try walking forward")
-        world_t_robot = self._tf_listener.lookup_a_tform_b(
-            self._vision_frame_name, self._body_frame_name
-        ).get_closest_se2_transform()
+        # world_t_robot = self._tf_listener.lookup_a_tform_b(
+        #     self._vision_frame_name, self._body_frame_name
+        # ).get_closest_se2_transform()
         # walk forward 2m
-        world_t_goal = world_t_robot * SE2Pose(x=distance, y=0.0, angle=0.0)
+        world_t_goal = self.world_t_robot_init * SE2Pose(x=distance, y=0.0, angle=0.0)
+        print(f"World t goal {world_t_goal}")
         proto_goal = RobotCommandBuilder.synchro_se2_trajectory_point_command(
             goal_x=world_t_goal.x,
             goal_y=world_t_goal.y,
@@ -224,7 +229,7 @@ def main(args: argparse.Namespace) -> int:
     # list objects one final time to make sure that it was deleted
     nogo.list_current_world_objects()
     # try walking forward again
-    nogo.try_walking_forward(distance=1.0)
+    nogo.try_walking_forward(distance=2.0)
     return 0
 
 
