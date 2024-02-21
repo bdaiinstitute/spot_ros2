@@ -26,10 +26,8 @@ tl::expected<void, std::string> RclcppTfInterface::updateStaticTransforms(
   return {};
 }
 
-tl::expected<void, std::string> RclcppTfInterface::sendDynamicTransforms(
-    const std::vector<geometry_msgs::msg::TransformStamped>& transforms) {
+void RclcppTfInterface::sendDynamicTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) {
   dynamic_tf_broadcaster_.sendTransform(transforms);
-  return {};
 }
 
 }  // namespace spot_ros2
