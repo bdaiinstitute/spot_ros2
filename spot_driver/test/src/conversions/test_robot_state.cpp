@@ -626,7 +626,7 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
                     ::bosdyn::api::SystemFault_Severity::SystemFault_Severity_SEVERITY_CRITICAL);
 
   // WHEN we create a SystemFaultState ROS message from the Robot State
-  auto out = getSystemFaultState(robot_state, clock_skew);
+  const auto out = getSystemFaultState(robot_state, clock_skew);
 
   // THEN this succeeds
   ASSERT_THAT(out.has_value(), IsTrue());
@@ -651,7 +651,7 @@ TEST(RobotStateConversions, TestGetSystemFaultStateNoFault) {
   ::bosdyn::api::RobotState robot_state;
 
   // WHEN we create a SystemFaultState ROS message from the Robot State
-  auto out = getSystemFaultState(robot_state, clock_skew);
+  const auto out = getSystemFaultState(robot_state, clock_skew);
 
   // THEN no ROS message is output
   EXPECT_THAT(out.has_value(), IsFalse());

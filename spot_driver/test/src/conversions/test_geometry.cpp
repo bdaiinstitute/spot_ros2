@@ -48,7 +48,7 @@ TEST(GeometryConversion, toRosRotation) {
 TEST(GeometryConversion, toTransformStampedTest) {
   // GIVEN a bosdyn protobuf transform, the parent frame name, the child frame name, and a timestamp
   const auto transform =
-      ::bosdyn::api::CreateSE3Pose(::bosdyn::api::CreateQuaternion(1, 2, 3, 4), ::bosdyn::api::CreateVec3(5, 6.7));
+      ::bosdyn::api::CreateSE3Pose(::bosdyn::api::CreateQuaternion(1, 2, 3, 4), ::bosdyn::api::CreateVec3(5, 6, 7));
   const auto parent_frame_name = "Parent";
   const auto child_frame_name = "Child";
   const auto tf_time = builtin_interfaces::build<::builtin_interfaces::msg::Time>().sec(10).nanosec(11);

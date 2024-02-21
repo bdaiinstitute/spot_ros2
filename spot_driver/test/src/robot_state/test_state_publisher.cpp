@@ -35,7 +35,7 @@ using ::testing::Unused;
 constexpr auto kErrorMessage = "Some error message.";
 
 namespace spot_ros2::test {
-class StatePublisherNodeTest : public ::testing::Test {
+class StatePublisherTest : public ::testing::Test {
  public:
   void SetUp() override {
     mock_node_interface = std::make_unique<MockNodeInterface>();
@@ -75,7 +75,7 @@ bosdyn::api::RobotState makeRobotState(const bool has_valid_transforms = true) {
   return out;
 }
 
-TEST_F(StatePublisherNodeTest, InitSucceeds) {
+TEST_F(StatePublisherTest, InitSucceeds) {
   // GIVEN a RobotStateClientInterface and a StatePublisher::MiddlewareHandle
 
   // THEN the timer interface's setTimer function is called once with the expected timer period
@@ -89,7 +89,7 @@ TEST_F(StatePublisherNodeTest, InitSucceeds) {
       std::move(mock_timer_interface));
 }
 
-TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
+TEST_F(StatePublisherTest, PublishCallbackTriggers) {
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
   EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
@@ -120,7 +120,7 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggers) {
   timer_interface_ptr->trigger();
 }
 
-TEST_F(StatePublisherNodeTest, PublishCallbackTriggersNoTfData) {
+TEST_F(StatePublisherTest, PublishCallbackTriggersNoTfData) {
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
   EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
@@ -152,7 +152,7 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggersNoTfData) {
   timer_interface_ptr->trigger();
 }
 
-TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetRobotState) {
+TEST_F(StatePublisherTest, PublishCallbackTriggersFailGetRobotState) {
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
   EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
@@ -189,7 +189,7 @@ TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetRobotState) {
   timer_interface_ptr->trigger();
 }
 
-TEST_F(StatePublisherNodeTest, PublishCallbackTriggersFailGetClockSkew) {
+TEST_F(StatePublisherTest, PublishCallbackTriggersFailGetClockSkew) {
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
   EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
