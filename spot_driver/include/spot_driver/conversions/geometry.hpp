@@ -11,31 +11,6 @@
 #include <string>
 
 namespace spot_ros2::conversions {
-
-/**
- * @brief Convert a bosdyn protobuf position message to a ROS geometry point message
- *
- * @param proto Position from Spot
- * @param ros_msg Output ROS message
- */
-void convertToRos(const ::bosdyn::api::Vec3& proto, geometry_msgs::msg::Point& ros_msg);
-
-/**
- * @brief Convert a bosdyn protobuf translation message to a ROS geometry translation message
- *
- * @param proto Translation from Spot
- * @param ros_msg Output ROS message
- */
-void convertToRos(const ::bosdyn::api::Vec3& proto, geometry_msgs::msg::Vector3& ros_msg);
-
-/**
- * @brief Convert a bosdyn protobuf rotation message to a ROS geometry rotation message
- *
- * @param proto Rotation from Spot
- * @param ros_msg Output ROS message
- */
-void convertToRos(const ::bosdyn::api::Quaternion& proto, geometry_msgs::msg::Quaternion& ros_msg);
-
 /**
  * @brief Convert SE3Pose messages to ROS TransformStamped messages
  *

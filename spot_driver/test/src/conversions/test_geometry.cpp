@@ -20,31 +20,6 @@ bool areTransformsEqual(const geometry_msgs::msg::Transform& tf1, const ::bosdyn
 }  // namespace
 
 namespace spot_ros2::conversions::test {
-
-TEST(GeometryConversion, toRosTranslation) {
-  // GIVEN a bosdyn position
-  const auto position = ::bosdyn::api::CreateVec3(1, 2, 3);
-
-  // WHEN converted to a ROS position msg
-  geometry_msgs::msg::Vector3 ros_position;
-  convertToRos(position, ros_position);
-
-  // THEN expect them to be equal
-  EXPECT_TRUE(arePositionsEqual(ros_position, position));
-}
-
-TEST(GeometryConversion, toRosRotation) {
-  // GIVEN a bosdyn quaternion
-  const auto q = ::bosdyn::api::CreateQuaternion(1, 2, 3, 4);
-
-  // WHEN converted to a ROS quaternion msg
-  geometry_msgs::msg::Quaternion ros_q;
-  convertToRos(q, ros_q);
-
-  // THEN expect them to be equal
-  EXPECT_TRUE(areRotationsEqual(ros_q, q));
-}
-
 TEST(GeometryConversion, toTransformStampedTest) {
   // GIVEN a bosdyn protobuf transform, the parent frame name, the child frame name, and a timestamp
   const auto transform =
