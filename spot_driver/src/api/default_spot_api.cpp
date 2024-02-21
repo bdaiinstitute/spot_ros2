@@ -81,8 +81,11 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
     return tl::make_unexpected("Failed to create world object client: " +
                                world_object_client_result.status.DebugString());
   }
-  std::unique_ptr<::bosdyn::client::WorldObjectClient> world_object_client{world_object_client_result.response};
-  world_object_client_interface_ = std::make_shared<DefaultWorldObjectClient>(std::move(world_object_client));
+  if (world_object_client_result.response == nullptr) {
+    return tl::make_unexpected("Failed to create world object client (nullptr): " +
+                               world_object_client_result.status.DebugString());
+  }
+  world_object_client_interface_ = std::make_shared<DefaultWorldObjectClient>(world_object_client_result.response);
 
   return {};
 }

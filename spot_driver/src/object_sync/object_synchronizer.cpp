@@ -27,6 +27,7 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<StateClientInterfac
                                        std::unique_ptr<RobotModelInterfaceBase> robot_model_interface)
     : state_client_interface_{state_client_interface},
       world_object_client_interface_{world_object_client_interface},
+      parameter_interface_{std::move(parameter_interface)},
       logger_interface_{std::move(logger_interface)},
       tf_listener_interface_{std::move(tf_listener_interface)},
       timer_interface_{std::move(timer_interface)},
@@ -39,8 +40,18 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<StateClientInterfac
 }
 
 void ObjectSynchronizer::onTimer() {
+  if (!world_object_client_interface_) {
+    logger_interface_->logError("World object interface not initialized.");
+    return;
+  }
+
   // Get all TF frame IDs
   const auto tf_frame_names = tf_listener_interface_->getAllFrameNames();
+  std::cout << "TF frames:\n";
+  for (const auto& frame : tf_frame_names) {
+    std::cout << "  " << frame << "\n";
+  }
+  std::cout << std::endl;
 
   // Get all frame IDs which are a part of Spot (I think this is fixed once we set whether Spot has an arm. Can retrieve
   // from the URDF published by RobotStatePublisher.) Get all the frame IDs which are published by Spot but cannot be
@@ -50,6 +61,12 @@ void ObjectSynchronizer::onTimer() {
     logger_interface_->logError("Failed to get Spot frame IDs from robot model: " + robot_model_frames.error());
     return;
   }
+
+  std::cout << "URDF frames:\n";
+  for (const auto& frame : robot_model_frames.value()) {
+    std::cout << "  " << frame << "\n";
+  }
+  std::cout << std::endl;
 
   ::bosdyn::api::ListWorldObjectRequest request_non_mutable_frames;
   request_non_mutable_frames.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_APRILTAG);
@@ -63,9 +80,12 @@ void ObjectSynchronizer::onTimer() {
   // non_mutable_frames_response.value().world_objects().at(0)
 
   std::set<std::string> world_object_names;
+  std::cout << "world objects:\n";
   for (const auto& world_object : non_mutable_frames_response.value().world_objects()) {
+    std::cout << "  " << world_object.name() << "\n";
     world_object_names.insert(world_object.name());
   }
+  std::cout << std::endl;
 
   // If a TF frame does not originate from Spot:
   //   If the frame is already included in the world objects:
@@ -85,13 +105,17 @@ void ObjectSynchronizer::onTimer() {
       continue;
     }
 
+    // Each frame is represented by a WorldObject which contains a single frame.
+    // The name of the object is identical to the frame ID.
+    // The world object client can only mutate a single world object at a time, so we send separate requests for each
+    // object
     ::bosdyn::api::MutateWorldObjectRequest request;
     auto* object = request.mutable_mutation()->mutable_object();
     *object->mutable_name() = tf_frame;
     auto* edge_map = object->mutable_transforms_snapshot()->mutable_child_to_parent_edge_map();
 
     ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
-    common_conversions::convertToProto(tform_base_to_frame.value(), *edge.mutable_parent_tform_child());
+    // common_conversions::convertToProto(tform_base_to_frame.value().transform, *edge.mutable_parent_tform_child());
 
     if (world_object_names.count(tf_frame) == 0) {
       request.mutable_mutation()->set_action(
@@ -100,16 +124,8 @@ void ObjectSynchronizer::onTimer() {
       request.mutable_mutation()->set_action(
           ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_CHANGE);
     }
-    world_object_client_interface_->mutateWorldObject(request)
+    world_object_client_interface_->mutateWorldObject(request);
   }
-
-  // Each frame is represented by a WorldObject which contains a single frame.
-  // The name of the object is identical to the frame ID.
-
-  ::bosdyn::api::ListWorldObjectRequest request;
-  request.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_UNKNOWN);
-  // TODO(jschornak-bdai): request should set earliest timestamp for objects
-  world_object_client_interface_->listWorldObjects(request);
 }
 
 }  // namespace spot_ros2

@@ -7,8 +7,7 @@
 
 namespace spot_ros2 {
 
-DefaultWorldObjectClient::DefaultWorldObjectClient(std::unique_ptr<bosdyn::client::WorldObjectClient> client)
-    : client_{std::move(client)} {}
+DefaultWorldObjectClient::DefaultWorldObjectClient(bosdyn::client::WorldObjectClient* client) : client_{client} {}
 
 tl::expected<::bosdyn::api::ListWorldObjectResponse, std::string> DefaultWorldObjectClient::listWorldObjects(
     ::bosdyn::api::ListWorldObjectRequest& request) {

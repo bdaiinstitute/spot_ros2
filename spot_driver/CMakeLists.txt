@@ -20,6 +20,7 @@ set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
   tl_expected
   spot_msgs
   nav_msgs
+  urdfdom
 )
 
 find_package(ament_cmake REQUIRED)
@@ -60,6 +61,7 @@ add_library(spot_api
   src/kinematic/kinematic_service.cpp
   src/kinematic/kinematic_middleware_handle.cpp
   src/object_sync/object_synchronizer.cpp
+  src/object_sync/object_synchronizer_node.cpp
   src/robot_state/state_middleware_handle.cpp
   src/robot_state/state_publisher.cpp
   src/robot_state/state_publisher_node.cpp
@@ -151,6 +153,18 @@ target_include_directories(spot_inverse_kinematics_component
 )
 target_link_libraries(spot_inverse_kinematics_component PUBLIC spot_api)
 
+###
+# Object Synchronization
+###
+
+add_executable(object_synchronizer_node src/object_sync/object_synchronizer_node_main.cpp)
+target_include_directories(object_synchronizer_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(object_synchronizer_node PUBLIC spot_api)
+
 rclcpp_components_register_node(
   spot_inverse_kinematics_component
   PLUGIN "spot_ros2::kinematic::KinematicNode"
@@ -198,6 +212,7 @@ install(
 # Install Executables
 install(
   TARGETS 
+    object_synchronizer_node
     spot_image_publisher_node
     spot_image_publisher_node_component
     spot_inverse_kinematics_node

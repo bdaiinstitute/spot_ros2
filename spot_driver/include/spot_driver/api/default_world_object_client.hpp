@@ -12,13 +12,13 @@
 namespace spot_ros2 {
 class DefaultWorldObjectClient : public WorldObjectClientInterface {
  public:
-  explicit DefaultWorldObjectClient(std::unique_ptr<bosdyn::client::WorldObjectClient> client);
+  explicit DefaultWorldObjectClient(bosdyn::client::WorldObjectClient* client);
   tl::expected<::bosdyn::api::ListWorldObjectResponse, std::string> listWorldObjects(
       ::bosdyn::api::ListWorldObjectRequest& request) override;
   tl::expected<::bosdyn::api::MutateWorldObjectResponse, std::string> mutateWorldObject(
       ::bosdyn::api::MutateWorldObjectRequest& request) override;
 
  private:
-  std::unique_ptr<bosdyn::client::WorldObjectClient> client_;
+  bosdyn::client::WorldObjectClient* client_;
 };
 }  // namespace spot_ros2
