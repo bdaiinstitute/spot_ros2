@@ -6,10 +6,10 @@
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
 
-  const auto node = std::make_shared<spot_ros2::StatePublisherNode>();
+  spot_ros2::StatePublisherNode node;
 
   // Spins the node with the default single-threaded executor.
-  rclcpp::spin(node->get_node_base_interface());
+  rclcpp::spin(node.get_node_base_interface());
 
   return 0;
 }

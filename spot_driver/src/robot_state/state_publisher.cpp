@@ -22,7 +22,8 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
                                std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                std::unique_ptr<TfInterfaceBase> tf_interface,
                                std::unique_ptr<TimerInterfaceBase> timer_interface)
-    : state_client_interface_{state_client_interface},
+    : is_using_vision_{false},
+      state_client_interface_{state_client_interface},
       time_sync_interface_{time_sync_api},
       middleware_handle_{std::move(middleware_handle)},
       parameter_interface_{std::move(parameter_interface)},
@@ -38,7 +39,7 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
                                                                             : preferred_odom_frame;
 
   // Create a timer to request and publish robot state at a fixed rate
-  timer_interface_->setTimer(kRobotStateCallbackPeriod, [this]() {
+  timer_interface_->setTimer(kRobotStateCallbackPeriod, [this] {
     timerCallback();
   });
 }
@@ -61,7 +62,7 @@ void StatePublisher::timerCallback() {
   const auto& robot_state = robot_state_result.value();
 
   const auto robot_state_messages =
-      RobotStateMessages{getBatteryStates(*robot_state_result, clock_skew),
+      RobotStateMessages{getBatteryStates(robot_state, clock_skew),
                          getWifiState(robot_state),
                          getFootState(robot_state),
                          getEstopStates(robot_state, clock_skew),
