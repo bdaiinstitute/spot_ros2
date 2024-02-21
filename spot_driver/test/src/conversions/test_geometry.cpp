@@ -6,15 +6,15 @@
 #include <spot_driver/conversions/geometry.hpp>
 
 namespace {
-bool arePositionsEqual(const geometry_msgs::msg::Vector3 ros, const ::bosdyn::api::Vec3 proto) {
+bool arePositionsEqual(const geometry_msgs::msg::Vector3& ros, const ::bosdyn::api::Vec3& proto) {
   return ros.x == proto.x() && ros.y == proto.y() && ros.z == proto.z();
 }
 
-bool areRotationsEqual(const geometry_msgs::msg::Quaternion ros, const ::bosdyn::api::Quaternion proto) {
+bool areRotationsEqual(const geometry_msgs::msg::Quaternion& ros, const ::bosdyn::api::Quaternion& proto) {
   return ros.x == proto.x() && ros.y == proto.y() && ros.z == proto.z() && ros.w == proto.w();
 }
 
-bool areTransformsEqual(const geometry_msgs::msg::Transform tf1, const ::bosdyn::api::SE3Pose tf2) {
+bool areTransformsEqual(const geometry_msgs::msg::Transform& tf1, const ::bosdyn::api::SE3Pose& tf2) {
   return areRotationsEqual(tf1.rotation, tf2.rotation()) && arePositionsEqual(tf1.translation, tf2.position());
 }
 }  // namespace
