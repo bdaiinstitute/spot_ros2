@@ -22,6 +22,11 @@ class SpotApi {
   virtual tl::expected<bool, std::string> hasArm() const = 0;
   virtual std::shared_ptr<KinematicApi> kinematicApi() const = 0;
   virtual std::shared_ptr<ImageClientInterface> image_client_interface() const = 0;
+
+  /**
+   * @brief Get a StateClientInterface that communicates with Spot's robot state server.
+   * @return A shared_ptr to an instance of StateClientInterface which is owned by this object.
+   */
   virtual std::shared_ptr<StateClientInterface> stateClientInterface() const = 0;
   virtual std::shared_ptr<TimeSyncApi> timeSyncInterface() const = 0;
 };
