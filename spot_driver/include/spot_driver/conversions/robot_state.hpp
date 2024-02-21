@@ -39,43 +39,154 @@ inline const std::map<const std::string, const std::string> kFriendlyJointNames 
     {"arm0.wr1", "arm_wr1"},        {"arm0.f1x", "arm_f1x"},
 };
 
+/**
+ * @brief Create a BatteryStateArray ROS message by parsing a RobotState message and applying a clock skew to it.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @return A BatteryStateArray containing the battery info from the robot state message.
+ */
 spot_msgs::msg::BatteryStateArray getBatteryStates(const ::bosdyn::api::RobotState& robot_state,
                                                    const google::protobuf::Duration& clock_skew);
 
+/**
+ * @brief Create a WiFiState ROS message by parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @return A WiFiState containing the wifi connection info from the robot state message.
+ */
 spot_msgs::msg::WiFiState getWifiState(const ::bosdyn::api::RobotState& robot_state);
 
+/**
+ * @brief Create a FootStateArray ROS message by parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @return A FootStateArray containing the foot state info from the robot state message.
+ */
 spot_msgs::msg::FootStateArray getFootState(const ::bosdyn::api::RobotState& robot_state);
 
+/**
+ * @brief Create an EStopStateArray ROS message by parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @return An EStopStateArray message containing the E-Stop state data from the robot state message.
+ */
 spot_msgs::msg::EStopStateArray getEstopStates(const ::bosdyn::api::RobotState& robot_state,
                                                const google::protobuf::Duration& clock_skew);
 
+/**
+ * @brief Create a JointState ROS message by parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @param prefix The prefix to apply to all robot joint names. This corresponds to the name of the robot. It is expected
+ * to terminate with `/`.
+ * @return If the robot state message contains joint state data, return a JointState message containing this data.
+ * Otherwise, return nullopt.
+ */
 std::optional<sensor_msgs::msg::JointState> getJointStates(const ::bosdyn::api::RobotState& robot_state,
                                                            const google::protobuf::Duration& clock_skew,
                                                            const std::string& prefix);
 
+/**
+ * @brief Create a ROS TFMessage by parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @param prefix  The prefix to apply to all robot frame IDs. This corresponds to the name of the robot. It is expected
+ * to terminate with `/`.
+ * @param preferred_base_frame_id Frame ID to use as the base frame of the TF tree. Must be either "odom" or "vision".
+ * @return If the robot state message contains a FrameTreeSnapshot and robot frame data, return a TFMessage containing
+ * this data. Otherwise, return nullopt.
+ */
 std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& robot_state,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                               const std::string& preferred_base_frame_id);
 
+/**
+ * @brief Create an TwistWithCovarianceStamped ROS message representing Spot's body velocity by parsing a RobotState
+ * message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @return If the robot state message contains the velocity of the Spot's body relative to the odometry frame in its
+ * kinematic state, return a TwistWithCovarianceStamped containing this data. Otherwise, return nullopt.
+ */
 std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
     const ::bosdyn::api::RobotState& robot_state, const google::protobuf::Duration& clock_skew);
 
+/**
+ * @brief Create an Odometry ROS message representing Spot's pose and velocity relative to a fixed world frame by
+ * parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @param prefix The prefix to apply to all robot frame IDs. This corresponds to the name of the robot. It is expected
+ * to terminate with `/`.
+ * @param is_using_vision Set to 'true' if Spot's preferred base frame is "vision". Otherwise, the preferred base frame
+ * will be "odom".
+ * @return If the robot state message's kinematic state contains data about its pose and velocity, return an Odometry
+ * message containing this data, Otherwise, return nullopt.
+ */
 std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& robot_state,
                                                const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                                bool is_using_vision);
 
+/**
+ * @brief Create a PowerState ROS message by parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @return If the robot state message contains data about Spot's power state, return a PowerState message containing
+ * this data. Otherwise, return nullopt.
+ */
 std::optional<spot_msgs::msg::PowerState> getPowerState(const ::bosdyn::api::RobotState& robot_state,
                                                         const google::protobuf::Duration& clock_skew);
 
+/**
+ * @brief Create a SystemFault ROS message by parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @return If the robot state message contains data about Spot's system fault states, return a SystemFaultState message
+ * containing this data. Otherwise, return nullopt.
+ */
 std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosdyn::api::RobotState& robot_state,
                                                                     const google::protobuf::Duration& clock_skew);
 
+/**
+ * @brief Create a ManipulatorState ROS message by parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @return If the robot state message contains data about Spot's manipulator state, return a ManipulatorState message
+ * containing this data. Otherwise, return nullopt.
+ */
 std::optional<bosdyn_msgs::msg::ManipulatorState> getManipulatorState(const ::bosdyn::api::RobotState& robot_state);
 
+/**
+ * @brief Create a Vector3Stamped ROS message representing the force exerted on Spot's end effector by parsing a
+ * RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @param prefix The prefix to apply to all robot frame IDs. This corresponds to the name of the robot. It is expected
+ * to terminate with `/`.
+ * @return If the robot state message contains data about the force on Spot's end effector, return a Vector3Stamped
+ * message representing this force. Otherwise, return nullopt.
+ */
 std::optional<geometry_msgs::msg::Vector3Stamped> getEndEffectorForce(const ::bosdyn::api::RobotState& robot_state,
                                                                       const google::protobuf::Duration& clock_skew,
                                                                       const std::string& prefix);
 
+/**
+ * @brief Create a BehaviorFaultState ROS message by parsing a RobotState message.
+ *
+ * @param robot_state Robot state message from Spot.
+ * @param clock_skew The clock skew reported by Spot at the timepoint when the robot state was created.
+ * @return If the robot state message contains data about Spot's behavior fault states, return a BehaviorFaultState
+ * message containing this data. Otherwise, return nullopt.
+ */
 std::optional<spot_msgs::msg::BehaviorFaultState> getBehaviorFaultState(const ::bosdyn::api::RobotState& robot_state,
                                                                         const google::protobuf::Duration& clock_skew);
 
