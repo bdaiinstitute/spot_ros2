@@ -158,9 +158,16 @@ std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& 
       !robot_state.kinematic_state().has_velocity_of_body_in_odom()) {
     return std::nullopt;
   }
-  const auto& kinematic_state = robot_state.kinematic_state();
+
+  const auto odom_twist = getOdomTwist(robot_state, clock_skew);
+  if (!odom_twist) {
+    return std::nullopt;
+  }
 
   nav_msgs::msg::Odometry odom_msg;
+  odom_msg.twist = odom_twist.value().twist;
+
+  const auto& kinematic_state = robot_state.kinematic_state();
   odom_msg.header.stamp = applyClockSkew(kinematic_state.acquisition_timestamp(), clock_skew);
 
   ::bosdyn::api::SE3Pose tf_body_pose;
@@ -177,7 +184,6 @@ std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& 
   }
   common_conversions::convertToRos(tf_body_pose, odom_msg.pose.pose);
   odom_msg.child_frame_id = prefix + "body";
-  odom_msg.twist = getOdomTwist(robot_state, clock_skew).value().twist;
   return odom_msg;
 }
 
