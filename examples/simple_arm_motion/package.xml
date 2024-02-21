@@ -4,8 +4,8 @@
   <name>simple_arm_motion</name>
   <version>0.0.0</version>
   <description>Example of converting the BD Simple Arm Motion example to ROS2</description>
-  <maintainer email="engineeering@theaiinstitute.com">BD AI Institute</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="engineeering@theaiinstitute.com">AI Institute</maintainer>
+  <license>MIT</license>
 
   <exec_depend>bdai_ros2_wrappers</exec_depend>
 
