@@ -29,14 +29,14 @@ void KinematicService::getSolutions(const std::shared_ptr<GetInverseKinematicSol
   auto ros_request = request->request;
 
   bosdyn::api::spot::InverseKinematicsRequest proto_request;
-  kinematic_conversions::convertToProto(ros_request, proto_request);
+  convertToProto(ros_request, proto_request);
 
   auto expected = kinematic_api_->getSolutions(proto_request);
   if (!expected) {
     logger_->logError(std::string{"Error querying the Inverse Kinematics service: "}.append(expected.error()));
     response->response.status.value = bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_UNKNOWN;
   } else {
-    kinematic_conversions::convertToRos(expected.value(), response->response);
+    convertToRos(expected.value(), response->response);
   }
 }
 }  // namespace spot_ros2::kinematic

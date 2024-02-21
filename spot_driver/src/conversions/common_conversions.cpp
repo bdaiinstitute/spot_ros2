@@ -2,7 +2,7 @@
 
 #include <spot_driver/conversions/common_conversions.hpp>
 
-namespace spot_ros2::common_conversions {
+namespace spot_ros2 {
 
 ///////////////////////////////////////////////////////////////////////////////
 // ROS to Protobuf.
@@ -44,7 +44,7 @@ void convertToProto(const geometry_msgs::msg::Pose& ros_msg, bosdyn::api::SE3Pos
   convertToProto(ros_msg.orientation, *proto.mutable_rotation());
 }
 
-void convertToProto(const double ros_msg, google::protobuf::DoubleValue& proto) {
+void convertToProto(const double& ros_msg, google::protobuf::DoubleValue& proto) {
   proto.set_value(ros_msg);
 }
 
@@ -73,7 +73,7 @@ void convertToProto(const bosdyn_msgs::msg::ArmJointPosition& ros_msg, bosdyn::a
 // Protobuf to ROS.
 
 void convertToRos(const bosdyn::api::RequestHeader& proto, bosdyn_msgs::msg::RequestHeader& ros_msg) {
-  common_conversions::convertToRos(proto.request_timestamp(), ros_msg.request_timestamp);
+  convertToRos(proto.request_timestamp(), ros_msg.request_timestamp);
   ros_msg.request_timestamp_is_set = proto.has_request_timestamp();
   ros_msg.client_name = proto.client_name();
   ros_msg.disable_rpc_logging = proto.disable_rpc_logging();
@@ -87,9 +87,9 @@ void convertToRos(const bosdyn::api::CommonError& proto, bosdyn_msgs::msg::Commo
 void convertToRos(const bosdyn::api::ResponseHeader& proto, bosdyn_msgs::msg::ResponseHeader& ros_msg) {
   convertToRos(proto.request_header(), ros_msg.request_header);
   ros_msg.request_header_is_set = proto.has_request_header();
-  common_conversions::convertToRos(proto.request_received_timestamp(), ros_msg.request_received_timestamp);
+  convertToRos(proto.request_received_timestamp(), ros_msg.request_received_timestamp);
   ros_msg.request_received_timestamp_is_set = proto.has_request_received_timestamp();
-  common_conversions::convertToRos(proto.response_timestamp(), ros_msg.response_timestamp);
+  convertToRos(proto.response_timestamp(), ros_msg.response_timestamp);
   ros_msg.response_timestamp_is_set = proto.has_response_timestamp();
   convertToRos(proto.error(), ros_msg.error);
   ros_msg.error_is_set = proto.has_error();
@@ -129,4 +129,4 @@ void convertToRos(const bosdyn::api::SE3Velocity& proto, geometry_msgs::msg::Twi
   convertToRos(proto.angular(), ros_msg.angular);
 }
 
-}  // namespace spot_ros2::common_conversions
+}  // namespace spot_ros2
