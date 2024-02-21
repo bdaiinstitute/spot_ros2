@@ -10,6 +10,7 @@
 #include <spot_driver/api/world_object_client_interface.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
+#include <spot_driver/interfaces/robot_model_interface_base.hpp>
 #include <spot_driver/interfaces/tf_interface_base.hpp>
 #include <spot_driver/interfaces/tf_listener_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
@@ -27,7 +28,8 @@ class ObjectSynchronizer {
                      std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                      std::unique_ptr<LoggerInterfaceBase> logger_interface,
                      std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                     std::unique_ptr<TimerInterfaceBase> timer_interface);
+                     std::unique_ptr<TimerInterfaceBase> timer_interface,
+                     std::unique_ptr<RobotModelInterfaceBase> robot_model_interface);
 
  private:
   void onTimer();
@@ -51,6 +53,8 @@ class ObjectSynchronizer {
   std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface_;
   /** @brief instance of TimerInterfaceBase to create callback timer*/
   std::unique_ptr<TimerInterfaceBase> timer_interface_;
+
+  std::unique_ptr<RobotModelInterfaceBase> robot_model_interface_;
 };
 
 }  // namespace spot_ros2

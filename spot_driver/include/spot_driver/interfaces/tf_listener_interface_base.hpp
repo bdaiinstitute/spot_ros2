@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <geometry_msgs/msg/detail/transform_stamped__struct.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/time.hpp>
