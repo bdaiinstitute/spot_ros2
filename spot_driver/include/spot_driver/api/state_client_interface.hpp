@@ -15,6 +15,13 @@ namespace spot_ros2 {
 class StateClientInterface {
  public:
   virtual ~StateClientInterface() = default;
+
+  /**
+   * @brief Retrieve Spot's most recent robot state data.
+   * @return Returns an expected which contains a RobotState message if the request was completed successfully. If the
+   * request could not be completed, or if the response does not contain a RobotState message, return an error message
+   * describing the failure.
+   */
   virtual tl::expected<bosdyn::api::RobotState, std::string> getRobotState() = 0;
 };
 }  // namespace spot_ros2

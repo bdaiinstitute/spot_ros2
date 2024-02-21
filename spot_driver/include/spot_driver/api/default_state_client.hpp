@@ -14,14 +14,20 @@ class DefaultStateClient final : public StateClientInterface {
   /**
    * @brief constructor for DefaultStateClient.
    *
-   * @param client pointer to Spot's RobotStateClient. A DefaultStateClient SHOULD NOT delete this pointer since it
+   * @param client A pointer to Spot's RobotStateClient. A DefaultStateClient SHOULD NOT delete this pointer since it
    * does not take ownership.
    */
   explicit DefaultStateClient(::bosdyn::client::RobotStateClient* client);
 
+  /**
+   * @brief Retrieve Spot's most recent robot state data.
+   * @return Returns an expected which contains a RobotState message if the request was completed successfully or an
+   * error message if the request could not be completed.
+   */
   tl::expected<bosdyn::api::RobotState, std::string> getRobotState() override;
 
  private:
+  /** @brief A pointer to a RobotStateClient provided to this class during construction. */
   ::bosdyn::client::RobotStateClient* client_;
 };
 
