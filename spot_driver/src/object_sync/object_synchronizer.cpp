@@ -45,6 +45,18 @@ void ObjectSynchronizer::onTimer() {
     return;
   }
 
+  // if (!state_client_interface_) {
+  //   logger_interface_->logError("Robot state interface not initialized.");
+  //   return;
+  // }
+
+  // const auto robot_state = state_client_interface_->getRobotState();
+  // if(!robot_state)
+  // {
+  //   logger_interface_->logError("Failed to get robot state.");
+  //   return;
+  // }
+
   // Get all TF frame IDs
   const auto tf_frame_names = tf_listener_interface_->getAllFrameNames();
   std::cout << "TF frames:\n";
@@ -55,7 +67,8 @@ void ObjectSynchronizer::onTimer() {
 
   // Get all frame IDs which are a part of Spot (I think this is fixed once we set whether Spot has an arm. Can retrieve
   // from the URDF published by RobotStatePublisher.) Get all the frame IDs which are published by Spot but cannot be
-  // modified by this node (for example, AR tag poses)
+  // modified by this node (for example, AR tag poses).
+  // The URDF does not contain the frames for the cameras, which are published by Spot.
   const auto robot_model_frames = robot_model_interface_->getFrameIds();
   if (!robot_model_frames) {
     logger_interface_->logError("Failed to get Spot frame IDs from robot model: " + robot_model_frames.error());
@@ -73,17 +86,37 @@ void ObjectSynchronizer::onTimer() {
   // TODO(jschornak-bdai): request should set earliest timestamp for objects
   const auto non_mutable_frames_response = world_object_client_interface_->listWorldObjects(request_non_mutable_frames);
   if (!non_mutable_frames_response) {
-    logger_interface_->logError("Failed to list world objects.");
+    logger_interface_->logError("Failed to list apriltag objects.");
+    return;
+  }
+
+  ::bosdyn::api::ListWorldObjectRequest request_mutable_frames;
+  request_mutable_frames.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_UNKNOWN);
+  // TODO(jschornak-bdai): request should set earliest timestamp for objects
+  const auto mutable_frames_response = world_object_client_interface_->listWorldObjects(request_mutable_frames);
+  if (!mutable_frames_response) {
+    logger_interface_->logError("Failed to list other objects.");
     return;
   }
   // Each WorldObject has its own transform snapshot
   // non_mutable_frames_response.value().world_objects().at(0)
 
-  std::set<std::string> world_object_names;
-  std::cout << "world objects:\n";
+  std::set<std::string> world_object_frames;
   for (const auto& world_object : non_mutable_frames_response.value().world_objects()) {
-    std::cout << "  " << world_object.name() << "\n";
-    world_object_names.insert(world_object.name());
+    if (!world_object.has_transforms_snapshot()) {
+      continue;
+    }
+    // TODO(jschornak): exclude frames that are part of Spot's body.
+    // The transform snapshot for the AprilTags for example contains the vision, odom, body, and vision frames upstream
+    // of the fiducial frames
+    for (const auto& world_object_subframe : world_object.transforms_snapshot().child_to_parent_edge_map()) {
+      world_object_frames.insert(world_object_subframe.first);
+    }
+  }
+
+  std::cout << "world object frames:\n";
+  for (const auto& frame : world_object_frames) {
+    std::cout << "  " << frame << "\n";
   }
   std::cout << std::endl;
 
@@ -117,7 +150,7 @@ void ObjectSynchronizer::onTimer() {
     ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
     // common_conversions::convertToProto(tform_base_to_frame.value().transform, *edge.mutable_parent_tform_child());
 
-    if (world_object_names.count(tf_frame) == 0) {
+    if (world_object_frames.count(tf_frame) == 0) {
       request.mutable_mutation()->set_action(
           ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_ADD);
     } else {
