@@ -37,12 +37,12 @@ from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
 
 import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
+from utilities.simple_spot_commander import SimpleSpotCommander
+from utilities.tf_listener_wrapper import TFListenerWrapper
 
 
 class SpotRunner:

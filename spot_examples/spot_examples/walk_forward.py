@@ -10,11 +10,11 @@ from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import SE2Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from rclpy.node import Node
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
 
 import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
+from utilities.simple_spot_commander import SimpleSpotCommander
+from utilities.tf_listener_wrapper import TFListenerWrapper
 
 # Where we want the robot to walk to relative to itself
 ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)

@@ -9,11 +9,11 @@ from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.robot_command import RobotCommandBuilder
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
 
 import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
+from utilities.simple_spot_commander import SimpleSpotCommander
+from utilities.tf_listener_wrapper import TFListenerWrapper
 
 
 def hello_arm(robot_name: Optional[str] = None) -> bool:
