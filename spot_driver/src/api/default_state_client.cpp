@@ -2,8 +2,8 @@
 
 #include <bosdyn/api/robot_state.pb.h>
 #include <spot_driver/api/default_state_client.hpp>
-#include <spot_driver/api/time_sync_api.hpp>
-#include <spot_driver/conversions/geometry.hpp>
+#include <string>
+#include <tl_expected/expected.hpp>
 #include <spot_driver/conversions/robot_state.hpp>
 
 namespace spot_ros2 {

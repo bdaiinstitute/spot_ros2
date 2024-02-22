@@ -172,15 +172,15 @@ std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& 
 
   ::bosdyn::api::SE3Pose tf_body_pose;
   if (is_using_vision) {
-    odom_msg.header.frame_id = prefix + "vision";
     if (!::bosdyn::api::GetWorldTformBody(kinematic_state.transforms_snapshot(), &tf_body_pose)) {
       return std::nullopt;
     }
+    odom_msg.header.frame_id = prefix + "vision";
   } else {
-    odom_msg.header.frame_id = prefix + "odom";
     if (!::bosdyn::api::GetOdomTformBody(kinematic_state.transforms_snapshot(), &tf_body_pose)) {
       return std::nullopt;
     }
+    odom_msg.header.frame_id = prefix + "odom";
   }
   common_conversions::convertToRos(tf_body_pose, odom_msg.pose.pose);
   odom_msg.child_frame_id = prefix + "body";

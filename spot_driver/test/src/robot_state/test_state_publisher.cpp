@@ -22,6 +22,7 @@
 #include <tl_expected/expected.hpp>
 
 #include <memory>
+#include <utility>
 
 using ::testing::_;
 using ::testing::AllOf;

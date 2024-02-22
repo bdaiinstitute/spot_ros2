@@ -3,9 +3,7 @@
 #pragma once
 
 #include <bosdyn/api/geometry.pb.h>
-#include <bosdyn/math/frame_helpers.h>
 #include <builtin_interfaces/msg/time.hpp>
-#include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
 #include <string>

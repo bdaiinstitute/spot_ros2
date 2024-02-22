@@ -11,6 +11,7 @@
 #include <spot_driver/interfaces/image_client_interface.hpp>
 
 #include <memory>
+#include <tl_expected/expected.hpp>
 #include <string>
 
 namespace spot_ros2::test {

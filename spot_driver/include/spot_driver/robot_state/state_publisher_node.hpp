@@ -7,6 +7,8 @@
 #include <spot_driver/api/spot_api.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
+#include <spot_driver/interfaces/timer_interface_base.hpp>
+#include <spot_driver/interfaces/tf_interface_base.hpp>
 #include <spot_driver/robot_state/state_publisher.hpp>
 
 #include <memory>

@@ -4,7 +4,7 @@
 
 #include <bosdyn/client/robot_state/robot_state_client.h>
 #include <spot_driver/api/state_client_interface.hpp>
-
+#include <tl_expected/expected.hpp>
 #include <string>
 
 namespace spot_ros2 {
