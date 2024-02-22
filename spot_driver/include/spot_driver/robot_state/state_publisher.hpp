@@ -13,7 +13,6 @@
 #include <spot_driver/interfaces/timer_interface_base.hpp>
 #include <spot_driver/types.hpp>
 
-
 namespace spot_ros2 {
 
 /**

@@ -1,9 +1,9 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <memory>
-#include <utility>
 #include <spot_driver/robot_state/state_publisher.hpp>
 #include <spot_driver/robot_state/state_publisher_node.hpp>
+#include <utility>
 
 #include <spot_driver/api/default_spot_api.hpp>
 
