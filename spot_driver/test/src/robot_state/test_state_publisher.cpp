@@ -5,8 +5,8 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/timestamp.pb.h>
-
 #include <geometry_msgs/msg/transform_stamped.hpp>
+#include <memory>
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
@@ -20,10 +20,9 @@
 #include <spot_driver/types.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <tl_expected/expected.hpp>
-
-#include <memory>
 #include <utility>
 
+namespace {
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::HasSubstr;
@@ -34,6 +33,7 @@ using ::testing::Return;
 using ::testing::Unused;
 
 constexpr auto kErrorMessage = "Some error message.";
+}  // namespace
 
 namespace spot_ros2::test {
 class StatePublisherTest : public ::testing::Test {

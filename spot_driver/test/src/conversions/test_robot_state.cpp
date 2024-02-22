@@ -1,12 +1,11 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
-#include <gmock/gmock-matchers.h>
-#include <gmock/gmock-more-matchers.h>
-#include <gmock/gmock.h>
-
 #include <bosdyn/api/geometry.pb.h>
 #include <bosdyn/api/robot_state.pb.h>
 #include <bosdyn/math/frame_helpers.h>
+#include <gmock/gmock-matchers.h>
+#include <gmock/gmock-more-matchers.h>
+#include <gmock/gmock.h>
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/map.h>
 #include <google/protobuf/timestamp.pb.h>

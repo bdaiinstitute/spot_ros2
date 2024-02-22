@@ -1,10 +1,11 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <gmock/gmock.h>
-
+#include <exception>
+#include <memory>
+#include <rclcpp/node.hpp>
+#include <rclcpp/node_options.hpp>
 #include <spot_driver/api/spot_api.hpp>
-#include <spot_driver/robot_state/state_publisher_node.hpp>
-
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
@@ -14,17 +15,14 @@
 #include <spot_driver/mock/mock_tf_interface.hpp>
 #include <spot_driver/mock/mock_time_sync_api.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
-
-#include <rclcpp/node.hpp>
-#include <rclcpp/node_options.hpp>
-
-#include <exception>
-#include <memory>
+#include <spot_driver/robot_state/state_publisher_node.hpp>
 #include <tl_expected/expected.hpp>
 
+namespace {
 using ::testing::_;
 using ::testing::InSequence;
 using ::testing::Return;
+}  // namespace
 
 namespace spot_ros2::test {
 

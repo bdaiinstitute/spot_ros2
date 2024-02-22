@@ -2,7 +2,12 @@
 
 #include <gmock/gmock.h>
 
+#include <bosdyn/api/geometry.pb.h>
 #include <bosdyn/math/proto_math.h>
+#include <builtin_interfaces/msg/time.hpp>
+#include <geometry_msgs/msg/quaternion.hpp>
+#include <geometry_msgs/msg/transform.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
 #include <spot_driver/conversions/geometry.hpp>
 
 namespace {
