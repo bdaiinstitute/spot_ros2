@@ -6,8 +6,7 @@ namespace spot_ros2 {
 RclcppTfInterface::RclcppTfInterface(const std::shared_ptr<rclcpp::Node>& node)
     : static_tf_broadcaster_{node}, dynamic_tf_broadcaster_{node} {}
 
-tl::expected<void, std::string> RclcppTfInterface::updateStaticTransforms(
-    const std::vector<geometry_msgs::msg::TransformStamped>& transforms) {
+void RclcppTfInterface::updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) {
   bool has_new_frame = false;
   for (const auto& transform : transforms) {
     // If one of the transforms is to a new child frame, flag that a new transform needs to be published and add the
@@ -23,7 +22,6 @@ tl::expected<void, std::string> RclcppTfInterface::updateStaticTransforms(
   if (has_new_frame) {
     static_tf_broadcaster_.sendTransform(transforms);
   }
-  return {};
 }
 
 void RclcppTfInterface::sendDynamicTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) {

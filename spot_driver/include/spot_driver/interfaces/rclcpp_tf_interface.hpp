@@ -27,10 +27,8 @@ class RclcppTfInterface : public TfInterfaceBase {
   /**
    * @brief Add new transforms to the StaticTransformBroadcaster.
    * @param transforms Transforms to publish as static transforms.
-   * @return Currently updating static transforms will always succeed, so this function always returns void.
    */
-  tl::expected<void, std::string> updateStaticTransforms(
-      const std::vector<geometry_msgs::msg::TransformStamped>& transforms) override;
+  void updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) override;
 
   /**
    * @brief Broadcast TF messages for dynamic transforms.

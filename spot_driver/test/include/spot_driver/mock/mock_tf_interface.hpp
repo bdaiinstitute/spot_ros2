@@ -14,8 +14,8 @@
 namespace spot_ros2::test {
 class MockTfInterface : public TfInterfaceBase {
  public:
-  MOCK_METHOD((tl::expected<void, std::string>), updateStaticTransforms,
-              (const std::vector<geometry_msgs::msg::TransformStamped>& transforms), (override));
+  MOCK_METHOD(void, updateStaticTransforms, (const std::vector<geometry_msgs::msg::TransformStamped>& transforms),
+              (override));
   MOCK_METHOD(void, sendDynamicTransforms, (const std::vector<geometry_msgs::msg::TransformStamped>& transforms),
               (override));
 };
