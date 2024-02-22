@@ -41,8 +41,9 @@ from tf2_ros import TransformBroadcaster
 import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
+
+from .simple_spot_commander import SimpleSpotCommander
+from .tf_listener_wrapper import TFListenerWrapper
 
 
 class SpotRunner:

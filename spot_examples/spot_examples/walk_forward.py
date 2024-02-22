@@ -13,8 +13,9 @@ from rclpy.node import Node
 
 import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
+
+from .simple_spot_commander import SimpleSpotCommander
+from .tf_listener_wrapper import TFListenerWrapper
 
 # Where we want the robot to walk to relative to itself
 ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)

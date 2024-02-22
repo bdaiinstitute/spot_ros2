@@ -12,8 +12,9 @@ from bosdyn.client.robot_command import RobotCommandBuilder
 
 import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
+
+from .simple_spot_commander import SimpleSpotCommander
+from .tf_listener_wrapper import TFListenerWrapper
 
 
 def hello_arm(robot_name: Optional[str] = None) -> bool:
