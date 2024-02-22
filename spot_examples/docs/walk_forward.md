@@ -4,11 +4,11 @@ This is a simple example of using ROS2 to make the robot walk 1m forward.
 ## Running the Example
 For this example, make sure to position the robot with 2m of clear space in front of it either sitting or standing (it's going to walk 1m forward). After the Spot driver is running, you can start the example with:
 ```bash
-ros2 run simple_walk_forward walk_forward
+ros2 run spot_examples walk_forward
 ```
 If you launched the driver with a namespace, use the following command instead:
 ```bash
-ros2 run simple_walk_forward walk_forward --robot <spot_name>
+ros2 run spot_examples walk_forward --robot <spot_name>
 ```
 The robot should walk forward.
 

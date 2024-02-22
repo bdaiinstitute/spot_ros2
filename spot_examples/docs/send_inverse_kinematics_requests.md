@@ -24,11 +24,11 @@ The given Python script will:
 
 Make sure there is approximately 1 meter free around the robot in all directions. Once the Spot driver is running, you can start the example with:
 ```bash
-ros2 run inverse_kinematics_example send_inverse_kinematics_requests --robot spot_name --poses n
+ros2 run spot_examples send_inverse_kinematics_requests --robot spot_name --poses n
 ```
 For example:
 ```bash
-ros2 run inverse_kinematics_example send_inverse_kinematics_requests --robot Opal --poses 10
+ros2 run spot_examples send_inverse_kinematics_requests --robot Opal --poses 10
 ```
 
 The following parameter is mandatory.
