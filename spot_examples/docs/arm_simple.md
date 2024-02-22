@@ -1,28 +1,8 @@
+# arm_simple
 This is a simple example of using ROS2 to move the arm up and down and open and close the gripper.
 
 ## Running the Example
-
-1.  Position the robot with 1m of clear space around it either sitting or standing (it will move its arm up and down)
-2.  Make sure you've built and sourced your workspace:
-    ```bash
-    cd <ros2 workspace>
-    colcon build --symlink-install
-    source /opt/ros/humble/setup.bash
-    source ./install/local_setup.bash
-    ```
-
-3.  Define the environment variables `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP` appropriately for your robot.
-
-4.  Start the driver:
-```bash
-ros2 launch spot_driver spot_driver.launch.py
-```
-If you want to launch with a namespace,
-```bash
-ros2 launch spot_driver.launch.py spot_name:=<spot_name>
-```
-
-5.  Run the example:
+For this example, make sure to position the robot with 2m of clear space in front of it either sitting or standing (it's going to walk 1m forward). After the Spot driver is running, you can start the example with:
 ```bash
 ros2 run simple_arm_motion arm_simple
 ```
@@ -35,7 +15,7 @@ ros2 run simple_arm_motion arm_simple --robot <spot_name>
 
 While the driver provides plenty of helper services and topics, direct Spot API calls can also usually be replaced with ROS2 calls simply by converting the protobuf into a ROS message and using the `robot_command` action.  This example shows how to update the [BD Simple Arm Motion example](https://dev.bostondynamics.com/python/examples/arm_simple/readme) to use ROS2 instead of direct API calls.  The same concepts can be applied to any code that uses the `RobotCommand` protobuf.
 
-We'll go through the changes the [ROS2 code](simple_arm_motion/arm_simple.py) makes to the [original example provided by Boston Dynamics](https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/arm_simple/arm_simple.py).
+We'll go through the changes the [ROS2 code](../spot_examples/arm_simple.py) makes to the [original example provided by Boston Dynamics](https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/arm_simple/arm_simple.py).
 
 The first substantive lines of the original code are:
 ```python

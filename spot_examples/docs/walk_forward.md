@@ -1,31 +1,12 @@
+# walk_forward
 This is a simple example of using ROS2 to make the robot walk 1m forward.
 
 ## Running the Example
-1.  Position the robot with 2m of clear space in front of it either sitting or standing (it's going to walk 1m forward)
-2.  Make sure you've built and sourced your workspace:
-    ```bash
-    cd <ros2 workspace>
-    colcon build --symlink-install
-    source /opt/ros/humble/setup.bash
-    source ./install/local_setup.bash
-    ```
-
-3.  Define the environment variables `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP` appropriately for your robot.
-
-4.  Start the driver:
-```bash
-ros2 launch spot_driver spot_driver.launch.py
-```
-If you want to launch with a namespace,
-```bash
-ros2 launch spot_driver.launch.py spot_name:=<spot_name> 
-```
-
-5.  Run the example:
+For this example, make sure to position the robot with 2m of clear space in front of it either sitting or standing (it's going to walk 1m forward). After the Spot driver is running, you can start the example with:
 ```bash
 ros2 run simple_walk_forward walk_forward
 ```
-If you are launching spot_ros2 with a namespace, use the following command instead:
+If you launched the driver with a namespace, use the following command instead:
 ```bash
 ros2 run simple_walk_forward walk_forward --robot <spot_name>
 ```
@@ -33,7 +14,7 @@ The robot should walk forward.
 
 ## Understanding the Code
 
-Now let's go through [the code](simple_walk_forward/walk_forward.py) and see what's happening.
+Now let's go through [the code](../spot_examples/walk_forward.py) and see what's happening.
 
 Because ROS generally requires persistent things like publishers and subscribers, it’s often useful to have a class around everything.  A [ROS Node](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html) is an object that can interact with [ROS topics](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Topics/Understanding-ROS2-Topics.html) so our classes usually inherit from Node or contain a node:
 ```python
@@ -51,7 +32,7 @@ Then we set up ROS's [TF](https://docs.ros.org/en/humble/Tutorials/Intermediate/
 ```
 We use a [wrapper](https://github.com/bdaiinstitute/ros_utilities/blob/main/bdai_ros2_wrappers/bdai_ros2_wrappers/tf_listener_wrapper.py) that supports synchronous operation around ROS2’s asynchronous [TF implementation](https://github.com/ros2/rclpy/tree/humble).  Passing it the body and vision frame names causes the wrapper to wait until it sees those frames.  This lets us make sure the robot is started and TF is working before proceeeding.
 
-In order to perform small actions with the robot we use the [SimpleSpotCommander class](../utilities/utilities/simple_spot_commander.py).  This wraps some service clients that talk to services offered by the spot driver.
+In order to perform small actions with the robot we use the [SimpleSpotCommander class](../../utilities/utilities/simple_spot_commander.py).  This wraps some service clients that talk to services offered by the spot driver.
 ```python
         self._robot = SimpleSpotCommander(self._robot_name, node)
 ```
