@@ -3,7 +3,11 @@
 
 #include <spot_driver/conversions/geometry.hpp>
 
+#include <bosdyn/api/geometry.pb.h>
+#include <builtin_interfaces/msg/time.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <spot_driver/conversions/common_conversions.hpp>
+#include <string>
 
 namespace spot_ros2::conversions {
 geometry_msgs::msg::TransformStamped toTransformStamped(const ::bosdyn::api::SE3Pose& transform,
