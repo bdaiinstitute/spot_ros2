@@ -32,22 +32,22 @@ sudo pip3 install --force-reinstall -v "setuptools==59.6.0"
 
 if $ARM; then
     # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
-    wget -q -O /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_arm64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.3.2-ARM64/ros-humble-bosdyn-msgs_3.3.2-0jammy_arm64.deb
-    sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_arm64.deb
-    rm /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_arm64.deb
+    wget -q -O /tmp/ros-humble-bosdyn-msgs_4.0.0-0jammy_arm64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v4.0.0-ARM64/ros-humble-bosdyn-msgs_4.0.0-0jammy_arm64.deb
+    sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_4.0.0-0jammy_arm64.deb
+    rm /tmp/ros-humble-bosdyn-msgs_4.0.0-0jammy_arm64.deb
 
     # Install spot-cpp-sdk
-    wget -q -O /tmp/spot-cpp-sdk_3.3.2_arm64.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/3.3.2/spot-cpp-sdk_3.3.2_arm64.deb
-    sudo dpkg -i /tmp/spot-cpp-sdk_3.3.2_arm64.deb
-    rm /tmp/spot-cpp-sdk_3.3.2_arm64.deb
+    wget -q -O /tmp/spot-cpp-sdk_4.0.0_arm64.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/4.0.0/spot-cpp-sdk_4.0.0_arm64.deb
+    sudo dpkg -i /tmp/spot-cpp-sdk_4.0.0_arm64.deb
+    rm /tmp/spot-cpp-sdk_4.0.0_arm64.deb
 else
     # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
-    wget -q -O /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.3.2-AMD64/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb
-    sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb
-    rm /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb
+    wget -q -O /tmp/ros-humble-bosdyn-msgs_4.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v4.0.0-AMD64/ros-humble-bosdyn-msgs_4.0.0-0jammy_amd64.deb
+    sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_4.0.0-0jammy_amd64.deb
+    rm /tmp/ros-humble-bosdyn-msgs_4.0.0-0jammy_amd64.deb
 
     # Install spot-cpp-sdk
-    wget -q -O /tmp/spot-cpp-sdk_3.3.2_amd64.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/3.3.2/spot-cpp-sdk_3.3.2_amd64.deb
-    sudo dpkg -i /tmp/spot-cpp-sdk_3.3.2_amd64.deb
-    rm /tmp/spot-cpp-sdk_3.3.2_amd64.deb
+    wget -q -O /tmp/spot-cpp-sdk_4.0.0_amd64.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/4.0.0/spot-cpp-sdk_4.0.0_amd64.deb
+    sudo dpkg -i /tmp/spot-cpp-sdk_4.0.0_amd64.deb
+    rm /tmp/spot-cpp-sdk_4.0.0_amd64.deb
 fi
