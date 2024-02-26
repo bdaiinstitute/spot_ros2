@@ -245,7 +245,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     kinematc_node_params = {"spot_name": spot_name}
     kinematic_node = launch_ros.actions.Node(
         package="spot_driver",
-        executable="kinematic_node",
+        executable="spot_inverse_kinematics_node",
         output="screen",
         parameters=[config_file, kinematc_node_params],
         namespace=spot_name,
@@ -280,7 +280,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_robot_state_publisher_params = {"spot_name": spot_name, "preferred_odom_frame": "odom"}
     spot_robot_state_publisher = launch_ros.actions.Node(
         package="spot_driver",
-        executable="spot_robot_state_publisher_node",
+        executable="state_publisher_node",
         output="screen",
         parameters=[config_file, spot_robot_state_publisher_params],
         namespace=spot_name,
