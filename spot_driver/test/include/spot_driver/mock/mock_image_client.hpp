@@ -1,5 +1,7 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#pragma once
+
 #include <gmock/gmock.h>
 
 #include <spot_driver/interfaces/image_client_interface.hpp>

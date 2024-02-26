@@ -47,7 +47,6 @@ from bosdyn_msgs.msg import (
     GripperCommandFeedback,
     Logpoint,
     ManipulationApiFeedbackResponse,
-    ManipulatorState,
     MobilityCommandFeedback,
     PtzDescription,
     RobotCommandFeedback,
@@ -58,11 +57,8 @@ from geometry_msgs.msg import (
     PoseStamped,
     TransformStamped,
     Twist,
-    TwistWithCovarianceStamped,
-    Vector3Stamped,
 )
 from google.protobuf.timestamp_pb2 import Timestamp
-from nav_msgs.msg import Odometry
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -75,7 +71,7 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
-from sensor_msgs.msg import CameraInfo, Image, JointState
+from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.conversions as conv
@@ -84,37 +80,17 @@ import spot_driver.conversions as conv
 # Release
 from spot_driver.ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
-    get_battery_states_from_state,
-    get_behavior_faults_from_state,
-    get_end_effector_force_from_state,
-    get_estop_state_from_state,
-    get_feet_from_state,
     get_from_env_and_fall_back_to_param,
-    get_joint_states_from_state,
-    get_manipulator_state_from_state,
-    get_odom_from_state,
-    get_odom_twist_from_state,
-    get_power_states_from_state,
-    get_system_faults_from_state,
-    get_tf_from_state,
     get_tf_from_world_objects,
-    get_wifi_from_state,
     populate_transform_stamped,
 )
 from spot_msgs.action import Manipulation, NavigateTo, RobotCommand, Trajectory  # type: ignore
 from spot_msgs.msg import (  # type: ignore
-    BatteryStateArray,
-    BehaviorFaultState,
-    EStopStateArray,
     Feedback,
-    FootStateArray,
     LeaseArray,
     LeaseResource,
     Metrics,
     MobilityParams,
-    PowerState,
-    SystemFaultState,
-    WiFiState,
 )
 from spot_msgs.srv import (  # type: ignore
     ChoreographyRecordedStateToAnimation,
@@ -240,7 +216,6 @@ class SpotROS(Node):
 
         self.callbacks: Dict[str, Callable] = {}
         """Dictionary listing what callback to use for what data task"""
-        self.callbacks["robot_state"] = self.robot_state_callback
         self.callbacks["metrics"] = self.metrics_callback
         self.callbacks["lease"] = self.lease_callback
         self.callbacks["world_objects"] = self.world_objects_callback
@@ -271,7 +246,6 @@ class SpotROS(Node):
         self.declare_parameter("rgb_cameras", True)
 
         # Declare rates for the spot_ros2 publishers, which are combined to a dictionary
-        self.declare_parameter("robot_state_rate", 50.0)
         self.declare_parameter("metrics_rate", 0.04)
         self.declare_parameter("lease_rate", 1.0)
         self.declare_parameter("world_objects_rate", 20.0)
@@ -316,7 +290,6 @@ class SpotROS(Node):
         self.goal_handle: Optional[ServerGoalHandle] = None
 
         self.rates = {
-            "robot_state": self.get_parameter("robot_state_rate").value,
             "metrics": self.get_parameter("metrics_rate").value,
             "lease": self.get_parameter("lease_rate").value,
             "world_objects": self.get_parameter("world_objects_rate").value,
@@ -485,26 +458,11 @@ class SpotROS(Node):
         self.declare_parameter("has_arm", has_arm)
 
         # Status Publishers #
-        self.joint_state_pub: Publisher = self.create_publisher(JointState, "joint_states", 1)
         self.dynamic_broadcaster: tf2_ros.TransformBroadcaster = tf2_ros.TransformBroadcaster(self)
         self.metrics_pub: Publisher = self.create_publisher(Metrics, "status/metrics", 1)
         self.lease_pub: Publisher = self.create_publisher(LeaseArray, "status/leases", 1)
-        self.odom_twist_pub: Publisher = self.create_publisher(TwistWithCovarianceStamped, "odometry/twist", 1)
-        self.odom_pub: Publisher = self.create_publisher(Odometry, "odometry", 1)
-        self.feet_pub: Publisher = self.create_publisher(FootStateArray, "status/feet", 1)
-        self.estop_pub: Publisher = self.create_publisher(EStopStateArray, "status/estop", 1)
-        self.wifi_pub: Publisher = self.create_publisher(WiFiState, "status/wifi", 1)
-        self.power_pub: Publisher = self.create_publisher(PowerState, "status/power_state", 1)
-        self.battery_pub: Publisher = self.create_publisher(BatteryStateArray, "status/battery_states", 1)
-        self.behavior_faults_pub: Publisher = self.create_publisher(BehaviorFaultState, "status/behavior_faults", 1)
-        self.system_faults_pub: Publisher = self.create_publisher(SystemFaultState, "status/system_faults", 1)
         self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
         self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
-        if has_arm:
-            self.end_effector_force_pub: Publisher = self.create_publisher(
-                Vector3Stamped, "status/end_effector_force", 1
-            )
-            self.manipulator_state_pub: Publisher = self.create_publisher(ManipulatorState, "manipulation_state", 1)
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
@@ -995,73 +953,6 @@ class SpotROS(Node):
             response.message = ""
 
         return response
-
-    def robot_state_callback(self, results: Any) -> None:
-        """Callback for when the Spot Wrapper gets new robot state data.
-        Args:
-            results: FutureWrapper object of AsyncPeriodicQuery callback
-        """
-        if self.spot_wrapper is None:
-            return
-
-        state = self.spot_wrapper.robot_state
-
-        if state is not None:
-            # Joint states
-            joint_state = get_joint_states_from_state(state, self.spot_wrapper)
-            if self.joint_state_pub is not None:
-                self.joint_state_pub.publish(joint_state)
-
-            # TF
-            tf_msg = get_tf_from_state(state, self.spot_wrapper, self.preferred_odom_frame.value)
-            if len(tf_msg.transforms) > 0:
-                self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
-
-            # Odom Twist #
-            twist_odom_msg = get_odom_twist_from_state(state, self.spot_wrapper)
-            self.odom_twist_pub.publish(twist_odom_msg)
-
-            # Odom #
-            if self.preferred_odom_frame.value == self.spot_wrapper.frame_prefix + "vision":
-                odom_msg = get_odom_from_state(state, self.spot_wrapper, use_vision=True)
-            else:
-                odom_msg = get_odom_from_state(state, self.spot_wrapper, use_vision=False)
-            self.odom_pub.publish(odom_msg)
-
-            # Feet #
-            foot_array_msg = get_feet_from_state(state, self.spot_wrapper)
-            self.feet_pub.publish(foot_array_msg)
-
-            # EStop #
-            estop_array_msg = get_estop_state_from_state(state, self.spot_wrapper)
-            self.estop_pub.publish(estop_array_msg)
-
-            # WIFI #
-            wifi_msg = get_wifi_from_state(state, self.spot_wrapper)
-            self.wifi_pub.publish(wifi_msg)
-
-            # Battery States #
-            battery_states_array_msg = get_battery_states_from_state(state, self.spot_wrapper)
-            self.battery_pub.publish(battery_states_array_msg)
-
-            # Power State #
-            power_state_msg = get_power_states_from_state(state, self.spot_wrapper)
-            self.power_pub.publish(power_state_msg)
-
-            # System Faults #
-            system_fault_state_msg = get_system_faults_from_state(state, self.spot_wrapper)
-            self.system_faults_pub.publish(system_fault_state_msg)
-
-            # Behavior Faults #
-            behavior_fault_state_msg = get_behavior_faults_from_state(state, self.spot_wrapper)
-            self.behavior_faults_pub.publish(behavior_fault_state_msg)
-
-            if self.spot_wrapper.has_arm():
-                end_effector_force_msg = get_end_effector_force_from_state(state, self.spot_wrapper)
-                self.end_effector_force_pub.publish(end_effector_force_msg)
-
-                manipulator_state_msg = get_manipulator_state_from_state(state, self.spot_wrapper)
-                self.manipulator_state_pub.publish(manipulator_state_msg)
 
     def metrics_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new metrics data.

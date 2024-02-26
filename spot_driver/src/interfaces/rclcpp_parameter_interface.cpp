@@ -17,6 +17,7 @@ constexpr auto kParameterNameHasRGBCameras = "rgb_cameras";
 constexpr auto kParameterNamePublishRGBImages = "publish_rgb";
 constexpr auto kParameterNamePublishDepthImages = "publish_depth";
 constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
+constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and
@@ -108,6 +109,10 @@ bool RclcppParameterInterface::getPublishDepthImages() const {
 bool RclcppParameterInterface::getPublishDepthRegisteredImages() const {
   return declareAndGetParameter<bool>(node_, kParameterNamePublishDepthRegisteredImages,
                                       kDefaultPublishDepthRegisteredImages);
+}
+
+std::string RclcppParameterInterface::getPreferredOdomFrame() const {
+  return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
 }
 
 std::string RclcppParameterInterface::getSpotName() const {

@@ -3,7 +3,8 @@
 #include <spot_driver/interfaces/rclcpp_tf_interface.hpp>
 
 namespace spot_ros2 {
-RclcppTfInterface::RclcppTfInterface(const std::shared_ptr<rclcpp::Node>& node) : static_tf_broadcaster_{node} {}
+RclcppTfInterface::RclcppTfInterface(const std::shared_ptr<rclcpp::Node>& node)
+    : static_tf_broadcaster_{node}, dynamic_tf_broadcaster_{node} {}
 
 void RclcppTfInterface::updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) {
   bool has_new_frame = false;
@@ -22,4 +23,9 @@ void RclcppTfInterface::updateStaticTransforms(const std::vector<geometry_msgs::
     static_tf_broadcaster_.sendTransform(transforms);
   }
 }
+
+void RclcppTfInterface::sendDynamicTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) {
+  dynamic_tf_broadcaster_.sendTransform(transforms);
+}
+
 }  // namespace spot_ros2

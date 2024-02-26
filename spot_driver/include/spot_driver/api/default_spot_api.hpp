@@ -6,6 +6,8 @@
 
 #include <bosdyn/client/robot/robot.h>
 #include <bosdyn/client/sdk/client_sdk.h>
+
+#include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/api/time_sync_api.hpp>
 
 #include <memory>
@@ -22,12 +24,15 @@ class DefaultSpotApi : public SpotApi {
   tl::expected<bool, std::string> hasArm() const override;
   std::shared_ptr<KinematicApi> kinematicApi() const override;
   std::shared_ptr<ImageClientInterface> image_client_interface() const override;
+  std::shared_ptr<StateClientInterface> stateClientInterface() const override;
+  std::shared_ptr<TimeSyncApi> timeSyncInterface() const override;
 
  private:
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   std::shared_ptr<KinematicApi> kinematicApi_;
   std::shared_ptr<ImageClientInterface> image_client_interface_;
+  std::shared_ptr<StateClientInterface> state_client_interface_;
   std::shared_ptr<TimeSyncApi> time_sync_api_;
   std::string robot_name_;
 };

@@ -18,5 +18,7 @@ class TfInterfaceBase {
   virtual ~TfInterfaceBase() {}
 
   virtual void updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) = 0;
+
+  virtual void sendDynamicTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) = 0;
 };
 }  // namespace spot_ros2

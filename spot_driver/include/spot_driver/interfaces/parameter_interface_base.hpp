@@ -24,6 +24,7 @@ class ParameterInterfaceBase {
   virtual bool getPublishRGBImages() const = 0;
   virtual bool getPublishDepthImages() const = 0;
   virtual bool getPublishDepthRegisteredImages() const = 0;
+  virtual std::string getPreferredOdomFrame() const = 0;
   virtual std::string getSpotName() const = 0;
 
  protected:
@@ -36,5 +37,6 @@ class ParameterInterfaceBase {
   static constexpr bool kDefaultPublishRGBImages{true};
   static constexpr bool kDefaultPublishDepthImages{true};
   static constexpr bool kDefaultPublishDepthRegisteredImages{true};
+  static constexpr auto kDefaultPreferredOdomFrame = "odom";
 };
 }  // namespace spot_ros2

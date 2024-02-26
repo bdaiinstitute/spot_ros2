@@ -4,7 +4,9 @@
 #include <spot_driver/api/default_image_client.hpp>
 #include <spot_driver/api/default_kinematic_api.hpp>
 #include <spot_driver/api/default_spot_api.hpp>
+#include <spot_driver/api/default_state_client.hpp>
 #include <spot_driver/api/default_time_sync_api.hpp>
+#include "spot_driver/api/state_client_interface.hpp"
 
 namespace spot_ros2 {
 
@@ -45,14 +47,21 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   time_sync_api_ = std::make_shared<DefaultTimeSyncApi>(get_time_sync_thread_response.response);
 
   // Image API.
-
   const auto image_client_result = robot_->EnsureServiceClient<::bosdyn::client::ImageClient>(
       ::bosdyn::client::ImageClient::GetDefaultServiceName());
   if (!image_client_result.status) {
     return tl::make_unexpected("Failed to create Image client.");
   }
+  // TODO(jschornak-bdai): apply clock skew in the image publisher instead of in DefaultImageClient
   image_client_interface_ =
       std::make_shared<DefaultImageClient>(image_client_result.response, time_sync_api_, robot_name_);
+
+  const auto robot_state_result = robot_->EnsureServiceClient<::bosdyn::client::RobotStateClient>(
+      ::bosdyn::client::RobotStateClient::GetDefaultServiceName());
+  if (!robot_state_result.status) {
+    return tl::make_unexpected("Failed to get robot state service client.");
+  }
+  state_client_interface_ = std::make_shared<DefaultStateClient>(robot_state_result.response);
 
   // Kinematic API.
   const auto kinematic_api_result = robot_->EnsureServiceClient<::bosdyn::client::InverseKinematicsClient>(
@@ -83,7 +92,17 @@ tl::expected<bool, std::string> DefaultSpotApi::hasArm() const {
 std::shared_ptr<ImageClientInterface> DefaultSpotApi::image_client_interface() const {
   return image_client_interface_;
 }
+
+std::shared_ptr<StateClientInterface> DefaultSpotApi::stateClientInterface() const {
+  return state_client_interface_;
+}
+
 std::shared_ptr<KinematicApi> DefaultSpotApi::kinematicApi() const {
   return kinematicApi_;
 }
+
+std::shared_ptr<TimeSyncApi> DefaultSpotApi::timeSyncInterface() const {
+  return time_sync_api_;
+}
+
 }  // namespace spot_ros2

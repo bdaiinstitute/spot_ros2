@@ -17,7 +17,6 @@ namespace spot_ros2 {
 class DefaultTimeSyncApi : public TimeSyncApi {
  public:
   explicit DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread);
-  ~DefaultTimeSyncApi() = default;
 
   tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(
       const google::protobuf::Timestamp& robot_timestamp) override;
