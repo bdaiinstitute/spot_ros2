@@ -25,11 +25,11 @@ class RclcppTfListenerInterface : public TfListenerInterfaceBase {
    */
   explicit RclcppTfListenerInterface(const std::shared_ptr<rclcpp::Node>& node);
 
-  std::vector<std::string> getAllFrameNames() override;
+  std::vector<std::string> getAllFrameNames() const override;
 
   tl::expected<geometry_msgs::msg::TransformStamped, std::string> lookupTransform(
       const std::string& parent, const std::string& child, const rclcpp::Time& timepoint,
-      const rclcpp::Duration& timeout) override;
+      const rclcpp::Duration& timeout) const override;
 
  private:
   tf2_ros::Buffer buffer_;

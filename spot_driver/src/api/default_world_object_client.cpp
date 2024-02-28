@@ -10,7 +10,7 @@ namespace spot_ros2 {
 DefaultWorldObjectClient::DefaultWorldObjectClient(bosdyn::client::WorldObjectClient* client) : client_{client} {}
 
 tl::expected<::bosdyn::api::ListWorldObjectResponse, std::string> DefaultWorldObjectClient::listWorldObjects(
-    ::bosdyn::api::ListWorldObjectRequest& request) {
+    ::bosdyn::api::ListWorldObjectRequest& request) const {
   try {
     auto result = client_->ListWorldObjects(request);
     if (result) {
@@ -27,7 +27,7 @@ tl::expected<::bosdyn::api::ListWorldObjectResponse, std::string> DefaultWorldOb
 }
 
 tl::expected<::bosdyn::api::MutateWorldObjectResponse, std::string> DefaultWorldObjectClient::mutateWorldObject(
-    ::bosdyn::api::MutateWorldObjectRequest& request) {
+    ::bosdyn::api::MutateWorldObjectRequest& request) const {
   try {
     auto result = client_->MutateWorldObjects(request);
     if (result) {

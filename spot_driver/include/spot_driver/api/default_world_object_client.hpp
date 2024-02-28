@@ -14,9 +14,9 @@ class DefaultWorldObjectClient : public WorldObjectClientInterface {
  public:
   explicit DefaultWorldObjectClient(bosdyn::client::WorldObjectClient* client);
   tl::expected<::bosdyn::api::ListWorldObjectResponse, std::string> listWorldObjects(
-      ::bosdyn::api::ListWorldObjectRequest& request) override;
+      ::bosdyn::api::ListWorldObjectRequest& request) const override;
   tl::expected<::bosdyn::api::MutateWorldObjectResponse, std::string> mutateWorldObject(
-      ::bosdyn::api::MutateWorldObjectRequest& request) override;
+      ::bosdyn::api::MutateWorldObjectRequest& request) const override;
 
  private:
   bosdyn::client::WorldObjectClient* client_;

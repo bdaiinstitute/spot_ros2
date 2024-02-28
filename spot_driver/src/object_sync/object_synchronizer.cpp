@@ -1,6 +1,7 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <chrono>
+#include <cstddef>
 #include <rclcpp/duration.hpp>
 #include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/conversions/common_conversions.hpp>
@@ -9,11 +10,84 @@
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <spot_driver/object_sync/object_synchronizer.hpp>
 #include <spot_driver/types.hpp>
+#include <string>
+#include <tl_expected/expected.hpp>
 #include <utility>
 
 namespace {
 constexpr auto kTfSyncPeriod = std::chrono::duration<double>{1.0 / 1.0};  // 1 Hz
+
+inline const std::set<std::string> kSpotInternalFrames{
+    // Links for moving robot joints
+    "arm_link_el0",
+    "arm_link_el1",
+    "arm_link_fngr",
+    "arm_link_hr0",
+    "arm_link_hr1",
+    "arm_link_sh0",
+    "arm_link_sh1",
+    "arm_link_wr0",
+    "arm_link_wr1",
+    "base_link",
+    "body",
+    "front_rail",
+    "rear_rail",
+    "hand",
+    "gpe",
+    "front_left_hip",
+    "front_left_upper_leg",
+    "front_left_lower_leg",
+    "front_right_hip",
+    "front_right_upper_leg",
+    "front_right_lower_leg",
+    "rear_left_hip",
+    "rear_left_upper_leg",
+    "rear_left_lower_leg",
+    "rear_right_hip",
+    "rear_right_upper_leg",
+    "rear_right_lower_leg",
+
+    // Base frames
+    "vision",
+    "flat_body",
+    "odom",
+
+    // Links for vision frames
+    "back_fisheye",
+    "back",
+    "head",
+    "frontleft_fisheye",
+    "frontleft",
+    "frontright_fisheye",
+    "frontright",
+    "left_fisheye",
+    "left",
+    "right_fisheye",
+    "right",
+    "hand_color_image_sensor",
+    "hand_depth_sensor",
+};
+
+std::string stripPrefix(const std::string& input, const std::string& prefix) {
+  const std::size_t prefix_index = input.find(prefix);
+  if (prefix_index == std::string::npos) {
+    return input;
+  }
+  if (prefix_index > 0) {
+    return input;
+  }
+
+  return input.substr(prefix.size());
 }
+
+std::string getAfterFirstSeparator(const std::string& input, const char separator) {
+  const std::size_t index = input.find(separator);
+  if (index == std::string::npos) {
+    return input;
+  }
+  return input.substr(index + 1);
+}
+}  // namespace
 
 namespace spot_ros2 {
 
@@ -69,17 +143,17 @@ void ObjectSynchronizer::onTimer() {
   // from the URDF published by RobotStatePublisher.) Get all the frame IDs which are published by Spot but cannot be
   // modified by this node (for example, AR tag poses).
   // The URDF does not contain the frames for the cameras, which are published by Spot.
-  const auto robot_model_frames = robot_model_interface_->getFrameIds();
-  if (!robot_model_frames) {
-    logger_interface_->logError("Failed to get Spot frame IDs from robot model: " + robot_model_frames.error());
-    return;
-  }
+  // const auto robot_model_frames = robot_model_interface_->getFrameIds();
+  // if (!robot_model_frames) {
+  //   logger_interface_->logError("Failed to get Spot frame IDs from robot model: " + robot_model_frames.error());
+  //   return;
+  // }
 
-  std::cout << "URDF frames:\n";
-  for (const auto& frame : robot_model_frames.value()) {
-    std::cout << "  " << frame << "\n";
-  }
-  std::cout << std::endl;
+  // std::cout << "URDF frames:\n";
+  // for (const auto& frame : robot_model_frames.value()) {
+  //   std::cout << "  " << frame << "\n";
+  // }
+  // std::cout << std::endl;
 
   ::bosdyn::api::ListWorldObjectRequest request_non_mutable_frames;
   request_non_mutable_frames.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_APRILTAG);
@@ -106,11 +180,12 @@ void ObjectSynchronizer::onTimer() {
     if (!world_object.has_transforms_snapshot()) {
       continue;
     }
-    // TODO(jschornak): exclude frames that are part of Spot's body.
-    // The transform snapshot for the AprilTags for example contains the vision, odom, body, and vision frames upstream
-    // of the fiducial frames
     for (const auto& world_object_subframe : world_object.transforms_snapshot().child_to_parent_edge_map()) {
-      world_object_frames.insert(world_object_subframe.first);
+      // Exclude frames that are part of Spot's body. The transform snapshot for the AprilTags for example contains the
+      // vision, odom, body, and vision frames upstream of the fiducial frames
+      if (kSpotInternalFrames.count(world_object_subframe.first) == 0) {
+        world_object_frames.insert(world_object_subframe.first);
+      }
     }
   }
 
@@ -127,7 +202,11 @@ void ObjectSynchronizer::onTimer() {
   //     Mutate world objects to add the frame as a new object
 
   for (const auto& tf_frame : tf_frame_names) {
-    if (robot_model_frames->count(tf_frame) > 0) {
+    // const auto tf_frame_no_prefix = getAfterFirstSeparator(tf_frame, '/');
+    const auto tf_frame_no_prefix = stripPrefix(tf_frame, frame_prefix_);
+
+    std::cout << tf_frame_no_prefix << std::endl;
+    if (kSpotInternalFrames.count(tf_frame_no_prefix) > 0) {
       continue;
     }
 
@@ -144,13 +223,13 @@ void ObjectSynchronizer::onTimer() {
     // object
     ::bosdyn::api::MutateWorldObjectRequest request;
     auto* object = request.mutable_mutation()->mutable_object();
-    *object->mutable_name() = tf_frame;
+    *object->mutable_name() = tf_frame_no_prefix;
     auto* edge_map = object->mutable_transforms_snapshot()->mutable_child_to_parent_edge_map();
 
     ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
     // common_conversions::convertToProto(tform_base_to_frame.value().transform, *edge.mutable_parent_tform_child());
 
-    if (world_object_frames.count(tf_frame) == 0) {
+    if (world_object_frames.count(tf_frame_no_prefix) == 0) {
       request.mutable_mutation()->set_action(
           ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_ADD);
     } else {

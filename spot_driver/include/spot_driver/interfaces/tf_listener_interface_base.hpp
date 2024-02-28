@@ -18,10 +18,10 @@ class TfListenerInterfaceBase {
  public:
   virtual ~TfListenerInterfaceBase() = default;
 
-  virtual std::vector<std::string> getAllFrameNames() = 0;
+  [[nodiscard]] virtual std::vector<std::string> getAllFrameNames() const = 0;
 
-  virtual tl::expected<geometry_msgs::msg::TransformStamped, std::string> lookupTransform(
+  [[nodiscard]] virtual tl::expected<geometry_msgs::msg::TransformStamped, std::string> lookupTransform(
       const std::string& parent, const std::string& child, const rclcpp::Time& timepoint,
-      const rclcpp::Duration& timeout) = 0;
+      const rclcpp::Duration& timeout) const = 0;
 };
 }  // namespace spot_ros2

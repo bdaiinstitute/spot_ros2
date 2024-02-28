@@ -14,9 +14,9 @@ class WorldObjectClientInterface {
   virtual ~WorldObjectClientInterface() = default;
 
   virtual tl::expected<::bosdyn::api::ListWorldObjectResponse, std::string> listWorldObjects(
-      ::bosdyn::api::ListWorldObjectRequest& request) = 0;
+      ::bosdyn::api::ListWorldObjectRequest& request) const = 0;
 
   virtual tl::expected<::bosdyn::api::MutateWorldObjectResponse, std::string> mutateWorldObject(
-      ::bosdyn::api::MutateWorldObjectRequest& request) = 0;
+      ::bosdyn::api::MutateWorldObjectRequest& request) const = 0;
 };
 }  // namespace spot_ros2

@@ -12,13 +12,13 @@ namespace spot_ros2 {
 RclcppTfListenerInterface::RclcppTfListenerInterface(const std::shared_ptr<rclcpp::Node>& node)
     : buffer_{node->get_clock()}, listener_{buffer_} {}
 
-std::vector<std::string> RclcppTfListenerInterface::getAllFrameNames() {
+std::vector<std::string> RclcppTfListenerInterface::getAllFrameNames() const {
   return buffer_.getAllFrameNames();
 }
 
 tl::expected<geometry_msgs::msg::TransformStamped, std::string> RclcppTfListenerInterface::lookupTransform(
     const std::string& parent, const std::string& child, const rclcpp::Time& timepoint,
-    const rclcpp::Duration& timeout) {
+    const rclcpp::Duration& timeout) const {
   try {
     return buffer_.lookupTransform(child, parent, timepoint, timeout);
   } catch (const tf2::LookupException& e) {

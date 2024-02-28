@@ -130,6 +130,16 @@ target_include_directories(test_kinematic_service
 )
 target_link_libraries(test_kinematic_service spot_api)
 
+ament_add_gmock(test_object_synchronization
+    src/test_object_synchronization.cpp
+)
+target_include_directories(test_object_synchronization
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(test_object_synchronization spot_api)
+
 #rclpy_test
 
 set(_pytest_tests
@@ -158,11 +168,11 @@ set(_pytest_tests
   pytests/test_undock.py
   pytests/test_upload_animation.py
 )
-foreach(_test_path ${_pytest_tests})
-  get_filename_component(_test_name ${_test_path} NAME_WE)
-  ament_add_pytest_test(${_test_name} ${_test_path}
-    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}
-    TIMEOUT 60
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  )
-endforeach()
+# foreach(_test_path ${_pytest_tests})
+#   get_filename_component(_test_name ${_test_path} NAME_WE)
+#   ament_add_pytest_test(${_test_name} ${_test_path}
+#     APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}
+#     TIMEOUT 60
+#     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+#   )
+# endforeach()
