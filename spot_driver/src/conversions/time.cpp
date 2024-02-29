@@ -32,11 +32,10 @@ builtin_interfaces::msg::Time robotTimeToLocalTime(const google::protobuf::Times
   // If the timestamp contains a negative time, create an all-zero ROS Time.
   if (seconds_local < 0) {
     return builtin_interfaces::build<builtin_interfaces::msg::Time>().sec(0).nanosec(0);
-  } else {
-    return builtin_interfaces::build<builtin_interfaces::msg::Time>()
-        .sec(static_cast<int>(seconds_local))
-        .nanosec(nanos_local);
   }
+  return builtin_interfaces::build<builtin_interfaces::msg::Time>()
+      .sec(static_cast<int>(seconds_local))
+      .nanosec(nanos_local);
 }
 
 google::protobuf::Timestamp localTimeToRobotTime(const builtin_interfaces::msg::Time& timestamp_local,
