@@ -70,7 +70,7 @@ TEST(TestKinematicService, getSolutions) {
 
   // THEN the IK response indicates that the request succeeds.
 
-  ASSERT_EQ(response->response.status.value, bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_OK);
+  ASSERT_EQ(response->response.status.value, bosdyn_spot_api_msgs::msg::InverseKinematicsResponseStatus::STATUS_OK);
 }
 
 /**
@@ -91,7 +91,8 @@ TEST(TestKinematicService, getSolutionsException) {
   auto response = std::make_shared<GetInverseKinematicSolutions::Response>();
   ik_service->getSolutions(request, response);
 
-  ASSERT_EQ(response->response.status.value, bosdyn_msgs::msg::InverseKinematicsResponseStatus::STATUS_UNKNOWN);
+  ASSERT_EQ(response->response.status.value,
+            bosdyn_spot_api_msgs::msg::InverseKinematicsResponseStatus::STATUS_UNKNOWN);
 }
 
 }  // namespace spot_ros2::kinematic::test

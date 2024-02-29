@@ -30,7 +30,7 @@ TEST(TestCommonConversions, convert_builtin_interfaces_time_to_proto) {
   convertToProto(rosMsg, protoMsg);
 
   ASSERT_EQ(rosMsg.sec, protoMsg.seconds());
-  ASSERT_EQ(rosMsg.nanosec, protoMsg.nanos());
+  ASSERT_EQ(static_cast<int>(rosMsg.nanosec), protoMsg.nanos());
 }
 
 TEST(TestCommonConversions, convertGeometryMsgsVector3ToProto) {
@@ -81,18 +81,18 @@ TEST(TestCommonConversions, convertGeometryMsgsQuaternionToProto) {
 }
 
 TEST(TestCommonConversions, convertBosdynMsgsRequestHeaderToProto) {
-  bosdyn_msgs::msg::RequestHeader rosMsg;
+  bosdyn_api_msgs::msg::RequestHeader rosMsg;
   bosdyn::api::RequestHeader protoMsg;
 
-  rosMsg.request_timestamp_is_set = true;
+  // All fields set by default.
   rosMsg.client_name = "client_name";
   rosMsg.disable_rpc_logging = true;
 
   convertToProto(rosMsg, protoMsg);
 
-  ASSERT_EQ(rosMsg.request_timestamp_is_set, protoMsg.has_request_timestamp());
+  ASSERT_TRUE(protoMsg.has_request_timestamp());
   ASSERT_EQ(rosMsg.client_name = "client_name", protoMsg.client_name());
-  ASSERT_EQ(rosMsg.disable_rpc_logging = true, protoMsg.disable_rpc_logging());
+  ASSERT_EQ(rosMsg.disable_rpc_logging, protoMsg.disable_rpc_logging());
 }
 
 class ConvertBosdynMsgsArmJointPositionToProtoParameterized : public ::testing::TestWithParam<ArmJointPosition> {};
@@ -105,34 +105,40 @@ TEST_P(ConvertBosdynMsgsArmJointPositionToProtoParameterized, CheckFieldsNotSet)
   convertToProto(ros_msg, proto_msg);
 
   // THEN we expect that each corresponding field is set and has the same value
-  EXPECT_THAT(proto_msg.has_sh0(), testing::Eq(ros_msg.sh0_is_set));
-  if (ros_msg.sh0_is_set) {
-    EXPECT_THAT(proto_msg.sh0().value(), testing::DoubleEq(ros_msg.sh0));
+  const bool sh0_is_set = (ros_msg.has_field & ArmJointPosition::SH0_FIELD_SET) != 0;
+  EXPECT_THAT(proto_msg.has_sh0(), testing::Eq(sh0_is_set));
+  if (sh0_is_set) {
+    EXPECT_THAT(proto_msg.sh0().value(), testing::DoubleEq(ros_msg.sh0.data));
   }
 
-  EXPECT_THAT(proto_msg.has_sh1(), testing::Eq(ros_msg.sh1_is_set));
-  if (ros_msg.sh1_is_set) {
-    EXPECT_THAT(proto_msg.sh1().value(), testing::DoubleEq(ros_msg.sh1));
+  const bool sh1_is_set = (ros_msg.has_field & ArmJointPosition::SH1_FIELD_SET) != 0;
+  EXPECT_THAT(proto_msg.has_sh1(), testing::Eq(sh1_is_set));
+  if (sh1_is_set) {
+    EXPECT_THAT(proto_msg.sh1().value(), testing::DoubleEq(ros_msg.sh1.data));
   }
 
-  EXPECT_THAT(proto_msg.has_el0(), testing::Eq(ros_msg.el0_is_set));
-  if (ros_msg.el0_is_set) {
-    EXPECT_THAT(proto_msg.el0().value(), testing::DoubleEq(ros_msg.el0));
+  const bool el0_is_set = (ros_msg.has_field & ArmJointPosition::EL0_FIELD_SET) != 0;
+  EXPECT_THAT(proto_msg.has_el0(), testing::Eq(el0_is_set));
+  if (el0_is_set) {
+    EXPECT_THAT(proto_msg.el0().value(), testing::DoubleEq(ros_msg.el0.data));
   }
 
-  EXPECT_THAT(proto_msg.has_el1(), testing::Eq(ros_msg.el1_is_set));
-  if (ros_msg.el1_is_set) {
-    EXPECT_THAT(proto_msg.el1().value(), testing::DoubleEq(ros_msg.el1));
+  const bool el1_is_set = (ros_msg.has_field & ArmJointPosition::EL1_FIELD_SET) != 0;
+  EXPECT_THAT(proto_msg.has_el1(), testing::Eq(el1_is_set));
+  if (el1_is_set) {
+    EXPECT_THAT(proto_msg.el1().value(), testing::DoubleEq(ros_msg.el1.data));
   }
 
-  EXPECT_THAT(proto_msg.has_wr0(), testing::Eq(ros_msg.wr0_is_set));
-  if (ros_msg.wr0_is_set) {
-    EXPECT_THAT(proto_msg.wr0().value(), testing::DoubleEq(ros_msg.wr0));
+  const bool wr0_is_set = (ros_msg.has_field & ArmJointPosition::WR0_FIELD_SET) != 0;
+  EXPECT_THAT(proto_msg.has_wr0(), testing::Eq(wr0_is_set));
+  if (wr0_is_set) {
+    EXPECT_THAT(proto_msg.wr0().value(), testing::DoubleEq(ros_msg.wr0.data));
   }
 
-  EXPECT_THAT(proto_msg.has_wr1(), testing::Eq(ros_msg.wr1_is_set));
-  if (ros_msg.wr1_is_set) {
-    EXPECT_THAT(proto_msg.wr1().value(), testing::DoubleEq(ros_msg.wr1));
+  const bool wr1_is_set = (ros_msg.has_field & ArmJointPosition::WR1_FIELD_SET) != 0;
+  EXPECT_THAT(proto_msg.has_wr1(), testing::Eq(wr1_is_set));
+  if (wr1_is_set) {
+    EXPECT_THAT(proto_msg.wr1().value(), testing::DoubleEq(ros_msg.wr1.data));
   }
 }
 
@@ -242,7 +248,7 @@ TEST(TestCommonConversions, convertProtoToBuiltinInterfacesTime) {
   convertToRos(protoMsg, rosMsg);
 
   ASSERT_EQ(protoMsg.seconds(), rosMsg.sec);
-  ASSERT_EQ(protoMsg.nanos(), rosMsg.nanosec);
+  ASSERT_EQ(protoMsg.nanos(), static_cast<int>(rosMsg.nanosec));
 }
 
 TEST(TestCommonConversions, convertProtoToGeometryMsgsVector3) {
