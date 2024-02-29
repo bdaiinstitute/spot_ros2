@@ -1,47 +1,15 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #pragma once
 
 #include <google/protobuf/duration.pb.h>
-#include <google/protobuf/timestamp.pb.h>
-#include <builtin_interfaces/msg/time.hpp>
+#include <string>
 #include <tl_expected/expected.hpp>
 
-#include <memory>
-#include <string>
-
 namespace spot_ros2 {
-
-inline builtin_interfaces::msg::Time applyClockSkew(const google::protobuf::Timestamp& timestamp,
-                                                    const google::protobuf::Duration& clock_skew) {
-  int64_t seconds_unskewed = timestamp.seconds() - clock_skew.seconds();
-  int32_t nanos_unskewed = timestamp.nanos() - clock_skew.nanos();
-
-  // Carry over a second if needed
-  // Note: Since ROS Time messages store the nanoseconds component as an unsigned integer, we need to do this before
-  // converting to ROS Time.
-  if (nanos_unskewed < 0) {
-    nanos_unskewed += 1e9;
-    seconds_unskewed -= 1;
-  } else if (nanos_unskewed >= 1e9) {
-    nanos_unskewed -= 1e9;
-    seconds_unskewed += 1;
-  }
-
-  // If the timestamp contains a negative time, create an all-zero ROS Time.
-  if (seconds_unskewed < 0) {
-    return builtin_interfaces::build<builtin_interfaces::msg::Time>().sec(0).nanosec(0);
-  } else {
-    return builtin_interfaces::build<builtin_interfaces::msg::Time>().sec(seconds_unskewed).nanosec(nanos_unskewed);
-  }
-}
-
 class TimeSyncApi {
  public:
   virtual ~TimeSyncApi() = default;
-
-  virtual tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(
-      const google::protobuf::Timestamp& robot_timestamp) = 0;
 
   /**
   * @brief Get the current clock skew from the Spot SDK's time sync endpoint.

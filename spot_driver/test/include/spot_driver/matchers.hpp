@@ -15,6 +15,7 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 #include <spot_driver/api/time_sync_api.hpp>
+#include <spot_driver/conversions/time.hpp>
 #include <spot_driver/serialization.hpp>
 #include <spot_msgs/msg/battery_state.hpp>
 #include <spot_msgs/msg/battery_state_array.hpp>
@@ -28,12 +29,12 @@
 namespace spot_ros2::test {
 /**
  * @brief This verifies that the difference between the input timestamp and the original timestamp matches the output of
- * the applyClockSkew function.
- * @details Don't use this to test applyClockSkew itself, since that would be rather tautological.
+ * the robotTimeToLocalTime function.
+ * @details Don't use this to test robotTimeToLocalTime itself, since that would be rather tautological.
  */
 MATCHER_P2(ClockSkewIsAppliedToHeader, original_stamp, clock_skew, "") {
-  return testing::ExplainMatchResult(testing::Eq(spot_ros2::applyClockSkew(original_stamp, clock_skew)), arg.stamp,
-                                     result_listener);
+  return testing::ExplainMatchResult(testing::Eq(spot_ros2::robotTimeToLocalTime(original_stamp, clock_skew)),
+                                     arg.stamp, result_listener);
 }
 
 MATCHER_P3(GeometryMsgsVector3Eq, x, y, z, "") {
