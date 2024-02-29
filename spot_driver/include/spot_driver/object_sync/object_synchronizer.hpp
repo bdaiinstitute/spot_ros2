@@ -34,9 +34,9 @@ class ObjectSynchronizer {
  private:
   void onTimer();
 
-  std::string full_odom_frame_id_;
-
   std::string frame_prefix_;
+  std::string preferred_base_frame_;
+  std::string preferred_base_frame_with_prefix_;
 
   // Interface classes to interact with Spot and the middleware.
   std::shared_ptr<StateClientInterface> state_client_interface_;

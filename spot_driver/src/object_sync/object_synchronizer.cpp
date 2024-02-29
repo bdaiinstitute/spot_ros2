@@ -109,6 +109,12 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<StateClientInterfac
       robot_model_interface_{std::move(robot_model_interface)} {
   const auto spot_name = parameter_interface_->getSpotName();
   frame_prefix_ = spot_name.empty() ? "" : spot_name + "/";
+
+  preferred_base_frame_ = stripPrefix(parameter_interface_->getPreferredOdomFrame(), frame_prefix_);
+  preferred_base_frame_with_prefix_ = preferred_base_frame_.find('/') == std::string::npos
+                                          ? spot_name + "/" + preferred_base_frame_
+                                          : preferred_base_frame_;
+
   timer_interface_->setTimer(kTfSyncPeriod, [this]() {
     onTimer();
   });
@@ -211,8 +217,9 @@ void ObjectSynchronizer::onTimer() {
       continue;
     }
 
-    const auto base_tform_child = tf_listener_interface_->lookupTransform(
-        frame_prefix_ + "odom", child_frame_id, rclcpp::Time{0, 0}, rclcpp::Duration{std::chrono::nanoseconds{0}});
+    const auto base_tform_child =
+        tf_listener_interface_->lookupTransform(preferred_base_frame_with_prefix_, child_frame_id, rclcpp::Time{0, 0},
+                                                rclcpp::Duration{std::chrono::nanoseconds{0}});
     if (!base_tform_child) {
       logger_interface_->logWarn(base_tform_child.error());
       continue;
@@ -229,11 +236,14 @@ void ObjectSynchronizer::onTimer() {
     *object->mutable_name() = child_frame_id_no_prefix;
 
     ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
-    *edge.mutable_parent_frame_name() = "odom";
+    *edge.mutable_parent_frame_name() = preferred_base_frame_;
     common_conversions::convertToProto(base_tform_child->transform, *edge.mutable_parent_tform_child());
 
     auto* edge_map = object->mutable_transforms_snapshot()->mutable_child_to_parent_edge_map();
     edge_map->insert(google::protobuf::MapPair{child_frame_id_no_prefix, edge});
+
+    std::cout << "Adding object for transform from " << preferred_base_frame_ << " to " << child_frame_id_no_prefix
+              << std::endl;
 
     if (world_object_frames.count(child_frame_id_no_prefix) == 0) {
       request.mutable_mutation()->set_action(
@@ -245,5 +255,4 @@ void ObjectSynchronizer::onTimer() {
     world_object_client_interface_->mutateWorldObject(request);
   }
 }
-
 }  // namespace spot_ros2
