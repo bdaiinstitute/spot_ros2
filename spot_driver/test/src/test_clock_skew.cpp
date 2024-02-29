@@ -66,17 +66,17 @@ TEST(TestClockSkewRobotToLocal, PositiveSkewNanosecsCarry) {
   // the clock skew is greater than the number of nanoseconds in the timestamp
   google::protobuf::Timestamp timestamp;
   timestamp.set_seconds(1000);
-  timestamp.set_nanos(100000000);
+  timestamp.set_nanos(100'000'000);
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(0);
-  clock_skew.set_nanos(200000000);
+  clock_skew.set_nanos(200'000'000);
 
   // WHEN we apply the clock skew to the timestamp
   const auto out = robotTimeToLocalTime(timestamp, clock_skew);
 
   // THEN a second is carried over into the nanoseconds field
   EXPECT_THAT(out.sec, testing::Eq(999));
-  EXPECT_THAT(out.nanosec, testing::Eq(900000000));
+  EXPECT_THAT(out.nanosec, testing::Eq(900'000'000));
 }
 
 TEST(TestClockSkewRobotToLocal, NegativeSkewNanosecsCarry) {
@@ -85,17 +85,17 @@ TEST(TestClockSkewRobotToLocal, NegativeSkewNanosecsCarry) {
   // timetamp nanoseconds
   google::protobuf::Timestamp timestamp;
   timestamp.set_seconds(1000);
-  timestamp.set_nanos(900000000);
+  timestamp.set_nanos(900'000'000);
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(0);
-  clock_skew.set_nanos(-200000000);
+  clock_skew.set_nanos(-200'000'000);
 
   // WHEN we apply the clock skew to the timestamp
   const auto out = robotTimeToLocalTime(timestamp, clock_skew);
 
   // THEN a full second and the remainder of nanoseconds are added to the timestamp
   EXPECT_THAT(out.sec, testing::Eq(1001));
-  EXPECT_THAT(out.nanosec, testing::Eq(100000000));
+  EXPECT_THAT(out.nanosec, testing::Eq(100'000'000));
 }
 
 TEST(TestClockSkewRobotToLocal, HandleNegativeInputTimestamp) {
@@ -198,10 +198,10 @@ TEST(TestClockSkewLocalToRobot, NegativeSkew) {
 TEST(TestClockSkewLocalToRobot, PositiveSkewNanosecsCarry) {
   // GIVEN a positive timestamp and a clock skew where the number of seconds is zero and the number of nanoseconds in
   // the clock skew is greater than the number of nanoseconds in the timestamp
-  const auto timestamp = builtin_interfaces::build<Time>().sec(1000).nanosec(900000000);
+  const auto timestamp = builtin_interfaces::build<Time>().sec(1000).nanosec(900'000'000);
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(0);
-  clock_skew.set_nanos(200000000);
+  clock_skew.set_nanos(200'000'000);
 
   // WHEN we apply the clock skew to the timestamp
   const auto out = localTimeToRobotTime(timestamp, clock_skew);
@@ -215,17 +215,17 @@ TEST(TestClockSkewLocalToRobot, NegativeSkewNanosecsCarry) {
   // GIVEN a positive timestamp and a clock skew where the number of seconds is zero and the number of nanoseconds in
   // the clock skew is negative and of sufficient magnitude to add to greater than one full second when summed with the
   // timetamp nanoseconds
-  const auto timestamp = builtin_interfaces::build<Time>().sec(1000).nanosec(100000000);
+  const auto timestamp = builtin_interfaces::build<Time>().sec(1000).nanosec(100'000'000);
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(0);
-  clock_skew.set_nanos(-200000000);
+  clock_skew.set_nanos(-200'000'000);
 
   // WHEN we apply the clock skew to the timestamp
   const auto out = localTimeToRobotTime(timestamp, clock_skew);
 
   // THEN a second is carried over from the nanoseconds field
   EXPECT_THAT(out.seconds(), testing::Eq(999));
-  EXPECT_THAT(out.nanos(), testing::Eq(90000000));
+  EXPECT_THAT(out.nanos(), testing::Eq(900'000'000));
 }
 
 TEST(TestClockSkewLocalToRobot, HandleNegativeUnskewedTimestamp) {
@@ -237,10 +237,10 @@ TEST(TestClockSkewLocalToRobot, HandleNegativeUnskewedTimestamp) {
   clock_skew.set_nanos(0);
 
   // WHEN we apply the clock skew to the timestamp
-  auto out = localTimeToRobotTime(timestamp, clock_skew);
+  const auto out = localTimeToRobotTime(timestamp, clock_skew);
 
   // THEN an all-zero timestamp is output
-  EXPECT_THAT(out.seconds(), testing::Eq(-1));
+  EXPECT_THAT(out.seconds(), testing::Eq(0));
   EXPECT_THAT(out.nanos(), testing::Eq(0));
 }
 
@@ -252,11 +252,11 @@ TEST(TestClockSkewLocalToRobot, HandleNegativeUnskewedTimestampFromNanoseconds) 
   clock_skew.set_nanos(-1);
 
   // WHEN we apply the clock skew to the timestamp
-  auto out = localTimeToRobotTime(timestamp, clock_skew);
+  const auto out = localTimeToRobotTime(timestamp, clock_skew);
 
   // THEN an all-zero timestamp is output
   EXPECT_THAT(out.seconds(), testing::Eq(0));
-  EXPECT_THAT(out.nanos(), testing::Eq(-1));
+  EXPECT_THAT(out.nanos(), testing::Eq(0));
 }
 
 }  // namespace spot_ros2::test

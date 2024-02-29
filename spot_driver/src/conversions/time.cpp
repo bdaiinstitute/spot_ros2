@@ -45,13 +45,16 @@ google::protobuf::Timestamp localTimeToRobotTime(const builtin_interfaces::msg::
   int32_t nanos_robot = static_cast<int32_t>(timestamp_local.nanosec) + clock_skew.nanos();
 
   // Carry over a second if needed
-  // Note: protobuf timestamps can have a negative seconds component, which would represent a timestamp prior to the
-  // epoch.
   normalize(seconds_robot, nanos_robot);
 
-  google::protobuf::Timestamp out;
-  out.set_seconds(seconds_robot);
-  out.set_nanos(nanos_robot);
-  return out;
+  // If the timestamp contains a negative time, return an all-zero timestamp
+  if (seconds_robot < 0) {
+    return google::protobuf::Timestamp{};
+  }
+
+  google::protobuf::Timestamp timestamp_robot;
+  timestamp_robot.set_seconds(seconds_robot);
+  timestamp_robot.set_nanos(nanos_robot);
+  return timestamp_robot;
 }
 }  // namespace spot_ros2
