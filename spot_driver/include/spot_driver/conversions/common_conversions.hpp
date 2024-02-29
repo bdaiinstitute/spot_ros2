@@ -21,7 +21,7 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 
-namespace spot_ros2::common_conversions {
+namespace spot_ros2 {
 
 ///////////////////////////////////////////////////////////////////////////////
 // ROS to Protobuf.
@@ -38,7 +38,7 @@ void convertToProto(const geometry_msgs::msg::Quaternion& ros_msg, bosdyn::api::
 
 void convertToProto(const geometry_msgs::msg::Pose& ros_msg, bosdyn::api::SE3Pose& proto);
 
-void convertToProto(const double ros_msg, google::protobuf::DoubleValue& proto);
+void convertToProto(const double& ros_msg, google::protobuf::DoubleValue& proto);
 
 void convertToProto(const bosdyn_msgs::msg::ArmJointPosition& ros_msg, bosdyn::api::ArmJointPosition& proto);
 
@@ -63,4 +63,4 @@ void convertToRos(const bosdyn::api::SE3Pose& proto, geometry_msgs::msg::Pose& r
 
 void convertToRos(const bosdyn::api::SE3Velocity& proto, geometry_msgs::msg::Twist& ros_msg);
 
-}  // namespace spot_ros2::common_conversions
+}  // namespace spot_ros2

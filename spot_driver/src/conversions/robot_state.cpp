@@ -55,7 +55,7 @@ spot_msgs::msg::FootStateArray getFootState(const ::bosdyn::api::RobotState& rob
 
   for (const auto& foot : robot_state.foot_state()) {
     spot_msgs::msg::FootState foot_state;
-    common_conversions::convertToRos(foot.foot_position_rt_body(), foot_state.foot_position_rt_body);
+    convertToRos(foot.foot_position_rt_body(), foot_state.foot_position_rt_body);
     foot_state.contact = foot.contact();
     foot_states.states.push_back(foot_state);
   }
@@ -126,11 +126,11 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& r
 
     // set target frame(preferred odom frame) as the root node in tf tree
     if (preferred_base_frame_id == frame_name) {
-      tf_msg.transforms.push_back(conversions::toTransformStamped(~(transform.parent_tform_child()), frame_name,
-                                                                  parent_frame_name, local_time));
+      tf_msg.transforms.push_back(
+          toTransformStamped(~(transform.parent_tform_child()), frame_name, parent_frame_name, local_time));
     } else {
       tf_msg.transforms.push_back(
-          conversions::toTransformStamped(transform.parent_tform_child(), parent_frame_name, frame_name, local_time));
+          toTransformStamped(transform.parent_tform_child(), parent_frame_name, frame_name, local_time));
     }
   }
   return tf_msg;
@@ -146,8 +146,7 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
   // TODO(schornakj): need to add the frame ID here?
   odom_twist_msg.header.stamp =
       spot_ros2::robotTimeToLocalTime(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
-  common_conversions::convertToRos(robot_state.kinematic_state().velocity_of_body_in_odom(),
-                                   odom_twist_msg.twist.twist);
+  convertToRos(robot_state.kinematic_state().velocity_of_body_in_odom(), odom_twist_msg.twist.twist);
   return odom_twist_msg;
 }
 
@@ -183,7 +182,7 @@ std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& 
     }
     odom_msg.header.frame_id = prefix + "odom";
   }
-  common_conversions::convertToRos(tf_body_pose, odom_msg.pose.pose);
+  convertToRos(tf_body_pose, odom_msg.pose.pose);
   odom_msg.child_frame_id = prefix + "body";
   return odom_msg;
 }
@@ -252,19 +251,17 @@ std::optional<bosdyn_msgs::msg::ManipulatorState> getManipulatorState(const ::bo
   manipulator_state_msg.gripper_open_percentage = manipulator_state.gripper_open_percentage();
   manipulator_state_msg.is_gripper_holding_item = manipulator_state.is_gripper_holding_item();
 
-  common_conversions::convertToRos(manipulator_state.estimated_end_effector_force_in_hand(),
-                                   manipulator_state_msg.estimated_end_effector_force_in_hand);
+  convertToRos(manipulator_state.estimated_end_effector_force_in_hand(),
+               manipulator_state_msg.estimated_end_effector_force_in_hand);
   manipulator_state_msg.estimated_end_effector_force_in_hand_is_set =
       manipulator_state.has_estimated_end_effector_force_in_hand();
 
   manipulator_state_msg.stow_state.value = manipulator_state.stow_state();
 
-  common_conversions::convertToRos(manipulator_state.velocity_of_hand_in_vision(),
-                                   manipulator_state_msg.velocity_of_hand_in_vision);
+  convertToRos(manipulator_state.velocity_of_hand_in_vision(), manipulator_state_msg.velocity_of_hand_in_vision);
   manipulator_state_msg.velocity_of_hand_in_vision_is_set = manipulator_state.has_velocity_of_hand_in_vision();
 
-  common_conversions::convertToRos(manipulator_state.velocity_of_hand_in_odom(),
-                                   manipulator_state_msg.velocity_of_hand_in_odom);
+  convertToRos(manipulator_state.velocity_of_hand_in_odom(), manipulator_state_msg.velocity_of_hand_in_odom);
   manipulator_state_msg.velocity_of_hand_in_odom_is_set = manipulator_state.has_velocity_of_hand_in_odom();
 
   manipulator_state_msg.carry_state.value = manipulator_state.carry_state();
@@ -280,8 +277,7 @@ std::optional<geometry_msgs::msg::Vector3Stamped> getEndEffectorForce(const ::bo
   geometry_msgs::msg::Vector3Stamped force;
   force.header.stamp = robotTimeToLocalTime(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
   force.header.frame_id = prefix + "hand";
-  common_conversions::convertToRos(robot_state.manipulator_state().estimated_end_effector_force_in_hand(),
-                                   force.vector);
+  convertToRos(robot_state.manipulator_state().estimated_end_effector_force_in_hand(), force.vector);
   return force;
 }
 

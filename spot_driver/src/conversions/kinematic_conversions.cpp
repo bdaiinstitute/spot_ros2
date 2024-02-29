@@ -4,7 +4,7 @@
 
 #include <spot_driver/conversions/common_conversions.hpp>
 
-namespace spot_ros2::kinematic_conversions {
+namespace spot_ros2 {
 
 ///////////////////////////////////////////////////////////////////////////////
 // ROS to Protobuf.
@@ -12,23 +12,23 @@ namespace spot_ros2::kinematic_conversions {
 void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequestFixedStance& ros_msg,
                     bosdyn::api::spot::InverseKinematicsRequest::FixedStance& proto) {
   if (ros_msg.fl_rt_scene_is_set) {
-    common_conversions::convertToProto(ros_msg.fl_rt_scene, *proto.mutable_fl_rt_scene());
+    convertToProto(ros_msg.fl_rt_scene, *proto.mutable_fl_rt_scene());
   }
   if (ros_msg.fr_rt_scene_is_set) {
-    common_conversions::convertToProto(ros_msg.fr_rt_scene, *proto.mutable_fr_rt_scene());
+    convertToProto(ros_msg.fr_rt_scene, *proto.mutable_fr_rt_scene());
   }
   if (ros_msg.hl_rt_scene_is_set) {
-    common_conversions::convertToProto(ros_msg.hl_rt_scene, *proto.mutable_hl_rt_scene());
+    convertToProto(ros_msg.hl_rt_scene, *proto.mutable_hl_rt_scene());
   }
   if (ros_msg.hr_rt_scene_is_set) {
-    common_conversions::convertToProto(ros_msg.hr_rt_scene, *proto.mutable_hr_rt_scene());
+    convertToProto(ros_msg.hr_rt_scene, *proto.mutable_hr_rt_scene());
   }
 }
 
 void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequestOnGroundPlaneStance& ros_msg,
                     bosdyn::api::spot::InverseKinematicsRequest::OnGroundPlaneStance& proto) {
   if (ros_msg.scene_tform_ground_is_set) {
-    common_conversions::convertToProto(ros_msg.scene_tform_ground, *proto.mutable_scene_tform_ground());
+    convertToProto(ros_msg.scene_tform_ground, *proto.mutable_scene_tform_ground());
   }
 }
 
@@ -47,14 +47,14 @@ void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequestOneOfStanceS
 void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequestWristMountedTool& ros_msg,
                     bosdyn::api::spot::InverseKinematicsRequest::WristMountedTool& proto) {
   if (ros_msg.wrist_tform_tool_is_set) {
-    common_conversions::convertToProto(ros_msg.wrist_tform_tool, *proto.mutable_wrist_tform_tool());
+    convertToProto(ros_msg.wrist_tform_tool, *proto.mutable_wrist_tform_tool());
   }
 }
 
 void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequestBodyMountedTool& ros_msg,
                     bosdyn::api::spot::InverseKinematicsRequest::BodyMountedTool& proto) {
   if (ros_msg.body_tform_tool_is_set) {
-    common_conversions::convertToProto(ros_msg.body_tform_tool, *proto.mutable_body_tform_tool());
+    convertToProto(ros_msg.body_tform_tool, *proto.mutable_body_tform_tool());
   }
 }
 
@@ -73,17 +73,17 @@ void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequestOneOfToolSpe
 void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequestToolPoseTask& ros_msg,
                     bosdyn::api::spot::InverseKinematicsRequest::ToolPoseTask& proto) {
   if (ros_msg.task_tform_desired_tool_is_set) {
-    common_conversions::convertToProto(ros_msg.task_tform_desired_tool, *proto.mutable_task_tform_desired_tool());
+    convertToProto(ros_msg.task_tform_desired_tool, *proto.mutable_task_tform_desired_tool());
   }
 }
 
 void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequestToolGazeTask& ros_msg,
                     bosdyn::api::spot::InverseKinematicsRequest::ToolGazeTask& proto) {
   if (ros_msg.target_in_task_is_set) {
-    common_conversions::convertToProto(ros_msg.target_in_task, *proto.mutable_target_in_task());
+    convertToProto(ros_msg.target_in_task, *proto.mutable_target_in_task());
   }
   if (ros_msg.task_tform_desired_tool_is_set) {
-    common_conversions::convertToProto(ros_msg.task_tform_desired_tool, *proto.mutable_task_tform_desired_tool());
+    convertToProto(ros_msg.task_tform_desired_tool, *proto.mutable_task_tform_desired_tool());
   }
 }
 
@@ -102,14 +102,14 @@ void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequestOneOfTaskSpe
 void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequest& ros_msg,
                     bosdyn::api::spot::InverseKinematicsRequest& proto) {
   if (ros_msg.header_is_set) {
-    common_conversions::convertToProto(ros_msg.header, *proto.mutable_header());
+    convertToProto(ros_msg.header, *proto.mutable_header());
   }
   proto.set_root_frame_name(ros_msg.root_frame_name);
   if (ros_msg.root_tform_scene_is_set) {
-    common_conversions::convertToProto(ros_msg.root_tform_scene, *proto.mutable_root_tform_scene());
+    convertToProto(ros_msg.root_tform_scene, *proto.mutable_root_tform_scene());
   }
   if (ros_msg.scene_tform_task_is_set) {
-    common_conversions::convertToProto(ros_msg.scene_tform_task, *proto.mutable_scene_tform_task());
+    convertToProto(ros_msg.scene_tform_task, *proto.mutable_scene_tform_task());
   }
 
   switch (ros_msg.nominal_arm_configuration.value) {
@@ -125,11 +125,10 @@ void convertToProto(const bosdyn_msgs::msg::InverseKinematicsRequest& ros_msg,
   }
 
   if (ros_msg.nominal_arm_configuration_overrides_is_set) {
-    common_conversions::convertToProto(ros_msg.nominal_arm_configuration_overrides,
-                                       *proto.mutable_nominal_arm_configuration_overrides());
+    convertToProto(ros_msg.nominal_arm_configuration_overrides, *proto.mutable_nominal_arm_configuration_overrides());
   }
   if (ros_msg.scene_tform_body_nominal_is_set) {
-    common_conversions::convertToProto(ros_msg.scene_tform_body_nominal, *proto.mutable_scene_tform_body_nominal());
+    convertToProto(ros_msg.scene_tform_body_nominal, *proto.mutable_scene_tform_body_nominal());
   }
 
   convertToProto(ros_msg.stance_specification, proto);
@@ -155,7 +154,7 @@ void convertToRos(const bosdyn::api::JointState& proto, bosdyn_msgs::msg::JointS
 void convertToRos(const bosdyn::api::FrameTreeSnapshot::ParentEdge& proto,
                   bosdyn_msgs::msg::FrameTreeSnapshotParentEdge& ros_msg) {
   ros_msg.parent_frame_name = proto.parent_frame_name();
-  common_conversions::convertToRos(proto.parent_tform_child(), ros_msg.parent_tform_child);
+  convertToRos(proto.parent_tform_child(), ros_msg.parent_tform_child);
   ros_msg.parent_tform_child_is_set = proto.has_parent_tform_child();
 }
 
@@ -176,23 +175,23 @@ void convertToRos(const bosdyn::api::KinematicState& proto, bosdyn_msgs::msg::Ki
     convertToRos(item, joint_state);
     ros_msg.joint_states.push_back(joint_state);
   }
-  common_conversions::convertToRos(proto.acquisition_timestamp(), ros_msg.acquisition_timestamp);
+  convertToRos(proto.acquisition_timestamp(), ros_msg.acquisition_timestamp);
   ros_msg.acquisition_timestamp_is_set = proto.has_acquisition_timestamp();
   convertToRos(proto.transforms_snapshot(), ros_msg.transforms_snapshot);
   ros_msg.transforms_snapshot_is_set = proto.has_transforms_snapshot();
-  common_conversions::convertToRos(proto.velocity_of_body_in_vision(), ros_msg.velocity_of_body_in_vision);
+  convertToRos(proto.velocity_of_body_in_vision(), ros_msg.velocity_of_body_in_vision);
   ros_msg.velocity_of_body_in_vision_is_set = proto.has_velocity_of_body_in_vision();
-  common_conversions::convertToRos(proto.velocity_of_body_in_odom(), ros_msg.velocity_of_body_in_odom);
+  convertToRos(proto.velocity_of_body_in_odom(), ros_msg.velocity_of_body_in_odom);
   ros_msg.velocity_of_body_in_odom_is_set = proto.has_velocity_of_body_in_odom();
 }
 
 void convertToRos(const bosdyn::api::spot::InverseKinematicsResponse& proto,
                   bosdyn_msgs::msg::InverseKinematicsResponse& ros_msg) {
-  common_conversions::convertToRos(proto.header(), ros_msg.header);
+  convertToRos(proto.header(), ros_msg.header);
   ros_msg.header_is_set = proto.has_header();
   ros_msg.status.value = proto.status();
   convertToRos(proto.robot_configuration(), ros_msg.robot_configuration);
   ros_msg.robot_configuration_is_set = proto.has_robot_configuration();
 }
 
-}  // namespace spot_ros2::kinematic_conversions
+}  // namespace spot_ros2

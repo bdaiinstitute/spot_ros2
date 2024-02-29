@@ -7,7 +7,7 @@
 #include <bosdyn_msgs/msg/inverse_kinematics_request.hpp>
 #include <bosdyn_msgs/msg/inverse_kinematics_response.hpp>
 
-namespace spot_ros2::kinematic_conversions {
+namespace spot_ros2 {
 
 ///////////////////////////////////////////////////////////////////////////////
 // ROS to Protobuf.
@@ -57,4 +57,4 @@ void convertToRos(const bosdyn::api::KinematicState& proto, bosdyn_msgs::msg::Ki
 void convertToRos(const bosdyn::api::spot::InverseKinematicsResponse& proto,
                   bosdyn_msgs::msg::InverseKinematicsResponse& ros_msg);
 
-}  // namespace spot_ros2::kinematic_conversions
+}  // namespace spot_ros2
