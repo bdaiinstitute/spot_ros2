@@ -34,6 +34,8 @@ class ObjectSynchronizer {
  private:
   void onTimer();
 
+  void listWorldObjectsCallback();
+
   std::string frame_prefix_;
   std::string preferred_base_frame_;
   std::string preferred_base_frame_with_prefix_;
