@@ -98,10 +98,13 @@ TEST(TestCommonConversions, convertBosdynMsgsRequestHeaderToProto) {
 class ConvertBosdynMsgsArmJointPositionToProtoParameterized : public ::testing::TestWithParam<ArmJointPosition> {};
 
 TEST_P(ConvertBosdynMsgsArmJointPositionToProtoParameterized, CheckFieldsNotSet) {
+  // GIVEN an arm joint position message with some number of fields set or not set
   ArmJointPosition ros_msg = GetParam();
   bosdyn::api::ArmJointPosition proto_msg;
+  // WHEN converting to a protobuf message
   convertToProto(ros_msg, proto_msg);
 
+  // THEN we expect that each corresponding field is set and has the same value
   EXPECT_THAT(proto_msg.has_sh0(), testing::Eq(ros_msg.sh0_is_set));
   if (ros_msg.sh0_is_set) {
     EXPECT_THAT(proto_msg.sh0().value(), testing::DoubleEq(ros_msg.sh0));
