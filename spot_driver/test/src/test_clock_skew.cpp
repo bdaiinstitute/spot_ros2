@@ -28,7 +28,7 @@ TEST(TestClockSkewRobotToLocal, ZeroSkew) {
 }
 
 TEST(TestClockSkewRobotToLocal, PositiveSkew) {
-  // GIVEN a postiive timestamp and a clock skew with positive seconds and nanoseconds fields
+  // GIVEN a positive timestamp and a clock skew with positive seconds and nanoseconds fields
   google::protobuf::Timestamp timestamp;
   timestamp.set_seconds(1000);
   timestamp.set_nanos(500);
@@ -45,7 +45,7 @@ TEST(TestClockSkewRobotToLocal, PositiveSkew) {
 }
 
 TEST(TestClockSkewRobotToLocal, NegativeSkew) {
-  // GIVEN a postiive timestamp and a clock skew with negative seconds and nanoseconds fields
+  // GIVEN a positive timestamp and a clock skew with negative seconds and nanoseconds fields
   google::protobuf::Timestamp timestamp;
   timestamp.set_seconds(1000);
   timestamp.set_nanos(500);
@@ -166,7 +166,7 @@ TEST(TestClockSkewLocalToRobot, ZeroSkew) {
 }
 
 TEST(TestClockSkewLocalToRobot, PositiveSkew) {
-  // GIVEN a postiive timestamp and a clock skew with positive seconds and nanoseconds fields
+  // GIVEN a positive timestamp and a clock skew with positive seconds and nanoseconds fields
   const auto timestamp = builtin_interfaces::build<Time>().sec(1000).nanosec(500);
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(100);
@@ -181,7 +181,7 @@ TEST(TestClockSkewLocalToRobot, PositiveSkew) {
 }
 
 TEST(TestClockSkewLocalToRobot, NegativeSkew) {
-  // GIVEN a postiive timestamp and a clock skew with negative seconds and nanoseconds fields
+  // GIVEN a positive timestamp and a clock skew with negative seconds and nanoseconds fields
   const auto timestamp = builtin_interfaces::build<Time>().sec(1000).nanosec(500);
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(-100);
@@ -197,7 +197,7 @@ TEST(TestClockSkewLocalToRobot, NegativeSkew) {
 
 TEST(TestClockSkewLocalToRobot, PositiveSkewNanosecsCarry) {
   // GIVEN a positive timestamp and a clock skew where the number of seconds is zero and the number of nanoseconds in
-  // the clock skew is greater than the number of nanoseconds in the timestamp
+  // the clock skew is of sufficient magnitude to carry over a full second from the nanoseconds
   const auto timestamp = builtin_interfaces::build<Time>().sec(1000).nanosec(900'000'000);
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(0);
@@ -213,8 +213,7 @@ TEST(TestClockSkewLocalToRobot, PositiveSkewNanosecsCarry) {
 
 TEST(TestClockSkewLocalToRobot, NegativeSkewNanosecsCarry) {
   // GIVEN a positive timestamp and a clock skew where the number of seconds is zero and the number of nanoseconds in
-  // the clock skew is negative and of sufficient magnitude to add to greater than one full second when summed with the
-  // timetamp nanoseconds
+  // the clock skew is negative and of sufficient magnitude to require carrying over a second into nanoseconds
   const auto timestamp = builtin_interfaces::build<Time>().sec(1000).nanosec(100'000'000);
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(0);
@@ -231,9 +230,9 @@ TEST(TestClockSkewLocalToRobot, NegativeSkewNanosecsCarry) {
 TEST(TestClockSkewLocalToRobot, HandleNegativeUnskewedTimestamp) {
   // GIVEN a timestamp with a positive number of seconds and a positive clock skew with a greater number of seconds than
   // the timestamp
-  const auto timestamp = builtin_interfaces::build<Time>().sec(0).nanosec(0);
+  const auto timestamp = builtin_interfaces::build<Time>().sec(1000).nanosec(0);
   google::protobuf::Duration clock_skew;
-  clock_skew.set_seconds(-1);
+  clock_skew.set_seconds(-1001);
   clock_skew.set_nanos(0);
 
   // WHEN we apply the clock skew to the timestamp
