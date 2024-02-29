@@ -8,6 +8,7 @@
 #include <spot_driver/conversions/common_conversions.hpp>
 #include <spot_driver/conversions/geometry.hpp>
 #include <spot_driver/conversions/robot_state.hpp>
+#include <spot_driver/conversions/time.hpp>
 
 namespace spot_ros2 {
 
@@ -18,7 +19,7 @@ spot_msgs::msg::BatteryStateArray getBatteryStates(const ::bosdyn::api::RobotSta
   for (const auto& battery : robot_state.battery_states()) {
     spot_msgs::msg::BatteryState battery_state;
 
-    battery_state.header.stamp = applyClockSkew(battery.timestamp(), clock_skew);
+    battery_state.header.stamp = robotTimeToLocalTime(battery.timestamp(), clock_skew);
     battery_state.identifier = battery.identifier();
     battery_state.charge_percentage = battery.charge_percentage().value();
     battery_state.estimated_runtime = builtin_interfaces::build<builtin_interfaces::msg::Duration>()
@@ -68,7 +69,7 @@ spot_msgs::msg::EStopStateArray getEstopStates(const ::bosdyn::api::RobotState& 
 
   for (const auto& estop : robot_state.estop_states()) {
     spot_msgs::msg::EStopState estop_state;
-    estop_state.header.stamp = applyClockSkew(estop.timestamp(), clock_skew);
+    estop_state.header.stamp = robotTimeToLocalTime(estop.timestamp(), clock_skew);
     estop_state.name = estop.name();
     estop_state.type = estop.type();
     estop_state.state = estop.state();
@@ -87,7 +88,7 @@ std::optional<sensor_msgs::msg::JointState> getJointStates(const ::bosdyn::api::
   }
 
   sensor_msgs::msg::JointState joint_states;
-  joint_states.header.stamp = applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
+  joint_states.header.stamp = robotTimeToLocalTime(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
 
   for (const auto& joint : robot_state.kinematic_state().joint_states()) {
     const auto joint_name = prefix + kFriendlyJointNames.at(joint.name());
@@ -110,7 +111,7 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& r
 
   tf2_msgs::msg::TFMessage tf_msg;
 
-  const auto local_time = applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
+  const auto local_time = robotTimeToLocalTime(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
 
   for (const auto& [frame_id, transform] :
        robot_state.kinematic_state().transforms_snapshot().child_to_parent_edge_map()) {
@@ -144,7 +145,7 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
   geometry_msgs::msg::TwistWithCovarianceStamped odom_twist_msg;
   // TODO(schornakj): need to add the frame ID here?
   odom_twist_msg.header.stamp =
-      spot_ros2::applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
+      spot_ros2::robotTimeToLocalTime(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
   common_conversions::convertToRos(robot_state.kinematic_state().velocity_of_body_in_odom(),
                                    odom_twist_msg.twist.twist);
   return odom_twist_msg;
@@ -168,7 +169,7 @@ std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& 
   odom_msg.twist = odom_twist.value().twist;
 
   const auto& kinematic_state = robot_state.kinematic_state();
-  odom_msg.header.stamp = applyClockSkew(kinematic_state.acquisition_timestamp(), clock_skew);
+  odom_msg.header.stamp = robotTimeToLocalTime(kinematic_state.acquisition_timestamp(), clock_skew);
 
   ::bosdyn::api::SE3Pose tf_body_pose;
   if (is_using_vision) {
@@ -195,7 +196,7 @@ std::optional<spot_msgs::msg::PowerState> getPowerState(const ::bosdyn::api::Rob
 
   spot_msgs::msg::PowerState power_state;
 
-  power_state.header.stamp = applyClockSkew(robot_state.power_state().timestamp(), clock_skew);
+  power_state.header.stamp = robotTimeToLocalTime(robot_state.power_state().timestamp(), clock_skew);
   power_state.motor_power_state = robot_state.power_state().motor_power_state();
   power_state.shore_power_state = robot_state.power_state().shore_power_state();
   power_state.locomotion_charge_percentage = robot_state.power_state().locomotion_charge_percentage().value();
@@ -215,7 +216,7 @@ std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosd
   const auto create_fault_message = [&clock_skew](const ::bosdyn::api::SystemFault& fault) {
     spot_msgs::msg::SystemFault fault_msg;
     fault_msg.name = fault.name();
-    fault_msg.header.stamp = applyClockSkew(fault.onset_timestamp(), clock_skew);
+    fault_msg.header.stamp = robotTimeToLocalTime(fault.onset_timestamp(), clock_skew);
     fault_msg.duration = builtin_interfaces::build<builtin_interfaces::msg::Duration>()
                              .sec(fault.duration().seconds())
                              .nanosec(fault.duration().nanos());
@@ -277,7 +278,7 @@ std::optional<geometry_msgs::msg::Vector3Stamped> getEndEffectorForce(const ::bo
     return std::nullopt;
   }
   geometry_msgs::msg::Vector3Stamped force;
-  force.header.stamp = applyClockSkew(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
+  force.header.stamp = robotTimeToLocalTime(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
   force.header.frame_id = prefix + "hand";
   common_conversions::convertToRos(robot_state.manipulator_state().estimated_end_effector_force_in_hand(),
                                    force.vector);
@@ -295,7 +296,7 @@ std::optional<spot_msgs::msg::BehaviorFaultState> getBehaviorFaultState(const ::
   for (const auto& fault : robot_state.behavior_fault_state().faults()) {
     spot_msgs::msg::BehaviorFault fault_msg;
     fault_msg.behavior_fault_id = fault.behavior_fault_id();
-    fault_msg.header.stamp = applyClockSkew(fault.onset_timestamp(), clock_skew);
+    fault_msg.header.stamp = robotTimeToLocalTime(fault.onset_timestamp(), clock_skew);
     fault_msg.cause = fault.cause();
     fault_msg.status = fault.status();
     behavior_fault_msgs.faults.push_back(fault_msg);
