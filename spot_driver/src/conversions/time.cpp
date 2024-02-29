@@ -2,6 +2,10 @@
 
 #include <spot_driver/conversions/time.hpp>
 
+#include <google/protobuf/duration.pb.h>
+#include <google/protobuf/timestamp.pb.h>
+#include <builtin_interfaces/msg/time.hpp>
+
 namespace {
 /**
  * @brief Modify seconds and nanoseconds in-place to enforce that the nanoseconds must contain a value between 0 and
