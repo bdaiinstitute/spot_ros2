@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <spot_driver/api/default_image_client.hpp>
 
@@ -17,6 +17,7 @@
 #include <spot_driver/api/default_time_sync_api.hpp>
 #include <spot_driver/api/spot_image_sources.hpp>
 #include <spot_driver/conversions/geometry.hpp>
+#include <spot_driver/conversions/time.hpp>
 #include <spot_driver/types.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <tl_expected/expected.hpp>
@@ -76,7 +77,7 @@ tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(
   // Omit leading `/` from frame ID if robot_name is empty
   info_msg.header.frame_id =
       (robot_name.empty() ? "" : robot_name + "/") + image_response.shot().frame_name_image_sensor();
-  info_msg.header.stamp = spot_ros2::applyClockSkew(image_response.shot().acquisition_time(), clock_skew);
+  info_msg.header.stamp = spot_ros2::robotTimeToLocalTime(image_response.shot().acquisition_time(), clock_skew);
 
   // We assume that the camera images have already been corrected for distortion, so the 5 distortion parameters are all
   // zero.
@@ -121,7 +122,7 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
   std_msgs::msg::Header header;
   // Omit leading `/` from frame ID if robot_name is empty
   header.frame_id = (robot_name.empty() ? "" : robot_name + "/") + image_capture.frame_name_image_sensor();
-  header.stamp = spot_ros2::applyClockSkew(image_capture.acquisition_time(), clock_skew);
+  header.stamp = spot_ros2::robotTimeToLocalTime(image_capture.acquisition_time(), clock_skew);
 
   const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
   if (!pixel_format_cv) {
@@ -177,7 +178,7 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
     const auto tform_msg = spot_ros2::conversions::toTransformStamped(
         transform.parent_tform_child(), robot_name.empty() ? parent_frame_id : (robot_name + "/" + parent_frame_id),
         robot_name.empty() ? child_frame_id : (robot_name + "/" + child_frame_id),
-        spot_ros2::applyClockSkew(image_response.shot().acquisition_time(), clock_skew));
+        spot_ros2::robotTimeToLocalTime(image_response.shot().acquisition_time(), clock_skew));
 
     out.push_back(tform_msg);
   }
