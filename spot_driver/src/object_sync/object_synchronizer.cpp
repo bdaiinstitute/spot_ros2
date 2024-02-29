@@ -101,6 +101,7 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<StateClientInterfac
                                        std::unique_ptr<RobotModelInterfaceBase> robot_model_interface)
     : state_client_interface_{state_client_interface},
       world_object_client_interface_{world_object_client_interface},
+      time_sync_interface_{time_sync_api},
       parameter_interface_{std::move(parameter_interface)},
       logger_interface_{std::move(logger_interface)},
       tf_listener_interface_{std::move(tf_listener_interface)},
@@ -201,19 +202,19 @@ void ObjectSynchronizer::onTimer() {
   //   Else (frame is not a world object):
   //     Mutate world objects to add the frame as a new object
 
-  for (const auto& tf_frame : tf_frame_names) {
+  for (const auto& child_frame_id : tf_frame_names) {
     // const auto tf_frame_no_prefix = getAfterFirstSeparator(tf_frame, '/');
-    const auto tf_frame_no_prefix = stripPrefix(tf_frame, frame_prefix_);
+    const auto child_frame_id_no_prefix = stripPrefix(child_frame_id, frame_prefix_);
 
-    std::cout << tf_frame_no_prefix << std::endl;
-    if (kSpotInternalFrames.count(tf_frame_no_prefix) > 0) {
+    std::cout << child_frame_id_no_prefix << std::endl;
+    if (kSpotInternalFrames.count(child_frame_id_no_prefix) > 0) {
       continue;
     }
 
-    const auto tform_base_to_frame = tf_listener_interface_->lookupTransform(
-        frame_prefix_ + "odom", tf_frame, rclcpp::Time{0, 0}, rclcpp::Duration{std::chrono::nanoseconds{0}});
-    if (!tform_base_to_frame) {
-      logger_interface_->logWarn(tform_base_to_frame.error());
+    const auto base_tform_child = tf_listener_interface_->lookupTransform(
+        frame_prefix_ + "odom", child_frame_id, rclcpp::Time{0, 0}, rclcpp::Duration{std::chrono::nanoseconds{0}});
+    if (!base_tform_child) {
+      logger_interface_->logWarn(base_tform_child.error());
       continue;
     }
 
@@ -223,13 +224,18 @@ void ObjectSynchronizer::onTimer() {
     // object
     ::bosdyn::api::MutateWorldObjectRequest request;
     auto* object = request.mutable_mutation()->mutable_object();
-    *object->mutable_name() = tf_frame_no_prefix;
-    auto* edge_map = object->mutable_transforms_snapshot()->mutable_child_to_parent_edge_map();
+
+    common_conversions::convertToProto(base_tform_child->header.stamp, *object->mutable_acquisition_time());
+    *object->mutable_name() = child_frame_id_no_prefix;
 
     ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
-    // common_conversions::convertToProto(tform_base_to_frame.value().transform, *edge.mutable_parent_tform_child());
+    *edge.mutable_parent_frame_name() = "odom";
+    common_conversions::convertToProto(base_tform_child->transform, *edge.mutable_parent_tform_child());
 
-    if (world_object_frames.count(tf_frame_no_prefix) == 0) {
+    auto* edge_map = object->mutable_transforms_snapshot()->mutable_child_to_parent_edge_map();
+    edge_map->insert(google::protobuf::MapPair{child_frame_id_no_prefix, edge});
+
+    if (world_object_frames.count(child_frame_id_no_prefix) == 0) {
       request.mutable_mutation()->set_action(
           ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_ADD);
     } else {
