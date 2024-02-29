@@ -2796,7 +2796,6 @@ class SpotROS(Node):
         self.get_logger().info("Shutting down ROS driver for Spot")
         if self.spot_wrapper is not None:
             self.spot_wrapper.sit()
-        self.node_rate.sleep()
         if self.spot_wrapper is not None:
             self.spot_wrapper.disconnect()
         super().destroy_node()

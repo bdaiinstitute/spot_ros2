@@ -12,6 +12,7 @@ import tf2_ros
 from bosdyn.api import image_pb2, world_object_pb2
 from bosdyn.client.frame_helpers import get_a_tform_b
 from bosdyn.client.math_helpers import SE3Pose
+from bosdyn_api_msgs.math_helpers import ros_transform_to_se3_pose
 from builtin_interfaces.msg import Time
 from cv_bridge import CvBridge
 from geometry_msgs.msg import TransformStamped
@@ -21,11 +22,6 @@ from sensor_msgs.msg import CameraInfo, CompressedImage, Image
 from tf2_msgs.msg import TFMessage
 
 from spot_wrapper.wrapper import SpotWrapper
-
-try:
-    from conversions import ros_transform_to_se3_pose
-except ModuleNotFoundError:
-    from .manual_conversions import ros_transform_to_se3_pose
 
 cv_bridge = CvBridge()
 

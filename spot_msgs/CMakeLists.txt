@@ -96,14 +96,14 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/RobotCommand.action"
   "action/Trajectory.action"
   "action/Manipulation.action"
-  DEPENDENCIES 
-    bosdyn_api_msgs 
-    bosdyn_spot_api_msgs 
+  DEPENDENCIES
+    bosdyn_api_msgs
+    bosdyn_spot_api_msgs
     bosdyn_spot_cam_api_msgs
-    builtin_interfaces 
-    common_interfaces 
-    geometry_msgs 
-    std_msgs 
+    builtin_interfaces
+    common_interfaces
+    geometry_msgs
+    std_msgs
     sensor_msgs
 )
 

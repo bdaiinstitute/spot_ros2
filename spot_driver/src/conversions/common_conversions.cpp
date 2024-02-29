@@ -75,7 +75,7 @@ void convertToProto(const bosdyn_api_msgs::msg::ArmJointPosition& ros_msg, bosdy
 void convertToRos(const bosdyn::api::RequestHeader& proto, bosdyn_api_msgs::msg::RequestHeader& ros_msg) {
   ros_msg.has_field = 0u;
   if (proto.has_request_timestamp()) {
-    common_conversions::convertToRos(proto.request_timestamp(), ros_msg.request_timestamp);
+    convertToRos(proto.request_timestamp(), ros_msg.request_timestamp);
     ros_msg.has_field |= bosdyn_api_msgs::msg::RequestHeader::REQUEST_TIMESTAMP_FIELD_SET;
   }
   ros_msg.client_name = proto.client_name();
@@ -94,11 +94,11 @@ void convertToRos(const bosdyn::api::ResponseHeader& proto, bosdyn_api_msgs::msg
     ros_msg.has_field |= bosdyn_api_msgs::msg::ResponseHeader::REQUEST_HEADER_FIELD_SET;
   }
   if (proto.has_request_received_timestamp()) {
-    common_conversions::convertToRos(proto.request_received_timestamp(), ros_msg.request_received_timestamp);
+    convertToRos(proto.request_received_timestamp(), ros_msg.request_received_timestamp);
     ros_msg.has_field |= bosdyn_api_msgs::msg::ResponseHeader::REQUEST_RECEIVED_TIMESTAMP_FIELD_SET;
   }
   if (proto.has_response_timestamp()) {
-    common_conversions::convertToRos(proto.response_timestamp(), ros_msg.response_timestamp);
+    convertToRos(proto.response_timestamp(), ros_msg.response_timestamp);
     ros_msg.has_field |= bosdyn_api_msgs::msg::ResponseHeader::RESPONSE_TIMESTAMP_FIELD_SET;
   }
   if (proto.has_error()) {
