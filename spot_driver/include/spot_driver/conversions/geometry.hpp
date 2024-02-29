@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace spot_ros2::conversions {
+namespace spot_ros2 {
 /**
  * @brief Convert SE3Pose messages to ROS TransformStamped messages
  *
@@ -22,4 +22,4 @@ geometry_msgs::msg::TransformStamped toTransformStamped(const ::bosdyn::api::SE3
                                                         const std::string& parent_frame, const std::string& child_frame,
                                                         const builtin_interfaces::msg::Time& tf_time);
 
-}  // namespace spot_ros2::conversions
+}  // namespace spot_ros2

@@ -1,9 +1,19 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <gmock/gmock-matchers.h>
+#include <gmock/gmock-more-matchers.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest-param-test.h>
 #include <gtest/gtest.h>
+#include <bosdyn_msgs/msg/arm_joint_position.hpp>
+#include <bosdyn_msgs/msg/inverse_kinematics_request.hpp>
 #include <spot_driver/conversions/common_conversions.hpp>
 
 #include <rclcpp/rclcpp.hpp>
+
+namespace {
+using ArmJointPosition = bosdyn_msgs::msg::ArmJointPosition;
+}
 
 namespace spot_ros2::test {
 
@@ -85,38 +95,136 @@ TEST(TestCommonConversions, convertBosdynMsgsRequestHeaderToProto) {
   ASSERT_EQ(rosMsg.disable_rpc_logging = true, protoMsg.disable_rpc_logging());
 }
 
-TEST(TestCommonConversions, convertBosdynMsgsArmJointPositionToProto) {
-  bosdyn_msgs::msg::ArmJointPosition rosMsg;
-  bosdyn::api::ArmJointPosition protoMsg;
+class ConvertBosdynMsgsArmJointPositionToProtoParameterized : public ::testing::TestWithParam<ArmJointPosition> {};
 
-  rosMsg.sh0_is_set = true;
-  rosMsg.sh0 = 0.1;
-  rosMsg.sh1_is_set = true;
-  rosMsg.sh1 = 0.2;
-  rosMsg.el0_is_set = true;
-  rosMsg.el0 = 0.3;
-  rosMsg.el1_is_set = true;
-  rosMsg.el1 = 0.4;
-  rosMsg.wr0_is_set = true;
-  rosMsg.wr0 = 0.5;
-  rosMsg.wr1_is_set = true;
-  rosMsg.wr1 = 0.6;
+TEST_P(ConvertBosdynMsgsArmJointPositionToProtoParameterized, CheckFieldsNotSet) {
+  ArmJointPosition ros_msg = GetParam();
+  bosdyn::api::ArmJointPosition proto_msg;
+  convertToProto(ros_msg, proto_msg);
 
-  convertToProto(rosMsg, protoMsg);
+  EXPECT_THAT(proto_msg.has_sh0(), testing::Eq(ros_msg.sh0_is_set));
+  if (ros_msg.sh0_is_set) {
+    EXPECT_THAT(proto_msg.sh0().value(), testing::DoubleEq(ros_msg.sh0));
+  }
 
-  ASSERT_EQ(rosMsg.sh0_is_set, protoMsg.has_sh0());
-  ASSERT_EQ(rosMsg.sh0, protoMsg.sh0().value());
-  ASSERT_EQ(rosMsg.sh1_is_set, protoMsg.has_sh1());
-  ASSERT_EQ(rosMsg.sh1, protoMsg.sh1().value());
-  ASSERT_EQ(rosMsg.el0_is_set, protoMsg.has_el0());
-  ASSERT_EQ(rosMsg.el0, protoMsg.el0().value());
-  ASSERT_EQ(rosMsg.el1_is_set, protoMsg.has_el1());
-  ASSERT_EQ(rosMsg.el1, protoMsg.el1().value());
-  ASSERT_EQ(rosMsg.wr0_is_set, protoMsg.has_wr0());
-  ASSERT_EQ(rosMsg.wr0, protoMsg.wr0().value());
-  ASSERT_EQ(rosMsg.wr1_is_set, protoMsg.has_wr1());
-  ASSERT_EQ(rosMsg.wr1, protoMsg.wr1().value());
+  EXPECT_THAT(proto_msg.has_sh1(), testing::Eq(ros_msg.sh1_is_set));
+  if (ros_msg.sh1_is_set) {
+    EXPECT_THAT(proto_msg.sh1().value(), testing::DoubleEq(ros_msg.sh1));
+  }
+
+  EXPECT_THAT(proto_msg.has_el0(), testing::Eq(ros_msg.el0_is_set));
+  if (ros_msg.el0_is_set) {
+    EXPECT_THAT(proto_msg.el0().value(), testing::DoubleEq(ros_msg.el0));
+  }
+
+  EXPECT_THAT(proto_msg.has_el1(), testing::Eq(ros_msg.el1_is_set));
+  if (ros_msg.el1_is_set) {
+    EXPECT_THAT(proto_msg.el1().value(), testing::DoubleEq(ros_msg.el1));
+  }
+
+  EXPECT_THAT(proto_msg.has_wr0(), testing::Eq(ros_msg.wr0_is_set));
+  if (ros_msg.wr0_is_set) {
+    EXPECT_THAT(proto_msg.wr0().value(), testing::DoubleEq(ros_msg.wr0));
+  }
+
+  EXPECT_THAT(proto_msg.has_wr1(), testing::Eq(ros_msg.wr1_is_set));
+  if (ros_msg.wr1_is_set) {
+    EXPECT_THAT(proto_msg.wr1().value(), testing::DoubleEq(ros_msg.wr1));
+  }
 }
+
+INSTANTIATE_TEST_CASE_P(ConvertBosdynMsgsArmJointPositionToProto, ConvertBosdynMsgsArmJointPositionToProtoParameterized,
+                        ::testing::Values(bosdyn_msgs::build<ArmJointPosition>()
+                                              .sh0(0.1)
+                                              .sh0_is_set(true)
+                                              .sh1(0.2)
+                                              .sh1_is_set(true)
+                                              .el0(0.3)
+                                              .el0_is_set(true)
+                                              .el1(0.4)
+                                              .el1_is_set(true)
+                                              .wr0(0.5)
+                                              .wr0_is_set(true)
+                                              .wr1(0.6)
+                                              .wr1_is_set(true),
+                                          bosdyn_msgs::build<ArmJointPosition>()
+                                              .sh0(0.0)
+                                              .sh0_is_set(false)
+                                              .sh1(0.2)
+                                              .sh1_is_set(true)
+                                              .el0(0.3)
+                                              .el0_is_set(true)
+                                              .el1(0.4)
+                                              .el1_is_set(true)
+                                              .wr0(0.5)
+                                              .wr0_is_set(true)
+                                              .wr1(0.6)
+                                              .wr1_is_set(true),
+                                          bosdyn_msgs::build<ArmJointPosition>()
+                                              .sh0(0.1)
+                                              .sh0_is_set(true)
+                                              .sh1(0.0)
+                                              .sh1_is_set(false)
+                                              .el0(0.3)
+                                              .el0_is_set(true)
+                                              .el1(0.4)
+                                              .el1_is_set(true)
+                                              .wr0(0.5)
+                                              .wr0_is_set(true)
+                                              .wr1(0.6)
+                                              .wr1_is_set(true),
+                                          bosdyn_msgs::build<ArmJointPosition>()
+                                              .sh0(0.1)
+                                              .sh0_is_set(true)
+                                              .sh1(0.2)
+                                              .sh1_is_set(true)
+                                              .el0(0.0)
+                                              .el0_is_set(false)
+                                              .el1(0.4)
+                                              .el1_is_set(true)
+                                              .wr0(0.5)
+                                              .wr0_is_set(true)
+                                              .wr1(0.6)
+                                              .wr1_is_set(true),
+                                          bosdyn_msgs::build<ArmJointPosition>()
+                                              .sh0(0.1)
+                                              .sh0_is_set(true)
+                                              .sh1(0.2)
+                                              .sh1_is_set(true)
+                                              .el0(0.3)
+                                              .el0_is_set(true)
+                                              .el1(0.0)
+                                              .el1_is_set(false)
+                                              .wr0(0.5)
+                                              .wr0_is_set(true)
+                                              .wr1(0.6)
+                                              .wr1_is_set(true),
+                                          bosdyn_msgs::build<ArmJointPosition>()
+                                              .sh0(0.1)
+                                              .sh0_is_set(true)
+                                              .sh1(0.2)
+                                              .sh1_is_set(true)
+                                              .el0(0.3)
+                                              .el0_is_set(true)
+                                              .el1(0.4)
+                                              .el1_is_set(true)
+                                              .wr0(0.0)
+                                              .wr0_is_set(false)
+                                              .wr1(0.6)
+                                              .wr1_is_set(true),
+                                          bosdyn_msgs::build<ArmJointPosition>()
+                                              .sh0(0.1)
+                                              .sh0_is_set(true)
+                                              .sh1(0.2)
+                                              .sh1_is_set(true)
+                                              .el0(0.3)
+                                              .el0_is_set(true)
+                                              .el1(0.4)
+                                              .el1_is_set(true)
+                                              .wr0(0.5)
+                                              .wr0_is_set(true)
+                                              .wr1(0.0)
+                                              .wr1_is_set(false)));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Protobuf to ROS.
