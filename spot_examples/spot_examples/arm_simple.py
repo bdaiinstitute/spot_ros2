@@ -4,6 +4,7 @@ from typing import Optional
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
+from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
@@ -14,7 +15,6 @@ import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
-from .tf_listener_wrapper import TFListenerWrapper
 
 
 def hello_arm(robot_name: Optional[str] = None) -> bool:
