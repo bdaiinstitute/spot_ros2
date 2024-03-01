@@ -237,4 +237,42 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfTas
             protoMsg.tool_gaze_task().task_tform_desired_tool().rotation().z());
 }
 
+TEST(TestKinematicConversions, convertProtoToBosdynMsgsKinematicState) {
+  bosdyn::api::KinematicState protoMsg;
+  bosdyn_api_msgs::msg::KinematicState rosMsg;
+
+  auto * joint_state = protoMsg.add_joint_states();
+  joint_state->set_name("shoulder");
+  joint_state->mutable_position()->set_value(0.0);
+  joint_state->mutable_velocity()->set_value(0.1);
+  joint_state->mutable_acceleration()->set_value(0.2);
+  joint_state->mutable_load()->set_value(0.5);
+  protoMsg.mutable_acquisition_timestamp()->set_seconds(1);
+  auto * snapshot = protoMsg.mutable_transforms_snapshot();
+  auto & edge = (*snapshot->mutable_child_to_parent_edge_map())["arm"];
+  edge.set_parent_frame_name("torso");
+  edge.mutable_parent_tform_child()->mutable_position()->set_x(1.0);
+  protoMsg.mutable_velocity_of_body_in_vision()->mutable_linear()->set_x(1.0);
+  protoMsg.mutable_velocity_of_body_in_odom()->mutable_linear()->set_y(1.0);
+
+  convertToRos(protoMsg, rosMsg);
+
+  ASSERT_EQ(protoMsg.joint_states_size(), static_cast<int>(rosMsg.joint_states.size()));
+  ASSERT_EQ(protoMsg.joint_states(0).name(), rosMsg.joint_states[0].name);
+  ASSERT_EQ(protoMsg.joint_states(0).position().value(), rosMsg.joint_states[0].position.data);
+  ASSERT_EQ(protoMsg.joint_states(0).velocity().value(), rosMsg.joint_states[0].velocity.data);
+  ASSERT_EQ(protoMsg.joint_states(0).acceleration().value(), rosMsg.joint_states[0].acceleration.data);
+  ASSERT_EQ(protoMsg.joint_states(0).load().value(), rosMsg.joint_states[0].load.data);
+  ASSERT_EQ(protoMsg.transforms_snapshot().child_to_parent_edge_map().size(),
+            rosMsg.transforms_snapshot.child_to_parent_edge_map.size());
+  ASSERT_EQ(rosMsg.transforms_snapshot.child_to_parent_edge_map[0].key, "arm");
+  ASSERT_EQ(protoMsg.transforms_snapshot().child_to_parent_edge_map().at("arm").parent_frame_name(),
+            rosMsg.transforms_snapshot.child_to_parent_edge_map[0].value.parent_frame_name);
+  ASSERT_EQ(protoMsg.transforms_snapshot().child_to_parent_edge_map().at("arm").parent_tform_child().position().x(),
+            rosMsg.transforms_snapshot.child_to_parent_edge_map[0].value.parent_tform_child.position.x);
+  ASSERT_EQ(protoMsg.acquisition_timestamp().seconds(), rosMsg.acquisition_timestamp.sec);
+  ASSERT_EQ(protoMsg.velocity_of_body_in_vision().linear().x(), rosMsg.velocity_of_body_in_vision.linear.x);
+  ASSERT_EQ(protoMsg.velocity_of_body_in_odom().linear().y(), rosMsg.velocity_of_body_in_odom.linear.y);
+}
+  
 }  // namespace spot_ros2::test

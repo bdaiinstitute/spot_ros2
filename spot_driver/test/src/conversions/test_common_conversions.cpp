@@ -90,7 +90,7 @@ TEST(TestCommonConversions, convertBosdynMsgsRequestHeaderToProto) {
   convertToProto(rosMsg, protoMsg);
 
   ASSERT_TRUE(protoMsg.has_request_timestamp());
-  ASSERT_EQ(rosMsg.client_name = "client_name", protoMsg.client_name());
+  ASSERT_EQ(rosMsg.client_name, protoMsg.client_name());
   ASSERT_EQ(rosMsg.disable_rpc_logging, protoMsg.disable_rpc_logging());
 }
 
@@ -210,6 +210,45 @@ TEST(TestCommonConversions, convertProtoToGeometryMsgsQuaternion) {
   ASSERT_EQ(protoMsg.x(), rosMsg.x);
   ASSERT_EQ(protoMsg.y(), rosMsg.y);
   ASSERT_EQ(protoMsg.z(), rosMsg.z);
+}
+
+TEST(TestCommonConversions, convertProtoToBosdynMsgsRequestHeader) {
+  bosdyn::api::RequestHeader protoMsg;
+  bosdyn_api_msgs::msg::RequestHeader rosMsg;
+
+  protoMsg.mutable_request_timestamp()->set_seconds(1);
+  protoMsg.set_client_name("client_name");
+  protoMsg.set_disable_rpc_logging(true);
+
+  convertToRos(protoMsg, rosMsg);
+
+  ASSERT_TRUE(rosMsg.has_field & bosdyn_api_msgs::msg::RequestHeader::REQUEST_TIMESTAMP_FIELD_SET);
+  ASSERT_EQ(protoMsg.request_timestamp().seconds(), rosMsg.request_timestamp.sec);
+  ASSERT_EQ(protoMsg.client_name(), rosMsg.client_name);
+  ASSERT_EQ(protoMsg.disable_rpc_logging(), rosMsg.disable_rpc_logging);
+}
+
+TEST(TestCommonConversions, convertProtoToBosdynMsgsResponseHeader) {
+  bosdyn::api::ResponseHeader protoMsg;
+  bosdyn_api_msgs::msg::ResponseHeader rosMsg;
+
+  protoMsg.mutable_request_header()->set_client_name("client_name");
+  protoMsg.mutable_request_received_timestamp()->set_seconds(1);
+  protoMsg.mutable_response_timestamp()->set_seconds(2);
+  protoMsg.mutable_error()->set_message("ok");
+
+  convertToRos(protoMsg, rosMsg);
+
+  using ResponseHeader = bosdyn_api_msgs::msg::ResponseHeader;
+  ASSERT_TRUE(rosMsg.has_field & ResponseHeader::REQUEST_HEADER_FIELD_SET);
+  ASSERT_TRUE(rosMsg.has_field & ResponseHeader::REQUEST_RECEIVED_TIMESTAMP_FIELD_SET);
+  ASSERT_TRUE(rosMsg.has_field & ResponseHeader::RESPONSE_TIMESTAMP_FIELD_SET);
+  ASSERT_TRUE(rosMsg.has_field & ResponseHeader::ERROR_FIELD_SET);
+
+  ASSERT_EQ(protoMsg.request_header().client_name(), rosMsg.request_header.client_name);
+  ASSERT_EQ(protoMsg.request_received_timestamp().seconds(), rosMsg.request_received_timestamp.sec);
+  ASSERT_EQ(protoMsg.response_timestamp().seconds(), rosMsg.response_timestamp.sec);
+  ASSERT_EQ(protoMsg.error().message(), rosMsg.error.message);
 }
 
 }  // namespace spot_ros2::test
