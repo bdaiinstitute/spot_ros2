@@ -126,6 +126,7 @@ jobs:
           parallel: true
           debug: true
           files: $(find . -name "coverage.xml" -type f)
+          base-path: ${{ github.workspace }}/src
 
       - name: Upload cpp coverage to Coveralls
         uses: coverallsapp/github-action@v2
@@ -136,12 +137,14 @@ jobs:
           debug: true
           files: coverage_spot_driver.info
           format: lcov
+          base-path: ${{ github.workspace }}/src
 
       - name: Aggregate coverage
         uses: coverallsapp/github-action@v2
         with:
           parallel-finished: true
           carryforward: "unittests-python, unittests-cpp"
+          base-path: ${{ github.workspace }}/src
 
       - name: Report on test results
         run: colcon test-result --all --verbose
