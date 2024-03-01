@@ -241,15 +241,15 @@ TEST(TestKinematicConversions, convertProtoToBosdynMsgsKinematicState) {
   bosdyn::api::KinematicState protoMsg;
   bosdyn_api_msgs::msg::KinematicState rosMsg;
 
-  auto * joint_state = protoMsg.add_joint_states();
+  auto* joint_state = protoMsg.add_joint_states();
   joint_state->set_name("shoulder");
   joint_state->mutable_position()->set_value(0.0);
   joint_state->mutable_velocity()->set_value(0.1);
   joint_state->mutable_acceleration()->set_value(0.2);
   joint_state->mutable_load()->set_value(0.5);
   protoMsg.mutable_acquisition_timestamp()->set_seconds(1);
-  auto * snapshot = protoMsg.mutable_transforms_snapshot();
-  auto & edge = (*snapshot->mutable_child_to_parent_edge_map())["arm"];
+  auto* snapshot = protoMsg.mutable_transforms_snapshot();
+  auto& edge = (*snapshot->mutable_child_to_parent_edge_map())["arm"];
   edge.set_parent_frame_name("torso");
   edge.mutable_parent_tform_child()->mutable_position()->set_x(1.0);
   protoMsg.mutable_velocity_of_body_in_vision()->mutable_linear()->set_x(1.0);
@@ -274,5 +274,5 @@ TEST(TestKinematicConversions, convertProtoToBosdynMsgsKinematicState) {
   ASSERT_EQ(protoMsg.velocity_of_body_in_vision().linear().x(), rosMsg.velocity_of_body_in_vision.linear.x);
   ASSERT_EQ(protoMsg.velocity_of_body_in_odom().linear().y(), rosMsg.velocity_of_body_in_odom.linear.y);
 }
-  
+
 }  // namespace spot_ros2::test

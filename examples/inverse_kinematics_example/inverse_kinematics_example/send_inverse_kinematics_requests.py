@@ -35,12 +35,12 @@ from bosdyn.client.frame_helpers import (
 )
 from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
+from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
-from bosdyn_msgs.conversions import convert
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
 
