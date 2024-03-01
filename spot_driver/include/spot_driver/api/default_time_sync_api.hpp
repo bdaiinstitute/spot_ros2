@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #pragma once
 
@@ -17,9 +17,6 @@ namespace spot_ros2 {
 class DefaultTimeSyncApi : public TimeSyncApi {
  public:
   explicit DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread);
-
-  tl::expected<builtin_interfaces::msg::Time, std::string> convertRobotTimeToLocalTime(
-      const google::protobuf::Timestamp& robot_timestamp) override;
 
   /**
   * @brief Get the current clock skew from the Spot SDK's time sync endpoint.

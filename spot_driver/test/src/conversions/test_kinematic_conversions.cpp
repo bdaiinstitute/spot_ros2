@@ -23,7 +23,7 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestToProto)
   rosMsg.nominal_arm_configuration_overrides_is_set = true;
   rosMsg.scene_tform_body_nominal_is_set = true;
 
-  kinematic_conversions::convertToProto(rosMsg, protoMsg);
+  convertToProto(rosMsg, protoMsg);
 
   ASSERT_EQ(rosMsg.header_is_set, protoMsg.has_header());
   ASSERT_EQ(rosMsg.root_frame_name, protoMsg.root_frame_name());
@@ -58,7 +58,7 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestFixedSta
   rosMsg.stance_specification.fixed_stance.hr_rt_scene.y = 0.2;
   rosMsg.stance_specification.fixed_stance.hr_rt_scene.z = 0.3;
 
-  kinematic_conversions::convertToProto(rosMsg.stance_specification.fixed_stance, *protoMsg.mutable_fixed_stance());
+  convertToProto(rosMsg.stance_specification.fixed_stance, *protoMsg.mutable_fixed_stance());
 
   ASSERT_EQ(rosMsg.stance_specification.fixed_stance.fl_rt_scene_is_set, protoMsg.fixed_stance().has_fl_rt_scene());
   ASSERT_EQ(rosMsg.stance_specification.fixed_stance.fl_rt_scene.x, protoMsg.fixed_stance().fl_rt_scene().x());
@@ -94,8 +94,7 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOnGround
   rosMsg.stance_specification.on_ground_plane_stance.scene_tform_ground.orientation.y = 0.4336;
   rosMsg.stance_specification.on_ground_plane_stance.scene_tform_ground.orientation.z = 0.3709;
 
-  kinematic_conversions::convertToProto(rosMsg.stance_specification.on_ground_plane_stance,
-                                        *protoMsg.mutable_on_ground_plane_stance());
+  convertToProto(rosMsg.stance_specification.on_ground_plane_stance, *protoMsg.mutable_on_ground_plane_stance());
 
   ASSERT_EQ(rosMsg.stance_specification.on_ground_plane_stance.scene_tform_ground_is_set,
             protoMsg.on_ground_plane_stance().has_scene_tform_ground());
@@ -130,7 +129,7 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfToo
   rosMsg.wrist_mounted_tool.wrist_tform_tool.orientation.y = 0.4336;
   rosMsg.wrist_mounted_tool.wrist_tform_tool.orientation.z = 0.3709;
 
-  kinematic_conversions::convertToProto(rosMsg, protoMsg);
+  convertToProto(rosMsg, protoMsg);
   ASSERT_EQ(rosMsg.wrist_mounted_tool.wrist_tform_tool.position.x,
             protoMsg.wrist_mounted_tool().wrist_tform_tool().position().x());
   ASSERT_EQ(rosMsg.wrist_mounted_tool.wrist_tform_tool.position.y,
@@ -162,7 +161,7 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfToo
   rosMsg.body_mounted_tool.body_tform_tool.orientation.y = 0.4336;
   rosMsg.body_mounted_tool.body_tform_tool.orientation.z = 0.3709;
 
-  kinematic_conversions::convertToProto(rosMsg, protoMsg);
+  convertToProto(rosMsg, protoMsg);
   ASSERT_EQ(rosMsg.body_mounted_tool.body_tform_tool.position.x,
             protoMsg.body_mounted_tool().body_tform_tool().position().x());
   ASSERT_EQ(rosMsg.body_mounted_tool.body_tform_tool.position.y,
@@ -194,7 +193,7 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfTas
   rosMsg.tool_pose_task.task_tform_desired_tool.orientation.y = 0.4336;
   rosMsg.tool_pose_task.task_tform_desired_tool.orientation.z = 0.3709;
 
-  kinematic_conversions::convertToProto(rosMsg, protoMsg);
+  convertToProto(rosMsg, protoMsg);
   ASSERT_EQ(rosMsg.tool_pose_task.task_tform_desired_tool.position.x,
             protoMsg.tool_pose_task().task_tform_desired_tool().position().x());
   ASSERT_EQ(rosMsg.tool_pose_task.task_tform_desired_tool.position.y,
@@ -226,7 +225,7 @@ TEST(TestKinematicConversions, convertBosdynMsgsInverseKinematicsRequestOneOfTas
   rosMsg.tool_gaze_task.task_tform_desired_tool.orientation.y = 0.4336;
   rosMsg.tool_gaze_task.task_tform_desired_tool.orientation.z = 0.3709;
 
-  kinematic_conversions::convertToProto(rosMsg, protoMsg);
+  convertToProto(rosMsg, protoMsg);
   ASSERT_EQ(rosMsg.tool_gaze_task.task_tform_desired_tool.position.x,
             protoMsg.tool_gaze_task().task_tform_desired_tool().position().x());
   ASSERT_EQ(rosMsg.tool_gaze_task.task_tform_desired_tool.position.y,

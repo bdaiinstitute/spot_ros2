@@ -24,7 +24,7 @@ bool areTransformsEqual(const geometry_msgs::msg::Transform& tf1, const ::bosdyn
 }
 }  // namespace
 
-namespace spot_ros2::conversions::test {
+namespace spot_ros2::test {
 TEST(GeometryConversion, toTransformStampedTest) {
   // GIVEN a bosdyn protobuf transform, the parent frame name, the child frame name, and a timestamp
   const auto transform =
@@ -43,4 +43,4 @@ TEST(GeometryConversion, toTransformStampedTest) {
   EXPECT_TRUE(areTransformsEqual(msg.transform, transform));
 }
 
-}  // namespace spot_ros2::conversions::test
+}  // namespace spot_ros2::test

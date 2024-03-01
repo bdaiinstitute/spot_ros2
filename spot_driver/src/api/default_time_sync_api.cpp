@@ -1,3 +1,4 @@
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <spot_driver/api/default_time_sync_api.hpp>
 
@@ -5,16 +6,6 @@ namespace spot_ros2 {
 
 DefaultTimeSyncApi::DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread)
     : time_sync_thread_{time_sync_thread} {}
-
-tl::expected<builtin_interfaces::msg::Time, std::string> DefaultTimeSyncApi::convertRobotTimeToLocalTime(
-    const google::protobuf::Timestamp& robot_timestamp) {
-  const auto get_clock_skew_result = getClockSkew();
-  if (!get_clock_skew_result) {
-    return tl::make_unexpected("Failed to get clock skew: " + get_clock_skew_result.error());
-  }
-
-  return applyClockSkew(robot_timestamp, get_clock_skew_result.value());
-}
 
 tl::expected<google::protobuf::Duration, std::string> DefaultTimeSyncApi::getClockSkew() {
   if (!time_sync_thread_) {

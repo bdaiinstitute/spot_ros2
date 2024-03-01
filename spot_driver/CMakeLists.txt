@@ -44,6 +44,7 @@ add_library(spot_api
   src/conversions/geometry.cpp
   src/conversions/kinematic_conversions.cpp
   src/conversions/robot_state.cpp
+  src/conversions/time.cpp
   src/images/spot_image_publisher.cpp
   src/images/images_middleware_handle.cpp
   src/images/spot_image_publisher_node.cpp
