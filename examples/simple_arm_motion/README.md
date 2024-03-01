@@ -134,7 +134,7 @@ In ROS2, we convert the created protobuf to a ROS2 action goal and we use the ac
 ```python
     # Convert to a ROS message
     action_goal = RobotCommand.Goal()
-    conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+    convert(command, action_goal.command)
     # Send the request and wait until the arm arrives at the goal
     node.get_logger().info('Moving arm to position 1.')
     robot_command_client.send_goal_and_wait(action_goal)

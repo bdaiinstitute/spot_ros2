@@ -103,7 +103,7 @@ Now we construct a goal to send to the Spot driver:
             goal_x=world_t_goal.x, goal_y=world_t_goal.y, goal_heading=world_t_goal.angle,
             frame_name=VISION_FRAME_NAME)
         action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(proto_goal, action_goal.command)
+        convert(proto_goal, action_goal.command)
 ```
 This constructs a protobuf message using the BD built in tools and converts it into a ROS action goal of a type that can be sent by our action client.
 
