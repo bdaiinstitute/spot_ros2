@@ -23,16 +23,30 @@ defaults:
   run:
     shell: bash
 
+concurrency:
+  group: ${{ github.repository }}-${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.sha || ''}}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint spot_ros2 packages
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config:
+        - { python: "3.8" }
+        - { python: "3.9" }
+        - { python: "3.10" }
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+        uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.config.python }}
+
       - name: Lint sources
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
   prepare_container:
     name: Prepare Humble container for tests
     runs-on: ubuntu-latest
@@ -47,24 +61,28 @@ jobs:
       image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+
       - name: Setup Docker buildx  # to workaround: https://github.com/docker/build-push-action/issues/461
         uses: docker/setup-buildx-action@79abd3f86f79a9d68a23c75a09a9a85889262adf
+      
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c  # https://github.com/docker/login-action
+        uses: docker/login-action@v3  # https://github.com/docker/login-action
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
       - name: Extract metadata (tags, labels) for Docker
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38  # https://github.com/docker/metadata-action
+        uses: docker/metadata-action@v5  # https://github.com/docker/metadata-action
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         id: meta
+      
       - name: Build and push Docker image (may be cached)
-        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a  # https://github.com/docker/build-push-action
+        uses: docker/build-push-action@v5  # https://github.com/docker/build-push-action
         with:
           context: .
           file: .devcontainer/Dockerfile
@@ -81,20 +99,24 @@ jobs:
       image: ${{ needs.prepare_container.outputs.image }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           path: src
+
       - name: Build packages
         run: |
           source /opt/ros/$ROS_DISTRO/setup.bash
           colcon build --symlink-install --packages-skip-regex proto2ros --cmake-args -DCMAKE_CXX_FLAGS="--coverage"
+
       - name: Test packages
         run: |
           source install/setup.bash
           colcon test --python-testing pytest --pytest-with-coverage --event-handlers console_direct+ --packages-skip-regex bdai_ros2_wrappers proto2ros
+
       - name: Generate coverage report
         run: lcov -c -d build/spot_driver/ -o coverage_spot_driver.info --include "*/spot_driver/*" --exclude "*/test/*"
+
       - name: Upload python coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
@@ -104,6 +126,7 @@ jobs:
           parallel: true
           debug: true
           files: $(find . -name "coverage.xml" -type f)
+
       - name: Upload cpp coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
@@ -113,14 +136,17 @@ jobs:
           debug: true
           files: coverage_spot_driver.info
           format: lcov
+
       - name: Aggregate coverage
         uses: coverallsapp/github-action@v2
         with:
           parallel-finished: true
           carryforward: "unittests-python, unittests-cpp"
+
       - name: Report on test results
         run: colcon test-result --all --verbose
         if: always()
+
       - name: Build packages documentation
         run: |
           source /opt/ros/$ROS_DISTRO/setup.bash

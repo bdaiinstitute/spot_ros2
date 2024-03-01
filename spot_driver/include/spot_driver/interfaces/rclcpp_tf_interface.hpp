@@ -3,6 +3,7 @@
 #pragma once
 
 #include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <rclcpp/node.hpp>
 #include <spot_driver/interfaces/tf_interface_base.hpp>
 
@@ -26,10 +27,14 @@ class RclcppTfInterface : public TfInterfaceBase {
   /**
    * @brief Add new transforms to the StaticTransformBroadcaster.
    * @param transforms Transforms to publish as static transforms.
-   * @return Currently updating static transforms will always succeed, so this function always returns void.
    */
-  tl::expected<void, std::string> updateStaticTransforms(
-      const std::vector<geometry_msgs::msg::TransformStamped>& transforms) override;
+  void updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) override;
+
+  /**
+   * @brief Broadcast TF messages for dynamic transforms.
+   * @param transforms Vector of transforms to broadcast.
+   */
+  void sendDynamicTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) override;
 
  private:
   /**
@@ -49,6 +54,8 @@ class RclcppTfInterface : public TfInterfaceBase {
    * minimize unnecessary calls to publish onto the /tf_static topic.
    */
   tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_;
+
+  tf2_ros::TransformBroadcaster dynamic_tf_broadcaster_;
 
   /**
    * @brief Tracks transforms which are currently being broadcast through the static transform broadcaster.

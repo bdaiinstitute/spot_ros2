@@ -26,7 +26,8 @@ class KinematicNode {
   /**
    * @brief Returns the NodeBaseInterface of this class's node.
    * @details This function exists to allow spinning the class's node as if it were derived from rclcpp::Node.
-   * This allows loading this class as a component node in a composable node container.
+   * This allows loading this class as a component node in a composable node container without requiring that it inherit
+   * from rclcpp::Node.
    *
    * @return A shared_ptr to the NodeBaseInterface of the node stored as a private member of this class.
    */

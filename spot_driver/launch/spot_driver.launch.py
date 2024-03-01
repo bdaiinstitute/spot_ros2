@@ -277,6 +277,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(robot_state_publisher)
 
+    spot_robot_state_publisher_params = {"spot_name": spot_name, "preferred_odom_frame": "odom"}
+    spot_robot_state_publisher = launch_ros.actions.Node(
+        package="spot_driver",
+        executable="spot_robot_state_publisher_node",
+        output="screen",
+        parameters=[config_file, spot_robot_state_publisher_params],
+        namespace=spot_name,
+    )
+    ld.add_action(spot_robot_state_publisher)
+
     spot_alert_node = launch_ros.actions.Node(
         package="spot_driver",
         executable="spot_alerts",
