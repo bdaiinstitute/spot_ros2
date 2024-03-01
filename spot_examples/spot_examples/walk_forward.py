@@ -5,7 +5,8 @@ from typing import Optional
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
-from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
+
+# from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
 from bdai_ros2_wrappers.utilities import fqn, namespace_with
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
@@ -16,6 +17,7 @@ import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
+from .tf_listener_wrapper import TFListenerWrapper
 
 # Where we want the robot to walk to relative to itself
 ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
@@ -23,6 +25,7 @@ ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
 
 class WalkForward:
     def __init__(self, robot_name: Optional[str] = None, node: Optional[Node] = None) -> None:
+        print("Init")
         self._logger = logging.getLogger(fqn(self.__class__))
         node = node or ros_scope.node()
         if node is None:
@@ -32,18 +35,21 @@ class WalkForward:
         self._body_frame_name = namespace_with(self._robot_name, BODY_FRAME_NAME)
         self._vision_frame_name = namespace_with(self._robot_name, VISION_FRAME_NAME)
         self._tf_listener = TFListenerWrapper(node)
+        print("Wait for transform")
         self._tf_listener.wait_for_a_tform_b(self._body_frame_name, self._vision_frame_name)
-
+        print("Done")
         self._robot = SimpleSpotCommander(self._robot_name, node)
         self._robot_command_client = ActionClientWrapper(
             RobotCommand, namespace_with(self._robot_name, "robot_command"), node
         )
 
     def initialize_robot(self) -> bool:
+        print("Initialize")
         self._logger.info(f"Robot name: {self._robot_name}")
         self._logger.info("Claiming robot")
         result = self._robot.command("claim")
         if not result.success:
+            print("Initialize failed")
             self._logger.error("Unable to claim robot message was " + result.message)
             return False
         self._logger.info("Claimed robot")
@@ -63,6 +69,7 @@ class WalkForward:
         return True
 
     def walk_forward_with_world_frame_goal(self) -> None:
+        print("Walk forward")
         self._logger.info("Walking forward")
         world_t_robot = self._tf_listener.lookup_a_tform_b(self._vision_frame_name, self._body_frame_name)
         world_t_robot_se2 = SE3Pose(
