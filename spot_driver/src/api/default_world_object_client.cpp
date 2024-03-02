@@ -16,11 +16,8 @@ tl::expected<::bosdyn::api::ListWorldObjectResponse, std::string> DefaultWorldOb
     if (result) {
       return result.response;
     }
-
-    const auto error_code = result.status.code().value();
-    const auto error_message = result.status.message();
-    return tl::make_unexpected("The ListWorldObjects service returned with error code " + std::to_string(error_code) +
-                               ": " + error_message);
+    return tl::make_unexpected("The ListWorldObjects service returned with error code " +
+                               std::to_string(result.status.code().value()) + ": " + result.status.message());
   } catch (const std::exception& ex) {
     return tl::make_unexpected("Failed to query the ListWorldObjects service: " + std::string{ex.what()});
   }
@@ -33,11 +30,8 @@ tl::expected<::bosdyn::api::MutateWorldObjectResponse, std::string> DefaultWorld
     if (result) {
       return result.response;
     }
-
-    const auto error_code = result.status.code().value();
-    const auto error_message = result.status.message();
-    return tl::make_unexpected("The MutateWorldObjects service returned with error code " + std::to_string(error_code) +
-                               ": " + error_message);
+    return tl::make_unexpected("The MutateWorldObjects service returned with error code " +
+                               std::to_string(result.status.code().value()) + ": " + result.status.message());
   } catch (const std::exception& ex) {
     return tl::make_unexpected("Failed to query the MutateWorldObjects service: " + std::string{ex.what()});
   }

@@ -116,6 +116,8 @@ enum class MutationOperation {
 
   auto* edge_map = object->mutable_transforms_snapshot()->mutable_child_to_parent_edge_map();
   edge_map->insert(google::protobuf::MapPair{child_frame_id_no_prefix, edge});
+  // Add the root frame
+  edge_map->insert(google::protobuf::MapPair{preferred_base_frame, ::bosdyn::api::FrameTreeSnapshot_ParentEdge{}});
 
   if (operation == MutationOperation::ADD) {
     request.mutable_mutation()->set_action(
@@ -131,22 +133,18 @@ enum class MutationOperation {
 
 namespace spot_ros2 {
 
-ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<StateClientInterface>& state_client_interface,
-                                       const std::shared_ptr<WorldObjectClientInterface>& world_object_client_interface,
+ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientInterface>& world_object_client_interface,
                                        const std::shared_ptr<TimeSyncApi>& time_sync_api,
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                        std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                                       std::unique_ptr<TimerInterfaceBase> timer_interface,
-                                       std::unique_ptr<RobotModelInterfaceBase> robot_model_interface)
-    : state_client_interface_{state_client_interface},
-      world_object_client_interface_{world_object_client_interface},
+                                       std::unique_ptr<TimerInterfaceBase> timer_interface)
+    : world_object_client_interface_{world_object_client_interface},
       time_sync_interface_{time_sync_api},
       parameter_interface_{std::move(parameter_interface)},
       logger_interface_{std::move(logger_interface)},
       tf_listener_interface_{std::move(tf_listener_interface)},
-      timer_interface_{std::move(timer_interface)},
-      robot_model_interface_{std::move(robot_model_interface)} {
+      timer_interface_{std::move(timer_interface)} {
   const auto spot_name = parameter_interface_->getSpotName();
   frame_prefix_ = spot_name.empty() ? "" : spot_name + "/";
 
@@ -156,7 +154,7 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<StateClientInterfac
                                           : preferred_base_frame_;
 
   timer_interface_->setTimer(kTfSyncPeriod, [this]() {
-    listWorldObjectsCallback();
+    // listWorldObjectsCallback();
     onTimer();
   });
 }

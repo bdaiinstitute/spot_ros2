@@ -26,11 +26,10 @@ ObjectSynchronizerNode::ObjectSynchronizerNode(std::unique_ptr<NodeInterfaceBase
                                                std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                                std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                                std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                                               std::unique_ptr<TimerInterfaceBase> timer_interface,
-                                               std::unique_ptr<RobotModelInterfaceBase> robot_model_interface)
+                                               std::unique_ptr<TimerInterfaceBase> timer_interface)
     : node_base_interface_{std::move(node_base_interface)} {
   initialize(std::move(spot_api), std::move(parameter_interface), std::move(logger_interface),
-             std::move(tf_listener_interface), std::move(timer_interface), std::move(robot_model_interface));
+             std::move(tf_listener_interface), std::move(timer_interface));
 }
 
 ObjectSynchronizerNode::ObjectSynchronizerNode(const rclcpp::NodeOptions& node_options) {
@@ -46,15 +45,14 @@ ObjectSynchronizerNode::ObjectSynchronizerNode(const rclcpp::NodeOptions& node_o
   auto robot_model_interface = std::make_unique<UrdfRobotModelInterface>(node);
 
   initialize(std::move(spot_api), std::move(parameter_interface), std::move(logger_interface),
-             std::move(tf_listener_interface), std::move(timer_interface), std::move(robot_model_interface));
+             std::move(tf_listener_interface), std::move(timer_interface));
 }
 
 void ObjectSynchronizerNode::initialize(std::unique_ptr<SpotApi> spot_api,
                                         std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                         std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                         std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                                        std::unique_ptr<TimerInterfaceBase> timer_interface,
-                                        std::unique_ptr<RobotModelInterfaceBase> robot_model_interface) {
+                                        std::unique_ptr<TimerInterfaceBase> timer_interface) {
   spot_api_ = std::move(spot_api);
 
   const auto address = parameter_interface->getAddress();
@@ -76,9 +74,8 @@ void ObjectSynchronizerNode::initialize(std::unique_ptr<SpotApi> spot_api,
   }
 
   internal_ = std::make_unique<ObjectSynchronizer>(
-      spot_api_->stateClientInterface(), spot_api_->worldObjectClientInterface(), spot_api_->timeSyncInterface(),
-      std::move(parameter_interface), std::move(logger_interface), std::move(tf_listener_interface),
-      std::move(timer_interface), std::move(robot_model_interface));
+      spot_api_->worldObjectClientInterface(), spot_api_->timeSyncInterface(), std::move(parameter_interface),
+      std::move(logger_interface), std::move(tf_listener_interface), std::move(timer_interface));
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> ObjectSynchronizerNode::get_node_base_interface() {

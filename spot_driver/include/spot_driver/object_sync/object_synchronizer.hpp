@@ -3,8 +3,7 @@
 #pragma once
 
 #include <memory>
-#include <string>
-
+#include <rclcpp/node.hpp>
 #include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/api/time_sync_api.hpp>
 #include <spot_driver/api/world_object_client_interface.hpp>
@@ -15,21 +14,18 @@
 #include <spot_driver/interfaces/tf_listener_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
 #include <spot_driver/types.hpp>
-
-#include <rclcpp/node.hpp>
+#include <string>
 #include <tl_expected/expected.hpp>
 
 namespace spot_ros2 {
 class ObjectSynchronizer {
  public:
-  ObjectSynchronizer(const std::shared_ptr<StateClientInterface>& state_client_interface,
-                     const std::shared_ptr<WorldObjectClientInterface>& world_object_client_interface,
+  ObjectSynchronizer(const std::shared_ptr<WorldObjectClientInterface>& world_object_client_interface,
                      const std::shared_ptr<TimeSyncApi>& time_sync_api,
                      std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                      std::unique_ptr<LoggerInterfaceBase> logger_interface,
                      std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                     std::unique_ptr<TimerInterfaceBase> timer_interface,
-                     std::unique_ptr<RobotModelInterfaceBase> robot_model_interface);
+                     std::unique_ptr<TimerInterfaceBase> timer_interface);
 
  private:
   void onTimer();
@@ -41,8 +37,6 @@ class ObjectSynchronizer {
   std::string preferred_base_frame_with_prefix_;
 
   // Interface classes to interact with Spot and the middleware.
-  std::shared_ptr<StateClientInterface> state_client_interface_;
-
   std::shared_ptr<WorldObjectClientInterface> world_object_client_interface_;
 
   std::shared_ptr<TimeSyncApi> time_sync_interface_;
@@ -53,10 +47,9 @@ class ObjectSynchronizer {
   std::unique_ptr<LoggerInterfaceBase> logger_interface_;
 
   std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface_;
+
   /** @brief instance of TimerInterfaceBase to create callback timer*/
   std::unique_ptr<TimerInterfaceBase> timer_interface_;
-
-  std::unique_ptr<RobotModelInterfaceBase> robot_model_interface_;
 };
 
 }  // namespace spot_ros2

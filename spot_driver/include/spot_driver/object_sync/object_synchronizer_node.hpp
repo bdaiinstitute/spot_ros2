@@ -38,8 +38,7 @@ class ObjectSynchronizerNode {
                          std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                          std::unique_ptr<LoggerInterfaceBase> logger_interface,
                          std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                         std::unique_ptr<TimerInterfaceBase> timer_interface,
-                         std::unique_ptr<RobotModelInterfaceBase> robot_model_interface);
+                         std::unique_ptr<TimerInterfaceBase> timer_interface);
 
   /**
    * @brief Constructor for StatePublisherNode.
@@ -78,8 +77,7 @@ class ObjectSynchronizerNode {
   void initialize(std::unique_ptr<SpotApi> spot_api, std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                   std::unique_ptr<LoggerInterfaceBase> logger_interface,
                   std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                  std::unique_ptr<TimerInterfaceBase> timer_interface,
-                  std::unique_ptr<RobotModelInterfaceBase> robot_model_interface);
+                  std::unique_ptr<TimerInterfaceBase> timer_interface);
 
   std::unique_ptr<NodeInterfaceBase> node_base_interface_;
   std::unique_ptr<SpotApi> spot_api_;
