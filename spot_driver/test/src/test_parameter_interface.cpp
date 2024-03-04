@@ -143,7 +143,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromEnvVars) {
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   // GIVEN we set all Spot config parameters to values which are different than the default values
   constexpr auto address_parameter = "192.168.100.10";
-  node_->declare_parameter("address", address_parameter);
+  node_->declare_parameter("hostname", address_parameter);
   constexpr auto username_parameter = "a_different_username";
   node_->declare_parameter("username", username_parameter);
   constexpr auto password_parameter = "other_password";
@@ -185,7 +185,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameter
 
   // GIVEN we set parameters with different values for Spot's address, username, and password
   constexpr auto address_parameter = "192.168.100.10";
-  node_->declare_parameter("address", address_parameter);
+  node_->declare_parameter("hostname", address_parameter);
   constexpr auto username_parameter = "a_different_username";
   node_->declare_parameter("username", username_parameter);
   constexpr auto password_parameter = "other_password";

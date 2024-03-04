@@ -9,7 +9,7 @@ constexpr auto kEnvVarNameAddress = "SPOT_IP";
 constexpr auto kEnvVarNameUsername = "BOSDYN_CLIENT_USERNAME";
 constexpr auto kEnvVarNamePassword = "BOSDYN_CLIENT_PASSWORD";
 
-constexpr auto kParameterNameAddress = "address";
+constexpr auto kParameterNameAddress = "hostname";
 constexpr auto kParameterNameUsername = "username";
 constexpr auto kParameterNamePassword = "password";
 constexpr auto kParameterNameRGBImageQuality = "image_quality";
