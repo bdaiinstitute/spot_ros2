@@ -196,33 +196,41 @@ def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int):
     # Check conditions.
 
     batch_size = 50
-    long_trajectories = 0
+    long_trajectories = []
 
     if command.HasField("synchronized_command"):
         if command.synchronized_command.HasField("mobility_command"):
             mobility_request = command.synchronized_command.mobility_command
-            if len(mobility_request.se2_trajectory_request.trajectory.points) > batch_size:
-                long_trajectories += 1
+            trajectory = mobility_request.se2_trajectory_request.trajectory
+            if len(trajectory.points) > batch_size:
+                long_trajectories.append(trajectory.points)
         if command.synchronized_command.HasField("arm_command"):
             arm_request = command.synchronized_command.arm_command
             if arm_request.HasField("arm_cartesian_command"):
-                if len(arm_request.arm_cartesian_command.pose_trajectory_in_task.points) > batch_size:
-                    long_trajectories += 1
+                trajectory = arm_request.arm_cartesian_command.pose_trajectory_in_task
+                if len(trajectory.points) > batch_size:
+                    long_trajectories.append(trajectory.points)
             elif arm_request.HasField("arm_joint_move_command"):
-                if len(arm_request.arm_joint_move_command.trajectory.points) > batch_size:
-                    long_trajectories += 1
+                trajectory = arm_request.arm_joint_move_command.trajectory
+                if len(trajectory.points) > batch_size:
+                    long_trajectories.append(trajectory.points)
             elif arm_request.HasField("arm_impedance_command"):
-                if len(arm_request.arm_impedance_command.task_tform_desired_tool.points) > batch_size:
-                    long_trajectories += 1
+                trajectory = arm_request.arm_impedance_command.task_tform_desired_tool
+                if len(trajectory.points) > batch_size:
+                    long_trajectories.append(trajectory.points)
         if command.synchronized_command.HasField("gripper_command"):
             gripper_request = command.synchronized_command.gripper_command
-            if len(gripper_request.claw_gripper_command.trajectory.points) > batch_size:
-                long_trajectories += 1
+            trajectory = gripper_request.claw_gripper_command.trajectory
+            if len(trajectory.points) > batch_size:
+                long_trajectories.append(trajectory.points)
 
-    if long_trajectories < 1:
+    if len(long_trajectories) < 1:
         return False
-    elif long_trajectories == 1:
+    elif len(long_trajectories) == 1:
         return True
+
+    # If there are more trajectories longer than the batch size, we must
+    # check if they are aligned.
 
     return False
 
