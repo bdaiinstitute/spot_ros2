@@ -2,6 +2,9 @@
 Working with trajectories.
 """
 
+# pylint: disable=E1101
+
+import logging
 import math
 import time
 from typing import Callable, Tuple
@@ -22,6 +25,7 @@ ContinuousTrajectory1D = Callable[[float], float]
 ContinuousTrajectory2D = Callable[[float], Tuple[SE2Pose, SE2Velocity]]
 ContinuousTrajectory3D = Callable[[float], Tuple[SE3Pose, SE3Velocity]]
 
+logging.basicConfig(level=logging.INFO)
 
 # CONTINOUS TRAJECTORIES ######################################################
 
@@ -109,7 +113,7 @@ def dicrete_trajectory_2d(
     trajectory.interpolation = trajectory_pb2.POS_INTERP_CUBIC
     t = start_time
     while t - start_time < duration:
-        pos, vel = trajectory_function(t)
+        pos, _ = trajectory_function(t)
         point = trajectory.points.add()
         point.pose.CopyFrom(pos.to_proto())
         point.time_since_reference.CopyFrom(seconds_to_duration(t - start_time))
@@ -183,20 +187,49 @@ def build_robot_command() -> robot_command_pb2.RobotCommand:
     return command
 
 
-def test_tmp():
+def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int):
 
     command = build_robot_command()
 
     # Check conditions.
 
+    batch_size = 50
+    long_trajectories = 0
+
     if command.HasField("synchronized_command"):
         if command.synchronized_command.HasField("mobility_command"):
             mobility_request = command.synchronized_command.mobility_command
+            if len(mobility_request.se2_trajectory_request.trajectory.points) > batch_size:
+                long_trajectories += 1
         if command.synchronized_command.HasField("arm_command"):
             arm_request = command.synchronized_command.arm_command
+            if arm_request.HasField("arm_cartesian_command"):
+                if len(arm_request.arm_cartesian_command.pose_trajectory_in_task.points) > batch_size:
+                    long_trajectories += 1
+            elif arm_request.HasField("arm_joint_move_command"):
+                if len(arm_request.arm_joint_move_command.trajectory.points) > batch_size:
+                    long_trajectories += 1
+            elif arm_request.HasField("arm_impedance_command"):
+                if len(arm_request.arm_impedance_command.task_tform_desired_tool.points) > batch_size:
+                    long_trajectories += 1
         if command.synchronized_command.HasField("gripper_command"):
             gripper_request = command.synchronized_command.gripper_command
-    else:
-        print("skipping empty robot command")
+            if len(gripper_request.claw_gripper_command.trajectory.points) > batch_size:
+                long_trajectories += 1
 
-    print("OK")
+    if long_trajectories < 1:
+        return False
+    elif long_trajectories == 1:
+        return True
+
+    return False
+
+
+def test_tmp():
+    """
+    Ongoing prototype.
+    """
+    batch_size = 50
+    command = build_robot_command()
+    value: bool = is_batch_required(command, batch_size)
+    print(value)
