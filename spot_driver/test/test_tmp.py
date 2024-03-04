@@ -27,7 +27,8 @@ ContinuousTrajectory3D = Callable[[float], Tuple[SE3Pose, SE3Velocity]]
 
 logging.basicConfig(level=logging.INFO)
 
-# CONTINOUS TRAJECTORIES ######################################################
+# CONTINOUS TRAJECTORIES
+# Here we define some continuous functions to use generate trajectories.
 
 
 def continuous_trajectory_1d(t: float) -> float:
@@ -78,7 +79,8 @@ def continuous_trajectory_3d(t: float) -> Tuple[SE3Pose, SE3Velocity]:
     return SE3Pose(x, y, z, quat), SE3Velocity(vx, vy, vz, 0, 0, 0)
 
 
-# DISCRETE TRAJECTORIES #######################################################
+# DISCRETE TRAJECTORIES
+# Here we sample the continuous functions to create discrete trajectories.
 
 
 def dicrete_trajectory_1d(
