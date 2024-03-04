@@ -23,15 +23,17 @@ int parseCmdArgs(int argc, char** argv);
   0.069  0.886  0.459  0.040
   0.000  0.000  0.000  1.000
 */
-cv::detail::CameraParams frontleft;
-std::vector<double> r = {0.998, -0.056, -0.043, -0.012,  0.461, -0.887,  0.069,  0.886,  0.459 };
-frontleft.R = cv::Mat(3, 3, CV_32F, r.data());
-frontleft.t =  {-0.003, 0.061, 0.040}; 
-cv::detail::CameraParams frontright;
 
-std::vector<cv::detail::CameraParams> cameras = {frontleft, frontright};
 int main(int argc, char* argv[])
 {
+    cv::detail::CameraParams frontleft;
+    cv::detail::CameraParams frontright;
+    std::vector<double> r = {0.998, -0.056, -0.043, -0.012,  0.461, -0.887,  0.069,  0.886,  0.459 };
+    frontright.R = cv::Mat::eye(3, 3, CV_32F);
+    frontright.t = cv::Mat{0., 0., 0.}; 
+    frontleft.R = cv::Mat(3, 3, CV_32F, r.data());
+    frontleft.t = cv::Mat{-0.003, 0.061, 0.040}; 
+    std::vector<cv::detail::CameraParams> cameras = {frontleft, frontright};
     int retval = parseCmdArgs(argc, argv);
     if (retval) return EXIT_FAILURE;
     Mat pano;
