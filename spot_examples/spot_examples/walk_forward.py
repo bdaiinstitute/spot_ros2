@@ -5,8 +5,7 @@ from typing import Optional
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
-
-# from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
+from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
 from bdai_ros2_wrappers.utilities import fqn, namespace_with
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
@@ -17,7 +16,6 @@ import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
-from .tf_listener_wrapper import TFListenerWrapper
 
 # Where we want the robot to walk to relative to itself
 ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
@@ -25,7 +23,6 @@ ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
 
 class WalkForward:
     def __init__(self, robot_name: Optional[str] = None, node: Optional[Node] = None) -> None:
-        print("Init")
         self._logger = logging.getLogger(fqn(self.__class__))
         node = node or ros_scope.node()
         if node is None:
@@ -35,9 +32,7 @@ class WalkForward:
         self._body_frame_name = namespace_with(self._robot_name, BODY_FRAME_NAME)
         self._vision_frame_name = namespace_with(self._robot_name, VISION_FRAME_NAME)
         self._tf_listener = TFListenerWrapper(node)
-        print("Wait for transform")
         self._tf_listener.wait_for_a_tform_b(self._body_frame_name, self._vision_frame_name)
-        print("Done")
         self._robot = SimpleSpotCommander(self._robot_name, node)
         self._robot_command_client = ActionClientWrapper(
             RobotCommand, namespace_with(self._robot_name, "robot_command"), node
@@ -73,14 +68,14 @@ class WalkForward:
         self._logger.info("Walking forward")
         world_t_robot = self._tf_listener.lookup_a_tform_b(self._vision_frame_name, self._body_frame_name)
         world_t_robot_se2 = SE3Pose(
-            world_t_robot.translation.x,
-            world_t_robot.translation.y,
-            world_t_robot.translation.z,
+            world_t_robot.transform.translation.x,
+            world_t_robot.transform.translation.y,
+            world_t_robot.transform.translation.z,
             Quat(
-                w=world_t_robot.rotation.w,
-                x=world_t_robot.rotation.x,
-                y=world_t_robot.rotation.y,
-                z=world_t_robot.rotation.z,
+                world_t_robot.transform.rotation.w,
+                world_t_robot.transform.rotation.x,
+                world_t_robot.transform.rotation.y,
+                world_t_robot.transform.rotation.z,
             ),
         ).get_closest_se2_transform()
         world_t_goal = world_t_robot_se2 * ROBOT_T_GOAL
