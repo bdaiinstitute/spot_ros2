@@ -14,6 +14,7 @@ from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import bdai_ros2_wrappers.process as ros_process
+from bdai_ros2_wrappers.executors import AutoScalingMultiThreadedExecutor, foreground
 import builtin_interfaces.msg
 import rclpy
 import rclpy.time
@@ -889,9 +890,6 @@ class SpotROS(Node):
                 self.handle_robot_command,
                 callback_group=self.group,
             )
-
-        # Register Shutdown Handle
-        # rclpy.on_shutdown(spot_ros.shutdown) # Shutdown Handle
 
         # Wait for an estop to be connected
         if self.spot_wrapper is not None and not self.start_estop.value:
@@ -2797,20 +2795,29 @@ class SpotROS(Node):
                     pass
             self.mobility_params_pub.publish(mobility_params_msg)
 
-    def destroy_node(self) -> None:
-        self.get_logger().info("Shutting down ROS driver for Spot")
+    def shutdown(self) -> None:
+        # TODO: Check behavior if this part is removed
         if self.spot_wrapper is not None:
             self.spot_wrapper.sit()
-        self.node_rate.sleep()
         if self.spot_wrapper is not None:
+            self.spot_wrapper.stop()
             self.spot_wrapper.disconnect()
         super().destroy_node()
+        self.node_rate.sleep()
+        rclpy.shutdown()
 
 
 @ros_process.main(prebaked=False)
 def main(args: Optional[List[str]] = None) -> None:
-    ros_process.spin(SpotROS)
-
+    with foreground(AutoScalingMultiThreadedExecutor()) as main.executor:
+        with ros_process.managed(SpotROS) as main.node:
+            try:
+                ros_process.spin(main.node)
+            except KeyboardInterrupt:
+                pass
+            finally:
+                main.node.node_rate.sleep()
+                main.node.shutdown()        
 
 if __name__ == "__main__":
     main()
