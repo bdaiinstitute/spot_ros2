@@ -27,8 +27,10 @@ ContinuousTrajectory3D = Callable[[float], Tuple[SE3Pose, SE3Velocity]]
 
 logging.basicConfig(level=logging.INFO)
 
+###############################################################################
 # CONTINOUS TRAJECTORIES
-# Here we define some continuous functions to use generate trajectories.
+# Here we define some continuous functions to be used to generate
+# sample trajectories.
 
 
 def continuous_trajectory_1d(t: float) -> float:
@@ -79,8 +81,9 @@ def continuous_trajectory_3d(t: float) -> Tuple[SE3Pose, SE3Velocity]:
     return SE3Pose(x, y, z, quat), SE3Velocity(vx, vy, vz, 0, 0, 0)
 
 
+###############################################################################
 # DISCRETE TRAJECTORIES
-# Here we sample the continuous functions to create discrete trajectories.
+# Here we define some trajectories by sampling continuous functions.
 
 
 def dicrete_trajectory_1d(
@@ -145,6 +148,12 @@ def dicrete_trajectory_3d(
     return trajectory
 
 
+###############################################################################
+# ROBOT COMMAND
+# Here we build a robot command containing different trajectories generated
+# from the previously defined samples.
+
+
 def build_robot_command() -> robot_command_pb2.RobotCommand:
     """
     Return a robot command with three components:
@@ -187,6 +196,13 @@ def build_robot_command() -> robot_command_pb2.RobotCommand:
     )
     command = robot_command_pb2.RobotCommand(synchronized_command=synchronized_command)
     return command
+
+
+###############################################################################
+# LOGIC
+# Here is the actual logic that we want to implement to:
+# 1 - Check if a robot command contains trajectories to be batched;
+# 2 - Create a sequence of robot commands.
 
 
 def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int):
