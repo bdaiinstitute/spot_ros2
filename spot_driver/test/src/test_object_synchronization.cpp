@@ -1,5 +1,6 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <bosdyn/api/geometry.pb.h>
 #include <bosdyn/api/robot_state.pb.h>
 #include <bosdyn/api/world_object.pb.h>
 #include <gmock/gmock-actions.h>
@@ -32,15 +33,18 @@
 namespace {
 using ::testing::_;
 using ::testing::AllOf;
+using ::testing::Contains;
 using ::testing::Eq;
 using ::testing::ExplainMatchResult;
 using ::testing::Field;
 using ::testing::HasSubstr;
 using ::testing::InSequence;
 using ::testing::Invoke;
+using ::testing::Key;
 using ::testing::Property;
 using ::testing::Return;
 using ::testing::StrEq;
+using ::testing::UnorderedElementsAre;
 using ::testing::Unused;
 
 MATCHER(MutationAddsObject, "") {
@@ -59,19 +63,27 @@ MATCHER_P(MutationTargetsObjectWhoseNameIs, object_name, "") {
   return testing::ExplainMatchResult(StrEq(arg.mutation().object().name()), object_name, result_listener);
 }
 
-// MATCHER_P(TransformEq, transform, "")
+MATCHER_P2(MutationTransformChildAndParentFramesAre, child_frame_name, base_frame_name, "") {
+  return testing::ExplainMatchResult(UnorderedElementsAre(Key(child_frame_name), Key(base_frame_name)),
+                                     arg.mutation().object().transforms_snapshot().child_to_parent_edge_map(),
+                                     result_listener);
+}
+
+// MATCHER_P(SE3PoseEq, pose, "")
 // {
+//   ::bosdyn::api::SE3Pose p;
+//   AllOf(Field("position", &::bosdyn::api::SE3Pose::position, Eq(pose.position())),
+//   Field("rotation", &::bosdyn::api::SE3Pose::rotation, Eq(pose.position())));
+
 //   return testing::ExplainMatchResult(Eq(arg), transform, result_listener);
 // }
 
 // MATCHER_P(MutationObjectTransformSnapshotContains, transform, "")
 // {
-//   return testing::ExplainMatchResult(
-//     AllOf(testing::SizeIs(1),
-//     )
-
-//     transform_snapshot_matcher(arg.mutation().object().transforms_snapshot()), const T &value, MatchResultListener
-//     *listener)
+//   return testing::ExplainMatchResult(Field(&::bosdyn::api::MutateWorldObjectRequest::mutation,
+//     Field(&::bosdyn::api::WorldObject::transforms_snapshot,
+//       Field(&::bosdyn::api::FrameTreeSnapshot::child_to_parent_edge_map, Contains(transform)))), arg,
+//       result_listener);
 // }
 
 constexpr auto kErrorMessage = "Some error message.";
@@ -211,8 +223,18 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   // THEN we send one MutateWorldObjectRequest
   // AND the request adds a new object
   // AND the new object's name matches the frame ID from the external source
+  ::bosdyn::api::SE3Pose pose;
+  pose.mutable_position()->set_x(1.0);
+  pose.mutable_position()->set_y(2.0);
+  pose.mutable_position()->set_z(3.0);
+  pose.mutable_rotation()->set_w(1.0);
+  pose.mutable_rotation()->set_x(0.0);
+  pose.mutable_rotation()->set_y(0.0);
+  pose.mutable_rotation()->set_z(0.0);
   EXPECT_CALL(*world_object_client_interface_ptr,
-              mutateWorldObject(AllOf(MutationChangesObject(), MutationTargetsObjectWhoseNameIs(kExternalFrameId))))
+              mutateWorldObject(AllOf(MutationChangesObject(), MutationTargetsObjectWhoseNameIs(kExternalFrameId),
+                                      // MutationObjectTransformSnapshotContains(pose)
+                                      MutationTransformChildAndParentFramesAre("odom", kExternalFrameId))))
       .Times(1);
 
   // GIVEN the ObjectSynchronizer has been created
