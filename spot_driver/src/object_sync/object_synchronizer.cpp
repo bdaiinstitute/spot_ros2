@@ -1,29 +1,33 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <bosdyn/api/world_object.pb.h>
+#include <bosdyn/math/frame_helpers.h>
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <geometry_msgs/msg/detail/transform_stamped__struct.hpp>
+#include <iterator>
 #include <rclcpp/duration.hpp>
 #include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/conversions/common_conversions.hpp>
 #include <spot_driver/conversions/geometry.hpp>
 #include <spot_driver/conversions/robot_state.hpp>
+#include <spot_driver/conversions/time.hpp>
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <spot_driver/object_sync/object_synchronizer.hpp>
 #include <spot_driver/types.hpp>
 #include <string>
 #include <tl_expected/expected.hpp>
 #include <utility>
-#include "spot_driver/conversions/time.hpp"
 
 namespace {
-constexpr auto kTfSyncPeriod = std::chrono::duration<double>{1.0 / 1.0};  // 1 Hz
+constexpr auto kTfSyncPeriod = std::chrono::duration<double>{1.0};  // 1 Hz
 
 /**
  * @brief All frame names which are considered internal to Spot.
  * @details It is surprisingly challenging to automatically generate a comprehensive list of Spot's internal frames,
- * since the authorities that manage these frames are scattered across several Spot API clients. Since we do not expect
- * Spot's internal frames to change dynamically, we have manually defined this list of frames instead.
+ * since the authorities that manage these frames are scattered across several Spot API clients. We do not expect
+ * Spot's internal frames to change dynamically, so we have manually defined this list of frames instead.
  */
 inline const std::set<std::string> kSpotInternalFrames{
     // Links for moving robot joints
@@ -70,6 +74,7 @@ inline const std::set<std::string> kSpotInternalFrames{
     "frontright",
     "left_fisheye",
     "left",
+    "link_wr1",
     "right_fisheye",
     "right",
     "hand_color_image_sensor",
@@ -77,7 +82,6 @@ inline const std::set<std::string> kSpotInternalFrames{
 
     // Mysterious forbidden frames which I expect will be deprecated in SDK version 4.0.0
     "arm0.link_wr1",
-    "link_wr1",
 };
 
 std::string stripPrefix(const std::string& input, const std::string& prefix) {
@@ -90,6 +94,66 @@ std::string stripPrefix(const std::string& input, const std::string& prefix) {
   }
 
   return input.substr(prefix.size());
+}
+
+std::string toString(const ::bosdyn::api::ValidateFrameTreeSnapshotStatus& status) {
+  using Status = ::bosdyn::api::ValidateFrameTreeSnapshotStatus;
+  switch (status) {
+    case Status::CYCLE:
+      return "CYCLE";
+    case Status::DISJOINT:
+      return "DISJOINT";
+    case Status::EMPTY:
+      return "EMPTY";
+    case Status::EMPTY_CHILD_FRAME_NAME:
+      return "EMPTY_CHILD_FRAME_NAME";
+    case Status::UNKNOWN_PARENT_FRAME_NAME:
+      return "UNKNOWN_PARENT_FRAME_NAME";
+    case Status::VALID:
+      return "VALID";
+    default:
+      return "Unknown status code.";
+  }
+}
+
+::bosdyn::api::ListWorldObjectRequest createNonMutableObjectsRequest() {
+  using Type = ::bosdyn::api::WorldObjectType;
+  ::bosdyn::api::ListWorldObjectRequest request;
+  request.add_object_type(Type::WORLD_OBJECT_APRILTAG);
+  request.add_object_type(Type::WORLD_OBJECT_DOCK);
+  request.add_object_type(Type::WORLD_OBJECT_DRAWABLE);
+  request.add_object_type(Type::WORLD_OBJECT_IMAGE_COORDINATES);
+  request.add_object_type(Type::WORLD_OBJECT_STAIRCASE);
+  request.add_object_type(Type::WORLD_OBJECT_USER_NOGO);
+  return request;
+}
+
+::bosdyn::api::ListWorldObjectRequest createMutableObjectsRequest() {
+  using Type = ::bosdyn::api::WorldObjectType;
+  ::bosdyn::api::ListWorldObjectRequest request;
+  request.add_object_type(Type::WORLD_OBJECT_UNKNOWN);
+  return request;
+}
+
+std::set<std::string> getObjectFrames(const ::bosdyn::api::ListWorldObjectResponse& list_objects_response) {
+  std::set<std::string> frames;
+  for (const auto& object : list_objects_response.world_objects()) {
+    if (!object.has_transforms_snapshot()) {
+      continue;
+    }
+    for (const auto& subframe : object.transforms_snapshot().child_to_parent_edge_map()) {
+      frames.insert(subframe.first);
+    }
+  }
+  return frames;
+}
+
+std::set<std::string> getObjectNames(const ::bosdyn::api::ListWorldObjectResponse& list_objects_response) {
+  std::set<std::string> names;
+  for (const auto& object : list_objects_response.world_objects()) {
+    names.insert(object.name());
+  }
+  return names;
 }
 
 enum class MutationOperation {
@@ -167,13 +231,7 @@ void ObjectSynchronizer::onTimer() {
 
   // Get a list of all world objects which are managed by Spot itself or through other Spot operator tools.
   // The TF tree may contain frames from these objects, and we must not attempt to modify these objects.
-  ::bosdyn::api::ListWorldObjectRequest request_non_mutable_objects;
-  request_non_mutable_objects.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_APRILTAG);
-  request_non_mutable_objects.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_DOCK);
-  request_non_mutable_objects.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_DRAWABLE);
-  request_non_mutable_objects.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_IMAGE_COORDINATES);
-  request_non_mutable_objects.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_STAIRCASE);
-  request_non_mutable_objects.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_USER_NOGO);
+  ::bosdyn::api::ListWorldObjectRequest request_non_mutable_objects = createNonMutableObjectsRequest();
   // TODO(jschornak-bdai): request should set earliest timestamp for objects
   const auto non_mutable_objects_response =
       world_object_client_interface_->listWorldObjects(request_non_mutable_objects);
@@ -181,35 +239,22 @@ void ObjectSynchronizer::onTimer() {
     logger_interface_->logError("Failed to list vision objects.");
     return;
   }
+  const auto non_mutable_frames_unfiltered = getObjectFrames(non_mutable_objects_response.value());
   std::set<std::string> non_mutable_frames;
-  for (const auto& object : non_mutable_objects_response.value().world_objects()) {
-    if (!object.has_transforms_snapshot()) {
-      continue;
-    }
-    for (const auto& subframe : object.transforms_snapshot().child_to_parent_edge_map()) {
-      if (kSpotInternalFrames.count(subframe.first) == 0) {
-        non_mutable_frames.insert(subframe.first);
-      }
-    }
-  }
+  std::set_difference(non_mutable_frames_unfiltered.cbegin(), non_mutable_frames_unfiltered.cend(),
+                      kSpotInternalFrames.cbegin(), kSpotInternalFrames.cend(),
+                      std::inserter(non_mutable_frames, non_mutable_frames.end()));
 
   // Get a list of all world objects with type UNKNOWN.
   // These objects are not managed by Spot, so we can mutate them.
-  ::bosdyn::api::ListWorldObjectRequest request_mutable_frames;
-  request_mutable_frames.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_UNKNOWN);
+  ::bosdyn::api::ListWorldObjectRequest request_mutable_frames = createMutableObjectsRequest();
   // TODO(jschornak-bdai): request should set earliest timestamp for objects
   const auto mutable_frames_response = world_object_client_interface_->listWorldObjects(request_mutable_frames);
   if (!mutable_frames_response) {
     logger_interface_->logError("Failed to list other objects.");
     return;
   }
-  std::set<std::string> mutable_object_names;
-  for (const auto& world_object : mutable_frames_response.value().world_objects()) {
-    if (!world_object.has_transforms_snapshot()) {
-      continue;
-    }
-    mutable_object_names.insert(world_object.name());
-  }
+  const auto mutable_object_names = getObjectNames(mutable_frames_response.value());
 
   // If a TF frame does not originate from Spot:
   //   If the frame is already included in the world objects:
@@ -251,10 +296,19 @@ void ObjectSynchronizer::onTimer() {
         mutable_object_names.count(child_frame_id_no_prefix) == 0 ? MutationOperation::ADD : MutationOperation::CHANGE;
     auto request = createMutationRequest(base_tform_child.value(), preferred_base_frame_, child_frame_id_no_prefix,
                                          clock_skew_result.value(), operation);
+
+    if (const auto status = ::bosdyn::api::ValidateFrameTreeSnapshot(request.mutation().object().transforms_snapshot());
+        status != ::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID) {
+      logger_interface_->logWarn("Frame tree snapshot for object " + child_frame_id_no_prefix +
+                                 " is not valid. Error code: " + toString(status));
+      continue;
+    }
+
     // Send the request to the API's client interface to add the object in Spot's environment.
     const auto response = world_object_client_interface_->mutateWorldObject(request);
     if (!response) {
       logger_interface_->logWarn(std::string("Failed to modify world object: ").append(response.error()));
+      continue;
     }
   }
 }
