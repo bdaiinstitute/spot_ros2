@@ -25,7 +25,7 @@ using ::testing::Return;
 
 namespace spot_ros2::images::test {
 
-constexpr auto kExampleAddress{"192.168.0.10"};
+constexpr auto kExampleHostname{"192.168.0.10"};
 constexpr auto kExampleUsername{"spot_user"};
 constexpr auto kExamplePassword{"hunter2"};
 
@@ -33,7 +33,7 @@ constexpr auto kSomeErrorMessage = "some error message";
 
 class FakeParameterInterface : public ParameterInterfaceBase {
  public:
-  std::string getAddress() const override { return address; }
+  std::string getHostname() const override { return hostname; }
 
   std::string getUsername() const override { return username; }
 
@@ -53,7 +53,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getSpotName() const override { return spot_name; }
 
-  std::string address;
+  std::string hostname;
   std::string username;
   std::string password;
 
