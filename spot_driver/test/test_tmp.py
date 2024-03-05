@@ -19,7 +19,7 @@ from bosdyn.api import (
     trajectory_pb2,
 )
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE2Velocity, SE3Pose, SE3Velocity
-from bosdyn.util import seconds_to_duration, seconds_to_timestamp
+from bosdyn.util import duration_to_seconds, seconds_to_duration, seconds_to_timestamp
 
 ContinuousTrajectory1D = Callable[[float], float]
 ContinuousTrajectory2D = Callable[[float], Tuple[SE2Pose, SE2Velocity]]
@@ -190,12 +190,15 @@ def build_robot_command() -> robot_command_pb2.RobotCommand:
 
 
 def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int):
+    """
+    This method returns true if the given command contains trajectories that
+    can be batched, false otherwise. To be batched, the command must contain
+    only one trajectory longer than the batch size or multiple trajectories
+    that are also time aligned.
+    """
 
-    command = build_robot_command()
+    # Find all trajectories that require batching.
 
-    # Check conditions.
-
-    batch_size = 50
     long_trajectories = []
 
     if command.HasField("synchronized_command"):
@@ -224,15 +227,26 @@ def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int):
             if len(trajectory.points) > batch_size:
                 long_trajectories.append(trajectory.points)
 
-    if len(long_trajectories) < 1:
+    long_trajectories_count = len(long_trajectories)
+    if long_trajectories_count < 1:
         return False
-    elif len(long_trajectories) == 1:
+    if long_trajectories_count == 1:
         return True
 
-    # If there are more trajectories longer than the batch size, we must
-    # check if they are aligned.
+    # Check that all long trajectories have the same size.
+    long_trajectory_size = len(long_trajectories[0])
+    same_size = all(len(trajectory) == long_trajectory_size for trajectory in long_trajectories)
+    if not same_size:
+        return False
 
-    return False
+    # Check that all long trajectories to are time aligned.
+    for i in range(long_trajectory_size):
+        time_since_reference = duration_to_seconds(long_trajectories[0][i].time_since_reference)
+        for j in range(1, len(long_trajectories)):
+            if not duration_to_seconds(long_trajectories[j][i].time_since_reference) == time_since_reference:
+                return False
+
+    return True
 
 
 def test_tmp():
