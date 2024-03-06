@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <bosdyn_msgs/msg/manipulator_state.hpp>
+#include <bosdyn_api_msgs/msg/manipulator_state.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -89,7 +89,7 @@ struct RobotStateMessages {
   std::optional<nav_msgs::msg::Odometry> maybe_odom;
   std::optional<spot_msgs::msg::PowerState> maybe_power_state;
   std::optional<spot_msgs::msg::SystemFaultState> maybe_system_fault_state;
-  std::optional<bosdyn_msgs::msg::ManipulatorState> maybe_manipulator_state;
+  std::optional<bosdyn_api_msgs::msg::ManipulatorState> maybe_manipulator_state;
   std::optional<geometry_msgs::msg::Vector3Stamped> maybe_end_effector_force;
   std::optional<spot_msgs::msg::BehaviorFaultState> maybe_behavior_fault_state;
 };

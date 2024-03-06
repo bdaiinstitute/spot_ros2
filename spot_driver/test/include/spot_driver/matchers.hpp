@@ -106,9 +106,9 @@ MATCHER_P6(EStopStatesContains, name, type, state, state_description, timestamp,
 
 MATCHER_P(DurationEq, duration, "") {
   return testing::ExplainMatchResult(
-      testing::AllOf(
-          testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(duration.seconds())),
-          testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec, testing::Eq(duration.nanos()))),
+      testing::AllOf(testing::Field("sec", &builtin_interfaces::msg::Duration::sec, testing::Eq(duration.seconds())),
+                     testing::Field("nanosec", &builtin_interfaces::msg::Duration::nanosec,
+                                    testing::Eq(static_cast<unsigned int>(duration.nanos())))),
       arg, result_listener);
 }
 
@@ -122,5 +122,9 @@ MATCHER_P8(SystemFaultEq, timestamp, clock_skew, duration, name, uid, code, erro
                      testing::Field("error_message", &SystemFault::error_message, testing::StrEq(error_msg)),
                      testing::Field("attributes", &SystemFault::attributes, testing::ContainerEq(attributes))),
       arg, result_listener);
+}
+
+MATCHER_P(HasEnabledBit, mask, "") {
+  return (arg & mask) != 0;
 }
 }  // namespace spot_ros2::test

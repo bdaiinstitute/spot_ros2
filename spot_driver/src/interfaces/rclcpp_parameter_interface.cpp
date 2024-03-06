@@ -5,11 +5,11 @@
 #include <cstdlib>
 
 namespace {
-constexpr auto kEnvVarNameAddress = "SPOT_IP";
+constexpr auto kEnvVarNameHostname = "SPOT_IP";
 constexpr auto kEnvVarNameUsername = "BOSDYN_CLIENT_USERNAME";
 constexpr auto kEnvVarNamePassword = "BOSDYN_CLIENT_PASSWORD";
 
-constexpr auto kParameterNameAddress = "address";
+constexpr auto kParameterNameHostname = "hostname";
 constexpr auto kParameterNameUsername = "username";
 constexpr auto kParameterNamePassword = "password";
 constexpr auto kParameterNameRGBImageQuality = "image_quality";
@@ -78,8 +78,8 @@ namespace spot_ros2 {
 
 RclcppParameterInterface::RclcppParameterInterface(const std::shared_ptr<rclcpp::Node>& node) : node_{node} {}
 
-std::string RclcppParameterInterface::getAddress() const {
-  return getEnvironmentVariableParameterFallback(node_, kEnvVarNameAddress, kParameterNameAddress, kDefaultAddress);
+std::string RclcppParameterInterface::getHostname() const {
+  return getEnvironmentVariableParameterFallback(node_, kEnvVarNameHostname, kParameterNameHostname, kDefaultHostname);
 }
 
 std::string RclcppParameterInterface::getUsername() const {

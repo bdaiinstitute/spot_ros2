@@ -30,23 +30,24 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash"
 
 # Install bosdyn_msgs package
-RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.3.2-AMD64/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb --output /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb --silent \
-  && dpkg -i /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb \
-  && rm /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb
+RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.0.0-2/ros-humble-bosdyn_msgs_4.0.0-2-jammy_amd64.run --output /tmp/ros-humble-bosdyn_msgs_4.0.0-2-jammy_amd64.run --silent \
+  && chmod +x /tmp/ros-humble-bosdyn_msgs_4.0.0-2-jammy_amd64.run \
+  && ((yes || true) | /tmp/ros-humble-bosdyn_msgs_4.0.0-2-jammy_amd64.run) \
+  && rm /tmp/ros-humble-bosdyn_msgs_4.0.0-2-jammy_amd64.run
 
 # Install spot_cpp_sdk package
-RUN curl -sL https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/3.3.2/spot-cpp-sdk_3.3.2_amd64.deb --output /tmp/spot-cpp-sdk_3.3.2_amd64.deb --silent \
-  && dpkg -i /tmp/spot-cpp-sdk_3.3.2_amd64.deb \
-  && rm /tmp/spot-cpp-sdk_3.3.2_amd64.deb
+RUN curl -sL https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/4.0.0/spot-cpp-sdk_4.0.0_amd64.deb --output /tmp/spot-cpp-sdk_4.0.0_amd64.deb --silent \
+  && dpkg -i /tmp/spot-cpp-sdk_4.0.0_amd64.deb \
+  && rm /tmp/spot-cpp-sdk_4.0.0_amd64.deb
 
 # Install bosdyn_msgs missing dependencies
 RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
     && pip install --root-user-action=ignore --no-cache-dir --default-timeout=900 \
     numpy==1.24.1 \
-    bosdyn-client==3.3.2 \
-    bosdyn-mission==3.3.2 \
-    bosdyn-api==3.3.2 \
-    bosdyn-core==3.3.2 \
+    bosdyn-client==4.0.0 \
+    bosdyn-mission==4.0.0 \
+    bosdyn-api==4.0.0 \
+    bosdyn-core==4.0.0 \
     pip cache purge
 
 # Install spot_wrapper requirements

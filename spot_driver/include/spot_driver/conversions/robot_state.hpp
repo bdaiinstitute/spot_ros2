@@ -3,7 +3,7 @@
 #pragma once
 
 #include <bosdyn/api/robot_state.pb.h>
-#include <bosdyn_msgs/msg/manipulator_state.hpp>
+#include <bosdyn_api_msgs/msg/manipulator_state.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <map>
@@ -162,7 +162,7 @@ std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosd
  * @return If the robot state message contains data about Spot's manipulator state, return a ManipulatorState message
  * containing this data. Otherwise, return nullopt.
  */
-std::optional<bosdyn_msgs::msg::ManipulatorState> getManipulatorState(const ::bosdyn::api::RobotState& robot_state);
+std::optional<bosdyn_api_msgs::msg::ManipulatorState> getManipulatorState(const ::bosdyn::api::RobotState& robot_state);
 
 /**
  * @brief Create a Vector3Stamped ROS message representing the force exerted on Spot's end effector by parsing a

@@ -62,7 +62,6 @@ def test_robot_command(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
             )
         )
     )
-    feedback_response.status = RobotCommandResponse.Status.STATUS_OK
     feedback_call.returns(feedback_response)
 
     # Query and wait for the action result.

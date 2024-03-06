@@ -11,28 +11,28 @@
   <buildtool_depend>ament_cmake_python</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
-  <depend>bdai_ros2_wrappers</depend>
   <depend>bosdyn</depend>
+  <depend>bosdyn_msgs</depend>
   <depend>common_interfaces</depend>
   <depend>depth_image_proc</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>protobuf</depend>
-  <depend>python3-protobuf</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
-  <depend>rclpy</depend>
-  <depend>robot_state_publisher</depend>
   <depend>rosidl_default_runtime</depend>
-  <depend>rviz2</depend>
   <depend>sensor_msgs</depend>
-  <depend>spot_description</depend>
   <depend>spot_msgs</depend>
-  <depend>spot_wrapper</depend>
   <depend>tf2_ros</depend>
   <depend>tl_expected</depend>
-  <depend>xacro</depend>
 
+  <exec_depend>bdai_ros2_wrappers</exec_depend>
+  <exec_depend>python3-protobuf</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>spot_description</exec_depend>
+  <exec_depend>spot_wrapper</exec_depend>
+  <exec_depend>xacro</exec_depend>
 
   <!-- Support for gtest and gmock-based tests in the ament buildsystem in CMake. -->
   <test_depend>ament_cmake_gmock</test_depend>

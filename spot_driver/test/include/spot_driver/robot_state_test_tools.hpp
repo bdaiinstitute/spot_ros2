@@ -8,7 +8,7 @@
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/map.h>
 #include <google/protobuf/timestamp.pb.h>
-#include <bosdyn_msgs/msg/manipulator_state_carry_state.hpp>
+#include <bosdyn_api_msgs/msg/manipulator_state_carry_state.hpp>
 #include <builtin_interfaces/msg/duration.hpp>
 #include <builtin_interfaces/msg/time.hpp>
 #include <geometry_msgs/msg/twist.hpp>

@@ -19,7 +19,7 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
    * @param node A shared_ptr to a rclcpp node. RclcppParameterInterface shares ownership of the shared_ptr.
    */
   explicit RclcppParameterInterface(const std::shared_ptr<rclcpp::Node>& node);
-  std::string getAddress() const override;
+  std::string getHostname() const override;
   std::string getUsername() const override;
   std::string getPassword() const override;
   double getRGBImageQuality() const override;

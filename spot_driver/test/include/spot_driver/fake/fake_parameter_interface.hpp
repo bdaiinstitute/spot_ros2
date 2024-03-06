@@ -9,7 +9,7 @@
 namespace spot_ros2::test {
 class FakeParameterInterface : public ParameterInterfaceBase {
  public:
-  std::string getAddress() const override { return kExampleAddress; }
+  std::string getHostname() const override { return kExampleHostname; }
 
   std::string getUsername() const override { return kExampleUsername; }
 
@@ -29,7 +29,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getSpotName() const override { return spot_name; }
 
-  static constexpr auto kExampleAddress{"192.168.0.10"};
+  static constexpr auto kExampleHostname{"192.168.0.10"};
   static constexpr auto kExampleUsername{"spot_user"};
   static constexpr auto kExamplePassword{"hunter2"};
 
