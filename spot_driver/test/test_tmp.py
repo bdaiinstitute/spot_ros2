@@ -265,6 +265,19 @@ def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int):
     return True
 
 
+def slice_trajectory(trajectory, index: int, batch_size: int) -> bool:
+    """
+    This command slices the trajectory protobuf message.
+    """
+    completed = True
+    batch = trajectory.points[index : index + batch_size]
+    if len(trajectory.points) - len(batch) - index > 0:
+        completed = False
+    trajectory.ClearField("points")
+    trajectory.points.extend(batch)
+    return completed
+
+
 def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> list[robot_command_pb2.RobotCommand]:
     """
     Analyze the trajectories inside the given command and if they require
@@ -276,7 +289,10 @@ def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> l
 
     index = 0
     commands: list[robot_command_pb2.RobotCommand] = []
-    while True:
+
+    completed = False
+    while not completed:
+        completed = True
 
         new_command = robot_command_pb2.RobotCommand()
         new_command.CopyFrom(command)
@@ -285,34 +301,26 @@ def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> l
             if new_command.synchronized_command.HasField("mobility_command"):
                 mobility_request = new_command.synchronized_command.mobility_command
                 trajectory = mobility_request.se2_trajectory_request.trajectory
-                batch = trajectory.points[index : index + batch_size]
-                trajectory.points[:] = []
-                trajectory.points.extend(batch)
+                completed = completed and slice_trajectory(trajectory, index, batch_size)
             if new_command.synchronized_command.HasField("arm_command"):
                 arm_request = new_command.synchronized_command.arm_command
                 if arm_request.HasField("arm_cartesian_command"):
                     trajectory = arm_request.arm_cartesian_command.pose_trajectory_in_task
-                    batch = trajectory.points[index : index + batch_size]
-                    trajectory.points[:] = []
-                    trajectory.points.extend(batch)
+                    completed = completed and slice_trajectory(trajectory, index, batch_size)
                 elif arm_request.HasField("arm_joint_move_command"):
                     trajectory = arm_request.arm_joint_move_command.trajectory
-                    batch = trajectory.points[index : index + batch_size]
-                    trajectory.points[:] = []
-                    trajectory.points.extend(batch)
+                    completed = completed and slice_trajectory(trajectory, index, batch_size)
                 elif arm_request.HasField("arm_impedance_command"):
                     trajectory = arm_request.arm_impedance_command.task_tform_desired_tool
-                    batch = trajectory.points[index : index + batch_size]
-                    trajectory.points[:] = []
-                    trajectory.points.extend(batch)
+                    completed = completed and slice_trajectory(trajectory, index, batch_size)
             if new_command.synchronized_command.HasField("gripper_command"):
                 gripper_request = new_command.synchronized_command.gripper_command
                 trajectory = gripper_request.claw_gripper_command.trajectory
-                batch = trajectory.points[index : index + batch_size]
-                trajectory.points[:] = []
-                trajectory.points.extend(batch)
+                completed = completed and slice_trajectory(trajectory, index, batch_size)
 
         commands.append(new_command)
+        index += batch_size
+
     return commands
 
 
@@ -323,3 +331,4 @@ def test_tmp():
     batch_size = 50
     command = build_sample_command()
     commands = batch_command(command, batch_size)
+    print(len(commands))
