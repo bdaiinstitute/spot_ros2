@@ -294,7 +294,7 @@ def slice_trajectory(trajectory: Any, index: int, batch_size: int) -> bool:
     return is_last_batch
 
 
-def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> list[robot_command_pb2.RobotCommand]:
+def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> List[robot_command_pb2.RobotCommand]:
     """
     Analyze the trajectories inside the given command and if they require
     batching, then return an equivalend sequence of commands.
