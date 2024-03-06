@@ -7,7 +7,7 @@ Working with trajectories.
 import logging
 import math
 import time
-from typing import Callable, Tuple
+from typing import Any, Callable, List, Tuple
 
 from bosdyn.api import (
     arm_command_pb2,
@@ -205,7 +205,7 @@ def build_sample_command() -> robot_command_pb2.RobotCommand:
 # 2 - Create a sequence of robot commands.
 
 
-def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int):
+def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int) -> bool:
     """
     This method returns true if the given command contains trajectories that
     can be batched, false otherwise. To be batched, the command must contain
@@ -265,7 +265,7 @@ def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int):
     return True
 
 
-def slice_trajectory(trajectory, index: int, batch_size: int) -> bool:
+def slice_trajectory(trajectory: Any, index: int, batch_size: int) -> bool:
     """
     This command slices the trajectory protobuf message.
     """
@@ -288,7 +288,7 @@ def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> l
         return [command]
 
     index = 0
-    commands: list[robot_command_pb2.RobotCommand] = []
+    commands: List[robot_command_pb2.RobotCommand] = []
 
     completed = False
     while not completed:
@@ -324,7 +324,7 @@ def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> l
     return commands
 
 
-def test_tmp():
+def test_tmp() -> None:
     """
     Ongoing prototype.
     """
