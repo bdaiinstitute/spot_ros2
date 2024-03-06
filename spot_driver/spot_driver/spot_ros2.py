@@ -39,7 +39,6 @@ from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
-from bosdyn.client.lease import LeaseKeepAlive
 from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
@@ -67,7 +66,6 @@ from rclpy.action.server import ServerGoalHandle
 from rclpy.callback_groups import (
     CallbackGroup,
     MutuallyExclusiveCallbackGroup,
-    ReentrantCallbackGroup,
 )
 from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
@@ -220,7 +218,7 @@ class SpotROS(Node):
         self.callbacks["lease"] = self.lease_callback
         self.callbacks["world_objects"] = self.world_objects_callback
 
-        self.group: CallbackGroup = ReentrantCallbackGroup()
+        self.group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.rgb_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_registered_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
@@ -933,18 +931,7 @@ class SpotROS(Node):
             response.message = "spot_ros2 is running in mock mode."
             return response
 
-        old_lease = self.spot_wrapper.lease2
-        # `take()` can technically raise an exception (although the two possibilities
-        # in the documentation don't seem to apply when take() is not given an argument),
-        # but handling exceptions inside a ROS callback is overcomplicated,
-        # so we ignore this for now.
-        lease = self.spot_wrapper._lease_client.take()
-        self.spot_wrapper._lease_keepalive = LeaseKeepAlive(self.spot_wrapper._lease_client)
-        # There is no clear evidence that take() could return the same lease as before,
-        # but we do this check to be extra safe.
-        have_new_lease = (old_lease is None and lease is not None) or (
-            str(lease.lease_proto) != str(old_lease.lease_proto)
-        )
+        have_new_lease, lease = self.spot_wrapper.take_lease()
         if have_new_lease:
             response.success = True
             response.message = str(lease.lease_proto)
