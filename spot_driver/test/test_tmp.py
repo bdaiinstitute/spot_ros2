@@ -200,7 +200,7 @@ def build_sample_command() -> robot_command_pb2.RobotCommand:
 
 ###############################################################################
 # LOGIC
-# Here is the actual logic that we want to implement to:
+# Here is the actual logic that we want to implement:
 # 1 - Check if a robot command contains trajectories to be batched;
 # 2 - Create a sequence of robot commands.
 
