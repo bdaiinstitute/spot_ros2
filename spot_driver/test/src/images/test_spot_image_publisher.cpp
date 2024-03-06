@@ -33,7 +33,7 @@ constexpr auto kSomeErrorMessage = "some error message";
 
 class FakeParameterInterface : public ParameterInterfaceBase {
  public:
-  std::string getAddress() const override { return kExampleAddress; }
+  std::string getHostname() const override { return kExampleAddress; }
 
   std::string getUsername() const override { return kExampleUsername; }
 

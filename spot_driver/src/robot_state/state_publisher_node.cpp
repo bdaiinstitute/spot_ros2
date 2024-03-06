@@ -55,13 +55,13 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
                                     std::unique_ptr<TimerInterfaceBase> timer_interface) {
   spot_api_ = std::move(spot_api);
 
-  const auto address = parameter_interface->getAddress();
+  const auto hostname = parameter_interface->getHostname();
   const auto robot_name = parameter_interface->getSpotName();
   const auto username = parameter_interface->getUsername();
   const auto password = parameter_interface->getPassword();
 
   // create and authenticate robot
-  if (const auto create_robot_result = spot_api_->createRobot(address, robot_name); !create_robot_result) {
+  if (const auto create_robot_result = spot_api_->createRobot(hostname, robot_name); !create_robot_result) {
     const auto error_msg{std::string{"Failed to create interface to robot: "}.append(create_robot_result.error())};
     logger_interface->logError(error_msg);
     throw std::runtime_error(error_msg);
