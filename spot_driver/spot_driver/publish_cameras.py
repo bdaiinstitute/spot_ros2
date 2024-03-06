@@ -1,4 +1,5 @@
-# Copyright [2023] Boston Dynamics AI Institute, Inc.
+#!/usr/bin/env python3
+# Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 import time
 
