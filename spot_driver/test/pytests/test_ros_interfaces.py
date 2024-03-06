@@ -310,9 +310,9 @@ class SpotDriverTest(unittest.TestCase):
         feedback.command.command_choice = feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET
 
         """ Testing arm command feedback """
-        feedback.command.synchronized_feedback.arm_command_feedback_is_set = True
-        feedback.command.synchronized_feedback.mobility_command_feedback_is_set = False
-        feedback.command.synchronized_feedback.gripper_command_feedback_is_set = False
+        feedback.command.synchronized_feedback.has_field = (
+            feedback.command.synchronized_feedback.ARM_COMMAND_FEEDBACK_FIELD_SET
+        )
 
         feedback.command.synchronized_feedback.arm_command_feedback.status.value = (
             arm_command_feedback.status.STATUS_COMMAND_OVERRIDDEN
@@ -641,9 +641,9 @@ class SpotDriverTest(unittest.TestCase):
         """ Testing mobility commands """
         mobility_feedback = RobotCommandFeedback().command.synchronized_feedback.mobility_command_feedback
 
-        feedback.command.synchronized_feedback.arm_command_feedback_is_set = False
-        feedback.command.synchronized_feedback.mobility_command_feedback_is_set = True
-        feedback.command.synchronized_feedback.gripper_command_feedback_is_set = False
+        feedback.command.synchronized_feedback.has_field = (
+            feedback.command.synchronized_feedback.MOBILITY_COMMAND_FEEDBACK_FIELD_SET
+        )
 
         feedback.command.synchronized_feedback.mobility_command_feedback.status.value = (
             mobility_feedback.status.STATUS_COMMAND_OVERRIDDEN
@@ -883,9 +883,9 @@ class SpotDriverTest(unittest.TestCase):
         """ Testing Gripper commands """
         gripper_feedback = RobotCommandFeedback().command.synchronized_feedback.gripper_command_feedback
 
-        feedback.command.synchronized_feedback.arm_command_feedback_is_set = False
-        feedback.command.synchronized_feedback.mobility_command_feedback_is_set = False
-        feedback.command.synchronized_feedback.gripper_command_feedback_is_set = True
+        feedback.command.synchronized_feedback.has_field = (
+            feedback.command.synchronized_feedback.GRIPPER_COMMAND_FEEDBACK_FIELD_SET
+        )
 
         feedback.command.synchronized_feedback.gripper_command_feedback.status.value = (
             gripper_feedback.status.STATUS_COMMAND_OVERRIDDEN

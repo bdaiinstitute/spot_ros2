@@ -2,4 +2,4 @@ string name
 ---
 bool success
 string message
-bosdyn_msgs/PtzPosition position
+bosdyn_spot_cam_api_msgs/PtzPosition position

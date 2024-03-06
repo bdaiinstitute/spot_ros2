@@ -35,12 +35,12 @@ from bosdyn.client.frame_helpers import (
 )
 from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
+from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
-import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
 
@@ -102,7 +102,7 @@ class SpotRunner:
         """
         command = RobotCommandBuilder.arm_ready_command()
         action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("ready_arm", action_goal)
 
     def _arm_stow(self) -> bool:
@@ -111,7 +111,7 @@ class SpotRunner:
         """
         command = RobotCommandBuilder.arm_stow_command()
         action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("arm_stow", action_goal)
 
     def _send_ik_request(
@@ -133,11 +133,11 @@ class SpotRunner:
             ),
         )
         request = GetInverseKinematicSolutions.Request()
-        conv.convert_proto_to_bosdyn_msgs_inverse_kinematics_request(ik_request, request.request)
+        convert(ik_request, request.request)
         ik_reponse = self._ik_client.call(request)
 
         proto = inverse_kinematics_pb2.InverseKinematicsResponse()
-        conv.convert_bosdyn_msgs_inverse_kinematics_response_to_proto(ik_reponse.response, proto)
+        convert(ik_reponse.response, proto)
         return proto
 
     def test_run(self) -> bool:
@@ -275,7 +275,7 @@ class SpotRunner:
                 wr1_T_tool.to_proto()
             )
             arm_command_goal = RobotCommand.Goal()
-            conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, arm_command_goal.command)
+            convert(arm_command, arm_command_goal.command)
             result = self._robot_command_client.send_goal_and_wait(
                 action_name="arm_move_one", goal=arm_command_goal, timeout_sec=5
             )

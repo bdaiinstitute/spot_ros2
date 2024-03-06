@@ -9,10 +9,10 @@ from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.robot_command import RobotCommandBuilder
+from bosdyn_msgs.conversions import convert
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
 
-import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 
 
@@ -97,7 +97,7 @@ def hello_arm(robot_name: Optional[str] = None) -> bool:
 
     # Convert to a ROS message
     action_goal = RobotCommand.Goal()
-    conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+    convert(command, action_goal.command)
     # Send the request and wait until the arm arrives at the goal
     logger.info("Moving arm to position 1.")
     robot_command_client.send_goal_and_wait("arm_move_one", action_goal)
@@ -133,7 +133,7 @@ def hello_arm(robot_name: Optional[str] = None) -> bool:
 
     # Convert to a ROS message
     action_goal = RobotCommand.Goal()
-    conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+    convert(command, action_goal.command)
     # Send the request and wait until the arm arrives at the goal
     logger.info("Moving arm to position 2.")
     robot_command_client.send_goal_and_wait("arm_move_two", action_goal)

@@ -121,10 +121,10 @@ In ROS2, we convert the created protobuf ROS2 request and call a ROS2 service.
             ),
         )
         request = GetInverseKinematicSolutions.Request()
-        conv.convert_proto_to_bosdyn_msgs_inverse_kinematics_request(ik_request, request.request)
+        convert(ik_request, request.request)
         ik_reponse = self._ik_client.call(request)
 
         proto = inverse_kinematics_pb2.InverseKinematicsResponse()
-        conv.convert_bosdyn_msgs_inverse_kinematics_response_to_proto(ik_reponse.response, proto)
+        convert(ik_reponse.response, proto)
         return proto
 ```
