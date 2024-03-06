@@ -154,7 +154,7 @@ def dicrete_trajectory_3d(
 # from the previously defined samples.
 
 
-def build_robot_command() -> robot_command_pb2.RobotCommand:
+def build_sample_command() -> robot_command_pb2.RobotCommand:
     """
     Return a robot command with three components:
     1 - an Arm command;
@@ -265,11 +265,61 @@ def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int):
     return True
 
 
+def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> list[robot_command_pb2.RobotCommand]:
+    """
+    Analyze the trajectories inside the given command and if they require
+    batching, then return an equivalend sequence of commands.
+    """
+
+    if not is_batch_required(command, batch_size):
+        return [command]
+
+    index = 0
+    commands: list[robot_command_pb2.RobotCommand] = []
+    while True:
+
+        new_command = robot_command_pb2.RobotCommand()
+        new_command.CopyFrom(command)
+
+        if new_command.HasField("synchronized_command"):
+            if new_command.synchronized_command.HasField("mobility_command"):
+                mobility_request = new_command.synchronized_command.mobility_command
+                trajectory = mobility_request.se2_trajectory_request.trajectory
+                batch = trajectory.points[index : index + batch_size]
+                trajectory.points[:] = []
+                trajectory.points.extend(batch)
+            if new_command.synchronized_command.HasField("arm_command"):
+                arm_request = new_command.synchronized_command.arm_command
+                if arm_request.HasField("arm_cartesian_command"):
+                    trajectory = arm_request.arm_cartesian_command.pose_trajectory_in_task
+                    batch = trajectory.points[index : index + batch_size]
+                    trajectory.points[:] = []
+                    trajectory.points.extend(batch)
+                elif arm_request.HasField("arm_joint_move_command"):
+                    trajectory = arm_request.arm_joint_move_command.trajectory
+                    batch = trajectory.points[index : index + batch_size]
+                    trajectory.points[:] = []
+                    trajectory.points.extend(batch)
+                elif arm_request.HasField("arm_impedance_command"):
+                    trajectory = arm_request.arm_impedance_command.task_tform_desired_tool
+                    batch = trajectory.points[index : index + batch_size]
+                    trajectory.points[:] = []
+                    trajectory.points.extend(batch)
+            if new_command.synchronized_command.HasField("gripper_command"):
+                gripper_request = new_command.synchronized_command.gripper_command
+                trajectory = gripper_request.claw_gripper_command.trajectory
+                batch = trajectory.points[index : index + batch_size]
+                trajectory.points[:] = []
+                trajectory.points.extend(batch)
+
+        commands.append(new_command)
+    return commands
+
+
 def test_tmp():
     """
     Ongoing prototype.
     """
     batch_size = 50
-    command = build_robot_command()
-    value: bool = is_batch_required(command, batch_size)
-    print(value)
+    command = build_sample_command()
+    commands = batch_command(command, batch_size)
