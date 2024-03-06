@@ -40,6 +40,8 @@ from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySeq
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn.client.lease import LeaseKeepAlive
+from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
+from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
     Camera,
@@ -73,8 +75,6 @@ from rclpy.publisher import Publisher
 from rclpy.timer import Rate
 from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
-
-import spot_driver.conversions as conv
 
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -1043,7 +1043,7 @@ class SpotROS(Node):
             (
                 seed_t_body_msg,
                 seed_t_body_trans_msg,
-            ) = conv.bosdyn_localization_to_pose_msg(
+            ) = bosdyn_localization_to_pose_msg(
                 state.localization,
                 self.spot_wrapper.robotToLocalTime,
                 in_seed_frame=True,
@@ -1494,7 +1494,7 @@ class SpotROS(Node):
             descriptions = []
             for proto_description in proto_descriptions:
                 ros_msg = PtzDescription()
-                conv.convert_proto_to_bosdyn_msgs_ptz_description(proto_description, ros_msg)
+                convert(proto_description, ros_msg)
                 descriptions.append(ros_msg)
             response.success = True
             response.message = "Success"
@@ -1514,7 +1514,7 @@ class SpotROS(Node):
                 raise Exception("Spot CAM has not been initialized")
 
             proto_position = self.spot_cam_wrapper.ptz.get_ptz_position(request.name)
-            conv.convert_proto_to_bosdyn_msgs_ptz_position(proto_position, response.position)
+            convert(proto_position, response.position)
             response.success = True
             response.message = "Success"
             return response
@@ -1567,7 +1567,7 @@ class SpotROS(Node):
             cameras = []
             for proto_camera in proto_cameras:
                 ros_msg = Camera()
-                conv.convert_proto_to_bosdyn_msgs_camera(proto_camera, ros_msg)
+                convert(proto_camera, ros_msg)
                 cameras.append(ros_msg)
             response.success = True
             response.message = "Success"
@@ -1590,7 +1590,7 @@ class SpotROS(Node):
             logpoints = []
             for proto_logpoint in proto_logpoints:
                 ros_msg = Logpoint()
-                conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, ros_msg)
+                convert(proto_logpoint, ros_msg)
                 logpoints.append(ros_msg)
             response.success = True
             response.message = "Success"
@@ -1612,7 +1612,7 @@ class SpotROS(Node):
             proto_logpoint, proto_data_chunk = self.spot_cam_wrapper.media_log.retrieve_logpoint(
                 request.name, request.raw
             )
-            conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
+            convert(proto_logpoint, response.logpoint)
             # Data is actually a bytes object, not DataChunk as the SpotCAM wrapper states...
             # Therefore, we use a uint8[] buffer in srv message and directly set that
             # to the bytes object.
@@ -1671,7 +1671,7 @@ class SpotROS(Node):
             tag = None if request.tag == "" else request.tag
             camera_name = SpotCamCamera(request.name)  # Silly but don't want to modify cam wrapper.
             proto_logpoint = self.spot_cam_wrapper.media_log.store(camera_name, tag)
-            conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
+            convert(proto_logpoint, response.logpoint)
             response.success = True
             response.message = "Success"
             return response
@@ -1966,7 +1966,7 @@ class SpotROS(Node):
         elif choice == fb.FEEDBACK_FOLLOW_ARM_FEEDBACK_SET:
             self.get_logger().warn("WARNING: FollowArmCommand provides no feedback")
         elif choice == fb.FEEDBACK_NOT_SET:
-            # sync_feedback.mobility_command_feedback_is_set, feedback_choice is actually not set.
+            # sync_feedback.mobility_command_feedback is set, but feedback_choice is actually not set.
             # This may happen when a command finishes, which means we may return SUCCESS below.
             self.get_logger().info("mobility command feedback indicates goal has reached")
         else:
@@ -2025,19 +2025,19 @@ class SpotROS(Node):
             # while the mobility is going to some SE2 trajectory then that will work.
 
             sync_feedback = feedback.command.synchronized_feedback
-            if sync_feedback.arm_command_feedback_is_set is True:
+            if sync_feedback.has_field & sync_feedback.ARM_COMMAND_FEEDBACK_FIELD_SET:
                 arm_feedback = sync_feedback.arm_command_feedback
                 response = self._process_synchronized_arm_command_feedback(arm_feedback)
                 if response is not GoalResponse.SUCCESS:
                     return response
 
-            if sync_feedback.mobility_command_feedback_is_set is True:
+            if sync_feedback.has_field & sync_feedback.MOBILITY_COMMAND_FEEDBACK_FIELD_SET:
                 mob_feedback = sync_feedback.mobility_command_feedback
                 response = self._process_synchronized_mobility_command_feedback(mob_feedback)
                 if response is not GoalResponse.SUCCESS:
                     return response
 
-            if sync_feedback.gripper_command_feedback_is_set is True:
+            if sync_feedback.has_field & sync_feedback.GRIPPER_COMMAND_FEEDBACK_FIELD_SET:
                 grip_feedback = sync_feedback.gripper_command_feedback
                 response = self._process_synchronized_gripper_command_feedback(grip_feedback)
                 if response is not GoalResponse.SUCCESS:
@@ -2067,16 +2067,13 @@ class SpotROS(Node):
                 )
         else:
             if self.spot_wrapper is not None:
-                conv.convert_proto_to_bosdyn_msgs_robot_command_feedback(
-                    self.spot_wrapper.get_robot_command_feedback(goal_id).feedback,
-                    feedback,
-                )
+                convert(self.spot_wrapper.get_robot_command_feedback(goal_id).feedback, feedback)
         return feedback
 
     def handle_robot_command(self, goal_handle: ServerGoalHandle) -> RobotCommand.Result:
         ros_command = goal_handle.request.command
         proto_command = robot_command_pb2.RobotCommand()
-        conv.convert_bosdyn_msgs_robot_command_to_proto(ros_command, proto_command)
+        convert(ros_command, proto_command)
         self._wait_for_goal = None
         if self.spot_wrapper is None:
             self._wait_for_goal = WaitForGoal(self.get_clock(), 2.0)
@@ -2180,9 +2177,7 @@ class SpotROS(Node):
     def _get_manipulation_command_feedback(self, goal_id: str) -> ManipulationApiFeedbackResponse:
         feedback = ManipulationApiFeedbackResponse()
         if self.spot_wrapper is not None:
-            conv.convert_proto_to_bosdyn_msgs_manipulation_api_feedback_response(
-                self.spot_wrapper.get_manipulation_command_feedback(goal_id), feedback
-            )
+            convert(self.spot_wrapper.get_manipulation_command_feedback(goal_id), feedback)
         return feedback
 
     def handle_manipulation_command(self, goal_handle: ServerGoalHandle) -> Manipulation.Result:
@@ -2191,7 +2186,7 @@ class SpotROS(Node):
 
         ros_command = goal_handle.request.command
         proto_command = manipulation_api_pb2.ManipulationApiRequest()
-        conv.convert_bosdyn_msgs_manipulation_api_request_to_proto(ros_command, proto_command)
+        convert(ros_command, proto_command)
         self._wait_for_goal = None
         if not self.spot_wrapper:
             self._wait_for_goal = WaitForGoal(self.get_clock(), 2.0)
@@ -2417,7 +2412,7 @@ class SpotROS(Node):
                 self.get_logger().warning(response.message)
                 return response
             else:
-                seed_t_body_msg = conv.bosdyn_localization_to_pose_msg(
+                seed_t_body_msg = bosdyn_localization_to_pose_msg(
                     state.localization,
                     self.spot_wrapper.robotToLocalTime,
                     in_seed_frame=True,
@@ -2544,7 +2539,7 @@ class SpotROS(Node):
     ) -> ListWorldObjects.Response:
         object_types = [ot.value for ot in request.request.object_type]
         time_start_point = None
-        if request.request.timestamp_filter_is_set:
+        if request.request.has_field & request.request.TIMESTAMP_FILTER_FIELD_SET:
             time_start_point = (
                 request.request.timestamp_filter.sec + float(request.request.timestamp_filter.nanosec) / 1e9
             )
@@ -2559,7 +2554,7 @@ class SpotROS(Node):
             world_object.apriltag_properties.frame_name_fiducial_filtered = "filtered_fiducial_3"
         else:
             proto_response = self.spot_wrapper.spot_world_objects.list_world_objects(object_types, time_start_point)
-        conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
+        convert(proto_response, response.response)
         return response
 
     def handle_navigate_to_feedback(self) -> None:
@@ -2629,9 +2624,9 @@ class SpotROS(Node):
             return response
         try:
             proto_request = gripper_camera_param_pb2.GripperCameraGetParamRequest()
-            conv.convert_bosdyn_msgs_gripper_camera_get_param_request_to_proto(request.request, proto_request)
+            convert(request.request, proto_request)
             proto_response = self.spot_wrapper.spot_images.get_gripper_camera_params(proto_request)
-            conv.convert_proto_to_bosdyn_msgs_gripper_camera_get_param_response(proto_response, response.response)
+            convert(proto_response, response.response)
             response.success = True
             response.message = "Request to get gripper camera parameters sent"
         except Exception as e:
@@ -2658,9 +2653,9 @@ class SpotROS(Node):
 
         try:
             proto_request = gripper_camera_param_pb2.GripperCameraParamRequest()
-            conv.convert_bosdyn_msgs_gripper_camera_param_request_to_proto(request.request, proto_request)
+            convert(request.request, proto_request)
             proto_response = self.spot_wrapper.spot_images.set_gripper_camera_params(proto_request)
-            conv.convert_proto_to_bosdyn_msgs_gripper_camera_param_response(proto_response, response.response)
+            convert(proto_response, response.response)
             response.success = True
             response.message = "Request to set gripper camera parameters sent"
         except Exception as e:
@@ -2801,7 +2796,6 @@ class SpotROS(Node):
         self.get_logger().info("Shutting down ROS driver for Spot")
         if self.spot_wrapper is not None:
             self.spot_wrapper.sit()
-        self.node_rate.sleep()
         if self.spot_wrapper is not None:
             self.spot_wrapper.disconnect()
         super().destroy_node()

@@ -12,8 +12,8 @@ void convertToProto(const builtin_interfaces::msg::Time& ros_msg, google::protob
   proto.set_nanos(ros_msg.nanosec);
 }
 
-void convertToProto(const bosdyn_msgs::msg::RequestHeader& ros_msg, bosdyn::api::RequestHeader& proto) {
-  if (ros_msg.request_timestamp_is_set) {
+void convertToProto(const bosdyn_api_msgs::msg::RequestHeader& ros_msg, bosdyn::api::RequestHeader& proto) {
+  if (ros_msg.has_field & bosdyn_api_msgs::msg::RequestHeader::REQUEST_TIMESTAMP_FIELD_SET) {
     convertToProto(ros_msg.request_timestamp, *proto.mutable_request_timestamp());
   }
   proto.set_client_name(ros_msg.client_name);
@@ -44,27 +44,27 @@ void convertToProto(const geometry_msgs::msg::Pose& ros_msg, bosdyn::api::SE3Pos
   convertToProto(ros_msg.orientation, *proto.mutable_rotation());
 }
 
-void convertToProto(const double& ros_msg, google::protobuf::DoubleValue& proto) {
-  proto.set_value(ros_msg);
+void convertToProto(const std_msgs::msg::Float64& ros_msg, google::protobuf::DoubleValue& proto) {
+  proto.set_value(ros_msg.data);
 }
 
-void convertToProto(const bosdyn_msgs::msg::ArmJointPosition& ros_msg, bosdyn::api::ArmJointPosition& proto) {
-  if (ros_msg.sh0_is_set) {
+void convertToProto(const bosdyn_api_msgs::msg::ArmJointPosition& ros_msg, bosdyn::api::ArmJointPosition& proto) {
+  if (ros_msg.has_field & bosdyn_api_msgs::msg::ArmJointPosition::SH0_FIELD_SET) {
     convertToProto(ros_msg.sh0, *proto.mutable_sh0());
   }
-  if (ros_msg.sh1_is_set) {
+  if (ros_msg.has_field & bosdyn_api_msgs::msg::ArmJointPosition::SH1_FIELD_SET) {
     convertToProto(ros_msg.sh1, *proto.mutable_sh1());
   }
-  if (ros_msg.el0_is_set) {
+  if (ros_msg.has_field & bosdyn_api_msgs::msg::ArmJointPosition::EL0_FIELD_SET) {
     convertToProto(ros_msg.el0, *proto.mutable_el0());
   }
-  if (ros_msg.el1_is_set) {
+  if (ros_msg.has_field & bosdyn_api_msgs::msg::ArmJointPosition::EL1_FIELD_SET) {
     convertToProto(ros_msg.el1, *proto.mutable_el1());
   }
-  if (ros_msg.wr0_is_set) {
+  if (ros_msg.has_field & bosdyn_api_msgs::msg::ArmJointPosition::WR0_FIELD_SET) {
     convertToProto(ros_msg.wr0, *proto.mutable_wr0());
   }
-  if (ros_msg.wr1_is_set) {
+  if (ros_msg.has_field & bosdyn_api_msgs::msg::ArmJointPosition::WR1_FIELD_SET) {
     convertToProto(ros_msg.wr1, *proto.mutable_wr1());
   }
 }
@@ -72,27 +72,39 @@ void convertToProto(const bosdyn_msgs::msg::ArmJointPosition& ros_msg, bosdyn::a
 ///////////////////////////////////////////////////////////////////////////////
 // Protobuf to ROS.
 
-void convertToRos(const bosdyn::api::RequestHeader& proto, bosdyn_msgs::msg::RequestHeader& ros_msg) {
-  convertToRos(proto.request_timestamp(), ros_msg.request_timestamp);
-  ros_msg.request_timestamp_is_set = proto.has_request_timestamp();
+void convertToRos(const bosdyn::api::RequestHeader& proto, bosdyn_api_msgs::msg::RequestHeader& ros_msg) {
+  ros_msg.has_field = 0u;
+  if (proto.has_request_timestamp()) {
+    convertToRos(proto.request_timestamp(), ros_msg.request_timestamp);
+    ros_msg.has_field |= bosdyn_api_msgs::msg::RequestHeader::REQUEST_TIMESTAMP_FIELD_SET;
+  }
   ros_msg.client_name = proto.client_name();
   ros_msg.disable_rpc_logging = proto.disable_rpc_logging();
 }
 
-void convertToRos(const bosdyn::api::CommonError& proto, bosdyn_msgs::msg::CommonError& ros_msg) {
+void convertToRos(const bosdyn::api::CommonError& proto, bosdyn_api_msgs::msg::CommonError& ros_msg) {
   ros_msg.code.value = proto.code();
   ros_msg.message = proto.message();
 }
 
-void convertToRos(const bosdyn::api::ResponseHeader& proto, bosdyn_msgs::msg::ResponseHeader& ros_msg) {
-  convertToRos(proto.request_header(), ros_msg.request_header);
-  ros_msg.request_header_is_set = proto.has_request_header();
-  convertToRos(proto.request_received_timestamp(), ros_msg.request_received_timestamp);
-  ros_msg.request_received_timestamp_is_set = proto.has_request_received_timestamp();
-  convertToRos(proto.response_timestamp(), ros_msg.response_timestamp);
-  ros_msg.response_timestamp_is_set = proto.has_response_timestamp();
-  convertToRos(proto.error(), ros_msg.error);
-  ros_msg.error_is_set = proto.has_error();
+void convertToRos(const bosdyn::api::ResponseHeader& proto, bosdyn_api_msgs::msg::ResponseHeader& ros_msg) {
+  ros_msg.has_field = 0u;
+  if (proto.has_request_header()) {
+    convertToRos(proto.request_header(), ros_msg.request_header);
+    ros_msg.has_field |= bosdyn_api_msgs::msg::ResponseHeader::REQUEST_HEADER_FIELD_SET;
+  }
+  if (proto.has_request_received_timestamp()) {
+    convertToRos(proto.request_received_timestamp(), ros_msg.request_received_timestamp);
+    ros_msg.has_field |= bosdyn_api_msgs::msg::ResponseHeader::REQUEST_RECEIVED_TIMESTAMP_FIELD_SET;
+  }
+  if (proto.has_response_timestamp()) {
+    convertToRos(proto.response_timestamp(), ros_msg.response_timestamp);
+    ros_msg.has_field |= bosdyn_api_msgs::msg::ResponseHeader::RESPONSE_TIMESTAMP_FIELD_SET;
+  }
+  if (proto.has_error()) {
+    convertToRos(proto.error(), ros_msg.error);
+    ros_msg.has_field |= bosdyn_api_msgs::msg::ResponseHeader::ERROR_FIELD_SET;
+  }
 }
 
 void convertToRos(const google::protobuf::Timestamp& proto, builtin_interfaces::msg::Time& ros_msg) {

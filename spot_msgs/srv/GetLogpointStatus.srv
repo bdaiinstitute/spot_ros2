@@ -2,4 +2,4 @@ string name
 ---
 bool success
 string message
-bosdyn_msgs/LogpointLogStatus status
+bosdyn_spot_cam_api_msgs/LogpointLogStatus status
