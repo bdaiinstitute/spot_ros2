@@ -61,7 +61,7 @@ The same command can be run/debugged in VSCode by adding the following to your l
     "console": "integratedTerminal",
     "justMyCode": true
 }
-    ```
+```
 
 ## Converting Direct API Calls to ROS 2
 
