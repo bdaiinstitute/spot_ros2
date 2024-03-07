@@ -39,12 +39,10 @@ class WalkForward:
         )
 
     def initialize_robot(self) -> bool:
-        print("Initialize")
         self._logger.info(f"Robot name: {self._robot_name}")
         self._logger.info("Claiming robot")
         result = self._robot.command("claim")
         if not result.success:
-            print("Initialize failed")
             self._logger.error("Unable to claim robot message was " + result.message)
             return False
         self._logger.info("Claimed robot")
@@ -64,7 +62,6 @@ class WalkForward:
         return True
 
     def walk_forward_with_world_frame_goal(self) -> None:
-        print("Walk forward")
         self._logger.info("Walking forward")
         world_t_robot = self._tf_listener.lookup_a_tform_b(self._vision_frame_name, self._body_frame_name)
         world_t_robot_se2 = SE3Pose(
