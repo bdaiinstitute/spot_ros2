@@ -2,7 +2,7 @@
 
 ## Introduction
 
-In this example, we will explore the utilization of ROS2 for deriving Inverse Kinematics (IK) solutions for specified tool poses. The process involves the following steps:
+In this example, we will explore the utilization of ROS 2 for deriving Inverse Kinematics (IK) solutions for specified tool poses. The process involves the following steps:
 
 **Goal Visualization:** For each requested tool pose, the system publishes a Tranform (TF) to RViz, to clearly visualize the goal.
 
@@ -51,7 +51,7 @@ The same command can be run/debugged in VSCode by adding the following to your l
     "name": "send_inverse_kinematics_requests",
     "type": "python",
     "request": "launch",
-    "program": "${workspaceFolder}/ws/src/external/spot_ros2/examples/inverse_kinematics/inverse_kinematics/send_inverse_kinematics_requests.py",
+    "program": "${workspaceFolder}/ws/src/external/spot_ros2/spot_examples/spot_examples/send_inverse_kinematics_requests.py",
     "args": [
         "--robot",
         "Opal",
@@ -63,13 +63,13 @@ The same command can be run/debugged in VSCode by adding the following to your l
 }
     ```
 
-## Converting Direct API Calls to ROS2
+## Converting Direct API Calls to ROS 2
 
-While the Spot driver provides plenty of helper services and topics, direct Spot API calls can usually be replaced by ROS2 calls. This is done by replacing the protobuf messages with ROS messages and using the `robot_command` action.
+While the Spot driver provides plenty of helper services and topics, direct Spot API calls can usually be replaced by ROS 2 calls. This is done by replacing the protobuf messages with ROS messages and using the `robot_command` action.
 
-The [ROS2 example](../spot_examples/send_inverse_kinematics_requests.py) is closely related to the [Spot SDK example](https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/inverse_kinematics/reachability.py) which is documented [here](https://dev.bostondynamics.com/python/examples/inverse_kinematics/readme).
+The [ROS 2 example](../spot_examples/send_inverse_kinematics_requests.py) is closely related to the [Spot SDK example](https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/inverse_kinematics/reachability.py) which is documented [here](https://dev.bostondynamics.com/python/examples/inverse_kinematics/readme).
 
-The ROS2 example publishes realtime TFs to RViz instead of plotting the result.
+The ROS 2 example publishes realtime TFs to RViz instead of plotting the result.
 
 The commands to claim, power on and stand up Spot are already well described in the example [Simple Arm Motion](simple_arm_motion/README.md). We will focus on the command to request an IK solution for a tool pose.
 
@@ -92,7 +92,7 @@ Using the Spot SDK, an IK request can be written as follows:
     ik_responses.append(ik_client.inverse_kinematics(ik_request))
 ```
 
-In ROS2, we convert the created protobuf ROS2 request and call a ROS2 service.
+In ROS 2, we convert the created protobuf ROS 2 request and call a ROS 2 service.
 
 ```python
     def _send_ik_request(

@@ -105,12 +105,12 @@ rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
 ```
 
 ### Install bosdyn_msgs from source
-The `bosdyn_msgs` package is installed as a debian package as part of the `install_spot_ros2` script because it's very large.  It can be checked out from source [here](https://github.com/bdaiinstitute/bosdyn_msgs) and then built as a normal ROS2 package if that is preferred (compilation takes about 15 minutes).
+The `bosdyn_msgs` package is installed as a debian package as part of the `install_spot_ros2` script because it's very large.  It can be checked out from source [here](https://github.com/bdaiinstitute/bosdyn_msgs) and then built as a normal ROS 2 package if that is preferred (compilation takes about 15 minutes).
 
 
 ## License
 
-MIT license - parts of the code developed specifically for ROS2.
+MIT license - parts of the code developed specifically for ROS 2.
 BSD3 license - parts of the code derived from the Clearpath Robotics ROS1 driver.
 
 ## Contributing
