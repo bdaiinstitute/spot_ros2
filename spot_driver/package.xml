@@ -31,7 +31,6 @@
   <depend>spot_wrapper</depend>
   <depend>tf2_ros</depend>
   <depend>tl_expected</depend>
-  <depend>urdfdom</depend>
   <depend>xacro</depend>
 
 

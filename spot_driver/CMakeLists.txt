@@ -20,7 +20,6 @@ set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
   tl_expected
   spot_msgs
   nav_msgs
-  urdfdom
 )
 
 find_package(ament_cmake REQUIRED)
@@ -57,7 +56,6 @@ add_library(spot_api
   src/interfaces/rclcpp_tf_interface.cpp
   src/interfaces/rclcpp_tf_listener_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
-  src/interfaces/urdf_robot_model_interface.cpp
   src/kinematic/kinematic_node.cpp
   src/kinematic/kinematic_service.cpp
   src/kinematic/kinematic_middleware_handle.cpp

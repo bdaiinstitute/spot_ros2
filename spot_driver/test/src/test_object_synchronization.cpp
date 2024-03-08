@@ -15,7 +15,6 @@
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
-#include <spot_driver/mock/mock_robot_model_interface.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
 #include <spot_driver/mock/mock_state_publisher_middleware_handle.hpp>
 #include <spot_driver/mock/mock_tf_interface.hpp>

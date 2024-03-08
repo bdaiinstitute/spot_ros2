@@ -10,7 +10,6 @@
 #include <spot_driver/interfaces/clock_interface_base.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
-#include <spot_driver/interfaces/robot_model_interface_base.hpp>
 #include <spot_driver/interfaces/tf_interface_base.hpp>
 #include <spot_driver/interfaces/tf_listener_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
