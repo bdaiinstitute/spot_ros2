@@ -200,16 +200,56 @@ def _build_sample_command(
     # Build a Robot Command.
 
     synchronized_command = synchronized_command_pb2.SynchronizedCommand.Request(
-        mobility_command=mobility_request, arm_command=arm_request, gripper_command=gripper_request
+        arm_command=arm_request, mobility_command=mobility_request, gripper_command=gripper_request
     )
     command = robot_command_pb2.RobotCommand(synchronized_command=synchronized_command)
     return command
 
 
-def test_trajectory_batching() -> None:
+def test_trajectories_different_length() -> None:
     """
-    Test if a command containing trajectory longer than a given batch size is
-    correctly batched.
+    When a command contains more than one trajectory longer than the batch size,
+    with different sizes, we cannot batch.
+    """
+
+    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+        duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+    )
+    mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
+        duration=10, dt=0.1, trajectory_function=_continuous_trajectory_2d
+    )
+
+    command = _build_sample_command(hand_trajectory=hand_trajectory, mobility_trajectory=mobility_trajectory)
+    commands = batch_command(command=command, batch_size=50)
+
+    # Trajectories have different lengths so we expect one command.
+    assert len(commands) == 1
+
+
+def test_trajectories_not_aligned() -> None:
+    """
+    When a command contains more than one trajectory longer than the batch size,
+    not time aligned, we cannot batch.
+    """
+
+    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+        duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+    )
+    mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
+        duration=10, dt=0.2, trajectory_function=_continuous_trajectory_2d
+    )
+
+    command = _build_sample_command(hand_trajectory=hand_trajectory, mobility_trajectory=mobility_trajectory)
+    commands = batch_command(command=command, batch_size=10)
+
+    # Trajectories are not aligned so we expect one command.
+    assert len(commands) == 1
+
+
+def test_multiple_trajectories() -> None:
+    """
+    When a command contains more than one trajectory longer than the batch size,
+    and time aligned, we can batch.
     """
 
     hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
@@ -222,11 +262,103 @@ def test_trajectory_batching() -> None:
         duration=20, dt=0.1, trajectory_function=_continuous_trajectory_1d
     )
 
-    batch_size = 50
     command = _build_sample_command(
         hand_trajectory=hand_trajectory,
         mobility_trajectory=mobility_trajectory,
         gripper_trajectory=gripper_trajectory,
     )
-    commands = batch_command(command, batch_size)
-    print(len(commands))
+    commands = batch_command(command=command, batch_size=50)
+
+    # Each trajectory contains 201 = 1 + 20 / 0.1 datapoints.
+    # With a batch size of 50, we expect 5 commands.
+    assert len(commands) == 5
+
+    assert len(commands[0].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 50
+    assert len(commands[1].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 50
+    assert len(commands[2].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 50
+    assert len(commands[3].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 50
+    assert len(commands[4].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 1
+
+    assert len(commands[0].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 50
+    assert len(commands[1].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 50
+    assert len(commands[2].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 50
+    assert len(commands[3].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 50
+    assert len(commands[4].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 1
+
+    assert len(commands[0].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 50
+    assert len(commands[1].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 50
+    assert len(commands[2].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 50
+    assert len(commands[3].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 50
+    assert len(commands[4].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 1
+
+
+def test_multiple_trajectorties_with_stride() -> None:
+    """
+    When a command contains more than one trajectory longer than the batch size,
+    and time aligned, we can batch.
+    """
+
+    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+        duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+    )
+    mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
+        duration=5, dt=0.1, trajectory_function=_continuous_trajectory_2d
+    )
+    gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
+        duration=5, dt=0.1, trajectory_function=_continuous_trajectory_1d
+    )
+
+    command = _build_sample_command(
+        hand_trajectory=hand_trajectory,
+        mobility_trajectory=mobility_trajectory,
+        gripper_trajectory=gripper_trajectory,
+    )
+    commands = batch_command(command=command, batch_size=20, overlapping_points=4)
+
+    # Each trajectory contains 51 = 1 + 5 / 0.1 datapoints.
+    # With a batch size of 20, and 4 overlapping points between trajectories,
+    # we expect 3 commands.
+    assert len(commands) == 3
+
+    assert len(commands[0].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 20
+    assert len(commands[1].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 20
+    assert len(commands[2].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 19
+
+    assert len(commands[0].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 20
+    assert len(commands[1].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 20
+    assert len(commands[2].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 19
+
+    assert len(commands[0].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 20
+    assert len(commands[1].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 20
+    assert len(commands[2].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 19
+
+
+def test_one_trajectory_with_stride() -> None:
+    """
+    When a command contains only one trajectory longer than the batch size,
+    we can always batch.
+    """
+
+    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+        duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+    )
+
+    command = _build_sample_command(hand_trajectory=hand_trajectory)
+    commands = batch_command(command=command, batch_size=20, overlapping_points=4)
+
+    # One trajectory contains 51 = 1 + 5 / 0.1 datapoints.
+    # With a batch size of 20, and 4 overlapping points between trajectories,
+    # we expect 3 commands.
+    assert len(commands) == 3
+
+    assert len(commands[0].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 20
+    assert len(commands[1].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 20
+    assert len(commands[2].synchronized_command.arm_command.arm_cartesian_command.pose_trajectory_in_task.points) == 19
+
+    assert len(commands[0].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 0
+    assert len(commands[1].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 0
+    assert len(commands[2].synchronized_command.mobility_command.se2_trajectory_request.trajectory.points) == 0
+
+    assert len(commands[0].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 0
+    assert len(commands[1].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 0
+    assert len(commands[2].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 0
