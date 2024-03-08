@@ -215,23 +215,14 @@ std::set<std::string> getObjectFrames(const ::bosdyn::api::ListWorldObjectRespon
  * @param list_objects_response Input message to parse.
  * @return A set of all object names listed in the input.
  */
-std::set<std::string> getObjectNames(const ::bosdyn::api::ListWorldObjectResponse& list_objects_response) {
-  std::set<std::string> names;
+std::map<std::string, int> getObjectNamesAndIDs(const ::bosdyn::api::ListWorldObjectResponse& list_objects_response) {
+  std::map<std::string, int> names_to_ids;
   for (const auto& object : list_objects_response.world_objects()) {
-    names.insert(object.name());
+    names_to_ids.insert(std::make_pair(object.name(), object.id()));
   }
-  return names;
+  return names_to_ids;
 }
 
-/**
- * @brief Represents the possible mutation operations which ObjectSynchronizer can perform.
- * @details This exists because the Spot API's MutateWorldObjectRequest_Action enum has several fields which are not
- * used by ObjectSynchronizer.
- */
-enum class MutationOperation {
-  ADD,
-  CHANGE,
-};
 /**
  * @brief Create a MutateWorldObjectRequest which adds or modifies a WorldObject corresponding to a TF frame.
  *
@@ -242,20 +233,19 @@ enum class MutationOperation {
  * @param operation
  * @return ::bosdyn::api::MutateWorldObjectRequest
  */
-::bosdyn::api::MutateWorldObjectRequest createMutationRequest(
+::bosdyn::api::MutateWorldObjectRequest createAddObjectRequest(
     const geometry_msgs::msg::TransformStamped& base_tform_child, const std::string& preferred_base_frame,
-    const std::string& child_frame_id_no_prefix, const google::protobuf::Duration& clock_skew,
-    const MutationOperation& operation) {
+    const std::string& child_frame_id_no_prefix, const google::protobuf::Duration& clock_skew) {
   ::bosdyn::api::MutateWorldObjectRequest request;
   *request.mutable_header()->mutable_request_timestamp() =
       spot_ros2::localTimeToRobotTime(base_tform_child.header.stamp, clock_skew);
   *request.mutable_mutation()->mutable_object()->mutable_acquisition_time() = request.header().request_timestamp();
 
   auto* object = request.mutable_mutation()->mutable_object();
-  object->mutable_acquisition_time()->CopyFrom(request.header().request_timestamp());
+  // object->mutable_acquisition_time()->CopyFrom(request.header().request_timestamp());
+  object->mutable_object_lifetime()->set_seconds(5.0);
 
   *object->mutable_name() = child_frame_id_no_prefix;
-  // object->set_id(97);
 
   auto* properties = object->mutable_drawable_properties()->Add();
   properties->mutable_frame()->set_arrow_length(0.1);
@@ -270,13 +260,41 @@ enum class MutationOperation {
   // Add the root frame
   edge_map->insert(google::protobuf::MapPair{preferred_base_frame, ::bosdyn::api::FrameTreeSnapshot_ParentEdge{}});
 
-  if (operation == MutationOperation::ADD) {
-    request.mutable_mutation()->set_action(
-        ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_ADD);
-  } else {
-    request.mutable_mutation()->set_action(
-        ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_CHANGE);
-  }
+  request.mutable_mutation()->set_action(
+      ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_ADD);
+
+  return request;
+}
+
+::bosdyn::api::MutateWorldObjectRequest createModifyObjectRequest(
+    const geometry_msgs::msg::TransformStamped& base_tform_child, const std::string& preferred_base_frame,
+    const std::string& child_frame_id_no_prefix, const google::protobuf::Duration& clock_skew, const int& id) {
+  ::bosdyn::api::MutateWorldObjectRequest request;
+  *request.mutable_header()->mutable_request_timestamp() =
+      spot_ros2::localTimeToRobotTime(base_tform_child.header.stamp, clock_skew);
+  *request.mutable_mutation()->mutable_object()->mutable_acquisition_time() = request.header().request_timestamp();
+
+  auto* object = request.mutable_mutation()->mutable_object();
+  // object->mutable_acquisition_time()->CopyFrom(request.header().request_timestamp());
+
+  *object->mutable_name() = child_frame_id_no_prefix;
+  object->set_id(id);
+
+  auto* properties = object->mutable_drawable_properties()->Add();
+  properties->mutable_frame()->set_arrow_length(0.1);
+  properties->mutable_frame()->set_arrow_radius(0.01);
+
+  ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
+  *edge.mutable_parent_frame_name() = preferred_base_frame;
+  spot_ros2::convertToProto(base_tform_child.transform, *edge.mutable_parent_tform_child());
+
+  auto* edge_map = object->mutable_transforms_snapshot()->mutable_child_to_parent_edge_map();
+  edge_map->insert(google::protobuf::MapPair{child_frame_id_no_prefix, edge});
+  // Add the root frame
+  edge_map->insert(google::protobuf::MapPair{preferred_base_frame, ::bosdyn::api::FrameTreeSnapshot_ParentEdge{}});
+
+  request.mutable_mutation()->set_action(
+      ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_CHANGE);
 
   return request;
 }
@@ -342,7 +360,7 @@ void ObjectSynchronizer::syncWorldObjects() {
     logger_interface_->logError("Failed to list other objects.");
     return;
   }
-  const auto mutable_object_names = getObjectNames(mutable_frames_response.value());
+  const auto mutable_objects = getObjectNamesAndIDs(mutable_frames_response.value());
 
   // If a TF frame does not originate from Spot:
   //   If the frame is already included in the world objects:
@@ -363,12 +381,12 @@ void ObjectSynchronizer::syncWorldObjects() {
     // Skip frames which are internal to Spot or which are from objects which we cannot mutate
     if (kSpotInternalFrames.count(child_frame_id_no_prefix) > 0 ||
         non_mutable_frames.count(child_frame_id_no_prefix) > 0) {
-      logger_interface_->logInfo("Frame " + child_frame_id_no_prefix + " is internal or non-mutable.");
+      // logger_interface_->logInfo("Frame " + child_frame_id_no_prefix + " is internal or non-mutable.");
       continue;
     }
 
     // Get the transform from the preferred base frame to the current TF frame
-    auto base_tform_child =
+    const auto base_tform_child =
         tf_listener_interface_->lookupTransform(preferred_base_frame_with_prefix_, child_frame_id, rclcpp::Time{0, 0},
                                                 rclcpp::Duration{std::chrono::nanoseconds{0}});
     if (!base_tform_child) {
@@ -376,19 +394,36 @@ void ObjectSynchronizer::syncWorldObjects() {
       continue;
     }
 
-    base_tform_child.value().header.stamp = clock_interface_->now();
-
     logger_interface_->logInfo("timestamp: " + std::to_string(base_tform_child.value().header.stamp.sec));
+
+    const auto now = clock_interface_->now();
+    if (now - base_tform_child.value().header.stamp > rclcpp::Duration{10, 0}) {
+      // Skip adding transforms that are stale
+      logger_interface_->logInfo("transform is too old");
+      continue;
+    }
 
     // Create a request to add or modify a WorldObject.
     // The transform snapshot of this WorldObject will contain a single transfrom from the preferred base frame to the
     // TF frame. The name of the WorldObject will match the frame ID of the TF frame. If there is already a WorldObject
     // whose name matches the current frame's frame ID, the request will modify this object. Otherwise, the request will
     // add a new object.
-    const MutationOperation operation =
-        mutable_object_names.count(child_frame_id_no_prefix) == 0 ? MutationOperation::ADD : MutationOperation::CHANGE;
-    auto request = createMutationRequest(base_tform_child.value(), preferred_base_frame_, child_frame_id_no_prefix,
-                                         clock_skew_result.value(), operation);
+
+    // TODO(jschornak): explicitly remove frames once they've gone stale.
+    // Should be able to be more consistent about this if we keep the last valid timestamp intact after performing
+    // lookups.
+
+    ::bosdyn::api::MutateWorldObjectRequest request;
+    if (mutable_objects.count(child_frame_id_no_prefix) > 0) {
+      const auto id = mutable_objects.at(child_frame_id_no_prefix);
+      request = createModifyObjectRequest(base_tform_child.value(), preferred_base_frame_, child_frame_id_no_prefix,
+                                          clock_skew_result.value(), id);
+      logger_interface_->logInfo("Modifying existing object for frame " + child_frame_id_no_prefix);
+    } else {
+      request = createAddObjectRequest(base_tform_child.value(), preferred_base_frame_, child_frame_id_no_prefix,
+                                       clock_skew_result.value());
+      logger_interface_->logInfo("Adding new object for frame " + child_frame_id_no_prefix);
+    }
 
     if (const auto status = ::bosdyn::api::ValidateFrameTreeSnapshot(request.mutation().object().transforms_snapshot());
         status != ::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID) {
@@ -396,9 +431,6 @@ void ObjectSynchronizer::syncWorldObjects() {
                                  " is not valid. Error code: " + toString(status));
       continue;
     }
-
-    logger_interface_->logInfo(std::string(operation == MutationOperation::ADD ? "Adding new" : "Modifying existing") +
-                               " object for frame " + child_frame_id_no_prefix);
 
     // Send the request to the API's client interface to add the object in Spot's environment.
     const auto response = world_object_client_interface_->mutateWorldObject(request);

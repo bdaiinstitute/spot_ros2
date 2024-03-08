@@ -13,6 +13,8 @@ RclcppTfListenerInterface::RclcppTfListenerInterface(const std::shared_ptr<rclcp
     : buffer_{node->get_clock()}, listener_{buffer_} {}
 
 std::vector<std::string> RclcppTfListenerInterface::getAllFrameNames() const {
+  // Note: this seems to get all past frames, in addition to all currently-published frames.
+  // Somewhat annoying when we want old frames to drop out.
   return buffer_.getAllFrameNames();
 }
 

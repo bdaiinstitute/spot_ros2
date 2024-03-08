@@ -182,6 +182,15 @@ TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
       .WillOnce(Return(list_apriltags_response))
       .WillOnce(Return(list_objects_response));
 
+  /*
+  OTHER IMPORTANT THINGS TO TEST:
+  - the object is of type DrawableFrame
+  - if modifying an existing object, the request contains the ID of the object
+  - we can handle the TF listener failing to look up a transform
+  - we can handle the WorldObject client returning one of several possible failure cases (also make these more
+  human-readable)
+  */
+
   // THEN we send one MutateWorldObjectRequest
   // AND the request adds a new object
   // AND the new object's name matches the frame ID from the external source
