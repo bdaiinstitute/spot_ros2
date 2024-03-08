@@ -114,7 +114,7 @@ def slice_trajectory(trajectory: Any, index: int, batch_size: int) -> bool:
 
 
 def batch_command(
-    command: robot_command_pb2.RobotCommand, batch_size: int, overlapping_points=0
+    command: robot_command_pb2.RobotCommand, batch_size: int, overlapping_points: int = 0
 ) -> List[robot_command_pb2.RobotCommand]:
     """
     Analyze the trajectories inside the given command and if they require
