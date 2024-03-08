@@ -2,6 +2,7 @@
 
 #include <spot_driver/api/default_world_object_client.hpp>
 
+#include <bosdyn/api/world_object.pb.h>
 #include <bosdyn/client/world_objects/world_object_client.h>
 #include <tl_expected/expected.hpp>
 

@@ -1,5 +1,7 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <spot_driver/object_sync/object_synchronizer.hpp>
+
 #include <bosdyn/api/world_object.pb.h>
 #include <bosdyn/math/frame_helpers.h>
 #include <algorithm>
@@ -14,7 +16,6 @@
 #include <spot_driver/conversions/robot_state.hpp>
 #include <spot_driver/conversions/time.hpp>
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
-#include <spot_driver/object_sync/object_synchronizer.hpp>
 #include <spot_driver/types.hpp>
 #include <string>
 #include <tl_expected/expected.hpp>
@@ -84,18 +85,33 @@ inline const std::set<std::string> kSpotInternalFrames{
     "arm0.link_wr1",
 };
 
+/**
+ * @brief Given an input string and a prefix string which is a substring starting at the beginning of the input string,
+ * return a new string which is the difference between the input string and the prefix string.
+ * @param input
+ * @param prefix
+ * @return A new string which is the difference between the input string and the prefix string.
+ */
 std::string stripPrefix(const std::string& input, const std::string& prefix) {
   const std::size_t prefix_index = input.find(prefix);
   if (prefix_index == std::string::npos) {
+    // The input does not contain the prefix
     return input;
   }
   if (prefix_index > 0) {
+    // The input does contain the prefix substring, but it does not begin at the start of the input.
+    // Return the unmodified input.
     return input;
   }
 
   return input.substr(prefix.size());
 }
 
+/**
+ * @brief Create string messages corresponding to the values of the ValidateFrameTreeSnapshotStatus enum.
+ * @param status Enum to convert.
+ * @return The string corresponding to the enum.
+ */
 std::string toString(const ::bosdyn::api::ValidateFrameTreeSnapshotStatus& status) {
   using Status = ::bosdyn::api::ValidateFrameTreeSnapshotStatus;
   switch (status) {
@@ -116,25 +132,70 @@ std::string toString(const ::bosdyn::api::ValidateFrameTreeSnapshotStatus& statu
   }
 }
 
+/**
+ * @brief Create string messages corresponding to the values of the MutateWorldObjectResponse_Status enum.
+ * @param status Enum to convert.
+ * @return The string corresponding to the enum.
+ */
+std::string toString(const ::bosdyn::api::MutateWorldObjectResponse_Status& status) {
+  using Status = ::bosdyn::api::MutateWorldObjectResponse_Status;
+  switch (status) {
+    case Status::MutateWorldObjectResponse_Status_STATUS_INVALID_MUTATION_ID:
+      return "INVALID_MUTATION_ID";
+    case Status::MutateWorldObjectResponse_Status_STATUS_INVALID_WORLD_OBJECT:
+      return "INVALID_WORLD_OBJECT";
+    case Status::MutateWorldObjectResponse_Status_STATUS_NO_PERMISSION:
+      return "NO_PERMISSION";
+    case Status::MutateWorldObjectResponse_Status_STATUS_OK:
+      return "OK";
+    case Status::MutateWorldObjectResponse_Status_STATUS_UNKNOWN:
+      return "UNKNOWN";
+    default:
+      return "Unknown status code";
+  }
+}
+
+/**
+ * @brief Create a ListWorldObjectRequest that requests world objects of all the types that ObjectSynchronizer should
+ * not modify.
+ * @details While Spot's MutateWorldObject service will reject requests to modify objects that were added by other
+ * entities, we filter out these non-mutable world objects beforehand to prevent sending mutation requests that are
+ * destined to fail. The only WorldObject type which ObjectSynchronizer adds or modifies is the Drawable type.
+ *
+ * @return Request for info about WorldObjects which ObjectSynchronizer should not modify.
+ */
 ::bosdyn::api::ListWorldObjectRequest createNonMutableObjectsRequest() {
   using Type = ::bosdyn::api::WorldObjectType;
   ::bosdyn::api::ListWorldObjectRequest request;
   request.add_object_type(Type::WORLD_OBJECT_APRILTAG);
   request.add_object_type(Type::WORLD_OBJECT_DOCK);
-  request.add_object_type(Type::WORLD_OBJECT_DRAWABLE);
   request.add_object_type(Type::WORLD_OBJECT_IMAGE_COORDINATES);
   request.add_object_type(Type::WORLD_OBJECT_STAIRCASE);
   request.add_object_type(Type::WORLD_OBJECT_USER_NOGO);
-  return request;
-}
-
-::bosdyn::api::ListWorldObjectRequest createMutableObjectsRequest() {
-  using Type = ::bosdyn::api::WorldObjectType;
-  ::bosdyn::api::ListWorldObjectRequest request;
   request.add_object_type(Type::WORLD_OBJECT_UNKNOWN);
   return request;
 }
 
+/**
+ * @brief Create a ListWorldObjectRequest that requests world objects of all the types that ObjectSynchronizer
+ * maymodify.
+ * @details Currently the only valid type of object is the Drawable object type.
+ * @return Request for info about WorldObjects which ObjectSynchronizer may modify.
+ */
+::bosdyn::api::ListWorldObjectRequest createMutableObjectsRequest() {
+  using Type = ::bosdyn::api::WorldObjectType;
+  ::bosdyn::api::ListWorldObjectRequest request;
+  request.add_object_type(Type::WORLD_OBJECT_DRAWABLE);
+  return request;
+}
+
+/**
+ * @brief Given a ListWorldObjectResponse message, create a list of all the frames listed in the transform snapshots
+ * those objects.
+ *
+ * @param list_objects_response Input message to parse.
+ * @return A set of all frame IDs which are listed in the transform snapshots of the input objects.
+ */
 std::set<std::string> getObjectFrames(const ::bosdyn::api::ListWorldObjectResponse& list_objects_response) {
   std::set<std::string> frames;
   for (const auto& object : list_objects_response.world_objects()) {
@@ -148,6 +209,12 @@ std::set<std::string> getObjectFrames(const ::bosdyn::api::ListWorldObjectRespon
   return frames;
 }
 
+/**
+ * @brief Given a ListWorldObjectResponse message, create a list of the names of these objects.
+ *
+ * @param list_objects_response Input message to parse.
+ * @return A set of all object names listed in the input.
+ */
 std::set<std::string> getObjectNames(const ::bosdyn::api::ListWorldObjectResponse& list_objects_response) {
   std::set<std::string> names;
   for (const auto& object : list_objects_response.world_objects()) {
@@ -156,11 +223,25 @@ std::set<std::string> getObjectNames(const ::bosdyn::api::ListWorldObjectRespons
   return names;
 }
 
+/**
+ * @brief Represents the possible mutation operations which ObjectSynchronizer can perform.
+ * @details This exists because the Spot API's MutateWorldObjectRequest_Action enum has several fields which are not
+ * used by ObjectSynchronizer.
+ */
 enum class MutationOperation {
   ADD,
   CHANGE,
 };
-
+/**
+ * @brief Create a MutateWorldObjectRequest which adds or modifies a WorldObject corresponding to a TF frame.
+ *
+ * @param base_tform_child
+ * @param preferred_base_frame
+ * @param child_frame_id_no_prefix
+ * @param clock_skew
+ * @param operation
+ * @return ::bosdyn::api::MutateWorldObjectRequest
+ */
 ::bosdyn::api::MutateWorldObjectRequest createMutationRequest(
     const geometry_msgs::msg::TransformStamped& base_tform_child, const std::string& preferred_base_frame,
     const std::string& child_frame_id_no_prefix, const google::protobuf::Duration& clock_skew,
@@ -171,8 +252,14 @@ enum class MutationOperation {
   *request.mutable_mutation()->mutable_object()->mutable_acquisition_time() = request.header().request_timestamp();
 
   auto* object = request.mutable_mutation()->mutable_object();
-  spot_ros2::convertToProto(base_tform_child.header.stamp, *object->mutable_acquisition_time());
+  object->mutable_acquisition_time()->CopyFrom(request.header().request_timestamp());
+
   *object->mutable_name() = child_frame_id_no_prefix;
+  // object->set_id(97);
+
+  auto* properties = object->mutable_drawable_properties()->Add();
+  properties->mutable_frame()->set_arrow_length(0.1);
+  properties->mutable_frame()->set_arrow_radius(0.01);
 
   ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
   *edge.mutable_parent_frame_name() = preferred_base_frame;
@@ -202,13 +289,15 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                        std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                                       std::unique_ptr<TimerInterfaceBase> timer_interface)
+                                       std::unique_ptr<TimerInterfaceBase> timer_interface,
+                                       std::unique_ptr<ClockInterfaceBase> clock_interface)
     : world_object_client_interface_{world_object_client_interface},
       time_sync_interface_{time_sync_api},
       parameter_interface_{std::move(parameter_interface)},
       logger_interface_{std::move(logger_interface)},
       tf_listener_interface_{std::move(tf_listener_interface)},
-      timer_interface_{std::move(timer_interface)} {
+      timer_interface_{std::move(timer_interface)},
+      clock_interface_{std::move(clock_interface)} {
   const auto spot_name = parameter_interface_->getSpotName();
   frame_prefix_ = spot_name.empty() ? "" : spot_name + "/";
 
@@ -218,12 +307,11 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
                                           : preferred_base_frame_;
 
   timer_interface_->setTimer(kTfSyncPeriod, [this]() {
-    // listWorldObjectsCallback();
-    onTimer();
+    syncWorldObjects();
   });
 }
 
-void ObjectSynchronizer::onTimer() {
+void ObjectSynchronizer::syncWorldObjects() {
   if (!world_object_client_interface_) {
     logger_interface_->logError("World object interface not initialized.");
     return;
@@ -275,17 +363,22 @@ void ObjectSynchronizer::onTimer() {
     // Skip frames which are internal to Spot or which are from objects which we cannot mutate
     if (kSpotInternalFrames.count(child_frame_id_no_prefix) > 0 ||
         non_mutable_frames.count(child_frame_id_no_prefix) > 0) {
+      logger_interface_->logInfo("Frame " + child_frame_id_no_prefix + " is internal or non-mutable.");
       continue;
     }
 
     // Get the transform from the preferred base frame to the current TF frame
-    const auto base_tform_child =
+    auto base_tform_child =
         tf_listener_interface_->lookupTransform(preferred_base_frame_with_prefix_, child_frame_id, rclcpp::Time{0, 0},
                                                 rclcpp::Duration{std::chrono::nanoseconds{0}});
     if (!base_tform_child) {
       logger_interface_->logWarn(base_tform_child.error());
       continue;
     }
+
+    base_tform_child.value().header.stamp = clock_interface_->now();
+
+    logger_interface_->logInfo("timestamp: " + std::to_string(base_tform_child.value().header.stamp.sec));
 
     // Create a request to add or modify a WorldObject.
     // The transform snapshot of this WorldObject will contain a single transfrom from the preferred base frame to the
@@ -304,31 +397,22 @@ void ObjectSynchronizer::onTimer() {
       continue;
     }
 
+    logger_interface_->logInfo(std::string(operation == MutationOperation::ADD ? "Adding new" : "Modifying existing") +
+                               " object for frame " + child_frame_id_no_prefix);
+
     // Send the request to the API's client interface to add the object in Spot's environment.
     const auto response = world_object_client_interface_->mutateWorldObject(request);
     if (!response) {
       logger_interface_->logWarn(std::string("Failed to modify world object: ").append(response.error()));
       continue;
     }
-  }
-}
+    logger_interface_->logInfo(
+        std::string("Response after modifying world object: ").append(toString(response->status())));
 
-void ObjectSynchronizer::listWorldObjectsCallback() {
-  ::bosdyn::api::ListWorldObjectRequest request;
-  request.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_APRILTAG);
-  request.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_DOCK);
-  request.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_DRAWABLE);
-  request.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_IMAGE_COORDINATES);
-  request.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_STAIRCASE);
-  request.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_USER_NOGO);
-  request.add_object_type(::bosdyn::api::WorldObjectType::WORLD_OBJECT_UNKNOWN);
-  const auto response = world_object_client_interface_->listWorldObjects(request);
-  if (!response) {
-    logger_interface_->logError("Failed to list objects.");
-    return;
-  }
-  for (const auto& object : response->world_objects()) {
-    logger_interface_->logInfo("There is a world object named " + object.name());
+    if (response->status() != ::bosdyn::api::MutateWorldObjectResponse::STATUS_OK) {
+      logger_interface_->logWarn(std::string("Failed to modify world object: ").append(toString(response->status())));
+      continue;
+    }
   }
 }
 }  // namespace spot_ros2

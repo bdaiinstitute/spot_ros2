@@ -29,6 +29,7 @@
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <tl_expected/expected.hpp>
 #include <utility>
+#include "spot_driver/mock/mock_clock_interface.hpp"
 
 namespace {
 using ::testing::_;
@@ -46,6 +47,7 @@ using ::testing::Return;
 using ::testing::StrEq;
 using ::testing::UnorderedElementsAre;
 using ::testing::Unused;
+using ::testing::Value;
 
 MATCHER(MutationAddsObject, "") {
   return ExplainMatchResult(Eq(arg.mutation().action()),
@@ -67,6 +69,14 @@ MATCHER_P2(MutationTransformChildAndParentFramesAre, child_frame_name, base_fram
   return testing::ExplainMatchResult(UnorderedElementsAre(Key(child_frame_name), Key(base_frame_name)),
                                      arg.mutation().object().transforms_snapshot().child_to_parent_edge_map(),
                                      result_listener);
+}
+
+MATCHER(MutationFrameTreeSnapshotIsValid, "") {
+  return ::bosdyn::api::ValidateFrameTreeSnapshot(arg.mutation().object().transforms_snapshot()) ==
+         ::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID;
+  // return
+  // testing::ExplainMatchResult(Value(::bosdyn::api::ValidateFrameTreeSnapshot(arg.mutation().object().transforms_snapshot()),
+  // Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID)), result_listener);
 }
 
 // MATCHER_P(SE3PoseEq, pose, "")
@@ -100,6 +110,7 @@ class ObjectSynchronizerTest : public ::testing::Test {
     mock_tf_interface = std::make_unique<MockTfInterface>();
     mock_tf_listener_interface = std::make_unique<MockTfListenerInterface>();
     mock_timer_interface = std::make_unique<MockTimerInterface>();
+    mock_clock_interface = std::make_unique<MockClockInterface>();
     mock_world_object_client = std::make_shared<MockWorldObjectClient>();
     mock_time_sync_api = std::make_shared<MockTimeSyncApi>();
   }
@@ -107,7 +118,8 @@ class ObjectSynchronizerTest : public ::testing::Test {
   void createObjectSynchronizer() {
     object_synchronizer = std::make_unique<ObjectSynchronizer>(
         mock_world_object_client, mock_time_sync_api, std::move(fake_parameter_interface),
-        std::move(mock_logger_interface), std::move(mock_tf_listener_interface), std::move(mock_timer_interface));
+        std::move(mock_logger_interface), std::move(mock_tf_listener_interface), std::move(mock_timer_interface),
+        std::move(mock_clock_interface));
   }
 
   void setInternalTimerCallback() const {
@@ -123,6 +135,8 @@ class ObjectSynchronizerTest : public ::testing::Test {
   std::unique_ptr<MockTfInterface> mock_tf_interface;
   std::unique_ptr<MockTfListenerInterface> mock_tf_listener_interface;
   std::unique_ptr<MockTimerInterface> mock_timer_interface;
+  std::unique_ptr<MockClockInterface> mock_clock_interface;
+
   std::shared_ptr<MockWorldObjectClient> mock_world_object_client;
   std::shared_ptr<MockTimeSyncApi> mock_time_sync_api;
   std::unique_ptr<ObjectSynchronizer> object_synchronizer;
@@ -172,8 +186,12 @@ TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
   // THEN we send one MutateWorldObjectRequest
   // AND the request adds a new object
   // AND the new object's name matches the frame ID from the external source
+  // AND the new object's frame tree snapshot is valid
+  // AND the new object's frame tree snapshot adds a transform from the base frame to the new frame ID
   EXPECT_CALL(*world_object_client_interface_ptr,
-              mutateWorldObject(AllOf(MutationAddsObject(), MutationTargetsObjectWhoseNameIs(kExternalFrameId))))
+              mutateWorldObject(AllOf(MutationAddsObject(), MutationTargetsObjectWhoseNameIs(kExternalFrameId),
+                                      MutationFrameTreeSnapshotIsValid(),
+                                      MutationTransformChildAndParentFramesAre("odom", kExternalFrameId))))
       .Times(1);
 
   // GIVEN the ObjectSynchronizer has been created
@@ -223,6 +241,8 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   // THEN we send one MutateWorldObjectRequest
   // AND the request adds a new object
   // AND the new object's name matches the frame ID from the external source
+  // AND the new object's frame tree snapshot is valid
+  // AND the new object's frame tree snapshot adds a transform from the base frame to the new frame ID
   ::bosdyn::api::SE3Pose pose;
   pose.mutable_position()->set_x(1.0);
   pose.mutable_position()->set_y(2.0);
@@ -234,6 +254,7 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   EXPECT_CALL(*world_object_client_interface_ptr,
               mutateWorldObject(AllOf(MutationChangesObject(), MutationTargetsObjectWhoseNameIs(kExternalFrameId),
                                       // MutationObjectTransformSnapshotContains(pose)
+                                      MutationFrameTreeSnapshotIsValid(),
                                       MutationTransformChildAndParentFramesAre("odom", kExternalFrameId))))
       .Times(1);
 
