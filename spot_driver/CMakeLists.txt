@@ -50,6 +50,7 @@ add_library(spot_api
   src/images/spot_image_publisher.cpp
   src/images/images_middleware_handle.cpp
   src/images/spot_image_publisher_node.cpp
+  src/interfaces/rclcpp_clock_interface.cpp
   src/interfaces/rclcpp_logger_interface.cpp
   src/interfaces/rclcpp_node_interface.cpp
   src/interfaces/rclcpp_parameter_interface.cpp

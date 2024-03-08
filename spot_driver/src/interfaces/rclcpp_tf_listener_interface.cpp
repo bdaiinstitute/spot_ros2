@@ -20,7 +20,8 @@ tl::expected<geometry_msgs::msg::TransformStamped, std::string> RclcppTfListener
     const std::string& parent, const std::string& child, const rclcpp::Time& timepoint,
     const rclcpp::Duration& timeout) const {
   try {
-    return buffer_.lookupTransform(child, parent, timepoint, timeout);
+    return buffer_.lookupTransform(child, parent, tf2::TimePointZero);
+    // return buffer_.lookupTransform(child, parent, timepoint, timeout);
   } catch (const tf2::LookupException& e) {
     return tl::make_unexpected(e.what());
   } catch (const tf2::ConnectivityException& e) {
