@@ -113,7 +113,9 @@ def slice_trajectory(trajectory: Any, index: int, batch_size: int) -> bool:
     return is_last_batch
 
 
-def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> List[robot_command_pb2.RobotCommand]:
+def batch_command(
+    command: robot_command_pb2.RobotCommand, batch_size: int, overlapping_points=0
+) -> List[robot_command_pb2.RobotCommand]:
     """
     Analyze the trajectories inside the given command and if they require
     batching, then return an equivalent sequence of commands.
@@ -121,6 +123,8 @@ def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> L
     Args:
         command: A robot command with some trajectories.
         batch_size: A batch size
+        overlapping_points: Number of points that must overlap between batched
+            trajectories.
 
     Returns:
         If no trajectory is longer than the given batch size, then returns
@@ -131,6 +135,11 @@ def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> L
     """
 
     if not is_batch_required(command, batch_size):
+        return [command]
+
+    # This is the increment to find the position of the next batch.
+    stride = batch_size - overlapping_points
+    if stride < 1:
         return [command]
 
     index = 0
@@ -147,24 +156,24 @@ def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> L
             if new_command.synchronized_command.HasField("mobility_command"):
                 mobility_request = new_command.synchronized_command.mobility_command
                 trajectory = mobility_request.se2_trajectory_request.trajectory
-                is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+                is_last_batch = slice_trajectory(trajectory, index, batch_size) and is_last_batch
             if new_command.synchronized_command.HasField("arm_command"):
                 arm_request = new_command.synchronized_command.arm_command
                 if arm_request.HasField("arm_cartesian_command"):
                     trajectory = arm_request.arm_cartesian_command.pose_trajectory_in_task
-                    is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+                    is_last_batch = slice_trajectory(trajectory, index, batch_size) and is_last_batch
                 elif arm_request.HasField("arm_joint_move_command"):
                     trajectory = arm_request.arm_joint_move_command.trajectory
-                    is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+                    is_last_batch = slice_trajectory(trajectory, index, batch_size) and is_last_batch
                 elif arm_request.HasField("arm_impedance_command"):
                     trajectory = arm_request.arm_impedance_command.task_tform_desired_tool
-                    is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+                    is_last_batch = slice_trajectory(trajectory, index, batch_size) and is_last_batch
             if new_command.synchronized_command.HasField("gripper_command"):
                 gripper_request = new_command.synchronized_command.gripper_command
                 trajectory = gripper_request.claw_gripper_command.trajectory
-                is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+                is_last_batch = slice_trajectory(trajectory, index, batch_size) and is_last_batch
 
         commands.append(new_command)
-        index += batch_size
+        index += stride
 
     return commands
