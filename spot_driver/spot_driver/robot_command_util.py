@@ -1,0 +1,170 @@
+# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
+
+"""
+Utility class with methods to manipulate robot commands.
+"""
+
+# We disable Pylint warnings for all Protobuf files because they contain objects
+# with dynamically added members.
+# pylint: disable=no-member
+
+from typing import Any, List
+
+from bosdyn.api import robot_command_pb2
+from bosdyn.util import duration_to_seconds
+
+
+def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int) -> bool:
+    """
+    This method returns true if the given command contains trajectories that
+    can be batched, false otherwise. To be batched, the command must contain
+    only one trajectory longer than the batch size or multiple trajectories
+    that are also time aligned.
+
+    Args:
+    command: A robot command with some trajectories.
+    batch_size: A batch size
+
+    Returns:
+        If the command has no trajectory is longer than the given batch size,
+        then returns false.
+        If the command has one trajectory longer than the given batch size, or
+        multiple trajectories which are also time aligned, then return true.
+    """
+
+    # Find all trajectories that require batching.
+
+    long_trajectories = []
+
+    if command.HasField("synchronized_command"):
+        if command.synchronized_command.HasField("mobility_command"):
+            mobility_request = command.synchronized_command.mobility_command
+            trajectory = mobility_request.se2_trajectory_request.trajectory
+            if len(trajectory.points) > batch_size:
+                long_trajectories.append(trajectory.points)
+        if command.synchronized_command.HasField("arm_command"):
+            arm_request = command.synchronized_command.arm_command
+            if arm_request.HasField("arm_cartesian_command"):
+                trajectory = arm_request.arm_cartesian_command.pose_trajectory_in_task
+                if len(trajectory.points) > batch_size:
+                    long_trajectories.append(trajectory.points)
+            elif arm_request.HasField("arm_joint_move_command"):
+                trajectory = arm_request.arm_joint_move_command.trajectory
+                if len(trajectory.points) > batch_size:
+                    long_trajectories.append(trajectory.points)
+            elif arm_request.HasField("arm_impedance_command"):
+                trajectory = arm_request.arm_impedance_command.task_tform_desired_tool
+                if len(trajectory.points) > batch_size:
+                    long_trajectories.append(trajectory.points)
+        if command.synchronized_command.HasField("gripper_command"):
+            gripper_request = command.synchronized_command.gripper_command
+            trajectory = gripper_request.claw_gripper_command.trajectory
+            if len(trajectory.points) > batch_size:
+                long_trajectories.append(trajectory.points)
+
+    long_trajectories_count = len(long_trajectories)
+
+    # No trajectory to batch.
+    if long_trajectories_count < 1:
+        return False
+
+    # One trajectory to batch.
+    if long_trajectories_count == 1:
+        return True
+
+    # There is more than one trajectory longer than the batch size.
+
+    # Check that all long trajectories have the same size.
+    long_trajectory_size = len(long_trajectories[0])
+    same_size = all(len(trajectory) == long_trajectory_size for trajectory in long_trajectories)
+    if not same_size:
+        return False
+
+    # Check that all long trajectories to are all time aligned.
+    for i in range(long_trajectory_size):
+        time_since_reference = duration_to_seconds(long_trajectories[0][i].time_since_reference)
+        for j in range(1, len(long_trajectories)):
+            if not duration_to_seconds(long_trajectories[j][i].time_since_reference) == time_since_reference:
+                return False
+
+    return True
+
+
+def slice_trajectory(trajectory: Any, index: int, batch_size: int) -> bool:
+    """
+    This command expects a trajectory protobuf message containing a repeated
+    field "points" that we want to slice.
+
+    Args:
+        trajectory: A protobuf message containing a repeated field "points" that we want to slice.
+        index: The position to slice the field from.
+        batch_size: The length of the slice.
+
+    Returns:
+        True if the last batch has been extracted.
+
+    """
+    is_last_batch = True
+    batch = trajectory.points[index : index + batch_size]
+    if len(trajectory.points) - len(batch) - index > 0:
+        is_last_batch = False
+    trajectory.ClearField("points")
+    trajectory.points.extend(batch)
+    return is_last_batch
+
+
+def batch_command(command: robot_command_pb2.RobotCommand, batch_size: int) -> List[robot_command_pb2.RobotCommand]:
+    """
+    Analyze the trajectories inside the given command and if they require
+    batching, then return an equivalent sequence of commands.
+
+    Args:
+        command: A robot command with some trajectories.
+        batch_size: A batch size
+
+    Returns:
+        If no trajectory is longer than the given batch size, then returns
+        an array containing the same robot command.
+        If it contains one trajectory longer than the given batch size, or
+        multiple trajectories which are also time aligned, then return an
+        array of robot commands, each of them representing a batch.
+    """
+
+    if not is_batch_required(command, batch_size):
+        return [command]
+
+    index = 0
+    commands: List[robot_command_pb2.RobotCommand] = []
+
+    is_last_batch = False
+    while not is_last_batch:
+        is_last_batch = True
+
+        new_command = robot_command_pb2.RobotCommand()
+        new_command.CopyFrom(command)
+
+        if new_command.HasField("synchronized_command"):
+            if new_command.synchronized_command.HasField("mobility_command"):
+                mobility_request = new_command.synchronized_command.mobility_command
+                trajectory = mobility_request.se2_trajectory_request.trajectory
+                is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+            if new_command.synchronized_command.HasField("arm_command"):
+                arm_request = new_command.synchronized_command.arm_command
+                if arm_request.HasField("arm_cartesian_command"):
+                    trajectory = arm_request.arm_cartesian_command.pose_trajectory_in_task
+                    is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+                elif arm_request.HasField("arm_joint_move_command"):
+                    trajectory = arm_request.arm_joint_move_command.trajectory
+                    is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+                elif arm_request.HasField("arm_impedance_command"):
+                    trajectory = arm_request.arm_impedance_command.task_tform_desired_tool
+                    is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+            if new_command.synchronized_command.HasField("gripper_command"):
+                gripper_request = new_command.synchronized_command.gripper_command
+                trajectory = gripper_request.claw_gripper_command.trajectory
+                is_last_batch = is_last_batch and slice_trajectory(trajectory, index, batch_size)
+
+        commands.append(new_command)
+        index += batch_size
+
+    return commands
