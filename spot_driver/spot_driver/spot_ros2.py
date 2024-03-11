@@ -14,11 +14,11 @@ from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import bdai_ros2_wrappers.process as ros_process
-from bdai_ros2_wrappers.executors import AutoScalingMultiThreadedExecutor, foreground
 import builtin_interfaces.msg
 import rclpy
 import rclpy.time
 import tf2_ros
+from bdai_ros2_wrappers.executors import AutoScalingMultiThreadedExecutor, foreground
 from bdai_ros2_wrappers.node import Node
 from bdai_ros2_wrappers.single_goal_action_server import (
     SingleGoalActionServer,
@@ -2812,9 +2812,10 @@ def main(args: Optional[List[str]] = None) -> None:
                 pass
             finally:
                 print("Shutting down spot_ros2 . . . ")
-                main.node.destroy_node() 
+                main.node.destroy_node()
                 main.executor.shutdown()
                 rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
