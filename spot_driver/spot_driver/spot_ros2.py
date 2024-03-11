@@ -2812,8 +2812,6 @@ def main(args: Optional[List[str]] = None) -> None:
                 pass
             finally:
                 print("Shutting down spot_ros2 . . . ")
-                main.node.stop()
-                main.node.node_rate.sleep()
                 main.node.destroy_node() 
                 main.executor.shutdown()
                 rclpy.shutdown()
