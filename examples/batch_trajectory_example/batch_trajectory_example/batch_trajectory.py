@@ -18,6 +18,7 @@ from typing import Callable, Optional, Tuple
 
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
+from bdai_ros2_wrappers.action_client import ActionClientWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api import (
     arm_command_pb2,
@@ -29,13 +30,16 @@ from bosdyn.api import (
     trajectory_pb2,
 )
 from bosdyn.client.frame_helpers import (
-    GRAV_ALIGNED_BODY_FRAME_NAME,
-    GROUND_PLANE_FRAME_NAME,
     ODOM_FRAME_NAME,
 )
 from bosdyn.client.math_helpers import Quat, SE3Pose, SE3Velocity
+from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 from rclpy.node import Node
+from utilities.simple_spot_commander import SimpleSpotCommander
+
+import spot_driver.conversions as conv
+from spot_msgs.action import RobotCommand  # type: ignore
 
 ###############################################################################
 # CONTINUOUS TRAJECTORIES
@@ -99,6 +103,7 @@ def _discrete_trajectory_3d(
 
 
 def _build_sample_command(
+    robot_name: str,
     hand_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
     mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None,
     gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None,
@@ -115,13 +120,15 @@ def _build_sample_command(
         A robot command with any of the given optional trajectory.
     """
 
+    odom_frame_name = namespace_with(robot_name, ODOM_FRAME_NAME)
+
     # Build an Arm request.
 
     arm_request = None
     if hand_trajectory is not None:
-        frame_name = "body"
         arm_cartesian_command = arm_command_pb2.ArmCartesianCommand.Request(
-            root_frame_name=frame_name, pose_trajectory_in_task=hand_trajectory
+            root_frame_name=odom_frame_name,
+            pose_trajectory_in_task=hand_trajectory,
         )
         arm_request = arm_command_pb2.ArmCommand.Request(arm_cartesian_command=arm_cartesian_command)
 
@@ -148,14 +155,43 @@ def _build_sample_command(
     return command
 
 
+###############################################################################
+# TEST RUNNER
+# This class claims the robot, set it up for the test and executes the test.
+
+
 class SpotRunner:
     """
-    This example show how to query for IK solutions and move
-    the robot arm to that solution.
+    This example show how send a long trajectory.
     """
 
     def __init__(self, node: Node, args: argparse.Namespace):
-        pass
+        self._node = node
+        self._robot_name: str = args.robot
+        self._logger = node.get_logger()
+        self._robot = SimpleSpotCommander(self._robot_name)
+
+        self._robot_command_client = ActionClientWrapper(
+            RobotCommand, namespace_with(self._robot_name, "robot_command"), node
+        )
+
+    def _ready_arm(self) -> bool:
+        """
+        Unstow the robot arm.
+        """
+        command = RobotCommandBuilder.arm_ready_command()
+        action_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        return self._robot_command_client.send_goal_and_wait("ready_arm", action_goal)
+
+    def _arm_stow(self) -> bool:
+        """
+        Stow the robot arm.
+        """
+        command = RobotCommandBuilder.arm_stow_command()
+        action_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        return self._robot_command_client.send_goal_and_wait("arm_stow", action_goal)
 
     def test_run(self) -> bool:
         """
@@ -164,14 +200,56 @@ class SpotRunner:
             True the process runs without errors, False otherwise.
         """
 
-        # Frame names.
-        odom_frame_name = namespace_with(self._robot_name, ODOM_FRAME_NAME)
-        flat_body_frame_name = namespace_with(self._robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)
-        ground_plane_frame_name = namespace_with(self._robot_name, GROUND_PLANE_FRAME_NAME)
+        # Claim robot.
+        self._logger.info("Claiming robot")
+        result = self._robot.command("claim")
+        if not result:
+            self._logger.error("Unable to claim robot")
+            return False
+        self._logger.info("Claimed robot")
 
-        task_frame_name = namespace_with(self._robot_name, "task_frame")
-        link_wr1_frame_name = namespace_with(self._robot_name, "link_wr1")
-        jaw_frame_name = namespace_with(self._robot_name, "jaw_frame")
+        # Power on robot.
+        self._logger.info("Powering robot on")
+        result = self._robot.command("power_on")
+        if not result:
+            self._logger.error("Unable to power on robot")
+            return False
+
+        # Stand up robot.
+        self._logger.info("Standing robot up")
+        result = self._robot.command("stand")
+        if not result:
+            self._logger.error("Robot did not stand")
+            return False
+        self._logger.info("Successfully stood up.")
+
+        # Unstow the arm.
+        self._logger.info("Unstow the arm")
+        result = self._ready_arm()
+        if not result:
+            self._logger.error("Failed to unstow the arm.")
+            return False
+        self._logger.info("Arm ready.")
+
+        # Arm command.
+
+        hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+            duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+        )
+        command = _build_sample_command(robot_name=self._robot_name, hand_trajectory=hand_trajectory)
+        action_goal = RobotCommand.Goal()
+        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        self._robot_command_client.send_goal_and_wait("arm_move_one", goal=action_goal, timeout_sec=5)
+
+        # Stow the arm.
+        self._logger.info("Stow the arm")
+        result = self._arm_stow()
+        if not result:
+            self._logger.error("Failed to stow the arm.")
+            return False
+        self._logger.info("Arm stowed.")
+
+        return True
 
 
 def cli() -> argparse.ArgumentParser:
