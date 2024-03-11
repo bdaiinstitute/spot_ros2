@@ -14,6 +14,7 @@ from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import bdai_ros2_wrappers.process as ros_process
+from bdai_ros2_wrappers.executors import AutoScalingMultiThreadedExecutor, foreground
 import builtin_interfaces.msg
 import rclpy
 import rclpy.time
@@ -2794,17 +2795,28 @@ class SpotROS(Node):
 
     def destroy_node(self) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
-        if self.spot_wrapper is not None:
-            self.spot_wrapper.sit()
+        self.node_rate.sleep()
         if self.spot_wrapper is not None:
             self.spot_wrapper.disconnect()
+            self.node_rate.sleep()
         super().destroy_node()
 
 
 @ros_process.main(prebaked=False)
 def main(args: Optional[List[str]] = None) -> None:
-    ros_process.spin(SpotROS)
-
+    with foreground(AutoScalingMultiThreadedExecutor()) as main.executor:
+        with ros_process.managed(SpotROS) as main.node:
+            try:
+                main.executor.spin()
+            except KeyboardInterrupt:
+                pass
+            finally:
+                print("Shutting down spot_ros2 . . . ")
+                main.node.stop()
+                main.node.node_rate.sleep()
+                main.node.destroy_node() 
+                main.executor.shutdown()
+                rclpy.shutdown()
 
 if __name__ == "__main__":
     main()
