@@ -28,9 +28,13 @@ from bosdyn.api import (
     robot_command_pb2,
     synchronized_command_pb2,
     trajectory_pb2,
+    geometry_pb2,
 )
 from bosdyn.client.frame_helpers import (
+    GRAV_ALIGNED_BODY_FRAME_NAME,
+    GROUND_PLANE_FRAME_NAME,
     ODOM_FRAME_NAME,
+    get_a_tform_b,
 )
 from bosdyn.client.math_helpers import Quat, SE3Pose, SE3Velocity
 from bosdyn.client.robot_command import RobotCommandBuilder
@@ -38,6 +42,7 @@ from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
 from utilities.simple_spot_commander import SimpleSpotCommander
+from utilities.tf_listener_wrapper import TFListenerWrapper
 
 from spot_msgs.action import RobotCommand  # type: ignore
 
@@ -103,7 +108,9 @@ def _discrete_trajectory_3d(
 
 
 def _build_sample_command(
-    robot_name: str,
+    root_frame_name: str,
+    wrist_tform_tool: geometry_pb2.SE3Pose,
+    root_tform_task: geometry_pb2.SE3Pose,
     hand_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
     mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None,
     gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None,
@@ -120,15 +127,15 @@ def _build_sample_command(
         A robot command with any of the given optional trajectory.
     """
 
-    odom_frame_name = namespace_with(robot_name, ODOM_FRAME_NAME)
-
     # Build an Arm request.
 
     arm_request = None
     if hand_trajectory is not None:
         arm_cartesian_command = arm_command_pb2.ArmCartesianCommand.Request(
-            root_frame_name=odom_frame_name,
+            root_frame_name=root_frame_name,
             pose_trajectory_in_task=hand_trajectory,
+            wrist_tform_tool=wrist_tform_tool,
+            root_tform_task=root_tform_task,
         )
         arm_request = arm_command_pb2.ArmCommand.Request(arm_cartesian_command=arm_cartesian_command)
 
@@ -200,6 +207,11 @@ class SpotRunner:
             True the process runs without errors, False otherwise.
         """
 
+        odom_frame_name = namespace_with(self._robot_name, ODOM_FRAME_NAME)
+        grav_body_frame_name = namespace_with(self._robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)
+        tf_listener = TFListenerWrapper(self._node)
+        tf_listener.wait_for_a_tform_b(odom_frame_name, grav_body_frame_name)
+
         # Claim robot.
         self._logger.info("Claiming robot")
         result = self._robot.command("claim")
@@ -233,13 +245,34 @@ class SpotRunner:
 
         # Arm command.
 
+        # Create a task frame. This will be the frame the trajectory is defined relative to.
+        # In this example, that is the center of the circle.
+        # The frame at the center of the circle is one that is 90cm in front of the robot,
+        # with z pointing back at the robot, x off the right side of the robot, and y up
+        grav_body_T_task = SE3Pose(x=0.9, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
+
+        # Now, get the transform between the "odometry" frame and the gravity aligned body frame.
+        # This will be used in conjunction with the grav_body_T_task frame to get the
+        # transformation between the odometry frame and the task frame. In order to get
+        # odom_T_grav_body we use a snapshot of the frame tree. For more information on the frame
+        # tree, see https://dev.bostondynamics.com/docs/concepts/geometry_and_frames
+        odom_T_grav_body = tf_listener.lookup_a_tform_b(odom_frame_name, grav_body_frame_name)
+
+        odom_T_task = odom_T_grav_body * grav_body_T_task
+        wrist_tform_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
+
         hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-            duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+            duration=10, dt=0.5, trajectory_function=_continuous_trajectory_3d
         )
-        command = _build_sample_command(robot_name=self._robot_name, hand_trajectory=hand_trajectory)
+        command = _build_sample_command(
+            root_frame_name=odom_frame_name,
+            root_tform_task=odom_T_task.to_proto(),
+            wrist_tform_tool=wrist_tform_tool.to_proto(),
+            hand_trajectory=hand_trajectory,
+        )
         action_goal = RobotCommand.Goal()
         convert(command, action_goal.command)
-        self._robot_command_client.send_goal_and_wait("arm_move_one", goal=action_goal, timeout_sec=5)
+        self._robot_command_client.send_goal_and_wait("move_arm", goal=action_goal)
 
         # Stow the arm.
         self._logger.info("Stow the arm")
