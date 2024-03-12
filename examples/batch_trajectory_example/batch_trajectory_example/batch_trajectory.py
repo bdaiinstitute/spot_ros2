@@ -15,7 +15,7 @@ import argparse
 import math
 import time
 from typing import Callable, Optional, Tuple
-
+from google.protobuf.wrappers_pb2 import DoubleValue
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
@@ -23,19 +23,14 @@ from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api import (
     arm_command_pb2,
     basic_command_pb2,
+    geometry_pb2,
     gripper_command_pb2,
     mobility_command_pb2,
     robot_command_pb2,
     synchronized_command_pb2,
     trajectory_pb2,
-    geometry_pb2,
 )
-from bosdyn.client.frame_helpers import (
-    GRAV_ALIGNED_BODY_FRAME_NAME,
-    GROUND_PLANE_FRAME_NAME,
-    ODOM_FRAME_NAME,
-    get_a_tform_b,
-)
+from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE3Pose, SE3Velocity
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn.util import seconds_to_duration, seconds_to_timestamp
@@ -136,6 +131,9 @@ def _build_sample_command(
             pose_trajectory_in_task=hand_trajectory,
             wrist_tform_tool=wrist_tform_tool,
             root_tform_task=root_tform_task,
+            maximum_acceleration=DoubleValue(value=10000.0),
+            max_linear_velocity=DoubleValue(value=10000.0),
+            max_angular_velocity=DoubleValue(value=10000.0),
         )
         arm_request = arm_command_pb2.ArmCommand.Request(arm_cartesian_command=arm_cartesian_command)
 
@@ -262,10 +260,10 @@ class SpotRunner:
         wrist_tform_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
 
         hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-            duration=10, dt=0.5, trajectory_function=_continuous_trajectory_3d
+            duration=10, dt=0.1, trajectory_function=_continuous_trajectory_3d
         )
         command = _build_sample_command(
-            root_frame_name=odom_frame_name,
+            root_frame_name=ODOM_FRAME_NAME,
             root_tform_task=odom_T_task.to_proto(),
             wrist_tform_tool=wrist_tform_tool.to_proto(),
             hand_trajectory=hand_trajectory,
