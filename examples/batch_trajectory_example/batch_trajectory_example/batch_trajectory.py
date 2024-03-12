@@ -181,7 +181,7 @@ class SpotRunner:
         """
         command = RobotCommandBuilder.arm_ready_command()
         action_goal = RobotCommand.Goal()
-        convert.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("ready_arm", action_goal)
 
     def _arm_stow(self) -> bool:
@@ -190,7 +190,7 @@ class SpotRunner:
         """
         command = RobotCommandBuilder.arm_stow_command()
         action_goal = RobotCommand.Goal()
-        convert.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("arm_stow", action_goal)
 
     def test_run(self) -> bool:
@@ -238,7 +238,7 @@ class SpotRunner:
         )
         command = _build_sample_command(robot_name=self._robot_name, hand_trajectory=hand_trajectory)
         action_goal = RobotCommand.Goal()
-        convert.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert(command, action_goal.command)
         self._robot_command_client.send_goal_and_wait("arm_move_one", goal=action_goal, timeout_sec=5)
 
         # Stow the arm.
