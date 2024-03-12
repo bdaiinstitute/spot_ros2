@@ -84,12 +84,6 @@ For some examples of using the Spot ROS 2 driver, check out [`spot_examples`](..
 |/set_ptz_position                                 |spot_msgs/srv/SetPtzPosition                      |    | 
 |/set_volume                                       |spot_msgs/srv/SetVolume                           |    | 
 |/sit                                              |std_srvs/srv/Trigger                              |    | 
-|/spot_ros2/describe_parameters                    |rcl_interfaces/srv/DescribeParameters             |    | 
-|/spot_ros2/get_parameter_types                    |rcl_interfaces/srv/GetParameterTypes              |    | 
-|/spot_ros2/get_parameters                         |rcl_interfaces/srv/GetParameters                  |    | 
-|/spot_ros2/list_parameters                        |rcl_interfaces/srv/ListParameters                 |    | 
-|/spot_ros2/set_parameters                         |rcl_interfaces/srv/SetParameters                  |    | 
-|/spot_ros2/set_parameters_atomically              |rcl_interfaces/srv/SetParametersAtomically        |    | 
 |/stair_mode                                       |std_srvs/srv/SetBool                              |    | 
 |/stand                                            |std_srvs/srv/Trigger                              |    | 
 |/start_recording_state                            |spot_msgs/srv/ChoreographyStartRecordingState     |    | 
