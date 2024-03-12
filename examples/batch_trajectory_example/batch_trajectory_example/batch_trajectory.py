@@ -35,10 +35,10 @@ from bosdyn.client.frame_helpers import (
 from bosdyn.client.math_helpers import Quat, SE3Pose, SE3Velocity
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn.util import seconds_to_duration, seconds_to_timestamp
+from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
 from utilities.simple_spot_commander import SimpleSpotCommander
 
-import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 
 ###############################################################################
@@ -181,7 +181,7 @@ class SpotRunner:
         """
         command = RobotCommandBuilder.arm_ready_command()
         action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("ready_arm", action_goal)
 
     def _arm_stow(self) -> bool:
@@ -190,7 +190,7 @@ class SpotRunner:
         """
         command = RobotCommandBuilder.arm_stow_command()
         action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("arm_stow", action_goal)
 
     def test_run(self) -> bool:
@@ -238,7 +238,7 @@ class SpotRunner:
         )
         command = _build_sample_command(robot_name=self._robot_name, hand_trajectory=hand_trajectory)
         action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
         self._robot_command_client.send_goal_and_wait("arm_move_one", goal=action_goal, timeout_sec=5)
 
         # Stow the arm.
