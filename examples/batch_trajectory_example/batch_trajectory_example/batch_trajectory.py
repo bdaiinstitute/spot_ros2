@@ -14,8 +14,8 @@ This example shows how a long trajectory is sent to the robot in batches.
 import argparse
 import math
 import time
-from typing import Callable, Optional, Tuple
-from google.protobuf.wrappers_pb2 import DoubleValue
+from typing import Callable, Optional
+
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
@@ -31,10 +31,11 @@ from bosdyn.api import (
     trajectory_pb2,
 )
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
-from bosdyn.client.math_helpers import Quat, SE3Pose, SE3Velocity
+from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 from bosdyn_msgs.conversions import convert
+from google.protobuf.wrappers_pb2 import DoubleValue
 from rclpy.node import Node
 from utilities.simple_spot_commander import SimpleSpotCommander
 from utilities.tf_listener_wrapper import TFListenerWrapper
@@ -46,26 +47,24 @@ from spot_msgs.action import RobotCommand  # type: ignore
 # Following, some continuous functions to generate sample trajectories for our
 # tests.
 
-ContinuousTrajectory3D = Callable[[float], Tuple[SE3Pose, SE3Velocity]]
+ContinuousTrajectory3D = Callable[[float], SE3Pose]
 
 
-def _continuous_trajectory_3d(t: float) -> Tuple[SE3Pose, SE3Velocity]:
+def _continuous_trajectory_3d(t: float) -> SE3Pose:
     """
-    Given a time t in the trajectory, return the SE3Pose and SE3Velocity at
-    this point in the trajectory.
+    Given a time t in the trajectory, return the SE3Pose at this point in
+    the trajectory.
     """
 
-    # Draw a circle
-    radius = 0.25  # Circle radius in meters
-    period = 2.0  # Time required to go all the way around circle in seconds.
-    x = radius * math.cos(2 * math.pi * t / period)
-    y = radius * math.sin(2 * math.pi * t / period)
+    # Draw an infinite symbol.
+    x_radius = 0.25  # Meters
+    y_radius = 0.1  # Meters
+    period = 10.0  # Time required to draw all the symbol in seconds.
+    x = x_radius * math.cos(2 * math.pi * t / period)
+    y = y_radius * math.sin(4 * math.pi * t / period)
     z = 0.0
     quat = Quat(1, 0, 0, 0)
-    vx = -radius * 2 * math.pi / period * math.sin(2 * math.pi * t / period)
-    vy = radius * 2 * math.pi / period * math.cos(2 * math.pi * t / period)
-    vz = 0.0
-    return SE3Pose(x, y, z, quat), SE3Velocity(vx, vy, vz, 0, 0, 0)
+    return SE3Pose(x, y, z, quat)
 
 
 ###############################################################################
@@ -75,22 +74,32 @@ def _continuous_trajectory_3d(t: float) -> Tuple[SE3Pose, SE3Velocity]:
 
 
 def _discrete_trajectory_3d(
-    duration: float, dt: float, trajectory_function: ContinuousTrajectory3D
+    reference_time: float,
+    start_time: float,
+    duration: float,
+    dt: float,
+    trajectory_function: ContinuousTrajectory3D,
 ) -> trajectory_pb2.SE3Trajectory:
     """
-    Return a trajectory in 3D space.
+    Return a discrete trajectory in 3D space by sampling a continuous 3D function.
+    The continuous function is sampled from a given start time, for a specified
+    duration and at given sampling intervals.
+
+
+    Args:
+        reference_time: The time the trajectory is executed.
+        start_time: The initial sampling time.
+        duration: The total sampling time.
+        dt: The sampling interval.
+        trajectory_function: the trajectory function to sample.
     """
-    start_time = time.time()
     trajectory = trajectory_pb2.SE3Trajectory()
-    trajectory.reference_time.CopyFrom(seconds_to_timestamp(start_time))
-    trajectory.pos_interpolation = trajectory_pb2.POS_INTERP_CUBIC
-    trajectory.ang_interpolation = trajectory_pb2.ANG_INTERP_CUBIC_EULER
+    trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
     t = start_time
-    while t - start_time < duration:
-        pos, vel = trajectory_function(t)
+    while t - start_time <= duration:
+        pos = trajectory_function(t)
         point = trajectory.points.add()
         point.pose.CopyFrom(pos.to_proto())
-        point.velocity.CopyFrom(vel.to_proto())
         point.time_since_reference.CopyFrom(seconds_to_duration(t - start_time))
         t = t + dt
     return trajectory
@@ -198,6 +207,30 @@ class SpotRunner:
         convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("arm_stow", action_goal)
 
+    def _follow_trajectory(
+        self,
+        root_frame_name: str,
+        wrist_tform_tool: geometry_pb2.SE3Pose,
+        root_tform_task: geometry_pb2.SE3Pose,
+        hand_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
+        mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None,
+        gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None,
+    ) -> None:
+        """
+        Order the arm tool to follow a given trajectory.
+        """
+        command = _build_sample_command(
+            root_frame_name=root_frame_name,
+            root_tform_task=root_tform_task,
+            wrist_tform_tool=wrist_tform_tool,
+            hand_trajectory=hand_trajectory,
+            mobility_trajectory=mobility_trajectory,
+            gripper_trajectory=gripper_trajectory,
+        )
+        action_goal = RobotCommand.Goal()
+        convert(command, action_goal.command)
+        self._robot_command_client.send_goal_and_wait("move_arm", goal=action_goal)
+
     def test_run(self) -> bool:
         """
         Send a very long arm trajectory to Spot.
@@ -259,18 +292,35 @@ class SpotRunner:
         odom_T_task = odom_T_grav_body * grav_body_T_task
         wrist_tform_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
 
+        # Move to the first position of the sampled trajectory.
         hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-            duration=10, dt=0.1, trajectory_function=_continuous_trajectory_3d
+            reference_time=time.time() + 2,
+            start_time=0,
+            duration=0,
+            dt=0.1,
+            trajectory_function=_continuous_trajectory_3d,
         )
-        command = _build_sample_command(
+        self._follow_trajectory(
             root_frame_name=ODOM_FRAME_NAME,
             root_tform_task=odom_T_task.to_proto(),
             wrist_tform_tool=wrist_tform_tool.to_proto(),
             hand_trajectory=hand_trajectory,
         )
-        action_goal = RobotCommand.Goal()
-        convert(command, action_goal.command)
-        self._robot_command_client.send_goal_and_wait("move_arm", goal=action_goal)
+
+        # Execute the sampled trajectory.
+        hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+            reference_time=time.time() + 1,
+            start_time=0,
+            duration=10,
+            dt=0.1,
+            trajectory_function=_continuous_trajectory_3d,
+        )
+        self._follow_trajectory(
+            root_frame_name=ODOM_FRAME_NAME,
+            root_tform_task=odom_T_task.to_proto(),
+            wrist_tform_tool=wrist_tform_tool.to_proto(),
+            hand_trajectory=hand_trajectory,
+        )
 
         # Stow the arm.
         self._logger.info("Stow the arm")
