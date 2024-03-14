@@ -2708,8 +2708,8 @@ class SpotROS(Node):
             parent_frame = transform.parent_frame_name
 
             # special case handling of parent frame to sync with robot state naming, see above
-            if parent_frame == "arm0_link_wr1":
-                parent_frame = "link_wr1"
+            if parent_frame == "arm0.link_wr1":
+                parent_frame = "arm_link_wr1"
 
             existing_transforms = [
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
