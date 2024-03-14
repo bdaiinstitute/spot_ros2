@@ -56,12 +56,13 @@ def _continuous_trajectory_3d(t: float) -> SE3Pose:
     the trajectory.
     """
 
-    # Draw an infinite symbol.
-    x_radius = 0.25  # Meters
-    y_radius = 0.1  # Meters
-    period = 10.0  # Time required to draw all the symbol in seconds.
-    x = x_radius * math.cos(2 * math.pi * t / period)
-    y = y_radius * math.sin(4 * math.pi * t / period)
+    # Draw a Rhodonea curve with 5 petals.
+    n = 5
+    period = 10.0  # Time required to draw the periodic curve in seconds.
+    t_norm = t / period
+    radius = 0.25 * math.sin(2 * math.pi * n * t_norm)
+    x = radius * math.cos(2 * math.pi * t_norm)
+    y = radius * math.sin(2 * math.pi * t_norm)
     z = 0.0
     quat = Quat(1, 0, 0, 0)
     return SE3Pose(x, y, z, quat)
@@ -312,7 +313,7 @@ class SpotRunner:
             reference_time=time.time() + 1,
             start_time=0,
             duration=10,
-            dt=0.1,
+            dt=0.05,
             trajectory_function=_continuous_trajectory_3d,
         )
         self._follow_trajectory(
