@@ -76,6 +76,8 @@ from rclpy.timer import Rate
 from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
 
+from spot_driver.robot_command_util import batch_command
+
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
 from spot_driver.ros_helpers import (
@@ -316,8 +318,7 @@ class SpotROS(Node):
                 COLOR_YELLOW
                 + f"The maximum individual task rate is {max_task_rate} Hz. You have manually set the async_tasks_rate"
                 f" to {self.async_tasks_rate} which is lower and will decrease the frequency of one of the periodic"
-                " tasks being run."
-                + COLOR_END
+                " tasks being run." + COLOR_END
             )
 
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
@@ -899,12 +900,10 @@ class SpotROS(Node):
             while self.spot_wrapper.is_estopped():
                 if not printed:
                     self.get_logger().warn(
-                        COLOR_YELLOW
-                        + "Waiting for estop to be released.  Make sure you have an active estop."
+                        COLOR_YELLOW + "Waiting for estop to be released.  Make sure you have an active estop."
                         '  You can acquire an estop on the tablet by choosing "Acquire Cut Motor Power Authority"'
                         " in the dropdown menu from the power icon.  (This will not power the motors or take the"
-                        " lease.)"
-                        + COLOR_END,
+                        " lease.)" + COLOR_END,
                     )
                     printed = True
                 time.sleep(0.5)
@@ -2074,6 +2073,11 @@ class SpotROS(Node):
         ros_command = goal_handle.request.command
         proto_command = robot_command_pb2.RobotCommand()
         convert(ros_command, proto_command)
+
+        commands = batch_command(proto_command, 50, 3)
+        if len(commands) == 1:
+            pass
+
         self._wait_for_goal = None
         if self.spot_wrapper is None:
             self._wait_for_goal = WaitForGoal(self.get_clock(), 2.0)

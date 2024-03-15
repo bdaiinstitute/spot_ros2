@@ -19,6 +19,7 @@ from typing import Callable, Optional
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
+from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api import (
     arm_command_pb2,
@@ -37,10 +38,10 @@ from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 from bosdyn_msgs.conversions import convert
 from google.protobuf.wrappers_pb2 import DoubleValue
 from rclpy.node import Node
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
 
+from spot_examples.simple_spot_commander import SimpleSpotCommander
 from spot_msgs.action import RobotCommand  # type: ignore
+from tf2_ros import TransformStamped
 
 ###############################################################################
 # CONTINUOUS TRAJECTORIES
@@ -57,10 +58,10 @@ def _continuous_trajectory_3d(t: float) -> SE3Pose:
     """
 
     # Draw a Rhodonea curve with 5 petals.
-    n = 5
+    n = 3
     period = 10.0  # Time required to draw the periodic curve in seconds.
     t_norm = t / period
-    radius = 0.25 * math.sin(2 * math.pi * n * t_norm)
+    radius = 0.4 * math.sin(math.pi * n * t_norm)
     x = radius * math.cos(2 * math.pi * t_norm)
     y = radius * math.sin(2 * math.pi * t_norm)
     z = 0.0
@@ -190,6 +191,22 @@ class SpotRunner:
             RobotCommand, namespace_with(self._robot_name, "robot_command"), node
         )
 
+    def _to_se3(self, ros_transform: TransformStamped) -> SE3Pose:
+        """
+        Convert from ROS TransformStamped to Bosdyn SE3Pose
+        """
+        return SE3Pose(
+            ros_transform.transform.translation.x,
+            ros_transform.transform.translation.y,
+            ros_transform.transform.translation.z,
+            Quat(
+                ros_transform.transform.rotation.w,
+                ros_transform.transform.rotation.x,
+                ros_transform.transform.rotation.y,
+                ros_transform.transform.rotation.z,
+            ),
+        )
+
     def _ready_arm(self) -> bool:
         """
         Unstow the robot arm.
@@ -288,9 +305,9 @@ class SpotRunner:
         # transformation between the odometry frame and the task frame. In order to get
         # odom_T_grav_body we use a snapshot of the frame tree. For more information on the frame
         # tree, see https://dev.bostondynamics.com/docs/concepts/geometry_and_frames
-        odom_T_grav_body = tf_listener.lookup_a_tform_b(odom_frame_name, grav_body_frame_name)
+        odom_T_grav_body: SE3Pose = self._to_se3(tf_listener.lookup_a_tform_b(odom_frame_name, grav_body_frame_name))
 
-        odom_T_task = odom_T_grav_body * grav_body_T_task
+        odom_T_task: SE3Pose = odom_T_grav_body * grav_body_T_task
         wrist_tform_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
 
         # Move to the first position of the sampled trajectory.
