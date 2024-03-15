@@ -48,7 +48,20 @@ from tf2_ros import TransformStamped
 # Following, some continuous functions to generate sample trajectories for our
 # tests.
 
+ContinuousTrajectory1D = Callable[[float], float]
 ContinuousTrajectory3D = Callable[[float], SE3Pose]
+
+
+def _continuous_trajectory_1d(t: float) -> float:
+    """
+    Given a time t in the trajectory, return a scalar representing a value
+    in the trajectory.
+    """
+    n = 3
+    period = 10.0
+    t_norm = t / period
+    x = -abs(math.sin(math.pi * n * t_norm))
+    return x
 
 
 def _continuous_trajectory_3d(t: float) -> SE3Pose:
@@ -59,8 +72,8 @@ def _continuous_trajectory_3d(t: float) -> SE3Pose:
 
     # Draw a Rhodonea curve with n petals and period P (seconds)
     n = 3
-    P = 10.0
-    t_norm = t / P
+    period = 10.0
+    t_norm = t / period
     radius = 0.4 * math.sin(math.pi * n * t_norm)
     x = radius * math.cos(math.pi * t_norm)
     y = radius * math.sin(math.pi * t_norm)
@@ -73,6 +86,25 @@ def _continuous_trajectory_3d(t: float) -> SE3Pose:
 # DISCRETE TRAJECTORIES
 # Following, some trajectories created by sampling previously defined
 # continuous functions.
+
+
+def _discrete_trajectory_1d(
+    reference_time: float, start_time: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory1D
+) -> trajectory_pb2.ScalarTrajectory:
+    """
+    Return a trajectory value.
+    """
+    trajectory = trajectory_pb2.ScalarTrajectory()
+    trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
+    trajectory.interpolation = trajectory_pb2.POS_INTERP_CUBIC
+    t = start_time
+    while t - start_time <= duration:
+        pos = trajectory_function(t)
+        point = trajectory.points.add()
+        point.point = pos
+        point.time_since_reference.CopyFrom(seconds_to_duration(t - start_time))
+        t = t + dt
+    return trajectory
 
 
 def _discrete_trajectory_3d(
@@ -310,34 +342,52 @@ class SpotRunner:
         odom_T_task: SE3Pose = odom_T_grav_body * grav_body_T_task
         wrist_tform_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
 
-        # Move to the first position of the sampled trajectory.
+        # Move arm and gripper to the first position of the sampled trajectories.
+        delay = 2
         hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-            reference_time=time.time() + 2,
+            reference_time=time.time() + delay,
             start_time=0,
             duration=0,
             dt=0.1,
             trajectory_function=_continuous_trajectory_3d,
         )
+        gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
+            reference_time=time.time() + delay,
+            start_time=0,
+            duration=0,
+            dt=0.1,
+            trajectory_function=_continuous_trajectory_1d,
+        )
         self._follow_trajectory(
             root_frame_name=ODOM_FRAME_NAME,
             root_tform_task=odom_T_task.to_proto(),
             wrist_tform_tool=wrist_tform_tool.to_proto(),
             hand_trajectory=hand_trajectory,
+            gripper_trajectory=gripper_trajectory,
         )
 
-        # Execute the sampled trajectory.
+        # Make arm and gripper follow the sampled trajectories.
+        delay = 1
         hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-            reference_time=time.time() + 1,
+            reference_time=time.time() + delay,
             start_time=0,
             duration=10,
             dt=0.05,
             trajectory_function=_continuous_trajectory_3d,
         )
+        gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
+            reference_time=time.time() + delay,
+            start_time=0,
+            duration=10,
+            dt=0.05,
+            trajectory_function=_continuous_trajectory_1d,
+        )
         self._follow_trajectory(
             root_frame_name=ODOM_FRAME_NAME,
             root_tform_task=odom_T_task.to_proto(),
             wrist_tform_tool=wrist_tform_tool.to_proto(),
             hand_trajectory=hand_trajectory,
+            gripper_trajectory=gripper_trajectory,
         )
 
         # Stow the arm.
