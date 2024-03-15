@@ -14,20 +14,18 @@
         </material>
       </visual>
       <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_sh0_base.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_sh0_left_motor.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_sh0_right_motor.obj" />
-        </geometry>
-      </collision>
+      <origin rpy="1.571 0 0" xyz="-0.015 0 0"/>
+      <geometry>
+        <cylinder length="0.21" radius="0.065"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.015 0 -0.035"/>
+      <geometry>
+        <cylinder length="0.15" radius="0.064"/>
+      </geometry>
+    </collision>
+
       <inertial>
         <origin rpy="0.0013490340912847287 -0.15433618253071657 0.0066354181456347305"
           xyz="-0.012372709810733795 -4.5211403630673885e-05 -0.02103196457028389" />
@@ -55,6 +53,12 @@
           <color rgba="0.2 0.2 0.2 1" />
         </material>
       </visual>
+      <collision>
+      <origin rpy="0 1.571 0" xyz="0.2 0 0"/>
+      <geometry>
+        <cylinder length="0.3" radius="0.042"/>
+      </geometry>
+    </collision>
       <inertial>
         <origin rpy="0.009910032200701302 -0.5123007314267984 0.002209016500439809"
           xyz="2.4176391889341176e-05 2.4116111490002368e-06 -1.0059113265015185e-05" />
@@ -74,37 +78,6 @@
         upper="0.52359877559829881565" />
     </joint>
 
-    <link name="${tf_prefix}arm_link_hr0">
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_hr0.obj" />
-        </geometry>
-        <material name="arm_link_hr0">
-          <color rgba="0.2 0.2 0.2 1" />
-        </material>
-      </visual>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_hr0.obj" />
-        </geometry>
-      </collision>
-      <inertial>
-        <origin rpy="-0.01179850657706405 0.0002834144901480151 -0.02372295500868482"
-          xyz="0.17047011852264404 -0.0019251034827902913 4.483893280848861e-05" />
-        <mass value="1e-06" />
-        <inertia ixx="6.312631747339145e-10" ixy="0.0" ixz="0.0" iyy="1.1487063558949979e-08"
-          iyz="0.0" izz="1.161105128440526e-08" />
-      </inertial>
-    </link>
-    <joint name="${tf_prefix}arm_hr0" type="fixed">
-      <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
-      <axis xyz="1 0 0" />
-      <parent link="${tf_prefix}arm_link_sh1" />
-      <child link="${tf_prefix}arm_link_hr0" />
-      <limit effort="1000" velocity="1000.00" lower="-1e6" upper="1e6" />
-    </joint>
-
     <link name="${tf_prefix}arm_link_el0">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
@@ -116,10 +89,17 @@
         </material>
       </visual>
       <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_el0.obj" />
-        </geometry>
-      </collision>
+      <origin rpy="0 0.6 0" xyz="0.02 0 0.03"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.05"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 1.571 0" xyz="0.085 0 0.075"/>
+      <geometry>
+        <cylinder length="0.11" radius="0.046"/>
+      </geometry>
+    </collision>
       <inertial>
         <origin rpy="-0.004185887288594259 -0.6136269547775202 -0.0004619387581783485"
           xyz="0.0553741455078125 0.00023603376757819206 0.04827198013663292" />
@@ -131,7 +111,7 @@
     <joint name="${tf_prefix}arm_el0" type="revolute">
       <origin xyz="0.3385 0 0" rpy="0 0 0" />
       <axis xyz="0 1 0" />
-      <parent link="${tf_prefix}arm_link_hr0" />
+      <parent link="${tf_prefix}arm_link_sh1" />
       <child link="${tf_prefix}arm_link_el0" />
       <limit effort="1000" velocity="1000.00" lower="0" upper="3.14159265358979311599" />
     </joint>
@@ -147,15 +127,17 @@
         </material>
       </visual>
       <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_el1_main.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_el1_lip.obj" />
-        </geometry>
-      </collision>
+      <origin rpy="0 1.571 0" xyz="-0.16 0 0"/>
+      <geometry>
+        <cylinder length="0.3" radius="0.04"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.571 0 0" xyz="0 -0.04 0"/>
+      <geometry>
+        <cylinder length="0.057" radius="0.042"/>
+      </geometry>
+    </collision>
       <inertial>
         <origin rpy="-0.15027374227250867 -0.0007874585461915551 0.003728225436950172"
           xyz="-0.1257835328578949 -0.013684478588402271 0.00010157923679798841" />
@@ -184,10 +166,11 @@
         </material>
       </visual>
       <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_wr0.obj" />
-        </geometry>
-      </collision>
+      <origin rpy="0 1.571 0" xyz="0.04 0 0"/>
+      <geometry>
+        <cylinder length="0.165" radius="0.04"/>
+      </geometry>
+    </collision>
       <inertial>
         <origin rpy="-0.4951534907966386 0.0033720434077784134 0.020027599337697932"
           xyz="0.008210677653551102 -0.012051000259816647 3.143483627354726e-05" />
@@ -216,25 +199,11 @@
         </material>
       </visual>
       <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_wr1.obj" />
-        </geometry>
-      </collision>
-      <collision>
+      <origin rpy="0 1.571 0" xyz="0.16 0 0"/>
       <geometry>
-        <mesh filename="package://spot_description/meshes/arm/collision/front_jaw.obj" />
+        <cylinder length="0.15" radius="0.065"/>
       </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/middle_jaw.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/jaw_tooth.obj" />
-        </geometry>
-      </collision>
+    </collision>
       <inertial>
         <origin rpy="0.006393076449033863 0.2928526604761865 -0.022814984050994802"
           xyz="0.12516802549362183 0.00010137435310753062 -0.013997982256114483" />
