@@ -13,6 +13,8 @@ from typing import Any, List
 from bosdyn.api import robot_command_pb2
 from bosdyn.util import duration_to_seconds
 
+from google.protobuf.duration_pb2 import Duration
+
 
 def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int) -> bool:
     """
@@ -39,28 +41,28 @@ def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int) 
     if command.HasField("synchronized_command"):
         if command.synchronized_command.HasField("mobility_command"):
             mobility_request = command.synchronized_command.mobility_command
-            trajectory = mobility_request.se2_trajectory_request.trajectory
-            if len(trajectory.points) > batch_size:
-                long_trajectories.append(trajectory.points)
+            points = mobility_request.se2_trajectory_request.trajectory.points
+            if len(points) > batch_size:
+                long_trajectories.append(points)
         if command.synchronized_command.HasField("arm_command"):
             arm_request = command.synchronized_command.arm_command
             if arm_request.HasField("arm_cartesian_command"):
-                trajectory = arm_request.arm_cartesian_command.pose_trajectory_in_task
-                if len(trajectory.points) > batch_size:
-                    long_trajectories.append(trajectory.points)
+                points = arm_request.arm_cartesian_command.pose_trajectory_in_task.points
+                if len(points) > batch_size:
+                    long_trajectories.append(points)
             elif arm_request.HasField("arm_joint_move_command"):
-                trajectory = arm_request.arm_joint_move_command.trajectory
-                if len(trajectory.points) > batch_size:
-                    long_trajectories.append(trajectory.points)
+                points = arm_request.arm_joint_move_command.trajectory.points
+                if len(points) > batch_size:
+                    long_trajectories.append(points)
             elif arm_request.HasField("arm_impedance_command"):
-                trajectory = arm_request.arm_impedance_command.task_tform_desired_tool
-                if len(trajectory.points) > batch_size:
-                    long_trajectories.append(trajectory.points)
+                points = arm_request.arm_impedance_command.task_tform_desired_tool.points
+                if len(points) > batch_size:
+                    long_trajectories.append(points)
         if command.synchronized_command.HasField("gripper_command"):
             gripper_request = command.synchronized_command.gripper_command
-            trajectory = gripper_request.claw_gripper_command.trajectory
-            if len(trajectory.points) > batch_size:
-                long_trajectories.append(trajectory.points)
+            points = gripper_request.claw_gripper_command.trajectory.points
+            if len(points) > batch_size:
+                long_trajectories.append(points)
 
     long_trajectories_count = len(long_trajectories)
 
@@ -177,3 +179,38 @@ def batch_command(
         index += stride
 
     return commands
+
+
+def max_duration(command: robot_command_pb2.RobotCommand) -> Duration:
+    """
+    This method checks the duration of all trajectories stored in the given command
+    and returns the longest.
+
+    Args:
+        command: The command to check the duration.
+
+    Returns:
+        The longest duration from all available trajectories.
+    """
+    time_since_reference = Duration()
+    if command.HasField("synchronized_command"):
+        if command.synchronized_command.HasField("mobility_command"):
+            mobility_request = command.synchronized_command.mobility_command
+            if points := mobility_request.se2_trajectory_request.trajectory.points:
+                time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+        if command.synchronized_command.HasField("arm_command"):
+            arm_request = command.synchronized_command.arm_command
+            if arm_request.HasField("arm_cartesian_command"):
+                if points := arm_request.arm_cartesian_command.pose_trajectory_in_task.points:
+                    time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+            elif arm_request.HasField("arm_joint_move_command"):
+                if points := arm_request.arm_joint_move_command.trajectory.points:
+                    time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+            elif arm_request.HasField("arm_impedance_command"):
+                if points := arm_request.arm_impedance_command.task_tform_desired_tool.points:
+                    time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+        if command.synchronized_command.HasField("gripper_command"):
+            gripper_request = command.synchronized_command.gripper_command
+            if points := gripper_request.claw_gripper_command.trajectory.points:
+                time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+    return time_since_reference
