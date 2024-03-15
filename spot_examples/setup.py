@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = "simple_arm_motion"
+package_name = "spot_examples"
 
 setup(
     name=package_name,
@@ -14,12 +14,14 @@ setup(
     zip_safe=True,
     maintainer="BD AI Institute",
     maintainer_email="engineering@theaiinstitute.com",
-    description="Direct conversion of BD simple arm command example",
-    license="TODO: License declaration",
+    description="Examples of using ROS 2 to control Spot",
+    license="MIT",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "arm_simple = simple_arm_motion.arm_simple:main",
+            "walk_forward = spot_examples.walk_forward:main",
+            "arm_simple = spot_examples.arm_simple:main",
+            "send_inverse_kinematics_requests = spot_examples.send_inverse_kinematics_requests:main",
         ],
     },
 )
