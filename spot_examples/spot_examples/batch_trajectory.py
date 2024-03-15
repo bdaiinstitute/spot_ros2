@@ -57,13 +57,13 @@ def _continuous_trajectory_3d(t: float) -> SE3Pose:
     the trajectory.
     """
 
-    # Draw a Rhodonea curve with 5 petals.
+    # Draw a Rhodonea curve with n petals and period P (seconds)
     n = 3
-    period = 10.0  # Time required to draw the periodic curve in seconds.
-    t_norm = t / period
+    P = 10.0
+    t_norm = t / P
     radius = 0.4 * math.sin(math.pi * n * t_norm)
-    x = radius * math.cos(2 * math.pi * t_norm)
-    y = radius * math.sin(2 * math.pi * t_norm)
+    x = radius * math.cos(math.pi * t_norm)
+    y = radius * math.sin(math.pi * t_norm)
     z = 0.0
     quat = Quat(1, 0, 0, 0)
     return SE3Pose(x, y, z, quat)
