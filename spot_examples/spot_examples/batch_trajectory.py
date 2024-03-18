@@ -6,6 +6,10 @@
 # dynamically added member attributes.
 # pylint: disable=no-member
 
+# We disable Pyling warnings for lines too long because it is been taking care
+# by the formatter.
+# pylint: disable=line-too-long
+
 
 """
 This example shows how a long trajectory is sent to the robot in batches.
@@ -427,4 +431,4 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(None)
