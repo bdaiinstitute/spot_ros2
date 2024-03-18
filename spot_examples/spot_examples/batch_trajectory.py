@@ -38,10 +38,10 @@ from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 from bosdyn_msgs.conversions import convert
 from google.protobuf.wrappers_pb2 import DoubleValue
 from rclpy.node import Node
+from tf2_ros import TransformStamped
 
 from spot_examples.simple_spot_commander import SimpleSpotCommander
 from spot_msgs.action import RobotCommand  # type: ignore
-from tf2_ros import TransformStamped
 
 ###############################################################################
 # CONTINUOUS TRAJECTORIES
@@ -344,14 +344,14 @@ class SpotRunner:
 
         # Move arm and gripper to the first position of the sampled trajectories.
         delay = 2
-        hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+        hand_trajectory = _discrete_trajectory_3d(
             reference_time=time.time() + delay,
             start_time=0,
             duration=0,
             dt=0.1,
             trajectory_function=_continuous_trajectory_3d,
         )
-        gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
+        gripper_trajectory = _discrete_trajectory_1d(
             reference_time=time.time() + delay,
             start_time=0,
             duration=0,
@@ -368,14 +368,14 @@ class SpotRunner:
 
         # Make arm and gripper follow the sampled trajectories.
         delay = 1
-        hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+        hand_trajectory = _discrete_trajectory_3d(
             reference_time=time.time() + delay,
             start_time=0,
             duration=10,
             dt=0.05,
             trajectory_function=_continuous_trajectory_3d,
         )
-        gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
+        gripper_trajectory = _discrete_trajectory_1d(
             reference_time=time.time() + delay,
             start_time=0,
             duration=10,

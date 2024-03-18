@@ -12,7 +12,6 @@ from typing import Any, List
 
 from bosdyn.api import robot_command_pb2
 from bosdyn.util import duration_to_seconds
-
 from google.protobuf.duration_pb2 import Duration
 
 
