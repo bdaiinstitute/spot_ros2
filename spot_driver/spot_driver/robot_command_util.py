@@ -8,6 +8,10 @@ Utility class with methods to manipulate robot commands.
 # with dynamically added members.
 # pylint: disable=no-member
 
+# We disable Pyling warnings for lines too long because it is been taking care
+# by the formatter.
+# pylint: disable=line-too-long
+
 from typing import Any, List
 
 from bosdyn.api import robot_command_pb2
