@@ -147,8 +147,8 @@ def _discrete_trajectory_3d(
 
 def _build_sample_command(
     root_frame_name: str,
-    wrist_tform_tool: geometry_pb2.SE3Pose,
-    root_tform_task: geometry_pb2.SE3Pose,
+    wrist_to_tool: geometry_pb2.SE3Pose,
+    root_to_task: geometry_pb2.SE3Pose,
     hand_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
     mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None,
     gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None,
@@ -172,8 +172,8 @@ def _build_sample_command(
         arm_cartesian_command = arm_command_pb2.ArmCartesianCommand.Request(
             root_frame_name=root_frame_name,
             pose_trajectory_in_task=hand_trajectory,
-            wrist_tform_tool=wrist_tform_tool,
-            root_tform_task=root_tform_task,
+            wrist_tform_tool=wrist_to_tool,
+            root_tform_task=root_to_task,
             maximum_acceleration=DoubleValue(value=10000.0),
             max_linear_velocity=DoubleValue(value=10000.0),
             max_angular_velocity=DoubleValue(value=10000.0),
@@ -260,8 +260,8 @@ class SpotRunner:
     def _follow_trajectory(
         self,
         root_frame_name: str,
-        wrist_tform_tool: geometry_pb2.SE3Pose,
-        root_tform_task: geometry_pb2.SE3Pose,
+        wrist_to_tool: geometry_pb2.SE3Pose,
+        root_to_task: geometry_pb2.SE3Pose,
         hand_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
         mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None,
         gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None,
@@ -271,8 +271,8 @@ class SpotRunner:
         """
         command = _build_sample_command(
             root_frame_name=root_frame_name,
-            root_tform_task=root_tform_task,
-            wrist_tform_tool=wrist_tform_tool,
+            root_to_task=root_to_task,
+            wrist_to_tool=wrist_to_tool,
             hand_trajectory=hand_trajectory,
             mobility_trajectory=mobility_trajectory,
             gripper_trajectory=gripper_trajectory,
@@ -330,17 +330,17 @@ class SpotRunner:
         # In this example, that is the center of the circle.
         # The frame at the center of the circle is one that is 90cm in front of the robot,
         # with z pointing back at the robot, x off the right side of the robot, and y up
-        grav_body_T_task = SE3Pose(x=0.9, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
+        body_to_task = SE3Pose(x=0.9, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
 
         # Now, get the transform between the "odometry" frame and the gravity aligned body frame.
-        # This will be used in conjunction with the grav_body_T_task frame to get the
+        # This will be used in conjunction with the body_to_task frame to get the
         # transformation between the odometry frame and the task frame. In order to get
-        # odom_T_grav_body we use a snapshot of the frame tree. For more information on the frame
+        # odom_to_body we use a snapshot of the frame tree. For more information on the frame
         # tree, see https://dev.bostondynamics.com/docs/concepts/geometry_and_frames
-        odom_T_grav_body: SE3Pose = self._to_se3(tf_listener.lookup_a_tform_b(odom_frame_name, grav_body_frame_name))
+        odom_to_body: SE3Pose = self._to_se3(tf_listener.lookup_a_tform_b(odom_frame_name, grav_body_frame_name))
 
-        odom_T_task: SE3Pose = odom_T_grav_body * grav_body_T_task
-        wrist_tform_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
+        odom_to_task: SE3Pose = odom_to_body * body_to_task
+        wrist_to_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
 
         # Move arm and gripper to the first position of the sampled trajectories.
         delay = 2
@@ -360,8 +360,8 @@ class SpotRunner:
         )
         self._follow_trajectory(
             root_frame_name=ODOM_FRAME_NAME,
-            root_tform_task=odom_T_task.to_proto(),
-            wrist_tform_tool=wrist_tform_tool.to_proto(),
+            root_to_task=odom_to_task.to_proto(),
+            wrist_to_tool=wrist_to_tool.to_proto(),
             hand_trajectory=hand_trajectory,
             gripper_trajectory=gripper_trajectory,
         )
@@ -384,8 +384,8 @@ class SpotRunner:
         )
         self._follow_trajectory(
             root_frame_name=ODOM_FRAME_NAME,
-            root_tform_task=odom_T_task.to_proto(),
-            wrist_tform_tool=wrist_tform_tool.to_proto(),
+            root_to_task=odom_to_task.to_proto(),
+            wrist_to_tool=wrist_to_tool.to_proto(),
             hand_trajectory=hand_trajectory,
             gripper_trajectory=gripper_trajectory,
         )
