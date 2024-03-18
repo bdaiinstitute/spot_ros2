@@ -207,6 +207,54 @@ def _build_sample_command(
     return command
 
 
+def _batch_size(sequence_length: int, batch_size: int, overlapping: int, batch_number: int) -> int:
+    """
+    Return the size of a batch considering a vector of given length, the batch size
+    and the overlapping points.
+
+    Args:
+        sequence_length: The sequence length.
+        batch_size: The batch size.
+        overlapping: The number of overlapping element between batches.
+        batch_number: The batch number.
+
+    Returns:
+        The size of the requested batch.
+
+    Examples:
+
+        sequence: 0 1 2 3 4 5 6 7 8 9 A B C
+        batch1:   0 1 2 3 4
+        batch2:           4 5 6 7 8
+        batch3:                   8 9 A B C
+        batch4:                           C
+        sequence_length = 13
+        batch_size = 5
+        overlapping = 1
+        batch sizes = [4, 4, 4, 1]
+
+        sequence: 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
+        batch1:   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
+        batch2:                                   6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+        batch3:                                                                   2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
+        sequence_length = 51
+        batch_size = 20
+        overlapping = 4
+        batch sizes = [20, 20, 19]
+    """
+    # Calculate the stride.
+    stride = batch_size - overlapping
+
+    # Calculate the total number of full batches.
+    num_full_batches = max(0, 1 + (sequence_length - batch_size) // stride)
+
+    if batch_number >= num_full_batches:
+        # Calculate the remaining elements.
+        return max(0, sequence_length - stride * batch_number)
+    else:
+        return batch_size
+
+
 def test_trajectories_different_length() -> None:
     """
     When a command contains more than one trajectory longer than the batch size,
@@ -372,7 +420,7 @@ def test_command_duration() -> None:
     duration = 5
     batch_size = 20
     time_sample = 0.1
-    overlapping_points = 4
+    overlapping = 4
 
     hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
         duration=duration, dt=time_sample, trajectory_function=_continuous_trajectory_3d
@@ -389,10 +437,23 @@ def test_command_duration() -> None:
         mobility_trajectory=mobility_trajectory,
         gripper_trajectory=gripper_trajectory,
     )
-    commands = batch_command(command=command, batch_size=batch_size, overlapping_points=overlapping_points)
+    commands = batch_command(command=command, batch_size=batch_size, overlapping_points=overlapping)
 
     # Each trajectory contains 51 = 1 + 5 / 0.1 datapoints.
     # With a batch size of 20, and 4 overlapping points between trajectories,
-    # we expect 3 commands.
+    # we expect 3 commands with trajectories of length 20, 20 and 19.
+
     assert len(commands) == 3
-    assert duration_to_seconds(command_duration(commands[0])) == pytest.approx((batch_size - 1) * time_sample)
+
+    sequence_length = len(hand_trajectory.points)
+    batch0_size = _batch_size(sequence_length, batch_size, overlapping, 0)
+    batch1_size = _batch_size(sequence_length, batch_size, overlapping, 1)
+    batch2_size = _batch_size(sequence_length, batch_size, overlapping, 2)
+
+    end_batch0 = batch0_size - 1
+    end_batch1 = end_batch0 - overlapping + batch1_size
+    end_batch2 = end_batch1 - overlapping + batch2_size
+
+    assert duration_to_seconds(command_duration(commands[0])) == pytest.approx(time_sample * end_batch0)
+    assert duration_to_seconds(command_duration(commands[1])) == pytest.approx(time_sample * end_batch1)
+    assert duration_to_seconds(command_duration(commands[2])) == pytest.approx(time_sample * end_batch2)
