@@ -10,6 +10,7 @@ The primary launchfile in this package is `spot_driver.launch.py`. Once you've b
 * To launch the process within a namespace, add the launch argument `spot_name:={name}`
 * To visualize Spot in RViz, add the launch argument `launch_rviz:=True`. This will automatically generate the appropriate RViz config file for your robot's name using `rviz.launch.py`.
 * To publish point clouds, add the launch argument `publish_point_clouds:=True`. This is disabled by default.
+
 The Spot driver contains both Python and C++ nodes. Spot's Python SDK is used for many operations. For example, `spot_ros2` is the primary node that connects with Spot and creates the ROS 2 action servers and services. Spot's C++ SDK is used in nodes like `spot_image_publisher_node` to retrieve images from Spot's RGB and depth cameras at close to their native refresh rate of 15 Hz -- something that is not possible using the Python SDK. 
 
 ## Examples
