@@ -73,6 +73,13 @@ cv::Matx33d const Rr(
  -0.025,  0.846,  0.533,
  -0.888,  0.226, -0.400);
 cv::Vec3d const tr(0.382, -0.043, -0.046);
+
+cv::Matx33d const Rb(
+ -0.43332543, -0.01624629,  0.90109108,
+ -0.0027512,   0.99985669,  0.01670396,
+ -0.90123333,  0.00475917, -0.43330802);
+// cv::Vec3d const tb(0.383, -0.006, -0.046);
+cv::Vec3d const tb = 0.5 * (tl + tr);
 /**
  * Load images 
  * Define extrinsics and intrinsics 
@@ -107,6 +114,9 @@ cv::Matx33d between(cv::Matx33d const& R1, cv::Matx33d const& R2) {
     return R1 * R2;
 }
 
+/*
+ * Gives R2 in frame of R1, assuming they both started in the same frame.
+ */
 void computeCameraTransform(cv::Matx33d const& R1, cv::Vec3d const& t1, cv::Matx33d const& R2, cv::Vec3d const& t2, cv::Matx33d& R_1to2, cv::Vec3d& t_1to2) {
   R_1to2 = R2 * R1.t();
   t_1to2 = R2 * (-R1.t() * t1) + t2;
@@ -118,21 +128,38 @@ cv::Matx33d computeHomography(cv::Matx33d const& R_1to2, cv::Vec3d const& tvec_1
 };
 
 void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right) {
-  cv::Matx33d Rb = 0.5 * (Rl + Rr);
-  cv::Vec3d tb = 0.5 * (tl + tr);
-  cv::Matx33d R_1tob, R_2tob;
-  cv::Vec3d t_1tob, t_2tob;
-  computeCameraTransform(Rl, tl, Rb, tb, R_1tob, t_1tob);
-  computeCameraTransform(Rr, tr, Rb, tb, R_2tob, t_2tob);
-  cv::Vec3d const normal = Rb * cv::Vec3d(0, 0, 1);
+  cv::Matx33d bRl, bRr;
+  cv::Vec3d btl, btr;
+  computeCameraTransform(Rl, tl, Rb, tb, bRl, btl);
+  computeCameraTransform(Rr, tr, Rb, tb, bRr, btr);
+  std::cout << "bRl = " << bRl << "\n";
+  std::cout << "btl = " << btl << "\n";
+  std::cout << "bRr = " << bRr << "\n";
+  std::cout << "btr = " << btr << "\n";
+  bRl = cv::Matx33d(
+       0.998,  0.008, 0.044,
+      -0.030,  0.853, 0.520,
+      -0.033, -0.521, 0.852
+      );
+  btl = cv::Vec3d(0., -0.03, 0.02);
+  bRr = cv::Matx33d(
+      0.998, -0.030, -0.033,
+      0.008,  0.853, -0.521,
+      0.044,  0.520,  0.852
+      );
+  btr = cv::Vec3d(0., 0.03, 0.02);
+  cv::Vec3d const normal = cv::Vec3d(0, 0, 1);
   double const distance = 2.;
-  cv::Matx33d homography_left = Kl * computeHomography(R_1tob, t_1tob, distance, normal) * Kl.inv();
+  cv::Matx33d homography_left = Kl * computeHomography(bRl, btl, distance, bRl * normal) * Kr.inv();
+  // homography_left = Kl * (Rl * Rr.t() - (-Rl * Rr.t() * tr + tl) * normal.t()) * Kr.inv();
   homography_left /= homography_left(2, 2);
-  cv::Matx33d homography_right = Kr * computeHomography(R_2tob, t_2tob, distance, normal) * Kr.inv();
+  cv::Matx33d homography_right = Kr * computeHomography(bRr, btr, distance, bRr * normal) * Kl.inv();
+  // homography_right = Kr * (Rr * Rl.t() - (-Rr * Rl.t() * tl + tr) * normal.t()) * Kl.inv();
   homography_right /= homography_right(2, 2);
-
   cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols, left.rows));
   cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols, right.rows));
+
+  //
 }
 
 int main(int argc, char* argv[])
@@ -142,14 +169,16 @@ int main(int argc, char* argv[])
      // Warp the images using the homography matrices
     cv::Mat image1 = imgs.at(0);
     cv::Mat image2 = imgs.at(1);
-    cv::Mat warpedImage1, warpedImage2;
-    cv::rotate(image1, image1, ROTATE_90_CLOCKWISE);
-    cv::rotate(image2, image2, ROTATE_90_CLOCKWISE);
+    cv::Mat warpedImage1, warpedImage2, result;
+    // cv::rotate(image1, image1, ROTATE_90_CLOCKWISE);
+    // cv::rotate(image2, image2, ROTATE_90_CLOCKWISE);
     mosaic(image2, image1, warpedImage1, warpedImage2);
     cv::imwrite("image1.jpg", warpedImage1);
     // cv::imwrite("image1.jpg", image1);
     cv::imwrite("image2.jpg", warpedImage2);
     // cv::imwrite("image2.jpg", image2);
+    cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
+    cv::imwrite("result.jpg", result);
     cout << "stitching completed successfully\n" << result_name << " saved!";
     return EXIT_SUCCESS;
 }
