@@ -76,7 +76,7 @@ from rclpy.timer import Rate
 from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
 
-from spot_driver.robot_command_util import batch_command
+from spot_driver.robot_command_util import batch_command, command_duration
 
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -2078,6 +2078,7 @@ class SpotROS(Node):
         convert(ros_command, proto_command)
 
         commands = batch_command(proto_command, 50, 3)
+        command_duration(commands[0])
         if len(commands) == 1:
             pass
 

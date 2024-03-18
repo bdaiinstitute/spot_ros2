@@ -10,6 +10,7 @@ import math
 import time
 from typing import Callable, Optional, Tuple
 
+import pytest
 from bosdyn.api import (
     arm_command_pb2,
     basic_command_pb2,
@@ -20,9 +21,9 @@ from bosdyn.api import (
     trajectory_pb2,
 )
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE2Velocity, SE3Pose, SE3Velocity
-from bosdyn.util import seconds_to_duration, seconds_to_timestamp
+from bosdyn.util import duration_to_seconds, seconds_to_duration, seconds_to_timestamp
 
-from spot_driver.robot_command_util import batch_command
+from spot_driver.robot_command_util import batch_command, command_duration
 
 ###############################################################################
 # CONTINUOUS TRAJECTORIES
@@ -362,3 +363,36 @@ def test_one_trajectory_with_stride() -> None:
     assert len(commands[0].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 0
     assert len(commands[1].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 0
     assert len(commands[2].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 0
+
+
+def test_command_duration() -> None:
+    """
+    Check the duration of a command containing multiple time-aligned trajectories.
+    """
+    duration = 5
+    batch_size = 20
+    time_sample = 0.1
+    overlapping_points = 4
+
+    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+        duration=duration, dt=time_sample, trajectory_function=_continuous_trajectory_3d
+    )
+    mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
+        duration=duration, dt=time_sample, trajectory_function=_continuous_trajectory_2d
+    )
+    gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
+        duration=duration, dt=time_sample, trajectory_function=_continuous_trajectory_1d
+    )
+
+    command = _build_sample_command(
+        hand_trajectory=hand_trajectory,
+        mobility_trajectory=mobility_trajectory,
+        gripper_trajectory=gripper_trajectory,
+    )
+    commands = batch_command(command=command, batch_size=batch_size, overlapping_points=overlapping_points)
+
+    # Each trajectory contains 51 = 1 + 5 / 0.1 datapoints.
+    # With a batch size of 20, and 4 overlapping points between trajectories,
+    # we expect 3 commands.
+    assert len(commands) == 3
+    assert duration_to_seconds(command_duration(commands[0])) == pytest.approx((batch_size - 1) * time_sample)

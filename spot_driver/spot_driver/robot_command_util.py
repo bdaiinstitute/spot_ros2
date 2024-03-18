@@ -176,7 +176,7 @@ def batch_command(
     return commands
 
 
-def max_duration(command: robot_command_pb2.RobotCommand) -> Duration:
+def command_duration(command: robot_command_pb2.RobotCommand) -> Duration:
     """
     This method checks the duration of all trajectories stored in the given command
     and returns the longest.
@@ -192,20 +192,30 @@ def max_duration(command: robot_command_pb2.RobotCommand) -> Duration:
         if command.synchronized_command.HasField("mobility_command"):
             mobility_request = command.synchronized_command.mobility_command
             if points := mobility_request.se2_trajectory_request.trajectory.points:
-                time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+                new_time_since_reference = points[-1].time_since_reference
+                if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
+                    time_since_reference = new_time_since_reference
         if command.synchronized_command.HasField("arm_command"):
             arm_request = command.synchronized_command.arm_command
             if arm_request.HasField("arm_cartesian_command"):
                 if points := arm_request.arm_cartesian_command.pose_trajectory_in_task.points:
-                    time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+                    new_time_since_reference = points[-1].time_since_reference
+                    if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
+                        time_since_reference = new_time_since_reference
             elif arm_request.HasField("arm_joint_move_command"):
                 if points := arm_request.arm_joint_move_command.trajectory.points:
-                    time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+                    new_time_since_reference = points[-1].time_since_reference
+                    if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
+                        time_since_reference = new_time_since_reference
             elif arm_request.HasField("arm_impedance_command"):
                 if points := arm_request.arm_impedance_command.task_tform_desired_tool.points:
-                    time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+                    new_time_since_reference = points[-1].time_since_reference
+                    if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
+                        time_since_reference = new_time_since_reference
         if command.synchronized_command.HasField("gripper_command"):
             gripper_request = command.synchronized_command.gripper_command
             if points := gripper_request.claw_gripper_command.trajectory.points:
-                time_since_reference = max(time_since_reference, points[-1].time_since_reference)
+                new_time_since_reference = points[-1].time_since_reference
+                if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
+                    time_since_reference = new_time_since_reference
     return time_since_reference
