@@ -2,15 +2,6 @@
 
 # Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
-# We disable Pylint warnings for all Protobuf files which contain objects with
-# dynamically added member attributes.
-# pylint: disable=no-member
-
-# We disable Pyling warnings for lines too long because it is been taking care
-# by the formatter.
-# pylint: disable=line-too-long
-
-
 """
 This example shows how a long trajectory is sent to the robot in batches.
 """
