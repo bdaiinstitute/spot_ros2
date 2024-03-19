@@ -4,7 +4,7 @@
 Utility class with methods to manipulate robot commands.
 """
 
-from typing import Any, List
+from typing import Any, List, Optional
 
 from bosdyn.api import robot_command_pb2
 from bosdyn.util import duration_to_seconds
@@ -176,7 +176,50 @@ def batch_command(
     return commands
 
 
-def max_time_since_reference(command: robot_command_pb2.RobotCommand) -> Duration:
+def min_time_since_reference(command: robot_command_pb2.RobotCommand) -> Optional[Duration]:
+    """
+    This method returns the min time_since_reference by inspecting all trajectories
+    stored in the given command.
+
+    Args:
+        command: The command to calculate the min time_since_reference.
+
+    Returns:
+        The min time_since_reference from all available trajectories.
+    """
+    time = None
+    if command.HasField("synchronized_command"):
+        if command.synchronized_command.HasField("mobility_command"):
+            mobility_request = command.synchronized_command.mobility_command
+            if points := mobility_request.se2_trajectory_request.trajectory.points:
+                time = points[0].time_since_reference
+        if command.synchronized_command.HasField("arm_command"):
+            arm_request = command.synchronized_command.arm_command
+            if arm_request.HasField("arm_cartesian_command"):
+                if points := arm_request.arm_cartesian_command.pose_trajectory_in_task.points:
+                    new_time = points[0].time_since_reference
+                    if time is None or duration_to_seconds(new_time) < duration_to_seconds(time):
+                        time = new_time
+            elif arm_request.HasField("arm_joint_move_command"):
+                if points := arm_request.arm_joint_move_command.trajectory.points:
+                    new_time = points[0].time_since_reference
+                    if time is None or duration_to_seconds(new_time) < duration_to_seconds(time):
+                        time = new_time
+            elif arm_request.HasField("arm_impedance_command"):
+                if points := arm_request.arm_impedance_command.task_tform_desired_tool.points:
+                    new_time = points[0].time_since_reference
+                    if time is None or duration_to_seconds(new_time) < duration_to_seconds(time):
+                        time = new_time
+        if command.synchronized_command.HasField("gripper_command"):
+            gripper_request = command.synchronized_command.gripper_command
+            if points := gripper_request.claw_gripper_command.trajectory.points:
+                new_time = points[0].time_since_reference
+                if time is None or duration_to_seconds(new_time) < duration_to_seconds(time):
+                    time = new_time
+    return time
+
+
+def max_time_since_reference(command: robot_command_pb2.RobotCommand) -> Optional[Duration]:
     """
     This method returns the max time_since_reference by inspecting all trajectories
     stored in the given command.
@@ -187,38 +230,36 @@ def max_time_since_reference(command: robot_command_pb2.RobotCommand) -> Duratio
     Returns:
         The max time_since_reference from all available trajectories.
     """
-    time_since_reference = Duration()
+    time = None
     if command.HasField("synchronized_command"):
         if command.synchronized_command.HasField("mobility_command"):
             mobility_request = command.synchronized_command.mobility_command
             if points := mobility_request.se2_trajectory_request.trajectory.points:
-                new_time_since_reference = points[-1].time_since_reference
-                if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
-                    time_since_reference = new_time_since_reference
+                time = points[-1].time_since_reference
         if command.synchronized_command.HasField("arm_command"):
             arm_request = command.synchronized_command.arm_command
             if arm_request.HasField("arm_cartesian_command"):
                 if points := arm_request.arm_cartesian_command.pose_trajectory_in_task.points:
-                    new_time_since_reference = points[-1].time_since_reference
-                    if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
-                        time_since_reference = new_time_since_reference
+                    new_time = points[-1].time_since_reference
+                    if time is None or duration_to_seconds(new_time) > duration_to_seconds(time):
+                        time = new_time
             elif arm_request.HasField("arm_joint_move_command"):
                 if points := arm_request.arm_joint_move_command.trajectory.points:
-                    new_time_since_reference = points[-1].time_since_reference
-                    if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
-                        time_since_reference = new_time_since_reference
+                    new_time = points[-1].time_since_reference
+                    if time is None or duration_to_seconds(new_time) > duration_to_seconds(time):
+                        time = new_time
             elif arm_request.HasField("arm_impedance_command"):
                 if points := arm_request.arm_impedance_command.task_tform_desired_tool.points:
-                    new_time_since_reference = points[-1].time_since_reference
-                    if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
-                        time_since_reference = new_time_since_reference
+                    new_time = points[-1].time_since_reference
+                    if time is None or duration_to_seconds(new_time) > duration_to_seconds(time):
+                        time = new_time
         if command.synchronized_command.HasField("gripper_command"):
             gripper_request = command.synchronized_command.gripper_command
             if points := gripper_request.claw_gripper_command.trajectory.points:
-                new_time_since_reference = points[-1].time_since_reference
-                if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
-                    time_since_reference = new_time_since_reference
-    return time_since_reference
+                new_time = points[-1].time_since_reference
+                if time is None or duration_to_seconds(new_time) > duration_to_seconds(time):
+                    time = new_time
+    return time
 
 
 def get_batch_size(sequence_length: int, batch_size: int, overlapping: int, batch_number: int) -> int:

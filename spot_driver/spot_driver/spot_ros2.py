@@ -76,7 +76,7 @@ from rclpy.timer import Rate
 from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
 
-from spot_driver.robot_command_util import batch_command, max_time_since_reference
+import spot_driver.robot_command_util as robot_command_util
 
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -2077,10 +2077,11 @@ class SpotROS(Node):
         proto_command = robot_command_pb2.RobotCommand()
         convert(ros_command, proto_command)
 
-        commands = batch_command(proto_command, 50, 3)
-        max_time_since_reference(commands[0])
-        if len(commands) == 1:
-            pass
+        # We send the first command and calculate when the next command is executed.
+
+        commands = robot_command_util.batch_command(proto_command, 50, 3)
+        if len(commands) > 1:
+            robot_command_util.min_time_since_reference(commands[0])
 
         self._wait_for_goal = None
         if self.spot_wrapper is None:

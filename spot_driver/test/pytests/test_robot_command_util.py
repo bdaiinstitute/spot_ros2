@@ -23,7 +23,7 @@ from bosdyn.api import (
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE2Velocity, SE3Pose, SE3Velocity
 from bosdyn.util import duration_to_seconds, seconds_to_duration, seconds_to_timestamp
 
-from spot_driver.robot_command_util import batch_command, command_duration
+from spot_driver.robot_command_util import batch_command, get_batch_size, max_time_since_reference
 
 ###############################################################################
 # CONTINUOUS TRAJECTORIES
@@ -207,51 +207,27 @@ def _build_sample_command(
     return command
 
 
-def _batch_size(sequence_length: int, batch_size: int, overlapping: int, batch_number: int) -> int:
+def test_get_batch_size() -> None:
     """
-    Return the size of a batch considering a vector of given length, the batch size
-    and the overlapping points.
-
-    Args:
-        sequence_length: The sequence length.
-        batch_size: The batch size.
-        overlapping: The number of overlapping element between batches.
-        batch_number: The batch number.
-
-    Returns:
-        The size of the requested batch.
-
-    Examples:
-
-        sequence: 0 1 2 3 4 5 6 7 8 9
-        batch1:   0 1 2 3 4
-        batch2:             5 6 7 8 9
-        sequence_length = 10
-        batch_size = 5
-        overlapping = 0
-        batch sizes = [5, 5]
-
-        sequence: 0 1 2 3 4 5 6 7 8 9 A B C
-        batch1:   0 1 2 3 4
-        batch2:           4 5 6 7 8
-        batch3:                   8 9 A B C
-        batch4:                           C
-        sequence_length = 13
-        batch_size = 5
-        overlapping = 1
-        batch sizes = [4, 4, 4, 1]
+    Test the command get_batch_size.
     """
-    # Calculate the stride.
-    stride = batch_size - overlapping
+    sequence = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    batch_size = 5
+    overlapping = 0
 
-    # Calculate the total number of full batches.
-    num_full_batches = max(0, 1 + (sequence_length - batch_size) // stride)
+    assert get_batch_size(len(sequence), batch_size, overlapping, 0) == 5
+    assert get_batch_size(len(sequence), batch_size, overlapping, 1) == 5
+    assert get_batch_size(len(sequence), batch_size, overlapping, 2) == 0
 
-    if batch_number >= num_full_batches:
-        # Calculate the remaining elements.
-        return max(0, sequence_length - stride * batch_number)
-    else:
-        return batch_size
+    sequence = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C"]
+    batch_size = 5
+    overlapping = 1
+
+    assert get_batch_size(len(sequence), batch_size, overlapping, 0) == 5
+    assert get_batch_size(len(sequence), batch_size, overlapping, 1) == 5
+    assert get_batch_size(len(sequence), batch_size, overlapping, 2) == 5
+    assert get_batch_size(len(sequence), batch_size, overlapping, 3) == 1
+    assert get_batch_size(len(sequence), batch_size, overlapping, 4) == 0
 
 
 def test_trajectories_different_length() -> None:
@@ -445,14 +421,14 @@ def test_command_duration() -> None:
     assert len(commands) == 3
 
     sequence_length = len(hand_trajectory.points)
-    batch0_size = _batch_size(sequence_length, batch_size, overlapping, 0)
-    batch1_size = _batch_size(sequence_length, batch_size, overlapping, 1)
-    batch2_size = _batch_size(sequence_length, batch_size, overlapping, 2)
+    batch0_size = get_batch_size(sequence_length, batch_size, overlapping, 0)
+    batch1_size = get_batch_size(sequence_length, batch_size, overlapping, 1)
+    batch2_size = get_batch_size(sequence_length, batch_size, overlapping, 2)
 
     end_batch0 = batch0_size - 1
     end_batch1 = end_batch0 - overlapping + batch1_size
     end_batch2 = end_batch1 - overlapping + batch2_size
 
-    assert duration_to_seconds(command_duration(commands[0])) == pytest.approx(time_sample * end_batch0)
-    assert duration_to_seconds(command_duration(commands[1])) == pytest.approx(time_sample * end_batch1)
-    assert duration_to_seconds(command_duration(commands[2])) == pytest.approx(time_sample * end_batch2)
+    assert duration_to_seconds(max_time_since_reference(commands[0])) == pytest.approx(time_sample * end_batch0)
+    assert duration_to_seconds(max_time_since_reference(commands[1])) == pytest.approx(time_sample * end_batch1)
+    assert duration_to_seconds(max_time_since_reference(commands[2])) == pytest.approx(time_sample * end_batch2)
