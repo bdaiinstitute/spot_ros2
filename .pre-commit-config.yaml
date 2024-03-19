@@ -50,9 +50,4 @@ repos:
 #     rev: v1.3.5
 #     hooks:
 #       - id: clang-tidy
-# -   repo: https://github.com/Takishima/cmake-pre-commit-hooks
-#     rev: v1.8.0
-#     hooks:
-#       # - id: clang-format
-#       - id: clang-tidy
-#         args: [--checks=readability-magic-numbers,--warnings-as-errors=*]
+#         args: [--warnings-as-errors=*]
