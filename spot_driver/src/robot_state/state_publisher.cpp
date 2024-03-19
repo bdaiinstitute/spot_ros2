@@ -35,8 +35,8 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
 
   const auto preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
   is_using_vision_ = preferred_odom_frame == "vision";
-  full_odom_frame_id_ = preferred_odom_frame.find('/') == std::string::npos ? spot_name + "/" + preferred_odom_frame
-                                                                            : preferred_odom_frame;
+  full_odom_frame_id_ =
+      preferred_odom_frame.find('/') == std::string::npos ? frame_prefix_ + preferred_odom_frame : preferred_odom_frame;
 
   // Create a timer to request and publish robot state at a fixed rate
   timer_interface_->setTimer(kRobotStateCallbackPeriod, [this] {
