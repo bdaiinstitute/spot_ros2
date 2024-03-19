@@ -84,52 +84,60 @@ def _continuous_trajectory_3d(t: float) -> SE3Pose:
 
 
 def _discrete_trajectory_1d(
-    reference_time: float, start_time: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory1D
+    reference_time: float, delay: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory1D
 ) -> trajectory_pb2.ScalarTrajectory:
     """
-    Return a trajectory value.
+    Return a scalar trajectory by sampling a continuous function. The
+    continuous function is sampled from 0 to a specified duration and at given
+    sampling intervals.
+
+    Args:
+        reference_time: The time the trajectory is executed.
+        delay: A delay to let the robot move into the initial position.
+        duration: The total sampling time.
+        dt: The sampling interval.
+        trajectory_function: the trajectory function to sample.
     """
     trajectory = trajectory_pb2.ScalarTrajectory()
     trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
     trajectory.interpolation = trajectory_pb2.POS_INTERP_CUBIC
-    t = start_time
-    while t - start_time <= duration:
+    t = 0.0
+    while t < duration:
         pos = trajectory_function(t)
         point = trajectory.points.add()
         point.point = pos
-        point.time_since_reference.CopyFrom(seconds_to_duration(t - start_time))
+        point.time_since_reference.CopyFrom(seconds_to_duration(t + delay))
         t = t + dt
     return trajectory
 
 
 def _discrete_trajectory_3d(
     reference_time: float,
-    start_time: float,
+    delay: float,
     duration: float,
     dt: float,
     trajectory_function: ContinuousTrajectory3D,
 ) -> trajectory_pb2.SE3Trajectory:
     """
-    Return a discrete trajectory in 3D space by sampling a continuous 3D function.
-    The continuous function is sampled from a given start time, for a specified
-    duration and at given sampling intervals.
-
+    Return a discrete trajectory in 3D space by sampling a continuous 3D
+    function. The continuous function is sampled from 0 to a specified duration
+    and at given sampling intervals.
 
     Args:
         reference_time: The time the trajectory is executed.
-        start_time: The initial sampling time.
+        delay: A delay to let the robot move into the initial position.
         duration: The total sampling time.
         dt: The sampling interval.
         trajectory_function: the trajectory function to sample.
     """
     trajectory = trajectory_pb2.SE3Trajectory()
     trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
-    t = start_time
-    while t - start_time <= duration:
+    t = 0.0
+    while t < duration:
         pos = trajectory_function(t)
         point = trajectory.points.add()
         point.pose.CopyFrom(pos.to_proto())
-        point.time_since_reference.CopyFrom(seconds_to_duration(t - start_time))
+        point.time_since_reference.CopyFrom(seconds_to_duration(t + delay))
         t = t + dt
     return trajectory
 
@@ -337,42 +345,22 @@ class SpotRunner:
         odom_to_task: SE3Pose = odom_to_body * body_to_task
         wrist_to_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
 
-        # Move arm and gripper to the first position of the sampled trajectories.
-        delay = 2
-        hand_trajectory = _discrete_trajectory_3d(
-            reference_time=time.time() + delay,
-            start_time=0,
-            duration=0,
-            dt=0.1,
-            trajectory_function=_continuous_trajectory_3d,
-        )
-        gripper_trajectory = _discrete_trajectory_1d(
-            reference_time=time.time() + delay,
-            start_time=0,
-            duration=0,
-            dt=0.1,
-            trajectory_function=_continuous_trajectory_1d,
-        )
-        self._follow_trajectory(
-            root_frame_name=ODOM_FRAME_NAME,
-            root_to_task=odom_to_task.to_proto(),
-            wrist_to_tool=wrist_to_tool.to_proto(),
-            hand_trajectory=hand_trajectory,
-            gripper_trajectory=gripper_trajectory,
-        )
+        # We add a delay to be sure that the trajectory starts
+        # after Spot current time.
+        start_time = time.time() + 2
 
         # Make arm and gripper follow the sampled trajectories.
-        delay = 1
+
         hand_trajectory = _discrete_trajectory_3d(
-            reference_time=time.time() + delay,
-            start_time=0,
+            reference_time=start_time,
+            delay=0,
             duration=10,
             dt=0.05,
             trajectory_function=_continuous_trajectory_3d,
         )
         gripper_trajectory = _discrete_trajectory_1d(
-            reference_time=time.time() + delay,
-            start_time=0,
+            reference_time=start_time,
+            delay=0,
             duration=10,
             dt=0.05,
             trajectory_function=_continuous_trajectory_1d,

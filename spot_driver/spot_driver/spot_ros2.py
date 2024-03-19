@@ -2077,7 +2077,7 @@ class SpotROS(Node):
         proto_command = robot_command_pb2.RobotCommand()
         convert(ros_command, proto_command)
 
-        # We send the first command and calculate when the next command is executed.
+        # We send the first command and calculate when the next command must be executed.
 
         commands = robot_command_util.batch_command(proto_command, 50, 3)
         if len(commands) > 1:

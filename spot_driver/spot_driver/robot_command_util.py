@@ -111,7 +111,7 @@ def slice_trajectory(trajectory: Any, index: int, batch_size: int) -> bool:
 
 
 def batch_command(
-    command: robot_command_pb2.RobotCommand, batch_size: int, overlapping_points: int = 0
+    command: robot_command_pb2.RobotCommand, batch_size: int, overlapping: int = 0
 ) -> List[robot_command_pb2.RobotCommand]:
     """
     Analyze the trajectories inside the given command and if they require
@@ -120,7 +120,7 @@ def batch_command(
     Args:
         command: A robot command with some trajectories.
         batch_size: A batch size
-        overlapping_points: Number of points that must overlap between batched
+        overlapping: Number of points that must overlap between batched
             trajectories.
 
     Returns:
@@ -135,7 +135,7 @@ def batch_command(
         return [command]
 
     # This is the increment to find the position of the next batch.
-    stride = batch_size - overlapping_points
+    stride = batch_size - overlapping
     if stride < 1:
         return [command]
 
