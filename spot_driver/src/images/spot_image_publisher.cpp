@@ -26,8 +26,7 @@ constexpr auto kDefaultDepthImageQuality = 100.0;
 }  // namespace
 
 namespace spot_ros2::images {
-::bosdyn::api::GetImageRequest createImageRequest(const std::set<ImageSource>& sources,
-                                                  [[maybe_unused]] const bool has_rgb_cameras,
+::bosdyn::api::GetImageRequest createImageRequest(const std::set<ImageSource>& sources, const bool has_rgb_cameras,
                                                   const double rgb_image_quality, const bool get_raw_rgb_images) {
   ::bosdyn::api::GetImageRequest request_message;
 
@@ -39,7 +38,11 @@ namespace spot_ros2::images {
       image_request->set_image_source_name(source_name);
       // RGB images can have a user-configurable image quality setting.
       image_request->set_quality_percent(rgb_image_quality);
-      image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8);
+      if (has_rgb_cameras) {
+        image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8);
+      } else {
+        image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8);
+      }
       // RGB images can be either raw or JPEG-compressed.
       image_request->set_image_format(get_raw_rgb_images ? bosdyn::api::Image_Format_FORMAT_RAW
                                                          : bosdyn::api::Image_Format_FORMAT_JPEG);
