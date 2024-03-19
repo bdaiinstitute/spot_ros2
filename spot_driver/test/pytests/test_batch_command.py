@@ -223,6 +223,14 @@ def _batch_size(sequence_length: int, batch_size: int, overlapping: int, batch_n
 
     Examples:
 
+        sequence: 0 1 2 3 4 5 6 7 8 9
+        batch1:   0 1 2 3 4
+        batch2:             5 6 7 8 9
+        sequence_length = 10
+        batch_size = 5
+        overlapping = 0
+        batch sizes = [5, 5]
+
         sequence: 0 1 2 3 4 5 6 7 8 9 A B C
         batch1:   0 1 2 3 4
         batch2:           4 5 6 7 8
@@ -232,15 +240,6 @@ def _batch_size(sequence_length: int, batch_size: int, overlapping: int, batch_n
         batch_size = 5
         overlapping = 1
         batch sizes = [4, 4, 4, 1]
-
-        sequence: 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
-        batch1:   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
-        batch2:                                   6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
-        batch3:                                                                   2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
-        sequence_length = 51
-        batch_size = 20
-        overlapping = 4
-        batch sizes = [20, 20, 19]
     """
     # Calculate the stride.
     stride = batch_size - overlapping
