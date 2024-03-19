@@ -115,7 +115,7 @@ The `bosdyn_msgs` package is installed as a debian package as part of the `insta
 If you encounter problems when using this repository, feel free to open an issue or PR.
 
 ### Verify Boston Dynamics API Installation
-To check that you have the necessary Boston Dynamics API packages from `install_spot_ros2.sh`, you can run the following command. Note that all versions should be `4.0.0`. If they were not installed correctly on your system, you can try manually installing them following [Boston Dynamics' guide](https://dev.bostondynamics.com/docs/python/quickstart#install-spot-python-packages).
+If you encounter `ModuleNotFoundErrors` with `bosdyn` packages upon running the driver, it is likely that the necessary Boston Dynamics API packages did not get installed with `install_spot_ros2.sh`. To check this, you can run the following command. Note that all versions should be `4.0.0`. 
 ```bash
 $ pip list | grep bosdyn
 bosdyn-api                           4.0.0
@@ -136,6 +136,7 @@ bosdyn-msgs                          4.0.0
 bosdyn-spot-api-msgs                 4.0.0
 bosdyn-spot-cam-api-msgs             4.0.0
 ```
+If these packages were not installed correctly on your system, you can try manually installing them following [Boston Dynamics' guide](https://dev.bostondynamics.com/docs/python/quickstart#install-spot-python-packages).
 
 ## License
 
