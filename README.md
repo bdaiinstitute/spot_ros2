@@ -47,9 +47,11 @@ From here, build and source the ROS 2 workspace:
 ```
 cd <ros2 ws>
 source /opt/ros/humble/setup.bash
-colcon build --symlink-install
+colcon build --symlink-install --packages-ignore proto2ros_tests
 source install/local_setup.bash
 ```
+
+We suggest ignoring the `proto2ros_tests` package in the build as it is not necessary for running the driver. If you choose to build it, you will see a number of error messages from testing the failure paths. 
 
 ## Example Code
 See [`spot_examples`](spot_examples/) for some examples of using the ROS 2 driver to control Spot.
