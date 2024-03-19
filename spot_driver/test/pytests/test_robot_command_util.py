@@ -90,7 +90,7 @@ def _continuous_trajectory_3d(t: float) -> Tuple[SE3Pose, SE3Velocity]:
 
 
 def _discrete_trajectory_1d(
-    reference_time: float, delay: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory1D
+    reference_time: float, ramp_up_time: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory1D
 ) -> trajectory_pb2.ScalarTrajectory:
     """
     Return a trajectory value.
@@ -103,13 +103,13 @@ def _discrete_trajectory_1d(
         pos = trajectory_function(t)
         point = trajectory.points.add()
         point.point = pos
-        point.time_since_reference.CopyFrom(seconds_to_duration(t + delay))
+        point.time_since_reference.CopyFrom(seconds_to_duration(t + ramp_up_time))
         t = t + dt
     return trajectory
 
 
 def _discrete_trajectory_2d(
-    reference_time: float, delay: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory2D
+    reference_time: float, ramp_up_time: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory2D
 ) -> trajectory_pb2.SE2Trajectory:
     """
     Return a trajectory in 2D space.
@@ -122,13 +122,13 @@ def _discrete_trajectory_2d(
         pos, _ = trajectory_function(t)
         point = trajectory.points.add()
         point.pose.CopyFrom(pos.to_proto())
-        point.time_since_reference.CopyFrom(seconds_to_duration(t + delay))
+        point.time_since_reference.CopyFrom(seconds_to_duration(t + ramp_up_time))
         t = t + dt
     return trajectory
 
 
 def _discrete_trajectory_3d(
-    reference_time: float, delay: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory3D
+    reference_time: float, ramp_up_time: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory3D
 ) -> trajectory_pb2.SE3Trajectory:
     """
     Return a trajectory in 3D space.
@@ -143,7 +143,7 @@ def _discrete_trajectory_3d(
         point = trajectory.points.add()
         point.pose.CopyFrom(pos.to_proto())
         point.velocity.CopyFrom(vel.to_proto())
-        point.time_since_reference.CopyFrom(seconds_to_duration(t + delay))
+        point.time_since_reference.CopyFrom(seconds_to_duration(t + ramp_up_time))
         t = t + dt
     return trajectory
 
@@ -234,10 +234,10 @@ def test_trajectories_different_length() -> None:
     """
 
     hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), delay=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
     )
     mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
-        reference_time=time.time(), delay=0, duration=10, dt=0.1, trajectory_function=_continuous_trajectory_2d
+        reference_time=time.time(), ramp_up_time=0, duration=10, dt=0.1, trajectory_function=_continuous_trajectory_2d
     )
 
     command = _build_sample_command(hand_trajectory=hand_trajectory, mobility_trajectory=mobility_trajectory)
@@ -254,10 +254,10 @@ def test_trajectories_not_aligned() -> None:
     """
 
     hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), delay=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
     )
     mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
-        reference_time=time.time(), delay=0, duration=10, dt=0.2, trajectory_function=_continuous_trajectory_2d
+        reference_time=time.time(), ramp_up_time=0, duration=10, dt=0.2, trajectory_function=_continuous_trajectory_2d
     )
 
     command = _build_sample_command(hand_trajectory=hand_trajectory, mobility_trajectory=mobility_trajectory)
@@ -274,13 +274,13 @@ def test_multiple_trajectories() -> None:
     """
 
     hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), delay=0, duration=20, dt=0.1, trajectory_function=_continuous_trajectory_3d
+        reference_time=time.time(), ramp_up_time=0, duration=20, dt=0.1, trajectory_function=_continuous_trajectory_3d
     )
     mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
-        reference_time=time.time(), delay=0, duration=20, dt=0.1, trajectory_function=_continuous_trajectory_2d
+        reference_time=time.time(), ramp_up_time=0, duration=20, dt=0.1, trajectory_function=_continuous_trajectory_2d
     )
     gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
-        reference_time=time.time(), delay=0, duration=20, dt=0.1, trajectory_function=_continuous_trajectory_1d
+        reference_time=time.time(), ramp_up_time=0, duration=20, dt=0.1, trajectory_function=_continuous_trajectory_1d
     )
 
     command = _build_sample_command(
@@ -317,13 +317,13 @@ def test_multiple_trajectorties_with_stride() -> None:
     """
 
     hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), delay=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
     )
     mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
-        reference_time=time.time(), delay=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_2d
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_2d
     )
     gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
-        reference_time=time.time(), delay=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_1d
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_1d
     )
 
     command = _build_sample_command(
@@ -358,7 +358,7 @@ def test_one_trajectory_with_stride() -> None:
     """
 
     hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), delay=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
     )
 
     command = _build_sample_command(hand_trajectory=hand_trajectory)
@@ -393,21 +393,21 @@ def test_command_duration() -> None:
 
     hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
         reference_time=time.time(),
-        delay=0,
+        ramp_up_time=0,
         duration=duration,
         dt=time_sample,
         trajectory_function=_continuous_trajectory_3d,
     )
     mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
         reference_time=time.time(),
-        delay=0,
+        ramp_up_time=0,
         duration=duration,
         dt=time_sample,
         trajectory_function=_continuous_trajectory_2d,
     )
     gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
         reference_time=time.time(),
-        delay=0,
+        ramp_up_time=0,
         duration=duration,
         dt=time_sample,
         trajectory_function=_continuous_trajectory_1d,
