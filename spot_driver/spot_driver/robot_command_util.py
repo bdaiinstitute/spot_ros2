@@ -176,16 +176,16 @@ def batch_command(
     return commands
 
 
-def command_duration(command: robot_command_pb2.RobotCommand) -> Duration:
+def max_time_since_reference(command: robot_command_pb2.RobotCommand) -> Duration:
     """
-    This method checks the duration of all trajectories stored in the given command
-    and returns the longest.
+    This method returns the max time_since_reference by inspecting all trajectories
+    stored in the given command.
 
     Args:
-        command: The command to check the duration.
+        command: The command to calculate the max time_since_reference.
 
     Returns:
-        The longest duration from all available trajectories.
+        The max time_since_reference from all available trajectories.
     """
     time_since_reference = Duration()
     if command.HasField("synchronized_command"):
@@ -219,3 +219,50 @@ def command_duration(command: robot_command_pb2.RobotCommand) -> Duration:
                 if duration_to_seconds(new_time_since_reference) > duration_to_seconds(time_since_reference):
                     time_since_reference = new_time_since_reference
     return time_since_reference
+
+
+def get_batch_size(sequence_length: int, batch_size: int, overlapping: int, batch_number: int) -> int:
+    """
+    Return the size of a batch considering a vector of given length, the batch size
+    and the overlapping points.
+
+    Args:
+        sequence_length: The sequence length.
+        batch_size: The batch size.
+        overlapping: The number of overlapping element between batches.
+        batch_number: The batch number.
+
+    Returns:
+        The size of the requested batch.
+
+    Examples:
+
+        sequence: 0 1 2 3 4 5 6 7 8 9
+        sequence_length = 10
+        batch_size = 5
+        overlapping = 0
+        batch1:   0 1 2 3 4
+        batch2:             5 6 7 8 9
+        batch sizes = [5, 5]
+
+        sequence: 0 1 2 3 4 5 6 7 8 9 A B C
+        sequence_length = 13
+        batch_size = 5
+        overlapping = 1
+        batch1:   0 1 2 3 4
+        batch2:           4 5 6 7 8
+        batch3:                   8 9 A B C
+        batch4:                           C
+        batch sizes = [5, 5, 5, 1]
+    """
+    # Calculate the stride.
+    stride = batch_size - overlapping
+
+    # Calculate the total number of full batches.
+    num_full_batches = max(0, 1 + (sequence_length - batch_size) // stride)
+
+    if batch_number >= num_full_batches:
+        # Calculate the remaining elements.
+        return max(0, sequence_length - stride * batch_number)
+    else:
+        return batch_size
