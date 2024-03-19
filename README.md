@@ -36,7 +36,7 @@ git submodule init
 git submodule update
 ```
 
-Then run the install script to install the necessary ROS dependencies. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system:
+Then run the install script to install the necessary Boston Dynamics and ROS dependencies. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system:
 ```bash
 cd <path to spot_ros2>
 ./install_spot_ros2.sh
@@ -110,6 +110,33 @@ rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
 The `bosdyn_msgs` package is installed as a debian package as part of the `install_spot_ros2` script because it's very large.  It can be checked out from source [here](https://github.com/bdaiinstitute/bosdyn_msgs) and then built as a normal ROS 2 package if that is preferred (compilation takes about 15 minutes).
 
 
+## Help
+
+If you encounter problems when using this repository, feel free to open an issue or PR.
+
+### Verify Boston Dynamics API Installation
+To check that you have the necessary Boston Dynamics API packages from `install_spot_ros2.sh`, you can run the following command. Note that all versions should be `4.0.0`. If they were not installed correctly on your system, you can try manually installing them following [Boston Dynamics' guide](https://dev.bostondynamics.com/docs/python/quickstart#install-spot-python-packages).
+```bash
+$ pip list | grep bosdyn
+bosdyn-api                           4.0.0
+bosdyn-api-msgs                      4.0.0
+bosdyn-auto-return-api-msgs          4.0.0
+bosdyn-autowalk-api-msgs             4.0.0
+bosdyn-choreography-client           4.0.0
+bosdyn-choreography-protos           4.0.0
+bosdyn-client                        4.0.0
+bosdyn-core                          4.0.0
+bosdyn-graph-nav-api-msgs            4.0.0
+bosdyn-keepalive-api-msgs            4.0.0
+bosdyn-log-status-api-msgs           4.0.0
+bosdyn-metrics-logging-api-msgs      4.0.0
+bosdyn-mission                       4.0.0
+bosdyn-mission-api-msgs              4.0.0
+bosdyn-msgs                          4.0.0
+bosdyn-spot-api-msgs                 4.0.0
+bosdyn-spot-cam-api-msgs             4.0.0
+```
+
 ## License
 
 MIT license - parts of the code developed specifically for ROS 2.
@@ -127,7 +154,7 @@ pre-commit run --all-files
 ```
 
 Now whenever you commit code to this repository, it will be checked against our `pre-commit` hooks. You can also run
-`git commit --no-verify` if you wish you commit without checking against the hooks. 
+`git commit --no-verify` if you wish to commit without checking against the hooks. 
 
 ### Contributors
 
