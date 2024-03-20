@@ -88,7 +88,7 @@ from spot_msgs.action import (  # type: ignore
     NavigateTo,
     Trajectory,
 )
-from spot_msgs.action import (
+from spot_msgs.action import (  # type: ignore
     RobotCommand as RobotCommandAction,
 )
 from spot_msgs.msg import (  # type: ignore
@@ -139,7 +139,7 @@ from spot_msgs.srv import (  # type: ignore
     TagLogpoint,
     UploadAnimation,
 )
-from spot_msgs.srv import (
+from spot_msgs.srv import (  # type: ignore
     RobotCommand as RobotCommandService,
 )
 from spot_wrapper.cam_wrapper import SpotCamCamera, SpotCamWrapper
