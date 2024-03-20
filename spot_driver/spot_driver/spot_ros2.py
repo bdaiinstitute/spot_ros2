@@ -2103,7 +2103,7 @@ class SpotROS(Node):
         if self.spot_wrapper is not None:
             args = (duration.nanoseconds / 1e9,) if duration.nanoseconds else ()
             response.success, response.message, robot_command_id = self.spot_wrapper.robot_command(proto_command, *args)
-            if robot_command_id:
+            if robot_command_id is not None:
                 response.robot_command_id = robot_command_id
         else:
             response.success = True
