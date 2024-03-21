@@ -1278,7 +1278,7 @@ class SpotROS(Node):
         return response
 
     def handle_stop_dance(
-                    self, request: Trigger.Request, response: Trigger.Response
+        self, request: Trigger.Request, response: Trigger.Response
     ) -> Trigger.Response:
         """ROS service handler to stop the robot's dancing."""
         if self.spot_wrapper is None:
