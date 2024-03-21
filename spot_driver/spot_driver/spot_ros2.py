@@ -589,9 +589,7 @@ class SpotROS(Node):
         self.create_service(
             Trigger,
             "stop_dance",
-            lambda request, response: self.service_wrapper(
-                "stop_dance", self.handle_stop_dance, request, response
-            ),
+            lambda request, response: self.service_wrapper("stop_dance", self.handle_stop_dance, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -1277,9 +1275,7 @@ class SpotROS(Node):
             response.message = "No choreography sequence found in request"
         return response
 
-    def handle_stop_dance(
-        self, request: Trigger.Request, response: Trigger.Response
-    ) -> Trigger.Response:
+    def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to stop the robot's dancing."""
         if self.spot_wrapper is None:
             response.success = False
