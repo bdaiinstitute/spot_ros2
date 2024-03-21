@@ -4,11 +4,10 @@
 Utility class with methods to manipulate robot commands.
 """
 
-from typing import Any, List, Optional
+from typing import Any, List
 
 from bosdyn.api import robot_command_pb2
-from bosdyn.util import duration_to_seconds
-from google.protobuf.duration_pb2 import Duration
+from bosdyn.util import duration_to_seconds, timestamp_to_sec
 
 
 def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int) -> bool:
@@ -176,90 +175,60 @@ def batch_command(
     return commands
 
 
-def min_time_since_reference(command: robot_command_pb2.RobotCommand) -> Optional[Duration]:
+def execution_time(command: robot_command_pb2.RobotCommand) -> float:
     """
-    This method returns the min time_since_reference by inspecting all trajectories
-    stored in the given command.
+    This method returns the execution time of the command by inspecting all
+    its trajectories.
 
     Args:
-        command: The command to calculate the min time_since_reference.
+        command: The command we want to calculate the execution time.
 
     Returns:
-        The min time_since_reference from all available trajectories.
+        The the execution time of the command obtained by inspecting all its
+        trajectories.
     """
-    time = None
+    current_time = float("inf")
     if command.HasField("synchronized_command"):
         if command.synchronized_command.HasField("mobility_command"):
             mobility_request = command.synchronized_command.mobility_command
-            if points := mobility_request.se2_trajectory_request.trajectory.points:
-                time = points[0].time_since_reference
+            if trajectory := mobility_request.se2_trajectory_request.trajectory:
+                new_time = timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(
+                    trajectory.points[0].time_since_reference
+                )
+                if new_time < current_time:
+                    current_time = new_time
         if command.synchronized_command.HasField("arm_command"):
             arm_request = command.synchronized_command.arm_command
             if arm_request.HasField("arm_cartesian_command"):
-                if points := arm_request.arm_cartesian_command.pose_trajectory_in_task.points:
-                    new_time = points[0].time_since_reference
-                    if time is None or duration_to_seconds(new_time) < duration_to_seconds(time):
-                        time = new_time
+                if trajectory := arm_request.arm_cartesian_command.pose_trajectory_in_task:
+                    new_time = timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(
+                        trajectory.points[0].time_since_reference
+                    )
+                    if new_time < current_time:
+                        current_time = new_time
             elif arm_request.HasField("arm_joint_move_command"):
-                if points := arm_request.arm_joint_move_command.trajectory.points:
-                    new_time = points[0].time_since_reference
-                    if time is None or duration_to_seconds(new_time) < duration_to_seconds(time):
-                        time = new_time
+                if trajectory := arm_request.arm_joint_move_command.trajectory:
+                    new_time = timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(
+                        trajectory.points[0].time_since_reference
+                    )
+                    if new_time < current_time:
+                        current_time = new_time
             elif arm_request.HasField("arm_impedance_command"):
-                if points := arm_request.arm_impedance_command.task_tform_desired_tool.points:
-                    new_time = points[0].time_since_reference
-                    if time is None or duration_to_seconds(new_time) < duration_to_seconds(time):
-                        time = new_time
+                if trajectory := arm_request.arm_impedance_command.task_tform_desired_tool:
+                    new_time = timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(
+                        trajectory.points[0].time_since_reference
+                    )
+                    if new_time < current_time:
+                        current_time = new_time
         if command.synchronized_command.HasField("gripper_command"):
             gripper_request = command.synchronized_command.gripper_command
-            if points := gripper_request.claw_gripper_command.trajectory.points:
-                new_time = points[0].time_since_reference
-                if time is None or duration_to_seconds(new_time) < duration_to_seconds(time):
-                    time = new_time
-    return time
-
-
-def max_time_since_reference(command: robot_command_pb2.RobotCommand) -> Optional[Duration]:
-    """
-    This method returns the max time_since_reference by inspecting all trajectories
-    stored in the given command.
-
-    Args:
-        command: The command to calculate the max time_since_reference.
-
-    Returns:
-        The max time_since_reference from all available trajectories.
-    """
-    time = None
-    if command.HasField("synchronized_command"):
-        if command.synchronized_command.HasField("mobility_command"):
-            mobility_request = command.synchronized_command.mobility_command
-            if points := mobility_request.se2_trajectory_request.trajectory.points:
-                time = points[-1].time_since_reference
-        if command.synchronized_command.HasField("arm_command"):
-            arm_request = command.synchronized_command.arm_command
-            if arm_request.HasField("arm_cartesian_command"):
-                if points := arm_request.arm_cartesian_command.pose_trajectory_in_task.points:
-                    new_time = points[-1].time_since_reference
-                    if time is None or duration_to_seconds(new_time) > duration_to_seconds(time):
-                        time = new_time
-            elif arm_request.HasField("arm_joint_move_command"):
-                if points := arm_request.arm_joint_move_command.trajectory.points:
-                    new_time = points[-1].time_since_reference
-                    if time is None or duration_to_seconds(new_time) > duration_to_seconds(time):
-                        time = new_time
-            elif arm_request.HasField("arm_impedance_command"):
-                if points := arm_request.arm_impedance_command.task_tform_desired_tool.points:
-                    new_time = points[-1].time_since_reference
-                    if time is None or duration_to_seconds(new_time) > duration_to_seconds(time):
-                        time = new_time
-        if command.synchronized_command.HasField("gripper_command"):
-            gripper_request = command.synchronized_command.gripper_command
-            if points := gripper_request.claw_gripper_command.trajectory.points:
-                new_time = points[-1].time_since_reference
-                if time is None or duration_to_seconds(new_time) > duration_to_seconds(time):
-                    time = new_time
-    return time
+            if trajectory := gripper_request.claw_gripper_command.trajectory:
+                new_time = timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(
+                    trajectory.points[0].time_since_reference
+                )
+                if new_time < current_time:
+                    current_time = new_time
+    return current_time
 
 
 def get_batch_size(sequence_length: int, batch_size: int, overlapping: int, batch_number: int) -> int:

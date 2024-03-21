@@ -52,7 +52,7 @@ def _continuous_trajectory_1d(t: float) -> float:
     Given a time t in the trajectory, return a scalar representing a value
     in the trajectory.
     """
-    n = 3
+    n = 5
     period = 10.0
     t_norm = t / period
     x = -abs(math.sin(math.pi * n * t_norm))
@@ -66,7 +66,7 @@ def _continuous_trajectory_3d(t: float) -> SE3Pose:
     """
 
     # Draw a Rhodonea curve with n petals and period P (seconds)
-    n = 3
+    n = 5
     period = 10.0
     t_norm = t / period
     radius = 0.4 * math.sin(math.pi * n * t_norm)
@@ -358,15 +358,15 @@ class SpotRunner:
 
         hand_trajectory = _discrete_trajectory_3d(
             reference_time=start_time,
-            ramp_up_time=2,
-            duration=10,
+            ramp_up_time=1,
+            duration=40,
             dt=0.05,
             trajectory_function=_continuous_trajectory_3d,
         )
-        gripper_trajectory = _discrete_trajectory_1d(
+        _discrete_trajectory_1d(
             reference_time=start_time,
-            ramp_up_time=2,
-            duration=10,
+            ramp_up_time=1,
+            duration=40,
             dt=0.05,
             trajectory_function=_continuous_trajectory_1d,
         )
@@ -375,7 +375,7 @@ class SpotRunner:
             root_to_task=odom_to_task.to_proto(),
             wrist_to_tool=wrist_to_tool.to_proto(),
             hand_trajectory=hand_trajectory,
-            gripper_trajectory=gripper_trajectory,
+            # gripper_trajectory=gripper_trajectory,
         )
 
         # Stow the arm.

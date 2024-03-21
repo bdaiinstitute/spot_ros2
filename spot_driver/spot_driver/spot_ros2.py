@@ -2073,43 +2073,47 @@ class SpotROS(Node):
         return feedback
 
     def handle_robot_command(self, goal_handle: ServerGoalHandle) -> RobotCommand.Result:
+        if self.spot_wrapper is None:
+            return
+
+        clock_skew = 0.0  # Call a service.
+
         ros_command = goal_handle.request.command
         proto_command = robot_command_pb2.RobotCommand()
         convert(ros_command, proto_command)
 
-        # We send the first command and calculate when the next command must be executed.
+        commands = robot_command_util.batch_command(proto_command, 100, 20)
+        num_of_commands = len(commands)
 
-        commands = robot_command_util.batch_command(proto_command, 50, 3)
-        if len(commands) > 1:
-            robot_command_util.min_time_since_reference(commands[0])
-
+        goal_id = None
         self._wait_for_goal = None
-        if self.spot_wrapper is None:
-            self._wait_for_goal = WaitForGoal(self.get_clock(), 2.0)
-            goal_id = None
-        else:
-            success, err_msg, goal_id = self.spot_wrapper.robot_command(proto_command)
-            if not success:
-                raise Exception(err_msg)
-
-        self.get_logger().info("Robot now executing goal " + str(goal_id))
-        # The command is non-blocking, but we need to keep this function up in order to interrupt if a
-        # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
-        # monitor whether the timeout_cb has already aborted the command
         feedback: Optional[RobotCommandFeedback] = None
         feedback_msg: Optional[RobotCommand.Feedback] = None
+
+        index = 0
+        execution_time = float("inf")
         while (
             rclpy.ok()
+            and goal_handle.is_active
             and not goal_handle.is_cancel_requested
             and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
-            and goal_handle.is_active
         ):
+            if index == 0 or time.time() + clock_skew >= execution_time:
+                success, err_msg, goal_id = self.spot_wrapper.robot_command(commands[index])
+                if not success:
+                    raise Exception(err_msg)
+                index += 1
+                if index < num_of_commands:
+                    execution_time = robot_command_util.execution_time(commands[index])
+                else:
+                    execution_time = float("inf")
+                self.get_logger().info("Robot now executing goal " + str(goal_id))
+
             feedback = self._get_robot_command_feedback(goal_id)
             feedback_msg = RobotCommand.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
             time.sleep(0.1)  # don't use rate here because we're already in a single thread
 
-        # publish a final feedback
         result = RobotCommand.Result()
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
