@@ -22,7 +22,8 @@
 #include <utility>
 
 namespace {
-constexpr auto kTfSyncPeriod = std::chrono::duration<double>{1.0};  // 1 Hz
+constexpr auto kWorldObjectSyncPeriod = std::chrono::duration<double>{1.0};  // 1 Hz
+constexpr auto kTfBroadcasterPeriod = std::chrono::duration<double>{0.1};    // 10 Hz
 
 /**
  * @brief All frame names which are considered internal to Spot.
@@ -178,7 +179,7 @@ std::string toString(const ::bosdyn::api::MutateWorldObjectResponse_Status& stat
 
 /**
  * @brief Create a ListWorldObjectRequest that requests world objects of all the types that ObjectSynchronizer
- * maymodify.
+ * may modify.
  * @details Currently the only valid type of object is the Drawable object type.
  * @return Request for info about WorldObjects which ObjectSynchronizer may modify.
  */
@@ -186,6 +187,23 @@ std::string toString(const ::bosdyn::api::MutateWorldObjectResponse_Status& stat
   using Type = ::bosdyn::api::WorldObjectType;
   ::bosdyn::api::ListWorldObjectRequest request;
   request.add_object_type(Type::WORLD_OBJECT_DRAWABLE);
+  return request;
+}
+
+/**
+ * @brief Create a ListWorldObjectRequest that requests all types of world objects.
+ * @return A request to list all WorldObject types.
+ */
+::bosdyn::api::ListWorldObjectRequest createAllObjectsRequest() {
+  using Type = ::bosdyn::api::WorldObjectType;
+  ::bosdyn::api::ListWorldObjectRequest request;
+  request.add_object_type(Type::WORLD_OBJECT_APRILTAG);
+  request.add_object_type(Type::WORLD_OBJECT_DOCK);
+  request.add_object_type(Type::WORLD_OBJECT_IMAGE_COORDINATES);
+  request.add_object_type(Type::WORLD_OBJECT_STAIRCASE);
+  request.add_object_type(Type::WORLD_OBJECT_USER_NOGO);
+  request.add_object_type(Type::WORLD_OBJECT_DRAWABLE);
+  request.add_object_type(Type::WORLD_OBJECT_UNKNOWN);
   return request;
 }
 
@@ -210,10 +228,10 @@ std::set<std::string> getObjectFrames(const ::bosdyn::api::ListWorldObjectRespon
 }
 
 /**
- * @brief Given a ListWorldObjectResponse message, create a list of the names of these objects.
+ * @brief Given a ListWorldObjectResponse message, create a map between the names and the IDs of these objects.
  *
  * @param list_objects_response Input message to parse.
- * @return A set of all object names listed in the input.
+ * @return A map where the keys are the names of the objects and the values are the IDs of the objects.
  */
 std::map<std::string, int> getObjectNamesAndIDs(const ::bosdyn::api::ListWorldObjectResponse& list_objects_response) {
   std::map<std::string, int> names_to_ids;
@@ -306,15 +324,19 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
                                        const std::shared_ptr<TimeSyncApi>& time_sync_api,
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<LoggerInterfaceBase> logger_interface,
+                                       std::unique_ptr<TfInterfaceBase> tf_broadcaster_interface,
                                        std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                                       std::unique_ptr<TimerInterfaceBase> timer_interface,
+                                       std::unique_ptr<TimerInterfaceBase> world_object_update_timer,
+                                       std::unique_ptr<TimerInterfaceBase> tf_broadcaster_timer,
                                        std::unique_ptr<ClockInterfaceBase> clock_interface)
     : world_object_client_interface_{world_object_client_interface},
       time_sync_interface_{time_sync_api},
       parameter_interface_{std::move(parameter_interface)},
       logger_interface_{std::move(logger_interface)},
+      tf_broadcaster_interface_{std::move(tf_broadcaster_interface)},
       tf_listener_interface_{std::move(tf_listener_interface)},
-      timer_interface_{std::move(timer_interface)},
+      world_object_update_timer_{std::move(world_object_update_timer)},
+      tf_broadcaster_timer_{std::move(tf_broadcaster_timer)},
       clock_interface_{std::move(clock_interface)} {
   const auto spot_name = parameter_interface_->getSpotName();
   frame_prefix_ = spot_name.empty() ? "" : spot_name + "/";
@@ -324,8 +346,12 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
                                           ? spot_name + "/" + preferred_base_frame_
                                           : preferred_base_frame_;
 
-  timer_interface_->setTimer(kTfSyncPeriod, [this]() {
+  world_object_update_timer_->setTimer(kWorldObjectSyncPeriod, [this]() {
     syncWorldObjects();
+  });
+
+  tf_broadcaster_timer_->setTimer(kTfBroadcasterPeriod, [this]() {
+    broadcastWorldObjectTransforms();
   });
 }
 
@@ -336,13 +362,14 @@ void ObjectSynchronizer::syncWorldObjects() {
   }
 
   // Get a list of all world objects which are managed by Spot itself or through other Spot operator tools.
-  // The TF tree may contain frames from these objects, and we must not attempt to modify these objects.
+  // The TF tree may contain frames from these objects, and we should not attempt to modify these objects. The Spot API
+  // allows us to attempt to modify them but it will fail if we try
   ::bosdyn::api::ListWorldObjectRequest request_non_mutable_objects = createNonMutableObjectsRequest();
   // TODO(jschornak-bdai): request should set earliest timestamp for objects
   const auto non_mutable_objects_response =
       world_object_client_interface_->listWorldObjects(request_non_mutable_objects);
   if (!non_mutable_objects_response) {
-    logger_interface_->logError("Failed to list vision objects.");
+    logger_interface_->logError("Failed to list non-mutable objects: " + non_mutable_objects_response.error());
     return;
   }
   const auto non_mutable_frames_unfiltered = getObjectFrames(non_mutable_objects_response.value());
@@ -351,22 +378,16 @@ void ObjectSynchronizer::syncWorldObjects() {
                       kSpotInternalFrames.cbegin(), kSpotInternalFrames.cend(),
                       std::inserter(non_mutable_frames, non_mutable_frames.end()));
 
-  // Get a list of all world objects with type UNKNOWN.
-  // These objects are not managed by Spot, so we can mutate them.
+  // Get a list of all world objects with type DRAWABLE. This is the only type of object that ObjectSynchronizer can add
+  // or modify.
   ::bosdyn::api::ListWorldObjectRequest request_mutable_frames = createMutableObjectsRequest();
   // TODO(jschornak-bdai): request should set earliest timestamp for objects
   const auto mutable_frames_response = world_object_client_interface_->listWorldObjects(request_mutable_frames);
   if (!mutable_frames_response) {
-    logger_interface_->logError("Failed to list other objects.");
+    logger_interface_->logError("Failed to list mutable objects: " + mutable_frames_response.error());
     return;
   }
   const auto mutable_objects = getObjectNamesAndIDs(mutable_frames_response.value());
-
-  // If a TF frame does not originate from Spot:
-  //   If the frame is already included in the world objects:
-  //     Mutate world objects to update the transform of the frame's object
-  //   Else (frame is not a world object):
-  //     Mutate world objects to add the frame as a new object
 
   const auto clock_skew_result = time_sync_interface_->getClockSkew();
   if (!clock_skew_result) {
@@ -381,11 +402,13 @@ void ObjectSynchronizer::syncWorldObjects() {
     // Skip frames which are internal to Spot or which are from objects which we cannot mutate
     if (kSpotInternalFrames.count(child_frame_id_no_prefix) > 0 ||
         non_mutable_frames.count(child_frame_id_no_prefix) > 0) {
-      // logger_interface_->logInfo("Frame " + child_frame_id_no_prefix + " is internal or non-mutable.");
       continue;
     }
 
-    // Get the transform from the preferred base frame to the current TF frame
+    // Get the transform from the preferred base frame to the current TF frame.
+    // We set the lookup timestamp to timepoint zero, which tells the TF buffer to give us the earliest-available
+    // transform to this frame. We set the lookup timeout duration to zero, which causes the lookup to return a failure
+    // case immediately if the transform is not available instead of blocking.
     const auto base_tform_child =
         tf_listener_interface_->lookupTransform(preferred_base_frame_with_prefix_, child_frame_id, rclcpp::Time{0, 0},
                                                 rclcpp::Duration{std::chrono::nanoseconds{0}});
@@ -394,14 +417,14 @@ void ObjectSynchronizer::syncWorldObjects() {
       continue;
     }
 
-    logger_interface_->logInfo("timestamp: " + std::to_string(base_tform_child.value().header.stamp.sec));
-
-    const auto now = clock_interface_->now();
-    if (now - base_tform_child.value().header.stamp > rclcpp::Duration{10, 0}) {
-      // Skip adding transforms that are stale
-      logger_interface_->logInfo("transform is too old");
-      continue;
-    }
+    // TODO(jschornak): Convert transform timestamps to host-relative time before performing this comparison.
+    // As currently written this throws an exception.
+    // const auto now = clock_interface_->now();
+    // if (now - base_tform_child.value().header.stamp > rclcpp::Duration{10, 0}) {
+    //   // Skip adding transforms that are stale
+    //   logger_interface_->logInfo("transform is too old");
+    //   continue;
+    // }
 
     // Create a request to add or modify a WorldObject.
     // The transform snapshot of this WorldObject will contain a single transfrom from the preferred base frame to the
@@ -425,6 +448,7 @@ void ObjectSynchronizer::syncWorldObjects() {
       logger_interface_->logInfo("Adding new object for frame " + child_frame_id_no_prefix);
     }
 
+    // TODO(jschornak-bdai): delete this check in favor of unit test to validate request creator function
     if (const auto status = ::bosdyn::api::ValidateFrameTreeSnapshot(request.mutation().object().transforms_snapshot());
         status != ::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID) {
       logger_interface_->logWarn("Frame tree snapshot for object " + child_frame_id_no_prefix +
@@ -445,6 +469,60 @@ void ObjectSynchronizer::syncWorldObjects() {
       logger_interface_->logWarn(std::string("Failed to modify world object: ").append(toString(response->status())));
       continue;
     }
+
+    // After successfully adding new WorldObject, add the frame ID for this object to the list of frames whose
+    // corresponding world objects originate in this node.
+    {
+      std::lock_guard lock{managed_frames_mutex_};
+      managed_frames_.insert(child_frame_id);
+    }
+  }
+}
+
+void ObjectSynchronizer::broadcastWorldObjectTransforms() {
+  const auto clock_skew_result = time_sync_interface_->getClockSkew();
+  if (!clock_skew_result) {
+    logger_interface_->logError(std::string{"Failed to get latest clock skew: "}.append(clock_skew_result.error()));
+    return;
+  }
+
+  auto request = createAllObjectsRequest();
+  const auto response = world_object_client_interface_->listWorldObjects(request);
+  if (!response) {
+    logger_interface_->logError("Failed to list world objects: " + response.error());
+    return;
+  }
+
+  const auto objects = getObjectNamesAndIDs(response.value());
+  std::set<std::string, std::less<>> all_object_names;
+  std::transform(objects.cbegin(), objects.cend(), std::inserter(all_object_names, all_object_names.end()),
+                 [](const std::pair<std::string, int>& pair) {
+                   return pair.first;
+                 });
+
+  // Create a set of names of objects which are not managed by this node
+  std::set<std::string, std::less<>> non_managed_objects;
+  {
+    std::lock_guard lock{managed_frames_mutex_};
+    std::set_difference(all_object_names.cbegin(), all_object_names.cend(), managed_frames_.cbegin(),
+                        managed_frames_.cend(), std::inserter(non_managed_objects, non_managed_objects.end()));
+  }
+
+  for (const auto& object : response->world_objects()) {
+    // Skip publishing TF for objects this node does not manage
+    if (non_managed_objects.count(object.name()) == 0) {
+      continue;
+    }
+
+    // Convert the object's frame tree snapshot into ROS TF frames
+    const auto transforms = getTf(object.transforms_snapshot(), object.acquisition_time(), clock_skew_result.value(),
+                                  frame_prefix_, preferred_base_frame_with_prefix_);
+    if (!transforms) {
+      logger_interface_->logWarn("Failed to get TF tree for object `" + object.name() + "`.");
+      continue;
+    }
+    // Broadcast TF frames for this object
+    tf_broadcaster_interface_->sendDynamicTransforms(transforms->transforms);
   }
 }
 }  // namespace spot_ros2

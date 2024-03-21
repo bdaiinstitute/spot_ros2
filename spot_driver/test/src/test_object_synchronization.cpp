@@ -102,49 +102,60 @@ namespace spot_ros2::test {
 class ObjectSynchronizerTest : public ::testing::Test {
  public:
   void SetUp() override {
-    mock_node_interface = std::make_unique<MockNodeInterface>();
-    fake_parameter_interface = std::make_unique<FakeParameterInterface>();
-    fake_parameter_interface->spot_name = "MyRobot";
-    mock_logger_interface = std::make_unique<MockLoggerInterface>();
-    mock_tf_interface = std::make_unique<MockTfInterface>();
-    mock_tf_listener_interface = std::make_unique<MockTfListenerInterface>();
-    mock_timer_interface = std::make_unique<MockTimerInterface>();
-    mock_clock_interface = std::make_unique<MockClockInterface>();
     mock_world_object_client = std::make_shared<MockWorldObjectClient>();
     mock_time_sync_api = std::make_shared<MockTimeSyncApi>();
+
+    fake_parameter_interface = std::make_unique<FakeParameterInterface>();
+    fake_parameter_interface->spot_name = "MyRobot";
+
+    mock_logger_interface = std::make_unique<MockLoggerInterface>();
+    mock_tf_broadcaster_interface = std::make_unique<MockTfInterface>();
+    mock_tf_listener_interface = std::make_unique<MockTfListenerInterface>();
+    mock_world_object_update_timer = std::make_unique<MockTimerInterface>();
+    mock_tf_broadcaster_timer = std::make_unique<MockTimerInterface>();
+    mock_clock_interface = std::make_unique<MockClockInterface>();
   }
 
   void createObjectSynchronizer() {
     object_synchronizer = std::make_unique<ObjectSynchronizer>(
         mock_world_object_client, mock_time_sync_api, std::move(fake_parameter_interface),
-        std::move(mock_logger_interface), std::move(mock_tf_listener_interface), std::move(mock_timer_interface),
-        std::move(mock_clock_interface));
+        std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
+        std::move(mock_tf_listener_interface), std::move(mock_world_object_update_timer),
+        std::move(mock_tf_broadcaster_timer), std::move(mock_clock_interface));
   }
 
   void setInternalTimerCallback() const {
-    auto* timer_interface_ptr = mock_timer_interface.get();
-    ON_CALL(*timer_interface_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
-      timer_interface_ptr->onSetTimer(cb);
+    auto* mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
+    ON_CALL(*mock_world_object_update_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
+      mock_world_object_update_timer_ptr->onSetTimer(cb);
+    });
+
+    auto* mock_tf_broadcaster_timer_ptr = mock_tf_broadcaster_timer.get();
+    ON_CALL(*mock_tf_broadcaster_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
+      mock_tf_broadcaster_timer_ptr->onSetTimer(cb);
     });
   }
-
-  std::unique_ptr<MockNodeInterface> mock_node_interface;
-  std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
-  std::unique_ptr<MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<MockTfInterface> mock_tf_interface;
-  std::unique_ptr<MockTfListenerInterface> mock_tf_listener_interface;
-  std::unique_ptr<MockTimerInterface> mock_timer_interface;
-  std::unique_ptr<MockClockInterface> mock_clock_interface;
-
   std::shared_ptr<MockWorldObjectClient> mock_world_object_client;
   std::shared_ptr<MockTimeSyncApi> mock_time_sync_api;
+
+  std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
+
+  std::unique_ptr<MockLoggerInterface> mock_logger_interface;
+  std::unique_ptr<MockTfInterface> mock_tf_broadcaster_interface;
+  std::unique_ptr<MockTfListenerInterface> mock_tf_listener_interface;
+  std::unique_ptr<MockTimerInterface> mock_world_object_update_timer;
+  std::unique_ptr<MockTimerInterface> mock_tf_broadcaster_timer;
+  std::unique_ptr<MockClockInterface> mock_clock_interface;
+
   std::unique_ptr<ObjectSynchronizer> object_synchronizer;
 };
 
 TEST_F(ObjectSynchronizerTest, InitSucceeds) {
   // THEN the timer interface's setTimer function is called once with the expected timer period
-  auto* timer_interface_ptr = mock_timer_interface.get();
-  EXPECT_CALL(*timer_interface_ptr, setTimer(std::chrono::duration<double>{1.0}, _));
+  auto* mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
+  EXPECT_CALL(*mock_world_object_update_timer_ptr, setTimer(std::chrono::duration<double>{1.0}, _));
+  auto* mock_tf_update_timer_ptr = mock_tf_broadcaster_timer.get();
+  EXPECT_CALL(*mock_tf_update_timer_ptr, setTimer(std::chrono::duration<double>{0.1}, _));
 
   // WHEN the ObjectSynchronizer is created
   createObjectSynchronizer();
@@ -152,10 +163,17 @@ TEST_F(ObjectSynchronizerTest, InitSucceeds) {
 
 TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
   // GIVEN the timer interface's setTimer function registers the internal callback function
-  auto* timer_interface_ptr = mock_timer_interface.get();
-  ON_CALL(*timer_interface_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
-    timer_interface_ptr->onSetTimer(cb);
+  auto* mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
+  ON_CALL(*mock_world_object_update_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
+    mock_world_object_update_timer_ptr->onSetTimer(cb);
   });
+
+  auto* mock_tf_broadcaster_timer_ptr = mock_tf_broadcaster_timer.get();
+  ON_CALL(*mock_tf_broadcaster_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
+    mock_tf_broadcaster_timer_ptr->onSetTimer(cb);
+  });
+  // auto* mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
+  // setInternalTimerCallback();
 
   // GIVEN the TF listener has info about two frames. One frame is an internal Spot frame, and the other frame is from a
   // different source.
@@ -206,15 +224,28 @@ TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
   createObjectSynchronizer();
 
   // WHEN the timer callback is triggered
-  timer_interface_ptr->trigger();
+  mock_world_object_update_timer_ptr->trigger();
 }
 
 TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   // GIVEN the timer interface's setTimer function registers the internal callback function
-  auto* timer_interface_ptr = mock_timer_interface.get();
-  ON_CALL(*timer_interface_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
-    timer_interface_ptr->onSetTimer(cb);
+  // auto* timer_interface_ptr = mock_world_object_update_timer.get();
+  // ON_CALL(*timer_interface_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
+  //   timer_interface_ptr->onSetTimer(cb);
+  // });
+
+  auto* mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
+  ON_CALL(*mock_world_object_update_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
+    mock_world_object_update_timer_ptr->onSetTimer(cb);
   });
+
+  auto* mock_tf_broadcaster_timer_ptr = mock_tf_broadcaster_timer.get();
+  ON_CALL(*mock_tf_broadcaster_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
+    mock_tf_broadcaster_timer_ptr->onSetTimer(cb);
+  });
+
+  // auto* mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
+  // setInternalTimerCallback();
 
   // GIVEN the TF listener has info about two frames. One frame is an internal Spot frame, and the other frame is from a
   // different source.
@@ -244,7 +275,8 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   addTransform(object->mutable_transforms_snapshot(), kExternalFrameId, "odom", 1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0);
   EXPECT_CALL(*world_object_client_interface_ptr, listWorldObjects)
       .WillOnce(Return(list_apriltags_response))
-      .WillOnce(Return(list_objects_response));
+      .WillOnce(Return(list_objects_response))
+      .WillRepeatedly(Return(list_objects_response));
 
   // THEN we send one MutateWorldObjectRequest
   // AND the request adds a new object
@@ -266,10 +298,14 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
                                       MutationTransformChildAndParentFramesAre("odom", kExternalFrameId))))
       .Times(1);
 
+  // auto* tf_broadcaster_ptr = mock_tf_broadcaster_interface.get();
+  // EXPECT_CALL(*tf_broadcaster_ptr, sendDynamicTransforms).Times(0);
+
   // GIVEN the ObjectSynchronizer has been created
   createObjectSynchronizer();
 
-  // WHEN the timer callback is triggered
-  timer_interface_ptr->trigger();
+  // WHEN the timer callbacks are triggered
+  mock_world_object_update_timer_ptr->trigger();
+  mock_tf_broadcaster_timer_ptr->trigger();
 }
 }  // namespace spot_ros2::test

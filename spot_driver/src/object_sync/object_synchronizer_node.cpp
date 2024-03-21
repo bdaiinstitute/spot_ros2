@@ -24,12 +24,15 @@ ObjectSynchronizerNode::ObjectSynchronizerNode(std::unique_ptr<NodeInterfaceBase
                                                std::unique_ptr<SpotApi> spot_api,
                                                std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                                std::unique_ptr<LoggerInterfaceBase> logger_interface,
+                                               std::unique_ptr<TfInterfaceBase> tf_broadcaster_interface,
                                                std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                                               std::unique_ptr<TimerInterfaceBase> timer_interface,
+                                               std::unique_ptr<TimerInterfaceBase> world_object_update_timer,
+                                               std::unique_ptr<TimerInterfaceBase> tf_broadcaster_timer,
                                                std::unique_ptr<ClockInterfaceBase> clock_interface)
     : node_base_interface_{std::move(node_base_interface)} {
   initialize(std::move(spot_api), std::move(parameter_interface), std::move(logger_interface),
-             std::move(tf_listener_interface), std::move(timer_interface), std::move(clock_interface));
+             std::move(tf_broadcaster_interface), std::move(tf_listener_interface),
+             std::move(world_object_update_timer), std::move(tf_broadcaster_timer), std::move(clock_interface));
 }
 
 ObjectSynchronizerNode::ObjectSynchronizerNode(const rclcpp::NodeOptions& node_options) {
@@ -40,19 +43,24 @@ ObjectSynchronizerNode::ObjectSynchronizerNode(const rclcpp::NodeOptions& node_o
   auto mw_handle = std::make_unique<StateMiddlewareHandle>(node);
   auto parameter_interface = std::make_unique<RclcppParameterInterface>(node);
   auto logger_interface = std::make_unique<RclcppLoggerInterface>(node->get_logger());
+  auto tf_broadcaster_interface = std::make_unique<RclcppTfInterface>(node);
   auto tf_listener_interface = std::make_unique<RclcppTfListenerInterface>(node);
-  auto timer_interface = std::make_unique<RclcppWallTimerInterface>(node);
+  auto world_object_update_timer = std::make_unique<RclcppWallTimerInterface>(node);
+  auto tf_broadcaster_timer = std::make_unique<RclcppWallTimerInterface>(node);
   auto clock_interface = std::make_unique<RclcppClockInterface>(node->get_node_clock_interface());
 
   initialize(std::move(spot_api), std::move(parameter_interface), std::move(logger_interface),
-             std::move(tf_listener_interface), std::move(timer_interface), std::move(clock_interface));
+             std::move(tf_broadcaster_interface), std::move(tf_listener_interface),
+             std::move(world_object_update_timer), std::move(tf_broadcaster_timer), std::move(clock_interface));
 }
 
 void ObjectSynchronizerNode::initialize(std::unique_ptr<SpotApi> spot_api,
                                         std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                         std::unique_ptr<LoggerInterfaceBase> logger_interface,
+                                        std::unique_ptr<TfInterfaceBase> tf_broadcaster_interface,
                                         std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
-                                        std::unique_ptr<TimerInterfaceBase> timer_interface,
+                                        std::unique_ptr<TimerInterfaceBase> world_object_update_timer,
+                                        std::unique_ptr<TimerInterfaceBase> tf_broadcaster_timer,
                                         std::unique_ptr<ClockInterfaceBase> clock_interface) {
   spot_api_ = std::move(spot_api);
 
@@ -74,10 +82,10 @@ void ObjectSynchronizerNode::initialize(std::unique_ptr<SpotApi> spot_api,
     throw std::runtime_error(error_msg);
   }
 
-  internal_ = std::make_unique<ObjectSynchronizer>(spot_api_->worldObjectClientInterface(),
-                                                   spot_api_->timeSyncInterface(), std::move(parameter_interface),
-                                                   std::move(logger_interface), std::move(tf_listener_interface),
-                                                   std::move(timer_interface), std::move(clock_interface));
+  internal_ = std::make_unique<ObjectSynchronizer>(
+      spot_api_->worldObjectClientInterface(), spot_api_->timeSyncInterface(), std::move(parameter_interface),
+      std::move(logger_interface), std::move(tf_broadcaster_interface), std::move(tf_listener_interface),
+      std::move(world_object_update_timer), std::move(tf_broadcaster_timer), std::move(clock_interface));
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> ObjectSynchronizerNode::get_node_base_interface() {
