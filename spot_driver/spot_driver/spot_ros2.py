@@ -863,18 +863,8 @@ class SpotROS(Node):
             self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
                 self,
                 [
-                    (
-                        RobotCommand,
-                        "robot_command",
-                        self.handle_robot_command,
-                        None
-                    ),
-                    (
-                        Manipulation,
-                        "manipulation",
-                        self.handle_manipulation_command,
-                        None
-                    ),
+                    (RobotCommand, "robot_command", self.handle_robot_command, None),
+                    (Manipulation, "manipulation", self.handle_manipulation_command, None),
                 ],
             )
         else:
