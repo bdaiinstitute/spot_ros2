@@ -35,8 +35,15 @@ constexpr auto kEndEffectorForceTopic{"status/end_effector_force"};
 constexpr auto kManipulatorTopic{"manipulation_state"};
 
 rclcpp::QoS makeQoS() {
-  return rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth));
+  // use sensor data default QoS because Reliable is slowing down network transmissions and should only be used if
+  // data has to be transferred reliably (e.g. a stream of a zip data blob, where one lost package is a problem)
+  // as the state publisher transfer in every package their current state, it doesn't matter if one is dropped.
+  // No need for receiver acknowledgement or resending the (old) state; just sending the next one is sufficient
+  auto qos = rclcpp::SensorDataQoS();
+  qos.keep_last(kPublisherHistoryDepth);
+  return qos;
 }
+
 }  // namespace
 
 namespace spot_ros2 {
