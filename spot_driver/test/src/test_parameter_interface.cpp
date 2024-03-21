@@ -154,6 +154,8 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   node_->declare_parameter("rgb_cameras", has_rgb_cameras_parameter);
   constexpr auto do_decompress_images_parameter = false;
   node_->declare_parameter("do_decompress_images", do_decompress_images_parameter);
+  constexpr auto publish_raw_rgb_cameras = true;
+  node_->declare_parameter("publish_raw_rgb_cameras", publish_raw_rgb_cameras);
   constexpr auto publish_rgb_images_parameter = false;
   node_->declare_parameter("publish_rgb", publish_rgb_images_parameter);
   constexpr auto publish_depth_images_parameter = false;
@@ -172,6 +174,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   EXPECT_THAT(parameter_interface.getRGBImageQuality(), Eq(rgb_image_quality_parameter));
   EXPECT_THAT(parameter_interface.getHasRGBCameras(), Eq(has_rgb_cameras_parameter));
   EXPECT_THAT(parameter_interface.getDoDecompressImages(), Eq(do_decompress_images_parameter));
+  EXPECT_THAT(parameter_interface.getPublishRawRGBCameras(), Eq(publish_raw_rgb_cameras));
   EXPECT_THAT(parameter_interface.getPublishRGBImages(), Eq(publish_rgb_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), Eq(publish_depth_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), Eq(publish_depth_registered_images_parameter));
@@ -218,6 +221,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   EXPECT_THAT(parameter_interface.getRGBImageQuality(), Eq(70.0));
   EXPECT_THAT(parameter_interface.getHasRGBCameras(), IsTrue());
   EXPECT_THAT(parameter_interface.getDoDecompressImages(), IsTrue());
+  EXPECT_THAT(parameter_interface.getPublishRawRGBCameras(), false);
   EXPECT_THAT(parameter_interface.getPublishRGBImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), IsTrue());
