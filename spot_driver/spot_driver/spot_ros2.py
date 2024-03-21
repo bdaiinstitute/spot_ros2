@@ -847,7 +847,6 @@ class SpotROS(Node):
             NavigateTo,
             "navigate_to",
             self.handle_navigate_to,
-            callback_group=self.group,
         )
         # spot_ros.navigate_as.start() # As is online
 
@@ -856,7 +855,6 @@ class SpotROS(Node):
             Trajectory,
             "trajectory",
             self.handle_trajectory,
-            callback_group=self.group,
         )
         # spot_ros.trajectory_server.start()
 
@@ -869,13 +867,13 @@ class SpotROS(Node):
                         RobotCommand,
                         "robot_command",
                         self.handle_robot_command,
-                        self.group,
+                        None
                     ),
                     (
                         Manipulation,
                         "manipulation",
                         self.handle_manipulation_command,
-                        self.group,
+                        None
                     ),
                 ],
             )
@@ -885,7 +883,6 @@ class SpotROS(Node):
                 RobotCommand,
                 "robot_command",
                 self.handle_robot_command,
-                callback_group=self.group,
             )
 
         # Register Shutdown Handle
@@ -908,7 +905,7 @@ class SpotROS(Node):
                 time.sleep(0.5)
             self.get_logger().info("Found estop!")
 
-        self.create_timer(1 / self.async_tasks_rate, self.step, callback_group=self.group)
+        self.create_timer(1 / self.async_tasks_rate, self.step)
 
         if self.spot_wrapper is not None and self.auto_claim.value:
             self.spot_wrapper.claim()
