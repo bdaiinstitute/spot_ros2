@@ -12,12 +12,14 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
+import sys
 
 import bdai_ros2_wrappers.process as ros_process
 import builtin_interfaces.msg
 import rclpy
 import rclpy.time
 import tf2_ros
+from bdai_ros2_wrappers.executors import AutoScalingMultiThreadedExecutor, foreground
 from bdai_ros2_wrappers.node import Node
 from bdai_ros2_wrappers.single_goal_action_server import (
     SingleGoalActionServer,
@@ -38,7 +40,7 @@ from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence
 from bosdyn.client import math_helpers
-from bosdyn.client.exceptions import InternalServerError
+from bosdyn.client.exceptions import InternalServerError, RetryableUnavailableError, ProxyConnectionError, UnableToConnectToRobotError
 from bosdyn.client.lease import LeaseKeepAlive
 from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
 from bosdyn_msgs.conversions import convert
@@ -141,7 +143,7 @@ MAX_DURATION = 1e6
 COLOR_END = "\33[0m"
 COLOR_GREEN = "\33[32m"
 COLOR_YELLOW = "\33[33m"
-
+COLOR_RED = "\033[91m"
 
 @dataclass
 class Request:
@@ -2810,17 +2812,32 @@ class SpotROS(Node):
             self.mobility_params_pub.publish(mobility_params_msg)
 
     def destroy_node(self) -> None:
-        self.get_logger().info("Shutting down ROS driver for Spot")
-        if self.spot_wrapper is not None:
-            self.spot_wrapper.sit()
+        # self.get_logger().info("Shutting down ROS driver for Spot")
+        self.node_rate.sleep()
         if self.spot_wrapper is not None:
             self.spot_wrapper.disconnect()
+            self.node_rate.sleep()
         super().destroy_node()
 
 
 @ros_process.main(prebaked=False)
 def main(args: Optional[List[str]] = None) -> None:
-    ros_process.spin(SpotROS)
+    try:
+        ros_process.spin(SpotROS)
+
+    except KeyboardInterrupt:
+        print(COLOR_YELLOW + "User interrupt!" + COLOR_END)
+        ros_process.node().spot_wrapper.stop()
+
+    except (RetryableUnavailableError, InternalServerError, ConnectionError, 
+            rclpy.Exceptions.RCLError, ProxyConnectionError, UnableToConnectToRobotError) as e:
+        print(COLOR_RED + f"Connection error: {str(e)}" + COLOR_END)
+
+    finally:
+        time.sleep(2.0)
+        ros_process.node().destroy_node()
+        time.sleep(5.0)
+        ros_process.try_shutdown()
 
 
 if __name__ == "__main__":
