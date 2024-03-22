@@ -478,6 +478,12 @@ class SpotROS(Node):
         )
         self.create_service(
             Trigger,
+            "lease/release",
+            lambda request, response: self.service_wrapper("lease/release", self.handle_lease_release, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
             "stop",
             lambda request, response: self.service_wrapper("stop", self.handle_stop, request, response),
             callback_group=self.group,
@@ -1111,12 +1117,21 @@ class SpotROS(Node):
         return response
 
     def handle_release(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the release service"""
+        """ROS service handler for the release service (lease and EStop)"""
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message = self.spot_wrapper.release()
+        return response
+
+    def handle_lease_release(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler to release the lease (and not the EStop.)"""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.releaseLease()
         return response
 
     def handle_stop(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
