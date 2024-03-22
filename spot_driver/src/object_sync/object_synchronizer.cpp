@@ -109,31 +109,6 @@ std::string stripPrefix(const std::string& input, const std::string& prefix) {
 }
 
 /**
- * @brief Create string messages corresponding to the values of the ValidateFrameTreeSnapshotStatus enum.
- * @param status Enum to convert.
- * @return The string corresponding to the enum.
- */
-std::string toString(const ::bosdyn::api::ValidateFrameTreeSnapshotStatus& status) {
-  using Status = ::bosdyn::api::ValidateFrameTreeSnapshotStatus;
-  switch (status) {
-    case Status::CYCLE:
-      return "CYCLE";
-    case Status::DISJOINT:
-      return "DISJOINT";
-    case Status::EMPTY:
-      return "EMPTY";
-    case Status::EMPTY_CHILD_FRAME_NAME:
-      return "EMPTY_CHILD_FRAME_NAME";
-    case Status::UNKNOWN_PARENT_FRAME_NAME:
-      return "UNKNOWN_PARENT_FRAME_NAME";
-    case Status::VALID:
-      return "VALID";
-    default:
-      return "Unknown status code.";
-  }
-}
-
-/**
  * @brief Create string messages corresponding to the values of the MutateWorldObjectResponse_Status enum.
  * @param status Enum to convert.
  * @return The string corresponding to the enum.
@@ -429,14 +404,6 @@ void ObjectSynchronizer::syncWorldObjects() {
       request = createAddObjectRequest(base_tform_child.value(), preferred_base_frame_, child_frame_id_no_prefix,
                                        clock_skew_result.value());
       logger_interface_->logInfo("Adding new object for frame " + child_frame_id_no_prefix);
-    }
-
-    // TODO(jschornak-bdai): delete this check in favor of unit test to validate request creator function
-    if (const auto status = ::bosdyn::api::ValidateFrameTreeSnapshot(request.mutation().object().transforms_snapshot());
-        status != ::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID) {
-      logger_interface_->logWarn("Frame tree snapshot for object " + child_frame_id_no_prefix +
-                                 " is not valid. Error code: " + toString(status));
-      continue;
     }
 
     // Send the request to the API's client interface to add the object in Spot's environment.
