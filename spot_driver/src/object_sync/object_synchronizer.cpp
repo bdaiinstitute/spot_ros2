@@ -195,15 +195,9 @@ std::string toString(const ::bosdyn::api::MutateWorldObjectResponse_Status& stat
  * @return A request to list all WorldObject types.
  */
 ::bosdyn::api::ListWorldObjectRequest createAllObjectsRequest() {
-  using Type = ::bosdyn::api::WorldObjectType;
   ::bosdyn::api::ListWorldObjectRequest request;
-  request.add_object_type(Type::WORLD_OBJECT_APRILTAG);
-  request.add_object_type(Type::WORLD_OBJECT_DOCK);
-  request.add_object_type(Type::WORLD_OBJECT_IMAGE_COORDINATES);
-  request.add_object_type(Type::WORLD_OBJECT_STAIRCASE);
-  request.add_object_type(Type::WORLD_OBJECT_USER_NOGO);
-  request.add_object_type(Type::WORLD_OBJECT_DRAWABLE);
-  request.add_object_type(Type::WORLD_OBJECT_UNKNOWN);
+  request.mutable_object_type()->MergeFrom(createMutableObjectsRequest().object_type());
+  request.mutable_object_type()->MergeFrom(createNonMutableObjectsRequest().object_type());
   return request;
 }
 
@@ -241,17 +235,7 @@ std::map<std::string, int> getObjectNamesAndIDs(const ::bosdyn::api::ListWorldOb
   return names_to_ids;
 }
 
-/**
- * @brief Create a MutateWorldObjectRequest which adds or modifies a WorldObject corresponding to a TF frame.
- *
- * @param base_tform_child
- * @param preferred_base_frame
- * @param child_frame_id_no_prefix
- * @param clock_skew
- * @param operation
- * @return ::bosdyn::api::MutateWorldObjectRequest
- */
-::bosdyn::api::MutateWorldObjectRequest createAddObjectRequest(
+::bosdyn::api::MutateWorldObjectRequest createBaseMutateObjectRequest(
     const geometry_msgs::msg::TransformStamped& base_tform_child, const std::string& preferred_base_frame,
     const std::string& child_frame_id_no_prefix, const google::protobuf::Duration& clock_skew) {
   ::bosdyn::api::MutateWorldObjectRequest request;
@@ -278,42 +262,46 @@ std::map<std::string, int> getObjectNamesAndIDs(const ::bosdyn::api::ListWorldOb
   // Add the root frame
   edge_map->insert(google::protobuf::MapPair{preferred_base_frame, ::bosdyn::api::FrameTreeSnapshot_ParentEdge{}});
 
-  request.mutable_mutation()->set_action(
-      ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_ADD);
-
   return request;
 }
 
+/**
+ * @brief Create a MutateWorldObjectRequest which adds a new WorldObject corresponding to a TF frame.
+ *
+ * @param base_tform_child
+ * @param preferred_base_frame
+ * @param child_frame_id_no_prefix
+ * @param clock_skew
+ * @return ::bosdyn::api::MutateWorldObjectRequest
+ */
+::bosdyn::api::MutateWorldObjectRequest createAddObjectRequest(
+    const geometry_msgs::msg::TransformStamped& base_tform_child, const std::string& preferred_base_frame,
+    const std::string& child_frame_id_no_prefix, const google::protobuf::Duration& clock_skew) {
+  auto request =
+      createBaseMutateObjectRequest(base_tform_child, preferred_base_frame, child_frame_id_no_prefix, clock_skew);
+  request.mutable_mutation()->set_action(
+      ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_ADD);
+  return request;
+}
+
+/**
+ * @brief Create a MutateWorldObjectRequest which modifies an existing WorldObject corresponding to a TF frame.
+ *
+ * @param base_tform_child
+ * @param preferred_base_frame
+ * @param child_frame_id_no_prefix
+ * @param clock_skew
+ * @param id
+ * @return ::bosdyn::api::MutateWorldObjectRequest
+ */
 ::bosdyn::api::MutateWorldObjectRequest createModifyObjectRequest(
     const geometry_msgs::msg::TransformStamped& base_tform_child, const std::string& preferred_base_frame,
     const std::string& child_frame_id_no_prefix, const google::protobuf::Duration& clock_skew, const int& id) {
-  ::bosdyn::api::MutateWorldObjectRequest request;
-  *request.mutable_header()->mutable_request_timestamp() =
-      spot_ros2::localTimeToRobotTime(base_tform_child.header.stamp, clock_skew);
-  *request.mutable_mutation()->mutable_object()->mutable_acquisition_time() = request.header().request_timestamp();
-
-  auto* object = request.mutable_mutation()->mutable_object();
-  // object->mutable_acquisition_time()->CopyFrom(request.header().request_timestamp());
-
-  *object->mutable_name() = child_frame_id_no_prefix;
-  object->set_id(id);
-
-  auto* properties = object->mutable_drawable_properties()->Add();
-  properties->mutable_frame()->set_arrow_length(0.1);
-  properties->mutable_frame()->set_arrow_radius(0.01);
-
-  ::bosdyn::api::FrameTreeSnapshot_ParentEdge edge;
-  *edge.mutable_parent_frame_name() = preferred_base_frame;
-  spot_ros2::convertToProto(base_tform_child.transform, *edge.mutable_parent_tform_child());
-
-  auto* edge_map = object->mutable_transforms_snapshot()->mutable_child_to_parent_edge_map();
-  edge_map->insert(google::protobuf::MapPair{child_frame_id_no_prefix, edge});
-  // Add the root frame
-  edge_map->insert(google::protobuf::MapPair{preferred_base_frame, ::bosdyn::api::FrameTreeSnapshot_ParentEdge{}});
-
+  auto request =
+      createBaseMutateObjectRequest(base_tform_child, preferred_base_frame, child_frame_id_no_prefix, clock_skew);
+  request.mutable_mutation()->mutable_object()->set_id(id);
   request.mutable_mutation()->set_action(
       ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_CHANGE);
-
   return request;
 }
 }  // namespace
@@ -431,11 +419,6 @@ void ObjectSynchronizer::syncWorldObjects() {
     // TF frame. The name of the WorldObject will match the frame ID of the TF frame. If there is already a WorldObject
     // whose name matches the current frame's frame ID, the request will modify this object. Otherwise, the request will
     // add a new object.
-
-    // TODO(jschornak): explicitly remove frames once they've gone stale.
-    // Should be able to be more consistent about this if we keep the last valid timestamp intact after performing
-    // lookups.
-
     ::bosdyn::api::MutateWorldObjectRequest request;
     if (mutable_objects.count(child_frame_id_no_prefix) > 0) {
       const auto id = mutable_objects.at(child_frame_id_no_prefix);
