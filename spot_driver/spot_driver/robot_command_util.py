@@ -6,8 +6,7 @@ Utility class with methods to manipulate robot commands.
 from typing import Any, List
 
 from bosdyn.api import robot_command_pb2
-from bosdyn.util import duration_to_seconds, seconds_to_timestamp, timestamp_to_sec
-from google.protobuf.duration_pb2 import Duration
+from bosdyn.util import duration_to_seconds
 
 
 def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int) -> bool:
@@ -175,146 +174,50 @@ def batch_command(
     return commands
 
 
-def waiting_time(command: robot_command_pb2.RobotCommand) -> float:
+def min_time_since_reference(command: robot_command_pb2.RobotCommand) -> float:
     """
-    This method returns the execution time of the command by inspecting all
-    its trajectories.
+    This method inspect all trajectories in the command and returns the minimum
+    time_since_reference.
+    It returns float("inf") if not trajectory is available.
 
     Args:
-        command: The command we want to calculate the execution time.
+        command: The command to inspect.
 
     Returns:
-        The the execution time of the command obtained by inspecting all its
-        trajectories.
+        The minimum time_since_reference of all trajectories in the command.
     """
-    current_waiting_time = float("inf")
+    min_time_since_reference = float("inf")
     if command.HasField("synchronized_command"):
         if command.synchronized_command.HasField("mobility_command"):
             mobility_request = command.synchronized_command.mobility_command
             if trajectory := mobility_request.se2_trajectory_request.trajectory:
-                new_waiting_time = duration_to_seconds(trajectory.points[0].time_since_reference)
-                if new_waiting_time < current_waiting_time:
-                    current_waiting_time = new_waiting_time
+                time = duration_to_seconds(trajectory.points[0].time_since_reference)
+                if time < min_time_since_reference:
+                    min_time_since_reference = time
         if command.synchronized_command.HasField("arm_command"):
             arm_request = command.synchronized_command.arm_command
             if arm_request.HasField("arm_cartesian_command"):
                 if trajectory := arm_request.arm_cartesian_command.pose_trajectory_in_task:
-                    new_waiting_time = duration_to_seconds(trajectory.points[0].time_since_reference)
-                    if new_waiting_time < current_waiting_time:
-                        current_waiting_time = new_waiting_time
+                    time = duration_to_seconds(trajectory.points[0].time_since_reference)
+                    if time < min_time_since_reference:
+                        min_time_since_reference = time
             elif arm_request.HasField("arm_joint_move_command"):
                 if trajectory := arm_request.arm_joint_move_command.trajectory:
-                    new_waiting_time = duration_to_seconds(trajectory.points[0].time_since_reference)
-                    if new_waiting_time < current_waiting_time:
-                        current_waiting_time = new_waiting_time
+                    time = duration_to_seconds(trajectory.points[0].time_since_reference)
+                    if time < min_time_since_reference:
+                        min_time_since_reference = time
             elif arm_request.HasField("arm_impedance_command"):
                 if trajectory := arm_request.arm_impedance_command.task_tform_desired_tool:
-                    new_waiting_time = duration_to_seconds(trajectory.points[0].time_since_reference)
-                    if new_waiting_time < current_waiting_time:
-                        current_waiting_time = new_waiting_time
+                    time = duration_to_seconds(trajectory.points[0].time_since_reference)
+                    if time < min_time_since_reference:
+                        min_time_since_reference = time
         if command.synchronized_command.HasField("gripper_command"):
             gripper_request = command.synchronized_command.gripper_command
             if trajectory := gripper_request.claw_gripper_command.trajectory:
-                new_waiting_time = duration_to_seconds(trajectory.points[0].time_since_reference)
-                if new_waiting_time < current_waiting_time:
-                    current_waiting_time = new_waiting_time
-    return current_waiting_time
-
-
-def to_string(command: robot_command_pb2.RobotCommand) -> str:
-    info = "command: {"
-    if command.HasField("synchronized_command"):
-        if command.synchronized_command.HasField("mobility_command"):
-            mobility_request = command.synchronized_command.mobility_command
-            if trajectory := mobility_request.se2_trajectory_request.trajectory:
-                info += " mobility_command: {\n"
-                info += (
-                    "  reference_time: "
-                    + str(trajectory.reference_time.ToDatetime().strftime("%Y-%m-%d %H:%M:%S"))
-                    + "\n"
-                )
-                info += " }\n"
-        if command.synchronized_command.HasField("arm_command"):
-            arm_request = command.synchronized_command.arm_command
-            if arm_request.HasField("arm_cartesian_command"):
-                if trajectory := arm_request.arm_cartesian_command.pose_trajectory_in_task:
-                    info += " arm_cartesian_command: {\n"
-                    info += (
-                        "  reference_time: "
-                        + str(trajectory.reference_time.ToDatetime().strftime("%Y-%m-%d %H:%M:%S"))
-                        + "\n"
-                    )
-                    info += " }\n"
-            elif arm_request.HasField("arm_joint_move_command"):
-                if trajectory := arm_request.arm_joint_move_command.trajectory:
-                    info += " arm_joint_move_command: {\n"
-                    info += (
-                        "  reference_time: "
-                        + str(trajectory.reference_time.ToDatetime().strftime("%Y-%m-%d %H:%M:%S"))
-                        + "\n"
-                    )
-                    info += " }\n"
-            elif arm_request.HasField("arm_impedance_command"):
-                if trajectory := arm_request.arm_impedance_command.task_tform_desired_tool:
-                    info += " arm_impedance_command: {\n"
-                    info += (
-                        "  reference_time: "
-                        + str(trajectory.reference_time.ToDatetime().strftime("%Y-%m-%d %H:%M:%S"))
-                        + "\n"
-                    )
-                    info += " }\n"
-        if command.synchronized_command.HasField("gripper_command"):
-            gripper_request = command.synchronized_command.gripper_command
-            if trajectory := gripper_request.claw_gripper_command.trajectory:
-                info += " gripper_command: {\n"
-                info += (
-                    "  reference_time: "
-                    + str(trajectory.reference_time.ToDatetime().strftime("%Y-%m-%d %H:%M:%S"))
-                    + "\n"
-                )
-                info += " }\n"
-    info += "}\n"
-    return info
-
-
-def add_skew(command: robot_command_pb2.RobotCommand, skew: Duration) -> None:
-    """
-    Add the given skew to the reference_time of each trajectory.
-    Args:
-        command: The command we want to calculate the execution time.
-        skew: The difference between the local time and the robot time.
-    """
-    float("inf")
-    if command.HasField("synchronized_command"):
-        if command.synchronized_command.HasField("mobility_command"):
-            mobility_request = command.synchronized_command.mobility_command
-            if trajectory := mobility_request.se2_trajectory_request.trajectory:
-                trajectory.reference_time.CopyFrom(
-                    seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                )
-        if command.synchronized_command.HasField("arm_command"):
-            arm_request = command.synchronized_command.arm_command
-            if arm_request.HasField("arm_cartesian_command"):
-                if trajectory := arm_request.arm_cartesian_command.pose_trajectory_in_task:
-                    trajectory.reference_time.CopyFrom(
-                        seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                    )
-            elif arm_request.HasField("arm_joint_move_command"):
-                if trajectory := arm_request.arm_joint_move_command.trajectory:
-                    trajectory.reference_time.CopyFrom(
-                        seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                    )
-            elif arm_request.HasField("arm_impedance_command"):
-                if trajectory := arm_request.arm_impedance_command.task_tform_desired_tool:
-                    trajectory.reference_time.CopyFrom(
-                        seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                    )
-        if command.synchronized_command.HasField("gripper_command"):
-            gripper_request = command.synchronized_command.gripper_command
-            if trajectory := gripper_request.claw_gripper_command.trajectory:
-                trajectory.reference_time.CopyFrom(
-                    seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                )
+                time = duration_to_seconds(trajectory.points[0].time_since_reference)
+                if time < min_time_since_reference:
+                    min_time_since_reference = time
+    return min_time_since_reference
 
 
 def get_batch_size(sequence_length: int, batch_size: int, overlapping: int, batch_number: int) -> int:

@@ -2095,13 +2095,6 @@ class SpotROS(Node):
         proto_command = robot_command_pb2.RobotCommand()
         convert(ros_command, proto_command)
 
-        self.get_logger().error("1 - " + robot_command_util.to_string(proto_command))
-
-        # Change the time of all trajectories from local to robot time.
-        # robot_command_util.add_skew(proto_command, self.spot_wrapper.time_skew)
-
-        self.get_logger().error("2 - " + robot_command_util.to_string(proto_command))
-
         # Inspect the command and if there are long trajectories, batch them.
         commands = robot_command_util.batch_command(
             proto_command, SpotROS.TRAJECTORY_BATCH_SIZE, SpotROS.TRAJECTORY_BATCH_OVERLAPPING_POINTS
@@ -2114,13 +2107,10 @@ class SpotROS(Node):
         feedback_msg: Optional[RobotCommand.Feedback] = None
 
         start_time = time.time()
-        waiting_time = 0.0
-
-        time_gap = robot_command_util.waiting_time(commands[0])
+        time_before_sending_command = 0.0
+        min_time_since_reference = robot_command_util.min_time_since_reference(commands[0])
 
         index = 0
-        self.get_logger().error("Waiting time " + str(waiting_time))
-
         while (
             rclpy.ok()
             and goal_handle.is_active
@@ -2128,16 +2118,17 @@ class SpotROS(Node):
             and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
         ):
             time_since_start = time.time() - start_time
-            if time_since_start >= waiting_time:
+            if time_since_start >= time_before_sending_command:
                 success, err_msg, goal_id = self.spot_wrapper.robot_command(commands[index])
                 if not success:
                     raise Exception(err_msg)
                 index += 1
                 if index < num_of_commands:
-                    waiting_time = robot_command_util.waiting_time(commands[index]) - time_gap
+                    time_before_sending_command = (
+                        robot_command_util.waiting_time(commands[index]) - min_time_since_reference
+                    )
                 else:
-                    waiting_time = float("inf")
-                self.get_logger().error("waiting_time: " + str(waiting_time))
+                    time_before_sending_command = float("inf")
                 self.get_logger().info("Robot now executing goal " + str(goal_id))
 
             feedback = self._get_robot_command_feedback(goal_id)
