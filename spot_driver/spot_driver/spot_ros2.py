@@ -2125,7 +2125,7 @@ class SpotROS(Node):
                 index += 1
                 if index < num_of_commands:
                     time_before_sending_command = (
-                        robot_command_util.waiting_time(commands[index]) - min_time_since_reference
+                        robot_command_util.min_time_since_reference(commands[index]) - min_time_since_reference
                     )
                 else:
                     time_before_sending_command = float("inf")
@@ -2134,7 +2134,7 @@ class SpotROS(Node):
             feedback = self._get_robot_command_feedback(goal_id)
             feedback_msg = RobotCommand.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
-            time.sleep(0.1)  # don't use rate here because we're already in a single thread
+            time.sleep(0.01)  # don't use rate here because we're already in a single thread
 
         result = RobotCommand.Result()
         if feedback is not None:

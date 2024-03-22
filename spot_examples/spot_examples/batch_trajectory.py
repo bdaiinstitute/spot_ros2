@@ -360,7 +360,7 @@ class SpotRunner:
             dt=0.05,
             trajectory_function=_continuous_trajectory_3d,
         )
-        gripper_trajectory = _discrete_trajectory_1d(
+        _discrete_trajectory_1d(
             reference_time=start_time,
             ramp_up_time=1,
             duration=40,
@@ -372,7 +372,7 @@ class SpotRunner:
             root_to_task=odom_to_task.to_proto(),
             wrist_to_tool=wrist_to_tool.to_proto(),
             hand_trajectory=hand_trajectory,
-            gripper_trajectory=gripper_trajectory,
+            # gripper_trajectory=gripper_trajectory,
         )
 
         # Stow the arm.
