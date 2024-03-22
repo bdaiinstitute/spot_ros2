@@ -39,7 +39,6 @@ from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
-from bosdyn.client.lease import LeaseKeepAlive
 from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
@@ -67,7 +66,6 @@ from rclpy.action.server import ServerGoalHandle
 from rclpy.callback_groups import (
     CallbackGroup,
     MutuallyExclusiveCallbackGroup,
-    ReentrantCallbackGroup,
 )
 from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
@@ -220,7 +218,7 @@ class SpotROS(Node):
         self.callbacks["lease"] = self.lease_callback
         self.callbacks["world_objects"] = self.world_objects_callback
 
-        self.group: CallbackGroup = ReentrantCallbackGroup()
+        self.group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.rgb_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_registered_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
@@ -855,7 +853,6 @@ class SpotROS(Node):
             NavigateTo,
             "navigate_to",
             self.handle_navigate_to,
-            callback_group=self.group,
         )
         # spot_ros.navigate_as.start() # As is online
 
@@ -864,7 +861,6 @@ class SpotROS(Node):
             Trajectory,
             "trajectory",
             self.handle_trajectory,
-            callback_group=self.group,
         )
         # spot_ros.trajectory_server.start()
 
@@ -873,18 +869,8 @@ class SpotROS(Node):
             self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
                 self,
                 [
-                    (
-                        RobotCommand,
-                        "robot_command",
-                        self.handle_robot_command,
-                        self.group,
-                    ),
-                    (
-                        Manipulation,
-                        "manipulation",
-                        self.handle_manipulation_command,
-                        self.group,
-                    ),
+                    (RobotCommand, "robot_command", self.handle_robot_command, None),
+                    (Manipulation, "manipulation", self.handle_manipulation_command, None),
                 ],
             )
         else:
@@ -893,7 +879,6 @@ class SpotROS(Node):
                 RobotCommand,
                 "robot_command",
                 self.handle_robot_command,
-                callback_group=self.group,
             )
 
         # Register Shutdown Handle
@@ -916,7 +901,7 @@ class SpotROS(Node):
                 time.sleep(0.5)
             self.get_logger().info("Found estop!")
 
-        self.create_timer(1 / self.async_tasks_rate, self.step, callback_group=self.group)
+        self.create_timer(1 / self.async_tasks_rate, self.step)
 
         if self.spot_wrapper is not None and self.auto_claim.value:
             self.spot_wrapper.claim()
@@ -939,18 +924,7 @@ class SpotROS(Node):
             response.message = "spot_ros2 is running in mock mode."
             return response
 
-        old_lease = self.spot_wrapper.lease2
-        # `take()` can technically raise an exception (although the two possibilities
-        # in the documentation don't seem to apply when take() is not given an argument),
-        # but handling exceptions inside a ROS callback is overcomplicated,
-        # so we ignore this for now.
-        lease = self.spot_wrapper._lease_client.take()
-        self.spot_wrapper._lease_keepalive = LeaseKeepAlive(self.spot_wrapper._lease_client)
-        # There is no clear evidence that take() could return the same lease as before,
-        # but we do this check to be extra safe.
-        have_new_lease = (old_lease is None and lease is not None) or (
-            str(lease.lease_proto) != str(old_lease.lease_proto)
-        )
+        have_new_lease, lease = self.spot_wrapper.take_lease()
         if have_new_lease:
             response.success = True
             response.message = str(lease.lease_proto)
