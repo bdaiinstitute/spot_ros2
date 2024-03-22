@@ -205,6 +205,21 @@ def set_node_parameter_from_parameter_list(
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
+    """
+    When we send very long trajectories to Spot, we create batches of given
+    size. If we do not batch a long trajectory, Spot will reject it.
+    """
+    TRAJECTORY_BATCH_SIZE = 100
+
+    """
+    When we send very long trajectories to Spot, we create overlapping batches.
+    Overlapping trajectories is very important because we want the robot to
+    stich them smoothly. A batch is sent before the previous one has completed,
+    to work around network latency.
+    The following value has been determined empirically.
+    """
+    TRAJECTORY_BATCH_OVERLAPPING_POINTS = 20
+
     def __init__(self, parameter_list: Optional[typing.List[Parameter]] = None, **kwargs: typing.Any) -> None:
         """
         Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.
@@ -2076,13 +2091,21 @@ class SpotROS(Node):
         if self.spot_wrapper is None:
             return
 
-        clock_skew = 0.0  # Call a service.
-
         ros_command = goal_handle.request.command
         proto_command = robot_command_pb2.RobotCommand()
         convert(ros_command, proto_command)
 
-        commands = robot_command_util.batch_command(proto_command, 100, 20)
+        self.get_logger().error("1 - " + robot_command_util.to_string(proto_command))
+
+        # Change the time of all trajectories from local to robot time.
+        # robot_command_util.add_skew(proto_command, self.spot_wrapper.time_skew)
+
+        self.get_logger().error("2 - " + robot_command_util.to_string(proto_command))
+
+        # Inspect the command and if there are long trajectories, batch them.
+        commands = robot_command_util.batch_command(
+            proto_command, SpotROS.TRAJECTORY_BATCH_SIZE, SpotROS.TRAJECTORY_BATCH_OVERLAPPING_POINTS
+        )
         num_of_commands = len(commands)
 
         goal_id = None
@@ -2090,23 +2113,31 @@ class SpotROS(Node):
         feedback: Optional[RobotCommandFeedback] = None
         feedback_msg: Optional[RobotCommand.Feedback] = None
 
+        start_time = time.time()
+        waiting_time = 0.0
+
+        time_gap = robot_command_util.waiting_time(commands[0])
+
         index = 0
-        execution_time = float("inf")
+        self.get_logger().error("Waiting time " + str(waiting_time))
+
         while (
             rclpy.ok()
             and goal_handle.is_active
             and not goal_handle.is_cancel_requested
             and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
         ):
-            if index == 0 or time.time() + clock_skew >= execution_time:
+            time_since_start = time.time() - start_time
+            if time_since_start >= waiting_time:
                 success, err_msg, goal_id = self.spot_wrapper.robot_command(commands[index])
                 if not success:
                     raise Exception(err_msg)
                 index += 1
                 if index < num_of_commands:
-                    execution_time = robot_command_util.execution_time(commands[index])
+                    waiting_time = robot_command_util.waiting_time(commands[index]) - time_gap
                 else:
-                    execution_time = float("inf")
+                    waiting_time = float("inf")
+                self.get_logger().error("waiting_time: " + str(waiting_time))
                 self.get_logger().info("Robot now executing goal " + str(goal_id))
 
             feedback = self._get_robot_command_feedback(goal_id)

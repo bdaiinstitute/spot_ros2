@@ -349,10 +349,7 @@ class SpotRunner:
         odom_to_task: SE3Pose = odom_to_body * body_to_task
         wrist_to_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
 
-        # We add a delay to be sure that the trajectory starts
-        # after Spot current time.
-        delay = 2
-        start_time = time.time() + delay
+        start_time = time.time()
 
         # Make arm and gripper follow the sampled trajectories.
 
