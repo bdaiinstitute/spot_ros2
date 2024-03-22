@@ -2,17 +2,21 @@
   <img src="spot.png" width="350">
   <h1 align="center">Spot ROS 2 Driver</h1>
   <p align="center">
-    <a href="https://github.com/MASKOR/spot_ros2/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
+    <img src="https://img.shields.io/badge/python-3.8|3.9|3.10-blue"/>
+    <a href="https://github.com/astral-sh/ruff">
+      <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"/>
     </a>
-    <a href="https://www.python.org/">
-    <img src="https://img.shields.io/badge/built%20with-Python3-red.svg" />
+    <a href="https://github.com/psf/black">
+      <img src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
     </a>
-    <a href="https://github.com/bdaiinstitute/spot_ros2/actions">
-    <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/test.yml/badge.svg">
+    <a href="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/ci.yml">
+      <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/ci.yml/badge.svg?branch=main"/>
     </a>
-    <a href="https://bdaiinstitute.github.io/spot_ros2">
-    <img src="https://img.shields.io/badge/docs-Python3-blue">
+    <a href="https://coveralls.io/github/bdaiinstitute/spot_ros2?branch=main">
+      <img src="https://coveralls.io/repos/github/bdaiinstitute/spot_ros2/badge.svg?branch=main"/>
+    </a>
+    <a href="LICENSE">
+      <img src="https://img.shields.io/badge/license-MIT-purple"/>
     </a>
   </p>
 </p>
