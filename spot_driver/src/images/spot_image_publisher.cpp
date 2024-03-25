@@ -36,14 +36,15 @@ namespace spot_ros2::images {
     if (source.type == SpotImageType::RGB) {
       bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
       image_request->set_image_source_name(source_name);
+      // JPEG images can have a user-configurable image quality setting.
+      image_request->set_quality_percent(rgb_image_quality);
       if (has_rgb_cameras) {
         image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8);
-        // RGB images can have a user-configurable image quality setting.
-        image_request->set_quality_percent(rgb_image_quality);
         // RGB images can be either raw or JPEG-compressed.
         image_request->set_image_format(get_raw_rgb_images ? bosdyn::api::Image_Format_FORMAT_RAW
                                                            : bosdyn::api::Image_Format_FORMAT_JPEG);
       } else {
+        // Grey images are always JPEG-compressed, so selection of RAW has no effect
         image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8);
       }
     } else if (source.type == SpotImageType::DEPTH) {
