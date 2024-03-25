@@ -77,6 +77,7 @@ bool SpotImagePublisher::initialize() {
   const auto publish_depth_registered_images =
       middleware_handle_->parameter_interface()->getPublishDepthRegisteredImages();
   const auto has_rgb_cameras = middleware_handle_->parameter_interface()->getHasRGBCameras();
+  const bool do_decompress_images = middleware_handle_->parameter_interface()->getDoDecompressImages();
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources =
@@ -86,23 +87,23 @@ bool SpotImagePublisher::initialize() {
   image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, false);
 
   // Create a publisher for each image source
-  middleware_handle_->createPublishers(sources);
+  middleware_handle_->createPublishers(sources, do_decompress_images);
 
   // Create a timer to request and publish images at a fixed rate
-  middleware_handle_->timer_interface()->setTimer(kImageCallbackPeriod, [this]() {
-    timerCallback();
+  middleware_handle_->timer_interface()->setTimer(kImageCallbackPeriod, [this, do_decompress_images]() {
+    timerCallback(do_decompress_images);
   });
 
   return true;
 }
 
-void SpotImagePublisher::timerCallback() {
+void SpotImagePublisher::timerCallback(bool do_decompress_images) {
   if (!image_request_message_) {
     middleware_handle_->logger_interface()->logError("No image request message generated. Returning.");
     return;
   }
 
-  const auto image_result = image_client_interface_->getImages(*image_request_message_);
+  const auto image_result = image_client_interface_->getImages(*image_request_message_, do_decompress_images);
   if (!image_result.has_value()) {
     middleware_handle_->logger_interface()->logError(
         std::string{"Failed to get images: "}.append(image_result.error()));
@@ -110,6 +111,7 @@ void SpotImagePublisher::timerCallback() {
   }
 
   middleware_handle_->publishImages(image_result.value().images_);
+  middleware_handle_->publishImages(image_result.value().compressed_images_);
 
   middleware_handle_->tf_interface()->updateStaticTransforms(image_result.value().transforms_);
 }
