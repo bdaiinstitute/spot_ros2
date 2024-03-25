@@ -19,7 +19,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     python3-argcomplete \
     python3-colcon-common-extensions \
     python3-colcon-mixin \
-    python3-pytest-cov \
     python3-rosdep \
     libpython3-dev \
     python3-vcstool \
@@ -44,10 +43,13 @@ RUN curl -sL https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/4.0
 RUN python -m pip install --no-cache-dir --upgrade pip==22.3.1 \
     && pip install --root-user-action=ignore --no-cache-dir --default-timeout=900 \
     numpy==1.24.1 \
-    bosdyn-client==4.0.0 \
-    bosdyn-mission==4.0.0 \
+    pytest-cov==4.1.0 \
+    pytest-xdist==3.5.0 \
     bosdyn-api==4.0.0 \
     bosdyn-core==4.0.0 \
+    bosdyn-client==4.0.0 \
+    bosdyn-mission==4.0.0 \
+    bosdyn-choreography-client==4.0.0 \
     pip cache purge
 
 # Install spot_wrapper requirements
