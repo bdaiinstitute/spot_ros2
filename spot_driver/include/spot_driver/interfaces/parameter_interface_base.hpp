@@ -23,6 +23,7 @@ class ParameterInterfaceBase {
   virtual bool getHasRGBCameras() const = 0;
   virtual bool getDoDecompressImages() const = 0;
   virtual bool getPublishRGBImages() const = 0;
+  virtual bool getPublishRawRGBCameras() const = 0;
   virtual bool getPublishDepthImages() const = 0;
   virtual bool getPublishDepthRegisteredImages() const = 0;
   virtual std::string getPreferredOdomFrame() const = 0;
@@ -37,6 +38,7 @@ class ParameterInterfaceBase {
   static constexpr bool kDefaultHasRGBCameras{true};
   static constexpr bool kDefaultDoDecompressImages{true};
   static constexpr bool kDefaultPublishRGBImages{true};
+  static constexpr bool kDefaultPublishRawRGBCameras{false};
   static constexpr bool kDefaultPublishDepthImages{true};
   static constexpr bool kDefaultPublishDepthRegisteredImages{true};
   static constexpr auto kDefaultPreferredOdomFrame = "odom";

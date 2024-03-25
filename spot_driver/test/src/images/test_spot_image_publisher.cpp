@@ -47,6 +47,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   bool getPublishRGBImages() const override { return publish_rgb_images; }
 
+  bool getPublishRawRGBCameras() const override { return publish_raw_rgb_cameras; }
+
   bool getPublishDepthImages() const override { return publish_depth_images; }
 
   bool getPublishDepthRegisteredImages() const override { return publish_depth_registered_images; }
@@ -57,8 +59,9 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   double rgb_image_quality = kDefaultRGBImageQuality;
   bool has_rgb_cameras = kDefaultHasRGBCameras;
-  bool publish_rgb_images = kDefaultPublishRGBImages;
   bool do_decompress_images = kDefaultDoDecompressImages;
+  bool publish_raw_rgb_cameras = kDefaultPublishRawRGBCameras;
+  bool publish_rgb_images = kDefaultPublishRGBImages;
   bool publish_depth_images = kDefaultPublishDepthImages;
   bool publish_depth_registered_images = kDefaultPublishDepthRegisteredImages;
   std::string spot_name;
