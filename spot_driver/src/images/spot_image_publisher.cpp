@@ -110,13 +110,8 @@ void SpotImagePublisher::timerCallback(bool do_decompress_images) {
     return;
   }
 
-  static int counter = 0;
-  counter += image_result.value().images_.size();
   middleware_handle_->publishImages(image_result.value().images_);
-  std::cerr << "Pub image [ " << counter << "]" << std::endl;
-  counter += image_result.value().compressed_images_.size();
   middleware_handle_->publishImages(image_result.value().compressed_images_);
-  std::cerr << "Pub compressed image [ " << counter << "]" << std::endl;
 
   middleware_handle_->tf_interface()->updateStaticTransforms(image_result.value().transforms_);
 }
