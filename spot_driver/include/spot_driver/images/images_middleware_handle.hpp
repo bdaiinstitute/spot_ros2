@@ -70,4 +70,25 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
   /** @brief Map between camera info topic names and camera info publishers. */
   std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::CameraInfo>>> info_publishers_;
 };
+
+template <typename IMAGE_WITH_CAMERA_INFO_TYPE>
+tl::expected<void, std::string> ImagesMiddlewareHandle::publishImagesT(
+    const std::map<ImageSource, IMAGE_WITH_CAMERA_INFO_TYPE>& images) {
+  for (const auto& [image_source, image_data] : images) {
+    const auto image_topic_name = toRosTopic(image_source);
+    try {
+      tryPublishImage(image_topic_name, image_data.image);
+    } catch (const std::out_of_range& e) {
+      return tl::make_unexpected("No publisher exists for image topic `" + image_topic_name + "`.");
+    }
+    try {
+      tryPublishImageInfo(image_topic_name, image_data.info);
+    } catch (const std::out_of_range& e) {
+      return tl::make_unexpected("No publisher exists for camera info topic`" + image_topic_name + "`.");
+    }
+  }
+
+  return {};
+}
+
 }  // namespace spot_ros2::images
