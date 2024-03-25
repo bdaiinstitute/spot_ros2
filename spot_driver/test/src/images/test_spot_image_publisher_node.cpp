@@ -43,6 +43,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   bool getHasRGBCameras() const override { return has_rgb_cameras; }
 
+  bool getDoDecompressImages() const override { return do_decompress_images; }
+
   bool getPublishRGBImages() const override { return publish_rgb_images; }
 
   bool getPublishDepthImages() const override { return publish_depth_images; }
@@ -59,6 +61,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   double rgb_image_quality = kDefaultRGBImageQuality;
   bool has_rgb_cameras = kDefaultHasRGBCameras;
+  bool do_decompress_images = kDefaultDoDecompressImages;
   bool publish_rgb_images = kDefaultPublishRGBImages;
   bool publish_depth_images = kDefaultPublishDepthImages;
   bool publish_depth_registered_images = kDefaultPublishDepthRegisteredImages;
@@ -67,9 +70,11 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
 class MockMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
  public:
-  MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources), (override));
+  MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources, bool), (override));
   MOCK_METHOD((tl::expected<void, std::string>), publishImages, ((const std::map<ImageSource, ImageWithCameraInfo>&)),
               (override));
+  MOCK_METHOD((tl::expected<void, std::string>), publishImages,
+              ((const std::map<ImageSource, CompressedImageWithCameraInfo>&)), (override));
   MOCK_METHOD(std::shared_ptr<rclcpp::Node>, node, (), (override));
 
   MOCK_METHOD(ParameterInterfaceBase*, parameter_interface, (), (override));

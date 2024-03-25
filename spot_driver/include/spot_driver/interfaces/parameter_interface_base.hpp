@@ -21,6 +21,7 @@ class ParameterInterfaceBase {
   virtual std::string getPassword() const = 0;
   virtual double getRGBImageQuality() const = 0;
   virtual bool getHasRGBCameras() const = 0;
+  virtual bool getDoDecompressImages() const = 0;
   virtual bool getPublishRGBImages() const = 0;
   virtual bool getPublishDepthImages() const = 0;
   virtual bool getPublishDepthRegisteredImages() const = 0;
@@ -34,6 +35,7 @@ class ParameterInterfaceBase {
   static constexpr auto kDefaultPassword = "password";
   static constexpr double kDefaultRGBImageQuality{70.0};
   static constexpr bool kDefaultHasRGBCameras{true};
+  static constexpr bool kDefaultDoDecompressImages{true};
   static constexpr bool kDefaultPublishRGBImages{true};
   static constexpr bool kDefaultPublishDepthImages{true};
   static constexpr bool kDefaultPublishDepthRegisteredImages{true};
