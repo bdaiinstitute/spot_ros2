@@ -24,6 +24,7 @@ import bdai_ros2_wrappers.scope as ros_scope
 import geometry_msgs.msg
 import numpy as np
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
+from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api.spot import inverse_kinematics_pb2, robot_command_pb2
 from bosdyn.client.frame_helpers import (
@@ -37,12 +38,27 @@ from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
-from tf2_ros import TransformBroadcaster
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
+from tf2_ros import TransformBroadcaster, TransformStamped
 
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
+
+from .simple_spot_commander import SimpleSpotCommander
+
+
+def to_se3(ros_transform: TransformStamped) -> SE3Pose:
+    """Convert from ROS TransformStamped to Bosdyn SE3Pose"""
+    return SE3Pose(
+        ros_transform.transform.translation.x,
+        ros_transform.transform.translation.y,
+        ros_transform.transform.translation.z,
+        Quat(
+            ros_transform.transform.rotation.w,
+            ros_transform.transform.rotation.x,
+            ros_transform.transform.rotation.y,
+            ros_transform.transform.rotation.z,
+        ),
+    )
 
 
 class SpotRunner:
@@ -191,8 +207,8 @@ class SpotRunner:
         self._logger.info("Arm ready.")
 
         # Look for known transforms published by the robot.
-        odom_T_flat_body: SE3Pose = self._tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name)
-        odom_T_gpe: SE3Pose = self._tf_listener.lookup_a_tform_b(odom_frame_name, ground_plane_frame_name)
+        odom_T_flat_body: SE3Pose = to_se3(self._tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name))
+        odom_T_gpe: SE3Pose = to_se3(self._tf_listener.lookup_a_tform_b(odom_frame_name, ground_plane_frame_name))
 
         # Construct the frame on the ground right underneath the center of the body.
         odom_T_ground_body: SE3Pose = odom_T_flat_body

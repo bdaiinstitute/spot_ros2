@@ -4,16 +4,17 @@ from typing import Optional
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
+from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
 
 from spot_msgs.action import RobotCommand  # type: ignore
+
+from .simple_spot_commander import SimpleSpotCommander
 
 
 def hello_arm(robot_name: Optional[str] = None) -> bool:
@@ -71,8 +72,19 @@ def hello_arm(robot_name: Optional[str] = None) -> bool:
     flat_body_T_hand = geometry_pb2.SE3Pose(position=hand_ewrt_flat_body, rotation=flat_body_Q_hand)
 
     odom_T_flat_body = tf_listener.lookup_a_tform_b(odom_frame_name, grav_aligned_body_frame_name)
+    odom_T_flat_body_se3 = math_helpers.SE3Pose(
+        odom_T_flat_body.transform.translation.x,
+        odom_T_flat_body.transform.translation.y,
+        odom_T_flat_body.transform.translation.z,
+        math_helpers.Quat(
+            odom_T_flat_body.transform.rotation.w,
+            odom_T_flat_body.transform.rotation.x,
+            odom_T_flat_body.transform.rotation.y,
+            odom_T_flat_body.transform.rotation.z,
+        ),
+    )
 
-    odom_T_hand = odom_T_flat_body * math_helpers.SE3Pose.from_obj(flat_body_T_hand)
+    odom_T_hand = odom_T_flat_body_se3 * math_helpers.SE3Pose.from_obj(flat_body_T_hand)
 
     # duration in seconds
     seconds = 2
@@ -111,7 +123,7 @@ def hello_arm(robot_name: Optional[str] = None) -> bool:
     flat_body_Q_hand.z = 0
 
     flat_body_T_hand2 = geometry_pb2.SE3Pose(position=hand_ewrt_flat_body, rotation=flat_body_Q_hand)
-    odom_T_hand = odom_T_flat_body * math_helpers.SE3Pose.from_obj(flat_body_T_hand2)
+    odom_T_hand = odom_T_flat_body_se3 * math_helpers.SE3Pose.from_obj(flat_body_T_hand2)
 
     arm_command = RobotCommandBuilder.arm_pose_command(
         odom_T_hand.x,

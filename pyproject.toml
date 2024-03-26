@@ -57,5 +57,5 @@ strict_equality = true
 warn_unreachable = true
 warn_redundant_casts = true
 no_implicit_optional = true
-files = ['spot_description', 'spot_driver', 'examples']
+files = ['spot_description', 'spot_driver', 'spot_examples']
 exclude = '^(docker|.*external|.*thirdparty|.*install|.*build|.*_experimental|.*conversions.py)/'

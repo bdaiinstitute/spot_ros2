@@ -5,16 +5,17 @@ from typing import Optional
 import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrappers.scope as ros_scope
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
+from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
 from bdai_ros2_wrappers.utilities import fqn, namespace_with
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
-from bosdyn.client.math_helpers import SE2Pose
+from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
 
 from spot_msgs.action import RobotCommand  # type: ignore
+
+from .simple_spot_commander import SimpleSpotCommander
 
 # Where we want the robot to walk to relative to itself
 ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
@@ -32,7 +33,6 @@ class WalkForward:
         self._vision_frame_name = namespace_with(self._robot_name, VISION_FRAME_NAME)
         self._tf_listener = TFListenerWrapper(node)
         self._tf_listener.wait_for_a_tform_b(self._body_frame_name, self._vision_frame_name)
-
         self._robot = SimpleSpotCommander(self._robot_name, node)
         self._robot_command_client = ActionClientWrapper(
             RobotCommand, namespace_with(self._robot_name, "robot_command"), node
@@ -63,10 +63,19 @@ class WalkForward:
 
     def walk_forward_with_world_frame_goal(self) -> None:
         self._logger.info("Walking forward")
-        world_t_robot = self._tf_listener.lookup_a_tform_b(
-            self._vision_frame_name, self._body_frame_name
+        world_t_robot = self._tf_listener.lookup_a_tform_b(self._vision_frame_name, self._body_frame_name)
+        world_t_robot_se2 = SE3Pose(
+            world_t_robot.transform.translation.x,
+            world_t_robot.transform.translation.y,
+            world_t_robot.transform.translation.z,
+            Quat(
+                world_t_robot.transform.rotation.w,
+                world_t_robot.transform.rotation.x,
+                world_t_robot.transform.rotation.y,
+                world_t_robot.transform.rotation.z,
+            ),
         ).get_closest_se2_transform()
-        world_t_goal = world_t_robot * ROBOT_T_GOAL
+        world_t_goal = world_t_robot_se2 * ROBOT_T_GOAL
         proto_goal = RobotCommandBuilder.synchro_se2_trajectory_point_command(
             goal_x=world_t_goal.x,
             goal_y=world_t_goal.y,
