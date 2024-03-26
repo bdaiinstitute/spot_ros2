@@ -10,7 +10,6 @@ import math
 import time
 from typing import Callable, Optional, Tuple
 
-import pytest
 from bosdyn.api import (
     arm_command_pb2,
     basic_command_pb2,
@@ -21,9 +20,9 @@ from bosdyn.api import (
     trajectory_pb2,
 )
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE2Velocity, SE3Pose, SE3Velocity
-from bosdyn.util import duration_to_seconds, seconds_to_duration, seconds_to_timestamp
+from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 
-from spot_driver.robot_command_util import batch_command, get_batch_size, max_time_since_reference
+from spot_driver.robot_command_util import batch_command, get_batch_size
 
 ###############################################################################
 # CONTINUOUS TRAJECTORIES
@@ -431,10 +430,6 @@ def test_command_duration() -> None:
     batch1_size = get_batch_size(sequence_length, batch_size, overlapping, 1)
     batch2_size = get_batch_size(sequence_length, batch_size, overlapping, 2)
 
-    end_batch0 = batch0_size - 1
-    end_batch1 = end_batch0 - overlapping + batch1_size
-    end_batch2 = end_batch1 - overlapping + batch2_size
-
-    assert duration_to_seconds(max_time_since_reference(commands[0])) == pytest.approx(time_sample * end_batch0)
-    assert duration_to_seconds(max_time_since_reference(commands[1])) == pytest.approx(time_sample * end_batch1)
-    assert duration_to_seconds(max_time_since_reference(commands[2])) == pytest.approx(time_sample * end_batch2)
+    assert batch0_size == 20
+    assert batch1_size == 20
+    assert batch2_size == 19

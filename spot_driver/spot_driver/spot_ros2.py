@@ -2108,7 +2108,6 @@ class SpotROS(Node):
 
         start_time = time.time()
         time_before_sending_command = 0.0
-        min_time_since_reference = robot_command_util.min_time_since_reference(commands[0])
 
         index = 0
         while (
@@ -2124,9 +2123,7 @@ class SpotROS(Node):
                     raise Exception(err_msg)
                 index += 1
                 if index < num_of_commands:
-                    time_before_sending_command = (
-                        robot_command_util.min_time_since_reference(commands[index]) - min_time_since_reference
-                    )
+                    time_before_sending_command = robot_command_util.min_time_since_reference(commands[index])
                 else:
                     time_before_sending_command = float("inf")
                 self.get_logger().info("Robot now executing goal " + str(goal_id))

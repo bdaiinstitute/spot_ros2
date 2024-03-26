@@ -19,15 +19,19 @@ from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api import (
     arm_command_pb2,
     basic_command_pb2,
-    geometry_pb2,
     gripper_command_pb2,
     mobility_command_pb2,
     robot_command_pb2,
     synchronized_command_pb2,
     trajectory_pb2,
 )
-from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
-from bosdyn.client.math_helpers import Quat, SE3Pose
+from bosdyn.client.frame_helpers import (
+    BODY_FRAME_NAME,
+    GRAV_ALIGNED_BODY_FRAME_NAME,
+    ODOM_FRAME_NAME,
+    VISION_FRAME_NAME,
+)
+from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 from bosdyn_msgs.conversions import convert
@@ -44,22 +48,38 @@ from spot_msgs.action import RobotCommand  # type: ignore
 # tests.
 
 ContinuousTrajectory1D = Callable[[float], float]
+ContinuousTrajectory2D = Callable[[float], SE2Pose]
 ContinuousTrajectory3D = Callable[[float], SE3Pose]
 
 
-def _continuous_trajectory_1d(t: float) -> float:
+def continuous_gripper_trajectory(t: float) -> float:
     """
     Given a time t in the trajectory, return a scalar representing a value
     in the trajectory.
     """
-    n = 5
+    n = 8
     period = 10.0
     t_norm = t / period
     x = -abs(math.sin(math.pi * n * t_norm))
     return x
 
 
-def _continuous_trajectory_3d(t: float) -> SE3Pose:
+def continuous_mobility_trajectory(t: float) -> SE2Pose:
+    """
+    Given a time t in the trajectory, return a scalar representing a value
+    in the trajectory.
+    (0,0) is a position under the body of the robot with x pointing forward.
+    """
+
+    period = 10.0
+    t_norm = t / period
+    x = 0.1
+    y = 0.0
+    angle = (20 * math.pi / 180) * math.sin(2.0 * math.pi * t_norm)
+    return SE2Pose(x, y, angle)
+
+
+def continuous_arm_trajectory(t: float) -> SE3Pose:
     """
     Given a time t in the trajectory, return the SE3Pose at this point in
     the trajectory.
@@ -77,137 +97,21 @@ def _continuous_trajectory_3d(t: float) -> SE3Pose:
     return SE3Pose(x, y, z, quat)
 
 
-###############################################################################
-# DISCRETE TRAJECTORIES
-# Following, some trajectories created by sampling previously defined
-# continuous functions.
-
-
-def _discrete_trajectory_1d(
-    reference_time: float,
-    ramp_up_time: float,
-    duration: float,
-    dt: float,
-    trajectory_function: ContinuousTrajectory1D,
-) -> trajectory_pb2.ScalarTrajectory:
+def _to_se3(ros_transform: TransformStamped) -> SE3Pose:
     """
-    Return a scalar trajectory by sampling a continuous function. The
-    continuous function is sampled from 0 to a specified duration and at given
-    sampling intervals.
-
-    Args:
-        reference_time: The time the trajectory is executed.
-        ramp_up_time: A delay to let the robot move into the initial position.
-        duration: The total sampling time.
-        dt: The sampling interval.
-        trajectory_function: the trajectory function to sample.
+    Convert from ROS TransformStamped to Bosdyn SE3Pose
     """
-    trajectory = trajectory_pb2.ScalarTrajectory()
-    trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
-    trajectory.interpolation = trajectory_pb2.POS_INTERP_CUBIC
-    t = 0.0
-    while t < duration:
-        pos = trajectory_function(t)
-        point = trajectory.points.add()
-        point.point = pos
-        point.time_since_reference.CopyFrom(seconds_to_duration(t + ramp_up_time))
-        t = t + dt
-    return trajectory
-
-
-def _discrete_trajectory_3d(
-    reference_time: float,
-    ramp_up_time: float,
-    duration: float,
-    dt: float,
-    trajectory_function: ContinuousTrajectory3D,
-) -> trajectory_pb2.SE3Trajectory:
-    """
-    Return a discrete trajectory in 3D space by sampling a continuous 3D
-    function. The continuous function is sampled from 0 to a specified duration
-    and at given sampling intervals.
-
-    Args:
-        reference_time: The time the trajectory is executed.
-        ramp_up_time: A delay to let the robot move into the initial position.
-        duration: The total sampling time.
-        dt: The sampling interval.
-        trajectory_function: the trajectory function to sample.
-    """
-    trajectory = trajectory_pb2.SE3Trajectory()
-    trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
-    t = 0.0
-    while t < duration:
-        pos = trajectory_function(t)
-        point = trajectory.points.add()
-        point.pose.CopyFrom(pos.to_proto())
-        point.time_since_reference.CopyFrom(seconds_to_duration(t + ramp_up_time))
-        t = t + dt
-    return trajectory
-
-
-###############################################################################
-# ROBOT COMMAND
-# Here we build a robot command containing different trajectories generated
-# from the previously defined samples.
-
-
-def _build_sample_command(
-    root_frame_name: str,
-    wrist_to_tool: geometry_pb2.SE3Pose,
-    root_to_task: geometry_pb2.SE3Pose,
-    hand_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
-    mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None,
-    gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None,
-) -> robot_command_pb2.RobotCommand:
-    """
-    Return a robot command with three optional trajectories.
-
-    Args
-        hand_trajectory: An hand 3D trajectory.
-        mobility_trajectory: A mobility 2D rajectory.
-        gripper_trajectory: A gripper scalar trajectory.
-
-    Returns:
-        A robot command with any of the given optional trajectory.
-    """
-
-    # Build an Arm request.
-
-    arm_request = None
-    if hand_trajectory is not None:
-        arm_cartesian_command = arm_command_pb2.ArmCartesianCommand.Request(
-            root_frame_name=root_frame_name,
-            pose_trajectory_in_task=hand_trajectory,
-            wrist_tform_tool=wrist_to_tool,
-            root_tform_task=root_to_task,
-            maximum_acceleration=DoubleValue(value=10000.0),
-            max_linear_velocity=DoubleValue(value=10000.0),
-            max_angular_velocity=DoubleValue(value=10000.0),
-        )
-        arm_request = arm_command_pb2.ArmCommand.Request(arm_cartesian_command=arm_cartesian_command)
-
-    # Build a Mobility request.
-
-    mobility_request = None
-    if mobility_trajectory is not None:
-        mobility_request = basic_command_pb2.SE2TrajectoryCommand.Request(trajectory=mobility_trajectory)
-        mobility_request = mobility_command_pb2.MobilityCommand.Request(se2_trajectory_request=mobility_request)
-
-    # Build a Gripper request.
-
-    gripper_request = None
-    if gripper_trajectory is not None:
-        claw_gripper_request = gripper_command_pb2.ClawGripperCommand.Request(trajectory=gripper_trajectory)
-        gripper_request = gripper_command_pb2.GripperCommand.Request(claw_gripper_command=claw_gripper_request)
-
-    # Build a Robot Command.
-
-    synchronized_command = synchronized_command_pb2.SynchronizedCommand.Request(
-        arm_command=arm_request, mobility_command=mobility_request, gripper_command=gripper_request
+    return SE3Pose(
+        ros_transform.transform.translation.x,
+        ros_transform.transform.translation.y,
+        ros_transform.transform.translation.z,
+        Quat(
+            ros_transform.transform.rotation.w,
+            ros_transform.transform.rotation.x,
+            ros_transform.transform.rotation.y,
+            ros_transform.transform.rotation.z,
+        ),
     )
-    command = robot_command_pb2.RobotCommand(synchronized_command=synchronized_command)
-    return command
 
 
 ###############################################################################
@@ -229,22 +133,15 @@ class SpotRunner:
         self._robot_command_client = ActionClientWrapper(
             RobotCommand, namespace_with(self._robot_name, "robot_command"), node
         )
+        self._tf_listener = TFListenerWrapper(self._node)
 
-    def _to_se3(self, ros_transform: TransformStamped) -> SE3Pose:
-        """
-        Convert from ROS TransformStamped to Bosdyn SE3Pose
-        """
-        return SE3Pose(
-            ros_transform.transform.translation.x,
-            ros_transform.transform.translation.y,
-            ros_transform.transform.translation.z,
-            Quat(
-                ros_transform.transform.rotation.w,
-                ros_transform.transform.rotation.x,
-                ros_transform.transform.rotation.y,
-                ros_transform.transform.rotation.z,
-            ),
-        )
+        self._body_frame_name = namespace_with(self._robot_name, BODY_FRAME_NAME)
+        self._vision_frame_name = namespace_with(self._robot_name, VISION_FRAME_NAME)
+        self._odom_frame_name = namespace_with(self._robot_name, ODOM_FRAME_NAME)
+        self._grav_body_frame_name = namespace_with(self._robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)
+
+        self._tf_listener.wait_for_a_tform_b(self._odom_frame_name, self._grav_body_frame_name)
+        self._tf_listener.wait_for_a_tform_b(self._vision_frame_name, self._body_frame_name)
 
     def _ready_arm(self) -> bool:
         """
@@ -264,29 +161,171 @@ class SpotRunner:
         convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("arm_stow", action_goal)
 
-    def _follow_trajectory(
+    def _arm_trajectory(
         self,
-        root_frame_name: str,
-        wrist_to_tool: geometry_pb2.SE3Pose,
-        root_to_task: geometry_pb2.SE3Pose,
+        reference_time: float,
+        ramp_up_time: float,
+        duration: float,
+        dt: float,
+        trajectory_function: ContinuousTrajectory3D,
+    ) -> trajectory_pb2.SE3Trajectory:
+        """
+        Return a discrete trajectory in 3D space by sampling a continuous 3D
+        function. The continuous function is sampled from 0 to a specified duration
+        and at given sampling intervals.
+
+        Args:
+            reference_time: The time the trajectory is executed.
+            ramp_up_time: A delay to let the robot move into the initial position.
+            duration: The total sampling time.
+            dt: The sampling interval.
+            trajectory_function: the trajectory function to sample.
+        """
+        trajectory = trajectory_pb2.SE3Trajectory()
+        trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
+        t = 0.0
+        while t < duration:
+            pos = trajectory_function(t)
+            point = trajectory.points.add()
+            point.pose.CopyFrom(pos.to_proto())
+            point.time_since_reference.CopyFrom(seconds_to_duration(t + ramp_up_time))
+            t = t + dt
+        return trajectory
+
+    def _gripper_trajectory(
+        self,
+        reference_time: float,
+        ramp_up_time: float,
+        duration: float,
+        dt: float,
+        trajectory_function: ContinuousTrajectory1D,
+    ) -> trajectory_pb2.ScalarTrajectory:
+        """
+        Return a scalar trajectory by sampling a continuous function. The
+        continuous function is sampled from 0 to a specified duration and at given
+        sampling intervals.
+
+        Args:
+            reference_time: The time the trajectory is executed.
+            ramp_up_time: A delay to let the robot move into the initial position.
+            duration: The total sampling time.
+            dt: The sampling interval.
+            trajectory_function: the trajectory function to sample.
+        """
+        trajectory = trajectory_pb2.ScalarTrajectory()
+        trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
+        trajectory.interpolation = trajectory_pb2.POS_INTERP_CUBIC
+        t = 0.0
+        while t < duration:
+            pos = trajectory_function(t)
+            point = trajectory.points.add()
+            point.point = pos
+            point.time_since_reference.CopyFrom(seconds_to_duration(t + ramp_up_time))
+            t = t + dt
+        return trajectory
+
+    def _mobility_trajectory(
+        self,
+        reference_time: float,
+        ramp_up_time: float,
+        duration: float,
+        dt: float,
+        trajectory_function: ContinuousTrajectory2D,
+    ) -> trajectory_pb2.SE2Trajectory:
+        vision_to_body = _to_se3(self._tf_listener.lookup_a_tform_b(self._vision_frame_name, self._body_frame_name))
+        trajectory = trajectory_pb2.SE2Trajectory()
+        trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
+        t = 0.0
+        while t < duration:
+            pos = vision_to_body.get_closest_se2_transform() * trajectory_function(t)
+            point = trajectory.points.add()
+            point.pose.CopyFrom(pos.to_proto())
+            point.time_since_reference.CopyFrom(seconds_to_duration(t + ramp_up_time))
+            t = t + dt
+        return trajectory
+
+    def _build_arm_command(
+        self, hand_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None
+    ) -> arm_command_pb2.ArmCommand.Request:
+        # Create a task frame. This will be the frame the trajectory is
+        # defined relative to. The center of the frame is 90cm in front of the
+        # robot, with z pointing back at the robot, x off the right side of the
+        # robot, and y up
+        body_to_task = SE3Pose(x=0.9, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
+
+        # Now, get the transform between the "odometry" frame and the gravity aligned body frame.
+        # This will be used in conjunction with the body_to_task frame to get the
+        # transformation between the odometry frame and the task frame. In order to get
+        # odom_to_body we use a snapshot of the frame tree. For more information on the frame
+        # tree, see https://dev.bostondynamics.com/docs/concepts/geometry_and_frames
+        odom_to_body: SE3Pose = _to_se3(
+            self._tf_listener.lookup_a_tform_b(self._odom_frame_name, self._grav_body_frame_name)
+        )
+
+        odom_to_task: SE3Pose = odom_to_body * body_to_task
+        wrist_to_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
+
+        arm_request = None
+        if hand_trajectory is not None:
+            arm_cartesian_command = arm_command_pb2.ArmCartesianCommand.Request(
+                root_frame_name=ODOM_FRAME_NAME,
+                root_tform_task=odom_to_task.to_proto(),
+                wrist_tform_tool=wrist_to_tool.to_proto(),
+                pose_trajectory_in_task=hand_trajectory,
+                maximum_acceleration=DoubleValue(value=10000.0),
+                max_linear_velocity=DoubleValue(value=10000.0),
+                max_angular_velocity=DoubleValue(value=10000.0),
+            )
+            arm_request = arm_command_pb2.ArmCommand.Request(arm_cartesian_command=arm_cartesian_command)
+        return arm_request
+
+    def _build_mobility_command(
+        self, mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None
+    ) -> mobility_command_pb2.MobilityCommand.Request:
+        mobility_request = None
+        if mobility_trajectory is not None:
+            mobility_request = basic_command_pb2.SE2TrajectoryCommand.Request(
+                trajectory=mobility_trajectory, se2_frame_name=VISION_FRAME_NAME
+            )
+            mobility_request = mobility_command_pb2.MobilityCommand.Request(se2_trajectory_request=mobility_request)
+        return mobility_request
+
+    def _build_gripper_command(
+        self, gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None
+    ) -> gripper_command_pb2.GripperCommand.Request:
+        gripper_request = None
+        if gripper_trajectory is not None:
+            claw_gripper_request = gripper_command_pb2.ClawGripperCommand.Request(trajectory=gripper_trajectory)
+            gripper_request = gripper_command_pb2.GripperCommand.Request(claw_gripper_command=claw_gripper_request)
+        return gripper_request
+
+    def _build_robot_command(
+        self,
         hand_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
         mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None,
         gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None,
-    ) -> None:
+    ) -> robot_command_pb2.RobotCommand:
         """
-        Order the arm tool to follow a given trajectory.
+        Return a robot command with three optional trajectories.
+
+        Args
+            hand_trajectory: An hand 3D trajectory.
+            mobility_trajectory: A mobility 2D rajectory.
+            gripper_trajectory: A gripper scalar trajectory.
+
+        Returns:
+            A robot command with any of the given optional trajectory.
         """
-        command = _build_sample_command(
-            root_frame_name=root_frame_name,
-            root_to_task=root_to_task,
-            wrist_to_tool=wrist_to_tool,
-            hand_trajectory=hand_trajectory,
-            mobility_trajectory=mobility_trajectory,
-            gripper_trajectory=gripper_trajectory,
+
+        arm_request = self._build_arm_command(hand_trajectory)
+        mobility_request = self._build_mobility_command(mobility_trajectory)
+        gripper_request = self._build_gripper_command(gripper_trajectory)
+
+        synchronized_command = synchronized_command_pb2.SynchronizedCommand.Request(
+            arm_command=arm_request, mobility_command=mobility_request, gripper_command=gripper_request
         )
-        action_goal = RobotCommand.Goal()
-        convert(command, action_goal.command)
-        self._robot_command_client.send_goal_and_wait("move_arm", goal=action_goal)
+        command = robot_command_pb2.RobotCommand(synchronized_command=synchronized_command)
+        return command
 
     def test_run(self) -> bool:
         """
@@ -294,11 +333,6 @@ class SpotRunner:
         Returns:
             True the process runs without errors, False otherwise.
         """
-
-        odom_frame_name = namespace_with(self._robot_name, ODOM_FRAME_NAME)
-        grav_body_frame_name = namespace_with(self._robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)
-        tf_listener = TFListenerWrapper(self._node)
-        tf_listener.wait_for_a_tform_b(odom_frame_name, grav_body_frame_name)
 
         # Claim robot.
         self._logger.info("Claiming robot")
@@ -331,49 +365,38 @@ class SpotRunner:
             return False
         self._logger.info("Arm ready.")
 
-        # Arm command.
-
-        # Create a task frame. This will be the frame the trajectory is defined relative to.
-        # In this example, that is the center of the circle.
-        # The frame at the center of the circle is one that is 90cm in front of the robot,
-        # with z pointing back at the robot, x off the right side of the robot, and y up
-        body_to_task = SE3Pose(x=0.9, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
-
-        # Now, get the transform between the "odometry" frame and the gravity aligned body frame.
-        # This will be used in conjunction with the body_to_task frame to get the
-        # transformation between the odometry frame and the task frame. In order to get
-        # odom_to_body we use a snapshot of the frame tree. For more information on the frame
-        # tree, see https://dev.bostondynamics.com/docs/concepts/geometry_and_frames
-        odom_to_body: SE3Pose = self._to_se3(tf_listener.lookup_a_tform_b(odom_frame_name, grav_body_frame_name))
-
-        odom_to_task: SE3Pose = odom_to_body * body_to_task
-        wrist_to_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
-
-        start_time = time.time()
-
         # Make arm and gripper follow the sampled trajectories.
 
-        hand_trajectory = _discrete_trajectory_3d(
+        start_time = time.time()
+        self._gripper_trajectory(
             reference_time=start_time,
-            ramp_up_time=1,
+            ramp_up_time=4,
             duration=40,
             dt=0.05,
-            trajectory_function=_continuous_trajectory_3d,
+            trajectory_function=continuous_gripper_trajectory,
         )
-        _discrete_trajectory_1d(
+        mobility_trajectory = self._mobility_trajectory(
             reference_time=start_time,
-            ramp_up_time=1,
+            ramp_up_time=4,
             duration=40,
             dt=0.05,
-            trajectory_function=_continuous_trajectory_1d,
+            trajectory_function=continuous_mobility_trajectory,
         )
-        self._follow_trajectory(
-            root_frame_name=ODOM_FRAME_NAME,
-            root_to_task=odom_to_task.to_proto(),
-            wrist_to_tool=wrist_to_tool.to_proto(),
+        hand_trajectory = self._arm_trajectory(
+            reference_time=start_time,
+            ramp_up_time=4,
+            duration=40,
+            dt=0.05,
+            trajectory_function=continuous_arm_trajectory,
+        )
+        command = self._build_robot_command(
             hand_trajectory=hand_trajectory,
+            mobility_trajectory=mobility_trajectory,
             # gripper_trajectory=gripper_trajectory,
         )
+        action_goal = RobotCommand.Goal()
+        convert(command, action_goal.command)
+        self._robot_command_client.send_goal_and_wait("move_arm", goal=action_goal)
 
         # Stow the arm.
         self._logger.info("Stow the arm")

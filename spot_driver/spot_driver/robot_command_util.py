@@ -6,8 +6,7 @@ Utility class with methods to manipulate robot commands.
 from typing import Any, List
 
 from bosdyn.api import robot_command_pb2
-from bosdyn.util import duration_to_seconds, seconds_to_timestamp, timestamp_to_sec
-from google.protobuf.duration_pb2 import Duration
+from bosdyn.util import duration_to_seconds
 
 
 def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int) -> bool:
@@ -173,46 +172,6 @@ def batch_command(
         index += stride
 
     return commands
-
-
-def add_skew(command: robot_command_pb2.RobotCommand, skew: Duration) -> None:
-    """
-    Add the given skew to the reference_time of each trajectory.
-    Args:
-        command: The command we want to calculate the execution time.
-        skew: The difference between the local time and the robot time.
-    """
-    float("inf")
-    if command.HasField("synchronized_command"):
-        if command.synchronized_command.HasField("mobility_command"):
-            mobility_request = command.synchronized_command.mobility_command
-            if trajectory := mobility_request.se2_trajectory_request.trajectory:
-                trajectory.reference_time.CopyFrom(
-                    seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                )
-        if command.synchronized_command.HasField("arm_command"):
-            arm_request = command.synchronized_command.arm_command
-            if arm_request.HasField("arm_cartesian_command"):
-                if trajectory := arm_request.arm_cartesian_command.pose_trajectory_in_task:
-                    trajectory.reference_time.CopyFrom(
-                        seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                    )
-            elif arm_request.HasField("arm_joint_move_command"):
-                if trajectory := arm_request.arm_joint_move_command.trajectory:
-                    trajectory.reference_time.CopyFrom(
-                        seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                    )
-            elif arm_request.HasField("arm_impedance_command"):
-                if trajectory := arm_request.arm_impedance_command.task_tform_desired_tool:
-                    trajectory.reference_time.CopyFrom(
-                        seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                    )
-        if command.synchronized_command.HasField("gripper_command"):
-            gripper_request = command.synchronized_command.gripper_command
-            if trajectory := gripper_request.claw_gripper_command.trajectory:
-                trajectory.reference_time.CopyFrom(
-                    seconds_to_timestamp(timestamp_to_sec(trajectory.reference_time) + duration_to_seconds(skew))
-                )
 
 
 def min_time_since_reference(command: robot_command_pb2.RobotCommand) -> float:
