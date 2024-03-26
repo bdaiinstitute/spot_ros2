@@ -169,7 +169,7 @@ class SpotRunner:
         ground_plane_frame_name = namespace_with(self._robot_name, GROUND_PLANE_FRAME_NAME)
 
         task_frame_name = namespace_with(self._robot_name, "task_frame")
-        link_wr1_frame_name = namespace_with(self._robot_name, "link_wr1")
+        arm_link_wr1_frame_name = namespace_with(self._robot_name, "arm_link_wr1")
         jaw_frame_name = namespace_with(self._robot_name, "jaw_frame")
 
         # Wait for the robot to publish the TF state.
@@ -222,7 +222,7 @@ class SpotRunner:
         # orientation so that when the hand is pointed downwards, the tool's z-axis is
         # pointed upward.
         wr1_T_tool: SE3Pose = SE3Pose(0.23589, 0.0, -0.03943, Quat.from_pitch(-np.pi / 2))
-        self._publish_transform(link_wr1_frame_name, jaw_frame_name, wr1_T_tool)
+        self._publish_transform(arm_link_wr1_frame_name, jaw_frame_name, wr1_T_tool)
 
         # Generate several random poses in front of the task frame where we want the tool to move to.
         # The desired tool poses are defined relative to thr task frame in front of the robot and slightly
