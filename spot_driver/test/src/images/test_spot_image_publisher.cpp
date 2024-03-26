@@ -43,7 +43,11 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   bool getHasRGBCameras() const override { return has_rgb_cameras; }
 
+  bool getDoDecompressImages() const override { return do_decompress_images; }
+
   bool getPublishRGBImages() const override { return publish_rgb_images; }
+
+  bool getPublishRawRGBCameras() const override { return publish_raw_rgb_cameras; }
 
   bool getPublishDepthImages() const override { return publish_depth_images; }
 
@@ -55,6 +59,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   double rgb_image_quality = kDefaultRGBImageQuality;
   bool has_rgb_cameras = kDefaultHasRGBCameras;
+  bool do_decompress_images = kDefaultDoDecompressImages;
+  bool publish_raw_rgb_cameras = kDefaultPublishRawRGBCameras;
   bool publish_rgb_images = kDefaultPublishRGBImages;
   bool publish_depth_images = kDefaultPublishDepthImages;
   bool publish_depth_registered_images = kDefaultPublishDepthRegisteredImages;
@@ -63,9 +69,12 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
 class MockMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
  public:
-  MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources), (override));
+  MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources, const bool do_decompress_images),
+              (override));
   MOCK_METHOD((tl::expected<void, std::string>), publishImages, ((const std::map<ImageSource, ImageWithCameraInfo>&)),
               (override));
+  MOCK_METHOD((tl::expected<void, std::string>), publishImages,
+              ((const std::map<ImageSource, CompressedImageWithCameraInfo>&)), (override));
   MOCK_METHOD(std::shared_ptr<rclcpp::Node>, node, (), (override));
 
   ParameterInterfaceBase* parameter_interface() override { return parameter_interface_.get(); }
@@ -134,8 +143,10 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
     // THEN the images we received from the Spot interface are published
     // THEN the static transforms to the image frames are updated
     InSequence seq;
-    EXPECT_CALL(*image_client_interface, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
-    EXPECT_CALL(*middleware_handle, publishImages);
+    EXPECT_CALL(*image_client_interface,
+                getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18), true));
+    std::map<ImageSource, ImageWithCameraInfo> image_source_map;
+    EXPECT_CALL(*middleware_handle, publishImages(image_source_map));
     EXPECT_CALL(*middleware_handle->tf_interface_, updateStaticTransforms);
   }
 
@@ -171,8 +182,10 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
     // THEN the images we received from the Spot interface are published
     // THEN the static transforms to the image frames are updated
     InSequence seq;
-    EXPECT_CALL(*image_client_interface, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
-    EXPECT_CALL(*middleware_handle, publishImages);
+    EXPECT_CALL(*image_client_interface,
+                getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15), true));
+    std::map<ImageSource, ImageWithCameraInfo> image_source_map;
+    EXPECT_CALL(*middleware_handle, publishImages(image_source_map));
     EXPECT_CALL(*middleware_handle->tf_interface_, updateStaticTransforms);
   }
 

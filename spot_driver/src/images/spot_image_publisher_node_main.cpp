@@ -9,10 +9,14 @@
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
 
-  const auto node = std::make_shared<spot_ros2::images::SpotImagePublisherNode>();
+  rclcpp::executors::MultiThreadedExecutor executor;
 
-  // Spins the node with the default single-threaded executor.
-  rclcpp::spin(node->get_node_base_interface());
+  auto node = std::make_shared<spot_ros2::images::SpotImagePublisherNode>();
 
+  executor.add_node(node->get_node_base_interface());
+
+  executor.spin();
+
+  rclcpp::shutdown();
   return 0;
 }

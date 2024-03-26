@@ -5,6 +5,7 @@
 #include <builtin_interfaces/msg/time.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <spot_driver/api/spot_image_sources.hpp>
+#include <spot_driver/types.hpp>
 #include <tl_expected/expected.hpp>
 
 #include <map>
@@ -12,8 +13,10 @@
 #include <vector>
 
 namespace spot_ros2 {
+
 struct GetImagesResult {
   std::map<ImageSource, ImageWithCameraInfo> images_;
+  std::map<ImageSource, CompressedImageWithCameraInfo> compressed_images_;
   std::vector<geometry_msgs::msg::TransformStamped> transforms_;
 };
 
@@ -22,6 +25,7 @@ struct GetImagesResult {
  */
 class ImageClientInterface {
  public:
-  virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) = 0;
+  virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request,
+                                                               bool do_decompress_images) = 0;
 };
 }  // namespace spot_ros2

@@ -41,14 +41,16 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
    * @brief Populates the image_publishgers_ and info_publishers_ members with image and camera info publishers.
    * @param image_sources Set of ImageSources. A publisher will be created for each ImageSource.
    */
-  void createPublishers(const std::set<ImageSource>& image_sources) override;
+  void createPublishers(const std::set<ImageSource>& image_sources, const bool do_decompress_images) override;
 
-  /**
-   * @brief Publishes image and camera info messages to ROS 2 topics.
-   * @param images Map of image sources to image and camera info data.
-   * @return If all images were published successfully, returns void. If there was an error, returns an error message.
-   */
-  tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) override;
+  tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) override {
+    return publishImagesT(images);
+  }
+
+  tl::expected<void, std::string> publishImages(
+      const std::map<ImageSource, CompressedImageWithCameraInfo>& images) override {
+    return publishImagesT(images);
+  }
 
   ParameterInterfaceBase* parameter_interface() override { return parameter_interface_.get(); }
   LoggerInterfaceBase* logger_interface() override { return logger_interface_.get(); }
@@ -57,6 +59,18 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
   std::shared_ptr<rclcpp::Node> node() override { return node_; }
 
  private:
+  /**
+   * @brief Publishes image and camera info messages to ROS 2 topics.
+   * @param images Map of image sources to image and camera info data.
+   * @return If all images were published successfully, returns void. If there was an error, returns an error message.
+   */
+  template <typename IMAGE_WITH_CAMERA_INFO_TYPE>
+  tl::expected<void, std::string> publishImagesT(const std::map<ImageSource, IMAGE_WITH_CAMERA_INFO_TYPE>& images);
+
+  void tryPublishImage(std::string const& image_topic_name, sensor_msgs::msg::Image const& image);
+  void tryPublishImage(std::string const& image_topic_name, sensor_msgs::msg::CompressedImage const& compressed_image);
+  void tryPublishImageInfo(std::string const& image_topic_name, sensor_msgs::msg::CameraInfo const& camera_info);
+
   /** @brief Shared instance of an rclcpp node to create publishers */
   std::shared_ptr<rclcpp::Node> node_;
   /** @brief instance of ParameterInterfaceBase to get ROS parameters*/
@@ -71,7 +85,32 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
   /** @brief Map between image topic names and image publishers. */
   std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::Image>>> image_publishers_;
 
+  /** @brief Map between image topic names and compressed image publishers. */
+  std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::CompressedImage>>>
+      compressed_image_publishers_;
+
   /** @brief Map between camera info topic names and camera info publishers. */
   std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::CameraInfo>>> info_publishers_;
 };
+
+template <typename IMAGE_WITH_CAMERA_INFO_TYPE>
+tl::expected<void, std::string> ImagesMiddlewareHandle::publishImagesT(
+    const std::map<ImageSource, IMAGE_WITH_CAMERA_INFO_TYPE>& images) {
+  for (const auto& [image_source, image_data] : images) {
+    const auto image_topic_name = toRosTopic(image_source);
+    try {
+      tryPublishImage(image_topic_name, image_data.image);
+    } catch (const std::out_of_range& e) {
+      return tl::make_unexpected("No publisher exists for image topic `" + image_topic_name + "`.");
+    }
+    try {
+      tryPublishImageInfo(image_topic_name, image_data.info);
+    } catch (const std::out_of_range& e) {
+      return tl::make_unexpected("No publisher exists for camera info topic`" + image_topic_name + "`.");
+    }
+  }
+
+  return {};
+}
+
 }  // namespace spot_ros2::images
