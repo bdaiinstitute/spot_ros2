@@ -5,6 +5,7 @@ from typing import Any, List, Optional
 import bdai_ros2_wrappers.process as ros_process
 from bdai_ros2_wrappers.node import Node
 from rclpy.parameter import Parameter
+from rclpy.qos import QoSPresetProfiles
 
 from spot_msgs.msg import (  # type: ignore
     BatteryStateArray,
@@ -18,7 +19,7 @@ class SpotAlerts(Node):
         super().__init__("spot_alerts", **kwargs)
         # Subscribers #
         self.battery_states = self.create_subscription(
-            BatteryStateArray, "status/battery_states", self.battery_callback, 1
+            BatteryStateArray, "status/battery_states", self.battery_callback, QoSPresetProfiles.SENSOR_DATA.value
         )
 
         # Parameters #
