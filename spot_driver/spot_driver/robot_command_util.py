@@ -9,7 +9,7 @@ from bosdyn.api import robot_command_pb2
 from bosdyn.util import duration_to_seconds
 
 
-def is_batch_required(command: robot_command_pb2.RobotCommand, batch_size: int) -> bool:
+def should_batch(command: robot_command_pb2.RobotCommand, batch_size: int) -> bool:
     """
     This method returns true if the given command contains trajectories that
     can be batched, false otherwise. To be batched, the command must contain
@@ -129,7 +129,7 @@ def batch_command(
         array of robot commands, each of them representing a batch.
     """
 
-    if not is_batch_required(command, batch_size):
+    if not should_batch(command, batch_size):
         return [command]
 
     # This is the increment to find the position of the next batch.
