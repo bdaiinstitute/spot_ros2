@@ -622,6 +622,15 @@ class SpotDriverTest(unittest.TestCase):
         )
 
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_impedance_feedback.status.value = (
+            arm_command_feedback.feedback.arm_impedance_feedback.status.STATUS_TRAJECTORY_CANCELLED
+        )
+        self.assertEqual(
+            self.spot_ros2._robot_command_goal_complete(feedback),
+            GoalResponse.FAILED,
+            "FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET | STATUS_TRAJECTORY_CANCELLED",
+        )
+
+        feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_impedance_feedback.status.value = (
             arm_command_feedback.feedback.arm_impedance_feedback.status.STATUS_TRAJECTORY_STALLED
         )
         self.assertEqual(
