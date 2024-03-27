@@ -2673,6 +2673,7 @@ class SpotROS(Node):
             self.tf_name_kinematic_odom.value,
             self.frame_prefix + "body",
         ]
+
         excluded_frames = [f[f.rfind("/") + 1 :] for f in excluded_frames]
 
         # Special case handling for hand camera frames that reference the link "arm0.link_wr1" in their
@@ -2699,7 +2700,7 @@ class SpotROS(Node):
 
             # special case handling of parent frame to sync with robot state naming, see above
             if parent_frame == "arm0.link_wr1":
-                parent_frame = "link_wr1"
+                parent_frame = "arm_link_wr1"
 
             existing_transforms = [
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
