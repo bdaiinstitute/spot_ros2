@@ -176,9 +176,9 @@ def batch_command(
 
 def min_time_since_reference(command: robot_command_pb2.RobotCommand) -> float:
     """
-    This method inspect all trajectories in the command and returns the minimum
+    This method inspects all trajectories in the command and returns the minimum
     time_since_reference.
-    It returns float("inf") if not trajectory is available.
+    It returns float("inf") if no trajectory is available.
 
     Args:
         command: The command to inspect.
