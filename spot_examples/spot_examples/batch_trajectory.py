@@ -98,10 +98,11 @@ def mobility_continuous_trajectory(t: float) -> SE2Pose:
     we use this function to model a continuous mobility trajectory over time.
     """
     period = 10.0
+    max_angle = 20 * math.pi / 180  # 20 deg
     t_norm = t / period
     x = 0.1
     y = 0.0
-    angle = (20 * math.pi / 180) * math.sin(2.0 * math.pi * t_norm)
+    angle = max_angle * math.sin(2.0 * math.pi * t_norm)
     return SE2Pose(x, y, angle)
 
 
