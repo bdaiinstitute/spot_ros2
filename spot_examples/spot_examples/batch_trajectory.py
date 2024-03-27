@@ -142,7 +142,7 @@ def _to_se3(ros_transform: TransformStamped) -> SE3Pose:
 
 class SpotRunner:
     """
-    This example shows how send a command with very long trajectories.
+    This example shows how to send a command with very long trajectories.
     """
 
     def __init__(self, node: Node, args: argparse.Namespace):
