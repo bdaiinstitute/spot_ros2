@@ -10,6 +10,7 @@ import math
 import time
 from typing import Callable, Optional, Tuple
 
+import pytest
 from bosdyn.api import (
     arm_command_pb2,
     basic_command_pb2,
@@ -22,22 +23,16 @@ from bosdyn.api import (
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE2Velocity, SE3Pose, SE3Velocity
 from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 
-from spot_driver.robot_command_util import batch_command, get_batch_size
-
-###############################################################################
-# CONTINUOUS TRAJECTORIES
-# Following, some continuous functions to generate sample trajectories for our
-# tests.
+from spot_driver.robot_command_util import batch_command, get_batch_size, min_time_since_reference
 
 ContinuousTrajectory1D = Callable[[float], float]
 ContinuousTrajectory2D = Callable[[float], Tuple[SE2Pose, SE2Velocity]]
 ContinuousTrajectory3D = Callable[[float], Tuple[SE3Pose, SE3Velocity]]
 
 
-def _continuous_trajectory_1d(t: float) -> float:
+def gripper_continuous_trajectory(t: float) -> float:
     """
-    Given a time t in the trajectory, return a scalar representing a value
-    in the trajectory.
+    We use this function to model a continuous gripper trajectory over time.
     """
     radius = 1.0
     period = 2.0
@@ -45,10 +40,9 @@ def _continuous_trajectory_1d(t: float) -> float:
     return x
 
 
-def _continuous_trajectory_2d(t: float) -> Tuple[SE2Pose, SE2Velocity]:
+def mobility_continuous_trajectory(t: float) -> Tuple[SE2Pose, SE2Velocity]:
     """
-    Given a time t in the trajectory, return the SE3Pose and SE3Velocity at
-    this point in the trajectory.
+    we use this function to model a continuous mobility trajectory over time.
     """
 
     # Draw a circle
@@ -63,10 +57,9 @@ def _continuous_trajectory_2d(t: float) -> Tuple[SE2Pose, SE2Velocity]:
     return SE2Pose(x, y, angle), SE2Velocity(vx, vy, va)
 
 
-def _continuous_trajectory_3d(t: float) -> Tuple[SE3Pose, SE3Velocity]:
+def arm_continuous_trajectory(t: float) -> Tuple[SE3Pose, SE3Velocity]:
     """
-    Given a time t in the trajectory, return the SE3Pose and SE3Velocity at
-    this point in the trajectory.
+    we use this function to model a continuous arm trajectory over time.
     """
 
     # Draw a circle
@@ -82,17 +75,11 @@ def _continuous_trajectory_3d(t: float) -> Tuple[SE3Pose, SE3Velocity]:
     return SE3Pose(x, y, z, quat), SE3Velocity(vx, vy, vz, 0, 0, 0)
 
 
-###############################################################################
-# DISCRETE TRAJECTORIES
-# Following, some trajectories created by sampling previously defined
-# continuous functions.
-
-
-def _discrete_trajectory_1d(
+def gripper_discrete_trajectory(
     reference_time: float, ramp_up_time: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory1D
 ) -> trajectory_pb2.ScalarTrajectory:
     """
-    Return a trajectory value.
+    We use this function to model a discrete gripper trajectory over time.
     """
     trajectory = trajectory_pb2.ScalarTrajectory()
     trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
@@ -107,11 +94,11 @@ def _discrete_trajectory_1d(
     return trajectory
 
 
-def _discrete_trajectory_2d(
+def mobility_discrete_trajectory(
     reference_time: float, ramp_up_time: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory2D
 ) -> trajectory_pb2.SE2Trajectory:
     """
-    Return a trajectory in 2D space.
+    We use this function to model a discrete mobility trajectory over time.
     """
     trajectory = trajectory_pb2.SE2Trajectory()
     trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
@@ -126,11 +113,11 @@ def _discrete_trajectory_2d(
     return trajectory
 
 
-def _discrete_trajectory_3d(
+def arm_discrete_trajectory(
     reference_time: float, ramp_up_time: float, duration: float, dt: float, trajectory_function: ContinuousTrajectory3D
 ) -> trajectory_pb2.SE3Trajectory:
     """
-    Return a trajectory in 3D space.
+    We use this function to model a discrete arm trajectory over time.
     """
     trajectory = trajectory_pb2.SE3Trajectory()
     trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
@@ -147,13 +134,7 @@ def _discrete_trajectory_3d(
     return trajectory
 
 
-###############################################################################
-# ROBOT COMMAND
-# Here we build a robot command containing different trajectories generated
-# from the previously defined samples.
-
-
-def _build_sample_command(
+def build_test_command(
     hand_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
     mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None,
     gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None,
@@ -162,12 +143,12 @@ def _build_sample_command(
     Return a robot command with three optional trajectories.
 
     Args
-        hand_trajectory: An hand 3D trajectory.
-        mobility_trajectory: A mobility 2D rajectory.
-        gripper_trajectory: A gripper scalar trajectory.
+        hand_trajectory: A 3D hand trajectory.
+        mobility_trajectory: A 2D mobility trajectory.
+        gripper_trajectory: A scalar gripper trajectory.
 
     Returns:
-        A robot command with any of the given optional trajectory.
+        A robot command with any of the given optional trajectories.
     """
 
     # Build an Arm request.
@@ -232,14 +213,18 @@ def test_trajectories_different_length() -> None:
     with different sizes, we cannot batch.
     """
 
-    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+    hand_trajectory: trajectory_pb2.SE3Trajectory = arm_discrete_trajectory(
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=arm_continuous_trajectory
     )
-    mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
-        reference_time=time.time(), ramp_up_time=0, duration=10, dt=0.1, trajectory_function=_continuous_trajectory_2d
+    mobility_trajectory: trajectory_pb2.SE2Trajectory = mobility_discrete_trajectory(
+        reference_time=time.time(),
+        ramp_up_time=0,
+        duration=10,
+        dt=0.1,
+        trajectory_function=mobility_continuous_trajectory,
     )
 
-    command = _build_sample_command(hand_trajectory=hand_trajectory, mobility_trajectory=mobility_trajectory)
+    command = build_test_command(hand_trajectory=hand_trajectory, mobility_trajectory=mobility_trajectory)
     commands = batch_command(command=command, batch_size=50)
 
     # Trajectories have different lengths so we expect one command.
@@ -252,14 +237,18 @@ def test_trajectories_not_aligned() -> None:
     not time aligned, we cannot batch.
     """
 
-    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+    hand_trajectory: trajectory_pb2.SE3Trajectory = arm_discrete_trajectory(
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=arm_continuous_trajectory
     )
-    mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
-        reference_time=time.time(), ramp_up_time=0, duration=10, dt=0.2, trajectory_function=_continuous_trajectory_2d
+    mobility_trajectory: trajectory_pb2.SE2Trajectory = mobility_discrete_trajectory(
+        reference_time=time.time(),
+        ramp_up_time=0,
+        duration=10,
+        dt=0.2,
+        trajectory_function=mobility_continuous_trajectory,
     )
 
-    command = _build_sample_command(hand_trajectory=hand_trajectory, mobility_trajectory=mobility_trajectory)
+    command = build_test_command(hand_trajectory=hand_trajectory, mobility_trajectory=mobility_trajectory)
     commands = batch_command(command=command, batch_size=10)
 
     # Trajectories are not aligned so we expect one command.
@@ -272,17 +261,25 @@ def test_multiple_trajectories() -> None:
     and time aligned, we can batch.
     """
 
-    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), ramp_up_time=0, duration=20, dt=0.1, trajectory_function=_continuous_trajectory_3d
+    hand_trajectory: trajectory_pb2.SE3Trajectory = arm_discrete_trajectory(
+        reference_time=time.time(), ramp_up_time=0, duration=20, dt=0.1, trajectory_function=arm_continuous_trajectory
     )
-    mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
-        reference_time=time.time(), ramp_up_time=0, duration=20, dt=0.1, trajectory_function=_continuous_trajectory_2d
+    mobility_trajectory: trajectory_pb2.SE2Trajectory = mobility_discrete_trajectory(
+        reference_time=time.time(),
+        ramp_up_time=0,
+        duration=20,
+        dt=0.1,
+        trajectory_function=mobility_continuous_trajectory,
     )
-    gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
-        reference_time=time.time(), ramp_up_time=0, duration=20, dt=0.1, trajectory_function=_continuous_trajectory_1d
+    gripper_trajectory: trajectory_pb2.ScalarTrajectory = gripper_discrete_trajectory(
+        reference_time=time.time(),
+        ramp_up_time=0,
+        duration=20,
+        dt=0.1,
+        trajectory_function=gripper_continuous_trajectory,
     )
 
-    command = _build_sample_command(
+    command = build_test_command(
         hand_trajectory=hand_trajectory,
         mobility_trajectory=mobility_trajectory,
         gripper_trajectory=gripper_trajectory,
@@ -315,17 +312,25 @@ def test_multiple_trajectorties_with_stride() -> None:
     and time aligned, we can batch.
     """
 
-    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+    hand_trajectory: trajectory_pb2.SE3Trajectory = arm_discrete_trajectory(
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=arm_continuous_trajectory
     )
-    mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
-        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_2d
+    mobility_trajectory: trajectory_pb2.SE2Trajectory = mobility_discrete_trajectory(
+        reference_time=time.time(),
+        ramp_up_time=0,
+        duration=5,
+        dt=0.1,
+        trajectory_function=mobility_continuous_trajectory,
     )
-    gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
-        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_1d
+    gripper_trajectory: trajectory_pb2.ScalarTrajectory = gripper_discrete_trajectory(
+        reference_time=time.time(),
+        ramp_up_time=0,
+        duration=5,
+        dt=0.1,
+        trajectory_function=gripper_continuous_trajectory,
     )
 
-    command = _build_sample_command(
+    command = build_test_command(
         hand_trajectory=hand_trajectory,
         mobility_trajectory=mobility_trajectory,
         gripper_trajectory=gripper_trajectory,
@@ -356,11 +361,11 @@ def test_one_trajectory_with_stride() -> None:
     we can always batch.
     """
 
-    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
-        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=_continuous_trajectory_3d
+    hand_trajectory: trajectory_pb2.SE3Trajectory = arm_discrete_trajectory(
+        reference_time=time.time(), ramp_up_time=0, duration=5, dt=0.1, trajectory_function=arm_continuous_trajectory
     )
 
-    command = _build_sample_command(hand_trajectory=hand_trajectory)
+    command = build_test_command(hand_trajectory=hand_trajectory)
     commands = batch_command(command=command, batch_size=20, overlapping=4)
 
     # One trajectory contains 51 = 1 + 5 / 0.1 datapoints.
@@ -381,55 +386,78 @@ def test_one_trajectory_with_stride() -> None:
     assert len(commands[2].synchronized_command.gripper_command.claw_gripper_command.trajectory.points) == 0
 
 
-def test_command_duration() -> None:
+def test_batch_execution_time() -> None:
     """
-    Check the duration of a command containing multiple time-aligned trajectories.
+    Check the execution time of each batch.
+
+    Test overview:
+
+        trajectory
+        pos:   0    1     2     3     4     5     6     7     8     9    10
+        time:  4.0  4.1   4.2   4.3   4.4   4.5   4.6   4.7   4.8   4.9  5.0
+
+        batch 0
+        pos:   0    1     2     3     4
+        time:  4.0  4.1   4.2   4.3   4.4
+        execution_time: 4
+
+        batch 1
+        pos:                    3     4     5     6     7
+        time:                   4.3   4.4   4.5   4.6   4.7
+        execution_time: 4 + (5 - 2) * 0.1
+
+        batch 2
+        pos:                                      6     7     8     9    10
+        time:                                     4.6   4.7   4.8   4.9  5.0
+        execution_time: 4 + 2 * (5 - 2) * 0.1
+
     """
-    duration = 5
-    batch_size = 20
+    ramp_up_time = 4
+    duration = 1
+    batch_size = 5
     time_sample = 0.1
-    overlapping = 4
+    overlapping = 2
 
-    hand_trajectory: trajectory_pb2.SE3Trajectory = _discrete_trajectory_3d(
+    hand_trajectory: trajectory_pb2.SE3Trajectory = arm_discrete_trajectory(
         reference_time=time.time(),
-        ramp_up_time=0,
+        ramp_up_time=ramp_up_time,
         duration=duration,
         dt=time_sample,
-        trajectory_function=_continuous_trajectory_3d,
+        trajectory_function=arm_continuous_trajectory,
     )
-    mobility_trajectory: trajectory_pb2.SE2Trajectory = _discrete_trajectory_2d(
+    mobility_trajectory: trajectory_pb2.SE2Trajectory = mobility_discrete_trajectory(
         reference_time=time.time(),
-        ramp_up_time=0,
+        ramp_up_time=ramp_up_time,
         duration=duration,
         dt=time_sample,
-        trajectory_function=_continuous_trajectory_2d,
+        trajectory_function=mobility_continuous_trajectory,
     )
-    gripper_trajectory: trajectory_pb2.ScalarTrajectory = _discrete_trajectory_1d(
+    gripper_trajectory: trajectory_pb2.ScalarTrajectory = gripper_discrete_trajectory(
         reference_time=time.time(),
-        ramp_up_time=0,
+        ramp_up_time=ramp_up_time,
         duration=duration,
         dt=time_sample,
-        trajectory_function=_continuous_trajectory_1d,
+        trajectory_function=gripper_continuous_trajectory,
     )
 
-    command = _build_sample_command(
+    command = build_test_command(
         hand_trajectory=hand_trajectory,
         mobility_trajectory=mobility_trajectory,
         gripper_trajectory=gripper_trajectory,
     )
     commands = batch_command(command=command, batch_size=batch_size, overlapping=overlapping)
 
-    # Each trajectory contains 51 = 1 + 5 / 0.1 datapoints.
-    # With a batch size of 20, and 4 overlapping points between trajectories,
-    # we expect 3 commands with trajectories of length 20, 20 and 19.
-
     assert len(commands) == 3
 
     sequence_length = len(hand_trajectory.points)
-    batch0_size = get_batch_size(sequence_length, batch_size, overlapping, 0)
-    batch1_size = get_batch_size(sequence_length, batch_size, overlapping, 1)
-    batch2_size = get_batch_size(sequence_length, batch_size, overlapping, 2)
+    assert get_batch_size(sequence_length, batch_size, overlapping, 0) == 5
+    assert get_batch_size(sequence_length, batch_size, overlapping, 1) == 5
+    assert get_batch_size(sequence_length, batch_size, overlapping, 2) == 5
 
-    assert batch0_size == 20
-    assert batch1_size == 20
-    assert batch2_size == 19
+    assert min_time_since_reference(commands[0]) == pytest.approx(ramp_up_time)
+    assert min_time_since_reference(commands[1]) == pytest.approx(
+        ramp_up_time + (batch_size - overlapping) * time_sample
+    )
+    assert min_time_since_reference(commands[2]) == pytest.approx(
+        ramp_up_time + 2 * (batch_size - overlapping) * time_sample
+    )
