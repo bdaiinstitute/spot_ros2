@@ -2117,8 +2117,11 @@ class SpotROS(Node):
             and not goal_handle.is_cancel_requested
             and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
         ):
-            # We keep looping and send batches at the expected times
-            # until the last batch succeeds.
+            # We keep looping and send batches at the expected times until the
+            # last batch succeeds. We always send the next batch before the
+            # previous one succeeds, so the only batch that can actuallly
+            # succeed is the last one.
+
             time_since_start = time.time() - start_time
             if time_since_start >= time_to_send_command:
                 success, err_msg, goal_id = self.spot_wrapper.robot_command(commands[index])
