@@ -2079,6 +2079,16 @@ class SpotROS(Node):
         return feedback
 
     def handle_robot_command(self, goal_handle: ServerGoalHandle) -> RobotCommand.Result:
+        """
+        Spot cannot process long trajectories. If we issue a command with long
+        trajectories for the arm or the body, the command will be batched,
+        assuming that there is only one long trajectory or more but all time
+        aligned.
+        To account for the network latency, a command must contain batched
+        trajectory with some overlapping.
+        This is currently not possible for the gripper trajectory, due to some
+        limitation in the SDK.
+        """
         if self.spot_wrapper is None:
             return
 
@@ -2098,7 +2108,7 @@ class SpotROS(Node):
         feedback_msg: Optional[RobotCommand.Feedback] = None
 
         start_time = time.time()
-        time_before_sending_command = 0.0
+        time_to_send_command = 0.0
 
         index = 0
         while (
@@ -2107,16 +2117,18 @@ class SpotROS(Node):
             and not goal_handle.is_cancel_requested
             and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
         ):
+            # We keep looping and send batches at the expected times
+            # until the last batch succeeds.
             time_since_start = time.time() - start_time
-            if time_since_start >= time_before_sending_command:
+            if time_since_start >= time_to_send_command:
                 success, err_msg, goal_id = self.spot_wrapper.robot_command(commands[index])
                 if not success:
                     raise Exception(err_msg)
                 index += 1
                 if index < num_of_commands:
-                    time_before_sending_command = robot_command_util.min_time_since_reference(commands[index])
+                    time_to_send_command = robot_command_util.min_time_since_reference(commands[index])
                 else:
-                    time_before_sending_command = float("inf")
+                    time_to_send_command = float("inf")
                 self.get_logger().info("Robot now executing goal " + str(goal_id))
 
             feedback = self._get_robot_command_feedback(goal_id)
