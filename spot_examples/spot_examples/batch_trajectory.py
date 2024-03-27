@@ -8,6 +8,22 @@ The robot draws a curve with the arm and at the same time rotates its body.
 
 Please note that it is not currenlty possible to batch gripper trajectories
 due to limitation in the SDK.
+
+Before running the example, set the required global variables and undock the
+robot using the following commands:
+
+export SPOT_NAME=...
+export SPOT_IP=...
+export BOSDYN_CLIENT_USERNAME=...
+export BOSDYN_CLIENT_PASSWORD=...
+
+python3 dock_my_robot.py (--dock-id DOCK_ID | --undock) ROBOT_IP
+
+Example:
+    cd /workspaces/bdai/external/spot-sdk-private/python/examples/docking/
+    python3 dock_my_robot.py --undock 10.17.30.34
+    python3 dock_my_robot.py --dock-id 527 10.17.30.34
+
 """
 
 import argparse
