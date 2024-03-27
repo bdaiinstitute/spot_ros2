@@ -4,8 +4,6 @@
 Tests to check trajectory batching in robot commands.
 """
 
-# pylint: disable=E1101
-
 import math
 import time
 from typing import Callable, Optional, Tuple
