@@ -75,7 +75,7 @@ from rclpy.node import Node
 from tf2_ros import TransformStamped
 
 from spot_examples.simple_spot_commander import SimpleSpotCommander
-from spot_msgs.action import RobotCommand  # type: ignore
+from spot_msgs.action import RobotCommand as RobotCommandAction  # type: ignore
 
 ContinuousTrajectory1D = Callable[[float], float]
 ContinuousTrajectory2D = Callable[[float], SE2Pose]
@@ -152,7 +152,7 @@ class SpotRunner:
         self._robot = SimpleSpotCommander(self._robot_name)
 
         self._robot_command_client = ActionClientWrapper(
-            RobotCommand, namespace_with(self._robot_name, "robot_command"), node
+            RobotCommandAction, namespace_with(self._robot_name, "robot_command"), node
         )
         self._tf_listener = TFListenerWrapper(self._node)
 
@@ -169,7 +169,7 @@ class SpotRunner:
         Unstow the robot arm.
         """
         command = RobotCommandBuilder.arm_ready_command()
-        action_goal = RobotCommand.Goal()
+        action_goal = RobotCommandAction.Goal()
         convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("ready_arm", action_goal)
 
@@ -178,7 +178,7 @@ class SpotRunner:
         Stow the robot arm.
         """
         command = RobotCommandBuilder.arm_stow_command()
-        action_goal = RobotCommand.Goal()
+        action_goal = RobotCommandAction.Goal()
         convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("arm_stow", action_goal)
 
@@ -442,7 +442,7 @@ class SpotRunner:
             mobility_trajectory=mobility_trajectory,
             # gripper_trajectory=gripper_trajectory,
         )
-        action_goal = RobotCommand.Goal()
+        action_goal = RobotCommandAction.Goal()
         convert(command, action_goal.command)
         self._robot_command_client.send_goal_and_wait("move_arm", goal=action_goal)
 
