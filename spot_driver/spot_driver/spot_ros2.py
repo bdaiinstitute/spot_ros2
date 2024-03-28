@@ -2126,7 +2126,7 @@ class SpotROS(Node):
             response.success = True
         return response
 
-    def handle_robot_command_action(self, goal_handle: ServerGoalHandle) -> RobotCommand.Result:
+    def handle_robot_command_action(self, goal_handle: ServerGoalHandle) -> RobotCommandAction.Result:
         """
         Spot cannot process long trajectories. If we issue a command with long
         trajectories for the arm or the body, the command will be batched,
@@ -2153,7 +2153,7 @@ class SpotROS(Node):
         goal_id = None
         self._wait_for_goal = None
         feedback: Optional[RobotCommandFeedback] = None
-        feedback_msg: Optional[RobotCommand.Feedback] = None
+        feedback_msg: Optional[RobotCommandAction.Feedback] = None
 
         start_time = time.time()
         time_to_send_command = 0.0
@@ -2183,11 +2183,11 @@ class SpotROS(Node):
                 self.get_logger().info("Robot now executing goal " + str(goal_id))
 
             feedback = self._get_robot_command_feedback(goal_id)
-            feedback_msg = RobotCommand.Feedback(feedback=feedback)
+            feedback_msg = RobotCommandAction.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
             time.sleep(0.01)  # don't use rate here because we're already in a single thread
 
-        result = RobotCommand.Result()
+        result = RobotCommandAction.Result()
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
