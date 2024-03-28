@@ -1950,7 +1950,8 @@ class SpotROS(Node):
                 return GoalResponse.FAILED
         elif choice == fb.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET:
             if (
-                fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_STALLED
+                fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_CANCELLED
+                or fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_STALLED
                 or fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_UNKNOWN
             ):
                 return GoalResponse.FAILED
