@@ -1,5 +1,6 @@
 #include <opencv2/core/hal/interface.h>
 #include <opencv2/core.hpp>
+#include <opencv2/core/base.hpp>
 #include <opencv2/core/matx.hpp>
 #include <opencv2/imgcodecs.hpp>
 // #include "opencv2/highgui.hpp"
@@ -15,70 +16,65 @@ vector<Mat> imgs;
 string result_name = "result.jpg";
 void printUsage(char** argv);
 int parseCmdArgs(int argc, char** argv);
-/*
-# Intrinsics
-Harriet/frontleft_fisheye
-K:
-331.015,     0.0, 318.082
-    0.0, 330.075, 235.748
-    0.0,     0.0,     1.0
-*/
+// # Intrinsics
+// Harriet/frontleft_fisheye
+// cv::Matx33d const Kl(          //
+//     331.015,     0.0, 318.082, // 
+//         0.0, 330.075, 235.748, //
+//         0.0,     0.0,     1.0);
+// Lionel/frontleft_fisheye
 cv::Matx33d const Kl(          //
-    331.015,     0.0, 318.082, // 
-        0.0, 330.075, 235.748, //
-        0.0,     0.0,     1.0);
-/*
-Harriet/frontright_fisheye
-K:
-332.744,     0.0, 315.983
-    0.0, 331.731, 237.265
-    0.0,     0.0,     1.0
-*/ 
-cv::Matx33d const Kr(          //
-    332.744,     0.0, 315.983, //
-        0.0, 331.731, 237.265, //
-        0.0,     0.0,     1.0); 
-/*
-# Extrinsics
-Harriet/body Harriet/frontleft_fisheye
-- Translation: [0.384, 0.031, -0.046]
-- Rotation: in Quaternion [0.144, 0.808, -0.218, 0.528]
-- Rotation: in RPY (radian) [-2.616, 1.159, 3.138]
-- Rotation: in RPY (degree) [-149.899, 66.391, 179.773]
-- Matrix:
- -0.400  0.463  0.791  0.384
-  0.002  0.863 -0.505  0.031
- -0.916 -0.201 -0.346 -0.046
-  0.000  0.000  0.000  1.000
-*/ 
-cv::Matx33d const Rl(
- -0.400,  0.463,  0.791, //  
-  0.002,  0.863, -0.505, //
- -0.916, -0.201, -0.346);
-cv::Vec3d const tl(0.384, 0.031, -0.046);
-/*
-Harriet/body Harriet/frontright_fisheye
-- Translation: [0.382, -0.043, -0.046]
-- Rotation: in Quaternion [-0.155, 0.822, 0.231, 0.496]
-- Rotation: in RPY (radian) [2.628, 1.093, -3.087]
-- Rotation: in RPY (degree) [150.566, 62.624, -176.844]
-- Matrix:
- -0.459 -0.484  0.745  0.382
- -0.025  0.846  0.533 -0.043
- -0.888  0.226 -0.400 -0.046
-  0.000  0.000  0.000  1.000
-*/
-cv::Matx33d const Rr(
- -0.459, -0.484,  0.745, 
- -0.025,  0.846,  0.533,
- -0.888,  0.226, -0.400);
-cv::Vec3d const tr(0.382, -0.043, -0.046);
+330.619,     0.0, 319.644, //
+    0.0, 329.641, 241.036, //
+    0.0,     0.0,     1.0);
 
-cv::Matx33d const Rb(
- -0.43332543, -0.01624629,  0.90109108,
- -0.0027512,   0.99985669,  0.01670396,
- -0.90123333,  0.00475917, -0.43330802);
+// Harriet/frontright_fisheye
+// cv::Matx33d const Kr(          //
+//     332.744,     0.0, 315.983, //
+//         0.0, 331.731, 237.265, //
+//         0.0,     0.0,     1.0); 
+cv::Matx33d const Kr(          //
+330.956,     0.0, 312.064, //
+    0.0, 329.804, 240.527, //
+    0.0,     0.0,     1.0);
+
+// # Extrinsics
+// Harriet/body Harriet/frontleft_fisheye
+// cv::Matx33d const Rl(
+//  -0.400,  0.463,  0.791, //  
+//   0.002,  0.863, -0.505, //
+//  -0.916, -0.201, -0.346);
+// cv::Vec3d const tl(0.384, 0.031, -0.046);
+// Lionel/body Lionel/frontleft_fisheye
+cv::Vec3d const tl(0.383, 0.035, -0.047);
+cv::Matx33d const Rl(
+ -0.406,  0.468,  0.785,
+ -0.001,  0.859, -0.512,
+ -0.914, -0.209, -0.348);
+
+// Harriet/body Harriet/frontright_fisheye
+// cv::Matx33d const Rr(
+//  -0.459, -0.484,  0.745, 
+//  -0.025,  0.846,  0.533,
+//  -0.888,  0.226, -0.400);
+// cv::Vec3d const tr(0.382, -0.043, -0.046);
+// Lionel/body Lionel/frontright_fisheye
+cv::Vec3d const tr(0.386, -0.035, -0.048);
+cv::Matx33d const Rr(
+ -0.417, -0.491,  0.765,
+  0.008,  0.840,  0.543,
+ -0.909,  0.232, -0.346);
+
+// cv::Matx33d const Rb(
+//  -0.43332543, -0.01624629,  0.90109108,
+//  -0.0027512,   0.99985669,  0.01670396,
+//  -0.90123333,  0.00475917, -0.43330802);
 // cv::Vec3d const tb(0.383, -0.006, -0.046);
+// cv::Vec3d const tb = 0.5 * (tl + tr);
+cv::Matx33d const Rb(
+-0.41030468, -0.01426928,  0.91183686,
+  0.00511951,  0.99982578,  0.01794987,
+ -0.91193413,  0.01203307, -0.41016015);
 cv::Vec3d const tb = 0.5 * (tl + tr);
 /**
  * Load images 
@@ -124,7 +120,8 @@ void computeCameraTransform(cv::Matx33d const& R1, cv::Vec3d const& t1, cv::Matx
 
 cv::Matx33d computeHomography(cv::Matx33d const& R_1to2, cv::Vec3d const& tvec_1to2, double distance, cv::Vec3d const& normal) {
   double const d_inv = 1. / distance;
-  return R_1to2 + d_inv * tvec_1to2 * normal.t();
+  cv::Matx33d const Tt = d_inv * tvec_1to2 * normal.t();
+  return R_1to2 + Tt;
 };
 
 void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right) {
@@ -132,34 +129,48 @@ void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv:
   cv::Vec3d btl, btr;
   computeCameraTransform(Rl, tl, Rb, tb, bRl, btl);
   computeCameraTransform(Rr, tr, Rb, tb, bRr, btr);
-  std::cout << "bRl = " << bRl << "\n";
+  std::cout << "bRl = \n" << bRl << "\n";
   std::cout << "btl = " << btl << "\n";
-  std::cout << "bRr = " << bRr << "\n";
+  std::cout << "bRr = \n" << bRr << "\n";
   std::cout << "btr = " << btr << "\n";
+  // [ x: -0.5481488, y: 0.0440343, z: -0.0084505 ]
+  // TODO(gwb) Multiply these matrices together again and see if you get the original
   bRl = cv::Matx33d(
-       0.998,  0.008, 0.044,
-      -0.030,  0.853, 0.520,
-      -0.033, -0.521, 0.852
+       1.000,  0.000, 0.000,
+       0.000,  0.853, 0.521,
+       0.000, -0.521, 0.853
       );
-  btl = cv::Vec3d(0., -0.03, 0.02);
+  btl = cv::Vec3d(0.6, -0.73, 0.02);
   bRr = cv::Matx33d(
-      0.998, -0.030, -0.033,
-      0.008,  0.853, -0.521,
-      0.044,  0.520,  0.852
+      1.000,  0.000,  0.000,
+      0.000,  0.853, -0.521,
+      0.000,  0.521,  0.853
       );
-  btr = cv::Vec3d(0., 0.03, 0.02);
+  btr = cv::Vec3d(-0.6, 0.73, 0.02); // added 0.25 x to tune the images a bit left to right
   cv::Vec3d const normal = cv::Vec3d(0, 0, 1);
   double const distance = 2.;
-  cv::Matx33d homography_left = Kl * computeHomography(bRl, btl, distance, bRl * normal) * Kr.inv();
+  cv::Matx33d const Kb(
+       500.,    0., 900., // increasing fx stretches left-right, cx moves image left 
+         0.,  500., 1700., // increasing fy zooms in, cy moves image down 
+         0.,    0., 1.
+      );
+  try {
+    std::cout << "doing the math\n";
+  cv::Matx33d homography_left = Kb * computeHomography(bRl, btl, distance, bRl * normal) * Kl.inv();
   // homography_left = Kl * (Rl * Rr.t() - (-Rl * Rr.t() * tr + tl) * normal.t()) * Kr.inv();
   homography_left /= homography_left(2, 2);
-  cv::Matx33d homography_right = Kr * computeHomography(bRr, btr, distance, bRr * normal) * Kl.inv();
+  cv::Matx33d homography_right = Kb * computeHomography(bRr, btr, distance, bRr * normal) * Kr.inv();
   // homography_right = Kr * (Rr * Rl.t() - (-Rr * Rl.t() * tl + tr) * normal.t()) * Kl.inv();
   homography_right /= homography_right(2, 2);
-  cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols, left.rows));
-  cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols, right.rows));
-
-  //
+  cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols + 1000, left.rows + 4000));
+  cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols + 1000, right.rows + 4000));
+  } catch (cv::Exception const& e) {
+    std::cout << "math bad\n";
+    std::cout << e.what();
+  }
+  std::cout << "warped_right: " << warped_right.cols << ", " << warped_right.rows << "\n";
+  std::cout << "warped_left: " << warped_left.cols << ", " << warped_left.rows << "\n";
+  std::cout << "see ya!\n";
 }
 
 int main(int argc, char* argv[])
@@ -170,8 +181,8 @@ int main(int argc, char* argv[])
     cv::Mat image1 = imgs.at(0);
     cv::Mat image2 = imgs.at(1);
     cv::Mat warpedImage1, warpedImage2, result;
-    // cv::rotate(image1, image1, ROTATE_90_CLOCKWISE);
-    // cv::rotate(image2, image2, ROTATE_90_CLOCKWISE);
+    // cv::rotate(image1, image1, ROTATE_90_COUNTERCLOCKWISE);
+    // cv::rotate(image2, image2, ROTATE_90_COUNTERCLOCKWISE);
     mosaic(image2, image1, warpedImage1, warpedImage2);
     cv::imwrite("image1.jpg", warpedImage1);
     // cv::imwrite("image1.jpg", image1);
