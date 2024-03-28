@@ -3,8 +3,8 @@
 #include <opencv2/core/base.hpp>
 #include <opencv2/core/matx.hpp>
 #include <opencv2/imgcodecs.hpp>
-// #include "opencv2/highgui.hpp"
 #include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv2/stitching.hpp>
 #include <iostream>
 #include <opencv2/stitching/detail/camera.hpp>
@@ -76,6 +76,16 @@ cv::Matx33d const Rb(
   0.00511951,  0.99982578,  0.01794987,
  -0.91193413,  0.01203307, -0.41016015);
 cv::Vec3d const tb = 0.5 * (tl + tr);
+cv::Vec3d normy(1, 0, 0);
+double gdistance = 10.;
+int d_slider = 10;
+int const d_max = 100;
+double x = 0.;
+int x_slider = 0;
+int const x_max = 100;
+double y = 0.;
+int y_slider = 0;
+int const y_max = 100;
 /**
  * Load images 
  * Define extrinsics and intrinsics 
@@ -118,59 +128,85 @@ void computeCameraTransform(cv::Matx33d const& R1, cv::Vec3d const& t1, cv::Matx
   t_1to2 = R2 * (-R1.t() * t1) + t2;
 }
 
-cv::Matx33d computeHomography(cv::Matx33d const& R_1to2, cv::Vec3d const& tvec_1to2, double distance, cv::Vec3d const& normal) {
-  double const d_inv = 1. / distance;
+cv::Matx33d computeHomography(cv::Matx33d const& R_1to2, cv::Vec3d const& tvec_1to2, double thedistance, cv::Vec3d const& normal) {
+  double const d_inv = 1. / thedistance;
   cv::Matx33d const Tt = d_inv * tvec_1to2 * normal.t();
   return R_1to2 + Tt;
 };
 
 void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right) {
-  cv::Matx33d bRl, bRr;
-  cv::Vec3d btl, btr;
-  computeCameraTransform(Rl, tl, Rb, tb, bRl, btl);
-  computeCameraTransform(Rr, tr, Rb, tb, bRr, btr);
-  std::cout << "bRl = \n" << bRl << "\n";
-  std::cout << "btl = " << btl << "\n";
-  std::cout << "bRr = \n" << bRr << "\n";
-  std::cout << "btr = " << btr << "\n";
+  std::cout << "gdistance = " << gdistance << "\n";
+  std::cout << "normy = " << normy << "\n";
+  cv::Matx33d bRl, bRr, lRm, rRm;
+  cv::Vec3d btl, btr, rtm, ltm;
+  // computeCameraTransform(Rl, tl, Rb, tb, bRl, btl);
+  // computeCameraTransform(Rr, tr, Rb, tb, bRr, btr);
   // [ x: -0.5481488, y: 0.0440343, z: -0.0084505 ]
   // TODO(gwb) Multiply these matrices together again and see if you get the original
   bRl = cv::Matx33d(
        1.000,  0.000, 0.000,
        0.000,  0.853, 0.521,
        0.000, -0.521, 0.853
-      );
-  btl = cv::Vec3d(0.6, -0.73, 0.02);
+      ); // original
+  // btl = cv::Vec3d(0.6, -0.73, 0.02); // manually tuned
+  btl = cv::Vec3d(0. - x , -0.03 - y, 0.02); // original
+  std::cout << "btl = " << btl << "\n";
   bRr = cv::Matx33d(
       1.000,  0.000,  0.000,
       0.000,  0.853, -0.521,
       0.000,  0.521,  0.853
-      );
-  btr = cv::Vec3d(-0.6, 0.73, 0.02); // added 0.25 x to tune the images a bit left to right
-  cv::Vec3d const normal = cv::Vec3d(0, 0, 1);
-  double const distance = 2.;
+      ); // original
+  // btr = cv::Vec3d(-0.6, 0.73, 0.02); // manually tuned
+  btr = cv::Vec3d(-0. + x, 0.03 + y, 0.02); // original 
+  std::cout << "btr = " << btr << "\n";
+  cv::Vec3d normal = Rb * cv::Vec3d(0, 0, 1);
+  // cv::Vec3d normal = normy; 
+  // normal[1] = 0.;
+  normal = cv::normalize(normal);
+  std::cout << "normal = " << normal << "\n";
+  // double const distance = 2.;
   cv::Matx33d const Kb(
        500.,    0., 900., // increasing fx stretches left-right, cx moves image left 
          0.,  500., 1700., // increasing fy zooms in, cy moves image down 
          0.,    0., 1.
       );
-  try {
-    std::cout << "doing the math\n";
-  cv::Matx33d homography_left = Kb * computeHomography(bRl, btl, distance, bRl * normal) * Kl.inv();
-  // homography_left = Kl * (Rl * Rr.t() - (-Rl * Rr.t() * tr + tl) * normal.t()) * Kr.inv();
+  cv::Matx33d homography_left = Kb * computeHomography(bRl, btl, gdistance, normal) * Kl.inv();
   homography_left /= homography_left(2, 2);
-  cv::Matx33d homography_right = Kb * computeHomography(bRr, btr, distance, bRr * normal) * Kr.inv();
-  // homography_right = Kr * (Rr * Rl.t() - (-Rr * Rl.t() * tl + tr) * normal.t()) * Kl.inv();
+  cv::Matx33d homography_right = Kb * computeHomography(bRr, btr, gdistance, normal) * Kr.inv();
   homography_right /= homography_right(2, 2);
   cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols + 1000, left.rows + 4000));
   cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols + 1000, right.rows + 4000));
-  } catch (cv::Exception const& e) {
-    std::cout << "math bad\n";
-    std::cout << e.what();
-  }
-  std::cout << "warped_right: " << warped_right.cols << ", " << warped_right.rows << "\n";
-  std::cout << "warped_left: " << warped_left.cols << ", " << warped_left.rows << "\n";
-  std::cout << "see ya!\n";
+}
+
+void on_x(int, void*) {
+  x = static_cast<double>(x_slider) / x_max;
+  cv::Mat image1 = imgs.at(0);
+  cv::Mat image2 = imgs.at(1);
+  cv::Mat warpedImage1, warpedImage2, result;
+  mosaic(image2, image1, warpedImage1, warpedImage2);
+  cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
+  cv::resizeWindow("mosaic", result.cols / 2, result.rows / 2);
+  cv::imshow("mosaic", result);
+}
+void on_y(int, void*) {
+  y = static_cast<double>(y_slider) / y_max;
+  cv::Mat image1 = imgs.at(0);
+  cv::Mat image2 = imgs.at(1);
+  cv::Mat warpedImage1, warpedImage2, result;
+  mosaic(image2, image1, warpedImage1, warpedImage2);
+  cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
+  cv::resizeWindow("mosaic", result.cols / 2, result.rows / 2);
+  cv::imshow("mosaic", result);
+}
+void on_d(int, void*) {
+  gdistance = static_cast<double>(d_max) / d_slider;
+  cv::Mat image1 = imgs.at(0);
+  cv::Mat image2 = imgs.at(1);
+  cv::Mat warpedImage1, warpedImage2, result;
+  mosaic(image2, image1, warpedImage1, warpedImage2);
+  cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
+  cv::resizeWindow("mosaic", result.cols / 2, result.rows / 2);
+  cv::imshow("mosaic", result);
 }
 
 int main(int argc, char* argv[])
@@ -181,16 +217,21 @@ int main(int argc, char* argv[])
     cv::Mat image1 = imgs.at(0);
     cv::Mat image2 = imgs.at(1);
     cv::Mat warpedImage1, warpedImage2, result;
-    // cv::rotate(image1, image1, ROTATE_90_COUNTERCLOCKWISE);
-    // cv::rotate(image2, image2, ROTATE_90_COUNTERCLOCKWISE);
     mosaic(image2, image1, warpedImage1, warpedImage2);
-    cv::imwrite("image1.jpg", warpedImage1);
-    // cv::imwrite("image1.jpg", image1);
-    cv::imwrite("image2.jpg", warpedImage2);
-    // cv::imwrite("image2.jpg", image2);
+    cv::namedWindow("mosaic", cv::WINDOW_NORMAL);
+    cv::createTrackbar("x", "mosaic", &x_slider, x_max, on_x);
+    cv::setTrackbarMin("x", "mosaic", -100);
+    cv::createTrackbar("y", "mosaic", &y_slider, y_max, on_y);
+    cv::setTrackbarMin("y", "mosaic", -100);
+    cv::createTrackbar("d", "mosaic", &d_slider, d_max, on_d);
+    cv::setTrackbarMin("d", "mosaic", -100);
+    // cv::imwrite("image1.jpg", warpedImage1);
+    // cv::imwrite("image2.jpg", warpedImage2);
     cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
-    cv::imwrite("result.jpg", result);
-    cout << "stitching completed successfully\n" << result_name << " saved!";
+    cv::resizeWindow("mosaic", result.cols / 2, result.rows / 2);
+    cv::imshow("mosaic", result);
+    cv::waitKey(0);
+    // cv::imwrite("result.jpg", result);
     return EXIT_SUCCESS;
 }
 void printUsage(char** argv)
