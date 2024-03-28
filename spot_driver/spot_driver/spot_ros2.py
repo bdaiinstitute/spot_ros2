@@ -214,20 +214,8 @@ def set_node_parameter_from_parameter_list(
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
-    """
-    When we send very long trajectories to Spot, we create batches of given
-    size. If we do not batch a long trajectory, Spot will reject it.
-    """
-    TRAJECTORY_BATCH_SIZE = 100
-
-    """
-    When we send very long trajectories to Spot, we create overlapping batches.
-    Overlapping trajectories is very important because we want the robot to
-    stich them smoothly. A batch is sent before the previous one has completed,
-    to work around network latency.
-    The following value has been determined empirically.
-    """
-    TRAJECTORY_BATCH_OVERLAPPING_POINTS = 20
+    TRAJECTORY_BATCH_SIZE_PARAM = "trajectory_batch_size"
+    TRAJECTORY_BATCH_OVERLAPPING_POINTS_PARAM = "trajectory_batch_overlapping_points"
 
     def __init__(self, parameter_list: Optional[typing.List[Parameter]] = None, **kwargs: typing.Any) -> None:
         """
@@ -284,6 +272,21 @@ class SpotROS(Node):
 
         self.declare_parameter("spot_name", "")
         self.declare_parameter("mock_enable", False)
+
+        # When we send very long trajectories to Spot, we create batches of
+        # given size. If we do not batch a long trajectory, Spot will reject it.
+        self.declare_parameter(self.TRAJECTORY_BATCH_SIZE_PARAM, 100)
+        self.trajectory_batch_size: Parameter = self.get_parameter(self.TRAJECTORY_BATCH_SIZE_PARAM).value
+
+        # When we send very long trajectories to Spot, we create overlapping
+        # batches. Overlapping trajectories is very important because we want
+        # the robot to stitch them smoothly. A batch is sent before the
+        # previous one has completed, to work around network latency. The
+        # following default value has been determined empirically.
+        self.declare_parameter(self.TRAJECTORY_BATCH_OVERLAPPING_POINTS_PARAM, 20)
+        self.trajectory_batch_overlapping_points: Parameter = self.get_parameter(
+            self.TRAJECTORY_BATCH_OVERLAPPING_POINTS_PARAM
+        ).value
 
         # If `mock_enable:=True`, then there are additional parameters. We must set this one separately.
         set_node_parameter_from_parameter_list(self, parameter_list, "mock_enable")
@@ -2146,7 +2149,7 @@ class SpotROS(Node):
 
         # Inspect the command and if there are long trajectories, batch them.
         commands = robot_command_util.batch_command(
-            proto_command, SpotROS.TRAJECTORY_BATCH_SIZE, SpotROS.TRAJECTORY_BATCH_OVERLAPPING_POINTS
+            proto_command, self.trajectory_batch_size, self.trajectory_batch_overlapping_points
         )
         num_of_commands = len(commands)
 
