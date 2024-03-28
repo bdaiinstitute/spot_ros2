@@ -886,7 +886,7 @@ class SpotROS(Node):
             self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
                 self,
                 [
-                    (RobotCommand, "robot_command", self.handle_robot_command, None),
+                    (RobotCommand, "robot_command", self.handle_robot_command_action, None),
                     (Manipulation, "manipulation", self.handle_manipulation_command, None),
                 ],
             )
@@ -895,7 +895,7 @@ class SpotROS(Node):
                 self,
                 RobotCommand,
                 "robot_command",
-                self.handle_robot_command,
+                self.handle_robot_command_action,
             )
 
         # Register Shutdown Handle
@@ -2078,7 +2078,7 @@ class SpotROS(Node):
                 convert(self.spot_wrapper.get_robot_command_feedback(goal_id).feedback, feedback)
         return feedback
 
-    def handle_robot_command(self, goal_handle: ServerGoalHandle) -> RobotCommand.Result:
+    def handle_robot_command_action(self, goal_handle: ServerGoalHandle) -> RobotCommand.Result:
         """
         Spot cannot process long trajectories. If we issue a command with long
         trajectories for the arm or the body, the command will be batched,
