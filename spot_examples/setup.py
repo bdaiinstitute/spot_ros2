@@ -22,6 +22,7 @@ setup(
             "walk_forward = spot_examples.walk_forward:main",
             "arm_simple = spot_examples.arm_simple:main",
             "send_inverse_kinematics_requests = spot_examples.send_inverse_kinematics_requests:main",
+            "batch_trajectory = spot_examples.batch_trajectory:main",
         ],
     },
 )
