@@ -16,6 +16,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import bdai_ros2_wrappers.process as ros_process
 import builtin_interfaces.msg
 import rclpy
+import rclpy.duration
 import rclpy.time
 import tf2_ros
 from bdai_ros2_wrappers.node import Node
@@ -84,7 +85,14 @@ from spot_driver.ros_helpers import (
     get_tf_from_world_objects,
     populate_transform_stamped,
 )
-from spot_msgs.action import Manipulation, NavigateTo, RobotCommand, Trajectory  # type: ignore
+from spot_msgs.action import (  # type: ignore
+    Manipulation,
+    NavigateTo,
+    Trajectory,
+)
+from spot_msgs.action import (  # type: ignore
+    RobotCommand as RobotCommandAction,
+)
 from spot_msgs.msg import (  # type: ignore
     Feedback,
     LeaseArray,
@@ -132,6 +140,9 @@ from spot_msgs.srv import (  # type: ignore
     StoreLogpoint,
     TagLogpoint,
     UploadAnimation,
+)
+from spot_msgs.srv import (  # type: ignore
+    RobotCommand as RobotCommandService,
 )
 from spot_wrapper.cam_wrapper import SpotCamCamera, SpotCamWrapper
 from spot_wrapper.spot_images import CameraSource
@@ -881,19 +892,41 @@ class SpotROS(Node):
         )
         # spot_ros.trajectory_server.start()
 
+        self.create_service(
+            RobotCommandService,
+            "robot_command",
+            lambda request, response: self.service_wrapper(
+                "robot_command",
+                self.handle_robot_command_service,
+                request,
+                response,
+            ),
+            callback_group=self.group,
+        )
+
         if has_arm:
             # Allows both the "robot command" and the "manipulation" action goal to preempt each other
             self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
                 self,
                 [
-                    (RobotCommand, "robot_command", self.handle_robot_command_action, None),
-                    (Manipulation, "manipulation", self.handle_manipulation_command, None),
+                    (
+                        RobotCommandAction,
+                        "robot_command",
+                        self.handle_robot_command_action,
+                        None,
+                    ),
+                    (
+                        Manipulation,
+                        "manipulation",
+                        self.handle_manipulation_command,
+                        None,
+                    ),
                 ],
             )
         else:
             self.robot_command_server = SingleGoalActionServer(
                 self,
-                RobotCommand,
+                RobotCommandAction,
                 "robot_command",
                 self.handle_robot_command_action,
             )
@@ -2077,6 +2110,21 @@ class SpotROS(Node):
             if self.spot_wrapper is not None:
                 convert(self.spot_wrapper.get_robot_command_feedback(goal_id).feedback, feedback)
         return feedback
+
+    def handle_robot_command_service(
+        self, request: RobotCommandService.Request, response: RobotCommandService.Response
+    ) -> RobotCommandService.Response:
+        proto_command = robot_command_pb2.RobotCommand()
+        convert(request.command, proto_command)
+        duration = rclpy.duration.Duration.from_msg(request.duration)
+        if self.spot_wrapper is not None:
+            args = (duration.nanoseconds / 1e9,) if duration.nanoseconds else ()
+            response.success, response.message, robot_command_id = self.spot_wrapper.robot_command(proto_command, *args)
+            if robot_command_id is not None:
+                response.robot_command_id = robot_command_id
+        else:
+            response.success = True
+        return response
 
     def handle_robot_command_action(self, goal_handle: ServerGoalHandle) -> RobotCommand.Result:
         """
