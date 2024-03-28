@@ -119,6 +119,12 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& r
     if (transform.parent_frame_name().empty()) {
       continue;
     }
+
+    // These frames are duplicates of arm_link_wr1 (published with robot state) and shouldn't be added to the TF tree!
+    if ((frame_id == "arm0.link_wr1") || (frame_id == "link_wr1")) {
+      continue;
+    }
+
     const auto parent_frame_name = transform.parent_frame_name().find('/') == std::string::npos
                                        ? prefix + transform.parent_frame_name()
                                        : transform.parent_frame_name();
