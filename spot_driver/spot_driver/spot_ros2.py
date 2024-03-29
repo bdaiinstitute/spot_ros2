@@ -37,7 +37,7 @@ from bosdyn.api import (
 )
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
-from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence
+from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence, ChoreographyStatusResponse
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
@@ -64,10 +64,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
-from rclpy.callback_groups import (
-    CallbackGroup,
-    MutuallyExclusiveCallbackGroup,
-)
+from rclpy.callback_groups import CallbackGroup, MutuallyExclusiveCallbackGroup
 from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
@@ -84,6 +81,7 @@ from spot_driver.ros_helpers import (
     populate_transform_stamped,
 )
 from spot_msgs.action import (  # type: ignore
+    ExecuteDance,
     Manipulation,
     NavigateTo,
     Trajectory,
@@ -106,7 +104,6 @@ from spot_msgs.srv import (  # type: ignore
     DeleteLogpoint,
     DeleteSound,
     Dock,
-    ExecuteDance,
     GetChoreographyStatus,
     GetGripperCameraParameters,
     GetLEDBrightness,
@@ -138,6 +135,7 @@ from spot_msgs.srv import (  # type: ignore
     StoreLogpoint,
     TagLogpoint,
     UploadAnimation,
+    UploadSequence,
 )
 from spot_msgs.srv import (  # type: ignore
     RobotCommand as RobotCommandService,
@@ -587,14 +585,7 @@ class SpotROS(Node):
             ),
             callback_group=self.group,
         )
-        self.create_service(
-            ExecuteDance,
-            "execute_dance",
-            lambda request, response: self.service_wrapper(
-                "execute_dance", self.handle_execute_dance, request, response
-            ),
-            callback_group=self.group,
-        )
+
         self.create_service(
             Trigger,
             "stop_dance",
@@ -609,6 +600,15 @@ class SpotROS(Node):
             ),
             callback_group=self.group,
         )
+        self.create_service(
+            UploadSequence,
+            "upload_sequence",
+            lambda request, response: self.service_wrapper(
+                "upload_sequence", self.handle_upload_sequence, request, response
+            ),
+            callback_group=self.group,
+        )
+
         self.create_service(
             ListAllDances,
             "list_all_dances",
@@ -858,6 +858,13 @@ class SpotROS(Node):
                 ),
                 callback_group=self.group,
             )
+
+        self.execute_dance_as = ActionServer(
+            self,
+            ExecuteDance,
+            "execute_dance",
+            self.handle_execute_dance,
+        )
 
         self.navigate_as = ActionServer(
             self,
@@ -1263,25 +1270,6 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.clear_behavior_fault(request.id)
         return response
 
-    def handle_execute_dance(
-        self, request: ExecuteDance.Request, response: ExecuteDance.Response
-    ) -> ExecuteDance.Response:
-        """ROS service handler for uploading and executing dance."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        if request.choreo_file_content:
-            response.success, response.message = self.spot_wrapper.execute_dance(request.choreo_file_content)
-        elif request.choreo_sequence_serialized:
-            choreography = ChoreographySequence()
-            choreography.ParseFromString(bytes(bytearray(request.choreo_sequence_serialized)))
-            response.success, response.message = self.spot_wrapper.execute_dance(choreography)
-        else:
-            response.success = False
-            response.message = "No choreography sequence found in request"
-        return response
-
     def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to stop the robot's dancing."""
         if self.spot_wrapper is None:
@@ -1375,10 +1363,12 @@ class SpotROS(Node):
         self, request: GetChoreographyStatus.Request, response: GetChoreographyStatus.Response
     ) -> GetChoreographyStatus.Response:
         """ROS service handler for getting current status of choreography playback."""
+
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
+
         response.success, response.message, choreography_status = self.spot_wrapper.get_choreography_status()
         response.status = choreography_status.status
         response.execution_id = choreography_status.execution_id
@@ -1388,6 +1378,7 @@ class SpotROS(Node):
         self, request: UploadAnimation.Request, response: UploadAnimation.Response
     ) -> UploadAnimation.Response:
         """ROS service handler for uploading an animation."""
+
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
@@ -1400,6 +1391,23 @@ class SpotROS(Node):
             animation = Animation()
             animation.ParseFromString(bytes(bytearray(request.animation_proto_serialized)))
             response.success, response.message = self.spot_wrapper.upload_animation_proto(animation)
+        else:
+            self.message = "Error: No data passed in message"
+            response.success = False
+        return response
+
+    def handle_upload_sequence(
+        self, request: UploadSequence.Request, response: UploadSequence.Response
+    ) -> UploadSequence.Response:
+        """ROS service handler for uploading choreography."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        elif request.sequence_proto_serialized:
+            sequence = ChoreographySequence()
+            sequence.ParseFromString(bytes(bytearray(request.sequence_proto_serialized)))
+            response.success, response.message = self.spot_wrapper.upload_choreography(sequence)
         else:
             self.message = "Error: No data passed in message"
             response.success = False
@@ -2596,6 +2604,76 @@ class SpotROS(Node):
             proto_response = self.spot_wrapper.spot_world_objects.list_world_objects(object_types, time_start_point)
         convert(proto_response, response.response)
         return response
+
+    def handle_execute_dance_feedback(self) -> None:
+        """Thread function to send execute dance feedback"""
+        if self.spot_wrapper is None:
+            return
+
+        while rclpy.ok() and self.run_dance_feedback:
+            res, msg, status = self.spot_wrapper.get_choreography_status()
+            if res:
+                feedback = ExecuteDance.Feedback()
+                feedback.is_dancing = status == ChoreographyStatusResponse.Status.STATUS_DANCING
+                if self.execute_dance_handle is not None:
+                    self.execute_dance_handle.publish_feedback(feedback)
+
+                if status == ChoreographyStatusResponse.Status.STATUS_COMPLETED_SEQUENCE:
+                    break
+
+            time.sleep(0.01)
+
+    def handle_execute_dance(self, execute_dance_handle: ServerGoalHandle) -> ExecuteDance.Result:
+        """ROS service handler for uploading and executing dance."""
+
+        self.execute_dance_handle = execute_dance_handle
+
+        feedback_thread = threading.Thread(target=self.handle_execute_dance_feedback, args=())
+        self.run_dance_feedback = True
+        feedback_thread.start()
+
+        if self.spot_wrapper is None:
+            error_msg = "Spot wrapper is None"
+            self.get_logger().error(error_msg)
+            result = ExecuteDance.Result()
+            result.success = False
+            result.message = error_msg
+            return result
+
+        start_slice = 0
+        if execute_dance_handle.request.start_slice:
+            start_slice = execute_dance_handle.request.start_slice
+
+        # Support different mehtods of starting the dance
+        if execute_dance_handle.request.choreo_name:
+            res, msg = self.spot_wrapper.execute_choreography_by_name(
+                execute_dance_handle.request.choreo_name, start_slice=start_slice
+            )
+
+        elif execute_dance_handle.request.choreo_file_content:
+            res, msg = self.spot_wrapper.execute_dance(
+                execute_dance_handle.request.choreo_file_content, start_slice=start_slice
+            )
+        elif execute_dance_handle.request.choreo_sequence_serialized:
+            sequence = ChoreographySequence()
+            sequence.ParseFromString(bytes(bytearray(execute_dance_handle.request.choreo_sequence_serialized)))
+            res, msg = self.spot_wrapper.upload_choreography(sequence)
+            if res:
+                res, msg = self.spot_wrapper.execute_choreography_by_name(sequence.name, start_slice)
+        else:
+            error_msg = "No dance content sent to execute"
+            result = ExecuteDance.Result()
+            result.success = False
+            result.message = error_msg
+            return result
+
+        self.run_dance_feedback = False
+        feedback_thread.join()
+
+        result = ExecuteDance.Result()
+        result.success = res
+        result.message = msg
+        return result
 
     def handle_navigate_to_feedback(self) -> None:
         """Thread function to send navigate_to feedback"""
