@@ -16,6 +16,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import bdai_ros2_wrappers.process as ros_process
 import builtin_interfaces.msg
 import rclpy
+import rclpy.duration
 import rclpy.time
 import tf2_ros
 from bdai_ros2_wrappers.node import Node
@@ -36,10 +37,11 @@ from bosdyn.api import (
 )
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
-from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence
+from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence, ChoreographyStatusResponse
 from bosdyn.client import math_helpers
 from bosdyn.client.exceptions import InternalServerError
-from bosdyn.client.lease import LeaseKeepAlive
+from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
+from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
     Camera,
@@ -62,19 +64,13 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
-from rclpy.callback_groups import (
-    CallbackGroup,
-    MutuallyExclusiveCallbackGroup,
-    ReentrantCallbackGroup,
-)
+from rclpy.callback_groups import CallbackGroup, MutuallyExclusiveCallbackGroup
 from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
 from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
-
-import spot_driver.conversions as conv
 
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -83,7 +79,15 @@ from spot_driver.ros_helpers import (
     get_from_env_and_fall_back_to_param,
     populate_transform_stamped,
 )
-from spot_msgs.action import Manipulation, NavigateTo, RobotCommand, Trajectory  # type: ignore
+from spot_msgs.action import (  # type: ignore
+    ExecuteDance,
+    Manipulation,
+    NavigateTo,
+    Trajectory,
+)
+from spot_msgs.action import (  # type: ignore
+    RobotCommand as RobotCommandAction,
+)
 from spot_msgs.msg import (  # type: ignore
     Feedback,
     LeaseArray,
@@ -99,7 +103,6 @@ from spot_msgs.srv import (  # type: ignore
     DeleteLogpoint,
     DeleteSound,
     Dock,
-    ExecuteDance,
     GetChoreographyStatus,
     GetGripperCameraParameters,
     GetLEDBrightness,
@@ -131,6 +134,10 @@ from spot_msgs.srv import (  # type: ignore
     StoreLogpoint,
     TagLogpoint,
     UploadAnimation,
+    UploadSequence,
+)
+from spot_msgs.srv import (  # type: ignore
+    RobotCommand as RobotCommandService,
 )
 from spot_wrapper.cam_wrapper import SpotCamCamera, SpotCamWrapper
 from spot_wrapper.spot_images import CameraSource
@@ -218,7 +225,7 @@ class SpotROS(Node):
         self.callbacks["metrics"] = self.metrics_callback
         self.callbacks["lease"] = self.lease_callback
 
-        self.group: CallbackGroup = ReentrantCallbackGroup()
+        self.group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.rgb_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.depth_registered_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
@@ -576,12 +583,11 @@ class SpotROS(Node):
             ),
             callback_group=self.group,
         )
+
         self.create_service(
-            ExecuteDance,
-            "execute_dance",
-            lambda request, response: self.service_wrapper(
-                "execute_dance", self.handle_execute_dance, request, response
-            ),
+            Trigger,
+            "stop_dance",
+            lambda request, response: self.service_wrapper("stop_dance", self.handle_stop_dance, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -592,6 +598,15 @@ class SpotROS(Node):
             ),
             callback_group=self.group,
         )
+        self.create_service(
+            UploadSequence,
+            "upload_sequence",
+            lambda request, response: self.service_wrapper(
+                "upload_sequence", self.handle_upload_sequence, request, response
+            ),
+            callback_group=self.group,
+        )
+
         self.create_service(
             ListAllDances,
             "list_all_dances",
@@ -842,12 +857,18 @@ class SpotROS(Node):
                 callback_group=self.group,
             )
 
+        self.execute_dance_as = ActionServer(
+            self,
+            ExecuteDance,
+            "execute_dance",
+            self.handle_execute_dance,
+        )
+
         self.navigate_as = ActionServer(
             self,
             NavigateTo,
             "navigate_to",
             self.handle_navigate_to,
-            callback_group=self.group,
         )
         # spot_ros.navigate_as.start() # As is online
 
@@ -856,9 +877,20 @@ class SpotROS(Node):
             Trajectory,
             "trajectory",
             self.handle_trajectory,
-            callback_group=self.group,
         )
         # spot_ros.trajectory_server.start()
+
+        self.create_service(
+            RobotCommandService,
+            "robot_command",
+            lambda request, response: self.service_wrapper(
+                "robot_command",
+                self.handle_robot_command_service,
+                request,
+                response,
+            ),
+            callback_group=self.group,
+        )
 
         if has_arm:
             # Allows both the "robot command" and the "manipulation" action goal to preempt each other
@@ -866,26 +898,25 @@ class SpotROS(Node):
                 self,
                 [
                     (
-                        RobotCommand,
+                        RobotCommandAction,
                         "robot_command",
-                        self.handle_robot_command,
-                        self.group,
+                        self.handle_robot_command_action,
+                        None,
                     ),
                     (
                         Manipulation,
                         "manipulation",
                         self.handle_manipulation_command,
-                        self.group,
+                        None,
                     ),
                 ],
             )
         else:
             self.robot_command_server = SingleGoalActionServer(
                 self,
-                RobotCommand,
+                RobotCommandAction,
                 "robot_command",
-                self.handle_robot_command,
-                callback_group=self.group,
+                self.handle_robot_command_action,
             )
 
         # Register Shutdown Handle
@@ -908,7 +939,7 @@ class SpotROS(Node):
                 time.sleep(0.5)
             self.get_logger().info("Found estop!")
 
-        self.create_timer(1 / self.async_tasks_rate, self.step, callback_group=self.group)
+        self.create_timer(1 / self.async_tasks_rate, self.step)
 
         if self.spot_wrapper is not None and self.auto_claim.value:
             self.spot_wrapper.claim()
@@ -931,18 +962,7 @@ class SpotROS(Node):
             response.message = "spot_ros2 is running in mock mode."
             return response
 
-        old_lease = self.spot_wrapper.lease2
-        # `take()` can technically raise an exception (although the two possibilities
-        # in the documentation don't seem to apply when take() is not given an argument),
-        # but handling exceptions inside a ROS callback is overcomplicated,
-        # so we ignore this for now.
-        lease = self.spot_wrapper._lease_client.take()
-        self.spot_wrapper._lease_keepalive = LeaseKeepAlive(self.spot_wrapper._lease_client)
-        # There is no clear evidence that take() could return the same lease as before,
-        # but we do this check to be extra safe.
-        have_new_lease = (old_lease is None and lease is not None) or (
-            str(lease.lease_proto) != str(old_lease.lease_proto)
-        )
+        have_new_lease, lease = self.spot_wrapper.take_lease()
         if have_new_lease:
             response.success = True
             response.message = str(lease.lease_proto)
@@ -1026,7 +1046,7 @@ class SpotROS(Node):
             (
                 seed_t_body_msg,
                 seed_t_body_trans_msg,
-            ) = conv.bosdyn_localization_to_pose_msg(
+            ) = bosdyn_localization_to_pose_msg(
                 state.localization,
                 self.spot_wrapper.robotToLocalTime,
                 in_seed_frame=True,
@@ -1233,23 +1253,15 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.clear_behavior_fault(request.id)
         return response
 
-    def handle_execute_dance(
-        self, request: ExecuteDance.Request, response: ExecuteDance.Response
-    ) -> ExecuteDance.Response:
-        """ROS service handler for uploading and executing dance."""
+    def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler to stop the robot's dancing."""
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        if request.choreo_file_content:
-            response.success, response.message = self.spot_wrapper.execute_dance(request.choreo_file_content)
-        elif request.choreo_sequence_serialized:
-            choreography = ChoreographySequence()
-            choreography.ParseFromString(bytes(bytearray(request.choreo_sequence_serialized)))
-            response.success, response.message = self.spot_wrapper.execute_dance(choreography)
-        else:
-            response.success = False
-            response.message = "No choreography sequence found in request"
+        success, msg = self.spot_wrapper.stop_choreography()
+        response.success = success
+        response.message = msg
         return response
 
     def handle_list_all_dances(
@@ -1334,10 +1346,12 @@ class SpotROS(Node):
         self, request: GetChoreographyStatus.Request, response: GetChoreographyStatus.Response
     ) -> GetChoreographyStatus.Response:
         """ROS service handler for getting current status of choreography playback."""
+
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
+
         response.success, response.message, choreography_status = self.spot_wrapper.get_choreography_status()
         response.status = choreography_status.status
         response.execution_id = choreography_status.execution_id
@@ -1347,6 +1361,7 @@ class SpotROS(Node):
         self, request: UploadAnimation.Request, response: UploadAnimation.Response
     ) -> UploadAnimation.Response:
         """ROS service handler for uploading an animation."""
+
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
@@ -1359,6 +1374,23 @@ class SpotROS(Node):
             animation = Animation()
             animation.ParseFromString(bytes(bytearray(request.animation_proto_serialized)))
             response.success, response.message = self.spot_wrapper.upload_animation_proto(animation)
+        else:
+            self.message = "Error: No data passed in message"
+            response.success = False
+        return response
+
+    def handle_upload_sequence(
+        self, request: UploadSequence.Request, response: UploadSequence.Response
+    ) -> UploadSequence.Response:
+        """ROS service handler for uploading choreography."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        elif request.sequence_proto_serialized:
+            sequence = ChoreographySequence()
+            sequence.ParseFromString(bytes(bytearray(request.sequence_proto_serialized)))
+            response.success, response.message = self.spot_wrapper.upload_choreography(sequence)
         else:
             self.message = "Error: No data passed in message"
             response.success = False
@@ -1477,7 +1509,7 @@ class SpotROS(Node):
             descriptions = []
             for proto_description in proto_descriptions:
                 ros_msg = PtzDescription()
-                conv.convert_proto_to_bosdyn_msgs_ptz_description(proto_description, ros_msg)
+                convert(proto_description, ros_msg)
                 descriptions.append(ros_msg)
             response.success = True
             response.message = "Success"
@@ -1497,7 +1529,7 @@ class SpotROS(Node):
                 raise Exception("Spot CAM has not been initialized")
 
             proto_position = self.spot_cam_wrapper.ptz.get_ptz_position(request.name)
-            conv.convert_proto_to_bosdyn_msgs_ptz_position(proto_position, response.position)
+            convert(proto_position, response.position)
             response.success = True
             response.message = "Success"
             return response
@@ -1550,7 +1582,7 @@ class SpotROS(Node):
             cameras = []
             for proto_camera in proto_cameras:
                 ros_msg = Camera()
-                conv.convert_proto_to_bosdyn_msgs_camera(proto_camera, ros_msg)
+                convert(proto_camera, ros_msg)
                 cameras.append(ros_msg)
             response.success = True
             response.message = "Success"
@@ -1573,7 +1605,7 @@ class SpotROS(Node):
             logpoints = []
             for proto_logpoint in proto_logpoints:
                 ros_msg = Logpoint()
-                conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, ros_msg)
+                convert(proto_logpoint, ros_msg)
                 logpoints.append(ros_msg)
             response.success = True
             response.message = "Success"
@@ -1595,7 +1627,7 @@ class SpotROS(Node):
             proto_logpoint, proto_data_chunk = self.spot_cam_wrapper.media_log.retrieve_logpoint(
                 request.name, request.raw
             )
-            conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
+            convert(proto_logpoint, response.logpoint)
             # Data is actually a bytes object, not DataChunk as the SpotCAM wrapper states...
             # Therefore, we use a uint8[] buffer in srv message and directly set that
             # to the bytes object.
@@ -1654,7 +1686,7 @@ class SpotROS(Node):
             tag = None if request.tag == "" else request.tag
             camera_name = SpotCamCamera(request.name)  # Silly but don't want to modify cam wrapper.
             proto_logpoint = self.spot_cam_wrapper.media_log.store(camera_name, tag)
-            conv.convert_proto_to_bosdyn_msgs_logpoint(proto_logpoint, response.logpoint)
+            convert(proto_logpoint, response.logpoint)
             response.success = True
             response.message = "Success"
             return response
@@ -1909,7 +1941,8 @@ class SpotROS(Node):
                 return GoalResponse.FAILED
         elif choice == fb.FEEDBACK_ARM_IMPEDANCE_FEEDBACK_SET:
             if (
-                fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_STALLED
+                fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_CANCELLED
+                or fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_TRAJECTORY_STALLED
                 or fb.arm_impedance_feedback.status.value == fb.arm_impedance_feedback.status.STATUS_UNKNOWN
             ):
                 return GoalResponse.FAILED
@@ -1949,7 +1982,7 @@ class SpotROS(Node):
         elif choice == fb.FEEDBACK_FOLLOW_ARM_FEEDBACK_SET:
             self.get_logger().warn("WARNING: FollowArmCommand provides no feedback")
         elif choice == fb.FEEDBACK_NOT_SET:
-            # sync_feedback.mobility_command_feedback_is_set, feedback_choice is actually not set.
+            # sync_feedback.mobility_command_feedback is set, but feedback_choice is actually not set.
             # This may happen when a command finishes, which means we may return SUCCESS below.
             self.get_logger().info("mobility command feedback indicates goal has reached")
         else:
@@ -2008,19 +2041,19 @@ class SpotROS(Node):
             # while the mobility is going to some SE2 trajectory then that will work.
 
             sync_feedback = feedback.command.synchronized_feedback
-            if sync_feedback.arm_command_feedback_is_set is True:
+            if sync_feedback.has_field & sync_feedback.ARM_COMMAND_FEEDBACK_FIELD_SET:
                 arm_feedback = sync_feedback.arm_command_feedback
                 response = self._process_synchronized_arm_command_feedback(arm_feedback)
                 if response is not GoalResponse.SUCCESS:
                     return response
 
-            if sync_feedback.mobility_command_feedback_is_set is True:
+            if sync_feedback.has_field & sync_feedback.MOBILITY_COMMAND_FEEDBACK_FIELD_SET:
                 mob_feedback = sync_feedback.mobility_command_feedback
                 response = self._process_synchronized_mobility_command_feedback(mob_feedback)
                 if response is not GoalResponse.SUCCESS:
                     return response
 
-            if sync_feedback.gripper_command_feedback_is_set is True:
+            if sync_feedback.has_field & sync_feedback.GRIPPER_COMMAND_FEEDBACK_FIELD_SET:
                 grip_feedback = sync_feedback.gripper_command_feedback
                 response = self._process_synchronized_gripper_command_feedback(grip_feedback)
                 if response is not GoalResponse.SUCCESS:
@@ -2050,16 +2083,28 @@ class SpotROS(Node):
                 )
         else:
             if self.spot_wrapper is not None:
-                conv.convert_proto_to_bosdyn_msgs_robot_command_feedback(
-                    self.spot_wrapper.get_robot_command_feedback(goal_id).feedback,
-                    feedback,
-                )
+                convert(self.spot_wrapper.get_robot_command_feedback(goal_id).feedback, feedback)
         return feedback
 
-    def handle_robot_command(self, goal_handle: ServerGoalHandle) -> RobotCommand.Result:
+    def handle_robot_command_service(
+        self, request: RobotCommandService.Request, response: RobotCommandService.Response
+    ) -> RobotCommandService.Response:
+        proto_command = robot_command_pb2.RobotCommand()
+        convert(request.command, proto_command)
+        duration = rclpy.duration.Duration.from_msg(request.duration)
+        if self.spot_wrapper is not None:
+            args = (duration.nanoseconds / 1e9,) if duration.nanoseconds else ()
+            response.success, response.message, robot_command_id = self.spot_wrapper.robot_command(proto_command, *args)
+            if robot_command_id is not None:
+                response.robot_command_id = robot_command_id
+        else:
+            response.success = True
+        return response
+
+    def handle_robot_command_action(self, goal_handle: ServerGoalHandle) -> RobotCommandAction.Result:
         ros_command = goal_handle.request.command
         proto_command = robot_command_pb2.RobotCommand()
-        conv.convert_bosdyn_msgs_robot_command_to_proto(ros_command, proto_command)
+        convert(ros_command, proto_command)
         self._wait_for_goal = None
         if self.spot_wrapper is None:
             self._wait_for_goal = WaitForGoal(self.get_clock(), 2.0)
@@ -2074,7 +2119,7 @@ class SpotROS(Node):
         # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
         # monitor whether the timeout_cb has already aborted the command
         feedback: Optional[RobotCommandFeedback] = None
-        feedback_msg: Optional[RobotCommand.Feedback] = None
+        feedback_msg: Optional[RobotCommandAction.Feedback] = None
         while (
             rclpy.ok()
             and not goal_handle.is_cancel_requested
@@ -2082,12 +2127,12 @@ class SpotROS(Node):
             and goal_handle.is_active
         ):
             feedback = self._get_robot_command_feedback(goal_id)
-            feedback_msg = RobotCommand.Feedback(feedback=feedback)
+            feedback_msg = RobotCommandAction.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
             time.sleep(0.1)  # don't use rate here because we're already in a single thread
 
         # publish a final feedback
-        result = RobotCommand.Result()
+        result = RobotCommandAction.Result()
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
@@ -2163,9 +2208,7 @@ class SpotROS(Node):
     def _get_manipulation_command_feedback(self, goal_id: str) -> ManipulationApiFeedbackResponse:
         feedback = ManipulationApiFeedbackResponse()
         if self.spot_wrapper is not None:
-            conv.convert_proto_to_bosdyn_msgs_manipulation_api_feedback_response(
-                self.spot_wrapper.get_manipulation_command_feedback(goal_id), feedback
-            )
+            convert(self.spot_wrapper.get_manipulation_command_feedback(goal_id), feedback)
         return feedback
 
     def handle_manipulation_command(self, goal_handle: ServerGoalHandle) -> Manipulation.Result:
@@ -2174,7 +2217,7 @@ class SpotROS(Node):
 
         ros_command = goal_handle.request.command
         proto_command = manipulation_api_pb2.ManipulationApiRequest()
-        conv.convert_bosdyn_msgs_manipulation_api_request_to_proto(ros_command, proto_command)
+        convert(ros_command, proto_command)
         self._wait_for_goal = None
         if not self.spot_wrapper:
             self._wait_for_goal = WaitForGoal(self.get_clock(), 2.0)
@@ -2400,7 +2443,7 @@ class SpotROS(Node):
                 self.get_logger().warning(response.message)
                 return response
             else:
-                seed_t_body_msg = conv.bosdyn_localization_to_pose_msg(
+                seed_t_body_msg = bosdyn_localization_to_pose_msg(
                     state.localization,
                     self.spot_wrapper.robotToLocalTime,
                     in_seed_frame=True,
@@ -2527,7 +2570,7 @@ class SpotROS(Node):
     ) -> ListWorldObjects.Response:
         object_types = [ot.value for ot in request.request.object_type]
         time_start_point = None
-        if request.request.timestamp_filter_is_set:
+        if request.request.has_field & request.request.TIMESTAMP_FILTER_FIELD_SET:
             time_start_point = (
                 request.request.timestamp_filter.sec + float(request.request.timestamp_filter.nanosec) / 1e9
             )
@@ -2542,8 +2585,78 @@ class SpotROS(Node):
             world_object.apriltag_properties.frame_name_fiducial_filtered = "filtered_fiducial_3"
         else:
             proto_response = self.spot_wrapper.spot_world_objects.list_world_objects(object_types, time_start_point)
-        conv.convert_proto_to_bosdyn_msgs_list_world_object_response(proto_response, response.response)
+        convert(proto_response, response.response)
         return response
+
+    def handle_execute_dance_feedback(self) -> None:
+        """Thread function to send execute dance feedback"""
+        if self.spot_wrapper is None:
+            return
+
+        while rclpy.ok() and self.run_dance_feedback:
+            res, msg, status = self.spot_wrapper.get_choreography_status()
+            if res:
+                feedback = ExecuteDance.Feedback()
+                feedback.is_dancing = status == ChoreographyStatusResponse.Status.STATUS_DANCING
+                if self.execute_dance_handle is not None:
+                    self.execute_dance_handle.publish_feedback(feedback)
+
+                if status == ChoreographyStatusResponse.Status.STATUS_COMPLETED_SEQUENCE:
+                    break
+
+            time.sleep(0.01)
+
+    def handle_execute_dance(self, execute_dance_handle: ServerGoalHandle) -> ExecuteDance.Result:
+        """ROS service handler for uploading and executing dance."""
+
+        self.execute_dance_handle = execute_dance_handle
+
+        feedback_thread = threading.Thread(target=self.handle_execute_dance_feedback, args=())
+        self.run_dance_feedback = True
+        feedback_thread.start()
+
+        if self.spot_wrapper is None:
+            error_msg = "Spot wrapper is None"
+            self.get_logger().error(error_msg)
+            result = ExecuteDance.Result()
+            result.success = False
+            result.message = error_msg
+            return result
+
+        start_slice = 0
+        if execute_dance_handle.request.start_slice:
+            start_slice = execute_dance_handle.request.start_slice
+
+        # Support different mehtods of starting the dance
+        if execute_dance_handle.request.choreo_name:
+            res, msg = self.spot_wrapper.execute_choreography_by_name(
+                execute_dance_handle.request.choreo_name, start_slice=start_slice
+            )
+
+        elif execute_dance_handle.request.choreo_file_content:
+            res, msg = self.spot_wrapper.execute_dance(
+                execute_dance_handle.request.choreo_file_content, start_slice=start_slice
+            )
+        elif execute_dance_handle.request.choreo_sequence_serialized:
+            sequence = ChoreographySequence()
+            sequence.ParseFromString(bytes(bytearray(execute_dance_handle.request.choreo_sequence_serialized)))
+            res, msg = self.spot_wrapper.upload_choreography(sequence)
+            if res:
+                res, msg = self.spot_wrapper.execute_choreography_by_name(sequence.name, start_slice)
+        else:
+            error_msg = "No dance content sent to execute"
+            result = ExecuteDance.Result()
+            result.success = False
+            result.message = error_msg
+            return result
+
+        self.run_dance_feedback = False
+        feedback_thread.join()
+
+        result = ExecuteDance.Result()
+        result.success = res
+        result.message = msg
+        return result
 
     def handle_navigate_to_feedback(self) -> None:
         """Thread function to send navigate_to feedback"""
@@ -2612,9 +2725,9 @@ class SpotROS(Node):
             return response
         try:
             proto_request = gripper_camera_param_pb2.GripperCameraGetParamRequest()
-            conv.convert_bosdyn_msgs_gripper_camera_get_param_request_to_proto(request.request, proto_request)
+            convert(request.request, proto_request)
             proto_response = self.spot_wrapper.spot_images.get_gripper_camera_params(proto_request)
-            conv.convert_proto_to_bosdyn_msgs_gripper_camera_get_param_response(proto_response, response.response)
+            convert(proto_response, response.response)
             response.success = True
             response.message = "Request to get gripper camera parameters sent"
         except Exception as e:
@@ -2641,9 +2754,9 @@ class SpotROS(Node):
 
         try:
             proto_request = gripper_camera_param_pb2.GripperCameraParamRequest()
-            conv.convert_bosdyn_msgs_gripper_camera_param_request_to_proto(request.request, proto_request)
+            convert(request.request, proto_request)
             proto_response = self.spot_wrapper.spot_images.set_gripper_camera_params(proto_request)
-            conv.convert_proto_to_bosdyn_msgs_gripper_camera_param_response(proto_response, response.response)
+            convert(proto_response, response.response)
             response.success = True
             response.message = "Request to set gripper camera parameters sent"
         except Exception as e:
@@ -2670,6 +2783,7 @@ class SpotROS(Node):
             self.tf_name_kinematic_odom.value,
             self.frame_prefix + "body",
         ]
+
         excluded_frames = [f[f.rfind("/") + 1 :] for f in excluded_frames]
 
         # Special case handling for hand camera frames that reference the link "arm0.link_wr1" in their
@@ -2696,7 +2810,7 @@ class SpotROS(Node):
 
             # special case handling of parent frame to sync with robot state naming, see above
             if parent_frame == "arm0.link_wr1":
-                parent_frame = "link_wr1"
+                parent_frame = "arm_link_wr1"
 
             existing_transforms = [
                 (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
@@ -2784,7 +2898,6 @@ class SpotROS(Node):
         self.get_logger().info("Shutting down ROS driver for Spot")
         if self.spot_wrapper is not None:
             self.spot_wrapper.sit()
-        self.node_rate.sleep()
         if self.spot_wrapper is not None:
             self.spot_wrapper.disconnect()
         super().destroy_node()

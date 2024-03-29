@@ -19,7 +19,7 @@ using ::testing::StrEq;
 constexpr auto kNodeName = "my_node_name";
 constexpr auto kNamespace = "my_namespace";
 
-constexpr auto kEnvVarNameAddress = "SPOT_IP";
+constexpr auto kEnvVarNameHostname = "SPOT_IP";
 constexpr auto kEnvVarNameUsername = "BOSDYN_CLIENT_USERNAME";
 constexpr auto kEnvVarNamePassword = "BOSDYN_CLIENT_PASSWORD";
 }  // namespace
@@ -39,13 +39,13 @@ class RclcppParameterInterfaceEnvVarTest : public RclcppParameterInterfaceTest {
     RclcppTest::SetUp();
 
     // Get current values of these environment variables.
-    const auto address = std::getenv(kEnvVarNameAddress);
+    const auto hostname = std::getenv(kEnvVarNameHostname);
     const auto username = std::getenv(kEnvVarNameUsername);
     const auto password = std::getenv(kEnvVarNamePassword);
 
     // If any are already set, cache them in private members.
-    if (address) {
-      spot_address_env_var_cached_ = address;
+    if (hostname) {
+      spot_hostname_env_var_cached_ = hostname;
     }
     if (username) {
       spot_username_env_var_cached_ = username;
@@ -55,7 +55,7 @@ class RclcppParameterInterfaceEnvVarTest : public RclcppParameterInterfaceTest {
     }
 
     // Unset the values of the environment variables to create a clean environment for the test cases.
-    unsetenv(kEnvVarNameAddress);
+    unsetenv(kEnvVarNameHostname);
     unsetenv(kEnvVarNameUsername);
     unsetenv(kEnvVarNamePassword);
 
@@ -67,10 +67,10 @@ class RclcppParameterInterfaceEnvVarTest : public RclcppParameterInterfaceTest {
     RclcppTest::TearDown();
 
     // Restore any cached environment variables.
-    if (spot_address_env_var_cached_) {
+    if (spot_hostname_env_var_cached_) {
       // Calling setenv with the last parameter == 1 replaces any existing value of the environment variable with the
       // new value.
-      setenv(kEnvVarNameAddress, spot_address_env_var_cached_->c_str(), 1);
+      setenv(kEnvVarNameHostname, spot_hostname_env_var_cached_->c_str(), 1);
     }
     if (spot_username_env_var_cached_) {
       setenv(kEnvVarNameUsername, spot_username_env_var_cached_->c_str(), 1);
@@ -83,7 +83,7 @@ class RclcppParameterInterfaceEnvVarTest : public RclcppParameterInterfaceTest {
   std::shared_ptr<rclcpp::Node> node_;
 
  private:
-  std::optional<std::string> spot_address_env_var_cached_;
+  std::optional<std::string> spot_hostname_env_var_cached_;
   std::optional<std::string> spot_username_env_var_cached_;
   std::optional<std::string> spot_password_env_var_cached_;
 };
@@ -122,9 +122,9 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithDefaultNamespace) {
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromEnvVars) {
-  // GIVEN we declare environment variables for Spot's address, username, and password
-  constexpr auto address_env_var = "10.0.20.5";
-  setenv(kEnvVarNameAddress, address_env_var, 1);
+  // GIVEN we declare environment variables for Spot's hostname, username, and password
+  constexpr auto hostname_env_var = "10.0.20.5";
+  setenv(kEnvVarNameHostname, hostname_env_var, 1);
   constexpr auto username_env_var = "some_username";
   setenv(kEnvVarNameUsername, username_env_var, 1);
   constexpr auto password_env_var = "very_secure_password";
@@ -133,17 +133,17 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromEnvVars) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
-  // WHEN we call getAddress(), getUsername(), and getPassword()
+  // WHEN we call getHostname(), getUsername(), and getPassword()
   // THEN the returned values match the values we set on the environment variables
-  EXPECT_THAT(parameter_interface.getAddress(), StrEq(address_env_var));
+  EXPECT_THAT(parameter_interface.getHostname(), StrEq(hostname_env_var));
   EXPECT_THAT(parameter_interface.getUsername(), StrEq(username_env_var));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq(password_env_var));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   // GIVEN we set all Spot config parameters to values which are different than the default values
-  constexpr auto address_parameter = "192.168.100.10";
-  node_->declare_parameter("address", address_parameter);
+  constexpr auto hostname_parameter = "192.168.100.10";
+  node_->declare_parameter("hostname", hostname_parameter);
   constexpr auto username_parameter = "a_different_username";
   node_->declare_parameter("username", username_parameter);
   constexpr auto password_parameter = "other_password";
@@ -164,7 +164,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
 
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN the returned values all match the values we used when declaring the parameters
-  EXPECT_THAT(parameter_interface.getAddress(), StrEq(address_parameter));
+  EXPECT_THAT(parameter_interface.getHostname(), StrEq(hostname_parameter));
   EXPECT_THAT(parameter_interface.getUsername(), StrEq(username_parameter));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq(password_parameter));
   EXPECT_THAT(parameter_interface.getRGBImageQuality(), Eq(rgb_image_quality_parameter));
@@ -175,17 +175,17 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameters) {
-  // GIVEN we declare a environment variables for Spot's address, username, and password
-  constexpr auto address_env_var = "10.0.20.5";
-  setenv(kEnvVarNameAddress, address_env_var, 1);
+  // GIVEN we declare a environment variables for Spot's hostname, username, and password
+  constexpr auto hostname_env_var = "10.0.20.5";
+  setenv(kEnvVarNameHostname, hostname_env_var, 1);
   constexpr auto username_env_var = "some_username";
   setenv(kEnvVarNameUsername, username_env_var, 1);
   constexpr auto password_env_var = "very_secure_password";
   setenv(kEnvVarNamePassword, password_env_var, 1);
 
-  // GIVEN we set parameters with different values for Spot's address, username, and password
-  constexpr auto address_parameter = "192.168.100.10";
-  node_->declare_parameter("address", address_parameter);
+  // GIVEN we set parameters with different values for Spot's hostname, username, and password
+  constexpr auto hostname_parameter = "192.168.100.10";
+  node_->declare_parameter("hostname", hostname_parameter);
   constexpr auto username_parameter = "a_different_username";
   node_->declare_parameter("username", username_parameter);
   constexpr auto password_parameter = "other_password";
@@ -194,10 +194,10 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameter
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
-  // WHEN we call getAddress(), getUsername(), and getPassword()
+  // WHEN we call getHostname(), getUsername(), and getPassword()
   // THEN the returned values match the values we used when declaring the environment variables, since we expect that
   // the environment variables take precedence over the parameters.
-  EXPECT_THAT(parameter_interface.getAddress(), StrEq(address_env_var));
+  EXPECT_THAT(parameter_interface.getHostname(), StrEq(hostname_env_var));
   EXPECT_THAT(parameter_interface.getUsername(), StrEq(username_env_var));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq(password_env_var));
 }
@@ -209,7 +209,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
 
   // WHEN we get the values from the parameter interface
   // THEN the returned values match the expected default values
-  EXPECT_THAT(parameter_interface.getAddress(), StrEq("10.0.0.3"));
+  EXPECT_THAT(parameter_interface.getHostname(), StrEq("10.0.0.3"));
   EXPECT_THAT(parameter_interface.getUsername(), StrEq("user"));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq("password"));
   EXPECT_THAT(parameter_interface.getRGBImageQuality(), Eq(70.0));

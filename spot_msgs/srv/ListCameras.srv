@@ -1,4 +1,4 @@
 ---
 bool success
 string message
-bosdyn_msgs/Camera[] cameras
+bosdyn_spot_cam_api_msgs/Camera[] cameras

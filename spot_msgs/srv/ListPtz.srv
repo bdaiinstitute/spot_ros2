@@ -1,4 +1,4 @@
 ---
 bool success
 string message
-bosdyn_msgs/PtzDescription[] descriptions
+bosdyn_spot_cam_api_msgs/PtzDescription[] descriptions

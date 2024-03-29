@@ -61,7 +61,7 @@ class StateMiddlewareHandle : public StatePublisher::MiddlewareHandle {
   std::shared_ptr<rclcpp::Publisher<nav_msgs::msg::Odometry>> odom_publisher_;
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::PowerState>> power_state_publisher_;
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::SystemFaultState>> system_faults_publisher_;
-  std::shared_ptr<rclcpp::Publisher<bosdyn_msgs::msg::ManipulatorState>> manipulator_state_publisher_;
+  std::shared_ptr<rclcpp::Publisher<bosdyn_api_msgs::msg::ManipulatorState>> manipulator_state_publisher_;
   std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>> end_effector_force_publisher_;
   std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::BehaviorFaultState>> behavior_fault_state_publisher_;
 };

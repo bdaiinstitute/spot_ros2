@@ -11,6 +11,8 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
+  bosdyn_api_msgs
+  bosdyn_spot_api_msgs
   cv_bridge
   geometry_msgs
   rclcpp

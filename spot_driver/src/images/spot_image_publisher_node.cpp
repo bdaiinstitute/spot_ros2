@@ -16,13 +16,13 @@ namespace spot_ros2::images {
 SpotImagePublisherNode::SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api,
                                                std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle)
     : node_{mw_handle->node()}, spot_api_{std::move(spot_api)} {
-  const auto address = mw_handle->parameter_interface()->getAddress();
+  const auto hostname = mw_handle->parameter_interface()->getHostname();
   const auto robot_name = mw_handle->parameter_interface()->getSpotName();
   const auto username = mw_handle->parameter_interface()->getUsername();
   const auto password = mw_handle->parameter_interface()->getPassword();
 
   // create and authenticate robot
-  if (const auto create_robot_result = spot_api_->createRobot(address, robot_name); !create_robot_result) {
+  if (const auto create_robot_result = spot_api_->createRobot(hostname, robot_name); !create_robot_result) {
     const auto error_msg{std::string{"Failed to create interface to robot: "}.append(create_robot_result.error())};
     mw_handle->logger_interface()->logError(error_msg);
     throw std::runtime_error(error_msg);

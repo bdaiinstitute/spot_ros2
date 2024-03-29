@@ -1,11 +1,13 @@
-ARM=false
+ARCH="amd64"
+SDK_VERSION="4.0.0"
+MSG_VERSION="${SDK_VERSION}-2"
 ROS_DISTRO=humble
 HELP=$'--arm64: Installs ARM64 version'
 REQUIREMENTS_FILE=spot_wrapper/requirements.txt
 
 while true; do
   case "$1" in
-    --arm64 ) ARM=true; shift ;;
+    --arm64 ) ARCH="arm64"; shift ;;
     -h | --help ) echo "$HELP"; exit 0;;
     -- ) shift; break ;;
     * ) break ;;
@@ -29,25 +31,13 @@ sudo apt-get install -y python3-distutils
 sudo apt-get install -y python3-apt
 sudo pip3 install --force-reinstall -v "setuptools==59.6.0"
 
+# Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
+wget -q -O /tmp/ros-humble-bosdyn_msgs_${MSG_VERSION}-jammy_${ARCH}.run https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/${MSG_VERSION}/ros-humble-bosdyn_msgs_${MSG_VERSION}-jammy_${ARCH}.run
+chmod +x /tmp/ros-humble-bosdyn_msgs_${MSG_VERSION}-jammy_${ARCH}.run
+sudo /tmp/ros-humble-bosdyn_msgs_${MSG_VERSION}-jammy_${ARCH}.run
+rm /tmp/ros-humble-bosdyn_msgs_${MSG_VERSION}-jammy_${ARCH}.run
 
-if $ARM; then
-    # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
-    wget -q -O /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_arm64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.3.2-ARM64/ros-humble-bosdyn-msgs_3.3.2-0jammy_arm64.deb
-    sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_arm64.deb
-    rm /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_arm64.deb
-
-    # Install spot-cpp-sdk
-    wget -q -O /tmp/spot-cpp-sdk_3.3.2_arm64.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/3.3.2/spot-cpp-sdk_3.3.2_arm64.deb
-    sudo dpkg -i /tmp/spot-cpp-sdk_3.3.2_arm64.deb
-    rm /tmp/spot-cpp-sdk_3.3.2_arm64.deb
-else
-    # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
-    wget -q -O /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/v3.3.2-AMD64/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb
-    sudo dpkg -i /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb
-    rm /tmp/ros-humble-bosdyn-msgs_3.3.2-0jammy_amd64.deb
-
-    # Install spot-cpp-sdk
-    wget -q -O /tmp/spot-cpp-sdk_3.3.2_amd64.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/3.3.2/spot-cpp-sdk_3.3.2_amd64.deb
-    sudo dpkg -i /tmp/spot-cpp-sdk_3.3.2_amd64.deb
-    rm /tmp/spot-cpp-sdk_3.3.2_amd64.deb
-fi
+# Install spot-cpp-sdk
+wget -q -O /tmp/spot-cpp-sdk_${SDK_VERSION}_${ARCH}.deb https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/${SDK_VERSION}/spot-cpp-sdk_${SDK_VERSION}_${ARCH}.deb
+sudo dpkg -i /tmp/spot-cpp-sdk_${SDK_VERSION}_${ARCH}.deb
+rm /tmp/spot-cpp-sdk_${SDK_VERSION}_${ARCH}.deb

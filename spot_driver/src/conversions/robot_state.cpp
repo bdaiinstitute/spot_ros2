@@ -134,6 +134,12 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
     if (transform.parent_frame_name().empty()) {
       continue;
     }
+
+    // These frames are duplicates of arm_link_wr1 (published with robot state) and shouldn't be added to the TF tree!
+    if ((frame_id == "arm0.link_wr1") || (frame_id == "link_wr1")) {
+      continue;
+    }
+
     const auto parent_frame_name = transform.parent_frame_name().find('/') == std::string::npos
                                        ? prefix + transform.parent_frame_name()
                                        : transform.parent_frame_name();
@@ -254,30 +260,39 @@ std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosd
   return system_fault_state;
 }
 
-std::optional<bosdyn_msgs::msg::ManipulatorState> getManipulatorState(const ::bosdyn::api::RobotState& robot_state) {
+std::optional<bosdyn_api_msgs::msg::ManipulatorState> getManipulatorState(
+    const ::bosdyn::api::RobotState& robot_state) {
+  using ManipulatorState = bosdyn_api_msgs::msg::ManipulatorState;
+
   if (!robot_state.has_manipulator_state()) {
     return std::nullopt;
   }
 
   const auto& manipulator_state = robot_state.manipulator_state();
 
-  bosdyn_msgs::msg::ManipulatorState manipulator_state_msg;
+  ManipulatorState manipulator_state_msg;
+  manipulator_state_msg.has_field = 0u;
 
   manipulator_state_msg.gripper_open_percentage = manipulator_state.gripper_open_percentage();
   manipulator_state_msg.is_gripper_holding_item = manipulator_state.is_gripper_holding_item();
 
-  convertToRos(manipulator_state.estimated_end_effector_force_in_hand(),
-               manipulator_state_msg.estimated_end_effector_force_in_hand);
-  manipulator_state_msg.estimated_end_effector_force_in_hand_is_set =
-      manipulator_state.has_estimated_end_effector_force_in_hand();
+  if (manipulator_state.has_estimated_end_effector_force_in_hand()) {
+    convertToRos(manipulator_state.estimated_end_effector_force_in_hand(),
+                 manipulator_state_msg.estimated_end_effector_force_in_hand);
+    manipulator_state_msg.has_field |= ManipulatorState::ESTIMATED_END_EFFECTOR_FORCE_IN_HAND_FIELD_SET;
+  }
 
   manipulator_state_msg.stow_state.value = manipulator_state.stow_state();
 
-  convertToRos(manipulator_state.velocity_of_hand_in_vision(), manipulator_state_msg.velocity_of_hand_in_vision);
-  manipulator_state_msg.velocity_of_hand_in_vision_is_set = manipulator_state.has_velocity_of_hand_in_vision();
+  if (manipulator_state.has_velocity_of_hand_in_vision()) {
+    convertToRos(manipulator_state.velocity_of_hand_in_vision(), manipulator_state_msg.velocity_of_hand_in_vision);
+    manipulator_state_msg.has_field |= ManipulatorState::VELOCITY_OF_HAND_IN_VISION_FIELD_SET;
+  }
 
-  convertToRos(manipulator_state.velocity_of_hand_in_odom(), manipulator_state_msg.velocity_of_hand_in_odom);
-  manipulator_state_msg.velocity_of_hand_in_odom_is_set = manipulator_state.has_velocity_of_hand_in_odom();
+  if (manipulator_state.has_velocity_of_hand_in_odom()) {
+    convertToRos(manipulator_state.velocity_of_hand_in_odom(), manipulator_state_msg.velocity_of_hand_in_odom);
+    manipulator_state_msg.has_field |= ManipulatorState::VELOCITY_OF_HAND_IN_ODOM_FIELD_SET;
+  }
 
   manipulator_state_msg.carry_state.value = manipulator_state.carry_state();
   return manipulator_state_msg;
