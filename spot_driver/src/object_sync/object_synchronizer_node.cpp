@@ -64,7 +64,7 @@ void ObjectSynchronizerNode::initialize(std::unique_ptr<SpotApi> spot_api,
                                         std::unique_ptr<ClockInterfaceBase> clock_interface) {
   spot_api_ = std::move(spot_api);
 
-  const auto address = parameter_interface->getAddress();
+  const auto address = parameter_interface->getHostname();
   const auto robot_name = parameter_interface->getSpotName();
   const auto username = parameter_interface->getUsername();
   const auto password = parameter_interface->getPassword();
