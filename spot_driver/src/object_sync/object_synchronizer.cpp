@@ -318,6 +318,16 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
   });
 }
 
+void ObjectSynchronizer::addManagedFrame(const std::string& frame_id) {
+  std::lock_guard lock{managed_frames_mutex_};
+  managed_frames_.insert(frame_id);
+}
+
+std::set<std::string, std::less<>> ObjectSynchronizer::getManagedFrames() const {
+  std::lock_guard lock{managed_frames_mutex_};
+  return managed_frames_;
+}
+
 void ObjectSynchronizer::syncWorldObjects() {
   if (!world_object_client_interface_) {
     logger_interface_->logError("World object interface not initialized.");
@@ -412,9 +422,6 @@ void ObjectSynchronizer::syncWorldObjects() {
       logger_interface_->logWarn(std::string("Failed to modify world object: ").append(response.error()));
       continue;
     }
-    logger_interface_->logInfo(
-        std::string("Response after modifying world object: ").append(toString(response->status())));
-
     if (response->status() != ::bosdyn::api::MutateWorldObjectResponse::STATUS_OK) {
       logger_interface_->logWarn(std::string("Failed to modify world object: ").append(toString(response->status())));
       continue;
@@ -422,10 +429,7 @@ void ObjectSynchronizer::syncWorldObjects() {
 
     // After successfully adding new WorldObject, add the frame ID for this object to the list of frames whose
     // corresponding world objects originate in this node.
-    {
-      std::lock_guard lock{managed_frames_mutex_};
-      managed_frames_.insert(child_frame_id);
-    }
+    addManagedFrame(child_frame_id);
   }
 }
 
@@ -451,12 +455,10 @@ void ObjectSynchronizer::broadcastWorldObjectTransforms() {
                  });
 
   // Create a set of names of objects which are not managed by this node
+  const auto managed_frames = getManagedFrames();
   std::set<std::string, std::less<>> non_managed_objects;
-  {
-    std::lock_guard lock{managed_frames_mutex_};
-    std::set_difference(all_object_names.cbegin(), all_object_names.cend(), managed_frames_.cbegin(),
-                        managed_frames_.cend(), std::inserter(non_managed_objects, non_managed_objects.end()));
-  }
+  std::set_difference(all_object_names.cbegin(), all_object_names.cend(), managed_frames.cbegin(),
+                      managed_frames.cend(), std::inserter(non_managed_objects, non_managed_objects.end()));
 
   for (const auto& object : response->world_objects()) {
     // Skip publishing TF for objects this node does not manage

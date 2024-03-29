@@ -9,6 +9,7 @@
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/transform.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 #include <spot_driver/api/time_sync_api.hpp>
@@ -66,6 +67,11 @@ inline std::ostream& operator<<(std::ostream& os, const geometry_msgs::msg::Quat
 }
 
 inline std::ostream& operator<<(std::ostream& os, const geometry_msgs::msg::Transform& obj) {
+  geometry_msgs::msg::to_flow_style_yaml(obj, os);
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const geometry_msgs::msg::TransformStamped& obj) {
   geometry_msgs::msg::to_flow_style_yaml(obj, os);
   return os;
 }

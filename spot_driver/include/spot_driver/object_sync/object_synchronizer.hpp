@@ -52,6 +52,23 @@ class ObjectSynchronizer {
                      std::unique_ptr<TimerInterfaceBase> tf_broadcaster_timer,
                      std::unique_ptr<ClockInterfaceBase> clock_interface);
 
+  /**
+   * @brief Get the frame IDs of TF frames which have been added to Spot's world model by ObjectSynchronizer. Locks
+   * managed_frames_mutex_.
+   * @return Returns a copy of the contents of managed_frames_.
+   */
+  std::set<std::string, std::less<>> getManagedFrames() const;
+
+ protected:
+  /**
+   * @brief Add a frame ID to managed_frames_. Locks managed_frames_mutex_.
+   * @details This function is marked protected because it should not be part of ObjectSynchronizer's public API, but we
+   * do want to be able to manually add managed frames while testing ObjectSynchronizer.
+   *
+   * @param frame_id The frame ID to add to managed_frames_.
+   */
+  void addManagedFrame(const std::string& frame_id);
+
  private:
   /**
    * @brief Timer callback function triggered by world_object_update_timer_.
@@ -72,7 +89,7 @@ class ObjectSynchronizer {
   std::string preferred_base_frame_with_prefix_;
 
   /** @brief Protects access to managed_frames_, since it can be read and modified from multiple threads. */
-  std::mutex managed_frames_mutex_;
+  mutable std::mutex managed_frames_mutex_;
   /** @brief Stores the frame IDs of all TF frames which have been added to Spot's world model by this class. */
   std::set<std::string, std::less<>> managed_frames_;
 
