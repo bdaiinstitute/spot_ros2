@@ -8,7 +8,7 @@
 
 namespace spot_ros2 {
 /**
- * @brief Defines an interface for a class that calls a callback function at a specified rate.
+ * @brief Defines an interface for a class that gets the current timestamp from a clock.
  */
 class ClockInterfaceBase {
  public:

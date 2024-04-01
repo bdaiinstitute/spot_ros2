@@ -74,7 +74,6 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
     return tl::make_unexpected("Failed to create Inverse Kinematic client.");
   }
   kinematicApi_ = std::make_shared<DefaultKinematicApi>(kinematic_api_result.response);
-
   const auto world_object_client_result = robot_->EnsureServiceClient<::bosdyn::client::WorldObjectClient>(
       ::bosdyn::client::WorldObjectClient::GetDefaultServiceName());
   if (!world_object_client_result.status) {

@@ -10,13 +10,13 @@
 
 namespace spot_ros2 {
 /**
- * @brief Implements TimerInterfaceBase to use rclcpp's WallTimer.
+ * @brief Implements ClockInterfaceBase to use the clock interface of a rclcpp Node.
  */
 class RclcppClockInterface : public ClockInterfaceBase {
  public:
   /**
-   * @brief The constructor for RclcppWallTimerInterface.
-   * @param node A shared_ptr to a rclcpp node. RclcppWallTimerInterface shares ownership of the shared_ptr.
+   * @brief The constructor for RclcppClockInterface.
+   * @param node A shared_ptr to a rclcpp Node. RclcppClockInterface shares ownership of the shared_ptr.
    */
   explicit RclcppClockInterface(
       const std::shared_ptr<rclcpp::node_interfaces::NodeClockInterface>& node_clock_interface);

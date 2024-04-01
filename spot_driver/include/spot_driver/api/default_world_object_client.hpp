@@ -10,8 +10,13 @@
 #include <tl_expected/expected.hpp>
 
 namespace spot_ros2 {
+/** @brief Implements WorldObjectClientInterface for the Spot API. */
 class DefaultWorldObjectClient : public WorldObjectClientInterface {
  public:
+  /**
+   * @brief Constructor for DefaultWorldObjectClient.
+   * @param client Pointer to a WorldObjectClient created by the Spot API.
+   */
   explicit DefaultWorldObjectClient(bosdyn::client::WorldObjectClient* client);
   tl::expected<::bosdyn::api::ListWorldObjectResponse, std::string> listWorldObjects(
       ::bosdyn::api::ListWorldObjectRequest& request) const override;
@@ -19,6 +24,10 @@ class DefaultWorldObjectClient : public WorldObjectClientInterface {
       ::bosdyn::api::MutateWorldObjectRequest& request) const override;
 
  private:
+  /**
+   * @brief Pointer to a WorldObjectClient created by the Spot API and passed in during construction.
+   * DefaultWorldObjectClient must not delete this pointer, since it does not take ownership.
+   */
   bosdyn::client::WorldObjectClient* client_;
 };
 }  // namespace spot_ros2

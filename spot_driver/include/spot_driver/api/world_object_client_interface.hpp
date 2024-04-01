@@ -11,6 +11,14 @@ namespace spot_ros2 {
 
 class WorldObjectClientInterface {
  public:
+  WorldObjectClientInterface() = default;
+  // Forbid copying or moving classes derived from WorldObjectClientInterface. This is because the implementation of
+  // this class for the Spot API contains a pointer to a specific instance of an API client.
+  WorldObjectClientInterface(WorldObjectClientInterface&& other) = delete;
+  WorldObjectClientInterface(const WorldObjectClientInterface&) = delete;
+  WorldObjectClientInterface& operator=(WorldObjectClientInterface&& other) = delete;
+  WorldObjectClientInterface& operator=(const WorldObjectClientInterface&) = delete;
+
   virtual ~WorldObjectClientInterface() = default;
 
   virtual tl::expected<::bosdyn::api::ListWorldObjectResponse, std::string> listWorldObjects(

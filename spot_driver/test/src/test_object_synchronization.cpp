@@ -10,9 +10,11 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/timestamp.pb.h>
+#include <rcl/time.h>
 #include <geometry_msgs/msg/detail/transform_stamped__struct.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <memory>
+#include <rclcpp/time.hpp>
 #include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
@@ -184,6 +186,9 @@ TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
     mock_tf_broadcaster_timer_ptr->onSetTimer(cb);
   });
 
+  auto* clock_ptr = mock_clock_interface.get();
+  ON_CALL(*clock_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
+
   // GIVEN the TF listener has info about two frames. One frame is an internal Spot frame, and the other frame is from a
   // different source.
   // THEN we make one request for known frame IDs
@@ -233,13 +238,15 @@ TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
   EXPECT_CALL(*logger_ptr, logError).Times(0);
 
   // GIVEN the ObjectSynchronizer has been created
+  // Note: for this test, this must only be called after registering all expected calls with the mocks
   createObjectSynchronizer();
-
-  EXPECT_THAT(object_synchronizer->getManagedFrames(), IsEmpty());
+  // GIVEN before the callback to sync world objects is triggered, the ObjectSynchronizer has no managed frames
+  ASSERT_THAT(object_synchronizer->getManagedFrames(), IsEmpty());
 
   // WHEN the timer callback is triggered
   mock_world_object_update_timer_ptr->trigger();
 
+  // THEN the ObjectSynchronizer is managing a single frame matching the external frame ID which was published via TF.
   EXPECT_THAT(object_synchronizer->getManagedFrames(), AllOf(SizeIs(1), Contains(kExternalFrameId)));
 }
 
@@ -249,6 +256,9 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   ON_CALL(*mock_world_object_update_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
     mock_world_object_update_timer_ptr->onSetTimer(cb);
   });
+
+  auto* clock_ptr = mock_clock_interface.get();
+  ON_CALL(*clock_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
 
   // GIVEN the TF listener has info about two frames. One frame is an internal Spot frame, and the other frame is from a
   // different source.
@@ -300,9 +310,8 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   EXPECT_CALL(*logger_ptr, logError).Times(0);
 
   // GIVEN the ObjectSynchronizer has been created
-  // Note: this needs to happen after registering all expected calls with the mocks
+  // Note: for this test, this must only be called after registering all expected calls with the mocks
   createObjectSynchronizer();
-
   // GIVEN before the callback to sync world objects is triggered, the ObjectSynchronizer has no managed frames
   EXPECT_THAT(object_synchronizer->getManagedFrames(), IsEmpty());
 
