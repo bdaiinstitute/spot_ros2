@@ -16,6 +16,7 @@
 #include <memory>
 #include <rclcpp/time.hpp>
 #include <spot_driver/fake/fake_parameter_interface.hpp>
+#include <spot_driver/mock/mock_clock_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
@@ -32,7 +33,6 @@
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <tl_expected/expected.hpp>
 #include <utility>
-#include "spot_driver/mock/mock_clock_interface.hpp"
 
 namespace {
 using ::testing::_;
@@ -90,6 +90,9 @@ inline const auto kMutateObjectResponseSuccess = [] {
   response.set_status(::bosdyn::api::MutateWorldObjectResponse_Status::MutateWorldObjectResponse_Status_STATUS_OK);
   return response;
 }();
+
+constexpr auto kExternalFrameId = "some_external_frame";
+constexpr auto kErrorMessage = "some error message";
 }  // namespace
 
 namespace spot_ros2::test {
@@ -138,6 +141,13 @@ class ObjectSynchronizerTest : public ::testing::Test {
     mock_world_object_update_timer = std::make_unique<MockTimerInterface>();
     mock_tf_broadcaster_timer = std::make_unique<MockTimerInterface>();
     mock_clock_interface = std::make_unique<MockClockInterface>();
+
+    mock_logger_interface_ptr = mock_logger_interface.get();
+    mock_tf_broadcaster_interface_ptr = mock_tf_broadcaster_interface.get();
+    mock_tf_listener_interface_ptr = mock_tf_listener_interface.get();
+    mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
+    mock_tf_broadcaster_timer_ptr = mock_tf_broadcaster_timer.get();
+    mock_clock_interface_ptr = mock_clock_interface.get();
   }
 
   void createObjectSynchronizer() {
@@ -148,11 +158,22 @@ class ObjectSynchronizerTest : public ::testing::Test {
         std::move(mock_tf_broadcaster_timer), std::move(mock_clock_interface));
   }
 
+  void registerTimerCallbacks() const {
+    ON_CALL(*mock_world_object_update_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
+      mock_world_object_update_timer_ptr->onSetTimer(cb);
+    });
+
+    ON_CALL(*mock_tf_broadcaster_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
+      mock_tf_broadcaster_timer_ptr->onSetTimer(cb);
+    });
+  }
+
   std::shared_ptr<MockWorldObjectClient> mock_world_object_client;
   std::shared_ptr<MockTimeSyncApi> mock_time_sync_api;
 
   std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
 
+  // Don't attempt to access these after createObjectSynchronizer() is called, since they get moved in that function
   std::unique_ptr<MockLoggerInterface> mock_logger_interface;
   std::unique_ptr<MockTfInterface> mock_tf_broadcaster_interface;
   std::unique_ptr<MockTfListenerInterface> mock_tf_listener_interface;
@@ -160,15 +181,21 @@ class ObjectSynchronizerTest : public ::testing::Test {
   std::unique_ptr<MockTimerInterface> mock_tf_broadcaster_timer;
   std::unique_ptr<MockClockInterface> mock_clock_interface;
 
+  // Use these pointers to interact with the mocks during tests
+  MockLoggerInterface* mock_logger_interface_ptr = nullptr;
+  MockTfInterface* mock_tf_broadcaster_interface_ptr = nullptr;
+  MockTfListenerInterface* mock_tf_listener_interface_ptr = nullptr;
+  MockTimerInterface* mock_world_object_update_timer_ptr = nullptr;
+  MockTimerInterface* mock_tf_broadcaster_timer_ptr = nullptr;
+  MockClockInterface* mock_clock_interface_ptr = nullptr;
+
   std::unique_ptr<ObjectSynchronizerForTesting> object_synchronizer;
 };
 
 TEST_F(ObjectSynchronizerTest, InitSucceeds) {
   // THEN the timer interface's setTimer function is called once with the expected timer period
-  auto* mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
   EXPECT_CALL(*mock_world_object_update_timer_ptr, setTimer(std::chrono::duration<double>{1.0}, _));
-  auto* mock_tf_update_timer_ptr = mock_tf_broadcaster_timer.get();
-  EXPECT_CALL(*mock_tf_update_timer_ptr, setTimer(std::chrono::duration<double>{0.1}, _));
+  EXPECT_CALL(*mock_tf_broadcaster_timer, setTimer(std::chrono::duration<double>{0.1}, _));
 
   // WHEN the ObjectSynchronizer is created
   createObjectSynchronizer();
@@ -176,48 +203,34 @@ TEST_F(ObjectSynchronizerTest, InitSucceeds) {
 
 TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
   // GIVEN the timer interface's setTimer function registers the internal callback function
-  auto* mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
-  ON_CALL(*mock_world_object_update_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
-    mock_world_object_update_timer_ptr->onSetTimer(cb);
-  });
+  registerTimerCallbacks();
 
-  auto* mock_tf_broadcaster_timer_ptr = mock_tf_broadcaster_timer.get();
-  ON_CALL(*mock_tf_broadcaster_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
-    mock_tf_broadcaster_timer_ptr->onSetTimer(cb);
-  });
-
-  auto* clock_ptr = mock_clock_interface.get();
-  ON_CALL(*clock_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
+  ON_CALL(*mock_clock_interface_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
 
   // GIVEN the TF listener has info about two frames. One frame is an internal Spot frame, and the other frame is from a
   // different source.
   // THEN we make one request for known frame IDs
-  constexpr auto kExternalFrameId = "some_external_frame";
-  auto* tf_listener_interface_ptr = mock_tf_listener_interface.get();
-  EXPECT_CALL(*tf_listener_interface_ptr, getAllFrameNames)
+  EXPECT_CALL(*mock_tf_listener_interface_ptr, getAllFrameNames)
       .WillOnce(Return(std::vector<std::string>{"MyRobot/body", kExternalFrameId}));
 
   // GIVEN the TF listener always returns identity transforms
   // THEN we look up the transform from Spot's odom frame to the frame that was from a non-Spot source
-  EXPECT_CALL(*tf_listener_interface_ptr, lookupTransform("MyRobot/odom", kExternalFrameId, _, _))
+  EXPECT_CALL(*mock_tf_listener_interface_ptr, lookupTransform("MyRobot/odom", kExternalFrameId, _, _))
       .WillOnce(Return(
           tl::expected<geometry_msgs::msg::TransformStamped, std::string>{geometry_msgs::msg::TransformStamped{}}));
-
-  auto* world_object_client_interface_ptr = mock_world_object_client.get();
 
   // GIVEN Spot's list of world objects does not include any apriltags or other world objects
   // THEN we make two separate requests to list world objects: one to get info about apriltags, and the second to get
   // info about other world objects
   ::bosdyn::api::ListWorldObjectResponse list_apriltags_response;
   ::bosdyn::api::ListWorldObjectResponse list_objects_response;
-  EXPECT_CALL(*world_object_client_interface_ptr, listWorldObjects)
+  EXPECT_CALL(*mock_world_object_client, listWorldObjects)
       .WillOnce(Return(list_apriltags_response))
       .WillOnce(Return(list_objects_response));
 
   /*
   OTHER IMPORTANT THINGS TO TEST:
   - the object is of type DrawableFrame
-  - we can handle the TF listener failing to look up a transform
   - we can handle the WorldObject client returning one of several possible failure cases
   */
 
@@ -226,16 +239,15 @@ TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
   // AND the new object's name matches the frame ID from the external source
   // AND the new object's frame tree snapshot is valid
   // AND the new object's frame tree snapshot adds a transform from the base frame to the new frame ID
-  EXPECT_CALL(*world_object_client_interface_ptr,
+  EXPECT_CALL(*mock_world_object_client,
               mutateWorldObject(AllOf(MutationAddsObject(), MutationTargetsObjectWhoseNameIs(kExternalFrameId),
                                       MutationFrameTreeSnapshotIsValid(),
                                       MutationTransformChildAndParentFramesAre("odom", kExternalFrameId))))
       .WillOnce(
           Return(tl::expected<::bosdyn::api::MutateWorldObjectResponse, std::string>{kMutateObjectResponseSuccess}));
 
-  auto* logger_ptr = mock_logger_interface.get();
-  EXPECT_CALL(*logger_ptr, logWarn).Times(0);
-  EXPECT_CALL(*logger_ptr, logError).Times(0);
+  EXPECT_CALL(*mock_logger_interface_ptr, logWarn).Times(0);
+  EXPECT_CALL(*mock_logger_interface_ptr, logError).Times(0);
 
   // GIVEN the ObjectSynchronizer has been created
   // Note: for this test, this must only be called after registering all expected calls with the mocks
@@ -252,26 +264,20 @@ TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
 
 TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   // GIVEN the timer interface's setTimer function registers the internal callback function to sync the world objects
-  auto* mock_world_object_update_timer_ptr = mock_world_object_update_timer.get();
-  ON_CALL(*mock_world_object_update_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
-    mock_world_object_update_timer_ptr->onSetTimer(cb);
-  });
+  registerTimerCallbacks();
 
-  auto* clock_ptr = mock_clock_interface.get();
-  ON_CALL(*clock_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
+  ON_CALL(*mock_clock_interface_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
 
   // GIVEN the TF listener has info about two frames. One frame is an internal Spot frame, and the other frame is from a
   // different source.
   // THEN we make one request for known frame IDs
-  constexpr auto kExternalFrameId = "some_external_frame";
   constexpr int32_t kObjectId = 100;
-  auto* tf_listener_interface_ptr = mock_tf_listener_interface.get();
-  EXPECT_CALL(*tf_listener_interface_ptr, getAllFrameNames)
+  EXPECT_CALL(*mock_tf_listener_interface_ptr, getAllFrameNames)
       .WillOnce(Return(std::vector<std::string>{"MyRobot/body", kExternalFrameId}));
 
   // GIVEN the TF listener always returns identity transforms
   // THEN we look up the transform from Spot's odom frame to the frame that was from a non-Spot source
-  EXPECT_CALL(*tf_listener_interface_ptr, lookupTransform("MyRobot/odom", kExternalFrameId, _, _))
+  EXPECT_CALL(*mock_tf_listener_interface_ptr, lookupTransform("MyRobot/odom", kExternalFrameId, _, _))
       .WillOnce(Return(
           tl::expected<geometry_msgs::msg::TransformStamped, std::string>{geometry_msgs::msg::TransformStamped{}}));
 
@@ -286,8 +292,7 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   addRootFrame(object->mutable_transforms_snapshot(), "odom");
   // GIVEN the body frame is at a nonzero pose relative to the odom frame
   addTransform(object->mutable_transforms_snapshot(), kExternalFrameId, "odom", 1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0);
-  auto* world_object_client_interface_ptr = mock_world_object_client.get();
-  EXPECT_CALL(*world_object_client_interface_ptr, listWorldObjects)
+  EXPECT_CALL(*mock_world_object_client, listWorldObjects)
       .WillOnce(Return(list_apriltags_response))
       .WillOnce(Return(list_objects_response));
 
@@ -297,7 +302,7 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   // AND the target object's ID matches the ID of the existing object
   // AND the mutation applies a valid frame tree snapshot
   // AND the mutation's frame tree snapshot adds a transform from the base frame to the new frame ID
-  EXPECT_CALL(*world_object_client_interface_ptr,
+  EXPECT_CALL(*mock_world_object_client,
               mutateWorldObject(AllOf(MutationChangesObject(), MutationTargetsObjectWhoseNameIs(kExternalFrameId),
                                       MutationTargetsObjectWhoseIdIs(kObjectId), MutationFrameTreeSnapshotIsValid(),
                                       MutationTransformChildAndParentFramesAre("odom", kExternalFrameId))))
@@ -305,9 +310,8 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
           Return(tl::expected<::bosdyn::api::MutateWorldObjectResponse, std::string>{kMutateObjectResponseSuccess}));
 
   // THEN no warning or error messages are logged
-  auto* logger_ptr = mock_logger_interface.get();
-  EXPECT_CALL(*logger_ptr, logWarn).Times(0);
-  EXPECT_CALL(*logger_ptr, logError).Times(0);
+  EXPECT_CALL(*mock_logger_interface_ptr, logWarn).Times(0);
+  EXPECT_CALL(*mock_logger_interface_ptr, logError).Times(0);
 
   // GIVEN the ObjectSynchronizer has been created
   // Note: for this test, this must only be called after registering all expected calls with the mocks
@@ -322,12 +326,48 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
   EXPECT_THAT(object_synchronizer->getManagedFrames(), AllOf(SizeIs(1), Contains(kExternalFrameId)));
 }
 
+TEST_F(ObjectSynchronizerTest, TfLookupError) {
+  // GIVEN the timer interface's setTimer function registers the internal callback function
+  registerTimerCallbacks();
+
+  ON_CALL(*mock_clock_interface_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
+
+  // GIVEN the TF listener has info about one frame from a non-Spot source
+  ON_CALL(*mock_tf_listener_interface_ptr, getAllFrameNames)
+      .WillByDefault(Return(std::vector<std::string>{kExternalFrameId}));
+
+  // GIVEN the TF listener will return a failure
+  EXPECT_CALL(*mock_tf_listener_interface_ptr, lookupTransform)
+      .WillRepeatedly(Return(tl::make_unexpected(kErrorMessage)));
+
+  auto* world_object_client_interface_ptr = mock_world_object_client.get();
+
+  // GIVEN Spot's list of world objects does not include any apriltags or other world objects
+  // THEN we make two separate requests to list world objects: one to get info about apriltags, and the second to get
+  // info about other world objects
+  ::bosdyn::api::ListWorldObjectResponse list_objects_response;
+  ON_CALL(*world_object_client_interface_ptr, listWorldObjects).WillByDefault(Return(list_objects_response));
+
+  EXPECT_CALL(*world_object_client_interface_ptr, mutateWorldObject).Times(0);
+
+  // THEN a warning message is reported that describes the TF lookup error
+  EXPECT_CALL(*mock_logger_interface_ptr, logWarn(HasSubstr(kErrorMessage))).Times(1);
+  EXPECT_CALL(*mock_logger_interface_ptr, logError).Times(0);
+
+  // GIVEN the ObjectSynchronizer has been created
+  // Note: for this test, this must only be called after registering all expected calls with the mocks
+  createObjectSynchronizer();
+
+  // WHEN the timer callback is triggered
+  mock_world_object_update_timer_ptr->trigger();
+
+  // THEN the ObjectSynchronizer is managing a single frame matching the external frame ID which was published via TF.
+  EXPECT_THAT(object_synchronizer->getManagedFrames(), IsEmpty());
+}
+
 TEST_F(ObjectSynchronizerTest, PublishWorldObjectTransforms) {
   // GIVEN the callback to broadcast TF data has been registered with the appropriate timer
-  auto* tf_broadcaster_timer_ptr = mock_tf_broadcaster_timer.get();
-  ON_CALL(*tf_broadcaster_timer_ptr, setTimer).WillByDefault([&](Unused, const std::function<void()>& cb) {
-    tf_broadcaster_timer_ptr->onSetTimer(cb);
-  });
+  registerTimerCallbacks();
 
   // GIVEN Spot's WorldObject API will report two objects
   // THEN we request info about world objects from Spot's WorldObject API
@@ -351,17 +391,15 @@ TEST_F(ObjectSynchronizerTest, PublishWorldObjectTransforms) {
 
   // THEN we broadcast a single transform, where the child frame ID of this transform is the name of the object whose TF
   // frame is not being managed by the ObjectSynchronizer with the robot name applied as a namespace
-  auto* tf_broadcaster_ptr = mock_tf_broadcaster_interface.get();
-  EXPECT_CALL(*tf_broadcaster_ptr,
+  EXPECT_CALL(*mock_tf_broadcaster_interface_ptr,
               sendDynamicTransforms(AllOf(
                   SizeIs(1), Contains(Field("child_frame_id", &geometry_msgs::msg::TransformStamped::child_frame_id,
                                             StrEq("MyRobot/dock"))))))
       .Times(1);
 
   // THEN no warning or error messages are logged
-  auto* logger_ptr = mock_logger_interface.get();
-  EXPECT_CALL(*logger_ptr, logWarn).Times(0);
-  EXPECT_CALL(*logger_ptr, logError).Times(0);
+  EXPECT_CALL(*mock_logger_interface_ptr, logWarn).Times(0);
+  EXPECT_CALL(*mock_logger_interface_ptr, logError).Times(0);
 
   // GIVEN the ObjectSynchronizer has been created
   createObjectSynchronizer();
@@ -371,6 +409,6 @@ TEST_F(ObjectSynchronizerTest, PublishWorldObjectTransforms) {
   ASSERT_THAT(object_synchronizer->getManagedFrames(), Contains("my_object"));
 
   // WHEN the timer callback to broadcast TF data is triggered
-  tf_broadcaster_timer_ptr->trigger();
+  mock_tf_broadcaster_timer_ptr->trigger();
 }
 }  // namespace spot_ros2::test
