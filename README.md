@@ -60,17 +60,14 @@ We suggest ignoring the `proto2ros_tests` package in the build as it is not nece
 ## Example Code
 See [`spot_examples`](spot_examples/) for some examples of using the ROS 2 driver to control Spot.
 
-## Launch
+## Launching the Driver
 The spot login data hostname, username and password can either be specified as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
 ### Model
     ros2 launch spot_description description.launch.py
 
-### SpotDriver
-    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>] [has_arm:=<True|False>] [spot_name:=<Name of Spot running the driver>] [launch_rviz:=<True|False>] 
-
-### Depth image to Pointcloud2
-    ros2 launch spot_driver point_cloud_xyz.launch.py
+### Spot Driver
+    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>] [spot_name:=<Name of Spot running the driver>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] 
 
 ### Command Line Example Node
 The `command_spot_driver` node contains service and action clients. To send a trajectory goal execute:
@@ -92,13 +89,6 @@ Then you want to log into the Spot CAM over the browser. In your browser, type i
 
 The default port for SDP is 31102 for the Spot CAM. Once inside, you will be prompted to log in using your username and password. Do so and the WebRTC frames should begin to properly stream.
 
-
-### Multiple Robots
-If you want to use multiple robots, use the `spot_driver_with_namespace` launch file:
-
-    ros2 launch spot_driver_with_namespace.py spot_name:=<spot name> config_file:=<path to your ROS config file>
-
-This will launch all nodes in the `spot_name` namespace and use `spot_name/` as the prefix for all frames.
 
 ## Advanced Install
 
