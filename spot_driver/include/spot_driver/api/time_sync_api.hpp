@@ -9,6 +9,13 @@
 namespace spot_ros2 {
 class TimeSyncApi {
  public:
+  // TimeSyncApi is move-only
+  TimeSyncApi() = default;
+  TimeSyncApi(TimeSyncApi&& other) = default;
+  TimeSyncApi(const TimeSyncApi&) = delete;
+  TimeSyncApi& operator=(TimeSyncApi&& other) = default;
+  TimeSyncApi& operator=(const TimeSyncApi&) = delete;
+
   virtual ~TimeSyncApi() = default;
 
   /**
