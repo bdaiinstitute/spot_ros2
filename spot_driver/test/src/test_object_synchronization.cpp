@@ -46,6 +46,7 @@ using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::IsEmpty;
 using ::testing::Key;
+using ::testing::Not;
 using ::testing::Property;
 using ::testing::Return;
 using ::testing::SizeIs;
@@ -58,6 +59,11 @@ MATCHER(MutationAddsObject, "") {
   return ExplainMatchResult(Eq(arg.mutation().action()),
                             ::bosdyn::api::MutateWorldObjectRequest_Action::MutateWorldObjectRequest_Action_ACTION_ADD,
                             result_listener);
+}
+
+MATCHER(ListObjectRequestIsForDrawableObjects, "") {
+  return std::find(arg.object_type().cbegin(), arg.object_type().cend(),
+                   ::bosdyn::api::WorldObjectType::WORLD_OBJECT_DRAWABLE) != arg.object_type().end();
 }
 
 MATCHER(MutationChangesObject, "") {
@@ -220,19 +226,13 @@ TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
           tl::expected<geometry_msgs::msg::TransformStamped, std::string>{geometry_msgs::msg::TransformStamped{}}));
 
   // GIVEN Spot's list of world objects does not include any apriltags or other world objects
-  // THEN we make two separate requests to list world objects: one to get info about apriltags, and the second to get
-  // info about other world objects
-  ::bosdyn::api::ListWorldObjectResponse list_apriltags_response;
-  ::bosdyn::api::ListWorldObjectResponse list_objects_response;
+  // THEN we make two separate requests to list world objects: one to get info about immutable objects, the second to
+  // get info about mutable objects
+  ::bosdyn::api::ListWorldObjectResponse list_mutable_objects_response;
+  ::bosdyn::api::ListWorldObjectResponse list_immutable_objects_response;
   EXPECT_CALL(*mock_world_object_client, listWorldObjects)
-      .WillOnce(Return(list_apriltags_response))
-      .WillOnce(Return(list_objects_response));
-
-  /*
-  OTHER IMPORTANT THINGS TO TEST:
-  - the object is of type DrawableFrame
-  - we can handle the WorldObject client returning one of several possible failure cases
-  */
+      .WillOnce(Return(list_immutable_objects_response))
+      .WillOnce(Return(list_mutable_objects_response));
 
   // THEN we send one MutateWorldObjectRequest
   // AND the request adds a new object
@@ -281,20 +281,20 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
       .WillOnce(Return(
           tl::expected<geometry_msgs::msg::TransformStamped, std::string>{geometry_msgs::msg::TransformStamped{}}));
 
-  // GIVEN Spot's list of world objects does not include any apriltags or other world objects
-  // THEN we make two separate requests to list world objects: one to get info about apriltags, and the second to get
-  // info about other world objects
-  ::bosdyn::api::ListWorldObjectResponse list_apriltags_response;
-  ::bosdyn::api::ListWorldObjectResponse list_objects_response;
-  auto* object = list_objects_response.add_world_objects();
+  // GIVEN Spot's list of world objects includes a single existing mutable object
+  // THEN we make two separate requests to list world objects: one to get info about immutable objects, the second to
+  // get info about mutable objects
+  ::bosdyn::api::ListWorldObjectResponse list_immutable_objects_response;
+  ::bosdyn::api::ListWorldObjectResponse list_mutable_objects;
+  auto* object = list_mutable_objects.add_world_objects();
   *object->mutable_name() = kExternalFrameId;
   object->set_id(kObjectId);
   addRootFrame(object->mutable_transforms_snapshot(), "odom");
   // GIVEN the body frame is at a nonzero pose relative to the odom frame
   addTransform(object->mutable_transforms_snapshot(), kExternalFrameId, "odom", 1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0);
   EXPECT_CALL(*mock_world_object_client, listWorldObjects)
-      .WillOnce(Return(list_apriltags_response))
-      .WillOnce(Return(list_objects_response));
+      .WillOnce(Return(list_immutable_objects_response))
+      .WillOnce(Return(list_mutable_objects));
 
   // THEN we send one MutateWorldObjectRequest
   // AND the request modifies an existing object
@@ -342,17 +342,52 @@ TEST_F(ObjectSynchronizerTest, TfLookupError) {
 
   auto* world_object_client_interface_ptr = mock_world_object_client.get();
 
-  // GIVEN Spot's list of world objects does not include any apriltags or other world objects
-  // THEN we make two separate requests to list world objects: one to get info about apriltags, and the second to get
-  // info about other world objects
+  // GIVEN Spot's list of world objects does not include any objects
   ::bosdyn::api::ListWorldObjectResponse list_objects_response;
   ON_CALL(*world_object_client_interface_ptr, listWorldObjects).WillByDefault(Return(list_objects_response));
 
+  // THEN no request is made to mutate objects
   EXPECT_CALL(*world_object_client_interface_ptr, mutateWorldObject).Times(0);
 
   // THEN a warning message is reported that describes the TF lookup error
   EXPECT_CALL(*mock_logger_interface_ptr, logWarn(HasSubstr(kErrorMessage))).Times(1);
-  EXPECT_CALL(*mock_logger_interface_ptr, logError).Times(0);
+
+  // GIVEN the ObjectSynchronizer has been created
+  createObjectSynchronizer();
+
+  // WHEN the timer callback is triggered
+  mock_world_object_update_timer_ptr->trigger();
+
+  // THEN the ObjectSynchronizer is not managing any frames after the update
+  EXPECT_THAT(object_synchronizer->getManagedFrames(), IsEmpty());
+}
+
+TEST_F(ObjectSynchronizerTest, ListImmutableObjectsError) {
+  // GIVEN the timer interface's setTimer function registers the internal callback function
+  registerTimerCallbacks();
+
+  ON_CALL(*mock_clock_interface_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
+
+  // GIVEN the TF listener has info about one frame from a non-Spot source
+  ON_CALL(*mock_tf_listener_interface_ptr, getAllFrameNames)
+      .WillByDefault(Return(std::vector<std::string>{kExternalFrameId}));
+
+  // GIVEN the TF listener will return identity transforms
+  ON_CALL(*mock_tf_listener_interface_ptr, lookupTransform)
+      .WillByDefault(Return(
+          tl::expected<geometry_msgs::msg::TransformStamped, std::string>{geometry_msgs::msg::TransformStamped{}}));
+
+  // GIVEN requesting info about immutable world objects will fail
+  EXPECT_CALL(*mock_world_object_client, listWorldObjects(Not(ListObjectRequestIsForDrawableObjects())))
+      .WillOnce(Return(tl::make_unexpected(kErrorMessage)));
+
+  // THEN no request is made to mutate objects
+  EXPECT_CALL(*mock_world_object_client, mutateWorldObject).Times(0);
+
+  // THEN an error message is reported that describes the failure
+  EXPECT_CALL(*mock_logger_interface_ptr,
+              logError(AllOf(HasSubstr("Failed to list non-mutable objects: "), HasSubstr(kErrorMessage))))
+      .Times(1);
 
   // GIVEN the ObjectSynchronizer has been created
   // Note: for this test, this must only be called after registering all expected calls with the mocks
@@ -361,7 +396,90 @@ TEST_F(ObjectSynchronizerTest, TfLookupError) {
   // WHEN the timer callback is triggered
   mock_world_object_update_timer_ptr->trigger();
 
-  // THEN the ObjectSynchronizer is managing a single frame matching the external frame ID which was published via TF.
+  // THEN the ObjectSynchronizer is not managing any frames
+  EXPECT_THAT(object_synchronizer->getManagedFrames(), IsEmpty());
+}
+
+TEST_F(ObjectSynchronizerTest, ListMutableObjectsError) {
+  // GIVEN the timer interface's setTimer function registers the internal callback function
+  registerTimerCallbacks();
+
+  ON_CALL(*mock_clock_interface_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
+
+  // GIVEN the TF listener has info about one frame from a non-Spot source
+  ON_CALL(*mock_tf_listener_interface_ptr, getAllFrameNames)
+      .WillByDefault(Return(std::vector<std::string>{kExternalFrameId}));
+
+  // GIVEN the TF listener will return identity transforms
+  ON_CALL(*mock_tf_listener_interface_ptr, lookupTransform)
+      .WillByDefault(Return(
+          tl::expected<geometry_msgs::msg::TransformStamped, std::string>{geometry_msgs::msg::TransformStamped{}}));
+
+  // GIVEN requesting info about immutable world objects will succeed
+  // AND requesting info about mutable world objects will fail
+  // THEN we first reuqest info about all objects that are not drawables, then request info about drawables
+  {
+    testing::InSequence seq;
+    ::bosdyn::api::ListWorldObjectResponse list_objects_response;
+    EXPECT_CALL(*mock_world_object_client, listWorldObjects(Not(ListObjectRequestIsForDrawableObjects())))
+        .WillOnce(Return(list_objects_response));
+    EXPECT_CALL(*mock_world_object_client, listWorldObjects(ListObjectRequestIsForDrawableObjects()))
+        .WillOnce(Return(tl::make_unexpected(kErrorMessage)));
+  }
+
+  // THEN no request is made to mutate objects
+  EXPECT_CALL(*mock_world_object_client, mutateWorldObject).Times(0);
+
+  // THEN an error message is reported that describes the failure
+  EXPECT_CALL(*mock_logger_interface_ptr,
+              logError(AllOf(HasSubstr("Failed to list mutable objects: "), HasSubstr(kErrorMessage))))
+      .Times(1);
+
+  // GIVEN the ObjectSynchronizer has been created
+  createObjectSynchronizer();
+
+  // WHEN the timer callback is triggered
+  mock_world_object_update_timer_ptr->trigger();
+
+  // THEN the ObjectSynchronizer is not managing any frames
+  EXPECT_THAT(object_synchronizer->getManagedFrames(), IsEmpty());
+}
+
+TEST_F(ObjectSynchronizerTest, MutateObjectsError) {
+  // GIVEN the timer interface's setTimer function registers the internal callback function
+  registerTimerCallbacks();
+
+  ON_CALL(*mock_clock_interface_ptr, now).WillByDefault(Return(rclcpp::Time{0, 0, RCL_ROS_TIME}));
+
+  // GIVEN the TF listener has info about one frame from a non-Spot source
+  ON_CALL(*mock_tf_listener_interface_ptr, getAllFrameNames)
+      .WillByDefault(Return(std::vector<std::string>{kExternalFrameId}));
+
+  // GIVEN the TF listener will return identity transforms
+  ON_CALL(*mock_tf_listener_interface_ptr, lookupTransform)
+      .WillByDefault(Return(
+          tl::expected<geometry_msgs::msg::TransformStamped, std::string>{geometry_msgs::msg::TransformStamped{}}));
+
+  // GIVEN requesting info about world objects always succeeds
+  ::bosdyn::api::ListWorldObjectResponse list_objects_response;
+  ON_CALL(*mock_world_object_client, listWorldObjects).WillByDefault(Return(list_objects_response));
+
+  // GIVEN mutating world objects will always fail
+  ON_CALL(*mock_world_object_client, mutateWorldObject).WillByDefault(Return(tl::make_unexpected(kErrorMessage)));
+
+  // THEN a warning message is reported that describes the error
+  EXPECT_CALL(*mock_logger_interface_ptr,
+              logWarn(AllOf(HasSubstr("Failed to modify world object: "), HasSubstr(kErrorMessage))))
+      .Times(1);
+
+  // GIVEN the ObjectSynchronizer has been created
+  // Note: for this test, this must only be called after registering all expected calls with the mocks
+  createObjectSynchronizer();
+
+  // WHEN the timer callback is triggered
+  mock_world_object_update_timer_ptr->trigger();
+
+  // THEN the ObjectSynchronizer is not managing any frames
   EXPECT_THAT(object_synchronizer->getManagedFrames(), IsEmpty());
 }
 
