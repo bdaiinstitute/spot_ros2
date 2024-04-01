@@ -15,7 +15,7 @@ namespace spot_ros2 {
  */
 class TfInterfaceBase {
  public:
-  virtual ~TfInterfaceBase() {}
+  virtual ~TfInterfaceBase() = default;
 
   virtual void updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) = 0;
 

@@ -10,7 +10,7 @@ namespace spot_ros2 {
  */
 class LoggerInterfaceBase {
  public:
-  virtual ~LoggerInterfaceBase() {}
+  virtual ~LoggerInterfaceBase() = default;
 
   virtual void logDebug(const std::string& message) const = 0;
   virtual void logInfo(const std::string& message) const = 0;

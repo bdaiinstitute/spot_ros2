@@ -22,6 +22,7 @@ struct GetImagesResult {
  */
 class ImageClientInterface {
  public:
+  virtual ~ImageClientInterface() = default;
   virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) = 0;
 };
 }  // namespace spot_ros2

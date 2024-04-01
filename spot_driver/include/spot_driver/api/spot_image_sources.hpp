@@ -6,10 +6,8 @@
 #include <spot_driver/types.hpp>
 #include <tl_expected/expected.hpp>
 
-#include <map>
 #include <set>
 #include <string>
-#include <vector>
 
 namespace spot_ros2 {
 /**

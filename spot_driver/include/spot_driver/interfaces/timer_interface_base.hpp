@@ -11,7 +11,7 @@ namespace spot_ros2 {
  */
 class TimerInterfaceBase {
  public:
-  virtual ~TimerInterfaceBase() {}
+  virtual ~TimerInterfaceBase() = default;
 
   virtual void setTimer(const std::chrono::duration<double>& period, const std::function<void()>& callback) = 0;
   virtual void clearTimer() = 0;
