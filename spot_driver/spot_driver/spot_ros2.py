@@ -964,7 +964,7 @@ class SpotROS(Node):
             response.message = "spot_ros2 is running in mock mode."
             return response
 
-        have_new_lease, lease = self.spot_wrapper.take_lease()
+        have_new_lease, lease = self.spot_wrapper.takeLease()
         if have_new_lease:
             response.success = True
             response.message = str(lease.lease_proto)
