@@ -17,7 +17,8 @@ class DefaultKinematicApi : public KinematicApi {
   /**
    * @brief Return a solution to the given request.
    */
-  tl::expected<InverseKinematicsResponse, std::string> getSolutions(InverseKinematicsRequest& request) override;
+  [[nodiscard]] tl::expected<InverseKinematicsResponse, std::string> getSolutions(
+      InverseKinematicsRequest& request) override;
 
  private:
   bosdyn::client::InverseKinematicsClient* kinematic_client_;

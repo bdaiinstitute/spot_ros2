@@ -32,7 +32,7 @@ class DefaultTimeSyncApi : public TimeSyncApi {
   * @return If the Spot SDK's time sync thread was not initialized, return an error message.
   * @return If the Spot SDK's time sync endpoint fails to handle the clock skew request, return an error message.
   */
-  tl::expected<google::protobuf::Duration, std::string> getClockSkew() override;
+  [[nodiscard]] tl::expected<google::protobuf::Duration, std::string> getClockSkew() override;
 
  private:
   std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread_;
