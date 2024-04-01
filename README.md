@@ -67,10 +67,7 @@ The spot login data hostname, username and password can either be specified as R
     ros2 launch spot_description description.launch.py
 
 ### Spot Driver
-    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>] [spot_name:=<Name of Spot running the driver>] [launch_rviz:=<True|False>] 
-
-### Depth image to Pointcloud2
-    ros2 launch spot_driver point_cloud_xyz.launch.py
+    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>] [spot_name:=<Name of Spot running the driver>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] 
 
 ### Command Line Example Node
 The `command_spot_driver` node contains service and action clients. To send a trajectory goal execute:
