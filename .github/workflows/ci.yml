@@ -1,4 +1,4 @@
-name: spot_ros2 CI
+name: CI
 
 on:
   pull_request:
@@ -103,16 +103,31 @@ jobs:
         with:
           submodules: recursive
 
+      - run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
       - name: Build packages
         run: |
           source /opt/ros/$ROS_DISTRO/setup.bash
-          colcon build --symlink-install --packages-skip-regex proto2ros --cmake-args -DCMAKE_CXX_FLAGS="--coverage"
+          colcon build --symlink-install --packages-up-to spot_driver spot_description spot_msgs spot_examples --cmake-args -DCMAKE_CXX_FLAGS="--coverage"
         working-directory: ${{ github.workspace }}/../../
 
-      - name: Test packages
+      - name: Test non-spot-driver packages
         run: |
           source install/setup.bash
-          colcon test --python-testing pytest --pytest-with-coverage --event-handlers console_direct+ --packages-skip-regex bdai_ros2_wrappers proto2ros
+          colcon test --event-handlers console_direct+ --packages-select spot_description spot_examples spot_msgs
+        working-directory: ${{ github.workspace }}/../../
+      
+      # Per https://github.com/colcon/colcon-ros/issues/151, `pytest-args` cannot be used in an ament_cmake package, so in order to pass arguments to pytest we have to run pytest directly
+      - name: Test python part of spot-driver package
+        run: |
+          source install/setup.bash
+          pytest -n auto --cov-report xml --cov-config=$GITHUB_WORKSPACE/.coveragerc --cov-report term --cov=spot_driver $GITHUB_WORKSPACE/spot_driver/test/pytests/
+        working-directory: ${{ github.workspace }}/../../
+
+      - name: Test c++ part of spot-driver packages
+        run: |
+          source install/setup.bash
+          colcon test --event-handlers console_direct+ --packages-select spot_driver
         working-directory: ${{ github.workspace }}/../../
 
       - name: Generate coverage report

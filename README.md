@@ -2,17 +2,21 @@
   <img src="spot.png" width="350">
   <h1 align="center">Spot ROS 2 Driver</h1>
   <p align="center">
-    <a href="https://github.com/MASKOR/spot_ros2/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
+    <img src="https://img.shields.io/badge/python-3.8|3.9|3.10-blue"/>
+    <a href="https://github.com/astral-sh/ruff">
+      <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"/>
     </a>
-    <a href="https://www.python.org/">
-    <img src="https://img.shields.io/badge/built%20with-Python3-red.svg" />
+    <a href="https://github.com/psf/black">
+      <img src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
     </a>
-    <a href="https://github.com/bdaiinstitute/spot_ros2/actions">
-    <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/test.yml/badge.svg">
+    <a href="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/ci.yml">
+      <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/ci.yml/badge.svg?branch=main"/>
     </a>
-    <a href="https://bdaiinstitute.github.io/spot_ros2">
-    <img src="https://img.shields.io/badge/docs-Python3-blue">
+    <a href="https://coveralls.io/github/bdaiinstitute/spot_ros2?branch=main">
+      <img src="https://coveralls.io/repos/github/bdaiinstitute/spot_ros2/badge.svg?branch=main"/>
+    </a>
+    <a href="LICENSE">
+      <img src="https://img.shields.io/badge/license-MIT-purple"/>
     </a>
   </p>
 </p>
@@ -36,7 +40,7 @@ git submodule init
 git submodule update
 ```
 
-Then run the install script to install the necessary ROS dependencies. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system:
+Then run the install script to install the necessary Boston Dynamics and ROS dependencies. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system:
 ```bash
 cd <path to spot_ros2>
 ./install_spot_ros2.sh
@@ -47,9 +51,11 @@ From here, build and source the ROS 2 workspace:
 ```
 cd <ros2 ws>
 source /opt/ros/humble/setup.bash
-colcon build --symlink-install
+colcon build --symlink-install --packages-ignore proto2ros_tests
 source install/local_setup.bash
 ```
+
+We suggest ignoring the `proto2ros_tests` package in the build as it is not necessary for running the driver. If you choose to build it, you will see a number of error messages from testing the failure paths. 
 
 ## Example Code
 See [`spot_examples`](spot_examples/) for some examples of using the ROS 2 driver to control Spot.
@@ -101,6 +107,34 @@ rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
 The `bosdyn_msgs` package is installed as a debian package as part of the `install_spot_ros2` script because it's very large.  It can be checked out from source [here](https://github.com/bdaiinstitute/bosdyn_msgs) and then built as a normal ROS 2 package if that is preferred (compilation takes about 15 minutes).
 
 
+## Help
+
+If you encounter problems when using this repository, feel free to open an issue or PR.
+
+### Verify Boston Dynamics API Installation
+If you encounter `ModuleNotFoundErrors` with `bosdyn` packages upon running the driver, it is likely that the necessary Boston Dynamics API packages did not get installed with `install_spot_ros2.sh`. To check this, you can run the following command. Note that all versions should be `4.0.0`. 
+```bash
+$ pip list | grep bosdyn
+bosdyn-api                           4.0.0
+bosdyn-api-msgs                      4.0.0
+bosdyn-auto-return-api-msgs          4.0.0
+bosdyn-autowalk-api-msgs             4.0.0
+bosdyn-choreography-client           4.0.0
+bosdyn-choreography-protos           4.0.0
+bosdyn-client                        4.0.0
+bosdyn-core                          4.0.0
+bosdyn-graph-nav-api-msgs            4.0.0
+bosdyn-keepalive-api-msgs            4.0.0
+bosdyn-log-status-api-msgs           4.0.0
+bosdyn-metrics-logging-api-msgs      4.0.0
+bosdyn-mission                       4.0.0
+bosdyn-mission-api-msgs              4.0.0
+bosdyn-msgs                          4.0.0
+bosdyn-spot-api-msgs                 4.0.0
+bosdyn-spot-cam-api-msgs             4.0.0
+```
+If these packages were not installed correctly on your system, you can try manually installing them following [Boston Dynamics' guide](https://dev.bostondynamics.com/docs/python/quickstart#install-spot-python-packages).
+
 ## License
 
 MIT license - parts of the code developed specifically for ROS 2.
@@ -118,7 +152,7 @@ pre-commit run --all-files
 ```
 
 Now whenever you commit code to this repository, it will be checked against our `pre-commit` hooks. You can also run
-`git commit --no-verify` if you wish you commit without checking against the hooks. 
+`git commit --no-verify` if you wish to commit without checking against the hooks. 
 
 ### Contributors
 

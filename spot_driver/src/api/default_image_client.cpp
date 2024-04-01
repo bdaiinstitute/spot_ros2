@@ -173,7 +173,7 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
     // which is used for publishing dynamic tfs elsewhere. Without this, the hand camera frame
     // positions would never properly update as no other pipelines reference "arm0.link_wr1".
     const auto parent_frame_id =
-        (transform.parent_frame_name() == "arm0.link_wr1") ? "link_wr1" : transform.parent_frame_name();
+        (transform.parent_frame_name() == "arm0.link_wr1") ? "arm_link_wr1" : transform.parent_frame_name();
 
     const auto tform_msg = spot_ros2::toTransformStamped(
         transform.parent_tform_child(), robot_name.empty() ? parent_frame_id : (robot_name + "/" + parent_frame_id),

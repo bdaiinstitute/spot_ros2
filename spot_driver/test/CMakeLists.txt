@@ -130,39 +130,40 @@ target_include_directories(test_kinematic_service
 )
 target_link_libraries(test_kinematic_service spot_api)
 
+# Per https://github.com/colcon/colcon-ros/issues/151, `pytest-args` cannot be used in an ament_cmake package, so in order to pass arguments to pytest we have to run pytest directly
+# If that gets fixed, then we can bring this back
 #rclpy_test
-
-set(_pytest_tests
-  pytests/test_copyright.py
-  pytests/test_dock.py
-  pytests/test_execute_dance.py
-  pytests/test_get_choreography_status.py
-  pytests/test_list_all_dances.py
-  pytests/test_list_all_moves.py
-  pytests/test_locomotion_mode.py
-  pytests/test_max_velocity.py
-  pytests/test_pep257.py
-  pytests/test_power_off.py
-  pytests/test_recorded_state_to_animation.py
-  pytests/test_release.py
-  pytests/test_robot_command.py
-  pytests/test_rollover.py
-  pytests/test_ros_interfaces.py
-  pytests/test_self_right.py
-  pytests/test_sit.py
-  pytests/test_stair_mode.py
-  pytests/test_stand.py
-  pytests/test_start_recording_state.py
-  pytests/test_stop.py
-  pytests/test_stop_recording_state.py
-  pytests/test_undock.py
-  pytests/test_upload_animation.py
-)
-foreach(_test_path ${_pytest_tests})
-  get_filename_component(_test_name ${_test_path} NAME_WE)
-  ament_add_pytest_test(${_test_name} ${_test_path}
-    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}
-    TIMEOUT 60
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  )
-endforeach()
+# set(_pytest_tests
+#   pytests/test_copyright.py
+#   pytests/test_dock.py
+#   pytests/test_execute_dance.py
+#   pytests/test_get_choreography_status.py
+#   pytests/test_list_all_dances.py
+#   pytests/test_list_all_moves.py
+#   pytests/test_locomotion_mode.py
+#   pytests/test_max_velocity.py
+#   pytests/test_pep257.py
+#   pytests/test_power_off.py
+#   pytests/test_recorded_state_to_animation.py
+#   pytests/test_release.py
+#   pytests/test_robot_command.py
+#   pytests/test_rollover.py
+#   pytests/test_ros_interfaces.py
+#   pytests/test_self_right.py
+#   pytests/test_sit.py
+#   pytests/test_stair_mode.py
+#   pytests/test_stand.py
+#   pytests/test_start_recording_state.py
+#   pytests/test_stop.py
+#   pytests/test_stop_recording_state.py
+#   pytests/test_undock.py
+#   pytests/test_upload_animation.py
+# )
+# foreach(_test_path ${_pytest_tests})
+#   get_filename_component(_test_name ${_test_path} NAME_WE)
+#   ament_add_pytest_test(${_test_name} ${_test_path}
+#     APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}
+#     TIMEOUT 60
+#     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+#   )
+# endforeach()

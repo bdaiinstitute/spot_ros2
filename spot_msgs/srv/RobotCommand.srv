@@ -1,0 +1,7 @@
+bosdyn_api_msgs/RobotCommand command
+builtin_interfaces/Duration duration
+---
+bool success
+string message
+
+uint32 robot_command_id
