@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <rclcpp/node.hpp>
 #include <spot_driver/api/spot_image_sources.hpp>
@@ -17,12 +17,7 @@ constexpr auto kCameraInfoTopicSuffix = "camera_info";
 
 namespace spot_ros2::images {
 
-ImagesMiddlewareHandle::ImagesMiddlewareHandle(std::shared_ptr<rclcpp::Node> node)
-    : node_{node},
-      parameter_interface_{std::make_unique<RclcppParameterInterface>(node)},
-      logger_interface_{std::make_unique<RclcppLoggerInterface>(node->get_logger())},
-      tf_interface_{std::make_unique<RclcppTfInterface>(node)},
-      timer_interface_{std::make_unique<RclcppWallTimerInterface>(node)} {}
+ImagesMiddlewareHandle::ImagesMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node) : node_{node} {}
 
 ImagesMiddlewareHandle::ImagesMiddlewareHandle(const rclcpp::NodeOptions& node_options)
     : ImagesMiddlewareHandle(std::make_shared<rclcpp::Node>("image_publisher", node_options)) {}

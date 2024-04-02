@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <spot_driver/images/spot_image_publisher.hpp>
 
@@ -15,10 +15,8 @@
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <spot_driver/types.hpp>
 
-#include <iostream>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 
 namespace {
 constexpr auto kImageCallbackPeriod = std::chrono::duration<double>{1.0 / 15.0};  // 15 Hz
@@ -63,20 +61,27 @@ namespace spot_ros2::images {
   return request_message;
 }
 
-SpotImagePublisher::SpotImagePublisher(std::shared_ptr<ImageClientInterface> image_client_interface,
-                                       std::unique_ptr<MiddlewareHandle> middleware_handle, bool has_arm)
+SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<ImageClientInterface>& image_client_interface,
+                                       std::unique_ptr<MiddlewareHandle> middleware_handle,
+                                       std::unique_ptr<ParameterInterfaceBase> parameters,
+                                       std::unique_ptr<LoggerInterfaceBase> logger,
+                                       std::unique_ptr<TfInterfaceBase> tf_broadcaster,
+                                       std::unique_ptr<TimerInterfaceBase> timer, bool has_arm)
     : image_client_interface_{image_client_interface},
       middleware_handle_{std::move(middleware_handle)},
+      parameters_{std::move(parameters)},
+      logger_{std::move(logger)},
+      tf_broadcaster_{std::move(tf_broadcaster)},
+      timer_{std::move(timer)},
       has_arm_{has_arm} {}
 
 bool SpotImagePublisher::initialize() {
   // These parameters all fall back to default values if the user did not set them at runtime
-  const auto rgb_image_quality = middleware_handle_->parameter_interface()->getRGBImageQuality();
-  const auto publish_rgb_images = middleware_handle_->parameter_interface()->getPublishRGBImages();
-  const auto publish_depth_images = middleware_handle_->parameter_interface()->getPublishDepthImages();
-  const auto publish_depth_registered_images =
-      middleware_handle_->parameter_interface()->getPublishDepthRegisteredImages();
-  const auto has_rgb_cameras = middleware_handle_->parameter_interface()->getHasRGBCameras();
+  const auto rgb_image_quality = parameters_->getRGBImageQuality();
+  const auto publish_rgb_images = parameters_->getPublishRGBImages();
+  const auto publish_depth_images = parameters_->getPublishDepthImages();
+  const auto publish_depth_registered_images = parameters_->getPublishDepthRegisteredImages();
+  const auto has_rgb_cameras = parameters_->getHasRGBCameras();
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources =
@@ -89,7 +94,7 @@ bool SpotImagePublisher::initialize() {
   middleware_handle_->createPublishers(sources);
 
   // Create a timer to request and publish images at a fixed rate
-  middleware_handle_->timer_interface()->setTimer(kImageCallbackPeriod, [this]() {
+  timer_->setTimer(kImageCallbackPeriod, [this]() {
     timerCallback();
   });
 
@@ -98,19 +103,18 @@ bool SpotImagePublisher::initialize() {
 
 void SpotImagePublisher::timerCallback() {
   if (!image_request_message_) {
-    middleware_handle_->logger_interface()->logError("No image request message generated. Returning.");
+    logger_->logError("No image request message generated. Returning.");
     return;
   }
 
   const auto image_result = image_client_interface_->getImages(*image_request_message_);
   if (!image_result.has_value()) {
-    middleware_handle_->logger_interface()->logError(
-        std::string{"Failed to get images: "}.append(image_result.error()));
+    logger_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
     return;
   }
 
   middleware_handle_->publishImages(image_result.value().images_);
 
-  middleware_handle_->tf_interface()->updateStaticTransforms(image_result.value().transforms_);
+  tf_broadcaster_->updateStaticTransforms(image_result.value().transforms_);
 }
 }  // namespace spot_ros2::images
