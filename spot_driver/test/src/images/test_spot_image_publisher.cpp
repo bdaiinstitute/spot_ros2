@@ -110,7 +110,7 @@ TEST_F(TestInitSpotImagePublisher, InitSucceeds) {
 
   // WHEN the SpotImagePublisher is initialized
   // THEN initialization succeeds
-  image_publisher->initialize();
+  EXPECT_THAT(image_publisher->initialize(), testing::IsTrue());
 }
 
 TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {

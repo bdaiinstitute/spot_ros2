@@ -11,6 +11,13 @@ namespace spot_ros2 {
  */
 class NodeInterfaceBase {
  public:
+  // NodeInterfaceBase is move-only
+  NodeInterfaceBase() = default;
+  NodeInterfaceBase(NodeInterfaceBase&& other) = default;
+  NodeInterfaceBase(const NodeInterfaceBase&) = delete;
+  NodeInterfaceBase& operator=(NodeInterfaceBase&& other) = default;
+  NodeInterfaceBase& operator=(const NodeInterfaceBase&) = delete;
+
   virtual ~NodeInterfaceBase() = default;
 
   virtual std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> getNodeBaseInterface() = 0;

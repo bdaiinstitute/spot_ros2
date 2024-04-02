@@ -24,7 +24,7 @@ class DefaultStateClient final : public StateClientInterface {
    * @return Returns an expected which contains a RobotState message if the request was completed successfully or an
    * error message if the request could not be completed.
    */
-  tl::expected<bosdyn::api::RobotState, std::string> getRobotState() override;
+  [[nodiscard]] tl::expected<bosdyn::api::RobotState, std::string> getRobotState() override;
 
  private:
   /** @brief A pointer to a RobotStateClient provided to this class during construction. */
