@@ -16,6 +16,13 @@ namespace spot_ros2 {
  */
 class TfListenerInterfaceBase {
  public:
+  // TfListenerInterfaceBase is move-only
+  TfListenerInterfaceBase() = default;
+  TfListenerInterfaceBase(TfListenerInterfaceBase&& other) = default;
+  TfListenerInterfaceBase(const TfListenerInterfaceBase&) = delete;
+  TfListenerInterfaceBase& operator=(TfListenerInterfaceBase&& other) = default;
+  TfListenerInterfaceBase& operator=(const TfListenerInterfaceBase&) = delete;
+
   virtual ~TfListenerInterfaceBase() = default;
 
   /**
@@ -30,12 +37,10 @@ class TfListenerInterfaceBase {
    * @param child Child frame ID.
    * @param timepoint Get a transform that is valid for this timestamp. Set an all-zero timepoint to get the latest
    * valid timestamp.
-   * @param timeout Duration to wait for a valid transform to become available.
    * @return If successful, returns a transform following the convention parent_tform_child. If not successful, returns
    * an error message.
    */
   [[nodiscard]] virtual tl::expected<geometry_msgs::msg::TransformStamped, std::string> lookupTransform(
-      const std::string& parent, const std::string& child, const rclcpp::Time& timepoint,
-      const rclcpp::Duration& timeout) const = 0;
+      const std::string& parent, const std::string& child, const rclcpp::Time& timepoint) const = 0;
 };
 }  // namespace spot_ros2

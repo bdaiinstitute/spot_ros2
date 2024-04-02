@@ -21,6 +21,10 @@ class RclcppTfListenerInterface : public TfListenerInterfaceBase {
  public:
   /**
    * @brief The constructor for RclcppTfListenerInterface.
+   * @details When creating the TF listener, we use the version of its constructor that takes an existing node, and we
+   * set that the listener should use an existing executor when monitoring TF data instead of creating its own. This
+   * makes the executor which the node is assigned to responsible for handling the TF subscriber callbacks and prevents
+   * the TF listener from creating its own internal node.
    * @param node A shared_ptr to a rclcpp node. RclcppTfListenerInterface shares ownership of the shared_ptr.
    */
   explicit RclcppTfListenerInterface(const std::shared_ptr<rclcpp::Node>& node);
@@ -38,13 +42,11 @@ class RclcppTfListenerInterface : public TfListenerInterfaceBase {
    * @param child Child frame ID.
    * @param timepoint Get a transform that is valid for this timestamp. Setting an all-zero timepoint is equivalent to
    * passing tf2::timePointZero().
-   * @param timeout Duration to wait for a valid transform to become available.
    * @return If successful, returns a transform following the convention parent_tform_child. If not successful, returns
    * an error message.
    */
   tl::expected<geometry_msgs::msg::TransformStamped, std::string> lookupTransform(
-      const std::string& parent, const std::string& child, const rclcpp::Time& timepoint,
-      const rclcpp::Duration& timeout) const override;
+      const std::string& parent, const std::string& child, const rclcpp::Time& timepoint) const override;
 
  private:
   tf2_ros::Buffer buffer_;

@@ -221,7 +221,7 @@ TEST_F(ObjectSynchronizerTest, AddFrameAsWorldObject) {
 
   // GIVEN the TF listener always returns identity transforms
   // THEN we look up the transform from Spot's odom frame to the frame that was from a non-Spot source
-  EXPECT_CALL(*mock_tf_listener_interface_ptr, lookupTransform("MyRobot/odom", kExternalFrameId, _, _))
+  EXPECT_CALL(*mock_tf_listener_interface_ptr, lookupTransform("MyRobot/odom", kExternalFrameId, _))
       .WillOnce(Return(
           tl::expected<geometry_msgs::msg::TransformStamped, std::string>{geometry_msgs::msg::TransformStamped{}}));
 
@@ -277,7 +277,7 @@ TEST_F(ObjectSynchronizerTest, ModifyFrameForExistingWorldObject) {
 
   // GIVEN the TF listener always returns identity transforms
   // THEN we look up the transform from Spot's odom frame to the frame that was from a non-Spot source
-  EXPECT_CALL(*mock_tf_listener_interface_ptr, lookupTransform("MyRobot/odom", kExternalFrameId, _, _))
+  EXPECT_CALL(*mock_tf_listener_interface_ptr, lookupTransform("MyRobot/odom", kExternalFrameId, _))
       .WillOnce(Return(
           tl::expected<geometry_msgs::msg::TransformStamped, std::string>{geometry_msgs::msg::TransformStamped{}}));
 

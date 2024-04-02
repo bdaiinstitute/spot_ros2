@@ -10,7 +10,7 @@
 
 namespace spot_ros2 {
 RclcppTfListenerInterface::RclcppTfListenerInterface(const std::shared_ptr<rclcpp::Node>& node)
-    : buffer_{node->get_clock()}, listener_{buffer_} {}
+    : buffer_{node->get_clock()}, listener_{buffer_, node, false} {}
 
 std::vector<std::string> RclcppTfListenerInterface::getAllFrameNames() const {
   // Note: this seems to get all past frames, in addition to all currently-published frames.
@@ -18,10 +18,10 @@ std::vector<std::string> RclcppTfListenerInterface::getAllFrameNames() const {
 }
 
 tl::expected<geometry_msgs::msg::TransformStamped, std::string> RclcppTfListenerInterface::lookupTransform(
-    const std::string& parent, const std::string& child, const rclcpp::Time& timepoint,
-    const rclcpp::Duration& timeout) const {
+    const std::string& parent, const std::string& child, const rclcpp::Time& timepoint) const {
   try {
-    return buffer_.lookupTransform(child, parent, timepoint, timeout);
+    // Use the non-blocking version of lookupTransform that does not set a timeout duration
+    return buffer_.lookupTransform(child, parent, timepoint);
   } catch (const tf2::LookupException& e) {
     return tl::make_unexpected(e.what());
   } catch (const tf2::ConnectivityException& e) {

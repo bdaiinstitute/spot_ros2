@@ -15,8 +15,6 @@ class MockTfListenerInterface : public TfListenerInterfaceBase {
   MOCK_METHOD((std::vector<std::string>), getAllFrameNames, (), (const, override));
 
   MOCK_METHOD((tl::expected<geometry_msgs::msg::TransformStamped, std::string>), lookupTransform,
-              (const std::string& parent, const std::string& child, const rclcpp::Time& timepoint,
-               const rclcpp::Duration& timeout),
-              (const, override));
+              (const std::string& parent, const std::string& child, const rclcpp::Time& timepoint), (const, override));
 };
 }  // namespace spot_ros2::test

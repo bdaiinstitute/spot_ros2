@@ -408,11 +408,9 @@ void ObjectSynchronizer::syncWorldObjects() {
 
     // Get the transform from the preferred base frame to the current TF frame.
     // We set the lookup timestamp to timepoint zero, which tells the TF buffer to give us the earliest-available
-    // transform to this frame. We set the lookup timeout duration to zero, which causes the lookup to return a failure
-    // case immediately if the transform is not available instead of blocking.
+    // transform to this frame.
     const auto base_tform_child =
-        tf_listener_interface_->lookupTransform(preferred_base_frame_with_prefix_, child_frame_id, rclcpp::Time{0, 0},
-                                                rclcpp::Duration{std::chrono::nanoseconds{0}});
+        tf_listener_interface_->lookupTransform(preferred_base_frame_with_prefix_, child_frame_id, rclcpp::Time{0, 0});
     if (!base_tform_child) {
       logger_interface_->logWarn(base_tform_child.error());
       continue;
