@@ -19,13 +19,15 @@ class DefaultSpotApi : public SpotApi {
  public:
   explicit DefaultSpotApi(const std::string& sdk_client_name);
 
-  tl::expected<void, std::string> createRobot(const std::string& ip_address, const std::string& robot_name) override;
-  tl::expected<void, std::string> authenticate(const std::string& username, const std::string& password) override;
-  tl::expected<bool, std::string> hasArm() const override;
-  std::shared_ptr<KinematicApi> kinematicApi() const override;
-  std::shared_ptr<ImageClientInterface> image_client_interface() const override;
-  std::shared_ptr<StateClientInterface> stateClientInterface() const override;
-  std::shared_ptr<TimeSyncApi> timeSyncInterface() const override;
+  [[nodiscard]] tl::expected<void, std::string> createRobot(const std::string& ip_address,
+                                                            const std::string& robot_name) override;
+  [[nodiscard]] tl::expected<void, std::string> authenticate(const std::string& username,
+                                                             const std::string& password) override;
+  [[nodiscard]] tl::expected<bool, std::string> hasArm() const override;
+  [[nodiscard]] std::shared_ptr<KinematicApi> kinematicApi() const override;
+  [[nodiscard]] std::shared_ptr<ImageClientInterface> image_client_interface() const override;
+  [[nodiscard]] std::shared_ptr<StateClientInterface> stateClientInterface() const override;
+  [[nodiscard]] std::shared_ptr<TimeSyncApi> timeSyncInterface() const override;
 
  private:
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;

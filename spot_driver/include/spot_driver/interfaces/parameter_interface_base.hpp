@@ -11,7 +11,14 @@ namespace spot_ros2 {
  */
 class ParameterInterfaceBase {
  public:
-  virtual ~ParameterInterfaceBase() {}
+  // ParameterInterfaceBase is move-only
+  ParameterInterfaceBase() = default;
+  ParameterInterfaceBase(ParameterInterfaceBase&& other) = default;
+  ParameterInterfaceBase(const ParameterInterfaceBase&) = delete;
+  ParameterInterfaceBase& operator=(ParameterInterfaceBase&& other) = default;
+  ParameterInterfaceBase& operator=(const ParameterInterfaceBase&) = delete;
+
+  virtual ~ParameterInterfaceBase() = default;
 
   // These functions retrieve optional parameters, where a default value can be used if the user does not provide a
   // specific value. If the parameter was set, return the value provided by the user. If the parameter was not set,

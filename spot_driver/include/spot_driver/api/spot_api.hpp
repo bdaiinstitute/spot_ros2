@@ -15,6 +15,13 @@ namespace spot_ros2 {
 
 class SpotApi {
  public:
+  // SpotApi is move-only
+  SpotApi() = default;
+  SpotApi(SpotApi&& other) = default;
+  SpotApi(const SpotApi&) = delete;
+  SpotApi& operator=(SpotApi&& other) = default;
+  SpotApi& operator=(const SpotApi&) = delete;
+
   virtual ~SpotApi() = default;
 
   virtual tl::expected<void, std::string> createRobot(const std::string& ip_address, const std::string& robot_name) = 0;
