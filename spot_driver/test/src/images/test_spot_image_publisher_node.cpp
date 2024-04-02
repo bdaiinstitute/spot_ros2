@@ -1,12 +1,15 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include <spot_driver/api/spot_api.hpp>
 #include <spot_driver/images/spot_image_publisher_node.hpp>
 
+#include <spot_driver/fake/fake_parameter_interface.hpp>
 #include <spot_driver/mock/mock_image_client.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
+#include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_spot_api.hpp>
 #include <spot_driver/mock/mock_tf_interface.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
@@ -14,111 +17,73 @@
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_options.hpp>
 
-#include <exception>
 #include <memory>
-#include <optional>
+#include <stdexcept>
 #include <tl_expected/expected.hpp>
 
 using ::testing::_;
 using ::testing::InSequence;
 using ::testing::Return;
 
-namespace spot_ros2::images::test {
-
-constexpr auto kExampleHostname{"192.168.0.10"};
-constexpr auto kExampleUsername{"spot_user"};
-constexpr auto kExamplePassword{"hunter2"};
-
-constexpr auto kSomeErrorMessage = "some error message";
-
-class FakeParameterInterface : public ParameterInterfaceBase {
- public:
-  std::string getHostname() const override { return hostname; }
-
-  std::string getUsername() const override { return username; }
-
-  std::string getPassword() const override { return password; }
-
-  double getRGBImageQuality() const override { return rgb_image_quality; }
-
-  bool getHasRGBCameras() const override { return has_rgb_cameras; }
-
-  bool getPublishRGBImages() const override { return publish_rgb_images; }
-
-  bool getPublishDepthImages() const override { return publish_depth_images; }
-
-  bool getPublishDepthRegisteredImages() const override { return publish_depth_registered_images; }
-
-  std::string getPreferredOdomFrame() const override { return "odom"; }
-
-  std::string getSpotName() const override { return spot_name; }
-
-  std::string hostname;
-  std::string username;
-  std::string password;
-
-  double rgb_image_quality = kDefaultRGBImageQuality;
-  bool has_rgb_cameras = kDefaultHasRGBCameras;
-  bool publish_rgb_images = kDefaultPublishRGBImages;
-  bool publish_depth_images = kDefaultPublishDepthImages;
-  bool publish_depth_registered_images = kDefaultPublishDepthRegisteredImages;
-  std::string spot_name;
-};
-
-class MockMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
+namespace spot_ros2::test {
+class MockMiddlewareHandle : public images::SpotImagePublisher::MiddlewareHandle {
  public:
   MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources), (override));
   MOCK_METHOD((tl::expected<void, std::string>), publishImages, ((const std::map<ImageSource, ImageWithCameraInfo>&)),
               (override));
-  MOCK_METHOD(std::shared_ptr<rclcpp::Node>, node, (), (override));
-
-  MOCK_METHOD(ParameterInterfaceBase*, parameter_interface, (), (override));
-  MOCK_METHOD(LoggerInterfaceBase*, logger_interface, (), (override));
-  TfInterfaceBase* tf_interface() override { return tf_interface_.get(); }
-  TimerInterfaceBase* timer_interface() override { return timer_interface_.get(); }
-
-  std::unique_ptr<FakeParameterInterface> parameter_interface_ = std::make_unique<FakeParameterInterface>();
-  std::unique_ptr<spot_ros2::test::MockLoggerInterface> logger_interface_ =
-      std::make_unique<spot_ros2::test::MockLoggerInterface>();
-  std::unique_ptr<spot_ros2::test::MockTfInterface> tf_interface_ =
-      std::make_unique<spot_ros2::test::MockTfInterface>();
-  std::unique_ptr<spot_ros2::test::MockTimerInterface> timer_interface_ =
-      std::make_unique<spot_ros2::test::MockTimerInterface>();
 };
 
 class SpotImagePubNodeTestFixture : public ::testing::Test {
  public:
   void SetUp() override {
-    fake_parameter_interface = std::make_shared<FakeParameterInterface>();
-    mock_logger_interface = std::make_shared<spot_ros2::test::MockLoggerInterface>();
     mock_spot_api = std::make_unique<spot_ros2::test::MockSpotApi>();
     mock_middleware_handle = std::make_unique<MockMiddlewareHandle>();
 
-    ON_CALL(*mock_middleware_handle, parameter_interface()).WillByDefault(Return(fake_parameter_interface.get()));
-    ON_CALL(*mock_middleware_handle, logger_interface()).WillByDefault(Return(mock_logger_interface.get()));
+    fake_parameter_interface = std::make_unique<FakeParameterInterface>();
+    mock_logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+    mock_tf_interface = std::make_unique<MockTfInterface>();
+    mock_timer_interface = std::make_unique<MockTimerInterface>();
+    mock_node_interface = std::make_unique<MockNodeInterface>();
   }
 
- protected:
-  std::shared_ptr<FakeParameterInterface> fake_parameter_interface;
-  std::shared_ptr<spot_ros2::test::MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<spot_ros2::test::MockSpotApi> mock_spot_api;
-  std::unique_ptr<spot_ros2::images::test::MockMiddlewareHandle> mock_middleware_handle;
+  std::unique_ptr<MockSpotApi> mock_spot_api;
+  std::unique_ptr<MockMiddlewareHandle> mock_middleware_handle;
+
+  std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
+  std::unique_ptr<MockLoggerInterface> mock_logger_interface;
+  std::unique_ptr<spot_ros2::test::MockTfInterface> mock_tf_interface;
+  std::unique_ptr<spot_ros2::test::MockTimerInterface> mock_timer_interface;
+  std::unique_ptr<MockNodeInterface> mock_node_interface;
 };
 
-TEST_F(SpotImagePubNodeTestFixture, Construction_Success) {
+TEST_F(SpotImagePubNodeTestFixture, ConstructionSuccess) {
   // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
   // THEN expect the following calls in sequence
-  InSequence seq;
-  EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
-  EXPECT_CALL(*mock_spot_api, authenticate).Times(1);
-  EXPECT_CALL(*mock_spot_api, hasArm).Times(1);
-  EXPECT_CALL(*mock_spot_api, image_client_interface).Times(1);
+  {
+    InSequence seq;
+    EXPECT_CALL(*mock_spot_api, createRobot).Times(1);
+    EXPECT_CALL(*mock_spot_api, authenticate).Times(1);
+    EXPECT_CALL(*mock_spot_api, hasArm).Times(1);
+    EXPECT_CALL(*mock_spot_api, image_client_interface).Times(1);
+  }
+
+  // THEN the underlying node base interface is accessed
+  EXPECT_CALL(*mock_node_interface, getNodeBaseInterface).Times(1);
 
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_NO_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)));
+  // THEN construction succeeds
+  std::unique_ptr<images::SpotImagePublisherNode> node;
+  ASSERT_NO_THROW(node = std::make_unique<images::SpotImagePublisherNode>(
+                      std::move(mock_spot_api), std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+                      std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface),
+                      std::move(mock_node_interface)));
+
+  // WHEN we get the underlying node base interface
+  // THEN no exception is thrown
+  EXPECT_NO_THROW(node->get_node_base_interface());
 }
 
-TEST_F(SpotImagePubNodeTestFixture, Construction_Create_Robot_failure) {
+TEST_F(SpotImagePubNodeTestFixture, ConstructionCreateRobotFailure) {
   // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
   // THEN expect the following calls in sequence
   InSequence seq;
@@ -128,10 +93,15 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_Create_Robot_failure) {
   EXPECT_CALL(*mock_spot_api, image_client_interface).Times(0);
 
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)), std::exception);
+  // THEN the constructor throws
+  EXPECT_THROW(images::SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle),
+                                              std::move(fake_parameter_interface), std::move(mock_logger_interface),
+                                              std::move(mock_tf_interface), std::move(mock_timer_interface),
+                                              std::move(mock_node_interface)),
+               std::runtime_error);
 }
 
-TEST_F(SpotImagePubNodeTestFixture, Construction_Authentication_failure) {
+TEST_F(SpotImagePubNodeTestFixture, ConstructionAuthenticationFailure) {
   {  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
     // THEN expect the following calls in sequence
     InSequence seq;
@@ -143,10 +113,15 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_Authentication_failure) {
     EXPECT_CALL(*mock_spot_api, image_client_interface).Times(0);
   }
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)), std::exception);
+  // THEN the constructor throws
+  EXPECT_THROW(images::SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle),
+                                              std::move(fake_parameter_interface), std::move(mock_logger_interface),
+                                              std::move(mock_tf_interface), std::move(mock_timer_interface),
+                                              std::move(mock_node_interface)),
+               std::runtime_error);
 }
 
-TEST_F(SpotImagePubNodeTestFixture, Construction_hasArm_failure) {
+TEST_F(SpotImagePubNodeTestFixture, ConstructionHasArmFailure) {
   {  // GIVEN a rclcpp::Node, MiddlewareInterface, and a SpotApi
     // THEN expect the following calls in sequence
     InSequence seq;
@@ -156,7 +131,12 @@ TEST_F(SpotImagePubNodeTestFixture, Construction_hasArm_failure) {
     EXPECT_CALL(*mock_spot_api, image_client_interface).Times(0);
   }
   // WHEN constructing a SpotImagePublisherNode
-  EXPECT_THROW(SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle)), std::exception);
+  // THEN the constructor throws
+  EXPECT_THROW(images::SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle),
+                                              std::move(fake_parameter_interface), std::move(mock_logger_interface),
+                                              std::move(mock_tf_interface), std::move(mock_timer_interface),
+                                              std::move(mock_node_interface)),
+               std::runtime_error);
 }
 
-}  // namespace spot_ros2::images::test
+}  // namespace spot_ros2::test
