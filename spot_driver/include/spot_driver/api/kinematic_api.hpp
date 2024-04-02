@@ -17,6 +17,13 @@ using ::bosdyn::client::Result;
 
 class KinematicApi {
  public:
+  // KinematicApi is move-only
+  KinematicApi() = default;
+  KinematicApi(KinematicApi&& other) = default;
+  KinematicApi(const KinematicApi&) = delete;
+  KinematicApi& operator=(KinematicApi&& other) = default;
+  KinematicApi& operator=(const KinematicApi&) = delete;
+
   virtual ~KinematicApi() = default;
 
   /**
