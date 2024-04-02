@@ -531,7 +531,7 @@ class SpotRunner:
         )
         action_goal = RobotCommandAction.Goal()
         convert(command, action_goal.command)
-        self._robot_command_client.send_goal_and_wait("move_arm", goal=action_goal)
+        self._robot_command_client.send_goal_and_wait("long_trajectory", goal=action_goal)
 
         # Stow the arm.
         self._logger.info("Stow the arm")
