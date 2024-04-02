@@ -69,7 +69,7 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   if (!kinematic_api_result.status) {
     // Failure to create the kinematic interface is not an error state, since it does not exist in older versions of the
     // Spot firmware, so don't return here.
-    kinematic_interface_ = std::nullopt;
+    kinematic_interface_ = nullptr;
   } else {
     // The kinematic interface is only available if the corresponding Spot API client was successfully created.
     kinematic_interface_ = std::make_shared<DefaultKinematicApi>(kinematic_api_result.response);
@@ -101,7 +101,7 @@ std::shared_ptr<StateClientInterface> DefaultSpotApi::stateClientInterface() con
   return state_client_interface_;
 }
 
-std::optional<std::shared_ptr<KinematicApi>> DefaultSpotApi::kinematicInterface() const {
+std::shared_ptr<KinematicApi> DefaultSpotApi::kinematicInterface() const {
   return kinematic_interface_;
 }
 

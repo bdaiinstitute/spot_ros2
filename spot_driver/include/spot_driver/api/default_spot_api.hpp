@@ -25,7 +25,7 @@ class DefaultSpotApi : public SpotApi {
   [[nodiscard]] tl::expected<void, std::string> authenticate(const std::string& username,
                                                              const std::string& password) override;
   [[nodiscard]] tl::expected<bool, std::string> hasArm() const override;
-  [[nodiscard]] std::optional<std::shared_ptr<KinematicApi>> kinematicInterface() const override;
+  [[nodiscard]] std::shared_ptr<KinematicApi> kinematicInterface() const override;
   [[nodiscard]] std::shared_ptr<ImageClientInterface> image_client_interface() const override;
   [[nodiscard]] std::shared_ptr<StateClientInterface> stateClientInterface() const override;
   [[nodiscard]] std::shared_ptr<TimeSyncApi> timeSyncInterface() const override;
@@ -33,7 +33,7 @@ class DefaultSpotApi : public SpotApi {
  private:
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
   std::unique_ptr<::bosdyn::client::Robot> robot_;
-  std::optional<std::shared_ptr<KinematicApi>> kinematic_interface_;
+  std::shared_ptr<KinematicApi> kinematic_interface_;
   std::shared_ptr<ImageClientInterface> image_client_interface_;
   std::shared_ptr<StateClientInterface> state_client_interface_;
   std::shared_ptr<TimeSyncApi> time_sync_api_;

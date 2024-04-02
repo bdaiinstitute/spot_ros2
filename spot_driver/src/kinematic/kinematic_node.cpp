@@ -54,13 +54,14 @@ void KinematicNode::initialize(std::shared_ptr<rclcpp::Node> node, std::unique_p
     throw std::runtime_error(errorMsg);
   }
 
-  if (!spot_api_->kinematicInterface().has_value()) {
-    constexpr auto errorMsg{"Failed to initialize the Spot API's inverse kinematics client."};
+  if (spot_api_->kinematicInterface() == nullptr) {
+    constexpr auto errorMsg{
+        "Failed to initialize the Spot API's inverse kinematics client, which is required to run this node."};
     logger_interface->logError(errorMsg);
     throw std::runtime_error(errorMsg);
   }
 
-  internal_ = std::make_unique<KinematicService>(spot_api_->kinematicInterface().value(), logger_interface,
+  internal_ = std::make_unique<KinematicService>(spot_api_->kinematicInterface(), logger_interface,
                                                  std::make_unique<KinematicMiddlewareHandle>(node_));
   internal_->initialize();
 }

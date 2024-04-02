@@ -31,9 +31,10 @@ class SpotApi {
   /**
    * @brief Get a shared_ptr to the Spot API's inverse kinematics interface, if it could be created.
    * @details Spots with firmware older than 3.3.0 cannot create the inverse kinematics client, so it is not guaranteed
-   * to exist and is therefore optional.
+   * to exist.
+   * @return A shared_ptr to the inverse kinematics interface. If this interface is not available, returns a nullptr.
    */
-  virtual std::optional<std::shared_ptr<KinematicApi>> kinematicInterface() const = 0;
+  virtual std::shared_ptr<KinematicApi> kinematicInterface() const = 0;
   virtual std::shared_ptr<ImageClientInterface> image_client_interface() const = 0;
 
   /**
