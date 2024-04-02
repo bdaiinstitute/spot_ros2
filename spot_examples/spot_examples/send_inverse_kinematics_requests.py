@@ -24,6 +24,7 @@ import bdai_ros2_wrappers.scope as ros_scope
 import geometry_msgs.msg
 import numpy as np
 from bdai_ros2_wrappers.action_client import ActionClientWrapper
+from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
 from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api.spot import inverse_kinematics_pb2, robot_command_pb2
 from bosdyn.client.frame_helpers import (
@@ -35,14 +36,29 @@ from bosdyn.client.frame_helpers import (
 )
 from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
+from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
-from tf2_ros import TransformBroadcaster
-from utilities.simple_spot_commander import SimpleSpotCommander
-from utilities.tf_listener_wrapper import TFListenerWrapper
+from tf2_ros import TransformBroadcaster, TransformStamped
 
-import spot_driver.conversions as conv
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
+
+from .simple_spot_commander import SimpleSpotCommander
+
+
+def to_se3(ros_transform: TransformStamped) -> SE3Pose:
+    """Convert from ROS TransformStamped to Bosdyn SE3Pose"""
+    return SE3Pose(
+        ros_transform.transform.translation.x,
+        ros_transform.transform.translation.y,
+        ros_transform.transform.translation.z,
+        Quat(
+            ros_transform.transform.rotation.w,
+            ros_transform.transform.rotation.x,
+            ros_transform.transform.rotation.y,
+            ros_transform.transform.rotation.z,
+        ),
+    )
 
 
 class SpotRunner:
@@ -102,7 +118,7 @@ class SpotRunner:
         """
         command = RobotCommandBuilder.arm_ready_command()
         action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("ready_arm", action_goal)
 
     def _arm_stow(self) -> bool:
@@ -111,7 +127,7 @@ class SpotRunner:
         """
         command = RobotCommandBuilder.arm_stow_command()
         action_goal = RobotCommand.Goal()
-        conv.convert_proto_to_bosdyn_msgs_robot_command(command, action_goal.command)
+        convert(command, action_goal.command)
         return self._robot_command_client.send_goal_and_wait("arm_stow", action_goal)
 
     def _send_ik_request(
@@ -133,11 +149,11 @@ class SpotRunner:
             ),
         )
         request = GetInverseKinematicSolutions.Request()
-        conv.convert_proto_to_bosdyn_msgs_inverse_kinematics_request(ik_request, request.request)
+        convert(ik_request, request.request)
         ik_reponse = self._ik_client.call(request)
 
         proto = inverse_kinematics_pb2.InverseKinematicsResponse()
-        conv.convert_bosdyn_msgs_inverse_kinematics_response_to_proto(ik_reponse.response, proto)
+        convert(ik_reponse.response, proto)
         return proto
 
     def test_run(self) -> bool:
@@ -153,7 +169,7 @@ class SpotRunner:
         ground_plane_frame_name = namespace_with(self._robot_name, GROUND_PLANE_FRAME_NAME)
 
         task_frame_name = namespace_with(self._robot_name, "task_frame")
-        link_wr1_frame_name = namespace_with(self._robot_name, "link_wr1")
+        arm_link_wr1_frame_name = namespace_with(self._robot_name, "arm_link_wr1")
         jaw_frame_name = namespace_with(self._robot_name, "jaw_frame")
 
         # Wait for the robot to publish the TF state.
@@ -191,8 +207,8 @@ class SpotRunner:
         self._logger.info("Arm ready.")
 
         # Look for known transforms published by the robot.
-        odom_T_flat_body: SE3Pose = self._tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name)
-        odom_T_gpe: SE3Pose = self._tf_listener.lookup_a_tform_b(odom_frame_name, ground_plane_frame_name)
+        odom_T_flat_body: SE3Pose = to_se3(self._tf_listener.lookup_a_tform_b(odom_frame_name, flat_body_frame_name))
+        odom_T_gpe: SE3Pose = to_se3(self._tf_listener.lookup_a_tform_b(odom_frame_name, ground_plane_frame_name))
 
         # Construct the frame on the ground right underneath the center of the body.
         odom_T_ground_body: SE3Pose = odom_T_flat_body
@@ -206,7 +222,7 @@ class SpotRunner:
         # orientation so that when the hand is pointed downwards, the tool's z-axis is
         # pointed upward.
         wr1_T_tool: SE3Pose = SE3Pose(0.23589, 0.0, -0.03943, Quat.from_pitch(-np.pi / 2))
-        self._publish_transform(link_wr1_frame_name, jaw_frame_name, wr1_T_tool)
+        self._publish_transform(arm_link_wr1_frame_name, jaw_frame_name, wr1_T_tool)
 
         # Generate several random poses in front of the task frame where we want the tool to move to.
         # The desired tool poses are defined relative to thr task frame in front of the robot and slightly
@@ -275,7 +291,7 @@ class SpotRunner:
                 wr1_T_tool.to_proto()
             )
             arm_command_goal = RobotCommand.Goal()
-            conv.convert_proto_to_bosdyn_msgs_robot_command(arm_command, arm_command_goal.command)
+            convert(arm_command, arm_command_goal.command)
             result = self._robot_command_client.send_goal_and_wait(
                 action_name="arm_move_one", goal=arm_command_goal, timeout_sec=5
             )

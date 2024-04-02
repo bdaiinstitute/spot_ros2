@@ -9,7 +9,7 @@
 #include <google/protobuf/duration.pb.h>
 #include <google/protobuf/map.h>
 #include <google/protobuf/timestamp.pb.h>
-#include <bosdyn_msgs/msg/manipulator_state_carry_state.hpp>
+#include <bosdyn_api_msgs/msg/manipulator_state_carry_state.hpp>
 #include <builtin_interfaces/msg/duration.hpp>
 #include <builtin_interfaces/msg/time.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
@@ -36,6 +36,7 @@ using ::testing::Field;
 using ::testing::IsEmpty;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
+using ::testing::Not;
 using ::testing::SizeIs;
 using ::testing::StrEq;
 using ::testing::UnorderedElementsAre;
@@ -699,20 +700,24 @@ TEST(RobotStateConversions, TestGetManipulatorState) {
   // THEN all the output fields are set, and contain the same values as the inputs
   EXPECT_THAT(out->gripper_open_percentage, DoubleEq(50.0));
   EXPECT_THAT(out->is_gripper_holding_item, IsTrue());
-  EXPECT_THAT(out->carry_state.value, Eq(bosdyn_msgs::msg::ManipulatorStateCarryState::CARRY_STATE_NOT_CARRIABLE));
-  EXPECT_THAT(out->stow_state.value, Eq(bosdyn_msgs::msg::ManipulatorStateStowState::STOWSTATE_DEPLOYED));
 
-  EXPECT_THAT(out->estimated_end_effector_force_in_hand_is_set, IsTrue());
+  using ManipulatorStateCarryState = bosdyn_api_msgs::msg::ManipulatorStateCarryState;
+  using ManipulatorStateStowState = bosdyn_api_msgs::msg::ManipulatorStateStowState;
+  EXPECT_THAT(out->carry_state.value, Eq(ManipulatorStateCarryState::CARRY_STATE_NOT_CARRIABLE));
+  EXPECT_THAT(out->stow_state.value, Eq(ManipulatorStateStowState::STOWSTATE_DEPLOYED));
+
+  using ManipulatorState = bosdyn_api_msgs::msg::ManipulatorState;
+  EXPECT_THAT(out->has_field, HasEnabledBit(ManipulatorState::ESTIMATED_END_EFFECTOR_FORCE_IN_HAND_FIELD_SET));
   EXPECT_THAT(out->estimated_end_effector_force_in_hand,
               GeometryMsgsVector3Eq(force_in_hand.x(), force_in_hand.y(), force_in_hand.z()));
 
-  EXPECT_THAT(out->velocity_of_hand_in_vision_is_set, IsTrue());
+  EXPECT_THAT(out->has_field, HasEnabledBit(ManipulatorState::VELOCITY_OF_HAND_IN_VISION_FIELD_SET));
   EXPECT_THAT(out->velocity_of_hand_in_vision,
               GeometryMsgsTwistEq(velocity_hand_vision.linear().x(), velocity_hand_vision.linear().y(),
                                   velocity_hand_vision.linear().z(), velocity_hand_vision.angular().x(),
                                   velocity_hand_vision.angular().y(), velocity_hand_vision.angular().z()));
 
-  EXPECT_THAT(out->velocity_of_hand_in_odom_is_set, IsTrue());
+  EXPECT_THAT(out->has_field, HasEnabledBit(ManipulatorState::VELOCITY_OF_HAND_IN_ODOM_FIELD_SET));
   EXPECT_THAT(out->velocity_of_hand_in_odom,
               GeometryMsgsTwistEq(velocity_hand_odom.linear().x(), velocity_hand_odom.linear().y(),
                                   velocity_hand_odom.linear().z(), velocity_hand_odom.angular().x(),
@@ -740,7 +745,8 @@ TEST(RobotStateConversions, TestGetManipulatorStateNoForceInHand) {
   // THEN the conversion does not succeed
   EXPECT_THAT(out.has_value(), IsTrue());
 
-  EXPECT_THAT(out->estimated_end_effector_force_in_hand_is_set, IsFalse());
+  using ManipulatorState = bosdyn_api_msgs::msg::ManipulatorState;
+  EXPECT_THAT(out->has_field, Not(HasEnabledBit(ManipulatorState::ESTIMATED_END_EFFECTOR_FORCE_IN_HAND_FIELD_SET)));
 }
 
 TEST(RobotStateConversions, TestGetEndEffectorForce) {

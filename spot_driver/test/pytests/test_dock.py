@@ -20,7 +20,7 @@ from spot_wrapper.testing.fixtures import SpotFixture
 
 
 @pytest.mark.usefixtures("spot_node")
-def test_dock(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
+def test_dock(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
     """
     This integration test checks if the "undock" service infrastructure is
     setup correctly.
@@ -59,7 +59,6 @@ def test_dock(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     stand_feedback_response.feedback.synchronized_feedback.mobility_command_feedback.status = (
         RobotCommandFeedbackStatus.STATUS_PROCESSING
     )
-    stand_feedback_response.status = RobotCommandResponse.Status.STATUS_OK
     stand_feedback_call.returns(stand_feedback_response)
 
     # Serve dock command.
@@ -158,7 +157,6 @@ def test_dock_with_dock_command_failed(ros: ROSAwareScope, simple_spot: SpotFixt
     stand_feedback_response.feedback.synchronized_feedback.mobility_command_feedback.status = (
         RobotCommandFeedbackStatus.STATUS_PROCESSING
     )
-    stand_feedback_response.status = RobotCommandResponse.Status.STATUS_OK
     stand_feedback_call.returns(stand_feedback_response)
 
     # Serve dock command and return unknown error.

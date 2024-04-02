@@ -11,6 +11,8 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
+  bosdyn_api_msgs
+  bosdyn_spot_api_msgs
   cv_bridge
   geometry_msgs
   rclcpp
@@ -158,12 +160,6 @@ install(
   spot_driver/command_spot_driver.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME command_spot
-  )
-install(
-  PROGRAMS
-  spot_driver/publish_cameras.py
-  DESTINATION lib/${PROJECT_NAME}
-  RENAME spot_publish_cameras
   )
 install(
   PROGRAMS

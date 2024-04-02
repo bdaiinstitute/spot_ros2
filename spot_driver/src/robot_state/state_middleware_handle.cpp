@@ -56,7 +56,7 @@ StateMiddlewareHandle::StateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>
       system_faults_publisher_{
           node_->create_publisher<spot_msgs::msg::SystemFaultState>(kSystemFaultsTopic, makeQoS())},
       manipulator_state_publisher_{
-          node_->create_publisher<bosdyn_msgs::msg::ManipulatorState>(kManipulatorTopic, makeQoS())},
+          node_->create_publisher<bosdyn_api_msgs::msg::ManipulatorState>(kManipulatorTopic, makeQoS())},
       end_effector_force_publisher_{
           node_->create_publisher<geometry_msgs::msg::Vector3Stamped>(kEndEffectorForceTopic, makeQoS())},
       behavior_fault_state_publisher_{
