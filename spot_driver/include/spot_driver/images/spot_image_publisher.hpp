@@ -80,7 +80,7 @@ class SpotImagePublisher {
    * @return False, if a required user-defined parameter was not set, if the attempt to connect to Spot fails, or if the
    * attempt to authenticate with Spot using the provided credentials fails.
    */
-  bool initialize();
+  [[nodiscard]] bool initialize();
 
  private:
   /**

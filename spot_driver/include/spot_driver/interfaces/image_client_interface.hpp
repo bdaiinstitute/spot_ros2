@@ -22,6 +22,13 @@ struct GetImagesResult {
  */
 class ImageClientInterface {
  public:
+  // ImageClientInterface is move-only
+  ImageClientInterface() = default;
+  ImageClientInterface(ImageClientInterface&& other) = default;
+  ImageClientInterface(const ImageClientInterface&) = delete;
+  ImageClientInterface& operator=(ImageClientInterface&& other) = default;
+  ImageClientInterface& operator=(const ImageClientInterface&) = delete;
+  virtual ~ImageClientInterface() = default;
   virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request) = 0;
 };
 }  // namespace spot_ros2

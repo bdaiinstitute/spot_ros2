@@ -43,7 +43,13 @@ SpotImagePublisherNode::SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api
 
   internal_ = std::make_unique<SpotImagePublisher>(spot_api_->image_client_interface(), std::move(mw_handle),
                                                    expected_has_arm.value());
-  internal_->initialize();
+
+  // TODO(jschornak): initialize() always returns true -- revise implementation to make it return void
+  if (!internal_->initialize()) {
+    constexpr auto error_msg{"Failed to initialize image publisher."};
+    mw_handle->logger_interface()->logError(error_msg);
+    throw std::runtime_error(error_msg);
+  }
 }
 
 SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_options)
