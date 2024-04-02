@@ -14,6 +14,13 @@ namespace spot_ros2 {
  */
 class StateClientInterface {
  public:
+  // StateClientInterface is move-only
+  StateClientInterface() = default;
+  StateClientInterface(StateClientInterface&& other) = default;
+  StateClientInterface(const StateClientInterface&) = delete;
+  StateClientInterface& operator=(StateClientInterface&& other) = default;
+  StateClientInterface& operator=(const StateClientInterface&) = delete;
+
   virtual ~StateClientInterface() = default;
 
   /**

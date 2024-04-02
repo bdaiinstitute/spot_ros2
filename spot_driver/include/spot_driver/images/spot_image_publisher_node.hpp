@@ -1,15 +1,17 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #pragma once
 
+#include <memory>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_options.hpp>
 #include <spot_driver/api/spot_api.hpp>
 #include <spot_driver/images/spot_image_publisher.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
+#include <spot_driver/interfaces/node_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
-
-#include <memory>
+#include <spot_driver/interfaces/tf_interface_base.hpp>
+#include <spot_driver/interfaces/timer_interface_base.hpp>
 
 namespace spot_ros2::images {
 /**
@@ -18,7 +20,11 @@ namespace spot_ros2::images {
 class SpotImagePublisherNode {
  public:
   SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api,
-                         std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle);
+                         std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle,
+                         std::unique_ptr<ParameterInterfaceBase> parameters,
+                         std::unique_ptr<LoggerInterfaceBase> logger, std::unique_ptr<TfInterfaceBase> tf_broadcaster,
+                         std::unique_ptr<TimerInterfaceBase> timer,
+                         std::unique_ptr<NodeInterfaceBase> node_base_interface);
 
   explicit SpotImagePublisherNode(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions{});
 
@@ -32,7 +38,11 @@ class SpotImagePublisherNode {
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> get_node_base_interface();
 
  private:
-  std::shared_ptr<rclcpp::Node> node_;
+  void initialize(std::unique_ptr<SpotApi> spot_api, std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle,
+                  std::unique_ptr<ParameterInterfaceBase> parameters, std::unique_ptr<LoggerInterfaceBase> logger,
+                  std::unique_ptr<TfInterfaceBase> tf_broadcaster, std::unique_ptr<TimerInterfaceBase> timer);
+
+  std::unique_ptr<NodeInterfaceBase> node_base_interface_;
   std::unique_ptr<SpotApi> spot_api_;
   std::unique_ptr<SpotImagePublisher> internal_;
 };

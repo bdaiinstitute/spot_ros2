@@ -72,6 +72,8 @@ from rclpy.timer import Rate
 from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
 
+import spot_driver.robot_command_util as robot_command_util
+
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
 from spot_driver.ros_helpers import (
@@ -210,6 +212,9 @@ def set_node_parameter_from_parameter_list(
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
+    TRAJECTORY_BATCH_SIZE_PARAM = "trajectory_batch_size"
+    TRAJECTORY_BATCH_OVERLAPPING_POINTS_PARAM = "trajectory_batch_overlapping_points"
+
     def __init__(self, parameter_list: Optional[typing.List[Parameter]] = None, **kwargs: typing.Any) -> None:
         """
         Main function for the SpotROS class.  Gets config from ROS and initializes the wrapper.
@@ -265,6 +270,21 @@ class SpotROS(Node):
 
         self.declare_parameter("spot_name", "")
         self.declare_parameter("mock_enable", False)
+
+        # When we send very long trajectories to Spot, we create batches of
+        # given size. If we do not batch a long trajectory, Spot will reject it.
+        self.declare_parameter(self.TRAJECTORY_BATCH_SIZE_PARAM, 100)
+        self.trajectory_batch_size: Parameter = self.get_parameter(self.TRAJECTORY_BATCH_SIZE_PARAM).value
+
+        # When we send very long trajectories to Spot, we create overlapping
+        # batches. Overlapping trajectories is very important because we want
+        # the robot to stitch them smoothly. A batch is sent before the
+        # previous one has completed, to work around network latency. The
+        # following default value has been determined empirically.
+        self.declare_parameter(self.TRAJECTORY_BATCH_OVERLAPPING_POINTS_PARAM, 20)
+        self.trajectory_batch_overlapping_points: Parameter = self.get_parameter(
+            self.TRAJECTORY_BATCH_OVERLAPPING_POINTS_PARAM
+        ).value
 
         # If `mock_enable:=True`, then there are additional parameters. We must set this one separately.
         set_node_parameter_from_parameter_list(self, parameter_list, "mock_enable")
@@ -2119,36 +2139,66 @@ class SpotROS(Node):
         return response
 
     def handle_robot_command_action(self, goal_handle: ServerGoalHandle) -> RobotCommandAction.Result:
+        """
+        Spot cannot process long trajectories. If we issue a command with long
+        trajectories for the arm or the body, the command will be batched,
+        assuming that there is only one long trajectory or more but all time
+        aligned.
+        To account for the network latency, a command must contain batched
+        trajectory with some overlapping.
+        This is currently not possible for the gripper trajectory, due to some
+        limitation in the SDK.
+        """
+        if self.spot_wrapper is None:
+            return
+
         ros_command = goal_handle.request.command
         proto_command = robot_command_pb2.RobotCommand()
         convert(ros_command, proto_command)
-        self._wait_for_goal = None
-        if self.spot_wrapper is None:
-            self._wait_for_goal = WaitForGoal(self.get_clock(), 2.0)
-            goal_id = None
-        else:
-            success, err_msg, goal_id = self.spot_wrapper.robot_command(proto_command)
-            if not success:
-                raise Exception(err_msg)
 
-        self.get_logger().info("Robot now executing goal " + str(goal_id))
-        # The command is non-blocking, but we need to keep this function up in order to interrupt if a
-        # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
-        # monitor whether the timeout_cb has already aborted the command
+        # Inspect the command and if there are long trajectories, batch them.
+        commands = robot_command_util.batch_command(
+            proto_command, self.trajectory_batch_size, self.trajectory_batch_overlapping_points
+        )
+        num_of_commands = len(commands)
+
+        goal_id = None
+        self._wait_for_goal = None
         feedback: Optional[RobotCommandFeedback] = None
         feedback_msg: Optional[RobotCommandAction.Feedback] = None
+
+        start_time = time.time()
+        time_to_send_command = 0.0
+
+        index = 0
         while (
             rclpy.ok()
+            and goal_handle.is_active
             and not goal_handle.is_cancel_requested
             and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
-            and goal_handle.is_active
         ):
+            # We keep looping and send batches at the expected times until the
+            # last batch succeeds. We always send the next batch before the
+            # previous one succeeds, so the only batch that can actuallly
+            # succeed is the last one.
+
+            time_since_start = time.time() - start_time
+            if time_since_start >= time_to_send_command:
+                success, err_msg, goal_id = self.spot_wrapper.robot_command(commands[index])
+                if not success:
+                    raise Exception(err_msg)
+                index += 1
+                if index < num_of_commands:
+                    time_to_send_command = robot_command_util.min_time_since_reference(commands[index])
+                else:
+                    time_to_send_command = float("inf")
+                self.get_logger().info("Robot now executing goal " + str(goal_id))
+
             feedback = self._get_robot_command_feedback(goal_id)
             feedback_msg = RobotCommandAction.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
-            time.sleep(0.1)  # don't use rate here because we're already in a single thread
+            time.sleep(0.01)  # don't use rate here because we're already in a single thread
 
-        # publish a final feedback
         result = RobotCommandAction.Result()
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
