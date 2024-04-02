@@ -163,12 +163,6 @@ install(
   )
 install(
   PROGRAMS
-  spot_driver/publish_cameras.py
-  DESTINATION lib/${PROJECT_NAME}
-  RENAME spot_publish_cameras
-  )
-install(
-  PROGRAMS
   spot_driver/spot_ros2.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME spot_ros2
