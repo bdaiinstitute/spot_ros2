@@ -79,7 +79,6 @@ import spot_driver.robot_command_util as robot_command_util
 from spot_driver.ros_helpers import (
     bosdyn_data_to_image_and_camera_info_msgs,
     get_from_env_and_fall_back_to_param,
-    get_tf_from_world_objects,
     populate_transform_stamped,
 )
 from spot_msgs.action import (  # type: ignore
@@ -230,7 +229,6 @@ class SpotROS(Node):
         """Dictionary listing what callback to use for what data task"""
         self.callbacks["metrics"] = self.metrics_callback
         self.callbacks["lease"] = self.lease_callback
-        self.callbacks["world_objects"] = self.world_objects_callback
 
         self.group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.rgb_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
@@ -1053,21 +1051,6 @@ class SpotROS(Node):
                 lease_array_msg.resources.append(new_resource)
 
             self.lease_pub.publish(lease_array_msg)
-
-    def world_objects_callback(self, results: Any) -> None:
-        if self.spot_wrapper is None:
-            return
-
-        world_objects = self.spot_wrapper.world_objects
-        if world_objects:
-            # TF
-            tf_msg = get_tf_from_world_objects(
-                world_objects.world_objects,
-                self.spot_wrapper,
-                self.preferred_odom_frame.value,
-            )
-            if len(tf_msg.transforms) > 0:
-                self.dynamic_broadcaster.sendTransform(tf_msg.transforms)
 
     def publish_graph_nav_pose_callback(self) -> None:
         if self.spot_wrapper is None:

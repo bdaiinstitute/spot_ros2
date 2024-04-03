@@ -1,11 +1,15 @@
 // Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <bosdyn/client/gripper_camera_param/gripper_camera_param_client.h>
+#include <bosdyn/client/world_objects/world_object_client.h>
+#include <memory>
 #include <spot_driver/api/default_image_client.hpp>
 #include <spot_driver/api/default_kinematic_api.hpp>
 #include <spot_driver/api/default_spot_api.hpp>
 #include <spot_driver/api/default_state_client.hpp>
 #include <spot_driver/api/default_time_sync_api.hpp>
+#include <tl_expected/expected.hpp>
+#include "spot_driver/api/default_world_object_client.hpp"
 #include "spot_driver/api/state_client_interface.hpp"
 
 namespace spot_ros2 {
@@ -70,6 +74,17 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
     return tl::make_unexpected("Failed to create Inverse Kinematic client.");
   }
   kinematicApi_ = std::make_shared<DefaultKinematicApi>(kinematic_api_result.response);
+  const auto world_object_client_result = robot_->EnsureServiceClient<::bosdyn::client::WorldObjectClient>(
+      ::bosdyn::client::WorldObjectClient::GetDefaultServiceName());
+  if (!world_object_client_result.status) {
+    return tl::make_unexpected("Failed to create world object client: " +
+                               world_object_client_result.status.DebugString());
+  }
+  if (world_object_client_result.response == nullptr) {
+    return tl::make_unexpected("Failed to create world object client (nullptr): " +
+                               world_object_client_result.status.DebugString());
+  }
+  world_object_client_interface_ = std::make_shared<DefaultWorldObjectClient>(world_object_client_result.response);
 
   return {};
 }
@@ -103,6 +118,10 @@ std::shared_ptr<KinematicApi> DefaultSpotApi::kinematicApi() const {
 
 std::shared_ptr<TimeSyncApi> DefaultSpotApi::timeSyncInterface() const {
   return time_sync_api_;
+}
+
+std::shared_ptr<WorldObjectClientInterface> DefaultSpotApi::worldObjectClientInterface() const {
+  return world_object_client_interface_;
 }
 
 }  // namespace spot_ros2

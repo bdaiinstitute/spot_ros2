@@ -130,6 +130,16 @@ target_include_directories(test_kinematic_service
 )
 target_link_libraries(test_kinematic_service spot_api)
 
+ament_add_gmock(test_object_synchronization
+    src/test_object_synchronization.cpp
+)
+target_include_directories(test_object_synchronization
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(test_object_synchronization spot_api)
+
 # Per https://github.com/colcon/colcon-ros/issues/151, `pytest-args` cannot be used in an ament_cmake package, so in order to pass arguments to pytest we have to run pytest directly
 # If that gets fixed, then we can bring this back
 #rclpy_test

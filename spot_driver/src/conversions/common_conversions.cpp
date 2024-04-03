@@ -44,6 +44,11 @@ void convertToProto(const geometry_msgs::msg::Pose& ros_msg, bosdyn::api::SE3Pos
   convertToProto(ros_msg.orientation, *proto.mutable_rotation());
 }
 
+void convertToProto(const geometry_msgs::msg::Transform& ros_msg, bosdyn::api::SE3Pose& proto) {
+  convertToProto(ros_msg.translation, *proto.mutable_position());
+  convertToProto(ros_msg.rotation, *proto.mutable_rotation());
+}
+
 void convertToProto(const std_msgs::msg::Float64& ros_msg, google::protobuf::DoubleValue& proto) {
   proto.set_value(ros_msg.data);
 }
@@ -134,6 +139,11 @@ void convertToRos(const bosdyn::api::Quaternion& proto, geometry_msgs::msg::Quat
 void convertToRos(const bosdyn::api::SE3Pose& proto, geometry_msgs::msg::Pose& ros_msg) {
   convertToRos(proto.position(), ros_msg.position);
   convertToRos(proto.rotation(), ros_msg.orientation);
+}
+
+void convertToRos(const bosdyn::api::SE3Pose& proto, geometry_msgs::msg::Transform& ros_msg) {
+  convertToRos(proto.position(), ros_msg.translation);
+  convertToRos(proto.rotation(), ros_msg.rotation);
 }
 
 void convertToRos(const bosdyn::api::SE3Velocity& proto, geometry_msgs::msg::Twist& ros_msg) {
