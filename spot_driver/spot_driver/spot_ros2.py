@@ -2740,7 +2740,7 @@ class SpotROS(Node):
             return response
 
         # run navigate_to
-        resp = self.spot_wrapper.spot_graph_nav.navigate_to(
+        resp = self.spot_wrapper.spot_graph_nav._navigate_to(
             upload_path=goal_handle.request.upload_path,
             navigate_to=goal_handle.request.navigate_to,
             initial_localization_fiducial=goal_handle.request.initial_localization_fiducial,
