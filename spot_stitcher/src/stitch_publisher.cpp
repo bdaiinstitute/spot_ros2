@@ -1,4 +1,5 @@
 #include <opencv2/core/hal/interface.h>
+#include <algorithm>
 #include <opencv2/core.hpp>
 #include <opencv2/core/base.hpp>
 #include <opencv2/core/matx.hpp>
@@ -126,44 +127,59 @@ void refresh_mosaic() {
   cv::resizeWindow("mosaic", result.cols / 2, result.rows / 2);
   cv::imshow("mosaic", result);
 }
+
+// maps an integer value from trackbar to -1:1
+double to_normy(int x) {
+  // values from zero to 200 with 100 being the center will map to -1:1
+  x = std::clamp(x, 0, 200);
+  return static_cast<double>(x - 100) / 100;
+}
+
+// maps an double value from normy to 0:200
+int to_trackbar(double x) {
+  // values from -1 to 1 with 0 being the center will map to 0:200
+  x = std::clamp(x, -1., 1.);
+  return static_cast<int>(x * 100 + 100);
+}
+
 // The range of the elements of normy can be [-1:1:0.1], default (0, 0, 1)
 // but the whole vector will stay normalized.
 // So as you pull on one slider, the other sliders will update
-cv::Vec3d normy(-0.5, 0, 0.);
-int nx_slider = -50;
-int const nx_max = 100;
-int ny_slider = 0;
-int const ny_max = 100;
-int nz_slider = 0;
-int const nz_max = 100;
+// cv::Vec3d normy(-0.159758, 0, 0.987156);
+cv::Vec3d normy(0., 0, 1.);
+int nx_slider = 84;
+int const nx_max = 200;
+int ny_slider = 100;
+int const ny_max = 200;
+int nz_slider = 198;
+int const nz_max = 200;
 
 void refresh_control() {
-  std::cout << "normy = " << normy << "\n";
   normy = cv::normalize(normy);
-  std::cout << "normy = " << normy << "\n";
-  std::cout << "normy.x trackbar pos = " << static_cast<int>(normy[0] * nx_max) << "\n";
-  std::cout << "normy.y trackbar pos = " << static_cast<int>(normy[1] * ny_max) << "\n";
-  std::cout << "normy.z trackbar pos = " << static_cast<int>(normy[2] * nz_max) << "\n";
-  cv::setTrackbarPos("nx", "control", static_cast<int>(normy[0] * nx_max)); 
-  cv::setTrackbarPos("ny", "control", static_cast<int>(normy[1] * ny_max)); 
-  cv::setTrackbarPos("nz", "control", static_cast<int>(normy[2] * nz_max)); 
+  try {
+  cv::setTrackbarPos("nx", "control", to_trackbar(normy[0])); 
+  cv::setTrackbarPos("ny", "control", to_trackbar(normy[1])); 
+  cv::setTrackbarPos("nz", "control", to_trackbar(normy[2]));
+  } catch(cv::Exception const& e) {
+    std::cout << e.what() << "\n";
+  }
   cv::Mat normal_arrow = draw_arrows(normy, 200, 2);
   cv::imshow("control", normal_arrow);
 }
 
 void on_nx(int, void*) {
-  normy[0] = static_cast<double>(nx_slider) / nx_max;
+  normy[0] = to_normy(nx_slider);
   refresh_control();
   refresh_mosaic();
 }
 
 void on_ny(int, void*) {
-  normy[1] = static_cast<double>(ny_slider) / ny_max;
+  normy[1] = to_normy(ny_slider);
   refresh_control();
   refresh_mosaic();
 }
 void on_nz(int, void*) {
-  normy[2] = static_cast<double>(nz_slider) / nz_max;
+  normy[2] = to_normy(nz_slider);
   refresh_control();
   refresh_mosaic();
 }
@@ -176,9 +192,18 @@ void on_nz(int, void*) {
 // btr = [-0.28, 0.44, 0.02]
 // normal = [0, 0, 1]
 
+// These are producing the best results
+// Some of these look similar the elements in the Rb and tb matrices.
+// See if there is a permulation of them that will be acceptable
+// gdistance = 10
+// btl = [0.25, -0.43, 0.02]
+// btr = [-0.25, 0.43, 0.02]
+// normal = [-0.159758, 0, 0.987156]
+// Don't forget to math out the values of btl and btr to see if they can come from normy
+
 // We want the range of x to be [-2:2:0.1], default 0
 double x = 0.;
-int x_slider = 28;
+int x_slider = -25;
 int const x_max = 100;
 
 void on_x(int, void*) {
@@ -251,7 +276,7 @@ void computeCameraTransform(cv::Matx33d const& R1, cv::Vec3d const& t1, cv::Matx
 cv::Matx33d computeHomography(cv::Matx33d const& R_1to2, cv::Vec3d const& tvec_1to2, double thedistance, cv::Vec3d const& normal) {
   double const d_inv = 1. / thedistance;
   cv::Matx33d const Tt = d_inv * tvec_1to2 * normal.t();
-  return R_1to2 + Tt;
+  return R_1to2 - Tt;
 };
 
 void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right) {
@@ -261,23 +286,20 @@ void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv:
   cv::Vec3d btl, btr, rtm, ltm;
   // computeCameraTransform(Rl, tl, Rb, tb, bRl, btl);
   // computeCameraTransform(Rr, tr, Rb, tb, bRr, btr);
-  // [ x: -0.5481488, y: 0.0440343, z: -0.0084505 ]
   // TODO(gwb) Multiply these matrices together again and see if you get the original
   bRl = cv::Matx33d(
        1.000,  0.000, 0.000,
        0.000,  0.853, 0.521,
        0.000, -0.521, 0.853
-      ); // original
-  // btl = cv::Vec3d(0.6, -0.73, 0.02); // manually tuned
-  btl = cv::Vec3d(0. - x , -0.03 - y, 0.02); // original
+      ); // from online tool
+  btl = cv::Vec3d(0. - x , -0.03 - y, 0.02); // from online tool
   std::cout << "btl = " << btl << "\n";
   bRr = cv::Matx33d(
       1.000,  0.000,  0.000,
       0.000,  0.853, -0.521,
       0.000,  0.521,  0.853
-      ); // original
-  // btr = cv::Vec3d(-0.6, 0.73, 0.02); // manually tuned
-  btr = cv::Vec3d(-0. + x, 0.03 + y, 0.02); // original 
+      ); // from online tool
+  btr = cv::Vec3d(-0. + x, 0.03 + y, 0.02); // from online tool 
   std::cout << "btr = " << btr << "\n";
   // cv::Vec3d normal = Rb * cv::Vec3d(0, 0, 1);
   cv::Vec3d normal = normy; 
@@ -317,11 +339,8 @@ int main(int argc, char* argv[])
     cv::createTrackbar("d", "control", &d_slider, d_max, on_d);
     cv::setTrackbarMin("d", "control", -100);
     cv::createTrackbar("nx", "control", &nx_slider, nx_max, on_nx);
-    cv::setTrackbarMin("nx", "control", -100);
     cv::createTrackbar("ny", "control", &ny_slider, ny_max, on_ny);
-    cv::setTrackbarMin("ny", "control", -100);
     cv::createTrackbar("nz", "control", &nz_slider, nz_max, on_nz);
-    cv::setTrackbarMin("nz", "control", -100);
     cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
     cv::resizeWindow("mosaic", result.cols / 2, result.rows / 2);
     cv::imshow("mosaic", result);
