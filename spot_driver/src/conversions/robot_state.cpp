@@ -1,7 +1,10 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <bosdyn/api/geometry.pb.h>
 #include <bosdyn/math/frame_helpers.h>
 #include <bosdyn/math/proto_math.h>
+#include <google/protobuf/duration.pb.h>
+#include <google/protobuf/timestamp.pb.h>
 #include <builtin_interfaces/msg/duration.hpp>
 #include <optional>
 #include <spot_driver/api/time_sync_api.hpp>
@@ -103,19 +106,31 @@ std::optional<sensor_msgs::msg::JointState> getJointStates(const ::bosdyn::api::
 
 std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& robot_state,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
-                                              const std::string& preferred_base_frame_id) {
-  if (!robot_state.has_kinematic_state() || !robot_state.kinematic_state().has_transforms_snapshot() ||
-      robot_state.kinematic_state().transforms_snapshot().child_to_parent_edge_map().empty()) {
+                                              [[maybe_unused]] const std::string& preferred_base_frame_id) {
+  if (!robot_state.has_kinematic_state() || !robot_state.kinematic_state().has_transforms_snapshot()) {
     return std::nullopt;
   }
 
+  return getTf(robot_state.kinematic_state().transforms_snapshot(),
+               robot_state.kinematic_state().acquisition_timestamp(), clock_skew, prefix, preferred_base_frame_id);
+}
+
+std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnapshot& frame_tree_snapshot,
+                                              const google::protobuf::Timestamp& timestamp_robot,
+                                              const google::protobuf::Duration& clock_skew, const std::string& prefix,
+                                              const std::string& preferred_base_frame_id) {
+  if (frame_tree_snapshot.child_to_parent_edge_map().empty()) {
+    return std::nullopt;
+  }
+
+  const auto timestamp_local = robotTimeToLocalTime(timestamp_robot, clock_skew);
+
   tf2_msgs::msg::TFMessage tf_msg;
-
-  const auto local_time = robotTimeToLocalTime(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
-
-  for (const auto& [frame_id, transform] :
-       robot_state.kinematic_state().transforms_snapshot().child_to_parent_edge_map()) {
-    // Do not publish frames without parents
+  for (const auto& [frame_id, transform] : frame_tree_snapshot.child_to_parent_edge_map()) {
+    // In Spot's FrameTreeSnapshot, a frame without a parent is a root frame.
+    // In TF, root frames are expressed by publishing a transform whose parent frame ID is not the child frame ID of any
+    // other transform. To satisfy this requirement, do not publish frames from the frame tree snapshot if they do not
+    // have a parent frame ID.
     if (transform.parent_frame_name().empty()) {
       continue;
     }
@@ -133,10 +148,10 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& r
     // set target frame(preferred odom frame) as the root node in tf tree
     if (preferred_base_frame_id == frame_name) {
       tf_msg.transforms.push_back(
-          toTransformStamped(~(transform.parent_tform_child()), frame_name, parent_frame_name, local_time));
+          toTransformStamped(~(transform.parent_tform_child()), frame_name, parent_frame_name, timestamp_local));
     } else {
       tf_msg.transforms.push_back(
-          toTransformStamped(transform.parent_tform_child(), parent_frame_name, frame_name, local_time));
+          toTransformStamped(transform.parent_tform_child(), parent_frame_name, frame_name, timestamp_local));
     }
   }
   return tf_msg;

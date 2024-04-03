@@ -252,6 +252,15 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(kinematic_node)
 
+    object_sync_node = launch_ros.actions.Node(
+        package="spot_driver",
+        executable="object_synchronizer_node",
+        output="screen",
+        parameters=[config_file, {"spot_name": spot_name}],
+        namespace=spot_name,
+    )
+    ld.add_action(object_sync_node)
+
     robot_description = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
