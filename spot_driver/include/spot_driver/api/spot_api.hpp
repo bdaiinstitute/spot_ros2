@@ -10,6 +10,7 @@
 #include <tl_expected/expected.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace spot_ros2 {
@@ -28,7 +29,13 @@ class SpotApi {
   virtual tl::expected<void, std::string> createRobot(const std::string& ip_address, const std::string& robot_name) = 0;
   virtual tl::expected<void, std::string> authenticate(const std::string& username, const std::string& password) = 0;
   virtual tl::expected<bool, std::string> hasArm() const = 0;
-  virtual std::shared_ptr<KinematicApi> kinematicApi() const = 0;
+  /**
+   * @brief Get a shared_ptr to the Spot API's inverse kinematics interface, if it could be created.
+   * @details Spots with firmware older than 3.3.0 cannot create the inverse kinematics client, so it is not guaranteed
+   * to exist.
+   * @return A shared_ptr to the inverse kinematics interface. If this interface is not available, returns a nullptr.
+   */
+  virtual std::shared_ptr<KinematicApi> kinematicInterface() const = 0;
   virtual std::shared_ptr<ImageClientInterface> image_client_interface() const = 0;
 
   /**

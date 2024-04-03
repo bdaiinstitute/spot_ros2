@@ -71,9 +71,14 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   const auto kinematic_api_result = robot_->EnsureServiceClient<::bosdyn::client::InverseKinematicsClient>(
       ::bosdyn::client::InverseKinematicsClient::GetDefaultServiceName());
   if (!kinematic_api_result.status) {
-    return tl::make_unexpected("Failed to create Inverse Kinematic client.");
+    // Failure to create the kinematic interface is not an error state, since it does not exist in older versions of the
+    // Spot firmware, so don't return here.
+    kinematic_interface_ = nullptr;
+  } else {
+    // The kinematic interface is only available if the corresponding Spot API client was successfully created.
+    kinematic_interface_ = std::make_shared<DefaultKinematicApi>(kinematic_api_result.response);
   }
-  kinematicApi_ = std::make_shared<DefaultKinematicApi>(kinematic_api_result.response);
+
   const auto world_object_client_result = robot_->EnsureServiceClient<::bosdyn::client::WorldObjectClient>(
       ::bosdyn::client::WorldObjectClient::GetDefaultServiceName());
   if (!world_object_client_result.status) {
@@ -112,8 +117,8 @@ std::shared_ptr<StateClientInterface> DefaultSpotApi::stateClientInterface() con
   return state_client_interface_;
 }
 
-std::shared_ptr<KinematicApi> DefaultSpotApi::kinematicApi() const {
-  return kinematicApi_;
+std::shared_ptr<KinematicApi> DefaultSpotApi::kinematicInterface() const {
+  return kinematic_interface_;
 }
 
 std::shared_ptr<TimeSyncApi> DefaultSpotApi::timeSyncInterface() const {

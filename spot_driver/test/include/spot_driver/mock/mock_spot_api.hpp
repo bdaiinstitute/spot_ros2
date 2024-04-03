@@ -11,6 +11,7 @@
 #include <spot_driver/interfaces/image_client_interface.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <tl_expected/expected.hpp>
 
@@ -20,7 +21,7 @@ class MockSpotApi : public SpotApi {
   MOCK_METHOD((tl::expected<void, std::string>), createRobot, (const std::string&, const std::string&), (override));
   MOCK_METHOD((tl::expected<void, std::string>), authenticate, (const std::string&, const std::string&), (override));
   MOCK_METHOD((tl::expected<bool, std::string>), hasArm, (), (const, override));
-  MOCK_METHOD(std::shared_ptr<KinematicApi>, kinematicApi, (), (const, override));
+  MOCK_METHOD(std::shared_ptr<KinematicApi>, kinematicInterface, (), (const, override));
   MOCK_METHOD(std::shared_ptr<ImageClientInterface>, image_client_interface, (), (const, override));
   MOCK_METHOD(std::shared_ptr<StateClientInterface>, stateClientInterface, (), (const, override));
   MOCK_METHOD(std::shared_ptr<TimeSyncApi>, timeSyncInterface, (), (const, override));

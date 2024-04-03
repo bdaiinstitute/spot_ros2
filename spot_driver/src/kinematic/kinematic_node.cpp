@@ -8,6 +8,7 @@
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 
 #include <memory>
+#include <stdexcept>
 
 namespace {
 constexpr auto kSDKClientName = "inverse_kinematic";
@@ -53,7 +54,14 @@ void KinematicNode::initialize(std::shared_ptr<rclcpp::Node> node, std::unique_p
     throw std::runtime_error(errorMsg);
   }
 
-  internal_ = std::make_unique<KinematicService>(spot_api_->kinematicApi(), logger_interface,
+  if (spot_api_->kinematicInterface() == nullptr) {
+    constexpr auto errorMsg{
+        "Failed to initialize the Spot API's inverse kinematics client, which is required to run this node."};
+    logger_interface->logError(errorMsg);
+    throw std::runtime_error(errorMsg);
+  }
+
+  internal_ = std::make_unique<KinematicService>(spot_api_->kinematicInterface(), logger_interface,
                                                  std::make_unique<KinematicMiddlewareHandle>(node_));
   internal_->initialize();
 }
