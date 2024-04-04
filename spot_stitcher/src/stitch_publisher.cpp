@@ -53,6 +53,11 @@ cv::Matx33d const Rl(
  -0.406,  0.468,  0.785,
  -0.001,  0.859, -0.512,
  -0.914, -0.209, -0.348);
+cv::Matx44d const wTl(
+ -0.406,  0.468,  0.785,  0.383, 
+ -0.001,  0.859, -0.512,  0.035,
+ -0.914, -0.209, -0.348, -0.047,
+  0.000,  0.000,  0.000,  1.000);
 
 // Harriet/body Harriet/frontright_fisheye
 // cv::Matx33d const Rr(
@@ -66,6 +71,11 @@ cv::Matx33d const Rr(
  -0.417, -0.491,  0.765,
   0.008,  0.840,  0.543,
  -0.909,  0.232, -0.346);
+cv::Matx44d const wTr(
+ -0.417, -0.491,  0.765,  0.386,
+  0.008,  0.840,  0.543, -0.035,
+ -0.909,  0.232, -0.346, -0.048,
+  0.000,  0.000,  0.000,  1.000);
 
 // cv::Matx33d const Rb(
 //  -0.43332543, -0.01624629,  0.90109108,
@@ -74,10 +84,15 @@ cv::Matx33d const Rr(
 // cv::Vec3d const tb(0.383, -0.006, -0.046);
 // cv::Vec3d const tb = 0.5 * (tl + tr);
 cv::Matx33d const Rb(
--0.41030468, -0.01426928,  0.91183686,
+ -0.41030468, -0.01426928,  0.91183686,
   0.00511951,  0.99982578,  0.01794987,
  -0.91193413,  0.01203307, -0.41016015);
 cv::Vec3d const tb = 0.5 * (tl + tr);
+cv::Matx44d const wTb(
+ -0.41030468, -0.01426928,  0.91183686,  0.3845,
+  0.00511951,  0.99982578,  0.01794987,  0.0000,
+ -0.91193413,  0.01203307, -0.41016015, -0.0475,
+  0.00000000,  0.00000000,  0.00000000,  1.);
 
 cv::Mat draw_arrows(const cv::Vec3d& vector, int imageSize, int lineThickness) {
     // Create a blank canvas
@@ -276,7 +291,7 @@ void computeCameraTransform(cv::Matx33d const& R1, cv::Vec3d const& t1, cv::Matx
 cv::Matx33d computeHomography(cv::Matx33d const& R_1to2, cv::Vec3d const& tvec_1to2, double thedistance, cv::Vec3d const& normal) {
   double const d_inv = 1. / thedistance;
   cv::Matx33d const Tt = d_inv * tvec_1to2 * normal.t();
-  return R_1to2 - Tt;
+  return R_1to2 + Tt;
 };
 
 void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right) {
@@ -284,22 +299,38 @@ void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv:
   std::cout << "normy = " << normy << "\n";
   cv::Matx33d bRl, bRr, lRm, rRm;
   cv::Vec3d btl, btr, rtm, ltm;
-  // computeCameraTransform(Rl, tl, Rb, tb, bRl, btl);
-  // computeCameraTransform(Rr, tr, Rb, tb, bRr, btr);
+  // computeCameraTransform(Rb, tb, Rl, tl, bRl, btl);
+  // computeCameraTransform(Rb, tb, Rr, tr, bRr, btr);
+  cv::Matx44d const lTm = wTl.inv() * wTb;
+  cv::Matx44d const rTm = wTr.inv() * wTb;
+  bRl = lTm.get_minor<3, 3>(0, 0);
+  bRr = rTm.get_minor<3, 3>(0, 0);
+  btl[0] = lTm(0, 3);
+  btl[1] = lTm(1, 3);
+  btl[2] = lTm(2, 3);
+  btr[0] = rTm(0, 3);
+  btr[1] = rTm(1, 3);
+  btr[2] = rTm(2, 3);
   // TODO(gwb) Multiply these matrices together again and see if you get the original
-  bRl = cv::Matx33d(
-       1.000,  0.000, 0.000,
-       0.000,  0.853, 0.521,
-       0.000, -0.521, 0.853
-      ); // from online tool
-  btl = cv::Vec3d(0. - x , -0.03 - y, 0.02); // from online tool
+  // bRl = cv::Matx33d(
+  //      1.000,  0.000, 0.000,
+  //      0.000,  0.853, 0.521,
+  //      0.000, -0.521, 0.853
+  //     ); // from online tool
+  // btl = cv::Vec3d(0. - x , -0.03 - y, 0.02); // from online tool
+  btl[0] -= x;
+  btl[1] -= y;
+  std::cout << "bRl = " << bRl << "\n";
   std::cout << "btl = " << btl << "\n";
-  bRr = cv::Matx33d(
-      1.000,  0.000,  0.000,
-      0.000,  0.853, -0.521,
-      0.000,  0.521,  0.853
-      ); // from online tool
-  btr = cv::Vec3d(-0. + x, 0.03 + y, 0.02); // from online tool 
+  // bRr = cv::Matx33d(
+  //     1.000,  0.000,  0.000,
+  //     0.000,  0.853, -0.521,
+  //     0.000,  0.521,  0.853
+  //     ); // from online tool
+  // btr = cv::Vec3d(-0. + x, 0.03 + y, 0.02); // from online tool 
+  btr[0] += x;
+  btr[1] += y;
+  std::cout << "bRr = " << bRr << "\n";
   std::cout << "btr = " << btr << "\n";
   // cv::Vec3d normal = Rb * cv::Vec3d(0, 0, 1);
   cv::Vec3d normal = normy; 
