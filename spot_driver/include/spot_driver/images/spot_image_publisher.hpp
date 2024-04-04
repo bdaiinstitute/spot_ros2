@@ -12,7 +12,7 @@
 #include <spot_driver/interfaces/image_client_interface.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
-#include <spot_driver/interfaces/tf_interface_base.hpp>
+#include <spot_driver/interfaces/tf_broadcaster_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
 #include <spot_driver/types.hpp>
 #include <string>
@@ -65,8 +65,8 @@ class SpotImagePublisher {
   SpotImagePublisher(const std::shared_ptr<ImageClientInterface>& image_client_interface,
                      std::unique_ptr<MiddlewareHandle> middleware_handle,
                      std::unique_ptr<ParameterInterfaceBase> parameters, std::unique_ptr<LoggerInterfaceBase> logger,
-                     std::unique_ptr<TfInterfaceBase> tf_broadcaster, std::unique_ptr<TimerInterfaceBase> timer,
-                     bool has_arm = false);
+                     std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster,
+                     std::unique_ptr<TimerInterfaceBase> timer, bool has_arm = false);
 
   /**
    * @brief Connect to Spot and start publishing image data.
@@ -97,7 +97,7 @@ class SpotImagePublisher {
 
   std::unique_ptr<ParameterInterfaceBase> parameters_;
   std::unique_ptr<LoggerInterfaceBase> logger_;
-  std::unique_ptr<TfInterfaceBase> tf_broadcaster_;
+  std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_;
   std::unique_ptr<TimerInterfaceBase> timer_;
 
   bool has_arm_;

@@ -21,7 +21,7 @@
 #include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
 #include <spot_driver/mock/mock_state_publisher_middleware_handle.hpp>
-#include <spot_driver/mock/mock_tf_interface.hpp>
+#include <spot_driver/mock/mock_tf_broadcaster_interface.hpp>
 #include <spot_driver/mock/mock_tf_listener_interface.hpp>
 #include <spot_driver/mock/mock_time_sync_api.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
@@ -114,7 +114,7 @@ class ObjectSynchronizerForTesting : public ObjectSynchronizer {
                                const std::shared_ptr<TimeSyncApi>& time_sync_api,
                                std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                std::unique_ptr<LoggerInterfaceBase> logger_interface,
-                               std::unique_ptr<TfInterfaceBase> tf_broadcaster_interface,
+                               std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                                std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
                                std::unique_ptr<TimerInterfaceBase> world_object_update_timer,
                                std::unique_ptr<TimerInterfaceBase> tf_broadcaster_timer,
@@ -142,7 +142,7 @@ class ObjectSynchronizerTest : public ::testing::Test {
     fake_parameter_interface->spot_name = "MyRobot";
 
     mock_logger_interface = std::make_unique<MockLoggerInterface>();
-    mock_tf_broadcaster_interface = std::make_unique<MockTfInterface>();
+    mock_tf_broadcaster_interface = std::make_unique<MockTfBroadcasterInterface>();
     mock_tf_listener_interface = std::make_unique<MockTfListenerInterface>();
     mock_world_object_update_timer = std::make_unique<MockTimerInterface>();
     mock_tf_broadcaster_timer = std::make_unique<MockTimerInterface>();
@@ -181,7 +181,7 @@ class ObjectSynchronizerTest : public ::testing::Test {
 
   // Don't attempt to access these after createObjectSynchronizer() is called, since they get moved in that function
   std::unique_ptr<MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<MockTfInterface> mock_tf_broadcaster_interface;
+  std::unique_ptr<MockTfBroadcasterInterface> mock_tf_broadcaster_interface;
   std::unique_ptr<MockTfListenerInterface> mock_tf_listener_interface;
   std::unique_ptr<MockTimerInterface> mock_world_object_update_timer;
   std::unique_ptr<MockTimerInterface> mock_tf_broadcaster_timer;
@@ -189,7 +189,7 @@ class ObjectSynchronizerTest : public ::testing::Test {
 
   // Use these pointers to interact with the mocks during tests
   MockLoggerInterface* mock_logger_interface_ptr = nullptr;
-  MockTfInterface* mock_tf_broadcaster_interface_ptr = nullptr;
+  MockTfBroadcasterInterface* mock_tf_broadcaster_interface_ptr = nullptr;
   MockTfListenerInterface* mock_tf_listener_interface_ptr = nullptr;
   MockTimerInterface* mock_world_object_update_timer_ptr = nullptr;
   MockTimerInterface* mock_tf_broadcaster_timer_ptr = nullptr;

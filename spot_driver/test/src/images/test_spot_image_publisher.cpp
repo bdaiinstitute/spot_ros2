@@ -11,7 +11,7 @@
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_spot_api.hpp>
-#include <spot_driver/mock/mock_tf_interface.hpp>
+#include <spot_driver/mock/mock_tf_broadcaster_interface.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
 
 #include <memory>
@@ -40,20 +40,21 @@ class TestInitSpotImagePublisher : public ::testing::Test {
     middleware_handle = std::make_unique<MockMiddlewareHandle>();
     fake_parameter_interface = std::make_unique<FakeParameterInterface>();
     mock_logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
-    mock_tf_interface = std::make_unique<MockTfInterface>();
+    mock_tf_broadcaster_interface = std::make_unique<MockTfBroadcasterInterface>();
     mock_timer_interface = std::make_unique<MockTimerInterface>();
 
     middleware_handle_ptr = middleware_handle.get();
     fake_parameter_interface_ptr = fake_parameter_interface.get();
     mock_logger_interface_ptr = mock_logger_interface.get();
-    mock_tf_interface_ptr = mock_tf_interface.get();
+    mock_tf_broadcaster_interface_ptr = mock_tf_broadcaster_interface.get();
     mock_timer_interface_ptr = mock_timer_interface.get();
   }
 
   void createImagePublisher(bool has_arm) {
     image_publisher = std::make_unique<images::SpotImagePublisher>(
         image_client_interface, std::move(middleware_handle), std::move(fake_parameter_interface),
-        std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface), has_arm);
+        std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface),
+        has_arm);
   }
 
   std::unique_ptr<images::SpotImagePublisher> image_publisher;
@@ -62,13 +63,13 @@ class TestInitSpotImagePublisher : public ::testing::Test {
   std::unique_ptr<MockMiddlewareHandle> middleware_handle;
   std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
   std::unique_ptr<MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<spot_ros2::test::MockTfInterface> mock_tf_interface;
+  std::unique_ptr<spot_ros2::test::MockTfBroadcasterInterface> mock_tf_broadcaster_interface;
   std::unique_ptr<spot_ros2::test::MockTimerInterface> mock_timer_interface;
 
   MockMiddlewareHandle* middleware_handle_ptr = nullptr;
   FakeParameterInterface* fake_parameter_interface_ptr = nullptr;
   MockLoggerInterface* mock_logger_interface_ptr = nullptr;
-  MockTfInterface* mock_tf_interface_ptr = nullptr;
+  MockTfBroadcasterInterface* mock_tf_broadcaster_interface_ptr = nullptr;
   MockTimerInterface* mock_timer_interface_ptr = nullptr;
 };
 
@@ -112,7 +113,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
     InSequence seq;
     EXPECT_CALL(*image_client_interface, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
     EXPECT_CALL(*middleware_handle, publishImages);
-    EXPECT_CALL(*mock_tf_interface_ptr, updateStaticTransforms);
+    EXPECT_CALL(*mock_tf_broadcaster_interface_ptr, updateStaticTransforms);
   }
 
   // GIVEN an image_publisher
@@ -148,7 +149,7 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
     InSequence seq;
     EXPECT_CALL(*image_client_interface, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
     EXPECT_CALL(*middleware_handle, publishImages);
-    EXPECT_CALL(*mock_tf_interface_ptr, updateStaticTransforms);
+    EXPECT_CALL(*mock_tf_broadcaster_interface_ptr, updateStaticTransforms);
   }
 
   // GIVEN an image publisher not expected to publish camera data

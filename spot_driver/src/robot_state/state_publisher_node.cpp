@@ -10,7 +10,7 @@
 #include <spot_driver/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_node_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
-#include <spot_driver/interfaces/rclcpp_tf_interface.hpp>
+#include <spot_driver/interfaces/rclcpp_tf_broadcaster_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <spot_driver/robot_state/state_middleware_handle.hpp>
 
@@ -25,11 +25,11 @@ StatePublisherNode::StatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_b
                                        std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<LoggerInterfaceBase> logger_interface,
-                                       std::unique_ptr<TfInterfaceBase> tf_interface,
+                                       std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                                        std::unique_ptr<TimerInterfaceBase> timer_interface)
     : node_base_interface_{std::move(node_base_interface)} {
   initialize(std::move(spot_api), std::move(middleware_handle), std::move(parameter_interface),
-             std::move(logger_interface), std::move(tf_interface), std::move(timer_interface));
+             std::move(logger_interface), std::move(tf_broadcaster_interface), std::move(timer_interface));
 }
 
 StatePublisherNode::StatePublisherNode(const rclcpp::NodeOptions& node_options) {
@@ -40,18 +40,18 @@ StatePublisherNode::StatePublisherNode(const rclcpp::NodeOptions& node_options) 
   auto mw_handle = std::make_unique<StateMiddlewareHandle>(node);
   auto parameter_interface = std::make_unique<RclcppParameterInterface>(node);
   auto logger_interface = std::make_unique<RclcppLoggerInterface>(node->get_logger());
-  auto tf_interface = std::make_unique<RclcppTfInterface>(node);
+  auto tf_broadcaster_interface = std::make_unique<RclcppTfBroadcasterInterface>(node);
   auto timer_interface = std::make_unique<RclcppWallTimerInterface>(node);
 
   initialize(std::move(spot_api), std::move(mw_handle), std::move(parameter_interface), std::move(logger_interface),
-             std::move(tf_interface), std::move(timer_interface));
+             std::move(tf_broadcaster_interface), std::move(timer_interface));
 }
 
 void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
                                     std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
                                     std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                     std::unique_ptr<LoggerInterfaceBase> logger_interface,
-                                    std::unique_ptr<TfInterfaceBase> tf_interface,
+                                    std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                                     std::unique_ptr<TimerInterfaceBase> timer_interface) {
   spot_api_ = std::move(spot_api);
 
@@ -73,9 +73,10 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
     throw std::runtime_error(error_msg);
   }
 
-  internal_ = std::make_unique<StatePublisher>(
-      spot_api_->stateClientInterface(), spot_api_->timeSyncInterface(), std::move(middleware_handle),
-      std::move(parameter_interface), std::move(logger_interface), std::move(tf_interface), std::move(timer_interface));
+  internal_ = std::make_unique<StatePublisher>(spot_api_->stateClientInterface(), spot_api_->timeSyncInterface(),
+                                               std::move(middleware_handle), std::move(parameter_interface),
+                                               std::move(logger_interface), std::move(tf_broadcaster_interface),
+                                               std::move(timer_interface));
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> StatePublisherNode::get_node_base_interface() {
