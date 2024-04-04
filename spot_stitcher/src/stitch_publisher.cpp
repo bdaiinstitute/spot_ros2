@@ -20,74 +20,31 @@ string result_name = "result.jpg";
 void printUsage(char** argv);
 int parseCmdArgs(int argc, char** argv);
 // # Intrinsics
-// Harriet/frontleft_fisheye
-// cv::Matx33d const Kl(          //
-//     331.015,     0.0, 318.082, // 
-//         0.0, 330.075, 235.748, //
-//         0.0,     0.0,     1.0);
 // Lionel/frontleft_fisheye
 cv::Matx33d const Kl(          //
 330.619,     0.0, 319.644, //
     0.0, 329.641, 241.036, //
     0.0,     0.0,     1.0);
 
-// Harriet/frontright_fisheye
-// cv::Matx33d const Kr(          //
-//     332.744,     0.0, 315.983, //
-//         0.0, 331.731, 237.265, //
-//         0.0,     0.0,     1.0); 
 cv::Matx33d const Kr(          //
 330.956,     0.0, 312.064, //
     0.0, 329.804, 240.527, //
     0.0,     0.0,     1.0);
 
 // # Extrinsics
-// Harriet/body Harriet/frontleft_fisheye
-// cv::Matx33d const Rl(
-//  -0.400,  0.463,  0.791, //  
-//   0.002,  0.863, -0.505, //
-//  -0.916, -0.201, -0.346);
-// cv::Vec3d const tl(0.384, 0.031, -0.046);
 // Lionel/body Lionel/frontleft_fisheye
-cv::Vec3d const tl(0.383, 0.035, -0.047);
-cv::Matx33d const Rl(
- -0.406,  0.468,  0.785,
- -0.001,  0.859, -0.512,
- -0.914, -0.209, -0.348);
 cv::Matx44d const wTl(
  -0.406,  0.468,  0.785,  0.383, 
  -0.001,  0.859, -0.512,  0.035,
  -0.914, -0.209, -0.348, -0.047,
   0.000,  0.000,  0.000,  1.000);
 
-// Harriet/body Harriet/frontright_fisheye
-// cv::Matx33d const Rr(
-//  -0.459, -0.484,  0.745, 
-//  -0.025,  0.846,  0.533,
-//  -0.888,  0.226, -0.400);
-// cv::Vec3d const tr(0.382, -0.043, -0.046);
 // Lionel/body Lionel/frontright_fisheye
-cv::Vec3d const tr(0.386, -0.035, -0.048);
-cv::Matx33d const Rr(
- -0.417, -0.491,  0.765,
-  0.008,  0.840,  0.543,
- -0.909,  0.232, -0.346);
 cv::Matx44d const wTr(
  -0.417, -0.491,  0.765,  0.386,
   0.008,  0.840,  0.543, -0.035,
  -0.909,  0.232, -0.346, -0.048,
   0.000,  0.000,  0.000,  1.000);
-
-// cv::Matx33d const Rb(
-//  -0.41030468, -0.01426928,  0.91183686,
-//   0.00511951,  0.99982578,  0.01794987,
-//  -0.91193413,  0.01203307, -0.41016015);
-// cv::Vec3d const tb = 0.5 * (tl + tr);
-// cv::Matx44d const wTb(
-//  -0.41030468, -0.01426928,  0.91183686,  0.3845,
-//   0.00511951,  0.99982578,  0.01794987,  0.0000,
-//  -0.91193413,  0.01203307, -0.41016015, -0.0475,
-//   0.00000000,  0.00000000,  0.00000000,  1.);
 
 cv::Mat draw_arrows(const cv::Vec3d& vector, int imageSize, int lineThickness) {
     // Create a blank canvas
@@ -134,7 +91,7 @@ void refresh_mosaic() {
   cv::Mat warpedImage1, warpedImage2, result;
   mosaic(image2, image1, warpedImage1, warpedImage2);
   cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
-  cv::resizeWindow("mosaic", result.cols / 2, result.rows / 2);
+  cv::resizeWindow("mosaic", result.cols, result.rows);
   cv::imshow("mosaic", result);
 }
 
@@ -194,14 +151,6 @@ void on_nz(int, void*) {
   refresh_mosaic();
 }
 
-// btl = [0.28, -0.03, 0.02]
-// btr = [-0.28, 0.03, 0.02]
-// normal = [0, 0, 1]
-//
-//btl = [0.28, -0.44, 0.02]
-// btr = [-0.28, 0.44, 0.02]
-// normal = [0, 0, 1]
-
 // These are producing the best results
 // Some of these look similar the elements in the Rb and tb matrices.
 // See if there is a permulation of them that will be acceptable
@@ -211,9 +160,22 @@ void on_nz(int, void*) {
 // normal = [-0.159758, 0, 0.987156]
 // Don't forget to math out the values of btl and btr to see if they can come from normy
 
+int cx_slider = 0;
+int const cx_max = 1000;
+
+void on_cx(int, void*) {
+  refresh_mosaic();
+}
+
+int ff_slider = 0;
+int const ff_max = 1000;
+
+void on_ff(int, void*) {
+  refresh_mosaic();
+}
 // We want the range of x to be [-2:2:0.1], default 0
 double x = 0.;
-int x_slider = -25;
+int x_slider = -1;
 int const x_max = 100;
 
 void on_x(int, void*) {
@@ -223,7 +185,7 @@ void on_x(int, void*) {
 
 // We want the range of y to be [-2:2:0.1], default 0
 double y = 0.;
-int y_slider = 41;
+int y_slider = 0;
 int const y_max = 100;
 
 void on_y(int, void*) {
@@ -233,7 +195,7 @@ void on_y(int, void*) {
 
 // We want the range of gdistance to be [0.1:10:0.1], default 1
 double gdistance = 10.;
-int d_slider = 10;
+int d_slider = 18;
 int const d_max = 100;
 
 void on_d(int, void*) {
@@ -241,43 +203,24 @@ void on_d(int, void*) {
   refresh_mosaic();
 }
 
-/**
- * Load images 
- * Define extrinsics and intrinsics 
- * Define virtual camera using the average of the extrinsics 
- * Define T1 an T2 to be the transforms from the first and second camera to the virtual camera 
- * Use H = K * [r0, r1, t] * K ^ -1   for each camera     // Inverses might need to be swapped
- * cv::warpPerspective
- * profit?
- *
- * Alternatively, to test out, the transfrom from camera 1 to camera 2 could be defined, and just
- * experiment on the second camera
- * t = t2 - t1
- * R = R2 * R1 ^ -1
- */
 cv::Matx33d between(cv::Matx33d const& R1, cv::Matx33d const& R2) {
   // Convert rotation matrices to quaternions
   cv::Quatd const q1 = cv::Quatd::createFromRotMat(R1);
   cv::Quatd const q2 = cv::Quatd::createFromRotMat(R2);
 
-  // Average the quaternions
-  cv::Quatd q3 = cv::Quatd::slerp(q1, q2, 0.5);
-
-  // Convert the average quaternion back to a rotation matrix
-  return q3.toRotMat3x3();
+  // Average the quaternions and convert back to rotation matrix
+  return cv::Quatd::slerp(q1, q2, 0.5).toRotMat3x3();
 }
-
-// cv::Matx33d computeHomography(cv::Matx33d const& R_1to2, cv::Vec3d const& tvec_1to2, double thedistance, cv::Vec3d const& normal) {
-//   double const d_inv = 1. / thedistance;
-//   cv::Matx33d const Tt = d_inv * tvec_1to2 * normal.t();
-//   return R_1to2 + Tt;
-// };
 
 cv::Matx33d computeHomography(cv::Matx33d const& Km, cv::Matx33d const& Kc, cv::Matx44d const& cTm, double thedistance, cv::Vec3d const& normal) {
   double const d_inv = 1. / thedistance;
+  //  Compute the amount to skew the rotation according to the plane definition (needs better explanation)
   cv::Matx33d const Tt = d_inv * cTm.get_minor<3, 1>(0, 3) * normal.t();
+  // Compute the geometric homography
   cv::Matx33d const Hg = cTm.get_minor<3, 3>(0, 0) + Tt;
+  // Compute the image space homography
   cv::Matx33d H = Km * Hg * Kc.inv();
+  // Normalize on the scalar element
   H /= H(2, 2);
   return H;
 };
@@ -331,14 +274,14 @@ void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv:
   normal = cv::normalize(normal);
   std::cout << "normal = " << normal << "\n";
   cv::Matx33d const Kb(
-       500.,    0., 900., // increasing fx stretches left-right, cx moves image left 
-         0.,  500., 1700., // increasing fy zooms in, cy moves image down 
+       385. + ff_slider,    0., 315. + cx_slider, // increasing fx stretches left-right, cx moves image left 
+         0.,  385. + ff_slider, 1000., // increasing fy zooms in, cy moves image down 
          0.,    0., 1.
       );
   cv::Matx33d const homography_left = computeHomography(Kb, Kl, lTm, gdistance, normal);  
   cv::Matx33d const homography_right = computeHomography(Kb, Kr, rTm, gdistance, normal);  
-  cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols + 1000, left.rows + 4000));
-  cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols + 1000, right.rows + 4000));
+  cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols, left.rows + 2000));
+  cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols, right.rows + 2000));
 }
 
 
@@ -362,8 +305,12 @@ int main(int argc, char* argv[])
     cv::createTrackbar("nx", "control", &nx_slider, nx_max, on_nx);
     cv::createTrackbar("ny", "control", &ny_slider, ny_max, on_ny);
     cv::createTrackbar("nz", "control", &nz_slider, nz_max, on_nz);
+    cv::createTrackbar("cx", "control", &cx_slider, cx_max, on_cx);
+    cv::setTrackbarMin("cx", "control", -1000);
+    cv::createTrackbar("ff", "control", &ff_slider, ff_max, on_ff);
+    cv::setTrackbarMin("ff", "control", -1000);
     cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
-    cv::resizeWindow("mosaic", result.cols / 2, result.rows / 2);
+    cv::resizeWindow("mosaic", result.cols, result.rows);
     cv::imshow("mosaic", result);
     cv::Mat normal_arrow = draw_arrows(normy, 200, 2);
     cv::imshow("control", normal_arrow);
