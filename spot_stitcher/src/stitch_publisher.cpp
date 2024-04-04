@@ -4,6 +4,7 @@
 #include <opencv2/core/base.hpp>
 #include <opencv2/core/matx.hpp>
 #include <opencv2/core/types.hpp>
+#include <opencv2/core/quaternion.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -78,21 +79,15 @@ cv::Matx44d const wTr(
   0.000,  0.000,  0.000,  1.000);
 
 // cv::Matx33d const Rb(
-//  -0.43332543, -0.01624629,  0.90109108,
-//  -0.0027512,   0.99985669,  0.01670396,
-//  -0.90123333,  0.00475917, -0.43330802);
-// cv::Vec3d const tb(0.383, -0.006, -0.046);
+//  -0.41030468, -0.01426928,  0.91183686,
+//   0.00511951,  0.99982578,  0.01794987,
+//  -0.91193413,  0.01203307, -0.41016015);
 // cv::Vec3d const tb = 0.5 * (tl + tr);
-cv::Matx33d const Rb(
- -0.41030468, -0.01426928,  0.91183686,
-  0.00511951,  0.99982578,  0.01794987,
- -0.91193413,  0.01203307, -0.41016015);
-cv::Vec3d const tb = 0.5 * (tl + tr);
-cv::Matx44d const wTb(
- -0.41030468, -0.01426928,  0.91183686,  0.3845,
-  0.00511951,  0.99982578,  0.01794987,  0.0000,
- -0.91193413,  0.01203307, -0.41016015, -0.0475,
-  0.00000000,  0.00000000,  0.00000000,  1.);
+// cv::Matx44d const wTb(
+//  -0.41030468, -0.01426928,  0.91183686,  0.3845,
+//   0.00511951,  0.99982578,  0.01794987,  0.0000,
+//  -0.91193413,  0.01203307, -0.41016015, -0.0475,
+//   0.00000000,  0.00000000,  0.00000000,  1.);
 
 cv::Mat draw_arrows(const cv::Vec3d& vector, int imageSize, int lineThickness) {
     // Create a blank canvas
@@ -242,7 +237,7 @@ int d_slider = 10;
 int const d_max = 100;
 
 void on_d(int, void*) {
-  gdistance = static_cast<double>(d_max) / d_slider;
+  gdistance = 0.1 * static_cast<double>(d_max) / d_slider;
   refresh_mosaic();
 }
 
@@ -261,92 +256,87 @@ void on_d(int, void*) {
  * R = R2 * R1 ^ -1
  */
 cv::Matx33d between(cv::Matx33d const& R1, cv::Matx33d const& R2) {
-    // Convert rotation matrices to quaternions
-    // cv::Quatd q1 = cv::Quatd::createFromRotMat(R1);
-    // Eigen::Quaterniond q1(R1);
-    // Eigen::Quaterniond q2(R2);
+  // Convert rotation matrices to quaternions
+  cv::Quatd const q1 = cv::Quatd::createFromRotMat(R1);
+  cv::Quatd const q2 = cv::Quatd::createFromRotMat(R2);
 
-    // Normalize quaternions (just to be safe)
-    // q1.normalize();
-    // q2.normalize();
+  // Average the quaternions
+  cv::Quatd q3 = cv::Quatd::slerp(q1, q2, 0.5);
 
-    // Perform SLERP with t=0.5
-    // Eigen::Quaterniond qMid = q1.slerp(0.5, q2);
-
-    // Convert the resulting quaternion back to a rotation matrix
-    // Eigen::Matrix3d RMid = qMid.toRotationMatrix();
-
-    // return RMid;
-    return R1 * R2;
+  // Convert the average quaternion back to a rotation matrix
+  return q3.toRotMat3x3();
 }
 
-/*
- * Gives R2 in frame of R1, assuming they both started in the same frame.
- */
-void computeCameraTransform(cv::Matx33d const& R1, cv::Vec3d const& t1, cv::Matx33d const& R2, cv::Vec3d const& t2, cv::Matx33d& R_1to2, cv::Vec3d& t_1to2) {
-  R_1to2 = R2 * R1.t();
-  t_1to2 = R2 * (-R1.t() * t1) + t2;
-}
+// cv::Matx33d computeHomography(cv::Matx33d const& R_1to2, cv::Vec3d const& tvec_1to2, double thedistance, cv::Vec3d const& normal) {
+//   double const d_inv = 1. / thedistance;
+//   cv::Matx33d const Tt = d_inv * tvec_1to2 * normal.t();
+//   return R_1to2 + Tt;
+// };
 
-cv::Matx33d computeHomography(cv::Matx33d const& R_1to2, cv::Vec3d const& tvec_1to2, double thedistance, cv::Vec3d const& normal) {
+cv::Matx33d computeHomography(cv::Matx33d const& Km, cv::Matx33d const& Kc, cv::Matx44d const& cTm, double thedistance, cv::Vec3d const& normal) {
   double const d_inv = 1. / thedistance;
-  cv::Matx33d const Tt = d_inv * tvec_1to2 * normal.t();
-  return R_1to2 + Tt;
+  cv::Matx33d const Tt = d_inv * cTm.get_minor<3, 1>(0, 3) * normal.t();
+  cv::Matx33d const Hg = cTm.get_minor<3, 3>(0, 0) + Tt;
+  cv::Matx33d H = Km * Hg * Kc.inv();
+  H /= H(2, 2);
+  return H;
 };
+
+void assign_translation(cv::Vec3d const& t, cv::Matx44d& T) {
+  T(0, 3) = t(0);
+  T(1, 3) = t(1);
+  T(2, 3) = t(2);
+}
+
+void assign_translation(cv::Matx31d const& t, cv::Matx44d& T) {
+  T(0, 3) = t(0);
+  T(1, 3) = t(1);
+  T(2, 3) = t(2);
+}
+
+void assign_rotation(cv::Matx33d const& R, cv::Matx44d& T) {
+  T(0, 0) = R(0, 0);
+  T(0, 1) = R(0, 1);
+  T(0, 2) = R(0, 2);
+
+  T(1, 0) = R(1, 0);
+  T(1, 1) = R(1, 1);
+  T(1, 2) = R(1, 2);
+
+  T(2, 0) = R(2, 0);
+  T(2, 1) = R(2, 1);
+  T(2, 2) = R(2, 2);
+}
+
+cv::Matx44d middle(cv::Matx44d const& T1, cv::Matx44d const& T2) {
+  cv::Matx44d T3 = cv::Matx44d::eye();
+  assign_rotation(between(T1.get_minor<3, 3>(0, 0), T2.get_minor<3, 3>(0, 0)), T3);
+  assign_translation(0.5 * (T1.get_minor<3, 1>(0, 3) + T2.get_minor<3, 1>(0, 3)), T3);
+  return T3;
+}
 
 void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right) {
   std::cout << "gdistance = " << gdistance << "\n";
   std::cout << "normy = " << normy << "\n";
-  cv::Matx33d bRl, bRr, lRm, rRm;
-  cv::Vec3d btl, btr, rtm, ltm;
-  // computeCameraTransform(Rb, tb, Rl, tl, bRl, btl);
-  // computeCameraTransform(Rb, tb, Rr, tr, bRr, btr);
-  cv::Matx44d const lTm = wTl.inv() * wTb;
-  cv::Matx44d const rTm = wTr.inv() * wTb;
-  bRl = lTm.get_minor<3, 3>(0, 0);
-  bRr = rTm.get_minor<3, 3>(0, 0);
-  btl[0] = lTm(0, 3);
-  btl[1] = lTm(1, 3);
-  btl[2] = lTm(2, 3);
-  btr[0] = rTm(0, 3);
-  btr[1] = rTm(1, 3);
-  btr[2] = rTm(2, 3);
-  // TODO(gwb) Multiply these matrices together again and see if you get the original
-  // bRl = cv::Matx33d(
-  //      1.000,  0.000, 0.000,
-  //      0.000,  0.853, 0.521,
-  //      0.000, -0.521, 0.853
-  //     ); // from online tool
-  // btl = cv::Vec3d(0. - x , -0.03 - y, 0.02); // from online tool
-  btl[0] -= x;
-  btl[1] -= y;
-  std::cout << "bRl = " << bRl << "\n";
-  std::cout << "btl = " << btl << "\n";
-  // bRr = cv::Matx33d(
-  //     1.000,  0.000,  0.000,
-  //     0.000,  0.853, -0.521,
-  //     0.000,  0.521,  0.853
-  //     ); // from online tool
-  // btr = cv::Vec3d(-0. + x, 0.03 + y, 0.02); // from online tool 
-  btr[0] += x;
-  btr[1] += y;
-  std::cout << "bRr = " << bRr << "\n";
-  std::cout << "btr = " << btr << "\n";
-  // cv::Vec3d normal = Rb * cv::Vec3d(0, 0, 1);
+  cv::Matx44d const wTb = middle(wTl, wTr);
+  cv::Matx44d lTm = wTl.inv() * wTb;
+  cv::Matx44d rTm = wTr.inv() * wTb;
+  lTm(0, 3) -= x;
+  lTm(0, 4) -= y;
+  std::cout << "lTm = " << lTm << "\n";
+  rTm(0, 3) += x;
+  rTm(0, 4) += y;
+  std::cout << "rTm = " << rTm << "\n";
   cv::Vec3d normal = normy; 
-  // normal[1] = 0.;
   normal = cv::normalize(normal);
   std::cout << "normal = " << normal << "\n";
-  // double const distance = 2.;
   cv::Matx33d const Kb(
        500.,    0., 900., // increasing fx stretches left-right, cx moves image left 
          0.,  500., 1700., // increasing fy zooms in, cy moves image down 
          0.,    0., 1.
       );
-  cv::Matx33d homography_left = Kb * computeHomography(bRl, btl, gdistance, normal) * Kl.inv();
-  homography_left /= homography_left(2, 2);
-  cv::Matx33d homography_right = Kb * computeHomography(bRr, btr, gdistance, normal) * Kr.inv();
-  homography_right /= homography_right(2, 2);
+  cv::Matx33d const homography_left = computeHomography(Kb, Kl, lTm, gdistance, normal);  
+  cv::Matx33d const homography_right = computeHomography(Kb, Kr, rTm, gdistance, normal);  
   cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols + 1000, left.rows + 4000));
   cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols + 1000, right.rows + 4000));
 }
