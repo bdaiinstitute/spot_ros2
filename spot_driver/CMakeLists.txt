@@ -55,7 +55,7 @@ add_library(spot_api
   src/interfaces/rclcpp_logger_interface.cpp
   src/interfaces/rclcpp_node_interface.cpp
   src/interfaces/rclcpp_parameter_interface.cpp
-  src/interfaces/rclcpp_tf_interface.cpp
+  src/interfaces/rclcpp_tf_broadcaster_interface.cpp
   src/interfaces/rclcpp_tf_listener_interface.cpp
   src/interfaces/rclcpp_wall_timer_interface.cpp
   src/kinematic/kinematic_node.cpp

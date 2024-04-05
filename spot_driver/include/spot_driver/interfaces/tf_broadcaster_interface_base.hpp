@@ -13,16 +13,16 @@ namespace spot_ros2 {
 /**
  * @brief Defines an interface for classes that broadcast transform data.
  */
-class TfInterfaceBase {
+class TfBroadcasterInterfaceBase {
  public:
-  // TfInterfaceBase is move-only
-  TfInterfaceBase() = default;
-  TfInterfaceBase(TfInterfaceBase&& other) = default;
-  TfInterfaceBase(const TfInterfaceBase&) = delete;
-  TfInterfaceBase& operator=(TfInterfaceBase&& other) = default;
-  TfInterfaceBase& operator=(const TfInterfaceBase&) = delete;
+  // TfBroadcasterInterfaceBase is move-only
+  TfBroadcasterInterfaceBase() = default;
+  TfBroadcasterInterfaceBase(TfBroadcasterInterfaceBase&& other) = default;
+  TfBroadcasterInterfaceBase(const TfBroadcasterInterfaceBase&) = delete;
+  TfBroadcasterInterfaceBase& operator=(TfBroadcasterInterfaceBase&& other) = default;
+  TfBroadcasterInterfaceBase& operator=(const TfBroadcasterInterfaceBase&) = delete;
 
-  virtual ~TfInterfaceBase() = default;
+  virtual ~TfBroadcasterInterfaceBase() = default;
 
   virtual void updateStaticTransforms(const std::vector<geometry_msgs::msg::TransformStamped>& transforms) = 0;
 

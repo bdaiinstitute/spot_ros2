@@ -12,7 +12,7 @@
 #include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
 #include <spot_driver/mock/mock_state_publisher_middleware_handle.hpp>
-#include <spot_driver/mock/mock_tf_interface.hpp>
+#include <spot_driver/mock/mock_tf_broadcaster_interface.hpp>
 #include <spot_driver/mock/mock_time_sync_api.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
 #include <spot_driver/robot_state/state_publisher.hpp>
@@ -43,14 +43,14 @@ class StatePublisherTest : public ::testing::Test {
 
     fake_parameter_interface = std::make_unique<FakeParameterInterface>();
     mock_logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
-    mock_tf_interface = std::make_unique<spot_ros2::test::MockTfInterface>();
+    mock_tf_broadcaster_interface = std::make_unique<spot_ros2::test::MockTfBroadcasterInterface>();
     mock_timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   }
 
   std::unique_ptr<MockNodeInterface> mock_node_interface;
   std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
   std::unique_ptr<MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<MockTfInterface> mock_tf_interface;
+  std::unique_ptr<MockTfBroadcasterInterface> mock_tf_broadcaster_interface;
   std::unique_ptr<MockTimerInterface> mock_timer_interface;
 
   std::shared_ptr<spot_ros2::test::MockStateClient> mock_state_client_interface =
@@ -86,7 +86,7 @@ TEST_F(StatePublisherTest, InitSucceeds) {
   // WHEN a robot state publisher is constructed
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
+      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
       std::move(mock_timer_interface));
 }
 
@@ -108,13 +108,13 @@ TEST_F(StatePublisherTest, PublishCallbackTriggers) {
     // AND THEN we publish the robot state to the appropriate topics
     EXPECT_CALL(*mock_middleware_handle, publishRobotState).Times(1);
     // AND THEN the robot transforms are published to TF
-    EXPECT_CALL(*mock_tf_interface, sendDynamicTransforms).Times(1);
+    EXPECT_CALL(*mock_tf_broadcaster_interface, sendDynamicTransforms).Times(1);
   }
 
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
+      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
       std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered
@@ -141,12 +141,12 @@ TEST_F(StatePublisherTest, PublishCallbackTriggersNoTfData) {
   }
 
   // THEN no transforms are published to TF
-  EXPECT_CALL(*mock_tf_interface, sendDynamicTransforms).Times(0);
+  EXPECT_CALL(*mock_tf_broadcaster_interface, sendDynamicTransforms).Times(0);
 
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
+      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
       std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered
@@ -178,12 +178,12 @@ TEST_F(StatePublisherTest, PublishCallbackTriggersFailGetRobotState) {
   // THEN we do not publish a robot state
   EXPECT_CALL(*mock_middleware_handle, publishRobotState).Times(0);
   // THEN we do not publish to TF
-  EXPECT_CALL(*mock_tf_interface, sendDynamicTransforms).Times(0);
+  EXPECT_CALL(*mock_tf_broadcaster_interface, sendDynamicTransforms).Times(0);
 
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
+      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
       std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered
@@ -210,12 +210,12 @@ TEST_F(StatePublisherTest, PublishCallbackTriggersFailGetClockSkew) {
   // THEN we do not publish a robot state
   EXPECT_CALL(*mock_middleware_handle, publishRobotState).Times(0);
   // THEN we do not publish to TF
-  EXPECT_CALL(*mock_tf_interface, sendDynamicTransforms).Times(0);
+  EXPECT_CALL(*mock_tf_broadcaster_interface, sendDynamicTransforms).Times(0);
 
   // GIVEN a robot_state_publisher
   robot_state_publisher = std::make_unique<StatePublisher>(
       mock_state_client_interface, mock_time_sync_api, std::move(mock_middleware_handle),
-      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_interface),
+      std::move(fake_parameter_interface), std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
       std::move(mock_timer_interface));
 
   // WHEN the timer callback is triggered

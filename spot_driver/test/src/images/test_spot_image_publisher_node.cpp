@@ -11,7 +11,7 @@
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_spot_api.hpp>
-#include <spot_driver/mock/mock_tf_interface.hpp>
+#include <spot_driver/mock/mock_tf_broadcaster_interface.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
 
 #include <rclcpp/node.hpp>
@@ -41,7 +41,7 @@ class SpotImagePubNodeTestFixture : public ::testing::Test {
 
     fake_parameter_interface = std::make_unique<FakeParameterInterface>();
     mock_logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
-    mock_tf_interface = std::make_unique<MockTfInterface>();
+    mock_tf_broadcaster_interface = std::make_unique<MockTfBroadcasterInterface>();
     mock_timer_interface = std::make_unique<MockTimerInterface>();
     mock_node_interface = std::make_unique<MockNodeInterface>();
   }
@@ -51,7 +51,7 @@ class SpotImagePubNodeTestFixture : public ::testing::Test {
 
   std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
   std::unique_ptr<MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<spot_ros2::test::MockTfInterface> mock_tf_interface;
+  std::unique_ptr<spot_ros2::test::MockTfBroadcasterInterface> mock_tf_broadcaster_interface;
   std::unique_ptr<spot_ros2::test::MockTimerInterface> mock_timer_interface;
   std::unique_ptr<MockNodeInterface> mock_node_interface;
 };
@@ -75,8 +75,8 @@ TEST_F(SpotImagePubNodeTestFixture, ConstructionSuccess) {
   std::unique_ptr<images::SpotImagePublisherNode> node;
   ASSERT_NO_THROW(node = std::make_unique<images::SpotImagePublisherNode>(
                       std::move(mock_spot_api), std::move(mock_middleware_handle), std::move(fake_parameter_interface),
-                      std::move(mock_logger_interface), std::move(mock_tf_interface), std::move(mock_timer_interface),
-                      std::move(mock_node_interface)));
+                      std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
+                      std::move(mock_timer_interface), std::move(mock_node_interface)));
 
   // WHEN we get the underlying node base interface
   // THEN no exception is thrown
@@ -96,7 +96,7 @@ TEST_F(SpotImagePubNodeTestFixture, ConstructionCreateRobotFailure) {
   // THEN the constructor throws
   EXPECT_THROW(images::SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle),
                                               std::move(fake_parameter_interface), std::move(mock_logger_interface),
-                                              std::move(mock_tf_interface), std::move(mock_timer_interface),
+                                              std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface),
                                               std::move(mock_node_interface)),
                std::runtime_error);
 }
@@ -116,7 +116,7 @@ TEST_F(SpotImagePubNodeTestFixture, ConstructionAuthenticationFailure) {
   // THEN the constructor throws
   EXPECT_THROW(images::SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle),
                                               std::move(fake_parameter_interface), std::move(mock_logger_interface),
-                                              std::move(mock_tf_interface), std::move(mock_timer_interface),
+                                              std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface),
                                               std::move(mock_node_interface)),
                std::runtime_error);
 }
@@ -134,7 +134,7 @@ TEST_F(SpotImagePubNodeTestFixture, ConstructionHasArmFailure) {
   // THEN the constructor throws
   EXPECT_THROW(images::SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle),
                                               std::move(fake_parameter_interface), std::move(mock_logger_interface),
-                                              std::move(mock_tf_interface), std::move(mock_timer_interface),
+                                              std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface),
                                               std::move(mock_node_interface)),
                std::runtime_error);
 }

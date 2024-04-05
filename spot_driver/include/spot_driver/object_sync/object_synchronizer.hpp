@@ -12,7 +12,7 @@
 #include <spot_driver/interfaces/clock_interface_base.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
-#include <spot_driver/interfaces/tf_interface_base.hpp>
+#include <spot_driver/interfaces/tf_broadcaster_interface_base.hpp>
 #include <spot_driver/interfaces/tf_listener_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
 #include <spot_driver/types.hpp>
@@ -46,7 +46,7 @@ class ObjectSynchronizer {
                      const std::shared_ptr<TimeSyncApi>& time_sync_api,
                      std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                      std::unique_ptr<LoggerInterfaceBase> logger_interface,
-                     std::unique_ptr<TfInterfaceBase> tf_broadcaster_interface,
+                     std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                      std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
                      std::unique_ptr<TimerInterfaceBase> world_object_update_timer,
                      std::unique_ptr<TimerInterfaceBase> tf_broadcaster_timer,
@@ -98,7 +98,7 @@ class ObjectSynchronizer {
   std::shared_ptr<TimeSyncApi> time_sync_interface_;
   std::unique_ptr<ParameterInterfaceBase> parameter_interface_;
   std::unique_ptr<LoggerInterfaceBase> logger_interface_;
-  std::unique_ptr<TfInterfaceBase> tf_broadcaster_interface_;
+  std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface_;
   std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface_;
   std::unique_ptr<TimerInterfaceBase> world_object_update_timer_;
   std::unique_ptr<TimerInterfaceBase> tf_broadcaster_timer_;

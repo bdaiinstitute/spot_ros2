@@ -11,7 +11,7 @@
 #include <spot_driver/images/images_middleware_handle.hpp>
 #include <spot_driver/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
-#include <spot_driver/interfaces/rclcpp_tf_interface.hpp>
+#include <spot_driver/interfaces/rclcpp_tf_broadcaster_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <spot_driver/types.hpp>
 
@@ -65,7 +65,7 @@ SpotImagePublisher::SpotImagePublisher(const std::shared_ptr<ImageClientInterfac
                                        std::unique_ptr<MiddlewareHandle> middleware_handle,
                                        std::unique_ptr<ParameterInterfaceBase> parameters,
                                        std::unique_ptr<LoggerInterfaceBase> logger,
-                                       std::unique_ptr<TfInterfaceBase> tf_broadcaster,
+                                       std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster,
                                        std::unique_ptr<TimerInterfaceBase> timer, bool has_arm)
     : image_client_interface_{image_client_interface},
       middleware_handle_{std::move(middleware_handle)},

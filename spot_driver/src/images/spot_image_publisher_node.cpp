@@ -9,7 +9,7 @@
 #include <spot_driver/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_node_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
-#include <spot_driver/interfaces/rclcpp_tf_interface.hpp>
+#include <spot_driver/interfaces/rclcpp_tf_broadcaster_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
 
 namespace {
@@ -21,7 +21,7 @@ SpotImagePublisherNode::SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api
                                                std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle,
                                                std::unique_ptr<ParameterInterfaceBase> parameters,
                                                std::unique_ptr<LoggerInterfaceBase> logger,
-                                               std::unique_ptr<TfInterfaceBase> tf_broadcaster,
+                                               std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster,
                                                std::unique_ptr<TimerInterfaceBase> timer,
                                                std::unique_ptr<NodeInterfaceBase> node_base_interface)
     : node_base_interface_{std::move(node_base_interface)} {
@@ -37,7 +37,7 @@ SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_o
   auto mw_handle = std::make_unique<ImagesMiddlewareHandle>(node_options);
   auto parameters = std::make_unique<RclcppParameterInterface>(node);
   auto logger = std::make_unique<RclcppLoggerInterface>(node->get_logger());
-  auto tf_broadcaster = std::make_unique<RclcppTfInterface>(node);
+  auto tf_broadcaster = std::make_unique<RclcppTfBroadcasterInterface>(node);
   auto timer = std::make_unique<RclcppWallTimerInterface>(node);
 
   initialize(std::move(spot_api), std::move(mw_handle), std::move(parameters), std::move(logger),
@@ -48,7 +48,7 @@ void SpotImagePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
                                         std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle,
                                         std::unique_ptr<ParameterInterfaceBase> parameters,
                                         std::unique_ptr<LoggerInterfaceBase> logger,
-                                        std::unique_ptr<TfInterfaceBase> tf_broadcaster,
+                                        std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster,
                                         std::unique_ptr<TimerInterfaceBase> timer) {
   spot_api_ = std::move(spot_api);
 

@@ -9,7 +9,7 @@
 #include <spot_driver/images/spot_image_publisher.hpp>
 #include <spot_driver/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
-#include <spot_driver/interfaces/rclcpp_tf_interface.hpp>
+#include <spot_driver/interfaces/rclcpp_tf_broadcaster_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
 #include <string>
 #include <tl_expected/expected.hpp>

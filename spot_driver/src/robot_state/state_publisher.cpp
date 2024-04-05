@@ -20,7 +20,7 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
                                std::unique_ptr<MiddlewareHandle> middleware_handle,
                                std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                std::unique_ptr<LoggerInterfaceBase> logger_interface,
-                               std::unique_ptr<TfInterfaceBase> tf_interface,
+                               std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                                std::unique_ptr<TimerInterfaceBase> timer_interface)
     : is_using_vision_{false},
       state_client_interface_{state_client_interface},
@@ -28,7 +28,7 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
       middleware_handle_{std::move(middleware_handle)},
       parameter_interface_{std::move(parameter_interface)},
       logger_interface_{std::move(logger_interface)},
-      tf_interface_{std::move(tf_interface)},
+      tf_broadcaster_interface_{std::move(tf_broadcaster_interface)},
       timer_interface_{std::move(timer_interface)} {
   const auto spot_name = parameter_interface_->getSpotName();
   frame_prefix_ = spot_name.empty() ? "" : spot_name + "/";
@@ -79,7 +79,7 @@ void StatePublisher::timerCallback() {
   middleware_handle_->publishRobotState(robot_state_messages);
 
   if (robot_state_messages.maybe_tf) {
-    tf_interface_->sendDynamicTransforms(robot_state_messages.maybe_tf->transforms);
+    tf_broadcaster_interface_->sendDynamicTransforms(robot_state_messages.maybe_tf->transforms);
   }
 }
 
