@@ -54,6 +54,7 @@ from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api import (
     arm_command_pb2,
     basic_command_pb2,
+    geometry_pb2,
     gripper_command_pb2,
     mobility_command_pb2,
     robot_command_pb2,
@@ -108,6 +109,23 @@ def mobility_continuous_trajectory(t: float) -> SE2Pose:
 
 
 def arm_cartesian_continuous_trajectory(t: float) -> SE3Pose:
+    """
+    we use this function to model a continuous arm trajectory over time.
+    """
+
+    # Draw a Rhodonea curve with n petals and period P (seconds)
+    n = 5
+    period = 10.0
+    t_norm = t / period
+    radius = 0.4 * math.sin(math.pi * n * t_norm)
+    x = radius * math.cos(math.pi * t_norm)
+    y = radius * math.sin(math.pi * t_norm)
+    z = 0.0
+    quat = Quat(1, 0, 0, 0)
+    return SE3Pose(x, y, z, quat)
+
+
+def arm_impedance_continuous_trajectory(t: float) -> SE3Pose:
     """
     we use this function to model a continuous arm trajectory over time.
     """
@@ -204,6 +222,37 @@ class SpotRunner:
         return self._robot_command_client.send_goal_and_wait("arm_stow", action_goal)
 
     def _arm_cartesian_discrete_trajectory(
+        self,
+        reference_time: float,
+        ramp_up_time: float,
+        duration: float,
+        dt: float,
+        trajectory_function: ContinuousTrajectory3D,
+    ) -> trajectory_pb2.SE3Trajectory:
+        """
+        Return a discrete trajectory in 3D space by sampling a continuous 3D
+        function. The continuous function is sampled from 0 to a specified duration
+        and at given sampling intervals.
+
+        Args:
+            reference_time: The time the trajectory is executed.
+            ramp_up_time: A delay to let the robot move into the initial position.
+            duration: The total sampling time.
+            dt: The sampling interval.
+            trajectory_function: the trajectory function to sample.
+        """
+        trajectory = trajectory_pb2.SE3Trajectory()
+        trajectory.reference_time.CopyFrom(seconds_to_timestamp(reference_time))
+        t = 0.0
+        while t < duration:
+            pos = trajectory_function(t)
+            point = trajectory.points.add()
+            point.pose.CopyFrom(pos.to_proto())
+            point.time_since_reference.CopyFrom(seconds_to_duration(t + ramp_up_time))
+            t = t + dt
+        return trajectory
+
+    def _arm_impedance_discrete_trajectory(
         self,
         reference_time: float,
         ramp_up_time: float,
@@ -375,6 +424,44 @@ class SpotRunner:
             arm_request = arm_command_pb2.ArmCommand.Request(arm_cartesian_command=arm_cartesian_command)
         return arm_request
 
+    def _build_arm_impedance_request(
+        self, trajectory: Optional[trajectory_pb2.SE3Trajectory] = None
+    ) -> arm_command_pb2.ArmCommand.Request:
+        """
+        Create a request to make the arm follow the given trajectory.
+        """
+
+        # Create a task frame. This will be the frame the trajectory is
+        # defined relative to. The center of the frame is 90cm in front of the
+        # robot, with z pointing back at the robot, x off the right side of the
+        # robot, and y up
+        body_to_task = SE3Pose(x=0.9, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
+
+        # Now, get the transform between the "odometry" frame and the gravity aligned body frame.
+        # This will be used in conjunction with the body_to_task frame to get the
+        # transformation between the odometry frame and the task frame. In order to get
+        # odom_to_body we use a snapshot of the frame tree. For more information on the frame
+        # tree, see https://dev.bostondynamics.com/docs/concepts/geometry_and_frames
+        odom_to_body: SE3Pose = _to_se3(
+            self._tf_listener.lookup_a_tform_b(self._odom_frame_name, self._grav_body_frame_name)
+        )
+
+        odom_to_task: SE3Pose = odom_to_body * body_to_task
+        wrist_to_tool = SE3Pose(x=0.25, y=0, z=0, rot=Quat(w=0.5, x=0.5, y=-0.5, z=-0.5))
+
+        arm_request = None
+        if trajectory is not None:
+            arm_impedance_command = arm_command_pb2.ArmImpedanceCommand.Request(
+                root_frame_name=ODOM_FRAME_NAME,
+                root_tform_task=odom_to_task.to_proto(),
+                wrist_tform_tool=wrist_to_tool.to_proto(),
+                task_tform_desired_tool=trajectory,
+                diagonal_stiffness_matrix=geometry_pb2.Vector(values=[500, 500, 500, 60, 60, 60]),
+                diagonal_damping_matrix=geometry_pb2.Vector(values=[2.5, 2.5, 2.5, 1.0, 1.0, 1.0]),
+            )
+            arm_request = arm_command_pb2.ArmCommand.Request(arm_impedance_command=arm_impedance_command)
+        return arm_request
+
     def _build_arm_joint_request(
         self, trajectory: Optional[arm_command_pb2.ArmJointTrajectory] = None
     ) -> arm_command_pb2.ArmCommand.Request:
@@ -417,6 +504,7 @@ class SpotRunner:
         self,
         arm_cartesian_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
         arm_joint_trajectory: Optional[arm_command_pb2.ArmJointTrajectory] = None,
+        arm_impedance_trajectory: Optional[trajectory_pb2.SE3Trajectory] = None,
         mobility_trajectory: Optional[trajectory_pb2.SE2Trajectory] = None,
         gripper_trajectory: Optional[trajectory_pb2.ScalarTrajectory] = None,
     ) -> robot_command_pb2.RobotCommand:
@@ -436,6 +524,8 @@ class SpotRunner:
             arm_request = self._build_arm_cartesian_request(arm_cartesian_trajectory)
         if arm_joint_trajectory is not None:
             arm_request = self._build_arm_joint_request(arm_joint_trajectory)
+        if arm_impedance_trajectory is not None:
+            arm_request = self._build_arm_impedance_request(arm_impedance_trajectory)
 
         mobility_request = self._build_mobility_request(mobility_trajectory)
         gripper_request = self._build_gripper_request(gripper_trajectory)
@@ -494,6 +584,7 @@ class SpotRunner:
             dt=0.05,
             trajectory_function=mobility_continuous_trajectory,
         )
+        arm_cartesian_trajectory = None
         arm_cartesian_trajectory = self._arm_cartesian_discrete_trajectory(
             reference_time=start_time,
             ramp_up_time=4,
@@ -502,11 +593,28 @@ class SpotRunner:
             trajectory_function=arm_cartesian_continuous_trajectory,
         )
 
+        arm_impedance_trajectory = None
+
+        # Uncomment the following lines if you want to try impedance trajectories.
+        # This will automatically override the cartesian trajectory.
+
+        # arm_impedance_trajectory = self._arm_impedance_discrete_trajectory(
+        #     reference_time=start_time,
+        #     ramp_up_time=4,
+        #     duration=40,
+        #     dt=0.05,
+        #     trajectory_function=arm_impedance_continuous_trajectory,
+        # )
+
         # Unfortunately, we cannot send at the moment gripper or arm joint
         # trajectories with a reference time that falls before the robot time
         # because of a limitation in the SDK.
 
-        # We leave the code here commented out.
+        arm_joint_trajectory = None
+
+        # As stated above, batching does not work with joint trajectories,
+        # but you can uncomment the following lines if you want to experiment.
+        # Spot will likely throw an error when the second batch is issued.
 
         # arm_joint_trajectory = self._arm_joint_discrete_trajectory(
         #     reference_time=start_time,
@@ -515,6 +623,13 @@ class SpotRunner:
         #     dt=0.05,
         #     trajectory_function=arm_joint_continuous_trajectory,
         # )
+
+        gripper_trajectory = None
+
+        # As stated above, batching does not work with grip trajectories,
+        # but you can uncomment the following lines if you want to experiment.
+        # Spot will likely throw an error when the second batch is issued.
+
         # gripper_trajectory = self._gripper_discrete_trajectory(
         #     reference_time=start_time,
         #     ramp_up_time=4,
@@ -525,9 +640,10 @@ class SpotRunner:
 
         command = self._build_robot_command(
             arm_cartesian_trajectory=arm_cartesian_trajectory,
-            # arm_joint_trajectory=arm_joint_trajectory,
+            arm_impedance_trajectory=arm_impedance_trajectory,
+            arm_joint_trajectory=arm_joint_trajectory,
             mobility_trajectory=mobility_trajectory,
-            # gripper_trajectory=gripper_trajectory,
+            gripper_trajectory=gripper_trajectory,
         )
         action_goal = RobotCommandAction.Goal()
         convert(command, action_goal.command)
