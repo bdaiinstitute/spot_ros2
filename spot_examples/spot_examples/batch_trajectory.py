@@ -54,12 +54,12 @@ from bdai_ros2_wrappers.utilities import namespace_with
 from bosdyn.api import (
     arm_command_pb2,
     basic_command_pb2,
+    geometry_pb2,
     gripper_command_pb2,
     mobility_command_pb2,
     robot_command_pb2,
     synchronized_command_pb2,
     trajectory_pb2,
-    geometry_pb2,
 )
 from bosdyn.client.frame_helpers import (
     BODY_FRAME_NAME,
