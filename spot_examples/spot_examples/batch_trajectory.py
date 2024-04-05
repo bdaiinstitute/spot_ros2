@@ -59,6 +59,7 @@ from bosdyn.api import (
     robot_command_pb2,
     synchronized_command_pb2,
     trajectory_pb2,
+    geometry_pb2,
 )
 from bosdyn.client.frame_helpers import (
     BODY_FRAME_NAME,
@@ -454,7 +455,9 @@ class SpotRunner:
                 root_frame_name=ODOM_FRAME_NAME,
                 root_tform_task=odom_to_task.to_proto(),
                 wrist_tform_tool=wrist_to_tool.to_proto(),
-                pose_trajectory_in_task=trajectory,
+                task_tform_desired_tool=trajectory,
+                diagonal_stiffness_matrix=geometry_pb2.Vector(values=[500, 500, 500, 60, 60, 60]),
+                diagonal_damping_matrix=geometry_pb2.Vector(values=[2.5, 2.5, 2.5, 1.0, 1.0, 1.0]),
             )
             arm_request = arm_command_pb2.ArmCommand.Request(arm_impedance_command=arm_impedance_command)
         return arm_request
@@ -581,26 +584,37 @@ class SpotRunner:
             dt=0.05,
             trajectory_function=mobility_continuous_trajectory,
         )
-        self._arm_cartesian_discrete_trajectory(
+        arm_cartesian_trajectory = None
+        arm_cartesian_trajectory = self._arm_cartesian_discrete_trajectory(
             reference_time=start_time,
             ramp_up_time=4,
             duration=40,
             dt=0.05,
             trajectory_function=arm_cartesian_continuous_trajectory,
         )
-        arm_impedance_trajectory = self._arm_impedance_discrete_trajectory(
-            reference_time=start_time,
-            ramp_up_time=4,
-            duration=40,
-            dt=0.05,
-            trajectory_function=arm_impedance_continuous_trajectory,
-        )
+
+        arm_impedance_trajectory = None
+
+        # Uncomment the following lines if you want to try impedance trajectories.
+        # This will automatically override the cartesian trajectory.
+
+        # arm_impedance_trajectory = self._arm_impedance_discrete_trajectory(
+        #     reference_time=start_time,
+        #     ramp_up_time=4,
+        #     duration=40,
+        #     dt=0.05,
+        #     trajectory_function=arm_impedance_continuous_trajectory,
+        # )
 
         # Unfortunately, we cannot send at the moment gripper or arm joint
         # trajectories with a reference time that falls before the robot time
         # because of a limitation in the SDK.
 
-        # We leave the code here commented out.
+        arm_joint_trajectory = None
+
+        # As stated above, batching does not work with joint trajectories,
+        # but you can uncomment the following lines if you want to experiment.
+        # Spot will likely throw an error when the second batch is issued.
 
         # arm_joint_trajectory = self._arm_joint_discrete_trajectory(
         #     reference_time=start_time,
@@ -609,6 +623,13 @@ class SpotRunner:
         #     dt=0.05,
         #     trajectory_function=arm_joint_continuous_trajectory,
         # )
+
+        gripper_trajectory = None
+
+        # As stated above, batching does not work with grip trajectories,
+        # but you can uncomment the following lines if you want to experiment.
+        # Spot will likely throw an error when the second batch is issued.
+
         # gripper_trajectory = self._gripper_discrete_trajectory(
         #     reference_time=start_time,
         #     ramp_up_time=4,
@@ -618,11 +639,11 @@ class SpotRunner:
         # )
 
         command = self._build_robot_command(
-            # arm_cartesian_trajectory=arm_cartesian_trajectory,
+            arm_cartesian_trajectory=arm_cartesian_trajectory,
             arm_impedance_trajectory=arm_impedance_trajectory,
-            # arm_joint_trajectory=arm_joint_trajectory,
+            arm_joint_trajectory=arm_joint_trajectory,
             mobility_trajectory=mobility_trajectory,
-            # gripper_trajectory=gripper_trajectory,
+            gripper_trajectory=gripper_trajectory,
         )
         action_goal = RobotCommandAction.Goal()
         convert(command, action_goal.command)
