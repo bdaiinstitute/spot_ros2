@@ -436,8 +436,9 @@ class SpotROS(Node):
             if self.initialize_spot_cam:
                 try:
                     self.cam_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_cam_wrapper")
-                    self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
-                except SystemError:
+                    self.spot_cam_wrapper = self.spot_wrapper.init_camera_wrapper(self.cam_logger)
+                except SystemError as e:
+                    self.get_logger().warn("Error making camera wrapper: " + str(e))
                     self.spot_cam_wrapper = None
 
             if self.frame_prefix != self.spot_wrapper.frame_prefix:
