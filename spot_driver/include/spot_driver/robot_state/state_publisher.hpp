@@ -9,7 +9,7 @@
 #include <spot_driver/api/time_sync_api.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
-#include <spot_driver/interfaces/tf_interface_base.hpp>
+#include <spot_driver/interfaces/tf_broadcaster_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
 #include <spot_driver/types.hpp>
 
@@ -42,14 +42,15 @@ class StatePublisher {
    * @param parameter_interface Retrieves runtime-configurable settings, such as the preferred base frame.
    * @param logger_interface Logs error messages if requesting, processing, and publishing the robot state info does not
    * succeed.
-   * @param tf_interface Publishes the dynamic transforms in Spot's robot state to TF.
+   * @param tf_broadcaster_interface Publishes the dynamic transforms in Spot's robot state to TF.
    * @param timer_interface Repeatedly triggers timerCallback() using the middleware's clock.
    *
    */
   StatePublisher(const std::shared_ptr<StateClientInterface>& state_client_interface,
                  const std::shared_ptr<TimeSyncApi>& time_sync_api, std::unique_ptr<MiddlewareHandle> middleware_handle,
                  std::unique_ptr<ParameterInterfaceBase> parameter_interface,
-                 std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,
+                 std::unique_ptr<LoggerInterfaceBase> logger_interface,
+                 std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                  std::unique_ptr<TimerInterfaceBase> timer_interface);
 
  private:
@@ -70,7 +71,7 @@ class StatePublisher {
   std::unique_ptr<MiddlewareHandle> middleware_handle_;
   std::unique_ptr<ParameterInterfaceBase> parameter_interface_;
   std::unique_ptr<LoggerInterfaceBase> logger_interface_;
-  std::unique_ptr<TfInterfaceBase> tf_interface_;
+  std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface_;
   std::unique_ptr<TimerInterfaceBase> timer_interface_;
 };
 }  // namespace spot_ros2
