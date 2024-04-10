@@ -31,20 +31,51 @@ cv::Matx33d const Kr(          //
     0.0, 329.804, 240.527, //
     0.0,     0.0,     1.0);
 
-// # Extrinsics
-// Lionel/body Lionel/frontleft_fisheye
-cv::Matx44d const wTl(
- -0.406,  0.468,  0.785,  0.383, 
- -0.001,  0.859, -0.512,  0.035,
- -0.914, -0.209, -0.348, -0.047,
-  0.000,  0.000,  0.000,  1.000);
+cv::Matx44d make_transform(cv::Quatd const& q, cv::Vec3d const& t) {
+  std::cout << "from make_transform\n";
+  // Initialize to identity for bottom row of homogeneous transform
+  cv::Matx44d transform = cv::Matx44d::eye();
+  // Copy in rotation
+  auto const r = q.toRotMat3x3();
+  transform(0, 0) = r(0, 0);
+  transform(0, 1) = r(0, 1);
+  transform(0, 2) = r(0, 2);
+  transform(1, 0) = r(1, 0);
+  transform(1, 1) = r(1, 1);
+  transform(1, 2) = r(1, 2);
+  transform(2, 0) = r(2, 0);
+  transform(2, 1) = r(2, 1);
+  transform(2, 2) = r(2, 2);
+  // Copy in translation
+  std::cout << t << "\n";
+  transform(0, 3) = t(0);
+  transform(1, 3) = t(1);
+  transform(2, 3) = t(2);
 
+  std::cout << transform << "\n";
+  return transform;
+}
+// # Extrinsics
+cv::Vec3d const wtl(0.383425730433869, 0.035200391141172356, -0.046645597578404197);
+cv::Quatd const wql(0.5254497615708897, 0.14428877676528717, 0.8083316709117128, -0.22289730093868648);
+// Lionel/body Lionel/frontleft_fisheye
+// cv::Matx44d const wTl(
+//  -0.406,  0.468,  0.785,  0.383, 
+//  -0.001,  0.859, -0.512,  0.035,
+//  -0.914, -0.209, -0.348, -0.047,
+//   0.000,  0.000,  0.000,  1.000);
+cv::Matx44d const wTl = make_transform(wql, wtl);
+
+cv::Vec3d const wtr(0.3857987361510829, -0.0353843606877599, -0.04788883099374454);
+cv::Quatd const wqr(0.5188475944760547, -0.14970432380380572, 0.8067028035363543, 0.24003411404932312);
 // Lionel/body Lionel/frontright_fisheye
-cv::Matx44d const wTr(
- -0.417, -0.491,  0.765,  0.386,
-  0.008,  0.840,  0.543, -0.035,
- -0.909,  0.232, -0.346, -0.048,
-  0.000,  0.000,  0.000,  1.000);
+// cv::Matx44d const wTr(
+//  -0.417, -0.491,  0.765,  0.386,
+//   0.008,  0.840,  0.543, -0.035,
+//  -0.909,  0.232, -0.346, -0.048,
+//   0.000,  0.000,  0.000,  1.000);
+cv::Matx44d const wTr = make_transform(wqr, wtr);
+
 
 cv::Mat draw_arrows(const cv::Vec3d& vector, int imageSize, int lineThickness) {
     // Create a blank canvas
@@ -167,10 +198,23 @@ void on_cx(int, void*) {
   refresh_mosaic();
 }
 
+int cy_slider = 0;
+int const cy_max = 1000;
+
+void on_cy(int, void*) {
+  refresh_mosaic();
+}
+
 int ff_slider = 0;
 int const ff_max = 1000;
 
 void on_ff(int, void*) {
+  refresh_mosaic();
+}
+int row_slider = 0;
+int const row_max = 2000;
+
+void on_row(int, void*) {
   refresh_mosaic();
 }
 // We want the range of x to be [-2:2:0.1], default 0
@@ -275,13 +319,13 @@ void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv:
   std::cout << "normal = " << normal << "\n";
   cv::Matx33d const Kb(
        385. + ff_slider,    0., 315. + cx_slider, // increasing fx stretches left-right, cx moves image left 
-         0.,  385. + ff_slider, 1000., // increasing fy zooms in, cy moves image down 
+         0.,  385. + ff_slider, 844. + cy_slider, // increasing fy zooms in, cy moves image down 
          0.,    0., 1.
       );
   cv::Matx33d const homography_left = computeHomography(Kb, Kl, lTm, gdistance, normal);  
   cv::Matx33d const homography_right = computeHomography(Kb, Kr, rTm, gdistance, normal);  
-  cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols, left.rows + 2000));
-  cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols, right.rows + 2000));
+  cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols, left.rows + row_slider + 1182)); // 2000
+  cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols, right.rows + row_slider + 1182));
 }
 
 
@@ -307,8 +351,11 @@ int main(int argc, char* argv[])
     cv::createTrackbar("nz", "control", &nz_slider, nz_max, on_nz);
     cv::createTrackbar("cx", "control", &cx_slider, cx_max, on_cx);
     cv::setTrackbarMin("cx", "control", -1000);
+    cv::createTrackbar("cy", "control", &cy_slider, cy_max, on_cy);
+    cv::setTrackbarMin("cy", "control", -1000);
     cv::createTrackbar("ff", "control", &ff_slider, ff_max, on_ff);
     cv::setTrackbarMin("ff", "control", -1000);
+    cv::createTrackbar("rows", "control", &row_slider, row_max, on_row);
     cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
     cv::resizeWindow("mosaic", result.cols, result.rows);
     cv::imshow("mosaic", result);
