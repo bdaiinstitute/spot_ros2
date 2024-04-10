@@ -10,7 +10,7 @@
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/node_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
-#include <spot_driver/interfaces/tf_interface_base.hpp>
+#include <spot_driver/interfaces/tf_broadcaster_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
 
 namespace spot_ros2::images {
@@ -22,7 +22,8 @@ class SpotImagePublisherNode {
   SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api,
                          std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle,
                          std::unique_ptr<ParameterInterfaceBase> parameters,
-                         std::unique_ptr<LoggerInterfaceBase> logger, std::unique_ptr<TfInterfaceBase> tf_broadcaster,
+                         std::unique_ptr<LoggerInterfaceBase> logger,
+                         std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster,
                          std::unique_ptr<TimerInterfaceBase> timer,
                          std::unique_ptr<NodeInterfaceBase> node_base_interface);
 
@@ -40,7 +41,8 @@ class SpotImagePublisherNode {
  private:
   void initialize(std::unique_ptr<SpotApi> spot_api, std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle,
                   std::unique_ptr<ParameterInterfaceBase> parameters, std::unique_ptr<LoggerInterfaceBase> logger,
-                  std::unique_ptr<TfInterfaceBase> tf_broadcaster, std::unique_ptr<TimerInterfaceBase> timer);
+                  std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster,
+                  std::unique_ptr<TimerInterfaceBase> timer);
 
   std::unique_ptr<NodeInterfaceBase> node_base_interface_;
   std::unique_ptr<SpotApi> spot_api_;

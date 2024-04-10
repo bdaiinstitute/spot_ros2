@@ -12,7 +12,7 @@
 #include <spot_driver/mock/mock_spot_api.hpp>
 #include <spot_driver/mock/mock_state_client.hpp>
 #include <spot_driver/mock/mock_state_publisher_middleware_handle.hpp>
-#include <spot_driver/mock/mock_tf_interface.hpp>
+#include <spot_driver/mock/mock_tf_broadcaster_interface.hpp>
 #include <spot_driver/mock/mock_time_sync_api.hpp>
 #include <spot_driver/mock/mock_timer_interface.hpp>
 #include <spot_driver/robot_state/state_publisher_node.hpp>
@@ -33,7 +33,7 @@ class StatePublisherNodeTest : public ::testing::Test {
 
     fake_parameter_interface = std::make_unique<FakeParameterInterface>();
     mock_logger_interface = std::make_unique<MockLoggerInterface>();
-    mock_tf_interface = std::make_unique<MockTfInterface>();
+    mock_tf_broadcaster_interface = std::make_unique<MockTfBroadcasterInterface>();
     mock_timer_interface = std::make_unique<MockTimerInterface>();
 
     mock_spot_api = std::make_unique<MockSpotApi>();
@@ -44,7 +44,7 @@ class StatePublisherNodeTest : public ::testing::Test {
   std::unique_ptr<MockNodeInterface> mock_node_interface;
   std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
   std::unique_ptr<MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<MockTfInterface> mock_tf_interface;
+  std::unique_ptr<MockTfBroadcasterInterface> mock_tf_broadcaster_interface;
   std::unique_ptr<MockTimerInterface> mock_timer_interface;
 
   std::unique_ptr<MockSpotApi> mock_spot_api;
@@ -73,7 +73,7 @@ TEST_F(StatePublisherNodeTest, ConstructionSuccessful) {
   // WHEN constructing a StatePublisherNodeTest
   EXPECT_NO_THROW(StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
                                      std::move(mock_middleware_handle), std::move(fake_parameter_interface),
-                                     std::move(mock_logger_interface), std::move(mock_tf_interface),
+                                     std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
                                      std::move(mock_timer_interface)));
 }
 
@@ -99,7 +99,7 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedCreateRobotFailure) {
   EXPECT_THROW(
       StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api), std::move(mock_middleware_handle),
                          std::move(fake_parameter_interface), std::move(mock_logger_interface),
-                         std::move(mock_tf_interface), std::move(mock_timer_interface)),
+                         std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface)),
       std::exception);
 }
 
@@ -125,7 +125,7 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedAuthenticateFailure) {
   EXPECT_THROW(
       StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api), std::move(mock_middleware_handle),
                          std::move(fake_parameter_interface), std::move(mock_logger_interface),
-                         std::move(mock_tf_interface), std::move(mock_timer_interface)),
+                         std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface)),
       std::exception);
 }
 

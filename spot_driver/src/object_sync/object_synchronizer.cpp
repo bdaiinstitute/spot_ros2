@@ -315,7 +315,7 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
                                        const std::shared_ptr<TimeSyncApi>& time_sync_api,
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<LoggerInterfaceBase> logger_interface,
-                                       std::unique_ptr<TfInterfaceBase> tf_broadcaster_interface,
+                                       std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                                        std::unique_ptr<TfListenerInterfaceBase> tf_listener_interface,
                                        std::unique_ptr<TimerInterfaceBase> world_object_update_timer,
                                        std::unique_ptr<TimerInterfaceBase> tf_broadcaster_timer,
