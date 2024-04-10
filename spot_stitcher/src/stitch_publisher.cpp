@@ -10,7 +10,9 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/stitching.hpp>
 #include <iostream>
+#include <opencv2/stitching/detail/blenders.hpp>
 #include <opencv2/stitching/detail/camera.hpp>
+#include <opencv2/stitching/detail/exposure_compensate.hpp>
 using namespace std;
 using namespace cv;
 bool divide_images = false;
@@ -32,7 +34,6 @@ cv::Matx33d const Kr(          //
     0.0,     0.0,     1.0);
 
 cv::Matx44d make_transform(cv::Quatd const& q, cv::Vec3d const& t) {
-  std::cout << "from make_transform\n";
   // Initialize to identity for bottom row of homogeneous transform
   cv::Matx44d transform = cv::Matx44d::eye();
   // Copy in rotation
@@ -47,12 +48,10 @@ cv::Matx44d make_transform(cv::Quatd const& q, cv::Vec3d const& t) {
   transform(2, 1) = r(2, 1);
   transform(2, 2) = r(2, 2);
   // Copy in translation
-  std::cout << t << "\n";
   transform(0, 3) = t(0);
   transform(1, 3) = t(1);
   transform(2, 3) = t(2);
 
-  std::cout << transform << "\n";
   return transform;
 }
 // # Extrinsics
@@ -114,14 +113,41 @@ cv::Mat draw_arrows(const cv::Vec3d& vector, int imageSize, int lineThickness) {
     return canvas;
 }
 
-void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right);
+void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right, cv::UMat& warped_left_mask, cv::UMat& warped_right_mask);
 
 void refresh_mosaic() {
   cv::Mat image1 = imgs.at(0);
   cv::Mat image2 = imgs.at(1);
   cv::Mat warpedImage1, warpedImage2, result;
-  mosaic(image2, image1, warpedImage1, warpedImage2);
-  cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
+  cv::UMat warpedMask1(image1.size(), CV_8U, 255);
+  cv::UMat warpedMask2(image2.size(), CV_8U, 255);
+  mosaic(image2, image1, warpedImage1, warpedImage2, warpedMask1, warpedMask2);
+  // cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
+  auto compensator = cv::detail::GainCompensator();
+  std::vector<cv::Point> corners{cv::Point(0, 0), cv::Point(0, 0)};
+  // std::vector<cv::UMat> warped_images(2);
+  // warpedImage1.convertTo(warped_images[0], CV_32F);
+  // warpedImage2.convertTo(warped_images[1], CV_32F);
+  // std::vector<cv::UMat> warped_masks {warpedMask1, warpedMask2};
+  // std::vector<std::pair<UMat,uchar> > level_masks;
+  //   for (size_t i = 0; i < warped_masks.size(); ++i)
+  //       level_masks.push_back(std::make_pair(warped_masks[i], (uchar)255));
+  // compensator.feed(corners, warped_images, level_masks);
+  // compensator.apply(0, cv::Point(0, 0), warpedImage1, warpedMask1); 
+  // compensator.apply(1, cv::Point(0, 0), warpedImage2, warpedMask2); 
+  auto blender = cv::detail::MultiBandBlender();
+  // Determine the size and ROI for blending based on the warped images
+    cv::Rect roi = cv::Rect(0, 0, image2.cols + image1.cols, std::max(image2.rows, image1.rows) + 1182);
+    blender.prepare(roi);
+
+    // Feed the warped images and their masks to the blender
+    blender.feed(warpedImage1, warpedMask1, cv::Point(0, 0));
+    blender.feed(warpedImage2, warpedMask2, cv::Point(0, 0));
+
+    // Blend the images
+    cv::Mat blend_mask;
+    blender.blend(result, blend_mask);
+    result.convertTo(result, (result.type() / 8) * 8);
   cv::resizeWindow("mosaic", result.cols, result.rows);
   cv::imshow("mosaic", result);
 }
@@ -302,7 +328,7 @@ cv::Matx44d middle(cv::Matx44d const& T1, cv::Matx44d const& T2) {
   return T3;
 }
 
-void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right) {
+void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right, cv::UMat& warped_left_mask, cv::UMat& warped_right_mask) {
   std::cout << "gdistance = " << gdistance << "\n";
   std::cout << "normy = " << normy << "\n";
   cv::Matx44d const wTb = middle(wTl, wTr);
@@ -324,8 +350,10 @@ void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv:
       );
   cv::Matx33d const homography_left = computeHomography(Kb, Kl, lTm, gdistance, normal);  
   cv::Matx33d const homography_right = computeHomography(Kb, Kr, rTm, gdistance, normal);  
-  cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols, left.rows + row_slider + 1182)); // 2000
-  cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols, right.rows + row_slider + 1182));
+  cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols, left.rows + row_slider + 1182), cv::INTER_LINEAR, cv::BORDER_CONSTANT); // 2000
+  cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols, right.rows + row_slider + 1182), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+  cv::warpPerspective(warped_left_mask, warped_left_mask, homography_left, cv::Size(left.cols, left.rows + row_slider + 1182), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+  cv::warpPerspective(warped_right_mask, warped_right_mask, homography_right, cv::Size(right.cols, right.rows + row_slider + 1182), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
 }
 
 
@@ -334,10 +362,10 @@ int main(int argc, char* argv[])
     int retval = parseCmdArgs(argc, argv);
     if (retval) return EXIT_FAILURE;
      // Warp the images using the homography matrices
-    cv::Mat image1 = imgs.at(0);
-    cv::Mat image2 = imgs.at(1);
-    cv::Mat warpedImage1, warpedImage2, result;
-    mosaic(image2, image1, warpedImage1, warpedImage2);
+    // cv::Mat image1 = imgs.at(0);
+    // cv::Mat image2 = imgs.at(1);
+    // cv::Mat warpedImage1, warpedImage2, result;
+    // mosaic(image2, image1, warpedImage1, warpedImage2);
     cv::namedWindow("mosaic", cv::WINDOW_NORMAL);
     cv::namedWindow("control", cv::WINDOW_NORMAL);
     cv::createTrackbar("x", "control", &x_slider, x_max, on_x);
@@ -356,9 +384,9 @@ int main(int argc, char* argv[])
     cv::createTrackbar("ff", "control", &ff_slider, ff_max, on_ff);
     cv::setTrackbarMin("ff", "control", -1000);
     cv::createTrackbar("rows", "control", &row_slider, row_max, on_row);
-    cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
-    cv::resizeWindow("mosaic", result.cols, result.rows);
-    cv::imshow("mosaic", result);
+    // cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
+    // cv::resizeWindow("mosaic", result.cols, result.rows);
+    // cv::imshow("mosaic", result);
     cv::Mat normal_arrow = draw_arrows(normy, 200, 2);
     cv::imshow("control", normal_arrow);
     cv::waitKey(0);
