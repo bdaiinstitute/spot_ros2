@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <tf2/exceptions.h>
 #include <tf2/time.h>
@@ -10,7 +10,9 @@
 
 namespace spot_ros2 {
 RclcppTfListenerInterface::RclcppTfListenerInterface(const std::shared_ptr<rclcpp::Node>& node)
-    : buffer_{node->get_clock()}, listener_{buffer_, node, false} {}
+    : buffer_{node->get_clock()}, listener_{buffer_, node, false} {
+  buffer_.setUsingDedicatedThread(true);
+}
 
 std::vector<std::string> RclcppTfListenerInterface::getAllFrameNames() const {
   // Note: this seems to get all past frames, in addition to all currently-published frames.

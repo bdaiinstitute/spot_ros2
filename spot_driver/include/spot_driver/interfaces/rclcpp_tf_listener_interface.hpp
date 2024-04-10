@@ -16,6 +16,7 @@
 namespace spot_ros2 {
 /**
  * @brief Implements TfListenerInterfaceBase to use the rclcpp TF system.
+ * @details The node passed to the constructor of this class MUST be spun by a MultiThreadedExecutor.
  */
 class RclcppTfListenerInterface : public TfListenerInterfaceBase {
  public:
