@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2022-2024 MASKOR & The AI Institute
+Copyright (c) 2023-2024 The AI Institute
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,10 +50,3 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-Copyright (c) 2020 Boston Dynamics, Inc.  All rights reserved.
-
-Downloading, reproducing, distributing or otherwise using the SDK Software
-is subject to the terms and conditions of the Boston Dynamics Software
-Development Kit License (20191101-BDSDK-SL).

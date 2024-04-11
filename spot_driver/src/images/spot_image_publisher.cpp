@@ -36,7 +36,8 @@ namespace spot_ros2::images {
       image_request->set_image_source_name(source_name);
       // RGB images can have a user-configurable image quality setting.
       image_request->set_quality_percent(rgb_image_quality);
-      if (has_rgb_cameras) {
+      // The hand camera always provides RGB images
+      if (source.camera == SpotCamera::HAND || has_rgb_cameras) {
         image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8);
       } else {
         image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8);
