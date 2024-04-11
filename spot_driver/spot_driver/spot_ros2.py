@@ -572,7 +572,6 @@ class SpotROS(Node):
             callback_group=self.group,
         )
 
-        # ARM STOW STUFF
         self.create_service(
             Trigger,
             "stow_arm",
