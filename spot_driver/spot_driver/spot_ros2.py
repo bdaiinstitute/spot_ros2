@@ -592,6 +592,23 @@ class SpotROS(Node):
                 callback_group=self.group,
             )
 
+            self.create_service(
+                Trigger,
+                "open_gripper",
+                lambda request, response: self.service_wrapper(
+                    "open_gripper", self.handle_open_gripper, request, response
+                ),
+                callback_group=self.group,
+            )
+            self.create_service(
+                Trigger,
+                "close_gripper",
+                lambda request, response: self.service_wrapper(
+                    "close_gripper", self.handle_close_gripper, request, response
+                ),
+                callback_group=self.group,
+            )
+
         self.create_service(
             SetBool,
             "stair_mode",
@@ -1307,6 +1324,24 @@ class SpotROS(Node):
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message = self.spot_wrapper.spot_arm.arm_carry()
+        return response
+
+    def handle_open_gripper(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler to open the gripper."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.spot_arm.gripper_open()
+        return response
+
+    def handle_close_gripper(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler to close the gripper."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.spot_arm.gripper_close()
         return response
 
     def handle_clear_behavior_fault(
