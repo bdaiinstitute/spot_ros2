@@ -1344,33 +1344,6 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.spot_arm.gripper_close()
         return response
 
-    def handle_stow_arm(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to stow the arm on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.stow_arm()
-        return response
-
-    def handle_ready_arm(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to ready (unstow) the arm on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.arm_unstow()
-        return response
-
-    def handle_carry(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to carry an object the robot has already grasped."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.arm_carry()
-        return response
-
     def handle_clear_behavior_fault(
         self, request: ClearBehaviorFault.Request, response: ClearBehaviorFault.Response
     ) -> ClearBehaviorFault.Response:
