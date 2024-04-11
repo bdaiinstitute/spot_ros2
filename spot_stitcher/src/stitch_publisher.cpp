@@ -119,12 +119,18 @@ void refresh_mosaic() {
   cv::Mat image1 = imgs.at(0);
   cv::Mat image2 = imgs.at(1);
   cv::Mat warpedImage1, warpedImage2, result;
-  cv::UMat warpedMask1(image1.size(), CV_8U, 255);
-  cv::UMat warpedMask2(image2.size(), CV_8U, 255);
+  // try {
+  // cv::UMat warpedMask1(image1.size(), CV_8U, 255);
+  cv::UMat warpedMask1(cv::Size(image1.cols, image1.rows + 1182 ), CV_8U, 255);
+  // cv::UMat warpedMask2(image2.size(), CV_8U, 255);
+  cv::UMat warpedMask2(cv::Size(image2.cols, image2.rows + 1182), CV_8U, 255);
   mosaic(image2, image1, warpedImage1, warpedImage2, warpedMask1, warpedMask2);
+  // } catch (cv::Exception & e) {
+    // std::cout << "boom " << e.what();
+  // }
   // cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
-  auto compensator = cv::detail::GainCompensator();
-  std::vector<cv::Point> corners{cv::Point(0, 0), cv::Point(0, 0)};
+  // auto compensator = cv::detail::GainCompensator();
+  // std::vector<cv::Point> corners{cv::Point(0, 0), cv::Point(0, 0)};
   // std::vector<cv::UMat> warped_images(2);
   // warpedImage1.convertTo(warped_images[0], CV_32F);
   // warpedImage2.convertTo(warped_images[1], CV_32F);
@@ -137,17 +143,17 @@ void refresh_mosaic() {
   // compensator.apply(1, cv::Point(0, 0), warpedImage2, warpedMask2); 
   auto blender = cv::detail::MultiBandBlender();
   // Determine the size and ROI for blending based on the warped images
-    cv::Rect roi = cv::Rect(0, 0, image2.cols + image1.cols, std::max(image2.rows, image1.rows) + 1182);
-    blender.prepare(roi);
+  cv::Rect roi = cv::Rect(0, 0, image2.cols + image1.cols, std::max(image2.rows, image1.rows) + 1182);
+  blender.prepare(roi);
 
-    // Feed the warped images and their masks to the blender
-    blender.feed(warpedImage1, warpedMask1, cv::Point(0, 0));
-    blender.feed(warpedImage2, warpedMask2, cv::Point(0, 0));
+  // Feed the warped images and their masks to the blender
+  blender.feed(warpedImage1, warpedMask1, cv::Point(0, 0));
+  blender.feed(warpedImage2, warpedMask2, cv::Point(0, 0));
 
-    // Blend the images
-    cv::Mat blend_mask;
-    blender.blend(result, blend_mask);
-    result.convertTo(result, (result.type() / 8) * 8);
+  // Blend the images
+  cv::Mat blend_mask;
+  blender.blend(result, blend_mask);
+  result.convertTo(result, (result.type() / 8) * 8);
   cv::resizeWindow("mosaic", result.cols, result.rows);
   cv::imshow("mosaic", result);
 }
@@ -361,11 +367,6 @@ int main(int argc, char* argv[])
 {
     int retval = parseCmdArgs(argc, argv);
     if (retval) return EXIT_FAILURE;
-     // Warp the images using the homography matrices
-    // cv::Mat image1 = imgs.at(0);
-    // cv::Mat image2 = imgs.at(1);
-    // cv::Mat warpedImage1, warpedImage2, result;
-    // mosaic(image2, image1, warpedImage1, warpedImage2);
     cv::namedWindow("mosaic", cv::WINDOW_NORMAL);
     cv::namedWindow("control", cv::WINDOW_NORMAL);
     cv::createTrackbar("x", "control", &x_slider, x_max, on_x);
@@ -384,9 +385,6 @@ int main(int argc, char* argv[])
     cv::createTrackbar("ff", "control", &ff_slider, ff_max, on_ff);
     cv::setTrackbarMin("ff", "control", -1000);
     cv::createTrackbar("rows", "control", &row_slider, row_max, on_row);
-    // cv::addWeighted(warpedImage1, 0.5, warpedImage2, 0.5, 0., result);
-    // cv::resizeWindow("mosaic", result.cols, result.rows);
-    // cv::imshow("mosaic", result);
     cv::Mat normal_arrow = draw_arrows(normy, 200, 2);
     cv::imshow("control", normal_arrow);
     cv::waitKey(0);
