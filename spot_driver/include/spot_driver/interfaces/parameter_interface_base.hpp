@@ -24,6 +24,8 @@ class ParameterInterfaceBase {
   // specific value. If the parameter was set, return the value provided by the user. If the parameter was not set,
   // return the default value.
   virtual std::string getHostname() const = 0;
+  virtual std::optional<int> getPort() const = 0;
+  virtual std::optional<std::string> getCertificate() const = 0;
   virtual std::string getUsername() const = 0;
   virtual std::string getPassword() const = 0;
   virtual double getRGBImageQuality() const = 0;

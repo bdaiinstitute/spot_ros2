@@ -14,11 +14,22 @@
 
 namespace spot_ros2 {
 
-DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name)
-    : client_sdk_{::bosdyn::client::CreateStandardSDK(sdk_client_name)} {}
+DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::optional<std::string>& certificate) {
+  if (certificate.has_value()) {
+    client_sdk_ = std::make_unique<::bosdyn::client::ClientSdk>();
+    client_sdk_->SetClientName(sdk_client_name);
+    if (const auto status = client_sdk_->LoadRobotCertFromFile(certificate.value()); !status) {
+      throw std::runtime_error(status.message());
+    }
+    client_sdk_->Init();
+  } else {
+    client_sdk_ = ::bosdyn::client::CreateStandardSDK(sdk_client_name);
+  }
+}
 
-tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& ip_address,
-                                                            const std::string& robot_name) {
+tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& robot_name,
+                                                            const std::string& ip_address,
+                                                            const std::optional<int>& port) {
   robot_name_ = robot_name;
 
   auto create_robot_result = client_sdk_->CreateRobot(ip_address);
@@ -28,6 +39,10 @@ tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& i
   }
 
   robot_ = std::move(create_robot_result.response);
+
+  if (port.has_value()) {
+    robot_->UpdateSecureChannelPort(port.value());
+  }
 
   return {};
 }

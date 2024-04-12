@@ -19,10 +19,12 @@ namespace spot_ros2 {
 
 class DefaultSpotApi : public SpotApi {
  public:
-  explicit DefaultSpotApi(const std::string& sdk_client_name);
+  explicit DefaultSpotApi(const std::string& sdk_client_name,
+                          const std::optional<std::string>& certificate = std::nullopt);
 
-  [[nodiscard]] tl::expected<void, std::string> createRobot(const std::string& ip_address,
-                                                            const std::string& robot_name) override;
+  [[nodiscard]] tl::expected<void, std::string> createRobot(const std::string& robot_name,
+                                                            const std::string& ip_address,
+                                                            const std::optional<int>& port = std::nullopt) override;
   [[nodiscard]] tl::expected<void, std::string> authenticate(const std::string& username,
                                                              const std::string& password) override;
   [[nodiscard]] tl::expected<bool, std::string> hasArm() const override;

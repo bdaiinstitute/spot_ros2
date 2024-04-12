@@ -88,6 +88,7 @@ def spot_node(ros: ROSAwareScope, simple_spot: SpotFixture) -> typing.Iterator[S
         rclpy.parameter.Parameter("password", rclpy.Parameter.Type.STRING, "spot"),
         rclpy.parameter.Parameter("hostname", rclpy.Parameter.Type.STRING, simple_spot.address),
         rclpy.parameter.Parameter("port", rclpy.Parameter.Type.INTEGER, simple_spot.port),
+        rclpy.parameter.Parameter("certificate", rclpy.Parameter.Type.STRING, str(simple_spot.certificate_path)),
         rclpy.parameter.Parameter("spot_name", rclpy.Parameter.Type.STRING, simple_spot.api.name),
         # disable camera publishing for now
         rclpy.parameter.Parameter("publish_rgb", rclpy.Parameter.Type.BOOL, False),
