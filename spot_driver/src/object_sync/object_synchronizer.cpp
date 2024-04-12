@@ -505,12 +505,43 @@ void ObjectSynchronizer::broadcastWorldObjectTransforms() {
     }
 
     // Convert the object's frame tree snapshot into ROS TF frames
-    const auto transforms = getTf(object.transforms_snapshot(), object.acquisition_time(), clock_skew_result.value(),
-                                  frame_prefix_, preferred_base_frame_with_prefix_);
+    auto transforms = getTf(object.transforms_snapshot(), object.acquisition_time(), clock_skew_result.value(),
+                            frame_prefix_, preferred_base_frame_with_prefix_);
     if (!transforms) {
       logger_interface_->logWarn("Failed to get TF tree for object `" + object.name() + "`.");
       continue;
     }
+
+    if (object.name().find("apriltag") != std::string::npos) {
+      std::cout << "this is an apriltag!" << std::endl;
+      // idea modify the tfs so that it does not contain the static frames
+      // ---------------------------------------------------------------------------------------------------------------
+      for (auto it = transforms->transforms.begin(); it != transforms->transforms.end();) {
+        auto name = it->child_frame_id;
+        if ((name.find("vision") != std::string::npos) || (name.find("odom") != std::string::npos) ||
+            (name.find("fiducial") != std::string::npos) || (name.find("body") != std::string::npos)) {
+          // this element should be kept
+          std::cout << "keep " << name << std::endl;
+          ++it;
+        } else {
+          std::cout << "delete " << name << std::endl;
+          it = transforms->transforms.erase(it);
+        }
+
+        // --------------------------------------------------------------------------------------------------------------
+        // for (const auto& tf : transforms->transforms) {
+        //   const auto frame_id = tf.child_frame_id;
+        //   std::cout << frame_id << " " << tf.header.frame_id << std::endl;
+        //   // keep child frame id with "fiducial", "vision", "body" (and maybe odom)
+        //   if ((frame_id.find("vision") != std::string::npos) || (frame_id.find("odom") != std::string::npos) ||
+        //   (frame_id.find("fiducial") != std::string::npos) || (frame_id.find("body") != std::string::npos)) {
+        //     std::cout << "keep " << std::endl;
+        //   } else {
+        //     std::cout << "discard " << std::endl;
+        //   }
+      }
+    }
+
     // Broadcast TF frames for this object
     tf_broadcaster_interface_->sendDynamicTransforms(transforms->transforms);
   }
