@@ -114,68 +114,63 @@ cv::Mat draw_arrows(const cv::Vec3d& vector, int imageSize, int lineThickness) {
     return canvas;
 }
 
-void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right, cv::UMat& warped_left_mask, cv::UMat& warped_right_mask);
+void mosaic(cv::Mat const& left, cv::Mat const& right, std::vector<cv::UMat>& warped_images, std::vector<cv::UMat>& warped_masks);
 
 void refresh_mosaic() {
   cv::Mat image1 = imgs.at(0);
   cv::Mat image2 = imgs.at(1);
-  cv::Mat warpedImage1, warpedImage2, result;
-  // try {
-  // cv::UMat warpedMask1(image1.size(), CV_8U, 255);
-  // cv::UMat warpedMask1(cv::Size(image1.cols, image1.rows + 1182 ), CV_8U, 255);
-  // cv::UMat warpedMask2(image2.size(), CV_8U, 255);
-  // cv::UMat warpedMask2(cv::Size(image2.cols, image2.rows + 1182), CV_8U, 255);
-  cv::UMat warpedMask1, warpedMask2;
-  mosaic(image2, image1, warpedImage1, warpedImage2, warpedMask1, warpedMask2);
-  // } catch (cv::Exception & e) {
-    // std::cout << "boom " << e.what();
-  // }
-  // Top left corners
-  std::vector<cv::Point> corners{cv::Point(0, 797), cv::Point(0, 0)};
   std::vector<cv::UMat> warped_images(2);
-  warpedImage1.convertTo(warped_images[0], CV_32F);
-  warpedImage2.convertTo(warped_images[1], CV_32F);
-  std::vector<cv::UMat> warped_masks {warpedMask1, warpedMask2};
+  std::vector<cv::UMat> warped_masks(2);
+  mosaic(image2, image1, warped_images, warped_masks);
+  // Top left corners, should be a different way to get these numbers, probably by transforming 0, 0 by homography
+  std::vector<cv::Point> corners{cv::Point(0, 797), cv::Point(0, 0)};
   std::vector<std::pair<UMat,uchar> > level_masks;
-    for (size_t i = 0; i < warped_masks.size(); ++i)
-        level_masks.push_back(std::make_pair(warped_masks[i], (uchar)255));
-  // auto compensator = cv::detail::GainCompensator();
-  auto compensator = cv::detail::BlocksGainCompensator();
+  for (size_t i = 0; i < warped_masks.size(); ++i) {
+    level_masks.push_back(std::make_pair(warped_masks[i], (uchar)255));
+  }
+  auto compensator = cv::detail::BlocksGainCompensator(); // Default in stitcher
   compensator.feed(corners, warped_images, level_masks);
   // Top left corners
-  compensator.apply(0, cv::Point(0, 797), warpedImage1, warpedMask1); 
-  compensator.apply(1, cv::Point(0, 0), warpedImage2, warpedMask2); // 0, 0 is correct here 
-
+  for (size_t ndx = 0; ndx < warped_images.size(); ndx++){
+    compensator.apply(ndx, corners[ndx], warped_images[ndx], warped_masks); 
+  }
+  // Convert images for seaming after they've been compensated
+  std::vector<cv::UMat> warped_images_f(2);
+  for (size_t ndx = 0; ndx < warped_images.size(); ndx++){
+    warped_images[ndx].convertTo(warped_images_f[ndx], CV_32F);
+  }
   // Find optimal seams to cut at
-  auto seamer = cv::detail::DpSeamFinder();
-  seamer.find(warped_images, corners, warped_masks);
+  auto seamer = cv::detail::DpSeamFinder(); // GraphCut is default in stitcher but they do it at a different scale
+  seamer.find(warped_images_f, corners, warped_masks);
 
   auto blender = cv::detail::MultiBandBlender(false, 200);
   // Determine the size and ROI for blending based on the warped images
-  cv::Rect roi = cv::Rect(0, 0, warpedImage1.cols, warpedImage1.rows);
-  blender.prepare(roi);
+  std::vector<cv::Size> sizes(2);
+  for (size_t ndx = 0; ndx < sizes.size(); ndx++) {
+    sizes[ndx] = warped_images[ndx].size();
+  }
+  blender.prepare(cv::detail::resultRoi(corners, sizes)); 
 
   // Feed the warped images and their masks to the blender
-  // cv::Mat overlap;
-  // cv::bitwise_and(warpedMask1, warpedMask2, overlap);
-  // blender.feed(warpedImage1, overlap, cv::Point(0, 0));
-  // blender.feed(warpedImage2, overlap, cv::Point(0, 0));
-  blender.feed(warpedImage1, warpedMask1, cv::Point(0, 0));
-  blender.feed(warpedImage2, warpedMask2, cv::Point(0, 0));
+  std::vector<cv::UMat> warped_images_s(2);
+  for (size_t ndx = 0; ndx < warped_images.size(); ndx++){
+    warped_images[ndx].convertTo(warped_images_s[ndx], CV_16S);
+  }
+  blender.feed(warped_images_s[0], warped_masks[0], cv::Point(0, 0));
+  blender.feed(warped_images_s[1], warped_masks[1], cv::Point(0, 0));
 
   // Blend the images
   cv::Mat blend_mask;
+  cv::Mat result;
   blender.blend(result, blend_mask);
   result.convertTo(result, CV_8U);
   cv::resizeWindow("mosaic", result.cols, result.rows);
-  cv::resizeWindow("right", warpedImage2.cols, warpedImage2.rows);
-  cv::resizeWindow("left", warpedImage1.cols, warpedImage1.rows);
+  cv::resizeWindow("left", sizes[0]);
+  cv::resizeWindow("right", sizes[1]);
   cv::imshow("mosaic", result);
-  // cv::imshow("right", warpedImage2);
-  // cv::imshow("left", warpedImage1);
-  cv::imshow("right", warpedMask2);
-  cv::imshow("left", warpedMask1);
-  cv::imwrite("result.png", result);
+  cv::imshow("left", warped_masks[0]);
+  cv::imshow("right", warped_masks[1]);
+  // cv::imwrite("result.png", result);
 }
 
 // maps an integer value from trackbar to -1:1
@@ -354,7 +349,7 @@ cv::Matx44d middle(cv::Matx44d const& T1, cv::Matx44d const& T2) {
   return T3;
 }
 
-void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv::Mat& warped_right, cv::UMat& warped_left_mask, cv::UMat& warped_right_mask) {
+void mosaic(cv::Mat const& left, cv::Mat const& right, std::vector<cv::UMat>& warped_images, std::vector<cv::UMat>& warped_masks) {
   std::cout << "gdistance = " << gdistance << "\n";
   std::cout << "normy = " << normy << "\n";
   cv::Matx44d const wTb = middle(wTl, wTr);
@@ -376,13 +371,13 @@ void mosaic(cv::Mat const& left, cv::Mat const& right, cv::Mat& warped_left, cv:
       );
   cv::Matx33d const homography_left = computeHomography(Kb, Kl, lTm, gdistance, normal);  
   cv::Matx33d const homography_right = computeHomography(Kb, Kr, rTm, gdistance, normal);  
-  cv::warpPerspective(left, warped_left, homography_left, cv::Size(left.cols, left.rows + row_slider + 1182), cv::INTER_LINEAR, cv::BORDER_CONSTANT); // 2000
-  cv::warpPerspective(right, warped_right, homography_right, cv::Size(right.cols, right.rows + row_slider + 1182), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+  cv::warpPerspective(left, warped_images[0], homography_left, cv::Size(left.cols, left.rows + row_slider + 1182));
+  cv::warpPerspective(right, warped_images[1], homography_right, cv::Size(right.cols, right.rows + row_slider + 1182));
   
   cv::UMat mask_left(left.size(), CV_8U, 255);
   cv::UMat mask_right(right.size(), CV_8U, 255);
-  cv::warpPerspective(mask_left, warped_left_mask, homography_left, cv::Size(left.cols, left.rows + row_slider + 1182), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
-  cv::warpPerspective(mask_right, warped_right_mask, homography_right, cv::Size(right.cols, right.rows + row_slider + 1182), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+  cv::warpPerspective(mask_left, warped_masks[0], homography_left, cv::Size(left.cols, left.rows + row_slider + 1182));
+  cv::warpPerspective(mask_right, warped_masks[1], homography_right, cv::Size(right.cols, right.rows + row_slider + 1182));
 }
 
 
