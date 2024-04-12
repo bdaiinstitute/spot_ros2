@@ -513,32 +513,18 @@ void ObjectSynchronizer::broadcastWorldObjectTransforms() {
     }
 
     if (object.name().find("apriltag") != std::string::npos) {
-      std::cout << "this is an apriltag!" << std::endl;
-      // idea modify the tfs so that it does not contain the static frames
-      // ---------------------------------------------------------------------------------------------------------------
+      // idea: modify the tfs so that it does not contain the static frames
+      // in the future this should be done in a cleaner way
       for (auto it = transforms->transforms.begin(); it != transforms->transforms.end();) {
         auto name = it->child_frame_id;
         if ((name.find("vision") != std::string::npos) || (name.find("odom") != std::string::npos) ||
             (name.find("fiducial") != std::string::npos) || (name.find("body") != std::string::npos)) {
           // this element should be kept
-          std::cout << "keep " << name << std::endl;
           ++it;
         } else {
-          std::cout << "delete " << name << std::endl;
+          // this element should be deleted
           it = transforms->transforms.erase(it);
         }
-
-        // --------------------------------------------------------------------------------------------------------------
-        // for (const auto& tf : transforms->transforms) {
-        //   const auto frame_id = tf.child_frame_id;
-        //   std::cout << frame_id << " " << tf.header.frame_id << std::endl;
-        //   // keep child frame id with "fiducial", "vision", "body" (and maybe odom)
-        //   if ((frame_id.find("vision") != std::string::npos) || (frame_id.find("odom") != std::string::npos) ||
-        //   (frame_id.find("fiducial") != std::string::npos) || (frame_id.find("body") != std::string::npos)) {
-        //     std::cout << "keep " << std::endl;
-        //   } else {
-        //     std::cout << "discard " << std::endl;
-        //   }
       }
     }
 
