@@ -121,9 +121,11 @@ void refresh_mosaic() {
   cv::Mat image2 = imgs.at(1);
   std::vector<cv::UMat> warped_images(2);
   std::vector<cv::UMat> warped_masks(2);
+  // while image2 in testing is coming from the right camera, it sees the left side of the scene
   mosaic(image2, image1, warped_images, warped_masks);
   // Top left corners, should be a different way to get these numbers, probably by transforming 0, 0 by homography
-  std::vector<cv::Point> corners{cv::Point(0, 797), cv::Point(0, 0)};
+  // std::vector<cv::Point> corners{cv::Point(0, 797), cv::Point(0, 0)};
+  std::vector<cv::Point> corners{cv::Point(0, 0), cv::Point(0, 0)};
   std::vector<std::pair<UMat,uchar> > level_masks;
   for (size_t i = 0; i < warped_masks.size(); ++i) {
     level_masks.push_back(std::make_pair(warped_masks[i], (uchar)255));
@@ -149,7 +151,8 @@ void refresh_mosaic() {
   for (size_t ndx = 0; ndx < sizes.size(); ndx++) {
     sizes[ndx] = warped_images[ndx].size();
   }
-  blender.prepare(cv::detail::resultRoi(corners, sizes)); 
+  blender.prepare(cv::detail::resultRoi(corners, sizes)); // for some reason this adds a lot of heig
+  // blender.prepare(cv::Rect(0, 0, sizes[0].width, sizes[0].height)); 
 
   // Feed the warped images and their masks to the blender
   std::vector<cv::UMat> warped_images_s(2);
@@ -355,6 +358,7 @@ void mosaic(cv::Mat const& left, cv::Mat const& right, std::vector<cv::UMat>& wa
   cv::Matx44d const wTb = middle(wTl, wTr);
   cv::Matx44d lTm = wTl.inv() * wTb;
   cv::Matx44d rTm = wTr.inv() * wTb;
+  std::cout << "x: " << x << " y: " << y << "\n";
   lTm(0, 3) -= x;
   lTm(0, 4) -= y;
   std::cout << "lTm = " << lTm << "\n";
