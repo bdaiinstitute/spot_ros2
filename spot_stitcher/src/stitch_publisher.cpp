@@ -10,10 +10,12 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/stitching.hpp>
 #include <iostream>
+#include <chrono>
 #include <opencv2/stitching/detail/blenders.hpp>
 #include <opencv2/stitching/detail/camera.hpp>
 #include <opencv2/stitching/detail/exposure_compensate.hpp>
 #include <opencv2/stitching/detail/seam_finders.hpp>
+#include <ratio>
 using namespace std;
 using namespace cv;
 bool divide_images = false;
@@ -117,35 +119,52 @@ cv::Mat draw_arrows(const cv::Vec3d& vector, int imageSize, int lineThickness) {
 void mosaic(cv::Mat const& left, cv::Mat const& right, std::vector<cv::UMat>& warped_images, std::vector<cv::UMat>& warped_masks);
 
 void refresh_mosaic() {
+  auto const start_function = std::chrono::high_resolution_clock::now();
   cv::Mat image1 = imgs.at(0);
   cv::Mat image2 = imgs.at(1);
-  std::vector<cv::UMat> warped_images(2);
-  std::vector<cv::UMat> warped_masks(2);
+  thread_local std::vector<cv::UMat> warped_images(2);
+  thread_local std::vector<cv::UMat> warped_masks(2);
+  // warped_images.clear();
+  // warped_masks.clear();
   // while image2 in testing is coming from the right camera, it sees the left side of the scene
+  auto const start_mosaic = std::chrono::high_resolution_clock::now();
   mosaic(image2, image1, warped_images, warped_masks);
+  auto const end_mosaic = std::chrono::high_resolution_clock::now();
   // Top left corners, should be a different way to get these numbers, probably by transforming 0, 0 by homography
   // std::vector<cv::Point> corners{cv::Point(0, 797), cv::Point(0, 0)};
+  auto const start_gain = std::chrono::high_resolution_clock::now();
   std::vector<cv::Point> corners{cv::Point(0, 0), cv::Point(0, 0)};
-  std::vector<std::pair<UMat,uchar> > level_masks;
+  // In some datasets it is shown that the gain compensation is worth it.
+  // And the cost can be non-linear as the seamer seems to have to work less hard
+  thread_local std::vector<std::pair<UMat,uchar> > level_masks;
+  level_masks.clear();
   for (size_t i = 0; i < warped_masks.size(); ++i) {
     level_masks.push_back(std::make_pair(warped_masks[i], (uchar)255));
   }
-  auto compensator = cv::detail::BlocksGainCompensator(); // Default in stitcher
+  // auto compensator = cv::detail::BlocksGainCompensator(); // 50 ms, great , Default in stitcher
+  // auto compensator = cv::detail::BlocksChannelsCompensator(); // 96 ms, ok but visible seam in some places
+  // auto compensator = cv::detail::ChannelsCompensator(); // 15 ms, ok but visible seam in a large area/everywhere 
+  auto compensator = cv::detail::GainCompensator(); // 7 ms, ok ok but still a seam, though less than the (blocks)channels compensators
   compensator.feed(corners, warped_images, level_masks);
   // Top left corners
   for (size_t ndx = 0; ndx < warped_images.size(); ndx++){
     compensator.apply(ndx, corners[ndx], warped_images[ndx], warped_masks); 
   }
+  auto const end_gain = std::chrono::high_resolution_clock::now();
   // Convert images for seaming after they've been compensated
-  std::vector<cv::UMat> warped_images_f(2);
+  auto const start_seam = std::chrono::high_resolution_clock::now();
+  thread_local std::vector<cv::UMat> warped_images_f(2);
   for (size_t ndx = 0; ndx < warped_images.size(); ndx++){
     warped_images[ndx].convertTo(warped_images_f[ndx], CV_32F);
   }
   // Find optimal seams to cut at
   auto seamer = cv::detail::DpSeamFinder(); // GraphCut is default in stitcher but they do it at a different scale
+                                            // DpSeamFinder is faster and has better performance in this use case
   seamer.find(warped_images_f, corners, warped_masks);
+  auto const end_seam = std::chrono::high_resolution_clock::now();
 
-  auto blender = cv::detail::MultiBandBlender(false, 200);
+  auto const start_blend = std::chrono::high_resolution_clock::now();
+  auto blender = cv::detail::MultiBandBlender();
   // Determine the size and ROI for blending based on the warped images
   std::vector<cv::Size> sizes(2);
   for (size_t ndx = 0; ndx < sizes.size(); ndx++) {
@@ -155,18 +174,18 @@ void refresh_mosaic() {
   // blender.prepare(cv::Rect(0, 0, sizes[0].width, sizes[0].height)); 
 
   // Feed the warped images and their masks to the blender
-  std::vector<cv::UMat> warped_images_s(2);
+  thread_local std::vector<cv::UMat> warped_images_s(2);
   for (size_t ndx = 0; ndx < warped_images.size(); ndx++){
     warped_images[ndx].convertTo(warped_images_s[ndx], CV_16S);
   }
   blender.feed(warped_images_s[0], warped_masks[0], cv::Point(0, 0));
   blender.feed(warped_images_s[1], warped_masks[1], cv::Point(0, 0));
-
   // Blend the images
   cv::Mat blend_mask;
   cv::Mat result;
   blender.blend(result, blend_mask);
   result.convertTo(result, CV_8U);
+  auto const end_blend = std::chrono::high_resolution_clock::now();
   cv::resizeWindow("mosaic", result.cols, result.rows);
   cv::resizeWindow("left", sizes[0]);
   cv::resizeWindow("right", sizes[1]);
@@ -174,6 +193,18 @@ void refresh_mosaic() {
   cv::imshow("left", warped_masks[0]);
   cv::imshow("right", warped_masks[1]);
   // cv::imwrite("result.png", result);
+  auto const end_function = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> duration_mosaic = end_mosaic - start_mosaic;
+  std::chrono::duration<double, std::milli> duration_gain = end_gain - start_gain;
+  std::chrono::duration<double, std::milli> duration_seam = end_seam - start_seam;
+  std::chrono::duration<double, std::milli> duration_blend = end_blend - start_blend;
+  std::chrono::duration<double, std::milli> duration_function = end_function - start_function;
+
+  std::cout << "function: " << duration_function.count() << "\n";
+  std::cout << "mosaic: " << duration_mosaic.count() << "\n";
+  std::cout << "gain: " << duration_gain.count() << "\n";
+  std::cout << "seam: " << duration_seam.count() << "\n";
+  std::cout << "blend: " << duration_blend.count() << "\n";
 }
 
 // maps an integer value from trackbar to -1:1
