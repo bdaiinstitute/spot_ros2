@@ -141,10 +141,10 @@ void refresh_mosaic() {
   for (size_t i = 0; i < warped_masks.size(); ++i) {
     level_masks.push_back(std::make_pair(warped_masks[i], (uchar)255));
   }
-  // auto compensator = cv::detail::BlocksGainCompensator(); // 50 ms, great , Default in stitcher
+  auto compensator = cv::detail::BlocksGainCompensator(); // 50 ms, great , Default in stitcher
   // auto compensator = cv::detail::BlocksChannelsCompensator(); // 96 ms, ok but visible seam in some places
   // auto compensator = cv::detail::ChannelsCompensator(); // 15 ms, ok but visible seam in a large area/everywhere 
-  auto compensator = cv::detail::GainCompensator(); // 7 ms, ok ok but still a seam, though less than the (blocks)channels compensators
+  // auto compensator = cv::detail::GainCompensator(); // 7 ms, ok ok but still a seam, though less than the (blocks)channels compensators
   compensator.feed(corners, warped_images, level_masks);
   // Top left corners
   for (size_t ndx = 0; ndx < warped_images.size(); ndx++){
@@ -170,8 +170,8 @@ void refresh_mosaic() {
   for (size_t ndx = 0; ndx < sizes.size(); ndx++) {
     sizes[ndx] = warped_images[ndx].size();
   }
-  blender.prepare(cv::detail::resultRoi(corners, sizes)); // for some reason this adds a lot of heig
-  // blender.prepare(cv::Rect(0, 0, sizes[0].width, sizes[0].height)); 
+  // blender.prepare(cv::detail::resultRoi(corners, sizes)); 
+  blender.prepare(cv::Rect(0, 0, sizes[0].width, sizes[0].height)); 
 
   // Feed the warped images and their masks to the blender
   thread_local std::vector<cv::UMat> warped_images_s(2);
@@ -181,8 +181,8 @@ void refresh_mosaic() {
   blender.feed(warped_images_s[0], warped_masks[0], cv::Point(0, 0));
   blender.feed(warped_images_s[1], warped_masks[1], cv::Point(0, 0));
   // Blend the images
-  cv::Mat blend_mask;
-  cv::Mat result;
+  cv::UMat blend_mask;
+  cv::UMat result;
   blender.blend(result, blend_mask);
   result.convertTo(result, CV_8U);
   auto const end_blend = std::chrono::high_resolution_clock::now();
@@ -192,7 +192,7 @@ void refresh_mosaic() {
   cv::imshow("mosaic", result);
   cv::imshow("left", warped_masks[0]);
   cv::imshow("right", warped_masks[1]);
-  // cv::imwrite("result.png", result);
+  cv::imwrite("result.png", result);
   auto const end_function = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> duration_mosaic = end_mosaic - start_mosaic;
   std::chrono::duration<double, std::milli> duration_gain = end_gain - start_gain;
@@ -409,8 +409,8 @@ void mosaic(cv::Mat const& left, cv::Mat const& right, std::vector<cv::UMat>& wa
   cv::warpPerspective(left, warped_images[0], homography_left, cv::Size(left.cols, left.rows + row_slider + 1182));
   cv::warpPerspective(right, warped_images[1], homography_right, cv::Size(right.cols, right.rows + row_slider + 1182));
   
-  cv::UMat mask_left(left.size(), CV_8U, 255);
-  cv::UMat mask_right(right.size(), CV_8U, 255);
+  thread_local cv::UMat const mask_left(left.size(), CV_8U, 255);
+  thread_local cv::UMat const mask_right(right.size(), CV_8U, 255);
   cv::warpPerspective(mask_left, warped_masks[0], homography_left, cv::Size(left.cols, left.rows + row_slider + 1182));
   cv::warpPerspective(mask_right, warped_masks[1], homography_right, cv::Size(right.cols, right.rows + row_slider + 1182));
 }
