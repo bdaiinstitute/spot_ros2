@@ -124,7 +124,7 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
                                               const google::protobuf::Timestamp& timestamp_robot,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                               const std::string& preferred_base_frame_id,
-                                              std::set<std::string, std::less<>> frames_to_ignore = {});
+                                              const std::set<std::string, std::less<>> frames_to_ignore = {});
 /**
  * @brief Create an TwistWithCovarianceStamped ROS message representing Spot's body velocity by parsing a RobotState
  * message.

@@ -119,7 +119,7 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
                                               const google::protobuf::Timestamp& timestamp_robot,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                               const std::string& preferred_base_frame_id,
-                                              std::set<std::string, std::less<>> frames_to_ignore) {
+                                              const std::set<std::string, std::less<>> frames_to_ignore) {
   if (frame_tree_snapshot.child_to_parent_edge_map().empty()) {
     return std::nullopt;
   }
@@ -136,6 +136,7 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
       continue;
     }
 
+    // If this frame is in the list of frames to ignore, skip it.
     if (frames_to_ignore.find(frame_id) != frames_to_ignore.end()) {
       continue;
     }

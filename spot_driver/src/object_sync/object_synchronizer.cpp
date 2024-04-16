@@ -511,7 +511,6 @@ void ObjectSynchronizer::broadcastWorldObjectTransforms() {
       logger_interface_->logWarn("Failed to get TF tree for object `" + object.name() + "`.");
       continue;
     }
-
     // Broadcast TF frames for this object
     tf_broadcaster_interface_->sendDynamicTransforms(transforms->transforms);
   }
