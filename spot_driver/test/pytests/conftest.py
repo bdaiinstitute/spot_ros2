@@ -120,9 +120,6 @@ def spot_node(ros: ROSAwareScope, simple_spot: SpotFixture) -> typing.Iterator[S
 
 @launch_pytest.fixture
 def spot_graph_description(simple_spot: SpotFixture, domain_id: int) -> typing.Iterator[launch.LaunchDescription]:
-    import time
-
-    time.sleep(5.0)
     with tempfile.NamedTemporaryFile(mode="w", suffix="config.yaml") as temp:
         data = {
             "username": "user",
