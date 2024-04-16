@@ -337,7 +337,7 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
                                           ? spot_name + "/" + preferred_base_frame_
                                           : preferred_base_frame_;
 
-  // TODO(khughes): This is temporarily disabled to reduce drivers spew about TF extrapolation.
+  // TODO(khughes): This is temporarily disabled to reduce driver's spew about TF extrapolation.
   // world_object_update_timer_->setTimer(kWorldObjectSyncPeriod, [this]() {
   //   syncWorldObjects();
   // });

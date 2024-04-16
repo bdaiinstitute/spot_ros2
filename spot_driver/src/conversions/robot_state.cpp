@@ -119,7 +119,7 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
                                               const google::protobuf::Timestamp& timestamp_robot,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                               const std::string& preferred_base_frame_id,
-                                              const std::set<std::string, std::less<>> frames_to_ignore) {
+                                              const std::set<std::string, std::less<>>& frames_to_ignore) {
   if (frame_tree_snapshot.child_to_parent_edge_map().empty()) {
     return std::nullopt;
   }
