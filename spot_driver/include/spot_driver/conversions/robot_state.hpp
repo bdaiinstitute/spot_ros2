@@ -116,19 +116,15 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& r
  * @param prefix  The prefix to apply to all robot frame IDs. This corresponds to the name of the robot. It is expected
  * to terminate with `/`.
  * @param preferred_base_frame_id Frame ID to use as the base frame of the TF tree. Must be either "odom" or "vision".
+ * @param frames_to_ignore Set of frames to not include in the TF tree.
  * @return If the input frame tree snapshot contains a non-zero number of entries, return a TFMessage containing
  * this data. Otherwise, return nullopt.
  */
 std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnapshot& frame_tree_snapshot,
                                               const google::protobuf::Timestamp& timestamp_robot,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
-                                              const std::string& preferred_base_frame_id);
-
-std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnapshot& frame_tree_snapshot,
-                                              const google::protobuf::Timestamp& timestamp_robot,
-                                              const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                               const std::string& preferred_base_frame_id,
-                                              std::set<std::string, std::less<>> frames_to_ignore);
+                                              std::set<std::string, std::less<>> frames_to_ignore = {});
 /**
  * @brief Create an TwistWithCovarianceStamped ROS message representing Spot's body velocity by parsing a RobotState
  * message.
