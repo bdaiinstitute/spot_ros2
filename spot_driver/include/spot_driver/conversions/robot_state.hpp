@@ -4,6 +4,7 @@
 
 #include <bosdyn/api/robot_state.pb.h>
 #include <bosdyn_api_msgs/msg/manipulator_state.hpp>
+#include <functional>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <map>
@@ -12,6 +13,7 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
+#include <set>
 #include <spot_msgs/msg/battery_state_array.hpp>
 #include <spot_msgs/msg/behavior_fault_state.hpp>
 #include <spot_msgs/msg/e_stop_state_array.hpp>
@@ -122,6 +124,11 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
                                               const std::string& preferred_base_frame_id);
 
+std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnapshot& frame_tree_snapshot,
+                                              const google::protobuf::Timestamp& timestamp_robot,
+                                              const google::protobuf::Duration& clock_skew, const std::string& prefix,
+                                              const std::string& preferred_base_frame_id,
+                                              std::set<std::string, std::less<>> frames_to_ignore);
 /**
  * @brief Create an TwistWithCovarianceStamped ROS message representing Spot's body velocity by parsing a RobotState
  * message.

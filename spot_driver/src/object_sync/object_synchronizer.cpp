@@ -505,27 +505,11 @@ void ObjectSynchronizer::broadcastWorldObjectTransforms() {
     }
 
     // Convert the object's frame tree snapshot into ROS TF frames
-    auto transforms = getTf(object.transforms_snapshot(), object.acquisition_time(), clock_skew_result.value(),
-                            frame_prefix_, preferred_base_frame_with_prefix_);
+    const auto transforms = getTf(object.transforms_snapshot(), object.acquisition_time(), clock_skew_result.value(),
+                                  frame_prefix_, preferred_base_frame_with_prefix_, kSpotInternalFrames);
     if (!transforms) {
       logger_interface_->logWarn("Failed to get TF tree for object `" + object.name() + "`.");
       continue;
-    }
-
-    if (object.name().find("apriltag") != std::string::npos) {
-      // idea: modify the tfs so that it does not contain the static frames
-      // in the future this should be done in a cleaner way
-      for (auto it = transforms->transforms.begin(); it != transforms->transforms.end();) {
-        auto name = it->child_frame_id;
-        if ((name.find("vision") != std::string::npos) || (name.find("odom") != std::string::npos) ||
-            (name.find("fiducial") != std::string::npos) || (name.find("body") != std::string::npos)) {
-          // this element should be kept
-          ++it;
-        } else {
-          // this element should be deleted
-          it = transforms->transforms.erase(it);
-        }
-      }
     }
 
     // Broadcast TF frames for this object
