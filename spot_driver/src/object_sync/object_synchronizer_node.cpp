@@ -39,7 +39,6 @@ ObjectSynchronizerNode::ObjectSynchronizerNode(const rclcpp::NodeOptions& node_o
   const auto node = std::make_shared<rclcpp::Node>("object_sync", node_options);
   node_base_interface_ = std::make_unique<RclcppNodeInterface>(node->get_node_base_interface());
 
-  auto spot_api = std::make_unique<DefaultSpotApi>(kDefaultSDKName);
   auto mw_handle = std::make_unique<StateMiddlewareHandle>(node);
   auto parameter_interface = std::make_unique<RclcppParameterInterface>(node);
   auto logger_interface = std::make_unique<RclcppLoggerInterface>(node->get_logger());
@@ -48,6 +47,8 @@ ObjectSynchronizerNode::ObjectSynchronizerNode(const rclcpp::NodeOptions& node_o
   auto world_object_update_timer = std::make_unique<RclcppWallTimerInterface>(node);
   auto tf_broadcaster_timer = std::make_unique<RclcppWallTimerInterface>(node);
   auto clock_interface = std::make_unique<RclcppClockInterface>(node->get_node_clock_interface());
+
+  auto spot_api = std::make_unique<DefaultSpotApi>(kDefaultSDKName, parameter_interface->getCertificate());
 
   initialize(std::move(spot_api), std::move(parameter_interface), std::move(logger_interface),
              std::move(tf_broadcaster_interface), std::move(tf_listener_interface),
@@ -65,12 +66,13 @@ void ObjectSynchronizerNode::initialize(std::unique_ptr<SpotApi> spot_api,
   spot_api_ = std::move(spot_api);
 
   const auto address = parameter_interface->getHostname();
+  const auto port = parameter_interface->getPort();
   const auto robot_name = parameter_interface->getSpotName();
   const auto username = parameter_interface->getUsername();
   const auto password = parameter_interface->getPassword();
 
   // create and authenticate robot
-  if (const auto create_robot_result = spot_api_->createRobot(address, robot_name); !create_robot_result) {
+  if (const auto create_robot_result = spot_api_->createRobot(robot_name, address, port); !create_robot_result) {
     const auto error_msg{std::string{"Failed to create interface to robot: "}.append(create_robot_result.error())};
     logger_interface->logError(error_msg);
     throw std::runtime_error(error_msg);

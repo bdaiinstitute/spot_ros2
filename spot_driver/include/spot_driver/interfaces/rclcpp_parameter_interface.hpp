@@ -6,6 +6,7 @@
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace spot_ros2 {
@@ -20,6 +21,8 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
    */
   explicit RclcppParameterInterface(const std::shared_ptr<rclcpp::Node>& node);
   [[nodiscard]] std::string getHostname() const override;
+  [[nodiscard]] std::optional<int> getPort() const override;
+  [[nodiscard]] std::optional<std::string> getCertificate() const override;
   [[nodiscard]] std::string getUsername() const override;
   [[nodiscard]] std::string getPassword() const override;
   [[nodiscard]] double getRGBImageQuality() const override;

@@ -36,12 +36,13 @@ StatePublisherNode::StatePublisherNode(const rclcpp::NodeOptions& node_options) 
   const auto node = std::make_shared<rclcpp::Node>("state_publisher", node_options);
   node_base_interface_ = std::make_unique<RclcppNodeInterface>(node->get_node_base_interface());
 
-  auto spot_api = std::make_unique<DefaultSpotApi>(kDefaultSDKName);
   auto mw_handle = std::make_unique<StateMiddlewareHandle>(node);
   auto parameter_interface = std::make_unique<RclcppParameterInterface>(node);
   auto logger_interface = std::make_unique<RclcppLoggerInterface>(node->get_logger());
   auto tf_broadcaster_interface = std::make_unique<RclcppTfBroadcasterInterface>(node);
   auto timer_interface = std::make_unique<RclcppWallTimerInterface>(node);
+
+  auto spot_api = std::make_unique<DefaultSpotApi>(kDefaultSDKName, parameter_interface->getCertificate());
 
   initialize(std::move(spot_api), std::move(mw_handle), std::move(parameter_interface), std::move(logger_interface),
              std::move(tf_broadcaster_interface), std::move(timer_interface));
@@ -56,12 +57,13 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
   spot_api_ = std::move(spot_api);
 
   const auto hostname = parameter_interface->getHostname();
+  const auto port = parameter_interface->getPort();
   const auto robot_name = parameter_interface->getSpotName();
   const auto username = parameter_interface->getUsername();
   const auto password = parameter_interface->getPassword();
 
   // create and authenticate robot
-  if (const auto create_robot_result = spot_api_->createRobot(hostname, robot_name); !create_robot_result) {
+  if (const auto create_robot_result = spot_api_->createRobot(robot_name, hostname, port); !create_robot_result) {
     const auto error_msg{std::string{"Failed to create interface to robot: "}.append(create_robot_result.error())};
     logger_interface->logError(error_msg);
     throw std::runtime_error(error_msg);

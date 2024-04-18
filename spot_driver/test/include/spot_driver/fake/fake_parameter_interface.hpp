@@ -4,12 +4,17 @@
 
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
+#include <optional>
 #include <string>
 
 namespace spot_ros2::test {
 class FakeParameterInterface : public ParameterInterfaceBase {
  public:
   std::string getHostname() const override { return kExampleHostname; }
+
+  std::optional<int> getPort() const override { return std::nullopt; }
+
+  std::optional<std::string> getCertificate() const override { return std::nullopt; }
 
   std::string getUsername() const override { return kExampleUsername; }
 
