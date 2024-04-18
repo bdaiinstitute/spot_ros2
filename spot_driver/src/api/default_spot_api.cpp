@@ -14,14 +14,25 @@
 
 namespace spot_ros2 {
 
-DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name)
-    : client_sdk_{::bosdyn::client::CreateStandardSDK(sdk_client_name)} {}
+DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::optional<std::string>& certificate) {
+  if (certificate.has_value()) {
+    client_sdk_ = std::make_unique<::bosdyn::client::ClientSdk>();
+    client_sdk_->SetClientName(sdk_client_name);
+    if (const auto status = client_sdk_->LoadRobotCertFromFile(certificate.value()); !status) {
+      throw std::runtime_error(status.message());
+    }
+    client_sdk_->Init();
+  } else {
+    client_sdk_ = ::bosdyn::client::CreateStandardSDK(sdk_client_name);
+  }
+}
 
-tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& ip_address,
-                                                            const std::string& robot_name) {
+tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& robot_name,
+                                                            const std::string& ip_address,
+                                                            const std::optional<int>& port) {
   robot_name_ = robot_name;
 
-  auto create_robot_result = client_sdk_->CreateRobot(ip_address);
+  auto create_robot_result = client_sdk_->CreateRobot(ip_address, ::bosdyn::client::USE_PROXY);
   if (!create_robot_result.status) {
     return tl::make_unexpected("Received error result when creating SDK robot interface: " +
                                create_robot_result.status.DebugString());
@@ -29,13 +40,18 @@ tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& i
 
   robot_ = std::move(create_robot_result.response);
 
+  if (port.has_value()) {
+    robot_->UpdateSecureChannelPort(port.value());
+  }
+
   return {};
 }
 
 tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& username, const std::string& password) {
   const auto authenticate_result = robot_->Authenticate(username, password);
   if (!authenticate_result) {
-    return tl::make_unexpected("Authentication with provided username and password did not succeed.");
+    return tl::make_unexpected("Authentication with provided username and password did not succeed: " +
+                               authenticate_result.DebugString());
   }
   // Start time synchronization between the robot and the client system.
   // This must be done only after a successful authentication.

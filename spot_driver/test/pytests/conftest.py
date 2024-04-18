@@ -14,13 +14,22 @@ Pytest automatically discovers all fixtures defined in the file "conftest.py".
 # warning that we want disabled.
 # pylint: disable=redefined-outer-name
 
+import tempfile
 import typing
 
 import bdai_ros2_wrappers.scope as ros_scope
 import domain_coordinator
 import grpc
+import launch
+import launch.actions
+import launch.substitutions
+import launch_pytest
+import launch_pytest.actions
+import launch_ros
+import launch_ros.substitutions
 import pytest
 import rclpy
+import yaml
 from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.power_pb2 import PowerCommandRequest, PowerCommandResponse, PowerCommandStatus
 from bosdyn.api.robot_command_pb2 import RobotCommandResponse
@@ -65,14 +74,19 @@ class simple_spot(MockSpot):
 
 
 @pytest.fixture
-def ros() -> typing.Iterator[ROSAwareScope]:
+def domain_id() -> typing.Iterator[int]:
+    with domain_coordinator.domain_id() as domain_id:
+        yield domain_id
+
+
+@pytest.fixture
+def ros(simple_spot: SpotFixture, domain_id: int) -> typing.Iterator[ROSAwareScope]:
     """
     This method is a generator function that returns a different ROS2 scope
     each time it is invoked, to handle a ROS2 context lifecycle.
     """
-    with domain_coordinator.domain_id() as domain_id:  # to ensure node isolation
-        with ros_scope.top(global_=True, namespace="fixture", domain_id=domain_id) as top:
-            yield top
+    with ros_scope.top(global_=True, namespace=simple_spot.api.name, domain_id=domain_id) as top:
+        yield top
 
 
 @pytest.fixture
@@ -88,6 +102,7 @@ def spot_node(ros: ROSAwareScope, simple_spot: SpotFixture) -> typing.Iterator[S
         rclpy.parameter.Parameter("password", rclpy.Parameter.Type.STRING, "spot"),
         rclpy.parameter.Parameter("hostname", rclpy.Parameter.Type.STRING, simple_spot.address),
         rclpy.parameter.Parameter("port", rclpy.Parameter.Type.INTEGER, simple_spot.port),
+        rclpy.parameter.Parameter("certificate", rclpy.Parameter.Type.STRING, str(simple_spot.certificate_path)),
         rclpy.parameter.Parameter("spot_name", rclpy.Parameter.Type.STRING, simple_spot.api.name),
         # disable camera publishing for now
         rclpy.parameter.Parameter("publish_rgb", rclpy.Parameter.Type.BOOL, False),
@@ -101,3 +116,42 @@ def spot_node(ros: ROSAwareScope, simple_spot: SpotFixture) -> typing.Iterator[S
             response = RobotCommandResponse()
             response.status = RobotCommandResponse.Status.STATUS_OK  # pylint: disable=no-member
             simple_spot.api.RobotCommand.future.returns(response)
+
+
+@launch_pytest.fixture
+def spot_graph_description(simple_spot: SpotFixture, domain_id: int) -> typing.Iterator[launch.LaunchDescription]:
+    with tempfile.NamedTemporaryFile(mode="w", suffix="config.yaml") as temp:
+        data = {
+            "username": "user",
+            "password": "pass",
+            "hostname": simple_spot.address,
+            "port": simple_spot.port,
+            "certificate": str(simple_spot.certificate_path),
+            "spot_name": simple_spot.api.name,
+            "rgb_cameras": False,
+        }
+        yaml.dump({"/**": {"ros__parameters": data}}, temp.file)
+        temp.file.close()
+
+        yield launch.LaunchDescription(
+            [
+                launch.actions.SetEnvironmentVariable("ROS_DOMAIN_ID", str(domain_id)),
+                launch.actions.IncludeLaunchDescription(
+                    launch.launch_description_sources.PythonLaunchDescriptionSource(
+                        launch.substitutions.PathJoinSubstitution(
+                            [
+                                launch_ros.substitutions.FindPackageShare("spot_driver"),
+                                "launch",
+                                "spot_driver.launch.py",
+                            ]
+                        )
+                    ),
+                    launch_arguments=[("config_file", temp.file.name), ("spot_name", simple_spot.api.name)],
+                ),
+                launch_pytest.actions.ReadyToTest(),
+            ],
+        )
+
+
+def pytest_configure() -> None:
+    pytest.spot_graph_description = spot_graph_description

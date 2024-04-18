@@ -352,6 +352,9 @@ class SpotROS(Node):
 
         self.ip: str = get_from_env_and_fall_back_to_param("SPOT_IP", self, "hostname", "10.0.0.3")
         self.port: int = get_from_env_and_fall_back_to_param("SPOT_PORT", self, "port", 0)
+        self.certificate: Optional[str] = (
+            get_from_env_and_fall_back_to_param("SPOT_CERTIFICATE", self, "certificate", "") or None
+        )
 
         self.camera_static_transform_broadcaster: tf2_ros.StaticTransformBroadcaster = (
             tf2_ros.StaticTransformBroadcaster(self)
@@ -428,6 +431,7 @@ class SpotROS(Node):
                 get_lease_on_action=self.get_lease_on_action.value,
                 continually_try_stand=self.continually_try_stand.value,
                 rgb_cameras=self.rgb_cameras.value,
+                cert_resource_glob=self.certificate,
             )
             if not self.spot_wrapper.is_valid:
                 return

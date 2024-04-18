@@ -14,12 +14,15 @@ namespace {
 using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::IsTrue;
+using ::testing::Optional;
 using ::testing::StrEq;
 
 constexpr auto kNodeName = "my_node_name";
 constexpr auto kNamespace = "my_namespace";
 
 constexpr auto kEnvVarNameHostname = "SPOT_IP";
+constexpr auto kEnvVarNamePort = "SPOT_PORT";
+constexpr auto kEnvVarNameCertificate = "SPOT_CERTIFICATE";
 constexpr auto kEnvVarNameUsername = "BOSDYN_CLIENT_USERNAME";
 constexpr auto kEnvVarNamePassword = "BOSDYN_CLIENT_PASSWORD";
 }  // namespace
@@ -40,12 +43,20 @@ class RclcppParameterInterfaceEnvVarTest : public RclcppParameterInterfaceTest {
 
     // Get current values of these environment variables.
     const auto hostname = std::getenv(kEnvVarNameHostname);
+    const auto port = std::getenv(kEnvVarNamePort);
+    const auto certificate = std::getenv(kEnvVarNameCertificate);
     const auto username = std::getenv(kEnvVarNameUsername);
     const auto password = std::getenv(kEnvVarNamePassword);
 
     // If any are already set, cache them in private members.
     if (hostname) {
       spot_hostname_env_var_cached_ = hostname;
+    }
+    if (port) {
+      spot_port_env_var_cached_ = port;
+    }
+    if (certificate) {
+      spot_certificate_env_var_cached_ = certificate;
     }
     if (username) {
       spot_username_env_var_cached_ = username;
@@ -56,6 +67,8 @@ class RclcppParameterInterfaceEnvVarTest : public RclcppParameterInterfaceTest {
 
     // Unset the values of the environment variables to create a clean environment for the test cases.
     unsetenv(kEnvVarNameHostname);
+    unsetenv(kEnvVarNamePort);
+    unsetenv(kEnvVarNameCertificate);
     unsetenv(kEnvVarNameUsername);
     unsetenv(kEnvVarNamePassword);
 
@@ -72,6 +85,12 @@ class RclcppParameterInterfaceEnvVarTest : public RclcppParameterInterfaceTest {
       // new value.
       setenv(kEnvVarNameHostname, spot_hostname_env_var_cached_->c_str(), 1);
     }
+    if (spot_port_env_var_cached_) {
+      setenv(kEnvVarNamePort, spot_port_env_var_cached_->c_str(), 1);
+    }
+    if (spot_certificate_env_var_cached_) {
+      setenv(kEnvVarNameCertificate, spot_certificate_env_var_cached_->c_str(), 1);
+    }
     if (spot_username_env_var_cached_) {
       setenv(kEnvVarNameUsername, spot_username_env_var_cached_->c_str(), 1);
     }
@@ -84,6 +103,8 @@ class RclcppParameterInterfaceEnvVarTest : public RclcppParameterInterfaceTest {
 
  private:
   std::optional<std::string> spot_hostname_env_var_cached_;
+  std::optional<std::string> spot_port_env_var_cached_;
+  std::optional<std::string> spot_certificate_env_var_cached_;
   std::optional<std::string> spot_username_env_var_cached_;
   std::optional<std::string> spot_password_env_var_cached_;
 };
@@ -125,6 +146,10 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromEnvVars) {
   // GIVEN we declare environment variables for Spot's hostname, username, and password
   constexpr auto hostname_env_var = "10.0.20.5";
   setenv(kEnvVarNameHostname, hostname_env_var, 1);
+  constexpr auto port_env_var = "12345";
+  setenv(kEnvVarNamePort, port_env_var, 1);
+  constexpr auto certificate_env_var = "some/certificate.crt";
+  setenv(kEnvVarNameCertificate, certificate_env_var, 1);
   constexpr auto username_env_var = "some_username";
   setenv(kEnvVarNameUsername, username_env_var, 1);
   constexpr auto password_env_var = "very_secure_password";
@@ -133,9 +158,11 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromEnvVars) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
-  // WHEN we call getHostname(), getUsername(), and getPassword()
+  // WHEN we call getHostname(), getPort(), getCertificate(), getUsername(), and getPassword()
   // THEN the returned values match the values we set on the environment variables
   EXPECT_THAT(parameter_interface.getHostname(), StrEq(hostname_env_var));
+  EXPECT_THAT(parameter_interface.getPort(), Optional(std::stoi(port_env_var)));
+  EXPECT_THAT(parameter_interface.getCertificate(), Optional(certificate_env_var));
   EXPECT_THAT(parameter_interface.getUsername(), StrEq(username_env_var));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq(password_env_var));
 }
@@ -144,6 +171,10 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   // GIVEN we set all Spot config parameters to values which are different than the default values
   constexpr auto hostname_parameter = "192.168.100.10";
   node_->declare_parameter("hostname", hostname_parameter);
+  constexpr auto port_parameter = 12345;
+  node_->declare_parameter("port", port_parameter);
+  constexpr auto certificate_parameter = "some/certificate.crt";
+  node_->declare_parameter("certificate", certificate_parameter);
   constexpr auto username_parameter = "a_different_username";
   node_->declare_parameter("username", username_parameter);
   constexpr auto password_parameter = "other_password";
@@ -165,6 +196,8 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN the returned values all match the values we used when declaring the parameters
   EXPECT_THAT(parameter_interface.getHostname(), StrEq(hostname_parameter));
+  EXPECT_THAT(parameter_interface.getPort(), Optional(port_parameter));
+  EXPECT_THAT(parameter_interface.getCertificate(), Optional(certificate_parameter));
   EXPECT_THAT(parameter_interface.getUsername(), StrEq(username_parameter));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq(password_parameter));
   EXPECT_THAT(parameter_interface.getRGBImageQuality(), Eq(rgb_image_quality_parameter));
@@ -178,6 +211,10 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameter
   // GIVEN we declare a environment variables for Spot's hostname, username, and password
   constexpr auto hostname_env_var = "10.0.20.5";
   setenv(kEnvVarNameHostname, hostname_env_var, 1);
+  constexpr auto port_env_var = "12345";
+  setenv(kEnvVarNamePort, port_env_var, 1);
+  constexpr auto certificate_env_var = "some/certificate.crt";
+  setenv(kEnvVarNameCertificate, certificate_env_var, 1);
   constexpr auto username_env_var = "some_username";
   setenv(kEnvVarNameUsername, username_env_var, 1);
   constexpr auto password_env_var = "very_secure_password";
@@ -186,6 +223,10 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameter
   // GIVEN we set parameters with different values for Spot's hostname, username, and password
   constexpr auto hostname_parameter = "192.168.100.10";
   node_->declare_parameter("hostname", hostname_parameter);
+  constexpr auto port_parameter = 12345;
+  node_->declare_parameter("port", port_parameter);
+  constexpr auto certificate_parameter = "some/certificate.crt";
+  node_->declare_parameter("certificate", certificate_parameter);
   constexpr auto username_parameter = "a_different_username";
   node_->declare_parameter("username", username_parameter);
   constexpr auto password_parameter = "other_password";
@@ -198,6 +239,8 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameter
   // THEN the returned values match the values we used when declaring the environment variables, since we expect that
   // the environment variables take precedence over the parameters.
   EXPECT_THAT(parameter_interface.getHostname(), StrEq(hostname_env_var));
+  EXPECT_THAT(parameter_interface.getPort(), Optional(std::stoi(port_env_var)));
+  EXPECT_THAT(parameter_interface.getCertificate(), Optional(certificate_env_var));
   EXPECT_THAT(parameter_interface.getUsername(), StrEq(username_env_var));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq(password_env_var));
 }
@@ -210,6 +253,8 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   // WHEN we get the values from the parameter interface
   // THEN the returned values match the expected default values
   EXPECT_THAT(parameter_interface.getHostname(), StrEq("10.0.0.3"));
+  EXPECT_THAT(parameter_interface.getPort(), Eq(std::nullopt));
+  EXPECT_THAT(parameter_interface.getCertificate(), Eq(std::nullopt));
   EXPECT_THAT(parameter_interface.getUsername(), StrEq("user"));
   EXPECT_THAT(parameter_interface.getPassword(), StrEq("password"));
   EXPECT_THAT(parameter_interface.getRGBImageQuality(), Eq(70.0));
