@@ -337,9 +337,10 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
                                           ? spot_name + "/" + preferred_base_frame_
                                           : preferred_base_frame_;
 
-  world_object_update_timer_->setTimer(kWorldObjectSyncPeriod, [this]() {
-    syncWorldObjects();
-  });
+  // TODO(khughes): This is temporarily disabled to reduce driver's spew about TF extrapolation.
+  // world_object_update_timer_->setTimer(kWorldObjectSyncPeriod, [this]() {
+  //   syncWorldObjects();
+  // });
 
   tf_broadcaster_timer_->setTimer(kTfBroadcasterPeriod, [this]() {
     broadcastWorldObjectTransforms();
@@ -506,7 +507,7 @@ void ObjectSynchronizer::broadcastWorldObjectTransforms() {
 
     // Convert the object's frame tree snapshot into ROS TF frames
     const auto transforms = getTf(object.transforms_snapshot(), object.acquisition_time(), clock_skew_result.value(),
-                                  frame_prefix_, preferred_base_frame_with_prefix_);
+                                  frame_prefix_, preferred_base_frame_with_prefix_, kSpotInternalFrames);
     if (!transforms) {
       logger_interface_->logWarn("Failed to get TF tree for object `" + object.name() + "`.");
       continue;

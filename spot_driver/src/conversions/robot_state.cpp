@@ -118,7 +118,8 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::RobotState& r
 std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnapshot& frame_tree_snapshot,
                                               const google::protobuf::Timestamp& timestamp_robot,
                                               const google::protobuf::Duration& clock_skew, const std::string& prefix,
-                                              const std::string& preferred_base_frame_id) {
+                                              const std::string& preferred_base_frame_id,
+                                              const std::set<std::string, std::less<>>& frames_to_ignore) {
   if (frame_tree_snapshot.child_to_parent_edge_map().empty()) {
     return std::nullopt;
   }
@@ -132,6 +133,11 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
     // other transform. To satisfy this requirement, do not publish frames from the frame tree snapshot if they do not
     // have a parent frame ID.
     if (transform.parent_frame_name().empty()) {
+      continue;
+    }
+
+    // If this frame is in the list of frames to ignore, skip it.
+    if (frames_to_ignore.find(frame_id) != frames_to_ignore.end()) {
       continue;
     }
 
