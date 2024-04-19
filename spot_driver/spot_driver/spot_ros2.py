@@ -576,6 +576,13 @@ class SpotROS(Node):
             callback_group=self.group,
         )
 
+        self.create_service(
+            Trigger,
+            "spot_check",
+            lambda request, response: self.service_wrapper("spot_check", self.handle_spot_check, request, response),
+            callback_group=self.group,
+        )
+
         if has_arm:
             self.create_service(
                 Trigger,
@@ -1301,6 +1308,15 @@ class SpotROS(Node):
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message = self.spot_wrapper.spot_docking.undock()
+        return response
+
+    def handle_spot_check(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler to run spot check on the robot."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.spot_check.start_check()
         return response
 
     def handle_stow_arm(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
