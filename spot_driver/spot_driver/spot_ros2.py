@@ -1309,7 +1309,7 @@ class SpotROS(Node):
             return response
         response.success, response.message = self.spot_wrapper.spot_docking.undock()
         return response
-    
+
     def handle_spot_check(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to run spot check on the robot."""
         if self.spot_wrapper is None:
