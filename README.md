@@ -66,7 +66,7 @@ ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml
 
 ## Configuration
 
-The Spot login data hostname, username and password can either be specified as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
+The Spot login data hostname, username and password can be specified either as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
 ## Simple Robot Commands
 Many simple robot commands can be called as services from the command line once the driver is running. For example:
@@ -157,12 +157,12 @@ If these packages were not installed correctly on your system, you can try manua
 If `spot_msgs` fails to build because it cannot locate numpy, [this issue](https://github.com/bdaiinstitute/spot_ros2/issues/96) has some solutions to this problem.
 
 ### Anaconda
-`spot_ros2` does not currently support a conda install, but it is possible to run the driver in a conda environment with a little extra work. [This issue](https://github.com/bdaiinstitute/spot_ros2/issues/330) covers some of the additional installs needed to run the driver in a conda environment.
+`spot_ros2` does not currently support a conda install, but it is possible to run the driver in a conda environment with a little extra work -- [this issue](https://github.com/bdaiinstitute/spot_ros2/issues/330) covers some of the additional installs needed for this.
 
 ## License
 
 MIT license - parts of the code developed specifically for ROS 2.
-BSD3 license - parts of the code derived from the Clearpath Robotics ROS1 driver.
+BSD3 license - parts of the code derived from the Clearpath Robotics ROS 1 driver.
 
 ## Contributing
 To contribute, install `pre-commit` via pip, run `pre-commit install` and then run `pre-commit run --all-files` to 
