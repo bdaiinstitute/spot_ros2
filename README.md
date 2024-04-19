@@ -61,7 +61,7 @@ We suggest ignoring the `proto2ros_tests` package in the build as it is not nece
 
 The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run:
 ```
-ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<RobotName>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] 
+ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Robot Name>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] 
 ```
 
 ## Configuration
@@ -71,16 +71,16 @@ The Spot login data hostname, username and password can be specified either as R
 ## Simple Robot Commands
 Many simple robot commands can be called as services from the command line once the driver is running. For example:
 
-* `ros2 service call /RobotName/sit std_srvs/srv/Trigger`
-* `ros2 service call /RobotName/stand std_srvs/srv/Trigger`
-* `ros2 service call /RobotName/undock std_srvs/srv/Trigger`
-* `ros2 service call /RobotName/power_off std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/sit std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/stand std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/undock std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/power_off std_srvs/srv/Trigger`
 
 If your Spot has an arm, some additional helpful services are exposed:
-* `ros2 service call /RobotName/stow_arm std_srvs/srv/Trigger`
-* `ros2 service call /RobotName/ready_arm std_srvs/srv/Trigger`
-* `ros2 service call /RobotName/open_gripper std_srvs/srv/Trigger`
-* `ros2 service call /RobotName/close_gripper std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/stow_arm std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/ready_arm std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/open_gripper std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/close_gripper std_srvs/srv/Trigger`
 
 The full list of interfaces provided by the driver can be explored via `ros2 topic list`, `ros2 service list`, and `ros2 action list`. For more information about the custom message types used in this package, run `ros2 interface show <interface_type>`.
 
