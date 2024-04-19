@@ -156,7 +156,6 @@ def spot_has_arm(context: LaunchContext) -> bool:
         password=password,
         hostname=hostname,
         port=port,
-        cert_resource_glob=certificate,
         robot_name=spot_name,
         logger=logger,
     )
