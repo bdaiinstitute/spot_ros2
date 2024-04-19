@@ -111,9 +111,9 @@ Then you want to log into the Spot CAM over the browser. In your browser, type i
 The default port for SDP is 31102 for the Spot CAM. Once inside, you will be prompted to log in using your username and password. Do so and the WebRTC frames should begin to properly stream.
 
 
-## Advanced Install
+# Advanced Install
 
-### Install spot_msgs as a deb package
+## Install spot_msgs as a deb package
 `spot_msgs` are normally compiled as part of this repository.  If you would prefer to install them as a debian package, follow the steps below:
 ```bash
 wget -q -O /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/spot_ros2/releases/download/spot_msgs-v0.0-0/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
@@ -121,15 +121,15 @@ sudo dpkg -i /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
 rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
 ```
 
-### Install bosdyn_msgs from source
+## Install bosdyn_msgs from source
 The `bosdyn_msgs` package is installed as a debian package as part of the `install_spot_ros2` script because it's very large.  It can be checked out from source [here](https://github.com/bdaiinstitute/bosdyn_msgs) and then built as a normal ROS 2 package if that is preferred (compilation takes about 15 minutes).
 
 
-## Help
+# Help
 
 If you encounter problems when using this repository, feel free to open an issue or PR.
 
-### Verify Boston Dynamics API Installation
+## Verify Boston Dynamics API Installation
 If you encounter `ModuleNotFoundErrors` with `bosdyn` packages upon running the driver, it is likely that the necessary Boston Dynamics API packages did not get installed with `install_spot_ros2.sh`. To check this, you can run the following command. Note that all versions should be `4.0.0`. 
 ```bash
 $ pip list | grep bosdyn
@@ -153,18 +153,18 @@ bosdyn-spot-cam-api-msgs             4.0.0
 ```
 If these packages were not installed correctly on your system, you can try manually installing them following [Boston Dynamics' guide](https://dev.bostondynamics.com/docs/python/quickstart#install-spot-python-packages).
 
-### Numpy & `spot_msgs`
+## Numpy & `spot_msgs`
 If `spot_msgs` fails to build because it cannot locate numpy, [this issue](https://github.com/bdaiinstitute/spot_ros2/issues/96) has some solutions to this problem.
 
-### Anaconda
+## Anaconda
 `spot_ros2` does not currently support a conda install, but it is possible to run the driver in a conda environment with a little extra work -- [this issue](https://github.com/bdaiinstitute/spot_ros2/issues/330) covers some of the additional installs needed for this.
 
-## License
+# License
 
 MIT license - parts of the code developed specifically for ROS 2.
 BSD3 license - parts of the code derived from the Clearpath Robotics ROS 1 driver.
 
-## Contributing
+# Contributing
 To contribute, install `pre-commit` via pip, run `pre-commit install` and then run `pre-commit run --all-files` to 
 verify that your code will pass inspection. 
 ```bash
@@ -178,7 +178,7 @@ pre-commit run --all-files
 Now whenever you commit code to this repository, it will be checked against our `pre-commit` hooks. You can also run
 `git commit --no-verify` if you wish to commit without checking against the hooks. 
 
-### Contributors
+## Contributors
 
 This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and the [Boston Dynamics AI Institute](https://theaiinstitute.com/).
 
