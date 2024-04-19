@@ -153,12 +153,6 @@ bosdyn-spot-cam-api-msgs             4.0.0
 ```
 If these packages were not installed correctly on your system, you can try manually installing them following [Boston Dynamics' guide](https://dev.bostondynamics.com/docs/python/quickstart#install-spot-python-packages).
 
-## Numpy & `spot_msgs`
-If `spot_msgs` fails to build because it cannot locate numpy, [this issue](https://github.com/bdaiinstitute/spot_ros2/issues/96) has some solutions to this problem.
-
-## Anaconda
-`spot_ros2` does not currently support a conda install, but it is possible to run the driver in a conda environment with a little extra work -- [this issue](https://github.com/bdaiinstitute/spot_ros2/issues/330) covers some of the additional installs needed for this.
-
 # License
 
 MIT license - parts of the code developed specifically for ROS 2.
