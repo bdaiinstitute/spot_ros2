@@ -57,31 +57,52 @@ source install/local_setup.bash
 
 We suggest ignoring the `proto2ros_tests` package in the build as it is not necessary for running the driver. If you choose to build it, you will see a number of error messages from testing the failure paths. 
 
-## Example Code
-See [`spot_examples`](spot_examples/) for some examples of using the ROS 2 driver to control Spot.
+# Spot ROS 2 Driver
 
-## Launching the Driver
-The spot login data hostname, username and password can either be specified as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
+The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run:
+```
+ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<RobotName>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] 
+```
 
-### Model
-    ros2 launch spot_description description.launch.py
+## Configuration
 
-### Spot Driver
-    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>] [spot_name:=<Name of Spot running the driver>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] 
+The Spot login data hostname, username and password can either be specified as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
-### Command Line Example Node
-The `command_spot_driver` node contains service and action clients. To send a trajectory goal execute:
+## Simple Robot Commands
+Many simple robot commands can be called as services from the command line once the driver is running. For example:
 
-    ros2 run spot_driver command_spot --ros-args -p command:=trajectory
+* `ros2 service call /RobotName/sit std_srvs/srv/Trigger`
+* `ros2 service call /RobotName/stand std_srvs/srv/Trigger`
+* `ros2 service call /RobotName/undock std_srvs/srv/Trigger`
+* `ros2 service call /RobotName/power_off std_srvs/srv/Trigger`
 
-### Spot CAM Usage
+If your Spot has an arm, some additional helpful services are exposed:
+* `ros2 service call /RobotName/stow_arm std_srvs/srv/Trigger`
+* `ros2 service call /RobotName/ready_arm std_srvs/srv/Trigger`
+* `ros2 service call /RobotName/open_gripper std_srvs/srv/Trigger`
+* `ros2 service call /RobotName/close_gripper std_srvs/srv/Trigger`
+
+The full list of interfaces provided by the driver can be explored via `ros2 topic list`, `ros2 service list`, and `ros2 action list`. For more information about the custom message types used in this package, run `ros2 interface show <interface_type>`.
+
+## Examples
+See [`spot_examples`](spot_examples/) for some more complex examples of using the ROS 2 driver to control Spot, which typically use the action servers provided by the driver. 
+
+## Images
+By default, the driver will publish RGB images as well as depth maps from the `frontleft`, `frontright`, `left`, `right`, and `back` cameras on Spot (plus `hand` if your Spot has an arm). If your Spot has greyscale cameras, you will need to set `rgb_cameras: False` in your configuration YAML file, or you will not recieve any image data. 
+
+By default, the driver does not publish point clouds. To enable this, launch the driver with `publish_point_clouds:=True`.
+
+## Spot CAM
 Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:
     `initialize_spot_cam: True`
 
-### Spot CAM Known Issues
 The Spot CAM payload has known issues with the SSL certification process in https. If you get the following errors:
 
-![image](https://github.com/bdaiinstitute/spot_ros2/assets/137220849/a2d8e248-ab4f-494b-b431-82adc7acf25d)
+```
+non-existing PPS 0 referenced
+decode_slice_header error
+no frame!
+```
 
 Then you want to log into the Spot CAM over the browser. In your browser, type in:
 
@@ -131,6 +152,12 @@ bosdyn-spot-api-msgs                 4.0.0
 bosdyn-spot-cam-api-msgs             4.0.0
 ```
 If these packages were not installed correctly on your system, you can try manually installing them following [Boston Dynamics' guide](https://dev.bostondynamics.com/docs/python/quickstart#install-spot-python-packages).
+
+### Numpy & `spot_msgs`
+If `spot_msgs` fails to build because it cannot locate numpy, [this issue](https://github.com/bdaiinstitute/spot_ros2/issues/96) has some solutions to this problem.
+
+### Anaconda
+`spot_ros2` does not currently support a conda install, but it is possible to run the driver in a conda environment with a little extra work. [This issue](https://github.com/bdaiinstitute/spot_ros2/issues/330) covers some of the additional installs needed to run the driver in a conda environment.
 
 ## License
 

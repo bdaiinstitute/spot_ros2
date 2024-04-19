@@ -174,12 +174,6 @@ rclcpp_components_register_node(
 ament_python_install_package(${PROJECT_NAME})
 install(
   PROGRAMS
-  spot_driver/command_spot_driver.py
-  DESTINATION lib/${PROJECT_NAME}
-  RENAME command_spot
-  )
-install(
-  PROGRAMS
   spot_driver/spot_ros2.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME spot_ros2
