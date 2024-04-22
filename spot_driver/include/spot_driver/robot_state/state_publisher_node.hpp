@@ -7,7 +7,7 @@
 #include <spot_driver/api/spot_api.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
-#include <spot_driver/interfaces/tf_interface_base.hpp>
+#include <spot_driver/interfaces/tf_broadcaster_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
 #include <spot_driver/robot_state/state_publisher.hpp>
 
@@ -32,7 +32,7 @@ class StatePublisherNode {
    * @param parameter_interface Retrieves runtime configuration settings needed to connect to and communicate with Spot.
    * @param logger_interface Logs error messages if requesting, processing, and publishing the robot state info does not
    * succeed.
-   * @param tf_interface Publishes the dynamic transforms in Spot's robot state to TF.
+   * @param tf_broadcaster_interface Publishes the dynamic transforms in Spot's robot state to TF.
    * @param timer_interface Repeatedly triggers timerCallback() using the middleware's clock.
    *
    */
@@ -40,7 +40,7 @@ class StatePublisherNode {
                      std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
                      std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                      std::unique_ptr<LoggerInterfaceBase> logger_interface,
-                     std::unique_ptr<TfInterfaceBase> tf_interface,
+                     std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                      std::unique_ptr<TimerInterfaceBase> timer_interface);
 
   /**
@@ -72,7 +72,7 @@ class StatePublisherNode {
    * @param parameter_interface Retrieves runtime configuration settings needed to connect to and communicate with Spot.
    * @param logger_interface Logs error messages if requesting, processing, and publishing the robot state info does not
    * succeed.
-   * @param tf_interface Publishes the dynamic transforms in Spot's robot state to TF.
+   * @param tf_broadcaster_interface Publishes the dynamic transforms in Spot's robot state to TF.
    * @param timer_interface Repeatedly triggers timerCallback() using the middleware's clock.
    *
    * @throw std::runtime_error if the Spot API fails to create a connection to Spot or fails to authenticate with Spot.
@@ -80,7 +80,8 @@ class StatePublisherNode {
   void initialize(std::unique_ptr<SpotApi> spot_api,
                   std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
                   std::unique_ptr<ParameterInterfaceBase> parameter_interface,
-                  std::unique_ptr<LoggerInterfaceBase> logger_interface, std::unique_ptr<TfInterfaceBase> tf_interface,
+                  std::unique_ptr<LoggerInterfaceBase> logger_interface,
+                  std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                   std::unique_ptr<TimerInterfaceBase> timer_interface);
 
   std::unique_ptr<NodeInterfaceBase> node_base_interface_;

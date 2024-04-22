@@ -1,5 +1,9 @@
+string choreo_name
 string choreo_file_content
 char[] choreo_sequence_serialized
+uint32 start_slice
 ---
 bool success 
 string message
+---
+bool is_dancing

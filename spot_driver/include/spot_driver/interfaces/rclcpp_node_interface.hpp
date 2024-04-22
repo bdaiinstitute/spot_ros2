@@ -19,7 +19,7 @@ class RclcppNodeInterface final : public NodeInterfaceBase {
    */
   explicit RclcppNodeInterface(const std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>& node_base_interface);
 
-  std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> getNodeBaseInterface() override;
+  [[nodiscard]] std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> getNodeBaseInterface() override;
 
  private:
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_interface_;

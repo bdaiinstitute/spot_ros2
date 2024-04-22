@@ -1,3 +1,5 @@
+# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
+
 import os
 
 import launch

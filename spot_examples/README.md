@@ -25,7 +25,7 @@ Follow the links on each of the node names for more detailed documentation about
 * [`walk_forward`](docs/walk_forward.md): A simple example that shows how to use ROS 2 to send `RobotCommand` goals to the Spot driver. If you are new to Spot and ROS 2, we recommend starting here.
 * [`arm_simple`](docs/arm_simple.md): An example of converting the [BD Simple Arm Motion](https://dev.bostondynamics.com/python/examples/arm_simple/readme) example to use ROS 2. 
 * [`send_inverse_kinematic_requests`](docs/send_inverse_kinematics_requests.md): An example that shows how to send inverse kinematics requests to the Spot Arm using ROS 2. 
-
+* [`batch_trajectory`](docs/batch_trajectory.md): An example that shows how to send very long trajectories to Spot using ROS2. 
 
 ## Adding new examples
 To add examples that demonstrate other features of the Spot driver, create a new node `new_example.py` in [spot_examples](spot_examples) and add it to `setup.py`. Make sure to also write a documentation file (`new_example.md`) in [docs](docs) that explains how to run the example and how the code works, and link to it in this central README. 

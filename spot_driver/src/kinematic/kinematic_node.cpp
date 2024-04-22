@@ -8,6 +8,7 @@
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 
 #include <memory>
+#include <stdexcept>
 
 namespace {
 constexpr auto kSDKClientName = "inverse_kinematic";
@@ -23,9 +24,9 @@ KinematicNode::KinematicNode(std::shared_ptr<rclcpp::Node> node, std::unique_ptr
 
 KinematicNode::KinematicNode(const rclcpp::NodeOptions& node_options) {
   auto node = std::make_shared<rclcpp::Node>("kinematic_service", node_options);
-  auto spot_api = std::make_unique<DefaultSpotApi>(kSDKClientName);
   auto parameter_interface = std::make_shared<RclcppParameterInterface>(node);
   auto logger_interface = std::make_shared<RclcppLoggerInterface>(node->get_logger());
+  auto spot_api = std::make_unique<DefaultSpotApi>(kSDKClientName, parameter_interface->getCertificate());
   initialize(node, std::move(spot_api), parameter_interface, logger_interface);
 }
 
@@ -36,12 +37,13 @@ void KinematicNode::initialize(std::shared_ptr<rclcpp::Node> node, std::unique_p
   spot_api_ = std::move(spot_api);
 
   const auto hostname = parameter_interface->getHostname();
+  const auto port = parameter_interface->getPort();
   const auto robot_name = parameter_interface->getSpotName();
   const auto username = parameter_interface->getUsername();
   const auto password = parameter_interface->getPassword();
 
   // create and authenticate robot
-  if (const auto create_robot_result = spot_api_->createRobot(hostname, robot_name); !create_robot_result) {
+  if (const auto create_robot_result = spot_api_->createRobot(robot_name, hostname, port); !create_robot_result) {
     const auto error_msg{std::string{"Failed to create interface to robot: "}.append(create_robot_result.error())};
     logger_interface->logError(error_msg);
     throw std::runtime_error(error_msg);
@@ -53,7 +55,14 @@ void KinematicNode::initialize(std::shared_ptr<rclcpp::Node> node, std::unique_p
     throw std::runtime_error(errorMsg);
   }
 
-  internal_ = std::make_unique<KinematicService>(spot_api_->kinematicApi(), logger_interface,
+  if (spot_api_->kinematicInterface() == nullptr) {
+    constexpr auto errorMsg{
+        "Failed to initialize the Spot API's inverse kinematics client, which is required to run this node."};
+    logger_interface->logError(errorMsg);
+    throw std::runtime_error(errorMsg);
+  }
+
+  internal_ = std::make_unique<KinematicService>(spot_api_->kinematicInterface(), logger_interface,
                                                  std::make_unique<KinematicMiddlewareHandle>(node_));
   internal_->initialize();
 }

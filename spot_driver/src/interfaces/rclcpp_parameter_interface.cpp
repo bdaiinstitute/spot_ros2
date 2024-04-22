@@ -6,10 +6,14 @@
 
 namespace {
 constexpr auto kEnvVarNameHostname = "SPOT_IP";
+constexpr auto kEnvVarNamePort = "SPOT_PORT";
+constexpr auto kEnvVarNameCertificate = "SPOT_CERTIFICATE";
 constexpr auto kEnvVarNameUsername = "BOSDYN_CLIENT_USERNAME";
 constexpr auto kEnvVarNamePassword = "BOSDYN_CLIENT_PASSWORD";
 
 constexpr auto kParameterNameHostname = "hostname";
+constexpr auto kParameterNamePort = "port";
+constexpr auto kParameterNameCertificate = "certificate";
 constexpr auto kParameterNameUsername = "username";
 constexpr auto kParameterNamePassword = "password";
 constexpr auto kParameterNameRGBImageQuality = "image_quality";
@@ -40,6 +44,27 @@ ParameterT declareAndGetParameter(const std::shared_ptr<rclcpp::Node>& node, con
 }
 
 /**
+ * @brief Try to get an rclcpp parameter. If the parameter has not been declared, declare it.
+ *
+ * @tparam ParameterT Parameter type.
+ * @param node Parameter will be declared and retrieved from this node.
+ * @param name Name of the parameter
+ * @return If the value for the parameter was set, return it. Otherwise, return none.
+ */
+template <typename ParameterT>
+std::optional<ParameterT> declareAndGetParameter(const std::shared_ptr<rclcpp::Node>& node, const std::string& name) {
+  if (!node->has_parameter(name)) {
+    node->declare_parameter(name, rclcpp::ParameterValue{ParameterT{}}.get_type());
+  }
+
+  rclcpp::Parameter parameter;
+  if (!node->get_parameter(name, parameter)) {
+    return std::nullopt;
+  }
+  return std::make_optional(parameter.get_value<ParameterT>());
+}
+
+/**
  * @brief Get the value of an environment variable, if it has been set.
  *
  * @param name Name of the environment variable.
@@ -51,6 +76,31 @@ std::optional<std::string> getEnvironmentVariable(const std::string& name) {
     return std::nullopt;
   }
   return value;
+}
+
+/**
+ * @brief Attempt to get a value from an environment variable, and if this fails try to get it from a rclcpp parameter
+ * instead.
+ *
+ * @param node Node to use when retrieving the rclcpp parameter.
+ * @param env_var_name Name of the environment variable.
+ * @param parameter_name Name of the parameter.
+ * @return If the environment variable was set to a valid value, parse it. Otherwise, if the rclcpp parameter was set,
+ * return its value. If neither the environment variable nor the rclcpp parameter was set, return none.
+ */
+template <typename ParameterT>
+std::optional<ParameterT> getEnvironmentVariableParameterFallback(const std::shared_ptr<rclcpp::Node>& node,
+                                                                  const std::string& env_var_name,
+                                                                  const std::string& parameter_name) {
+  if (const auto env_var_result = getEnvironmentVariable(env_var_name); env_var_result.has_value()) {
+    std::istringstream iss{env_var_result.value()};
+    ParameterT value;
+    iss >> value;
+    if (!iss.fail()) {
+      return std::make_optional(value);
+    }
+  }
+  return declareAndGetParameter<ParameterT>(node, parameter_name);
 }
 
 /**
@@ -72,6 +122,7 @@ std::string getEnvironmentVariableParameterFallback(const std::shared_ptr<rclcpp
   }
   return declareAndGetParameter<std::string>(node, parameter_name, default_value);
 }
+
 }  // namespace
 
 namespace spot_ros2 {
@@ -82,12 +133,20 @@ std::string RclcppParameterInterface::getHostname() const {
   return getEnvironmentVariableParameterFallback(node_, kEnvVarNameHostname, kParameterNameHostname, kDefaultHostname);
 }
 
+std::optional<int> RclcppParameterInterface::getPort() const {
+  return getEnvironmentVariableParameterFallback<int>(node_, kEnvVarNamePort, kParameterNamePort);
+}
+
 std::string RclcppParameterInterface::getUsername() const {
   return getEnvironmentVariableParameterFallback(node_, kEnvVarNameUsername, kParameterNameUsername, kDefaultUsername);
 }
 
 std::string RclcppParameterInterface::getPassword() const {
   return getEnvironmentVariableParameterFallback(node_, kEnvVarNamePassword, kParameterNamePassword, kDefaultPassword);
+}
+
+std::optional<std::string> RclcppParameterInterface::getCertificate() const {
+  return getEnvironmentVariableParameterFallback<std::string>(node_, kEnvVarNameCertificate, kParameterNameCertificate);
 }
 
 double RclcppParameterInterface::getRGBImageQuality() const {

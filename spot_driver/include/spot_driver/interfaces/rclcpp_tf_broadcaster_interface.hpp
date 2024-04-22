@@ -5,7 +5,7 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <rclcpp/node.hpp>
-#include <spot_driver/interfaces/tf_interface_base.hpp>
+#include <spot_driver/interfaces/tf_broadcaster_interface_base.hpp>
 
 #include <memory>
 #include <set>
@@ -14,15 +14,15 @@
 
 namespace spot_ros2 {
 /**
- * @brief Implements TfInterfaceBase to use the rclcpp TF system.
+ * @brief Implements TfBroadcasterInterfaceBase to use the rclcpp TF system.
  */
-class RclcppTfInterface : public TfInterfaceBase {
+class RclcppTfBroadcasterInterface : public TfBroadcasterInterfaceBase {
  public:
   /**
-   * @brief The constructor for RclcppTfInterface.
-   * @param node A shared_ptr to a rclcpp node. RclcppTfInterface shares ownership of the shared_ptr.
+   * @brief The constructor for RclcppTfBroadcasterInterface.
+   * @param node A shared_ptr to a rclcpp node. RclcppTfBroadcasterInterface shares ownership of the shared_ptr.
    */
-  explicit RclcppTfInterface(const std::shared_ptr<rclcpp::Node>& node);
+  explicit RclcppTfBroadcasterInterface(const std::shared_ptr<rclcpp::Node>& node);
 
   /**
    * @brief Add new transforms to the StaticTransformBroadcaster.
