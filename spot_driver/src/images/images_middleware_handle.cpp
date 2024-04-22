@@ -13,6 +13,15 @@ constexpr auto kPublisherHistoryDepth = 1;
 
 constexpr auto kImageTopicSuffix = "image";
 constexpr auto kCameraInfoTopicSuffix = "camera_info";
+
+rclcpp::QoS makeQoS() {
+  // most compatible publisher durability: transient local
+  // most compatible publisher reliabilty: reliable
+  // see also
+  // https://docs.ros.org/en/iron/Concepts/Intermediate/About-Quality-of-Service-Settings.html#qos-compatibilities
+  return rclcpp::QoS(kPublisherHistoryDepth).transient_local().reliable();
+}
+
 }  // namespace
 
 namespace spot_ros2::images {
@@ -35,13 +44,11 @@ void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image
     const auto image_topic_name = topic_name_base + "/" + kImageTopicSuffix;
 
     image_publishers_.try_emplace(image_topic_name,
-                                  node_->create_publisher<sensor_msgs::msg::Image>(
-                                      image_topic_name, rclcpp::SensorDataQoS().keep_last(kPublisherHistoryDepth)));
+                                  node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name, makeQoS()));
 
     const auto info_topic_name = topic_name_base + "/" + kCameraInfoTopicSuffix;
     info_publishers_.try_emplace(info_topic_name,
-                                 node_->create_publisher<sensor_msgs::msg::CameraInfo>(
-                                     info_topic_name, rclcpp::SensorDataQoS().keep_last(kPublisherHistoryDepth)));
+                                 node_->create_publisher<sensor_msgs::msg::CameraInfo>(info_topic_name, makeQoS()));
   }
 }
 
