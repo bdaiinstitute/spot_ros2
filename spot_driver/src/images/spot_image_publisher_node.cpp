@@ -33,7 +33,7 @@ SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_o
   const auto node = std::make_shared<rclcpp::Node>("image_publisher", node_options);
   node_base_interface_ = std::make_unique<RclcppNodeInterface>(node->get_node_base_interface());
 
-  auto mw_handle = std::make_unique<ImagesMiddlewareHandle>(node_options);
+  auto mw_handle = std::make_unique<ImagesMiddlewareHandle>(node);
   auto parameters = std::make_unique<RclcppParameterInterface>(node);
   auto logger = std::make_unique<RclcppLoggerInterface>(node->get_logger());
   auto tf_broadcaster = std::make_unique<RclcppTfBroadcasterInterface>(node);
