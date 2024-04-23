@@ -110,6 +110,15 @@ std_msgs::msg::Header createImageHeader(const bosdyn::api::ImageCapture& image_c
   return header;
 }
 
+std_msgs::msg::Header createImageHeader(const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
+                                        const google::protobuf::Duration& clock_skew) {
+  std_msgs::msg::Header header;
+  // Omit leading `/` from frame ID if robot_name is empty
+  header.frame_id = (robot_name.empty() ? "" : robot_name + "/") + image_capture.frame_name_image_sensor();
+  header.stamp = spot_ros2::robotTimeToLocalTime(image_capture.acquisition_time(), clock_skew);
+  return header;
+}
+
 tl::expected<sensor_msgs::msg::CompressedImage, std::string> toCompressedImageMsg(
     const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
     const google::protobuf::Duration& clock_skew) {
