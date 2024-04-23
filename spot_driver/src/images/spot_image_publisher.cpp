@@ -34,17 +34,18 @@ namespace spot_ros2::images {
     if (source.type == SpotImageType::RGB) {
       bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
       image_request->set_image_source_name(source_name);
-      // RGB images can have a user-configurable image quality setting.
+      // JPEG images can have a user-configurable image quality setting.
       image_request->set_quality_percent(rgb_image_quality);
       // The hand camera always provides RGB images
       if (source.camera == SpotCamera::HAND || has_rgb_cameras) {
         image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8);
+        // RGB images can be either raw or JPEG-compressed.
+        image_request->set_image_format(get_raw_rgb_images ? bosdyn::api::Image_Format_FORMAT_RAW
+                                                           : bosdyn::api::Image_Format_FORMAT_JPEG);
       } else {
+        // Grey images are always JPEG-compressed, so selection of RAW has no effect
         image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8);
       }
-      // RGB images can be either raw or JPEG-compressed.
-      image_request->set_image_format(get_raw_rgb_images ? bosdyn::api::Image_Format_FORMAT_RAW
-                                                         : bosdyn::api::Image_Format_FORMAT_JPEG);
     } else if (source.type == SpotImageType::DEPTH) {
       bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
       image_request->set_image_source_name(source_name);
@@ -83,13 +84,14 @@ bool SpotImagePublisher::initialize() {
   const auto publish_depth_images = parameters_->getPublishDepthImages();
   const auto publish_depth_registered_images = parameters_->getPublishDepthRegisteredImages();
   const auto has_rgb_cameras = parameters_->getHasRGBCameras();
+  const auto publish_raw_rgb_cameras = parameters_->getPublishRawRGBCameras();
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources =
       createImageSources(publish_rgb_images, publish_depth_images, publish_depth_registered_images, has_arm_);
 
   // Generate the image request message to capture the data from the specified image sources
-  image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, false);
+  image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, publish_raw_rgb_cameras);
 
   // Create a publisher for each image source
   middleware_handle_->createPublishers(sources);
