@@ -11,7 +11,14 @@ namespace spot_ros2 {
  */
 class TimerInterfaceBase {
  public:
-  virtual ~TimerInterfaceBase() {}
+  // TimerInterfaceBase is move-only
+  TimerInterfaceBase() = default;
+  TimerInterfaceBase(TimerInterfaceBase&& other) = default;
+  TimerInterfaceBase(const TimerInterfaceBase&) = delete;
+  TimerInterfaceBase& operator=(TimerInterfaceBase&& other) = default;
+  TimerInterfaceBase& operator=(const TimerInterfaceBase&) = delete;
+
+  virtual ~TimerInterfaceBase() = default;
 
   virtual void setTimer(const std::chrono::duration<double>& period, const std::function<void()>& callback) = 0;
   virtual void clearTimer() = 0;

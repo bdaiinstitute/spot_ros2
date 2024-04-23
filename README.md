@@ -40,7 +40,7 @@ git submodule init
 git submodule update
 ```
 
-Then run the install script to install the necessary ROS dependencies. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system:
+Then run the install script to install the necessary Boston Dynamics and ROS dependencies. The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install. Run the correct command based on your system:
 ```bash
 cd <path to spot_ros2>
 ./install_spot_ros2.sh
@@ -51,38 +51,58 @@ From here, build and source the ROS 2 workspace:
 ```
 cd <ros2 ws>
 source /opt/ros/humble/setup.bash
-colcon build --symlink-install
+colcon build --symlink-install --packages-ignore proto2ros_tests
 source install/local_setup.bash
 ```
 
-## Example Code
-See [`spot_examples`](spot_examples/) for some examples of using the ROS 2 driver to control Spot.
+We suggest ignoring the `proto2ros_tests` package in the build as it is not necessary for running the driver. If you choose to build it, you will see a number of error messages from testing the failure paths. 
 
-## Launch
-The spot login data hostname, username and password can either be specified as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
+# Spot ROS 2 Driver
 
-### Model
-    ros2 launch spot_description description.launch.py
+The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run:
+```
+ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Robot Name>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] 
+```
 
-### SpotDriver
-    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path to your ROS config file>] [has_arm:=<True|False>] [spot_name:=<Name of Spot running the driver>] [launch_rviz:=<True|False>] 
+## Configuration
 
-### Depth image to Pointcloud2
-    ros2 launch spot_driver point_cloud_xyz.launch.py
+The Spot login data hostname, username and password can be specified either as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
-### Command Line Example Node
-The `command_spot_driver` node contains service and action clients. To send a trajectory goal execute:
+## Simple Robot Commands
+Many simple robot commands can be called as services from the command line once the driver is running. For example:
 
-    ros2 run spot_driver command_spot --ros-args -p command:=trajectory
+* `ros2 service call /<Robot Name>/sit std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/stand std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/undock std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/power_off std_srvs/srv/Trigger`
 
-### Spot CAM Usage
+If your Spot has an arm, some additional helpful services are exposed:
+* `ros2 service call /<Robot Name>/stow_arm std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/ready_arm std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/open_gripper std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/close_gripper std_srvs/srv/Trigger`
+
+The full list of interfaces provided by the driver can be explored via `ros2 topic list`, `ros2 service list`, and `ros2 action list`. For more information about the custom message types used in this package, run `ros2 interface show <interface_type>`.
+
+## Examples
+See [`spot_examples`](spot_examples/) for some more complex examples of using the ROS 2 driver to control Spot, which typically use the action servers provided by the driver. 
+
+## Images
+By default, the driver will publish RGB images as well as depth maps from the `frontleft`, `frontright`, `left`, `right`, and `back` cameras on Spot (plus `hand` if your Spot has an arm). If your Spot has greyscale cameras, you will need to set `rgb_cameras: False` in your configuration YAML file, or you will not recieve any image data. 
+
+By default, the driver does not publish point clouds. To enable this, launch the driver with `publish_point_clouds:=True`.
+
+## Spot CAM
 Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:
     `initialize_spot_cam: True`
 
-### Spot CAM Known Issues
 The Spot CAM payload has known issues with the SSL certification process in https. If you get the following errors:
 
-![image](https://github.com/bdaiinstitute/spot_ros2/assets/137220849/a2d8e248-ab4f-494b-b431-82adc7acf25d)
+```
+non-existing PPS 0 referenced
+decode_slice_header error
+no frame!
+```
 
 Then you want to log into the Spot CAM over the browser. In your browser, type in:
 
@@ -91,16 +111,9 @@ Then you want to log into the Spot CAM over the browser. In your browser, type i
 The default port for SDP is 31102 for the Spot CAM. Once inside, you will be prompted to log in using your username and password. Do so and the WebRTC frames should begin to properly stream.
 
 
-### Multiple Robots
-If you want to use multiple robots, use the `spot_driver_with_namespace` launch file:
+# Advanced Install
 
-    ros2 launch spot_driver_with_namespace.py spot_name:=<spot name> config_file:=<path to your ROS config file>
-
-This will launch all nodes in the `spot_name` namespace and use `spot_name/` as the prefix for all frames.
-
-## Advanced Install
-
-### Install spot_msgs as a deb package
+## Install spot_msgs as a deb package
 `spot_msgs` are normally compiled as part of this repository.  If you would prefer to install them as a debian package, follow the steps below:
 ```bash
 wget -q -O /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb https://github.com/bdaiinstitute/spot_ros2/releases/download/spot_msgs-v0.0-0/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
@@ -108,16 +121,44 @@ sudo dpkg -i /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
 rm /tmp/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb
 ```
 
-### Install bosdyn_msgs from source
+## Install bosdyn_msgs from source
 The `bosdyn_msgs` package is installed as a debian package as part of the `install_spot_ros2` script because it's very large.  It can be checked out from source [here](https://github.com/bdaiinstitute/bosdyn_msgs) and then built as a normal ROS 2 package if that is preferred (compilation takes about 15 minutes).
 
 
-## License
+# Help
+
+If you encounter problems when using this repository, feel free to open an issue or PR.
+
+## Verify Boston Dynamics API Installation
+If you encounter `ModuleNotFoundErrors` with `bosdyn` packages upon running the driver, it is likely that the necessary Boston Dynamics API packages did not get installed with `install_spot_ros2.sh`. To check this, you can run the following command. Note that all versions should be `4.0.0`. 
+```bash
+$ pip list | grep bosdyn
+bosdyn-api                           4.0.0
+bosdyn-api-msgs                      4.0.0
+bosdyn-auto-return-api-msgs          4.0.0
+bosdyn-autowalk-api-msgs             4.0.0
+bosdyn-choreography-client           4.0.0
+bosdyn-choreography-protos           4.0.0
+bosdyn-client                        4.0.0
+bosdyn-core                          4.0.0
+bosdyn-graph-nav-api-msgs            4.0.0
+bosdyn-keepalive-api-msgs            4.0.0
+bosdyn-log-status-api-msgs           4.0.0
+bosdyn-metrics-logging-api-msgs      4.0.0
+bosdyn-mission                       4.0.0
+bosdyn-mission-api-msgs              4.0.0
+bosdyn-msgs                          4.0.0
+bosdyn-spot-api-msgs                 4.0.0
+bosdyn-spot-cam-api-msgs             4.0.0
+```
+If these packages were not installed correctly on your system, you can try manually installing them following [Boston Dynamics' guide](https://dev.bostondynamics.com/docs/python/quickstart#install-spot-python-packages).
+
+# License
 
 MIT license - parts of the code developed specifically for ROS 2.
-BSD3 license - parts of the code derived from the Clearpath Robotics ROS1 driver.
+BSD3 license - parts of the code derived from the Clearpath Robotics ROS 1 driver.
 
-## Contributing
+# Contributing
 To contribute, install `pre-commit` via pip, run `pre-commit install` and then run `pre-commit run --all-files` to 
 verify that your code will pass inspection. 
 ```bash
@@ -129,9 +170,9 @@ pre-commit run --all-files
 ```
 
 Now whenever you commit code to this repository, it will be checked against our `pre-commit` hooks. You can also run
-`git commit --no-verify` if you wish you commit without checking against the hooks. 
+`git commit --no-verify` if you wish to commit without checking against the hooks. 
 
-### Contributors
+## Contributors
 
 This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and the [Boston Dynamics AI Institute](https://theaiinstitute.com/).
 

@@ -4,12 +4,17 @@
 
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
+#include <optional>
 #include <string>
 
 namespace spot_ros2::test {
 class FakeParameterInterface : public ParameterInterfaceBase {
  public:
   std::string getHostname() const override { return kExampleHostname; }
+
+  std::optional<int> getPort() const override { return std::nullopt; }
+
+  std::optional<std::string> getCertificate() const override { return std::nullopt; }
 
   std::string getUsername() const override { return kExampleUsername; }
 
@@ -18,10 +23,6 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   double getRGBImageQuality() const override { return rgb_image_quality; }
 
   bool getHasRGBCameras() const override { return has_rgb_cameras; }
-
-  bool getDoDecompressImages() const override { return do_decompress_images; }
-
-  bool getPublishRawRGBCameras() const override { return publish_raw_rgb_cameras; }
 
   bool getPublishRGBImages() const override { return publish_rgb_images; }
 
@@ -39,8 +40,6 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   double rgb_image_quality = ParameterInterfaceBase::kDefaultRGBImageQuality;
   bool has_rgb_cameras = ParameterInterfaceBase::kDefaultHasRGBCameras;
-  bool do_decompress_images = ParameterInterfaceBase::kDefaultDoDecompressImages;
-  bool publish_raw_rgb_cameras = ParameterInterfaceBase::kDefaultPublishRawRGBCameras;
   bool publish_rgb_images = ParameterInterfaceBase::kDefaultPublishRGBImages;
   bool publish_depth_images = ParameterInterfaceBase::kDefaultPublishDepthImages;
   bool publish_depth_registered_images = ParameterInterfaceBase::kDefaultPublishDepthRegisteredImages;

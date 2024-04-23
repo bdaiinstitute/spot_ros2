@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #pragma once
 
@@ -12,12 +12,10 @@
 #include <spot_driver/interfaces/image_client_interface.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
-#include <spot_driver/interfaces/tf_interface_base.hpp>
+#include <spot_driver/interfaces/tf_broadcaster_interface_base.hpp>
 #include <spot_driver/interfaces/timer_interface_base.hpp>
 #include <spot_driver/types.hpp>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 namespace spot_ros2::images {
 /**
@@ -47,18 +45,12 @@ class SpotImagePublisher {
    */
   class MiddlewareHandle {
    public:
-    virtual void createPublishers(const std::set<ImageSource>& image_sources, const bool do_decompress_images) = 0;
-    virtual tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
-    virtual tl::expected<void, std::string> publishImages(
-        const std::map<ImageSource, CompressedImageWithCameraInfo>& images) = 0;
-
-    virtual ParameterInterfaceBase* parameter_interface() = 0;
-    virtual LoggerInterfaceBase* logger_interface() = 0;
-    virtual TfInterfaceBase* tf_interface() = 0;
-    virtual TimerInterfaceBase* timer_interface() = 0;
-    virtual std::shared_ptr<rclcpp::Node> node() = 0;
-
     virtual ~MiddlewareHandle() = default;
+
+    virtual void createPublishers(const std::set<ImageSource>& image_sources) = 0;
+    virtual tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
+    virtual tl::expected<void, std::string> publishCompressedImages(
+        const std::map<ImageSource, CompressedImageWithCameraInfo>& compressed_images) = 0;
   };
 
   /**
@@ -72,8 +64,11 @@ class SpotImagePublisher {
    * @param has_arm A flag indicating if the Spot in use has an arm. Needed to generate image sources during
    * initialization.
    */
-  SpotImagePublisher(std::shared_ptr<ImageClientInterface> image_client_interface,
-                     std::unique_ptr<MiddlewareHandle> middleware_handle, bool has_arm = false);
+  SpotImagePublisher(const std::shared_ptr<ImageClientInterface>& image_client_interface,
+                     std::unique_ptr<MiddlewareHandle> middleware_handle,
+                     std::unique_ptr<ParameterInterfaceBase> parameters, std::unique_ptr<LoggerInterfaceBase> logger,
+                     std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster,
+                     std::unique_ptr<TimerInterfaceBase> timer, bool has_arm = false);
 
   /**
    * @brief Connect to Spot and start publishing image data.
@@ -82,14 +77,14 @@ class SpotImagePublisher {
    * @return False, if a required user-defined parameter was not set, if the attempt to connect to Spot fails, or if the
    * attempt to authenticate with Spot using the provided credentials fails.
    */
-  bool initialize();
+  [[nodiscard]] bool initialize();
 
  private:
   /**
    * @brief Callback function which is called through timer_interface_.
    * @details Requests image data from Spot, and then publishes the images and static camera transforms.
    */
-  void timerCallback(bool do_decompress_images);
+  void timerCallback();
 
   /**
    * @brief Image request message which is set when SpotImagePublisher::initialize() is called.
@@ -101,6 +96,12 @@ class SpotImagePublisher {
   // Interface classes to interact with Spot and the middleware.
   std::shared_ptr<ImageClientInterface> image_client_interface_;
   std::unique_ptr<MiddlewareHandle> middleware_handle_;
+
+  std::unique_ptr<ParameterInterfaceBase> parameters_;
+  std::unique_ptr<LoggerInterfaceBase> logger_;
+  std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_;
+  std::unique_ptr<TimerInterfaceBase> timer_;
+
   bool has_arm_;
 };
 }  // namespace spot_ros2::images

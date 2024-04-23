@@ -67,6 +67,27 @@ tl::expected<int, std::string> getCvPixelFormat(const bosdyn::api::Image_PixelFo
   }
 }
 
+tl::expected<std::string, std::string> getSensorMsgPixelFormat(const bosdyn::api::Image_PixelFormat& format) {
+  switch (format) {
+    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8: {
+      return sensor_msgs::image_encodings::TYPE_8UC3;
+    }
+    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGBA_U8: {
+      return sensor_msgs::image_encodings::TYPE_8UC4;
+    }
+    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8: {
+      return sensor_msgs::image_encodings::TYPE_8UC1;
+    }
+    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U16:
+    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_DEPTH_U16: {
+      return sensor_msgs::image_encodings::TYPE_16UC1;
+    }
+    default: {
+      return tl::make_unexpected("Unknown pixel format.");
+    }
+  }
+}
+
 tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(
     const bosdyn::api::ImageResponse& image_response, const std::string& robot_name,
     const google::protobuf::Duration& clock_skew) {
@@ -126,67 +147,45 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
                                                               const std::string& robot_name,
                                                               const google::protobuf::Duration& clock_skew) {
   const auto& image = image_capture.image();
-  auto data = image.data();
+  if (image.format() != bosdyn::api::Image_Format_FORMAT_RAW) {
+    return tl::make_unexpected("Only RAW image cannot be sent as ROS2-image.");
+  }
 
-  const auto header = createImageHeader(image_capture, robot_name, clock_skew);
   const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
   if (!pixel_format_cv) {
-    return tl::make_unexpected("Failed to determine pixel format: " + pixel_format_cv.error());
+    return tl::make_unexpected("Failed to determine cv pixel format: " + pixel_format_cv.error());
   }
 
-  if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG) {
-    // When the image is JPEG-compressed, it is represented as a 1 x (width * height) row of bytes.
-    // First we create a cv::Mat which contains the compressed image data...
-    const cv::Mat img_compressed{1, image.rows() * image.cols(), CV_8UC1, &data.front()};
-    // Then we decode it to extract the raw image into a new cv::Mat.
-    if (image.pixel_format() == bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8) {
-      const cv::Mat img_grey = cv::imdecode(img_compressed, cv::IMREAD_GRAYSCALE);
-      if (!img_grey.data) {
-        return tl::make_unexpected("Failed to decode JPEG-compressed image.");
-      }
-      const auto image = cv_bridge::CvImage{header, "mono8", img_grey}.toImageMsg();
-      return *image;
-    } else {
-      const cv::Mat img_bgr = cv::imdecode(img_compressed, cv::IMREAD_COLOR);
-      if (!img_bgr.data) {
-        return tl::make_unexpected("Failed to decode JPEG-compressed image.");
-      }
-      const auto image = cv_bridge::CvImage{header, "bgr8", img_bgr}.toImageMsg();
-      return *image;
-    }
-  } else if (image.format() == bosdyn::api::Image_Format_FORMAT_RAW) {
-    // Note: as currently implemented, this assumes that the only images which will be provided as raw data will be
-    // 16UC1 depth images.
-    // TODO(jschornak-bdai): handle converting raw RGB and grayscale images as well.
-    const cv::Mat img = cv::Mat(image.rows(), image.cols(), pixel_format_cv.value(), &data.front());
-    if (!img.data) {
-      return tl::make_unexpected("Failed to decode raw-formatted image.");
-    }
-    const auto image = cv_bridge::CvImage{header, sensor_msgs::image_encodings::TYPE_16UC1, img}.toImageMsg();
-    return *image;
-  } else if (image.format() == bosdyn::api::Image_Format_FORMAT_RLE) {
-    return tl::make_unexpected("Conversion from FORMAT_RLE is not yet implemented.");
-  } else {
-    return tl::make_unexpected("Unknown image format.");
+  const auto pixel_format_sensor_msg = getSensorMsgPixelFormat(image.pixel_format());
+  if (!pixel_format_sensor_msg) {
+    return tl::make_unexpected("Failed to determine msg pixel format: " + pixel_format_sensor_msg.error());
   }
+
+  auto data = image.data();
+  const cv::Mat img = cv::Mat(image.rows(), image.cols(), pixel_format_cv.value(), &data.front());
+  if (!img.data) {
+    return tl::make_unexpected("Failed to decode raw-formatted image.");
+  }
+  const auto image_msg =
+      cv_bridge::CvImage{createImageHeader(image_capture, robot_name, clock_skew), pixel_format_sensor_msg.value(), img}
+          .toImageMsg();
+  return *image_msg;
 }
 
 tl::expected<sensor_msgs::msg::CompressedImage, std::string> toCompressedImageMsg(
     const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
     const google::protobuf::Duration& clock_skew) {
   const auto& image = image_capture.image();
-  auto data = image.data();
+  if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG) {
+    return tl::make_unexpected("Only JPEG image cannot be sent as ROS2-compressed image.");
+  }
 
+  auto data = image.data();
   sensor_msgs::msg::CompressedImage compressed_image;
   compressed_image.header = createImageHeader(image_capture, robot_name, clock_skew);
-
-  if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG) {
-    compressed_image.format = "jpeg";
-    compressed_image.data.insert(compressed_image.data.begin(), data.begin(), data.end());
-    return compressed_image;
-  } else {
-    return tl::make_unexpected("toCompresseImageMsg: Not in jpeg image format.");
-  }
+  compressed_image.format = "jpeg";
+  compressed_image.data.insert(compressed_image.data.begin(), data.begin(), data.end());
+  return compressed_image;
 }
 
 tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> getImageTransforms(
@@ -204,7 +203,7 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
     // which is used for publishing dynamic tfs elsewhere. Without this, the hand camera frame
     // positions would never properly update as no other pipelines reference "arm0.link_wr1".
     const auto parent_frame_id =
-        (transform.parent_frame_name() == "arm0.link_wr1") ? "link_wr1" : transform.parent_frame_name();
+        (transform.parent_frame_name() == "arm0.link_wr1") ? "arm_link_wr1" : transform.parent_frame_name();
 
     const auto tform_msg = spot_ros2::toTransformStamped(
         transform.parent_tform_child(), robot_name.empty() ? parent_frame_id : (robot_name + "/" + parent_frame_id),
@@ -223,8 +222,7 @@ DefaultImageClient::DefaultImageClient(::bosdyn::client::ImageClient* image_clie
                                        std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name)
     : image_client_{image_client}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
 
-tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request,
-                                                                         bool do_decompress_images) {
+tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
       image_client_->GetImageAsync(request);
 
@@ -255,7 +253,7 @@ tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdy
                                  get_source_name_result.error());
     }
 
-    if (!do_decompress_images && (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG)) {
+    if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG) {
       const auto image_msg = toCompressedImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
       if (!image_msg) {
         return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());

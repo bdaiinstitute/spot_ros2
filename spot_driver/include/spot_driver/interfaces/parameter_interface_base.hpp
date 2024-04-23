@@ -11,19 +11,26 @@ namespace spot_ros2 {
  */
 class ParameterInterfaceBase {
  public:
-  virtual ~ParameterInterfaceBase() {}
+  // ParameterInterfaceBase is move-only
+  ParameterInterfaceBase() = default;
+  ParameterInterfaceBase(ParameterInterfaceBase&& other) = default;
+  ParameterInterfaceBase(const ParameterInterfaceBase&) = delete;
+  ParameterInterfaceBase& operator=(ParameterInterfaceBase&& other) = default;
+  ParameterInterfaceBase& operator=(const ParameterInterfaceBase&) = delete;
+
+  virtual ~ParameterInterfaceBase() = default;
 
   // These functions retrieve optional parameters, where a default value can be used if the user does not provide a
   // specific value. If the parameter was set, return the value provided by the user. If the parameter was not set,
   // return the default value.
   virtual std::string getHostname() const = 0;
+  virtual std::optional<int> getPort() const = 0;
+  virtual std::optional<std::string> getCertificate() const = 0;
   virtual std::string getUsername() const = 0;
   virtual std::string getPassword() const = 0;
   virtual double getRGBImageQuality() const = 0;
   virtual bool getHasRGBCameras() const = 0;
-  virtual bool getDoDecompressImages() const = 0;
   virtual bool getPublishRGBImages() const = 0;
-  virtual bool getPublishRawRGBCameras() const = 0;
   virtual bool getPublishDepthImages() const = 0;
   virtual bool getPublishDepthRegisteredImages() const = 0;
   virtual std::string getPreferredOdomFrame() const = 0;
@@ -36,9 +43,7 @@ class ParameterInterfaceBase {
   static constexpr auto kDefaultPassword = "password";
   static constexpr double kDefaultRGBImageQuality{70.0};
   static constexpr bool kDefaultHasRGBCameras{true};
-  static constexpr bool kDefaultDoDecompressImages{true};
   static constexpr bool kDefaultPublishRGBImages{true};
-  static constexpr bool kDefaultPublishRawRGBCameras{false};
   static constexpr bool kDefaultPublishDepthImages{true};
   static constexpr bool kDefaultPublishDepthRegisteredImages{true};
   static constexpr auto kDefaultPreferredOdomFrame = "odom";
