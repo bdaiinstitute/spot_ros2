@@ -19,6 +19,7 @@
 #include <spot_driver/conversions/decompress_images.hpp>
 #include <spot_driver/conversions/geometry.hpp>
 #include <spot_driver/conversions/time.hpp>
+#include <spot_driver/conversions/decompress_images.hpp>
 #include <spot_driver/types.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <string>
