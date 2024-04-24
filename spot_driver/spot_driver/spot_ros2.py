@@ -69,6 +69,7 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
+from rclpy.qos import QoSPresetProfiles
 from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
 
@@ -1138,12 +1139,12 @@ class SpotROS(Node):
             setattr(
                 self,
                 f"{camera_name}_{publisher_name}_pub",
-                self.create_publisher(Image, f"{topic_name}/{camera_name}/image", 1),
+                self.create_publisher(Image, f"{topic_name}/{camera_name}/image", QoSPresetProfiles.SENSOR_DATA.value),
             )
             setattr(
                 self,
                 f"{camera_name}_{publisher_name}_info_pub",
-                self.create_publisher(CameraInfo, f"{topic_name}/{camera_name}/camera_info", 1),
+                self.create_publisher(CameraInfo, f"{topic_name}/{camera_name}/camera_info", QoSPresetProfiles.SENSOR_DATA.value),
             )
         # create a timer for publishing
         self.create_timer(

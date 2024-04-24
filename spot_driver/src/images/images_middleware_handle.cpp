@@ -16,10 +16,10 @@ constexpr auto kCameraInfoTopicSuffix = "camera_info";
 
 rclcpp::QoS makeQoS() {
   // most compatible publisher durability: transient local
-  // most compatible publisher reliabilty: reliable
+  // most compatible publisher reliabilty: bes effort
   // see also
   // https://docs.ros.org/en/iron/Concepts/Intermediate/About-Quality-of-Service-Settings.html#qos-compatibilities
-  return rclcpp::QoS(kPublisherHistoryDepth).transient_local().reliable();
+  return rclcpp::QoS(kPublisherHistoryDepth).transient_local().best_effort();
 }
 
 }  // namespace
