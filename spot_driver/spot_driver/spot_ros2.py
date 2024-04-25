@@ -586,20 +586,20 @@ class SpotROS(Node):
         if has_arm:
             self.create_service(
                 Trigger,
-                "stow_arm",
-                lambda request, response: self.service_wrapper("stow_arm", self.handle_stow_arm, request, response),
+                "arm_stow",
+                lambda request, response: self.service_wrapper("arm_stow", self.handle_arm_stow, request, response),
                 callback_group=self.group,
             )
             self.create_service(
                 Trigger,
-                "ready_arm",
-                lambda request, response: self.service_wrapper("ready_arm", self.handle_ready_arm, request, response),
+                "arm_unstow",
+                lambda request, response: self.service_wrapper("arm_unstow", self.handle_arm_unstow, request, response),
                 callback_group=self.group,
             )
             self.create_service(
                 Trigger,
-                "carry",
-                lambda request, response: self.service_wrapper("carry", self.handle_carry, request, response),
+                "arm_carry",
+                lambda request, response: self.service_wrapper("arm_carry", self.handle_arm_carry, request, response),
                 callback_group=self.group,
             )
 
@@ -1319,16 +1319,16 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.spot_check.start_check()
         return response
 
-    def handle_stow_arm(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    def handle_arm_stow(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to stow the arm on the robot."""
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message = self.spot_wrapper.spot_arm.stow_arm()
+        response.success, response.message = self.spot_wrapper.spot_arm.arm_stow()
         return response
 
-    def handle_ready_arm(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    def handle_arm_unstow(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to ready (unstow) the arm on the robot."""
         if self.spot_wrapper is None:
             response.success = False
@@ -1337,7 +1337,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.spot_arm.arm_unstow()
         return response
 
-    def handle_carry(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    def handle_arm_carry(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to carry an object the robot has already grasped."""
         if self.spot_wrapper is None:
             response.success = False
