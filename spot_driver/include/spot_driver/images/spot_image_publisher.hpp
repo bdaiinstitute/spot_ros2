@@ -84,7 +84,7 @@ class SpotImagePublisher {
    * @brief Callback function which is called through timer_interface_.
    * @details Requests image data from Spot, and then publishes the images and static camera transforms.
    */
-  void timerCallback();
+  void timerCallback(bool uncompress_images);
 
   /**
    * @brief Image request message which is set when SpotImagePublisher::initialize() is called.

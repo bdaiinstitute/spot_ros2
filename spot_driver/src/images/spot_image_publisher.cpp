@@ -84,7 +84,8 @@ bool SpotImagePublisher::initialize() {
   const auto publish_depth_images = parameters_->getPublishDepthImages();
   const auto publish_depth_registered_images = parameters_->getPublishDepthRegisteredImages();
   const auto has_rgb_cameras = parameters_->getHasRGBCameras();
-  const auto publish_raw_rgb_cameras = parameters_->getPublishRawRGBCameras();
+  // always use compressed transport from SPOT, we decompress it in paralell if desired
+  const auto publish_raw_rgb_cameras = false;
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources =
@@ -98,19 +99,20 @@ bool SpotImagePublisher::initialize() {
 
   // Create a timer to request and publish images at a fixed rate
   timer_->setTimer(kImageCallbackPeriod, [this]() {
-    timerCallback();
+    const auto uncompress_images = parameters_->getUncompressImages();
+    timerCallback(uncompress_images);
   });
 
   return true;
 }
 
-void SpotImagePublisher::timerCallback() {
+void SpotImagePublisher::timerCallback(bool uncompress_images) {
   if (!image_request_message_) {
     logger_->logError("No image request message generated. Returning.");
     return;
   }
 
-  const auto image_result = image_client_interface_->getImages(*image_request_message_);
+  const auto image_result = image_client_interface_->getImages(*image_request_message_, uncompress_images);
   if (!image_result.has_value()) {
     logger_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
     return;

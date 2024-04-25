@@ -44,6 +44,7 @@ add_library(spot_api
   src/api/default_world_object_client.cpp
   src/api/spot_image_sources.cpp
   src/conversions/common_conversions.cpp
+  src/conversions/decompress_images.cpp
   src/conversions/geometry.cpp
   src/conversions/kinematic_conversions.cpp
   src/conversions/robot_state.cpp

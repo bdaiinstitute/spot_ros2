@@ -113,7 +113,8 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
     // THEN the images we received from the Spot interface are published
     // THEN the static transforms to the image frames are updated
     InSequence seq;
-    EXPECT_CALL(*image_client_interface, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18)));
+    EXPECT_CALL(*image_client_interface,
+                getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18), true));
     EXPECT_CALL(*middleware_handle, publishImages);
     EXPECT_CALL(*middleware_handle, publishCompressedImages);
     EXPECT_CALL(*mock_tf_broadcaster_interface_ptr, updateStaticTransforms);
@@ -150,7 +151,8 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
     // THEN the images we received from the Spot interface are published
     // THEN the static transforms to the image frames are updated
     InSequence seq;
-    EXPECT_CALL(*image_client_interface, getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15)));
+    EXPECT_CALL(*image_client_interface,
+                getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15), true));
     EXPECT_CALL(*middleware_handle, publishImages);
     EXPECT_CALL(*mock_tf_broadcaster_interface_ptr, updateStaticTransforms);
   }
