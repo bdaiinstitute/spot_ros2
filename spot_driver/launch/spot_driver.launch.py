@@ -402,9 +402,7 @@ def generate_launch_description() -> launch.LaunchDescription:
             "uncompress_images",
             default_value="true",
             choices=["true", "false"],
-            description=(
-                "Choose whether to uncompress the images that get published by Spot."
-            ),
+            description="Choose whether to uncompress the images that get published by Spot.",
         )
     )
     launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
