@@ -27,6 +27,7 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
   [[nodiscard]] std::string getPassword() const override;
   [[nodiscard]] double getRGBImageQuality() const override;
   [[nodiscard]] bool getHasRGBCameras() const override;
+  [[nodiscard]] bool getPublishRawRGBCameras() const override;
   [[nodiscard]] bool getPublishRGBImages() const override;
   [[nodiscard]] bool getPublishDepthImages() const override;
   [[nodiscard]] bool getPublishDepthRegisteredImages() const override;

@@ -77,8 +77,9 @@ Many simple robot commands can be called as services from the command line once 
 * `ros2 service call /<Robot Name>/power_off std_srvs/srv/Trigger`
 
 If your Spot has an arm, some additional helpful services are exposed:
-* `ros2 service call /<Robot Name>/stow_arm std_srvs/srv/Trigger`
-* `ros2 service call /<Robot Name>/ready_arm std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/arm_stow std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/arm_unstow std_srvs/srv/Trigger`
+* `ros2 service call /<Robot Name>/arm_carry std_srvs/srv/Trigger`
 * `ros2 service call /<Robot Name>/open_gripper std_srvs/srv/Trigger`
 * `ros2 service call /<Robot Name>/close_gripper std_srvs/srv/Trigger`
 

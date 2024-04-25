@@ -113,17 +113,22 @@ tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(
   return info_msg;
 }
 
+std_msgs::msg::Header createImageHeader(const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
+                                        const google::protobuf::Duration& clock_skew) {
+  std_msgs::msg::Header header;
+  // Omit leading `/` from frame ID if robot_name is empty
+  header.frame_id = (robot_name.empty() ? "" : robot_name + "/") + image_capture.frame_name_image_sensor();
+  header.stamp = spot_ros2::robotTimeToLocalTime(image_capture.acquisition_time(), clock_skew);
+  return header;
+}
+
 tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api::ImageCapture& image_capture,
                                                               const std::string& robot_name,
                                                               const google::protobuf::Duration& clock_skew) {
   const auto& image = image_capture.image();
   auto data = image.data();
 
-  std_msgs::msg::Header header;
-  // Omit leading `/` from frame ID if robot_name is empty
-  header.frame_id = (robot_name.empty() ? "" : robot_name + "/") + image_capture.frame_name_image_sensor();
-  header.stamp = spot_ros2::robotTimeToLocalTime(image_capture.acquisition_time(), clock_skew);
-
+  const auto header = createImageHeader(image_capture, robot_name, clock_skew);
   const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
   if (!pixel_format_cv) {
     return tl::make_unexpected("Failed to determine pixel format: " + pixel_format_cv.error());
@@ -134,13 +139,21 @@ tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api:
     // First we create a cv::Mat which contains the compressed image data...
     const cv::Mat img_compressed{1, image.rows() * image.cols(), CV_8UC1, &data.front()};
     // Then we decode it to extract the raw image into a new cv::Mat.
-    // Note: this assumes that if an image is provided as JPEG-compressed data, then it is an RGB image.
-    const cv::Mat img_bgr = cv::imdecode(img_compressed, cv::IMREAD_COLOR);
-    if (!img_bgr.data) {
-      return tl::make_unexpected("Failed to decode JPEG-compressed image.");
+    if (image.pixel_format() == bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8) {
+      const cv::Mat img_grey = cv::imdecode(img_compressed, cv::IMREAD_GRAYSCALE);
+      if (!img_grey.data) {
+        return tl::make_unexpected("Failed to decode JPEG-compressed image.");
+      }
+      const auto image = cv_bridge::CvImage{header, "mono8", img_grey}.toImageMsg();
+      return *image;
+    } else {
+      const cv::Mat img_bgr = cv::imdecode(img_compressed, cv::IMREAD_COLOR);
+      if (!img_bgr.data) {
+        return tl::make_unexpected("Failed to decode JPEG-compressed image.");
+      }
+      const auto image = cv_bridge::CvImage{header, "bgr8", img_bgr}.toImageMsg();
+      return *image;
     }
-    const auto image = cv_bridge::CvImage{header, "bgr8", img_bgr}.toImageMsg();
-    return *image;
   } else if (image.format() == bosdyn::api::Image_Format_FORMAT_RAW) {
     // Note: as currently implemented, this assumes that the only images which will be provided as raw data will be
     // 16UC1 depth images.

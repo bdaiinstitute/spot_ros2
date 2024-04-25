@@ -9,7 +9,7 @@
 #include <spot_driver/interfaces/rclcpp_wall_timer_interface.hpp>
 
 namespace {
-constexpr auto kPublisherHistoryDepth = 1;
+constexpr auto kPublisherHistoryDepth = 10;
 
 constexpr auto kImageTopicSuffix = "image";
 constexpr auto kCameraInfoTopicSuffix = "camera_info";
