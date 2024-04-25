@@ -16,6 +16,7 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver/api/default_time_sync_api.hpp>
 #include <spot_driver/api/spot_image_sources.hpp>
+#include <spot_driver/conversions/decompress_images.hpp>
 #include <spot_driver/conversions/geometry.hpp>
 #include <spot_driver/conversions/time.hpp>
 #include <spot_driver/types.hpp>
@@ -43,50 +44,6 @@ static const std::set<std::string> kExcludedStaticTfFrames{
     // on the arm's position and a static transform would fix it to its initial position.
     "arm0.link_wr1",
 };
-
-tl::expected<int, std::string> getCvPixelFormat(const bosdyn::api::Image_PixelFormat& format) {
-  switch (format) {
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8: {
-      return CV_8UC3;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGBA_U8: {
-      return CV_8UC4;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8: {
-      return CV_8UC1;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U16: {
-      return CV_16UC1;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_DEPTH_U16: {
-      return CV_16UC1;
-    }
-    default: {
-      return tl::make_unexpected("Unknown pixel format.");
-    }
-  }
-}
-
-tl::expected<std::string, std::string> getSensorMsgPixelFormat(const bosdyn::api::Image_PixelFormat& format) {
-  switch (format) {
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8: {
-      return sensor_msgs::image_encodings::TYPE_8UC3;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGBA_U8: {
-      return sensor_msgs::image_encodings::TYPE_8UC4;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8: {
-      return sensor_msgs::image_encodings::TYPE_8UC1;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U16:
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_DEPTH_U16: {
-      return sensor_msgs::image_encodings::TYPE_16UC1;
-    }
-    default: {
-      return tl::make_unexpected("Unknown pixel format.");
-    }
-  }
-}
 
 tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(
     const bosdyn::api::ImageResponse& image_response, const std::string& robot_name,
@@ -143,51 +100,6 @@ std_msgs::msg::Header createImageHeader(const bosdyn::api::ImageCapture& image_c
   return header;
 }
 
-tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api::ImageCapture& image_capture,
-                                                              const std::string& robot_name,
-                                                              const google::protobuf::Duration& clock_skew) {
-  const auto& image = image_capture.image();
-  if (image.format() != bosdyn::api::Image_Format_FORMAT_RAW) {
-    return tl::make_unexpected("Only RAW image cannot be sent as ROS2-image.");
-  }
-
-  const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
-  if (!pixel_format_cv) {
-    return tl::make_unexpected("Failed to determine cv pixel format: " + pixel_format_cv.error());
-  }
-
-  const auto pixel_format_sensor_msg = getSensorMsgPixelFormat(image.pixel_format());
-  if (!pixel_format_sensor_msg) {
-    return tl::make_unexpected("Failed to determine msg pixel format: " + pixel_format_sensor_msg.error());
-  }
-
-  auto data = image.data();
-  const cv::Mat img = cv::Mat(image.rows(), image.cols(), pixel_format_cv.value(), &data.front());
-  if (!img.data) {
-    return tl::make_unexpected("Failed to decode raw-formatted image.");
-  }
-  const auto image_msg =
-      cv_bridge::CvImage{createImageHeader(image_capture, robot_name, clock_skew), pixel_format_sensor_msg.value(), img}
-          .toImageMsg();
-  return *image_msg;
-}
-
-tl::expected<sensor_msgs::msg::CompressedImage, std::string> toCompressedImageMsg(
-    const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
-    const google::protobuf::Duration& clock_skew) {
-  const auto& image = image_capture.image();
-  if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG) {
-    return tl::make_unexpected("Only JPEG image cannot be sent as ROS2-compressed image.");
-  }
-
-  auto data = image.data();
-  sensor_msgs::msg::CompressedImage compressed_image;
-  compressed_image.header = createImageHeader(image_capture, robot_name, clock_skew);
-  compressed_image.format = "jpeg";
-  compressed_image.data.insert(compressed_image.data.begin(), data.begin(), data.end());
-  return compressed_image;
-}
-
 tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> getImageTransforms(
     const bosdyn::api::ImageResponse& image_response, const std::string& robot_name,
     const google::protobuf::Duration& clock_skew) {
@@ -213,6 +125,22 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
     out.push_back(tform_msg);
   }
   return out;
+}
+
+tl::expected<sensor_msgs::msg::CompressedImage, std::string> toCompressedImageMsg(
+    const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
+    const google::protobuf::Duration& clock_skew) {
+  const auto& image = image_capture.image();
+  if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG) {
+    return tl::make_unexpected("Only JPEG image cannot be sent as ROS2-compressed image.");
+  }
+
+  auto data = image.data();
+  sensor_msgs::msg::CompressedImage compressed_image;
+  compressed_image.header = createImageHeader(image_capture, robot_name, clock_skew);
+  compressed_image.format = "jpeg";
+  compressed_image.data.insert(compressed_image.data.begin(), data.begin(), data.end());
+  return compressed_image;
 }
 }  // namespace
 
@@ -240,6 +168,11 @@ tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdy
   for (const auto& image_response : get_image_result.response.image_responses()) {
     const auto& image = image_response.shot().image();
     auto data = image.data();
+
+    const auto image_msg = toCompressedImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
+    if (!image_msg) {
+      return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());
+    }
 
     const auto info_msg = toCameraInfoMsg(image_response, robot_name_, clock_skew_result.value());
     if (!info_msg) {
