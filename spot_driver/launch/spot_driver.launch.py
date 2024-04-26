@@ -235,7 +235,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(spot_driver_node)
 
-    uncompress_images = True if LaunchConfiguration("uncompress_images").perform(context) == "true" else False
+    uncompress_images = True if LaunchConfiguration("uncompress_images").perform(context).lower() == "true" else False
     spot_image_publisher_params = {
         "spot_name": spot_name,
         "uncompress_images": uncompress_images,
@@ -400,8 +400,8 @@ def generate_launch_description() -> launch.LaunchDescription:
     launch_args.append(
         DeclareLaunchArgument(
             "uncompress_images",
-            default_value="true",
-            choices=["true", "false"],
+            default_value="True",
+            choices=["True", "False"],
             description="Choose whether to uncompress the images that get published by Spot.",
         )
     )
