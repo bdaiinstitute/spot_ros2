@@ -133,7 +133,8 @@ tl::expected<sensor_msgs::msg::CompressedImage, std::string> toCompressedImageMs
     const google::protobuf::Duration& clock_skew) {
   const auto& image = image_capture.image();
   if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG) {
-    return tl::make_unexpected("Only JPEG image can be sent as ROS2-compressed image. Format is: " + std::to_string(image.format()));
+    return tl::make_unexpected("Only JPEG image can be sent as ROS2-compressed image. Format is: " +
+                               std::to_string(image.format()));
   }
 
   auto data = image.data();
