@@ -21,6 +21,7 @@
 #include <spot_driver/conversions/time.hpp>
 #include <spot_driver/types.hpp>
 #include <std_msgs/msg/header.hpp>
+#include <string>
 #include <tl_expected/expected.hpp>
 
 #include <algorithm>
@@ -132,7 +133,7 @@ tl::expected<sensor_msgs::msg::CompressedImage, std::string> toCompressedImageMs
     const google::protobuf::Duration& clock_skew) {
   const auto& image = image_capture.image();
   if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG) {
-    return tl::make_unexpected("Only JPEG image cannot be sent as ROS2-compressed image.");
+    return tl::make_unexpected("Only JPEG image can be sent as ROS2-compressed image. Format is: " + std::to_string(image.format()));
   }
 
   auto data = image.data();
@@ -182,16 +183,18 @@ tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdy
                                  get_source_name_result.error());
     }
 
-    const auto compressed_image_msg =
-        toCompressedImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
-    if (!compressed_image_msg) {
-      return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " +
-                                 compressed_image_msg.error());
+    if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG) {
+      const auto compressed_image_msg =
+          toCompressedImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
+      if (!compressed_image_msg) {
+        return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " +
+                                   compressed_image_msg.error());
+      }
+      out.compressed_images_.try_emplace(get_source_name_result.value(),
+                                         CompressedImageWithCameraInfo{compressed_image_msg.value(), info_msg.value()});
     }
-    out.compressed_images_.try_emplace(get_source_name_result.value(),
-                                       CompressedImageWithCameraInfo{compressed_image_msg.value(), info_msg.value()});
 
-    if (uncompress_images) {
+    if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG || uncompress_images) {
       const auto image_msg = getDecompressImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
       if (!image_msg) {
         return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());

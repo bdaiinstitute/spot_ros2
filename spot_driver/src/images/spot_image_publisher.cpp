@@ -45,6 +45,7 @@ namespace spot_ros2::images {
       } else {
         // Grey images are always JPEG-compressed, so selection of RAW has no effect
         image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8);
+        image_request->set_image_format(bosdyn::api::Image_Format_FORMAT_JPEG);
       }
     } else if (source.type == SpotImageType::DEPTH) {
       bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
@@ -111,15 +112,12 @@ void SpotImagePublisher::timerCallback(bool uncompress_images) {
     logger_->logError("No image request message generated. Returning.");
     return;
   }
-  logger_->logError(std::string("Timer callback with uncompress_images =") + std::to_string(uncompress_images));
 
   const auto image_result = image_client_interface_->getImages(*image_request_message_, uncompress_images);
   if (!image_result.has_value()) {
     logger_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
     return;
   }
-  logger_->logError(std::string("got images: ") + std::to_string(image_result.value().images_.size()) +
-                    "and compressed ones: " + std::to_string(image_result.value().compressed_images_.size()));
 
   middleware_handle_->publishImages(image_result.value().images_);
   middleware_handle_->publishCompressedImages(image_result.value().compressed_images_);
