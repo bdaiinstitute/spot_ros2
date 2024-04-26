@@ -20,7 +20,7 @@ ImagesMiddlewareHandle::ImagesMiddlewareHandle(const std::shared_ptr<rclcpp::Nod
 ImagesMiddlewareHandle::ImagesMiddlewareHandle(const rclcpp::NodeOptions& node_options)
     : ImagesMiddlewareHandle(std::make_shared<rclcpp::Node>("image_publisher", node_options)) {}
 
-void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image_sources) {
+void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images) {
   image_publishers_.clear();
   info_publishers_.clear();
 
@@ -30,15 +30,16 @@ void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image
     // ultimately appear as `/MyRobotName/camera/frontleft/image`.
     const auto image_topic_name = toRosTopic(image_source);
 
-    if (image_source.type != SpotImageType::RGB) {
-      image_publishers_.try_emplace(
-          image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(
-                                image_topic_name + "/image", rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth))));
-    } else {
+    if (image_source.type == SpotImageType::RGB) {
       compressed_image_publishers_.try_emplace(
           image_topic_name,
           node_->create_publisher<sensor_msgs::msg::CompressedImage>(
               image_topic_name + "/compressed", rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth))));
+    }
+    if (uncompress_images || (image_source.type != SpotImageType::RGB)) {
+      image_publishers_.try_emplace(
+          image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(
+                                image_topic_name + "/image", rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth))));
     }
     info_publishers_.try_emplace(image_topic_name, node_->create_publisher<sensor_msgs::msg::CameraInfo>(
                                                        image_topic_name + "/camera_info",

@@ -47,7 +47,7 @@ class SpotImagePublisher {
    public:
     virtual ~MiddlewareHandle() = default;
 
-    virtual void createPublishers(const std::set<ImageSource>& image_sources) = 0;
+    virtual void createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images) = 0;
     virtual tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
     virtual tl::expected<void, std::string> publishCompressedImages(
         const std::map<ImageSource, CompressedImageWithCameraInfo>& compressed_images) = 0;
