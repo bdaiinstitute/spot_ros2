@@ -36,7 +36,6 @@ from bosdyn.api import (
     trajectory_pb2,
     world_object_pb2,
 )
-
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence, ChoreographyStatusResponse
@@ -499,8 +498,9 @@ class SpotROS(Node):
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
         if has_arm:
-            self.create_subscription(ArmVelocityCommandRequest, "arm_velocity",
-                                     self.set_arm_velocity_callback, 1, callback_group=self.group)
+            self.create_subscription(
+                ArmVelocityCommandRequest, "arm_velocity", self.set_arm_velocity_callback, 1, callback_group=self.group
+            )
         self.create_service(
             Trigger,
             "claim",
@@ -2937,7 +2937,8 @@ class SpotROS(Node):
         angular_velocity = geometry_pb2.Vec3(
             x=data.angular_velocity_of_hand_rt_odom_in_hand.x,
             y=data.angular_velocity_of_hand_rt_odom_in_hand.y,
-            z=data.angular_velocity_of_hand_rt_odom_in_hand.z)
+            z=data.angular_velocity_of_hand_rt_odom_in_hand.z,
+        )
 
         cartesian_velocity = arm_command_pb2.ArmVelocityCommand.CartesianVelocity()
         cartesian_velocity.velocity_in_frame_name.x = data.command.cartesian_velocity.velocity_in_frame_name.x
@@ -2946,10 +2947,10 @@ class SpotROS(Node):
         cartesian_velocity.frame_name = data.command.cartesian_velocity.frame_name
 
         proto_command = arm_command_pb2.ArmVelocityCommand.Request(
-                cylindrical_velocity=cylindrical_velocity,
-                angular_velocity_of_hand_rt_odom_in_hand=angular_velocity,
-                cartesian_velocity=cartesian_velocity
-                )
+            cylindrical_velocity=cylindrical_velocity,
+            angular_velocity_of_hand_rt_odom_in_hand=angular_velocity,
+            cartesian_velocity=cartesian_velocity,
+        )
 
         return self.spot_wrapper.spot_arm.handle_arm_velocity(proto_command)
 
