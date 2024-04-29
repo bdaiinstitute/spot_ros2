@@ -16,10 +16,12 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver/api/default_time_sync_api.hpp>
 #include <spot_driver/api/spot_image_sources.hpp>
+#include <spot_driver/conversions/decompress_images.hpp>
 #include <spot_driver/conversions/geometry.hpp>
 #include <spot_driver/conversions/time.hpp>
 #include <spot_driver/types.hpp>
 #include <std_msgs/msg/header.hpp>
+#include <string>
 #include <tl_expected/expected.hpp>
 
 #include <algorithm>
@@ -43,29 +45,6 @@ static const std::set<std::string> kExcludedStaticTfFrames{
     // on the arm's position and a static transform would fix it to its initial position.
     "arm0.link_wr1",
 };
-
-tl::expected<int, std::string> getCvPixelFormat(const bosdyn::api::Image_PixelFormat& format) {
-  switch (format) {
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGB_U8: {
-      return CV_8UC3;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_RGBA_U8: {
-      return CV_8UC4;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8: {
-      return CV_8UC1;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U16: {
-      return CV_16UC1;
-    }
-    case bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_DEPTH_U16: {
-      return CV_16UC1;
-    }
-    default: {
-      return tl::make_unexpected("Unknown pixel format.");
-    }
-  }
-}
 
 tl::expected<sensor_msgs::msg::CameraInfo, std::string> toCameraInfoMsg(
     const bosdyn::api::ImageResponse& image_response, const std::string& robot_name,
@@ -122,55 +101,6 @@ std_msgs::msg::Header createImageHeader(const bosdyn::api::ImageCapture& image_c
   return header;
 }
 
-tl::expected<sensor_msgs::msg::Image, std::string> toImageMsg(const bosdyn::api::ImageCapture& image_capture,
-                                                              const std::string& robot_name,
-                                                              const google::protobuf::Duration& clock_skew) {
-  const auto& image = image_capture.image();
-  auto data = image.data();
-
-  const auto header = createImageHeader(image_capture, robot_name, clock_skew);
-  const auto pixel_format_cv = getCvPixelFormat(image.pixel_format());
-  if (!pixel_format_cv) {
-    return tl::make_unexpected("Failed to determine pixel format: " + pixel_format_cv.error());
-  }
-
-  if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG) {
-    // When the image is JPEG-compressed, it is represented as a 1 x (width * height) row of bytes.
-    // First we create a cv::Mat which contains the compressed image data...
-    const cv::Mat img_compressed{1, image.rows() * image.cols(), CV_8UC1, &data.front()};
-    // Then we decode it to extract the raw image into a new cv::Mat.
-    if (image.pixel_format() == bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8) {
-      const cv::Mat img_grey = cv::imdecode(img_compressed, cv::IMREAD_GRAYSCALE);
-      if (!img_grey.data) {
-        return tl::make_unexpected("Failed to decode JPEG-compressed image.");
-      }
-      const auto image = cv_bridge::CvImage{header, "mono8", img_grey}.toImageMsg();
-      return *image;
-    } else {
-      const cv::Mat img_bgr = cv::imdecode(img_compressed, cv::IMREAD_COLOR);
-      if (!img_bgr.data) {
-        return tl::make_unexpected("Failed to decode JPEG-compressed image.");
-      }
-      const auto image = cv_bridge::CvImage{header, "bgr8", img_bgr}.toImageMsg();
-      return *image;
-    }
-  } else if (image.format() == bosdyn::api::Image_Format_FORMAT_RAW) {
-    // Note: as currently implemented, this assumes that the only images which will be provided as raw data will be
-    // 16UC1 depth images.
-    // TODO(jschornak-bdai): handle converting raw RGB and grayscale images as well.
-    const cv::Mat img = cv::Mat(image.rows(), image.cols(), pixel_format_cv.value(), &data.front());
-    if (!img.data) {
-      return tl::make_unexpected("Failed to decode raw-formatted image.");
-    }
-    const auto image = cv_bridge::CvImage{header, sensor_msgs::image_encodings::TYPE_16UC1, img}.toImageMsg();
-    return *image;
-  } else if (image.format() == bosdyn::api::Image_Format_FORMAT_RLE) {
-    return tl::make_unexpected("Conversion from FORMAT_RLE is not yet implemented.");
-  } else {
-    return tl::make_unexpected("Unknown image format.");
-  }
-}
-
 tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> getImageTransforms(
     const bosdyn::api::ImageResponse& image_response, const std::string& robot_name,
     const google::protobuf::Duration& clock_skew) {
@@ -197,6 +127,23 @@ tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> get
   }
   return out;
 }
+
+tl::expected<sensor_msgs::msg::CompressedImage, std::string> toCompressedImageMsg(
+    const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
+    const google::protobuf::Duration& clock_skew) {
+  const auto& image = image_capture.image();
+  if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG) {
+    return tl::make_unexpected("Only JPEG image can be sent as ROS2-compressed image. Format is: " +
+                               std::to_string(image.format()));
+  }
+
+  auto data = image.data();
+  sensor_msgs::msg::CompressedImage compressed_image;
+  compressed_image.header = createImageHeader(image_capture, robot_name, clock_skew);
+  compressed_image.format = "jpeg";
+  compressed_image.data.insert(compressed_image.data.begin(), data.begin(), data.end());
+  return compressed_image;
+}
 }  // namespace
 
 namespace spot_ros2 {
@@ -205,7 +152,8 @@ DefaultImageClient::DefaultImageClient(::bosdyn::client::ImageClient* image_clie
                                        std::shared_ptr<TimeSyncApi> time_sync_api, const std::string& robot_name)
     : image_client_{image_client}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
 
-tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request) {
+tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request,
+                                                                         bool uncompress_images) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
       image_client_->GetImageAsync(request);
 
@@ -224,11 +172,6 @@ tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdy
     const auto& image = image_response.shot().image();
     auto data = image.data();
 
-    const auto image_msg = toImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
-    if (!image_msg) {
-      return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());
-    }
-
     const auto info_msg = toCameraInfoMsg(image_response, robot_name_, clock_skew_result.value());
     if (!info_msg) {
       return tl::make_unexpected("Failed to convert SDK image response to ROS CameraInfo message: " + info_msg.error());
@@ -236,11 +179,28 @@ tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdy
 
     const auto& camera_name = image_response.source().name();
     const auto get_source_name_result = fromSpotImageSourceName(camera_name);
-    if (get_source_name_result.has_value()) {
-      out.images_.try_emplace(get_source_name_result.value(), ImageWithCameraInfo{image_msg.value(), info_msg.value()});
-    } else {
+    if (!get_source_name_result.has_value()) {
       return tl::make_unexpected("Failed to convert API image source name to ImageSource: " +
                                  get_source_name_result.error());
+    }
+
+    if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG) {
+      const auto compressed_image_msg =
+          toCompressedImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
+      if (!compressed_image_msg) {
+        return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " +
+                                   compressed_image_msg.error());
+      }
+      out.compressed_images_.try_emplace(get_source_name_result.value(),
+                                         CompressedImageWithCameraInfo{compressed_image_msg.value(), info_msg.value()});
+    }
+
+    if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG || uncompress_images) {
+      const auto image_msg = getDecompressImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
+      if (!image_msg) {
+        return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());
+      }
+      out.images_.try_emplace(get_source_name_result.value(), ImageWithCameraInfo{image_msg.value(), info_msg.value()});
     }
 
     const auto transforms_result = getImageTransforms(image_response, robot_name_, clock_skew_result.value());

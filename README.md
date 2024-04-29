@@ -61,7 +61,7 @@ We suggest ignoring the `proto2ros_tests` package in the build as it is not nece
 
 The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run:
 ```
-ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Robot Name>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] 
+ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Robot Name>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] [uncompress_images:=<True|False>]
 ```
 
 ## Configuration
@@ -92,6 +92,8 @@ See [`spot_examples`](spot_examples/) for some more complex examples of using th
 By default, the driver will publish RGB images as well as depth maps from the `frontleft`, `frontright`, `left`, `right`, and `back` cameras on Spot (plus `hand` if your Spot has an arm). If your Spot has greyscale cameras, you will need to set `rgb_cameras: False` in your configuration YAML file, or you will not recieve any image data. 
 
 By default, the driver does not publish point clouds. To enable this, launch the driver with `publish_point_clouds:=True`.
+
+By default, the driver will publish both compressed images (under `/<Robot Name>/camera/<camera location>/compressed`) and uncompressed images (under `/<Robot Name>/camera/<camera location>/image`). If you wish to only receive compressed images for performance reasons, launch the driver with `uncompress_images:=False`
 
 ## Spot CAM
 Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:

@@ -45,6 +45,7 @@ namespace spot_ros2::images {
       } else {
         // Grey images are always JPEG-compressed, so selection of RAW has no effect
         image_request->set_pixel_format(bosdyn::api::Image_PixelFormat_PIXEL_FORMAT_GREYSCALE_U8);
+        image_request->set_image_format(bosdyn::api::Image_Format_FORMAT_JPEG);
       }
     } else if (source.type == SpotImageType::DEPTH) {
       bosdyn::api::ImageRequest* image_request = request_message.add_image_requests();
@@ -84,7 +85,9 @@ bool SpotImagePublisher::initialize() {
   const auto publish_depth_images = parameters_->getPublishDepthImages();
   const auto publish_depth_registered_images = parameters_->getPublishDepthRegisteredImages();
   const auto has_rgb_cameras = parameters_->getHasRGBCameras();
-  const auto publish_raw_rgb_cameras = parameters_->getPublishRawRGBCameras();
+  // always use compressed transport from SPOT, we decompress it in paralell if desired
+  const auto publish_raw_rgb_cameras = false;
+  const auto uncompress_images = parameters_->getUncompressImages();
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources =
@@ -94,29 +97,30 @@ bool SpotImagePublisher::initialize() {
   image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, publish_raw_rgb_cameras);
 
   // Create a publisher for each image source
-  middleware_handle_->createPublishers(sources);
+  middleware_handle_->createPublishers(sources, uncompress_images);
 
   // Create a timer to request and publish images at a fixed rate
-  timer_->setTimer(kImageCallbackPeriod, [this]() {
-    timerCallback();
+  timer_->setTimer(kImageCallbackPeriod, [this, uncompress_images]() {
+    timerCallback(uncompress_images);
   });
 
   return true;
 }
 
-void SpotImagePublisher::timerCallback() {
+void SpotImagePublisher::timerCallback(bool uncompress_images) {
   if (!image_request_message_) {
     logger_->logError("No image request message generated. Returning.");
     return;
   }
 
-  const auto image_result = image_client_interface_->getImages(*image_request_message_);
+  const auto image_result = image_client_interface_->getImages(*image_request_message_, uncompress_images);
   if (!image_result.has_value()) {
     logger_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
     return;
   }
 
   middleware_handle_->publishImages(image_result.value().images_);
+  middleware_handle_->publishCompressedImages(image_result.value().compressed_images_);
 
   tf_broadcaster_->updateStaticTransforms(image_result.value().transforms_);
 }
