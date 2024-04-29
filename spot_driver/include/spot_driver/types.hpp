@@ -7,6 +7,7 @@
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <spot_msgs/msg/battery_state_array.hpp>
@@ -55,7 +56,20 @@ struct ImageSource {
 struct ImageWithCameraInfo {
   sensor_msgs::msg::Image image;
   sensor_msgs::msg::CameraInfo info;
+
+  /** @brief Allows comparing one ImageWithCameraInfo instance with another. */
+  bool operator==(const ImageWithCameraInfo& e) const { return e.image == image && e.info == info; }
 };
+
+/** @brief Stores an CompressedImage message and a corresponding CameraInfo message together. */
+struct CompressedImageWithCameraInfo {
+  sensor_msgs::msg::CompressedImage image;
+  sensor_msgs::msg::CameraInfo info;
+
+  /** @brief Allows comparing one CompressedImageWithCameraInfo instance with another. */
+  bool operator==(const CompressedImageWithCameraInfo& e) const { return e.image == image && e.info == info; }
+};
+
 }  // namespace spot_ros2
 
 /**
