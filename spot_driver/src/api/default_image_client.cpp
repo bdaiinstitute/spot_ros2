@@ -16,9 +16,9 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver/api/default_time_sync_api.hpp>
 #include <spot_driver/api/spot_image_sources.hpp>
+#include <spot_driver/conversions/decompress_images.hpp>
 #include <spot_driver/conversions/geometry.hpp>
 #include <spot_driver/conversions/time.hpp>
-#include <spot_driver/conversions/decompress_images.hpp>
 #include <spot_driver/types.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <string>

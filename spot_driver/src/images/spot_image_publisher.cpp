@@ -114,8 +114,8 @@ void SpotImagePublisher::timerCallback(bool uncompress_images, bool compress_ima
     return;
   }
 
-  const auto image_result = image_client_interface_->getImages(*image_request_message_, uncompress_images, 
-                                                              compress_images);
+  const auto image_result =
+      image_client_interface_->getImages(*image_request_message_, uncompress_images, compress_images);
   if (!image_result.has_value()) {
     logger_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
     return;

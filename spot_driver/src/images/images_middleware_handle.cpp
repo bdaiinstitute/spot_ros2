@@ -21,7 +21,7 @@ ImagesMiddlewareHandle::ImagesMiddlewareHandle(const rclcpp::NodeOptions& node_o
     : ImagesMiddlewareHandle(std::make_shared<rclcpp::Node>("image_publisher", node_options)) {}
 
 void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images,
-                                                bool compress_images) {
+                                              bool compress_images) {
   image_publishers_.clear();
   info_publishers_.clear();
 

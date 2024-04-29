@@ -21,7 +21,7 @@ class DefaultImageClient : public ImageClientInterface {
                      const std::string& robot_name);
 
   [[nodiscard]] tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request,
-                                                                     bool uncompress_images, 
+                                                                     bool uncompress_images,
                                                                      bool compress_images) override;
 
  private:
