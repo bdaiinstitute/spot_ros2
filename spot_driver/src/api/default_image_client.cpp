@@ -184,7 +184,7 @@ tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdy
                                  get_source_name_result.error());
     }
 
-    if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG) {
+    if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG && !uncompress_images) {
       const auto compressed_image_msg =
           toCompressedImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
       if (!compressed_image_msg) {
