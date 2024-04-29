@@ -48,6 +48,7 @@ class ParameterInterfaceBase {
   static constexpr bool kDefaultDoDecompressImages{true};
   static constexpr bool kDefaultPublishRGBImages{true};
   static constexpr bool kDefaultUncompressImages{true};
+  static constexpr bool kDefaultCompressImages{false};
   static constexpr bool kDefaultPublishDepthImages{true};
   static constexpr bool kDefaultPublishDepthRegisteredImages{true};
   static constexpr auto kDefaultPreferredOdomFrame = "odom";
