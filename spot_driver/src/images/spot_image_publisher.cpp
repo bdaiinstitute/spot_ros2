@@ -101,7 +101,7 @@ bool SpotImagePublisher::initialize() {
   middleware_handle_->createPublishers(sources, uncompress_images, compress_images);
 
   // Create a timer to request and publish images at a fixed rate
-  timer_->setTimer(kImageCallbackPeriod, [this, uncompress_images]() {
+  timer_->setTimer(kImageCallbackPeriod, [this, uncompress_images, compress_images]() {
     timerCallback(uncompress_images, compress_images);
   });
 

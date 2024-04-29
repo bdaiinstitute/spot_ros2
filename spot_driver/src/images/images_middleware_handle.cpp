@@ -86,25 +86,4 @@ tl::expected<void, std::string> ImagesMiddlewareHandle::publishCompressedImages(
   return {};
 }
 
-tl::expected<void, std::string> ImagesMiddlewareHandle::publishCompressedImages(
-    const std::map<ImageSource, CompressedImageWithCameraInfo>& compressed_images) {
-  for (const auto& [image_source, compressed_image_data] : compressed_images) {
-    const auto image_topic_name = toRosTopic(image_source);
-    try {
-      compressed_image_publishers_.at(image_topic_name)->publish(compressed_image_data.image);
-    } catch (const std::out_of_range& e) {
-      return tl::make_unexpected("No compressed image publisher exists for image topic `" + image_topic_name + "`.");
-    }
-    try {
-      info_publishers_.at(image_topic_name)->publish(compressed_image_data.info);
-    } catch (const std::out_of_range& e) {
-      return tl::make_unexpected("No camera_info publisher exists for camera info topic`" + image_topic_name + "`.");
-    }
-  }
-
-void ImagesMiddlewareHandle::tryPublishImageInfo(std::string const& image_topic_name,
-                                                 sensor_msgs::msg::CameraInfo const& camera_info) {
-  info_publishers_.at(image_topic_name)->publish(camera_info);
-}
-
 }  // namespace spot_ros2::images

@@ -1,4 +1,4 @@
-// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 The AI Institute LLC. All rights reserved.
 
 #pragma once
 
@@ -39,8 +39,7 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
    * @brief Populates the image_publishgers_ and info_publishers_ members with image and camera info publishers.
    * @param image_sources Set of ImageSources. A publisher will be created for each ImageSource.
    */
-  void createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images, 
-                                                                    bool compress_images) override;
+  void createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images, bool compress_images) override;
 
   /**
    * @brief Publishes image and camera info messages to ROS 2 topics.
@@ -71,25 +70,4 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
   /** @brief Map between camera info topic names and camera info publishers. */
   std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::CameraInfo>>> info_publishers_;
 };
-
-template <typename IMAGE_WITH_CAMERA_INFO_TYPE>
-tl::expected<void, std::string> ImagesMiddlewareHandle::publishImagesT(
-    const std::map<ImageSource, IMAGE_WITH_CAMERA_INFO_TYPE>& images) {
-  for (const auto& [image_source, image_data] : images) {
-    const auto image_topic_name = toRosTopic(image_source);
-    try {
-      tryPublishImage(image_topic_name, image_data.image);
-    } catch (const std::out_of_range& e) {
-      return tl::make_unexpected("No publisher exists for image topic `" + image_topic_name + "`.");
-    }
-    try {
-      tryPublishImageInfo(image_topic_name, image_data.info);
-    } catch (const std::out_of_range& e) {
-      return tl::make_unexpected("No publisher exists for camera info topic`" + image_topic_name + "`.");
-    }
-  }
-
-  return {};
-}
-
 }  // namespace spot_ros2::images

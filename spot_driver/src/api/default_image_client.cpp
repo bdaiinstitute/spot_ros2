@@ -16,7 +16,6 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver/api/default_time_sync_api.hpp>
 #include <spot_driver/api/spot_image_sources.hpp>
-#include <spot_driver/conversions/decompress_images.hpp>
 #include <spot_driver/conversions/geometry.hpp>
 #include <spot_driver/conversions/time.hpp>
 #include <spot_driver/conversions/decompress_images.hpp>
@@ -100,42 +99,6 @@ std_msgs::msg::Header createImageHeader(const bosdyn::api::ImageCapture& image_c
   header.frame_id = (robot_name.empty() ? "" : robot_name + "/") + image_capture.frame_name_image_sensor();
   header.stamp = spot_ros2::robotTimeToLocalTime(image_capture.acquisition_time(), clock_skew);
   return header;
-}
-
-std_msgs::msg::Header createImageHeader(const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
-                                        const google::protobuf::Duration& clock_skew) {
-  std_msgs::msg::Header header;
-  // Omit leading `/` from frame ID if robot_name is empty
-  header.frame_id = (robot_name.empty() ? "" : robot_name + "/") + image_capture.frame_name_image_sensor();
-  header.stamp = spot_ros2::robotTimeToLocalTime(image_capture.acquisition_time(), clock_skew);
-  return header;
-}
-
-std_msgs::msg::Header createImageHeader(const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
-                                        const google::protobuf::Duration& clock_skew) {
-  std_msgs::msg::Header header;
-  // Omit leading `/` from frame ID if robot_name is empty
-  header.frame_id = (robot_name.empty() ? "" : robot_name + "/") + image_capture.frame_name_image_sensor();
-  header.stamp = spot_ros2::robotTimeToLocalTime(image_capture.acquisition_time(), clock_skew);
-  return header;
-}
-
-tl::expected<sensor_msgs::msg::CompressedImage, std::string> toCompressedImageMsg(
-    const bosdyn::api::ImageCapture& image_capture, const std::string& robot_name,
-    const google::protobuf::Duration& clock_skew) {
-  const auto& image = image_capture.image();
-  auto data = image.data();
-
-  sensor_msgs::msg::CompressedImage compressed_image;
-  compressed_image.header = createImageHeader(image_capture, robot_name, clock_skew);
-
-  if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG) {
-    compressed_image.format = "jpeg";
-    compressed_image.data.insert(compressed_image.data.begin(), data.begin(), data.end());
-    return compressed_image;
-  } else {
-    return tl::make_unexpected("toCompresseImageMsg: Not in jpeg image format.");
-  }
 }
 
 tl::expected<std::vector<geometry_msgs::msg::TransformStamped>, std::string> getImageTransforms(

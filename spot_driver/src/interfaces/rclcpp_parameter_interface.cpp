@@ -18,7 +18,6 @@ constexpr auto kParameterNameUsername = "username";
 constexpr auto kParameterNamePassword = "password";
 constexpr auto kParameterNameRGBImageQuality = "image_quality";
 constexpr auto kParameterNameHasRGBCameras = "rgb_cameras";
-constexpr auto kParameterNameDoDecompressImages = "do_decompress_images";
 constexpr auto kParameterNamePublishRGBImages = "publish_rgb";
 constexpr auto kParameterNameUncompressImages = "uncompress_images";
 constexpr auto kParameterNameCompressImages = "compress_images";
@@ -158,10 +157,6 @@ double RclcppParameterInterface::getRGBImageQuality() const {
 
 bool RclcppParameterInterface::getHasRGBCameras() const {
   return declareAndGetParameter<bool>(node_, kParameterNameHasRGBCameras, kDefaultHasRGBCameras);
-}
-
-bool RclcppParameterInterface::getDoDecompressImages() const {
-  return declareAndGetParameter<bool>(node_, kParameterNameDoDecompressImages, kDefaultDoDecompressImages);
 }
 
 bool RclcppParameterInterface::getPublishRGBImages() const {
