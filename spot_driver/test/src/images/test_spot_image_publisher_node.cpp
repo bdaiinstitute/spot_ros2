@@ -28,7 +28,7 @@ using ::testing::Return;
 namespace spot_ros2::test {
 class MockMiddlewareHandle : public images::SpotImagePublisher::MiddlewareHandle {
  public:
-  MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources, bool), (override));
+  MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources, bool, bool), (override));
   MOCK_METHOD((tl::expected<void, std::string>), publishImages, ((const std::map<ImageSource, ImageWithCameraInfo>&)),
               (override));
   MOCK_METHOD((tl::expected<void, std::string>), publishCompressedImages,
