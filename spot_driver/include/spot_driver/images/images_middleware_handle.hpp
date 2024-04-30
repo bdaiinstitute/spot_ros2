@@ -39,7 +39,7 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
    * @brief Populates the image_publishgers_ and info_publishers_ members with image and camera info publishers.
    * @param image_sources Set of ImageSources. A publisher will be created for each ImageSource.
    */
-  void createPublishers(const std::set<ImageSource>& image_sources) override;
+  void createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images) override;
 
   /**
    * @brief Publishes image and camera info messages to ROS 2 topics.
@@ -48,12 +48,24 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
    */
   tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) override;
 
+  /**
+   * @brief Publishes compressed image and camera info messages to ROS 2 topics.
+   * @param images Map of image sources to compressed image and camera info data.
+   * @return If all images were published successfully, returns void. If there was an error, returns an error message.
+   */
+  tl::expected<void, std::string> publishCompressedImages(
+      const std::map<ImageSource, CompressedImageWithCameraInfo>& compressed_images) override;
+
  private:
   /** @brief Shared instance of an rclcpp node to create publishers */
   std::shared_ptr<rclcpp::Node> node_;
 
   /** @brief Map between image topic names and image publishers. */
   std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::Image>>> image_publishers_;
+
+  /** @brief Map between image topic names and compressed image publishers. */
+  std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::CompressedImage>>>
+      compressed_image_publishers_;
 
   /** @brief Map between camera info topic names and camera info publishers. */
   std::unordered_map<std::string, std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::CameraInfo>>> info_publishers_;

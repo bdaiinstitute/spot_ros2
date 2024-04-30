@@ -11,6 +11,7 @@
 namespace spot_ros2::test {
 class MockImageClient : public ImageClientInterface {
  public:
-  MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest), (override));
+  MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest, bool),
+              (override));
 };
 }  // namespace spot_ros2::test
