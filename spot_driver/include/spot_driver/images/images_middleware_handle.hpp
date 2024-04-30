@@ -40,7 +40,7 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
    * @param image_sources Set of ImageSources. A publisher will be created for each ImageSource.
    */
   void createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images,
-                        bool compress_images) override;
+                        bool publish_compressed_images) override;
 
   /**
    * @brief Publishes image and camera info messages to ROS 2 topics.

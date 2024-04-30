@@ -26,7 +26,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   bool getUncompressImages() const override { return uncompress_images; }
 
-  bool getCompressImages() const override { return compress_images; }
+  bool getPublishCompressedImages() const override { return publish_compressed_images; }
 
   bool getPublishRGBImages() const override { return publish_rgb_images; }
 
@@ -45,7 +45,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   double rgb_image_quality = ParameterInterfaceBase::kDefaultRGBImageQuality;
   bool has_rgb_cameras = ParameterInterfaceBase::kDefaultHasRGBCameras;
   bool uncompress_images = ParameterInterfaceBase::kDefaultUncompressImages;
-  bool compress_images = ParameterInterfaceBase::kDefaultCompressImages;
+  bool publish_compressed_images = ParameterInterfaceBase::kDefaultPublishCompressedImages;
   bool publish_rgb_images = ParameterInterfaceBase::kDefaultPublishRGBImages;
   bool publish_depth_images = ParameterInterfaceBase::kDefaultPublishDepthImages;
   bool publish_depth_registered_images = ParameterInterfaceBase::kDefaultPublishDepthRegisteredImages;

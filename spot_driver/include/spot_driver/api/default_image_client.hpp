@@ -22,7 +22,7 @@ class DefaultImageClient : public ImageClientInterface {
 
   [[nodiscard]] tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request,
                                                                      bool uncompress_images,
-                                                                     bool compress_images) override;
+                                                                     bool publish_compressed_images) override;
 
  private:
   ::bosdyn::client::ImageClient* image_client_;

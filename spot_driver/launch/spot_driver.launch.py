@@ -236,11 +236,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(spot_driver_node)
 
     uncompress_images = True if LaunchConfiguration("uncompress_images").perform(context).lower() == "true" else False
-    compress_images = True if LaunchConfiguration("compress_images").perform(context).lower() == "true" else False
+    publish_compressed_images = True if LaunchConfiguration("publish_compressed_images").perform(context).lower() == "true" else False
     spot_image_publisher_params = {
         "spot_name": spot_name,
         "uncompress_images": uncompress_images,
-        "compress_images": compress_images,
+        "publish_compressed_images": publish_compressed_images,
     }
 
     # If using nodelets to generate registered depth images, do not retrieve and publish registered depth images using
@@ -410,7 +410,7 @@ def generate_launch_description() -> launch.LaunchDescription:
     )
     launch_args.append(
         DeclareLaunchArgument(
-            "compress_images",
+            "publish_compressed_images",
             default_value="False",
             choices=["True", "False"],
             description="Choose whether to publish compressed images from Spot (False by default).",
