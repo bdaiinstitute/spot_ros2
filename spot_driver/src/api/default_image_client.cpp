@@ -153,7 +153,8 @@ DefaultImageClient::DefaultImageClient(::bosdyn::client::ImageClient* image_clie
     : image_client_{image_client}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
 
 tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request,
-                                                                         bool uncompress_images, bool publish_compressed_images) {
+                                                                         bool uncompress_images,
+                                                                         bool publish_compressed_images) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
       image_client_->GetImageAsync(request);
 
