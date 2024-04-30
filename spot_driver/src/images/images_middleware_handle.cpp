@@ -31,7 +31,7 @@ void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image
     // ultimately appear as `/MyRobotName/camera/frontleft/image`.
     const auto image_topic_name = toRosTopic(image_source);
 
-    if (image_source.type == SpotImageType::RGB || compress_images) {
+    if (image_source.type == SpotImageType::RGB && compress_images) {
       compressed_image_publishers_.try_emplace(
           image_topic_name,
           node_->create_publisher<sensor_msgs::msg::CompressedImage>(

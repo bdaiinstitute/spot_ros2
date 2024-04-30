@@ -236,7 +236,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(spot_driver_node)
 
     uncompress_images = True if LaunchConfiguration("uncompress_images").perform(context).lower() == "true" else False
-    compress_images = True if LaunchConfiguration("compress_images").perform(context).lower() == "false" else False
+    compress_images = True if LaunchConfiguration("compress_images").perform(context).lower() == "true" else False
     spot_image_publisher_params = {
         "spot_name": spot_name,
         "uncompress_images": uncompress_images,
