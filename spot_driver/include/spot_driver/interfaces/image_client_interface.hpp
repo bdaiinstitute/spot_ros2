@@ -33,6 +33,7 @@ class ImageClientInterface {
   ImageClientInterface& operator=(const ImageClientInterface&) = delete;
   virtual ~ImageClientInterface() = default;
   virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request,
-                                                               bool uncompress_images) = 0;
+                                                               bool uncompress_images,
+                                                               bool publish_compressed_images) = 0;
 };
 }  // namespace spot_ros2

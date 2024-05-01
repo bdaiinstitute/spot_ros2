@@ -153,7 +153,8 @@ DefaultImageClient::DefaultImageClient(::bosdyn::client::ImageClient* image_clie
     : image_client_{image_client}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
 
 tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request,
-                                                                         bool uncompress_images) {
+                                                                         bool uncompress_images,
+                                                                         bool publish_compressed_images) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
       image_client_->GetImageAsync(request);
 
@@ -184,7 +185,7 @@ tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdy
                                  get_source_name_result.error());
     }
 
-    if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG) {
+    if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG && publish_compressed_images) {
       const auto compressed_image_msg =
           toCompressedImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
       if (!compressed_image_msg) {

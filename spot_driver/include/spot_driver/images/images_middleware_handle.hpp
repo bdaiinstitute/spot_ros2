@@ -1,4 +1,4 @@
-// Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023-2024 The AI Institute LLC. All rights reserved.
 
 #pragma once
 
@@ -39,7 +39,8 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
    * @brief Populates the image_publishgers_ and info_publishers_ members with image and camera info publishers.
    * @param image_sources Set of ImageSources. A publisher will be created for each ImageSource.
    */
-  void createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images) override;
+  void createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images,
+                        bool publish_compressed_images) override;
 
   /**
    * @brief Publishes image and camera info messages to ROS 2 topics.

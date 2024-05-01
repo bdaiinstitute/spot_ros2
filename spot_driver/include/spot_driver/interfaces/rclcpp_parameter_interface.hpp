@@ -28,6 +28,7 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
   [[nodiscard]] double getRGBImageQuality() const override;
   [[nodiscard]] bool getHasRGBCameras() const override;
   [[nodiscard]] bool getUncompressImages() const override;
+  [[nodiscard]] bool getPublishCompressedImages() const override;
   [[nodiscard]] bool getPublishRGBImages() const override;
   [[nodiscard]] bool getPublishDepthImages() const override;
   [[nodiscard]] bool getPublishDepthRegisteredImages() const override;
