@@ -8,6 +8,7 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <set>
+#include <spot_driver/api/middleware_handle_base.hpp>
 #include <spot_driver/api/spot_image_sources.hpp>
 #include <spot_driver/interfaces/image_client_interface.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
@@ -43,7 +44,7 @@ class SpotImagePublisher {
   /**
    * @brief A handle class around rclcpp::Node operations for SpotImagePublisher
    */
-  class MiddlewareHandle {
+  class MiddlewareHandle : public MiddlewareHandleBase {
    public:
     virtual ~MiddlewareHandle() = default;
 

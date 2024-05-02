@@ -11,14 +11,6 @@
 namespace {
 constexpr auto kPublisherHistoryDepth = 10;
 
-rclcpp::QoS makeQoS() {
-  // most compatible publisher durability: transient local
-  // most compatible publisher reliabilty: reliable
-  // see also
-  // https://docs.ros.org/en/iron/Concepts/Intermediate/About-Quality-of-Service-Settings.html#qos-compatibilities
-  return rclcpp::QoS(kPublisherHistoryDepth).transient_local().reliable();
-}
-
 }  // namespace
 
 namespace spot_ros2::images {
@@ -41,18 +33,17 @@ void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image
 
     if (image_source.type == SpotImageType::RGB && publish_compressed_images) {
       compressed_image_publishers_.try_emplace(
-          image_topic_name,
-          node_->create_publisher<sensor_msgs::msg::CompressedImage>(
-              image_topic_name + "/compressed", makeQoS()));
+          image_topic_name, node_->create_publisher<sensor_msgs::msg::CompressedImage>(
+                                image_topic_name + "/compressed", makePublisherQoS(kPublisherHistoryDepth)));
     }
     if (uncompress_images || (image_source.type != SpotImageType::RGB)) {
       image_publishers_.try_emplace(
-          image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(
-                                image_topic_name + "/image", rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth))));
+          image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name + "/image",
+                                                                             makePublisherQoS(kPublisherHistoryDepth)));
     }
-    info_publishers_.try_emplace(image_topic_name, node_->create_publisher<sensor_msgs::msg::CameraInfo>(
-                                                       image_topic_name + "/camera_info",
-                                                       makeQoS()));
+    info_publishers_.try_emplace(image_topic_name,
+                                 node_->create_publisher<sensor_msgs::msg::CameraInfo>(
+                                     image_topic_name + "/camera_info", makePublisherQoS(kPublisherHistoryDepth)));
   }
 }
 
