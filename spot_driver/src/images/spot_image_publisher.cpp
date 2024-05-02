@@ -88,6 +88,7 @@ bool SpotImagePublisher::initialize() {
   // always use compressed transport from SPOT, we decompress it in paralell if desired
   const auto publish_raw_rgb_cameras = false;
   const auto uncompress_images = parameters_->getUncompressImages();
+  const auto publish_compressed_images = parameters_->getPublishCompressedImages();
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources =
@@ -97,23 +98,24 @@ bool SpotImagePublisher::initialize() {
   image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, publish_raw_rgb_cameras);
 
   // Create a publisher for each image source
-  middleware_handle_->createPublishers(sources, uncompress_images);
+  middleware_handle_->createPublishers(sources, uncompress_images, publish_compressed_images);
 
   // Create a timer to request and publish images at a fixed rate
-  timer_->setTimer(kImageCallbackPeriod, [this, uncompress_images]() {
-    timerCallback(uncompress_images);
+  timer_->setTimer(kImageCallbackPeriod, [this, uncompress_images, publish_compressed_images]() {
+    timerCallback(uncompress_images, publish_compressed_images);
   });
 
   return true;
 }
 
-void SpotImagePublisher::timerCallback(bool uncompress_images) {
+void SpotImagePublisher::timerCallback(bool uncompress_images, bool publish_compressed_images) {
   if (!image_request_message_) {
     logger_->logError("No image request message generated. Returning.");
     return;
   }
 
-  const auto image_result = image_client_interface_->getImages(*image_request_message_, uncompress_images);
+  const auto image_result =
+      image_client_interface_->getImages(*image_request_message_, uncompress_images, publish_compressed_images);
   if (!image_result.has_value()) {
     logger_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
     return;

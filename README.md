@@ -61,7 +61,7 @@ We suggest ignoring the `proto2ros_tests` package in the build as it is not nece
 
 The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run:
 ```
-ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Robot Name>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] [uncompress_images:=<True|False>]
+ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Robot Name>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] [uncompress_images:=<True|False>] [publish_compressed_images:=<True|False>]
 ```
 
 ## Configuration
@@ -93,7 +93,7 @@ By default, the driver will publish RGB images as well as depth maps from the `f
 
 By default, the driver does not publish point clouds. To enable this, launch the driver with `publish_point_clouds:=True`.
 
-By default, the driver will publish both compressed images (under `/<Robot Name>/camera/<camera location>/compressed`) and uncompressed images (under `/<Robot Name>/camera/<camera location>/image`). If you wish to only receive compressed images for performance reasons, launch the driver with `uncompress_images:=False`
+The driver can publish both compressed images (under `/<Robot Name>/camera/<camera location>/compressed`) and uncompressed images (under `/<Robot Name>/camera/<camera location>/image`). By default, it will only publish the uncompressed images. You can turn (un)compressed images on/off by launching the driver with the flags `uncompress_images:=<True|False>` and `publish_compressed_images:=<True|False>`.
 
 ## Spot CAM
 Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:

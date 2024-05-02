@@ -20,6 +20,7 @@ constexpr auto kParameterNameRGBImageQuality = "image_quality";
 constexpr auto kParameterNameHasRGBCameras = "rgb_cameras";
 constexpr auto kParameterNamePublishRGBImages = "publish_rgb";
 constexpr auto kParameterNameUncompressImages = "uncompress_images";
+constexpr auto kParameterNamePublishCompressedImages = "publish_compressed_images";
 constexpr auto kParameterNamePublishDepthImages = "publish_depth";
 constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
@@ -164,6 +165,10 @@ bool RclcppParameterInterface::getPublishRGBImages() const {
 
 bool RclcppParameterInterface::getUncompressImages() const {
   return declareAndGetParameter<bool>(node_, kParameterNameUncompressImages, kDefaultUncompressImages);
+}
+
+bool RclcppParameterInterface::getPublishCompressedImages() const {
+  return declareAndGetParameter<bool>(node_, kParameterNamePublishCompressedImages, kDefaultPublishCompressedImages);
 }
 
 bool RclcppParameterInterface::getPublishDepthImages() const {
