@@ -11,7 +11,7 @@ namespace spot_ros2 {
  */
 class MiddlewareHandleBase {
  public:
-  rclcpp::QoS makePublisherQoS(size_t const publisherHistoryDepth) {
+  rclcpp::QoS makePublisherQoS(size_t const publisherHistoryDepth) const {
     // most compatible publisher durability: transient local
     // most compatible publisher reliabilty: reliable
     // see also
