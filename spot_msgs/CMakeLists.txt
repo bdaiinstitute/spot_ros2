@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(spot_msgs)
 
+if(POLICY CMP0148)
+  cmake_policy(SET CMP0148 OLD)
+endif()
+
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
