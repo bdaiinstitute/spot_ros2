@@ -81,7 +81,9 @@ TEST_F(StatePublisherTest, InitSucceeds) {
 
   // THEN the timer interface's setTimer function is called once with the expected timer period
   auto* timer_interface_ptr = mock_timer_interface.get();
-  EXPECT_CALL(*timer_interface_ptr, setTimer(std::chrono::duration<double>{1.0 / 50.0}, _)).Times(1);
+  EXPECT_CALL(*timer_interface_ptr, setTimer(std::chrono::duration<double>{1.0 / 50.0}, _,
+                                             TimerInterfaceBase::MultiThreading::MutuallyExclusive))
+      .Times(1);
 
   // WHEN a robot state publisher is constructed
   robot_state_publisher = std::make_unique<StatePublisher>(
@@ -93,9 +95,11 @@ TEST_F(StatePublisherTest, InitSucceeds) {
 TEST_F(StatePublisherTest, PublishCallbackTriggers) {
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
-  EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
-    timer_interface_ptr->onSetTimer(cb);
-  });
+  EXPECT_CALL(*timer_interface_ptr, setTimer)
+      .Times(1)
+      .WillOnce([&](Unused, const std::function<void()>& cb, const TimerInterfaceBase::MultiThreading) {
+        timer_interface_ptr->onSetTimer(cb);
+      });
 
   {
     InSequence seq;
@@ -124,9 +128,11 @@ TEST_F(StatePublisherTest, PublishCallbackTriggers) {
 TEST_F(StatePublisherTest, PublishCallbackTriggersNoTfData) {
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
-  EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
-    timer_interface_ptr->onSetTimer(cb);
-  });
+  EXPECT_CALL(*timer_interface_ptr, setTimer)
+      .Times(1)
+      .WillOnce([&](Unused, const std::function<void()>& cb, const TimerInterfaceBase::MultiThreading) {
+        timer_interface_ptr->onSetTimer(cb);
+      });
 
   {
     InSequence seq;
@@ -156,9 +162,11 @@ TEST_F(StatePublisherTest, PublishCallbackTriggersNoTfData) {
 TEST_F(StatePublisherTest, PublishCallbackTriggersFailGetRobotState) {
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
-  EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
-    timer_interface_ptr->onSetTimer(cb);
-  });
+  EXPECT_CALL(*timer_interface_ptr, setTimer)
+      .Times(1)
+      .WillOnce([&](Unused, const std::function<void()>& cb, const TimerInterfaceBase::MultiThreading) {
+        timer_interface_ptr->onSetTimer(cb);
+      });
 
   auto* logger_interface_ptr = mock_logger_interface.get();
   {
@@ -193,9 +201,11 @@ TEST_F(StatePublisherTest, PublishCallbackTriggersFailGetRobotState) {
 TEST_F(StatePublisherTest, PublishCallbackTriggersFailGetClockSkew) {
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
   auto* timer_interface_ptr = mock_timer_interface.get();
-  EXPECT_CALL(*timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
-    timer_interface_ptr->onSetTimer(cb);
-  });
+  EXPECT_CALL(*timer_interface_ptr, setTimer)
+      .Times(1)
+      .WillOnce([&](Unused, const std::function<void()>& cb, const TimerInterfaceBase::MultiThreading) {
+        timer_interface_ptr->onSetTimer(cb);
+      });
 
   auto* logger_interface_ptr = mock_logger_interface.get();
   {

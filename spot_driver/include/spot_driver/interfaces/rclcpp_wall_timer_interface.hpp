@@ -21,11 +21,18 @@ class RclcppWallTimerInterface : public TimerInterfaceBase {
    */
   explicit RclcppWallTimerInterface(const std::shared_ptr<rclcpp::Node>& node);
 
-  void setTimer(const std::chrono::duration<double>& period, const std::function<void()>& callback) override;
+  /**
+   * @brief The destructor
+   */
+  virtual ~RclcppWallTimerInterface();
+
+  void setTimer(const std::chrono::duration<double>& period, const std::function<void()>& callback,
+                const MultiThreading multithreading = MultiThreading::MutuallyExclusive) override;
   void clearTimer() override;
 
  private:
   std::shared_ptr<rclcpp::Node> node_;
   std::shared_ptr<rclcpp::TimerBase> timer_;
+  std::shared_ptr<rclcpp::CallbackGroup> callback_group_;
 };
 }  // namespace spot_ros2

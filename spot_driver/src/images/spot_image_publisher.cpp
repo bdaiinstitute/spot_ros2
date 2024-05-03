@@ -101,14 +101,21 @@ bool SpotImagePublisher::initialize() {
   middleware_handle_->createPublishers(sources, uncompress_images, publish_compressed_images);
 
   // Create a timer to request and publish images at a fixed rate
-  timer_->setTimer(kImageCallbackPeriod, [this, uncompress_images, publish_compressed_images]() {
-    timerCallback(uncompress_images, publish_compressed_images);
-  });
+  timer_->setTimer(
+      kImageCallbackPeriod,
+      [this, uncompress_images, publish_compressed_images]() {
+        timerCallback(uncompress_images, publish_compressed_images);
+      },
+      TimerInterfaceBase::MultiThreading::Reentrant);
 
   return true;
 }
 
 void SpotImagePublisher::timerCallback(bool uncompress_images, bool publish_compressed_images) {
+  static uint32_t timer_counter{0u};
+  auto const local_count = timer_counter++;
+
+  logger_->logError(std::string("timer callback[") + std::to_string(local_count) + "] start.");
   if (!image_request_message_) {
     logger_->logError("No image request message generated. Returning.");
     return;
@@ -125,5 +132,6 @@ void SpotImagePublisher::timerCallback(bool uncompress_images, bool publish_comp
   middleware_handle_->publishCompressedImages(image_result.value().compressed_images_);
 
   tf_broadcaster_->updateStaticTransforms(image_result.value().transforms_);
+  logger_->logError(std::string("timer callback[") + std::to_string(local_count) + "] end.");
 }
 }  // namespace spot_ros2::images

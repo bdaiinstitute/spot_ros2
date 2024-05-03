@@ -81,7 +81,9 @@ TEST_F(TestInitSpotImagePublisher, InitSucceeds) {
   // THEN expect createPublishers to be invoked
   EXPECT_CALL(*middleware_handle, createPublishers).Times(1);
   // THEN the timer interface's setTimer function is called once with the expected timer period
-  EXPECT_CALL(*mock_timer_interface_ptr, setTimer(std::chrono::duration<double>{1.0 / 15.0}, _)).Times(1);
+  EXPECT_CALL(*mock_timer_interface_ptr, setTimer(std::chrono::duration<double>{1.0 / 15.0}, _,
+                                                  TimerInterfaceBase::MultiThreading::MutuallyExclusive))
+      .Times(1);
 
   // GIVEN all required parameters are set to correct values
   // GIVEN an image publisher that is expected to publish gripper camera images
@@ -103,9 +105,12 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
   EXPECT_CALL(*middleware_handle, createPublishers).Times(1);
 
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
-  EXPECT_CALL(*mock_timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
-    mock_timer_interface_ptr->onSetTimer(cb);
-  });
+
+  EXPECT_CALL(*mock_timer_interface_ptr, setTimer)
+      .Times(1)
+      .WillOnce([&](Unused, const std::function<void()>& cb, const TimerInterfaceBase::MultiThreading) {
+        mock_timer_interface_ptr->onSetTimer(cb);
+      });
 
   {
     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
@@ -141,9 +146,11 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
   EXPECT_CALL(*middleware_handle, createPublishers).Times(1);
 
   // THEN the timer interface's setTimer function is called once and the timer_callback is set
-  EXPECT_CALL(*mock_timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
-    mock_timer_interface_ptr->onSetTimer(cb);
-  });
+  EXPECT_CALL(*mock_timer_interface_ptr, setTimer)
+      .Times(1)
+      .WillOnce([&](Unused, const std::function<void()>& cb, const TimerInterfaceBase::MultiThreading) {
+        mock_timer_interface_ptr->onSetTimer(cb);
+      });
 
   {
     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras

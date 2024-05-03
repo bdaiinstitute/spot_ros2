@@ -20,7 +20,10 @@ class TimerInterfaceBase {
 
   virtual ~TimerInterfaceBase() = default;
 
-  virtual void setTimer(const std::chrono::duration<double>& period, const std::function<void()>& callback) = 0;
+  enum class MultiThreading { MutuallyExclusive, Reentrant };
+
+  virtual void setTimer(const std::chrono::duration<double>& period, const std::function<void()>& callback,
+                        const MultiThreading multithreading = MultiThreading::MutuallyExclusive) = 0;
   virtual void clearTimer() = 0;
 };
 }  // namespace spot_ros2

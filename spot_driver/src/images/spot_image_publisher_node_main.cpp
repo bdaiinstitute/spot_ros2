@@ -10,9 +10,11 @@ int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
 
   const auto node = std::make_shared<spot_ros2::images::SpotImagePublisherNode>();
-
-  // Spins the node with the default single-threaded executor.
-  rclcpp::spin(node->get_node_base_interface());
+  // This node uses a multithreaded executor because the timer to poll the images takes far too long to be able to reach
+  // the desired framerate and blocks itself from reaching 15Hz
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(node->get_node_base_interface());
+  executor.spin();
 
   return 0;
 }

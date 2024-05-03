@@ -12,7 +12,9 @@
 namespace spot_ros2::test {
 class MockTimerInterface : public TimerInterfaceBase {
  public:
-  MOCK_METHOD(void, setTimer, (const std::chrono::duration<double>& period, const std::function<void()>& callback),
+  MOCK_METHOD(void, setTimer,
+              (const std::chrono::duration<double>& period, const std::function<void()>& callback,
+               const MultiThreading multithreading),
               (override));
   MOCK_METHOD(void, clearTimer, (), (override));
 
