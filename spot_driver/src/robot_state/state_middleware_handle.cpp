@@ -34,33 +34,36 @@ constexpr auto kBehaviorFaultsTopic{"status/behavior_faults"};
 constexpr auto kEndEffectorForceTopic{"status/end_effector_force"};
 constexpr auto kManipulatorTopic{"manipulation_state"};
 
-rclcpp::QoS makeQoS() {
-  return rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth));
-}
 }  // namespace
 
 namespace spot_ros2 {
 
 StateMiddlewareHandle::StateMiddlewareHandle(const std::shared_ptr<rclcpp::Node>& node)
     : node_{node},
-      battery_states_publisher_{
-          node_->create_publisher<spot_msgs::msg::BatteryStateArray>(kBatteryStatesTopic, makeQoS())},
-      wifi_state_publisher_{node_->create_publisher<spot_msgs::msg::WiFiState>(kWifiTopic, makeQoS())},
-      foot_states_publisher_{node_->create_publisher<spot_msgs::msg::FootStateArray>(kFeetTopic, makeQoS())},
-      estop_states_publisher_{node_->create_publisher<spot_msgs::msg::EStopStateArray>(kEStopTopic, makeQoS())},
-      joint_state_publisher_{node_->create_publisher<sensor_msgs::msg::JointState>(kJointStatesTopic, makeQoS())},
-      odom_twist_publisher_{
-          node_->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(kOdomTwistTopic, makeQoS())},
-      odom_publisher_{node_->create_publisher<nav_msgs::msg::Odometry>(kOdomTopic, makeQoS())},
-      power_state_publisher_{node_->create_publisher<spot_msgs::msg::PowerState>(kPowerStatesTopic, makeQoS())},
-      system_faults_publisher_{
-          node_->create_publisher<spot_msgs::msg::SystemFaultState>(kSystemFaultsTopic, makeQoS())},
-      manipulator_state_publisher_{
-          node_->create_publisher<bosdyn_api_msgs::msg::ManipulatorState>(kManipulatorTopic, makeQoS())},
-      end_effector_force_publisher_{
-          node_->create_publisher<geometry_msgs::msg::Vector3Stamped>(kEndEffectorForceTopic, makeQoS())},
-      behavior_fault_state_publisher_{
-          node_->create_publisher<spot_msgs::msg::BehaviorFaultState>(kBehaviorFaultsTopic, makeQoS())} {}
+      battery_states_publisher_{node_->create_publisher<spot_msgs::msg::BatteryStateArray>(
+          kBatteryStatesTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      wifi_state_publisher_{
+          node_->create_publisher<spot_msgs::msg::WiFiState>(kWifiTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      foot_states_publisher_{node_->create_publisher<spot_msgs::msg::FootStateArray>(
+          kFeetTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      estop_states_publisher_{node_->create_publisher<spot_msgs::msg::EStopStateArray>(
+          kEStopTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      joint_state_publisher_{node_->create_publisher<sensor_msgs::msg::JointState>(
+          kJointStatesTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      odom_twist_publisher_{node_->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
+          kOdomTwistTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      odom_publisher_{
+          node_->create_publisher<nav_msgs::msg::Odometry>(kOdomTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      power_state_publisher_{node_->create_publisher<spot_msgs::msg::PowerState>(
+          kPowerStatesTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      system_faults_publisher_{node_->create_publisher<spot_msgs::msg::SystemFaultState>(
+          kSystemFaultsTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      manipulator_state_publisher_{node_->create_publisher<bosdyn_api_msgs::msg::ManipulatorState>(
+          kManipulatorTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      end_effector_force_publisher_{node_->create_publisher<geometry_msgs::msg::Vector3Stamped>(
+          kEndEffectorForceTopic, makePublisherQoS(kPublisherHistoryDepth))},
+      behavior_fault_state_publisher_{node_->create_publisher<spot_msgs::msg::BehaviorFaultState>(
+          kBehaviorFaultsTopic, makePublisherQoS(kPublisherHistoryDepth))} {}
 
 StateMiddlewareHandle::StateMiddlewareHandle(const rclcpp::NodeOptions& node_options)
     : StateMiddlewareHandle(std::make_shared<rclcpp::Node>(kNodeName, node_options)) {}

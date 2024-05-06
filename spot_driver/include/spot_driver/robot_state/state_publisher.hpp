@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 
+#include <spot_driver/api/middleware_handle_base.hpp>
 #include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/api/time_sync_api.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
@@ -24,7 +25,7 @@ class StatePublisher {
   /**
    * @brief A handle that enables dependency injection of ROS and rclcpp::Node operations
    */
-  class MiddlewareHandle {
+  class MiddlewareHandle : public MiddlewareHandleBase {
    public:
     virtual ~MiddlewareHandle() = default;
     virtual void publishRobotState(const RobotStateMessages& robot_state_msgs) = 0;

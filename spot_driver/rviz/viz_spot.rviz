@@ -238,7 +238,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /camera/back/image
       Value: false
     - Class: rviz_default_plugins/Image
@@ -252,7 +252,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /camera/frontleft/image
       Value: false
     - Class: rviz_default_plugins/Image
@@ -266,7 +266,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /camera/frontright/image
       Value: false
     - Class: rviz_default_plugins/Image
@@ -280,7 +280,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /camera/left/image
       Value: false
     - Class: rviz_default_plugins/Image
@@ -294,7 +294,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /camera/right/image
       Value: true
     - Alpha: 1

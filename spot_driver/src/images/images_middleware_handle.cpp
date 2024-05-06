@@ -33,18 +33,17 @@ void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image
 
     if (image_source.type == SpotImageType::RGB && publish_compressed_images) {
       compressed_image_publishers_.try_emplace(
-          image_topic_name,
-          node_->create_publisher<sensor_msgs::msg::CompressedImage>(
-              image_topic_name + "/compressed", rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth))));
+          image_topic_name, node_->create_publisher<sensor_msgs::msg::CompressedImage>(
+                                image_topic_name + "/compressed", makePublisherQoS(kPublisherHistoryDepth)));
     }
     if (uncompress_images || (image_source.type != SpotImageType::RGB)) {
       image_publishers_.try_emplace(
-          image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(
-                                image_topic_name + "/image", rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth))));
+          image_topic_name, node_->create_publisher<sensor_msgs::msg::Image>(image_topic_name + "/image",
+                                                                             makePublisherQoS(kPublisherHistoryDepth)));
     }
-    info_publishers_.try_emplace(image_topic_name, node_->create_publisher<sensor_msgs::msg::CameraInfo>(
-                                                       image_topic_name + "/camera_info",
-                                                       rclcpp::QoS(rclcpp::KeepLast(kPublisherHistoryDepth))));
+    info_publishers_.try_emplace(image_topic_name,
+                                 node_->create_publisher<sensor_msgs::msg::CameraInfo>(
+                                     image_topic_name + "/camera_info", makePublisherQoS(kPublisherHistoryDepth)));
   }
 }
 
