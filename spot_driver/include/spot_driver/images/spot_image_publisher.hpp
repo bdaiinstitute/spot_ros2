@@ -50,8 +50,8 @@ class SpotImagePublisher {
 
     virtual void createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images,
                                   bool publish_compressed_images) = 0;
-    virtual tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) = 0;
-    virtual tl::expected<void, std::string> publishCompressedImages(
+    virtual tl::expected<void, std::string> publishImages(
+        const std::map<ImageSource, ImageWithCameraInfo>& images,
         const std::map<ImageSource, CompressedImageWithCameraInfo>& compressed_images) = 0;
   };
 

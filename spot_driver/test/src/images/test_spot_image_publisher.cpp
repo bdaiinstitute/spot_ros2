@@ -29,10 +29,10 @@ namespace spot_ros2::test {
 class MockMiddlewareHandle : public images::SpotImagePublisher::MiddlewareHandle {
  public:
   MOCK_METHOD(void, createPublishers, (const std::set<ImageSource>& image_sources, bool, bool), (override));
-  MOCK_METHOD((tl::expected<void, std::string>), publishImages, ((const std::map<ImageSource, ImageWithCameraInfo>&)),
+  MOCK_METHOD((tl::expected<void, std::string>), publishImages,
+              ((const std::map<ImageSource, ImageWithCameraInfo>&),
+               (const std::map<ImageSource, CompressedImageWithCameraInfo>&)),
               (override));
-  MOCK_METHOD((tl::expected<void, std::string>), publishCompressedImages,
-              ((const std::map<ImageSource, CompressedImageWithCameraInfo>&)), (override));
 };
 
 class TestInitSpotImagePublisher : public ::testing::Test {
@@ -116,7 +116,6 @@ TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
     EXPECT_CALL(*image_client_interface,
                 getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18), true, false));
     EXPECT_CALL(*middleware_handle, publishImages);
-    EXPECT_CALL(*middleware_handle, publishCompressedImages);
     EXPECT_CALL(*mock_tf_broadcaster_interface_ptr, updateStaticTransforms);
   }
 
