@@ -121,9 +121,7 @@ void SpotImagePublisher::timerCallback(bool uncompress_images, bool publish_comp
     return;
   }
 
-  middleware_handle_->publishImages(image_result.value().images_);
-  middleware_handle_->publishCompressedImages(image_result.value().compressed_images_);
-
+  middleware_handle_->publishImages(image_result.value().images_, image_result.value().compressed_images_);
   tf_broadcaster_->updateStaticTransforms(image_result.value().transforms_);
 }
 }  // namespace spot_ros2::images

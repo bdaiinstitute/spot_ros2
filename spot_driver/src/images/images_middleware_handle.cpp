@@ -48,7 +48,9 @@ void ImagesMiddlewareHandle::createPublishers(const std::set<ImageSource>& image
 }
 
 tl::expected<void, std::string> ImagesMiddlewareHandle::publishImages(
-    const std::map<ImageSource, ImageWithCameraInfo>& images) {
+    const std::map<ImageSource, ImageWithCameraInfo>& images,
+    const std::map<ImageSource, CompressedImageWithCameraInfo>& compressed_images) {
+  std::set<std::string> camera_infos_sent;
   for (const auto& [image_source, image_data] : images) {
     const auto image_topic_name = toRosTopic(image_source);
     try {
@@ -58,16 +60,11 @@ tl::expected<void, std::string> ImagesMiddlewareHandle::publishImages(
     }
     try {
       info_publishers_.at(image_topic_name)->publish(image_data.info);
+      camera_infos_sent.insert(image_topic_name);
     } catch (const std::out_of_range& e) {
       return tl::make_unexpected("No camera_info publisher exists for camera info topic`" + image_topic_name + "`.");
     }
   }
-
-  return {};
-}
-
-tl::expected<void, std::string> ImagesMiddlewareHandle::publishCompressedImages(
-    const std::map<ImageSource, CompressedImageWithCameraInfo>& compressed_images) {
   for (const auto& [image_source, compressed_image_data] : compressed_images) {
     const auto image_topic_name = toRosTopic(image_source);
     try {
@@ -75,13 +72,15 @@ tl::expected<void, std::string> ImagesMiddlewareHandle::publishCompressedImages(
     } catch (const std::out_of_range& e) {
       return tl::make_unexpected("No compressed image publisher exists for image topic `" + image_topic_name + "`.");
     }
-    try {
-      info_publishers_.at(image_topic_name)->publish(compressed_image_data.info);
-    } catch (const std::out_of_range& e) {
-      return tl::make_unexpected("No camera_info publisher exists for camera info topic`" + image_topic_name + "`.");
+    auto camera_info_insert_result = camera_infos_sent.insert(image_topic_name);
+    if (camera_info_insert_result.second) {
+      try {
+        info_publishers_.at(image_topic_name)->publish(compressed_image_data.info);
+      } catch (const std::out_of_range& e) {
+        return tl::make_unexpected("No camera_info publisher exists for camera info topic`" + image_topic_name + "`.");
+      }
     }
   }
-
   return {};
 }
 

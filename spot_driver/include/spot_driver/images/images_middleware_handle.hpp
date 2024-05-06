@@ -43,18 +43,13 @@ class ImagesMiddlewareHandle : public SpotImagePublisher::MiddlewareHandle {
                         bool publish_compressed_images) override;
 
   /**
-   * @brief Publishes image and camera info messages to ROS 2 topics.
+   * @brief Publishes (compressed) images and camera info messages to ROS 2 topics.
    * @param images Map of image sources to image and camera info data.
+   * @param compressed_images Map of image sources to compressed image and camera info data.
    * @return If all images were published successfully, returns void. If there was an error, returns an error message.
    */
-  tl::expected<void, std::string> publishImages(const std::map<ImageSource, ImageWithCameraInfo>& images) override;
-
-  /**
-   * @brief Publishes compressed image and camera info messages to ROS 2 topics.
-   * @param images Map of image sources to compressed image and camera info data.
-   * @return If all images were published successfully, returns void. If there was an error, returns an error message.
-   */
-  tl::expected<void, std::string> publishCompressedImages(
+  tl::expected<void, std::string> publishImages(
+      const std::map<ImageSource, ImageWithCameraInfo>& images,
       const std::map<ImageSource, CompressedImageWithCameraInfo>& compressed_images) override;
 
  private:
