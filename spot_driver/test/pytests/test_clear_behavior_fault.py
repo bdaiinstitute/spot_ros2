@@ -12,6 +12,7 @@ import pytest
 from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.robot_command_pb2 import ClearBehaviorFaultResponse
+from std_srvs.srv import Trigger
 
 from spot_msgs.srv import ClearBehaviorFault  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
@@ -28,13 +29,21 @@ def test_clear_behavior_fault(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
         simple_spot: a programmable fake Spot robot running on a local
             GRPC server.
     """
+    # Satisfy driver prerequisites.
+    client = ros.node.create_client(Trigger, "claim")
+    assert client.wait_for_service(timeout_sec=2.0)
+    future = client.call_async(Trigger.Request())
+    assert wait_for_future(future, timeout_sec=2.0)
+    result = future.result()
+    assert result.success, result.message
 
     # Send ROS request.
     client = ros.node.create_client(ClearBehaviorFault, "clear_behavior_fault")
+    assert client.wait_for_service(timeout_sec=2.0)
     future = client.call_async(ClearBehaviorFault.Request(id=127))
 
     # Serve fault clear service.
-    call = simple_spot.api.ClearBehaviorFault.serve(timeout=2.0)
+    call = simple_spot.api.ClearBehaviorFault.serve(timeout=5.0)
     assert call is not None
     assert call.request.behavior_fault_id == 127
     response = ClearBehaviorFaultResponse()
