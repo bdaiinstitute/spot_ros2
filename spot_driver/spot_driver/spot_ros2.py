@@ -583,6 +583,50 @@ class SpotROS(Node):
             callback_group=self.group,
         )
 
+        # Mission services
+        self.create_service(
+            LoadMission,
+            "load_mission",
+            lambda request, response: self.service_wrapper("load_mission", self.handle_load_mission, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            PlayMission,
+            "play_mission",
+            lambda request, response: self.service_wrapper("play_mission", self.handle_play_mission, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "pause_mission",
+            lambda request, response: self.service_wrapper("pause_mission", self.handle_pause_mission, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "stop_mission",
+            lambda request, response: self.service_wrapper("stop_mission", self.handle_stop_mission, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            RestartMission,
+            "restart_mission",
+            lambda request, response: self.service_wrapper("restart_mission", self.handle_restart_mission, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            GetMissionInfo,
+            "get_mission_info",
+            lambda request, response: self.service_wrapper("get_mission_info", self.handle_get_mission_info, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            GetMissionState,
+            "get_mission_state",
+            lambda request, response: self.service_wrapper("get_mission_state", self.handle_get_mission_state, request, response),
+            callback_group=self.group,
+        )
+
         if has_arm:
             self.create_service(
                 Trigger,

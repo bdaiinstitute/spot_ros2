@@ -1,0 +1,5 @@
+bosdyn_api_msgs/RestartMissionRequest request
+---
+bosdyn_api_msgs/RestartMissionResponse response
+bool success
+string message
