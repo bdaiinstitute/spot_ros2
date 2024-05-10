@@ -1,4 +1,4 @@
-bosdyn_api_msgs/GetStateRequest request
+
 ---
 bosdyn_api_msgs/GetStateResponse response
 bool success

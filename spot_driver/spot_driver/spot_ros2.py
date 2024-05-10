@@ -137,6 +137,11 @@ from spot_msgs.srv import (  # type: ignore
     TagLogpoint,
     UploadAnimation,
     UploadSequence,
+    PlayMission,
+    LoadMission,
+    RestartMission,
+    GetMissionInfo,
+    GetMissionState
 )
 from spot_msgs.srv import (  # type: ignore
     RobotCommand as RobotCommandService,
