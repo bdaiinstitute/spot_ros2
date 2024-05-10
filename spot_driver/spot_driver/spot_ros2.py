@@ -1428,6 +1428,44 @@ class SpotROS(Node):
         response.success = success
         response.message = message
         return response
+    
+    # Mission services
+    def handle_load_mission(self, request: LoadMission.Request, response: LoadMission.Response) -> LoadMission.Response:
+        raise NotImplementedError
+    
+    def handle_play_mission(self, request: PlayMission.Request, response: PlayMission.Response) -> PlayMission.Response:
+        raise NotImplementedError
+    
+    def handle_pause_mission(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler to pause the mission."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        success, msg = self.spot_wrapper._spot_mission._pause_mission()
+        response.success = success
+        response.message = msg
+        return response
+    
+    def handle_stop_mission(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler to stop the mission."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        success, msg = self.spot_wrapper._spot_mission._stop_mission()
+        response.success = success
+        response.message = msg
+        return response
+    
+    def handle_restart_mission(self, request: RestartMission.Request, response: RestartMission.Response) -> RestartMission.Response:
+        raise NotImplementedError
+    
+    def handle_get_mission_info(self, request: GetMissionInfo.Request, response: GetMissionInfo.Response) -> GetMissionInfo.Response:
+        raise NotImplementedError
+    
+    def handle_get_mission_state(self, request: GetMissionState.Request, response: GetMissionState.Response) -> GetMissionState.Response:
+        raise NotImplementedError
 
     def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to stop the robot's dancing."""
