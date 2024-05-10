@@ -1372,7 +1372,12 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message = self.spot_wrapper.clear_behavior_fault(request.id)
+        success, message, cleared = self.spot_wrapper.clear_behavior_fault(request.id)
+        if not cleared:
+            success = False
+            message = "No behavior fault cleared"
+        response.success = success
+        response.message = message
         return response
 
     def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
