@@ -1431,10 +1431,26 @@ class SpotROS(Node):
     
     # Mission services
     def handle_load_mission(self, request: LoadMission.Request, response: LoadMission.Response) -> LoadMission.Response:
-        raise NotImplementedError
+        """ROS service handler to load the mission."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        proto_response = self.spot_wrapper.spot_mission.load_mission(request.request.node, request.request.leases)
+        convert(proto_response, response.response)
+        return response
     
     def handle_play_mission(self, request: PlayMission.Request, response: PlayMission.Response) -> PlayMission.Response:
-        raise NotImplementedError
+        """ROS service handler to play the loaded mission."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        proto_response = self.spot_wrapper.spot_mission.play_mission(request.request.pause_time, 
+                                                                     request.request.leases, 
+                                                                     request.request.settings)
+        convert(proto_response, response.response)
+        return response
     
     def handle_pause_mission(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to pause the mission."""
@@ -1442,7 +1458,7 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        success, msg = self.spot_wrapper._spot_mission._pause_mission()
+        success, msg = self.spot_wrapper.spot_mission.pause_mission()
         response.success = success
         response.message = msg
         return response
@@ -1453,19 +1469,44 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        success, msg = self.spot_wrapper._spot_mission._stop_mission()
+        success, msg = self.spot_wrapper.spot_mission.stop_mission()
         response.success = success
         response.message = msg
         return response
     
     def handle_restart_mission(self, request: RestartMission.Request, response: RestartMission.Response) -> RestartMission.Response:
-        raise NotImplementedError
+        """ROS service handler to restart the loaded mission."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        proto_response = self.spot_wrapper.spot_mission.restart_mission(request.request.pause_time, 
+                                                                     request.request.leases, 
+                                                                     request.request.settings)
+        convert(proto_response, response.response)
+        return response
     
     def handle_get_mission_info(self, request: GetMissionInfo.Request, response: GetMissionInfo.Response) -> GetMissionInfo.Response:
-        raise NotImplementedError
+        """ROS service handler to get the loaded mission's info."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        proto_response = self.spot_wrapper.spot_mission.get_mission_info()
+        convert(proto_response, response.response)
+        return response
     
     def handle_get_mission_state(self, request: GetMissionState.Request, response: GetMissionState.Response) -> GetMissionState.Response:
-        raise NotImplementedError
+        """ROS service handler to get the loaded mission's state."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        proto_response = self.spot_wrapper.spot_mission.get_mission_state(request.request.history_upper_tick_bound,
+                                                                          request.request.history_lower_tick_bound,
+                                                                          request.request.history_past_ticks)
+        convert(proto_response, response.response)
+        return response
 
     def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to stop the robot's dancing."""
