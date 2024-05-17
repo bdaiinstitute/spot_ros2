@@ -1,5 +1,5 @@
 
 ---
-bosdyn_api_msgs/GetStateResponse response
+bosdyn_mission_api_msgs/GetStateResponse response
 bool success
 string message

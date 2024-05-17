@@ -1,5 +1,5 @@
-bosdyn_api_msgs/LoadMissionRequest request
+bosdyn_mission_api_msgs/LoadMissionRequest request
 ---
-bosdyn_api_msgs/LoadMissionResponse response
+bosdyn_mission_api_msgs/LoadMissionResponse response
 bool success
 string message
