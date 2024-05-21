@@ -499,7 +499,11 @@ class SpotROS(Node):
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
         if has_arm:
             self.create_subscription(
-                ArmVelocityCommandRequest, "arm_velocity", self.set_arm_velocity_callback, 1, callback_group=self.group
+                ArmVelocityCommandRequest,
+                "arm_velocity",
+                self.handle_arm_velocity_command,
+                1,
+                callback_group=self.group,
             )
         self.create_service(
             Trigger,
@@ -2925,26 +2929,34 @@ class SpotROS(Node):
 
         return response
 
-    def set_arm_velocity_callback(self, data: ArmVelocityCommandRequest) -> None:
+    def handle_arm_velocity_command(self, arm_velocity_command: ArmVelocityCommandRequest) -> None:
         if self.spot_wrapper is None:
             return
 
         cylindrical_velocity = arm_command_pb2.ArmVelocityCommand.CylindricalVelocity()
-        cylindrical_velocity.linear_velocity.r = data.command.cylindrical_velocity.linear_velocity.r
-        cylindrical_velocity.linear_velocity.theta = data.command.cylindrical_velocity.linear_velocity.theta
-        cylindrical_velocity.linear_velocity.z = data.command.cylindrical_velocity.linear_velocity.z
+        cylindrical_velocity.linear_velocity.r = arm_velocity_command.command.cylindrical_velocity.linear_velocity.r
+        cylindrical_velocity.linear_velocity.theta = (
+            arm_velocity_command.command.cylindrical_velocity.linear_velocity.theta
+        )
+        cylindrical_velocity.linear_velocity.z = arm_velocity_command.command.cylindrical_velocity.linear_velocity.z
 
         angular_velocity = geometry_pb2.Vec3(
-            x=data.angular_velocity_of_hand_rt_odom_in_hand.x,
-            y=data.angular_velocity_of_hand_rt_odom_in_hand.y,
-            z=data.angular_velocity_of_hand_rt_odom_in_hand.z,
+            x=arm_velocity_command.angular_velocity_of_hand_rt_odom_in_hand.x,
+            y=arm_velocity_command.angular_velocity_of_hand_rt_odom_in_hand.y,
+            z=arm_velocity_command.angular_velocity_of_hand_rt_odom_in_hand.z,
         )
 
         cartesian_velocity = arm_command_pb2.ArmVelocityCommand.CartesianVelocity()
-        cartesian_velocity.velocity_in_frame_name.x = data.command.cartesian_velocity.velocity_in_frame_name.x
-        cartesian_velocity.velocity_in_frame_name.y = data.command.cartesian_velocity.velocity_in_frame_name.y
-        cartesian_velocity.velocity_in_frame_name.z = data.command.cartesian_velocity.velocity_in_frame_name.z
-        cartesian_velocity.frame_name = data.command.cartesian_velocity.frame_name
+        cartesian_velocity.velocity_in_frame_name.x = (
+            arm_velocity_command.command.cartesian_velocity.velocity_in_frame_name.x
+        )
+        cartesian_velocity.velocity_in_frame_name.y = (
+            arm_velocity_command.command.cartesian_velocity.velocity_in_frame_name.y
+        )
+        cartesian_velocity.velocity_in_frame_name.z = (
+            arm_velocity_command.command.cartesian_velocity.velocity_in_frame_name.z
+        )
+        cartesian_velocity.frame_name = arm_velocity_command.command.cartesian_velocity.frame_name
 
         proto_command = arm_command_pb2.ArmVelocityCommand.Request(
             cylindrical_velocity=cylindrical_velocity,
