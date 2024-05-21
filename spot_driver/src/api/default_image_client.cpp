@@ -153,7 +153,6 @@ DefaultImageClient::DefaultImageClient(::bosdyn::client::ImageClient* image_clie
     : image_client_{image_client}, time_sync_api_{time_sync_api}, robot_name_{robot_name} {}
 
 tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request,
-                                                                         bool uncompress_images,
                                                                          bool publish_compressed_images) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
       image_client_->GetImageAsync(request);
@@ -196,7 +195,7 @@ tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdy
                                          CompressedImageWithCameraInfo{compressed_image_msg.value(), info_msg.value()});
     }
 
-    if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG || uncompress_images) {
+    if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG) {
       const auto image_msg = getDecompressImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
       if (!image_msg) {
         return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());

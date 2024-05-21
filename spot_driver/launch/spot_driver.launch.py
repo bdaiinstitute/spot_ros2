@@ -104,11 +104,9 @@ def create_point_cloud_nodelets(
         )
     return composable_node_descriptions
 
+
 def create_uncompressed_image_publishers(
-    context: launch.LaunchContext,
-    spot_name: LaunchConfiguration,
-    has_arm: bool,
-    ld: LaunchDescription
+    context: launch.LaunchContext, spot_name: LaunchConfiguration, has_arm: bool, ld: LaunchDescription
 ) -> None:
     """Create image transport nodes to uncompress the compressed images from the driver."""
 
@@ -117,10 +115,12 @@ def create_uncompressed_image_publishers(
             launch_ros.actions.Node(
                 package="image_transport",
                 executable="republish",
-                arguments=['compressed', 'raw'],
+                arguments=["compressed", "raw"],
                 name=f"{camera}_uncompresser",
-                remappings=[('/in/compressed', f'/{spot_name}/camera/{camera}/compressed'),
-                            ('/out', f'/{spot_name}/camera/{camera}/uncompressed')],
+                remappings=[
+                    ("/in/compressed", f"/{spot_name}/camera/{camera}/compressed"),
+                    ("/out", f"/{spot_name}/camera/{camera}/uncompressed"),
+                ],
             ),
         )
 
@@ -261,7 +261,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     spot_image_publisher_params = {
         "spot_name": spot_name,
-        "uncompress_images": uncompress_images,
         "publish_compressed_images": publish_compressed_images,
     }
 
@@ -374,7 +373,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(container)
 
     # uncompress the images
-    create_uncompressed_image_publishers(context, spot_name, has_arm, ld)
+    if uncompress_images:
+        create_uncompressed_image_publishers(context, spot_name, has_arm, ld)
+
 
 def generate_launch_description() -> launch.LaunchDescription:
     launch_args = []

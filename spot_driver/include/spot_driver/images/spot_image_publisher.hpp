@@ -48,8 +48,7 @@ class SpotImagePublisher {
    public:
     virtual ~MiddlewareHandle() = default;
 
-    virtual void createPublishers(const std::set<ImageSource>& image_sources, bool uncompress_images,
-                                  bool publish_compressed_images) = 0;
+    virtual void createPublishers(const std::set<ImageSource>& image_sources, bool publish_compressed_images) = 0;
     virtual tl::expected<void, std::string> publishImages(
         const std::map<ImageSource, ImageWithCameraInfo>& images,
         const std::map<ImageSource, CompressedImageWithCameraInfo>& compressed_images) = 0;
@@ -86,7 +85,7 @@ class SpotImagePublisher {
    * @brief Callback function which is called through timer_interface_.
    * @details Requests image data from Spot, and then publishes the images and static camera transforms.
    */
-  void timerCallback(bool uncompress_images, bool publish_compressed_images);
+  void timerCallback(bool publish_compressed_images);
 
   /**
    * @brief Image request message which is set when SpotImagePublisher::initialize() is called.
