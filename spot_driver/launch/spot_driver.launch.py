@@ -105,11 +105,9 @@ def create_point_cloud_nodelets(
     return composable_node_descriptions
 
 
-def create_uncompressed_image_publishers(
-    context: launch.LaunchContext, spot_name: LaunchConfiguration, has_arm: bool, ld: LaunchDescription
-) -> None:
+def create_uncompressed_image_publishers(spot_name: LaunchConfiguration, has_arm: bool, ld: LaunchDescription) -> None:
     """Create image transport nodes to uncompress the compressed images from the driver."""
-
+    prefix = f"/{spot_name}" if spot_name else ""
     for camera in get_camera_sources(has_arm):
         ld.add_action(
             launch_ros.actions.Node(
@@ -119,8 +117,8 @@ def create_uncompressed_image_publishers(
                 name=f"uncompress_{camera}",
                 namespace=spot_name,
                 remappings=[
-                    (f"/{spot_name}/in/compressed", f"/{spot_name}/camera/{camera}/compressed"),
-                    (f"/{spot_name}/out", f"/{spot_name}/camera/{camera}/image"),
+                    (f"{prefix}/in/compressed", f"{prefix}/camera/{camera}/compressed"),
+                    (f"{prefix}/out", f"{prefix}/camera/{camera}/image"),
                 ],
             ),
         )
@@ -375,7 +373,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     # uncompress the images
     if uncompress_images:
-        create_uncompressed_image_publishers(context, spot_name, has_arm, ld)
+        create_uncompressed_image_publishers(spot_name, has_arm, ld)
 
 
 def generate_launch_description() -> launch.LaunchDescription:
