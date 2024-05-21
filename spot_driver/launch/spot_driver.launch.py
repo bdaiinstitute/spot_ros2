@@ -120,7 +120,7 @@ def create_uncompressed_image_publishers(
                 namespace=spot_name,
                 remappings=[
                     (f"/{spot_name}/in/compressed", f"/{spot_name}/camera/{camera}/compressed"),
-                    (f"/{spot_name}/out", f"/{spot_name}/camera/{camera}/uncompressed"),
+                    (f"/{spot_name}/out", f"/{spot_name}/camera/{camera}/image"),
                 ],
             ),
         )
