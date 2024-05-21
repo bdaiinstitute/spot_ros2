@@ -262,7 +262,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   EXPECT_THAT(parameter_interface.getPassword(), StrEq("password"));
   EXPECT_THAT(parameter_interface.getRGBImageQuality(), Eq(70.0));
   EXPECT_THAT(parameter_interface.getHasRGBCameras(), IsTrue());
-  EXPECT_THAT(parameter_interface.getPublishCompressedImages(), false);
+  EXPECT_THAT(parameter_interface.getPublishCompressedImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishRGBImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), IsTrue());
