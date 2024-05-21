@@ -116,10 +116,11 @@ def create_uncompressed_image_publishers(
                 package="image_transport",
                 executable="republish",
                 arguments=["compressed", "raw"],
-                name=f"{camera}_uncompresser",
+                name=f"uncompress_{camera}",
+                namespace=spot_name,
                 remappings=[
-                    ("/in/compressed", f"/{spot_name}/camera/{camera}/compressed"),
-                    ("/out", f"/{spot_name}/camera/{camera}/uncompressed"),
+                    (f"/{spot_name}/in/compressed", f"/{spot_name}/camera/{camera}/compressed"),
+                    (f"/{spot_name}/out", f"/{spot_name}/camera/{camera}/uncompressed"),
                 ],
             ),
         )
@@ -430,15 +431,15 @@ def generate_launch_description() -> launch.LaunchDescription:
             "uncompress_images",
             default_value="True",
             choices=["True", "False"],
-            description="Choose whether to publish uncompressed images from Spot (True by default).",
+            description="Choose whether to publish uncompressed images from Spot.",
         )
     )
     launch_args.append(
         DeclareLaunchArgument(
             "publish_compressed_images",
-            default_value="False",
+            default_value="True",
             choices=["True", "False"],
-            description="Choose whether to publish compressed images from Spot (False by default).",
+            description="Choose whether to publish compressed images from Spot.",
         )
     )
     launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
