@@ -254,7 +254,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(spot_driver_node)
 
-    uncompress_images = True if LaunchConfiguration("uncompress_images").perform(context).lower() == "true" else False
     publish_compressed_images = (
         True if LaunchConfiguration("publish_compressed_images").perform(context).lower() == "true" else False
     )
@@ -371,9 +370,23 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(container)
 
-    # uncompress the images
-    if uncompress_images:
-        create_uncompressed_image_publishers(spot_name, has_arm, ld)
+    # conditionally uncompress the images
+    prefix = f"/{spot_name}" if spot_name else ""
+    for camera in get_camera_sources(has_arm):
+        ld.add_action(
+            launch_ros.actions.Node(
+                package="image_transport",
+                executable="republish",
+                arguments=["compressed", "raw"],
+                name=f"uncompress_{camera}",
+                namespace=spot_name,
+                remappings=[
+                    (f"{prefix}/in/compressed", f"{prefix}/camera/{camera}/compressed"),
+                    (f"{prefix}/out", f"{prefix}/camera/{camera}/image"),
+                ],
+                condition=IfCondition(LaunchConfiguration("uncompress_images")),
+            ),
+        )
 
 
 def generate_launch_description() -> launch.LaunchDescription:
