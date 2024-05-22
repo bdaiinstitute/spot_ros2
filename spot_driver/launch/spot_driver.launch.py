@@ -82,6 +82,15 @@ def create_point_cloud_nodelets(
     composable_node_descriptions = []
 
     for camera in get_camera_sources(has_arm):
+        name_prefix = f"/{spot_name}" if spot_name else ""
+        point_cloud_params = {}
+        point_cloud_params[f"qos_overrides.{name_prefix}/camera/{camera}/image.subscription.reliability"] = (
+            "best_effort"
+        )
+        point_cloud_params[f"qos_overrides.{name_prefix}/depth_registered/{camera}/image.subscription.reliability"] = (
+            "best_effort"
+        )
+
         composable_node_descriptions.append(
             launch_ros.descriptions.ComposableNode(
                 package="depth_image_proc",
@@ -100,6 +109,7 @@ def create_point_cloud_nodelets(
                     ),
                     ("points", PathJoinSubstitution(["depth_registered", camera, "points"]).perform(context)),
                 ],
+                parameters=[point_cloud_params],
             ),
         )
     return composable_node_descriptions
