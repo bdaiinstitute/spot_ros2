@@ -105,25 +105,6 @@ def create_point_cloud_nodelets(
     return composable_node_descriptions
 
 
-def create_uncompressed_image_publishers(spot_name: LaunchConfiguration, has_arm: bool, ld: LaunchDescription) -> None:
-    """Create image transport nodes to uncompress the compressed images from the driver."""
-    prefix = f"/{spot_name}" if spot_name else ""
-    for camera in get_camera_sources(has_arm):
-        ld.add_action(
-            launch_ros.actions.Node(
-                package="image_transport",
-                executable="republish",
-                arguments=["compressed", "raw"],
-                name=f"uncompress_{camera}",
-                namespace=spot_name,
-                remappings=[
-                    (f"{prefix}/in/compressed", f"{prefix}/camera/{camera}/compressed"),
-                    (f"{prefix}/out", f"{prefix}/camera/{camera}/image"),
-                ],
-            ),
-        )
-
-
 def get_login_parameters(context: LaunchContext) -> Tuple[str, str, str, Optional[int], Optional[str]]:
     """Obtain the username, password, hostname, and port of Spot from the environment variables or, if they are not
     set, the configuration file yaml."""
@@ -371,7 +352,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(container)
 
     # conditionally uncompress the images
-    prefix = f"/{spot_name}" if spot_name else ""
+    image_prefix = f"/{spot_name}" if spot_name else ""
     for camera in get_camera_sources(has_arm):
         ld.add_action(
             launch_ros.actions.Node(
@@ -381,8 +362,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                 name=f"uncompress_{camera}",
                 namespace=spot_name,
                 remappings=[
-                    (f"{prefix}/in/compressed", f"{prefix}/camera/{camera}/compressed"),
-                    (f"{prefix}/out", f"{prefix}/camera/{camera}/image"),
+                    (f"{image_prefix}/in/compressed", f"{image_prefix}/camera/{camera}/compressed"),
+                    (f"{image_prefix}/out", f"{image_prefix}/camera/{camera}/image"),
                 ],
                 condition=IfCondition(LaunchConfiguration("uncompress_images")),
             ),
