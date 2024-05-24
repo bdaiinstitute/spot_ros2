@@ -358,6 +358,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     stitcher_params = {
         "body_frame": f"{spot_name}/body" if spot_name else "body",
         "virtual_camera_frame": f"{spot_name}/virtual_camera" if spot_name else "virtual_camera",
+        # TODO: are these next values hardcoded?
+        "virtual_camera_intrinsics": [385.0, 0.0, 315.0, 0.0, 385.0, 844.0, 0.0, 0.0, 1.0],
+        "virtual_camera_projection_plane": [-0.15916, 0.0, 0.987253],
+        "virtual_camera_plane_distance": 0.5,
+        "stitched_image_row_padding": 1182,
     }
     image_stitcher_node = launch_ros.actions.Node(
         package="spot_driver",
