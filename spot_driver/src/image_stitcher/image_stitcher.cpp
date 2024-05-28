@@ -154,15 +154,16 @@ void assignRotation(const cv::Matx33d& R, cv::Matx44d& T) {
 }
 
 cv::Matx33d between(const cv::Matx33d& R1, const cv::Matx33d& R2) {
-  // Convert rotation matrices to quaternions
+  // Get the rotation matrix in between R1 and R2
+  // First convert rotation matrices to quaternions
   const cv::Quatd q1 = cv::Quatd::createFromRotMat(R1);
   const cv::Quatd q2 = cv::Quatd::createFromRotMat(R2);
-
-  // Average the quaternions and convert back to rotation matrix
+  // Then average the quaternions and convert back to rotation matrix
   return cv::Quatd::slerp(q1, q2, 0.5).toRotMat3x3();
 }
 
 cv::Matx44d middle(const cv::Matx44d& T1, const cv::Matx44d& T2) {
+  // Take the left and right image frames and determine the transform in the middle
   cv::Matx44d T3 = cv::Matx44d::eye();
   assignRotation(between(T1.get_minor<3, 3>(0, 0), T2.get_minor<3, 3>(0, 0)), T3);
   assignTranslation(0.5 * (T1.get_minor<3, 1>(0, 3) + T2.get_minor<3, 1>(0, 3)), T3);
@@ -188,7 +189,7 @@ cv::Matx33d computeHomography(const cv::Matx33d& Km, const cv::Matx33d& Kc, cons
 namespace spot_ros2 {
 
 RclcppCameraSynchronizer::RclcppCameraSynchronizer(const std::shared_ptr<rclcpp::Node>& node) {
-  // Remap these topics onto the actual Spot camera topics in the launch file
+  // These topics are remapped onto the actual Spot camera topics in the launch file
   subscriber_image1_.subscribe(node.get(), "left/image", "raw");
   subscriber_info1_.subscribe(node, "left/camera_info");
   subscriber_image2_.subscribe(node.get(), "right/image", "raw");
@@ -213,7 +214,7 @@ RclcppCameraHandle::RclcppCameraHandle(const std::shared_ptr<rclcpp::Node>& node
   body_frame_ = node->declare_parameter("body_frame", "robot/body");
   // Name of the virtual camera frame to publish
   camera_frame_ = node->declare_parameter("virtual_camera_frame", "robot/virtual_camera");
-  // Get the virtual camera intrinsics, which could fail if the wrong numner of parameters are specified in the yaml
+  // Get the virtual camera intrinsics, which could fail if the wrong number of parameters are specified in the yaml
   try {
     intrinsics_ = toCvMatx33d(
         node->declare_parameter("virtual_camera_intrinsics", std::vector<double>{1., 0., 0., 0., 1., 0., 0., 0., 1.}));

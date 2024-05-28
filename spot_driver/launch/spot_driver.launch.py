@@ -354,11 +354,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(container)
 
     # add the image stitcher node
-    stitcher_prefix = f"/{spot_name}" if spot_name else ""
     stitcher_params = {
         "body_frame": f"{spot_name}/body" if spot_name else "body",
         "virtual_camera_frame": f"{spot_name}/virtual_camera" if spot_name else "virtual_camera",
     }
+    stitcher_prefix = f"/{spot_name}" if spot_name else ""
     image_stitcher_node = launch_ros.actions.Node(
         package="spot_driver",
         executable="image_stitcher_node",
@@ -372,6 +372,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             (f"{stitcher_prefix}/virtual_camera/image", f"{stitcher_prefix}/camera/frontmiddle_virtual/image"),
         ],
         parameters=[config_file, stitcher_params],
+        condition=IfCondition(LaunchConfiguration("stitch_front_images")),
     )
     ld.add_action(image_stitcher_node)
 
@@ -429,7 +430,7 @@ def generate_launch_description() -> launch.LaunchDescription:
             "uncompress_images",
             default_value="True",
             choices=["True", "False"],
-            description="Choose whether to publish uncompressed images from Spot (True by default).",
+            description="Choose whether to publish uncompressed images from Spot.",
         )
     )
     launch_args.append(
@@ -437,7 +438,17 @@ def generate_launch_description() -> launch.LaunchDescription:
             "publish_compressed_images",
             default_value="False",
             choices=["True", "False"],
-            description="Choose whether to publish compressed images from Spot (False by default).",
+            description="Choose whether to publish compressed images from Spot.",
+        )
+    )
+    launch_args.append(
+        DeclareLaunchArgument(
+            "stitch_front_images",
+            default_value="False",
+            choices=["True", "False"],
+            description=(
+                "Choose whether to publish a stitched image constructed from Spot's front left and right cameras."
+            ),
         )
     )
     launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))

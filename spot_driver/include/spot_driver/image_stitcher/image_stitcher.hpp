@@ -142,7 +142,7 @@ struct MiddleCamera {
   // These are where the warped images/masks go. They are in vector form because later
   // they get passed into functions that need them in vector form.
   std::vector<cv::UMat> warped_images_;
-  // These should have better names
+  // Warped images encoded in CV_16S and CV_32F, respectively.
   std::vector<cv::UMat> warped_images_f_;
   std::vector<cv::UMat> warped_images_s_;
 
