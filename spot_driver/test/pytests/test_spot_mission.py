@@ -27,7 +27,6 @@ from spot_msgs.srv import (  # type: ignore
     GetMissionInfo,
     GetMissionState,
     LoadMission,
-    PauseMission,
     PlayMission,
     RestartMission,
     StopMission,
@@ -89,7 +88,7 @@ def test_mission_services(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     assert result.success
 
     # Test PauseMission
-    client = ros.node.create_client(PauseMission, "pause_mission")
+    client = ros.node.create_client(Trigger, "pause_mission")
     assert client.wait_for_service(timeout_sec=2.0)
     load_req = Trigger.Request()
     future = client.call_async(load_req)
@@ -123,15 +122,15 @@ def test_mission_services(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     assert result.success
 
     # Test StopMission
-    client = ros.node.create_client(StopMission, "stop_mission")
+    client = ros.node.create_client(Trigger, "stop_mission")
     assert client.wait_for_service(timeout_sec=2.0)
     load_req = Trigger.Request()
     future = client.call_async(load_req)
 
-    call = simple_spot.api.RestartMission.serve(timeout=2.0)
+    call = simple_spot.api.StopMission.serve(timeout=2.0)
     assert call is not None
 
-    response = RestartMission.Response()
+    response = StopMission.Response()
     response.success = True
     call.returns(response)
 
