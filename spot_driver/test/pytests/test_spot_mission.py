@@ -11,21 +11,22 @@ Test for the Mission commands.
 import pytest
 from bdai_ros2_wrappers.futures import wait_for_future
 from bdai_ros2_wrappers.scope import ROSAwareScope
-from bosdyn.api.robot_command_pb2 import ClearBehaviorFaultResponse
-from bosdyn.api.mission.mission_service_pb2_grpc import (LoadMissionRequest,
-                                                         RestartMissionRequest)
-
+from bosdyn.api.mission.mission_service_pb2_grpc import LoadMissionRequest, RestartMissionRequest
 from std_srvs.srv import Trigger
 
-from spot_msgs.srv import (LoadMission, 
-                           GetMissionInfo, 
-                           GetMissionState,
-                           PlayMission,
-                           PauseMission,
-                           RestartMission,
-                           StopMission
-                           )  # type: ignore
+from spot_msgs.srv import (
+    GetMissionInfo,
+    GetMissionState,
+    LoadMission,
+    PauseMission,
+    PlayMission,
+    RestartMission,
+    StopMission,
+)
+
+# type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
+
 
 @pytest.mark.usefixtures("spot_node")
 def test_mission_services(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
