@@ -2,13 +2,13 @@
 
 /**:
   ros__parameters:
-    robot_state_rate: 20.0
+    robot_state_rate: 30.0
     metrics_rate: 0.04
     lease_rate: 1.0
-    image_rate: 10.0
+    image_rate: 15.0
     auto_claim: False
     auto_power_on: False
-    auto_stand: False
+    auto_stand: True
     deadzone: 0.05
     estop_timeout: 9.0
     username: "user"
@@ -17,6 +17,11 @@
     start_estop: False
     preferred_odom_frame: "odom" # pass either odom/vision. This frame will become the parent of body in tf2 tree and will be used in odometry topic. https://dev.bostondynamics.com/docs/concepts/geometry_and_frames.html?highlight=frame#frames-in-the-spot-robot-world for more info.
     async_tasks_rate: 10.0
-    cmd_duration: 0.125 # Increase if spot stutters while walking
+    cmd_duration: 0.25 # Increase if spot stutters while walking
     rgb_cameras: True
     initialize_spot_cam: False
+    # The following parameters are used in the image stitcher node and can be adjusted if the stitched image looks incorrect.
+    virtual_camera_intrinsics: [385.0, 0.0, 315.0, 0.0, 385.0, 844.0, 0.0, 0.0, 1.0]
+    virtual_camera_projection_plane: [-0.15916, 0.0, 0.987253]
+    virtual_camera_plane_distance: 0.5
+    stitched_image_row_padding: 1182
