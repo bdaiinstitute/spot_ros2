@@ -23,10 +23,7 @@ from bosdyn.api.mission.mission_pb2 import (
 )
 from std_srvs.srv import Trigger
 
-# type: ignore
-from spot_wrapper.testing.fixtures import SpotFixture
-
-from spot_msgs.srv import ( # type: ignore
+from spot_msgs.srv import (  # type: ignore
     GetMissionInfo,
     GetMissionState,
     LoadMission,
@@ -35,6 +32,7 @@ from spot_msgs.srv import ( # type: ignore
     RestartMission,
     StopMission,
 )
+from spot_wrapper.testing.fixtures import SpotFixture
 
 
 @pytest.mark.usefixtures("spot_node")
