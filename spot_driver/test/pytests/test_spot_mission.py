@@ -14,7 +14,10 @@ from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.mission.mission_service_pb2_grpc import LoadMissionRequest, RestartMissionRequest
 from std_srvs.srv import Trigger
 
-from spot_msgs.srv import (
+# type: ignore
+from spot_wrapper.testing.fixtures import SpotFixture
+
+from .spot_msgs.srv import (
     GetMissionInfo,
     GetMissionState,
     LoadMission,
@@ -23,9 +26,6 @@ from spot_msgs.srv import (
     RestartMission,
     StopMission,
 )
-
-# type: ignore
-from spot_wrapper.testing.fixtures import SpotFixture
 
 
 @pytest.mark.usefixtures("spot_node")
