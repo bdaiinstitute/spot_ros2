@@ -29,7 +29,6 @@ from spot_msgs.srv import (  # type: ignore
     LoadMission,
     PlayMission,
     RestartMission,
-    StopMission,
 )
 from spot_wrapper.testing.fixtures import SpotFixture
 
