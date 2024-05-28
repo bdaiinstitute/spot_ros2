@@ -26,7 +26,7 @@ from std_srvs.srv import Trigger
 # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
 
-from .spot_msgs.srv import (
+from spot_msgs.srv import ( # type: ignore
     GetMissionInfo,
     GetMissionState,
     LoadMission,
