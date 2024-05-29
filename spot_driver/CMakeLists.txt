@@ -15,9 +15,13 @@ set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
   bosdyn_spot_api_msgs
   cv_bridge
   geometry_msgs
+  image_transport
+  message_filters
+  OpenCV
   rclcpp
   rclcpp_components
   sensor_msgs
+  tf2_eigen
   tf2_ros
   tl_expected
   spot_msgs
@@ -27,6 +31,7 @@ set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(bosdyn REQUIRED)
+find_package(OpenCV 4 REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -172,6 +177,26 @@ rclcpp_components_register_node(
   PLUGIN "spot_ros2::kinematic::KinematicNode"
   EXECUTABLE spot_inverse_kinematics_node_component)
 
+add_library(image_stitcher
+  src/image_stitcher/image_stitcher.cpp
+  src/image_stitcher/image_stitcher_node.cpp)
+target_include_directories(image_stitcher
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(image_stitcher PUBLIC spot_api)
+set_property(TARGET image_stitcher PROPERTY POSITION_INDEPENDENT_CODE ON)
+ament_target_dependencies(image_stitcher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
+  
+add_executable(image_stitcher_node src/image_stitcher/image_stitcher_node_main.cpp)
+target_include_directories(image_stitcher_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(image_stitcher_node PUBLIC image_stitcher)
+
 ament_python_install_package(${PROJECT_NAME})
 install(
   PROGRAMS
@@ -188,6 +213,7 @@ install(
 # Install Libraries
 install(
   TARGETS
+    image_stitcher
     spot_api
     spot_image_publisher_component
     spot_inverse_kinematics_component
@@ -202,6 +228,7 @@ install(
 # Install Executables
 install(
   TARGETS 
+    image_stitcher_node
     object_synchronizer_node
     spot_image_publisher_node
     spot_image_publisher_node_component
