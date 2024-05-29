@@ -14,11 +14,8 @@ from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.mission.mission_pb2 import (
     GetInfoResponse,
     GetStateResponse,
-    LoadMissionRequest,
     LoadMissionResponse,
-    PlayMissionRequest,
     PlayMissionResponse,
-    RestartMissionRequest,
     RestartMissionResponse,
 )
 from std_srvs.srv import Trigger
@@ -55,7 +52,7 @@ def test_mission_services(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Test LoadMission
     client = ros.node.create_client(LoadMission, "load_mission")
     assert client.wait_for_service(timeout_sec=2.0)
-    load_req = LoadMission.Request(LoadMissionRequest())
+    load_req = LoadMission.Request()
     future = client.call_async(load_req)
 
     call = simple_spot.api.LoadMission.serve(timeout=2.0)
@@ -72,7 +69,7 @@ def test_mission_services(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Test PlayMission
     client = ros.node.create_client(PlayMission, "play_mission")
     assert client.wait_for_service(timeout_sec=2.0)
-    load_req = PlayMission.Request(PlayMissionRequest())
+    load_req = PlayMission.Request()
     future = client.call_async(load_req)
 
     call = simple_spot.api.PlayMission.serve(timeout=2.0)
@@ -106,7 +103,7 @@ def test_mission_services(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Test RestartMission
     client = ros.node.create_client(RestartMission, "restart_mission")
     assert client.wait_for_service(timeout_sec=2.0)
-    load_req = RestartMission.Request(RestartMissionRequest())
+    load_req = RestartMission.Request()
     future = client.call_async(load_req)
 
     call = simple_spot.api.RestartMission.serve(timeout=2.0)
