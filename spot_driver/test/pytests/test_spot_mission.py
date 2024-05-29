@@ -129,7 +129,7 @@ def test_mission_services(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     call = simple_spot.api.StopMission.serve(timeout=2.0)
     assert call is not None
 
-    response = StopMission.Response()
+    response = Trigger.Response()
     response.success = True
     call.returns(response)
 
