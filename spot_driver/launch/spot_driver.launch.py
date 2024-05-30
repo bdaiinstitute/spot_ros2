@@ -211,6 +211,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             "stitch_front_images": LaunchConfiguration("stitch_front_images"),
             "spot_name": LaunchConfiguration("spot_name"),
         }.items(),
+        condition=IfCondition(LaunchConfiguration("launch_image_publishers")),
     )
 
     ld.add_action(spot_image_publishers)
@@ -239,6 +240,14 @@ def generate_launch_description() -> launch.LaunchDescription:
             "rviz_config_file",
             default_value="",
             description="RViz config file",
+        )
+    )
+    launch_args.append(
+        DeclareLaunchArgument(
+            "launch_image_publishers",
+            default_value="True",
+            choices=["True", "False"],
+            description="Choose whether to launch the image publishing nodes from Spot.",
         )
     )
     launch_args.append(
