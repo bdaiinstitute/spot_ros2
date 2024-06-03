@@ -115,7 +115,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
         has_arm = mock_has_arm
     else:
-        has_arm = spot_has_arm(context)
+        has_arm = spot_has_arm(config_file_path=config_file.perform(context), spot_name=spot_name)
 
     depth_registered_mode_string = depth_registered_mode_config.perform(context).lower()
     if depth_registered_mode_string == "from_spot":

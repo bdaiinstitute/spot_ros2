@@ -5,15 +5,11 @@ import os
 from typing import Optional, Tuple
 
 import yaml
-from launch import LaunchContext
-from launch.substitutions import LaunchConfiguration
 
 from spot_wrapper.wrapper import SpotWrapper
 
-# THIS_PACKAGE = "spot_driver"
 
-
-def get_login_parameters(context: LaunchContext) -> Tuple[str, str, str, Optional[int], Optional[str]]:
+def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional[int], Optional[str]]:
     """Obtain the username, password, hostname, and port of Spot from the environment variables or, if they are not
     set, the configuration file yaml."""
     # Get value from environment variables
@@ -25,7 +21,6 @@ def get_login_parameters(context: LaunchContext) -> Tuple[str, str, str, Optiona
     certificate = os.getenv("SPOT_CERTIFICATE")
 
     # parse the yaml to determine if login information is set there
-    config_file_path = LaunchConfiguration("config_file").perform(context)
     if os.path.isfile(config_file_path):
         with open(config_file_path, "r") as config_yaml:
             try:
@@ -54,11 +49,10 @@ def get_login_parameters(context: LaunchContext) -> Tuple[str, str, str, Optiona
     return username, password, hostname, port, certificate
 
 
-def spot_has_arm(context: LaunchContext) -> bool:
+def spot_has_arm(config_file_path: str, spot_name: str) -> bool:
     """Check if Spot has an arm by logging in and instantiating a SpotWrapper"""
-    spot_name = LaunchConfiguration("spot_name").perform(context)
     logger = logging.getLogger("spot_driver_launch")
-    username, password, hostname, port, certificate = get_login_parameters(context)
+    username, password, hostname, port, certificate = get_login_parameters(config_file_path)
     spot_wrapper = SpotWrapper(
         username=username,
         password=password,
