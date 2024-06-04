@@ -10,8 +10,18 @@ from spot_wrapper.wrapper import SpotWrapper
 
 
 def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional[int], Optional[str]]:
-    """Obtain the username, password, hostname, and port of Spot from the environment variables or, if they are not
-    set, the configuration file yaml."""
+    """Obtain the username, password, hostname, port, and certificate of Spot from the environment variables or,
+    if they are not set, the configuration file yaml.
+
+    Args:
+        config_file_path (str): Path to the configuration yaml
+
+    Raises:
+        ValueError: If any of username, password, hostname is not set.
+
+    Returns:
+        Tuple[str, str, str, Optional[int], Optional[str]]: username, password, hostname, port, certificate
+    """
     # Get value from environment variables
     username = os.getenv("BOSDYN_CLIENT_USERNAME")
     password = os.getenv("BOSDYN_CLIENT_PASSWORD")
@@ -34,9 +44,9 @@ def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional
                         password = ros_params["password"]
                     if (not hostname) and ("hostname" in ros_params):
                         hostname = ros_params["hostname"]
-                    if not port and "port" in ros_params:
+                    if (not port) and ("port" in ros_params):
                         port = ros_params["port"]
-                    if not certificate and "certificate" in ros_params:
+                    if (not certificate) and ("certificate" in ros_params):
                         certificate = ros_params["certificate"]
             except yaml.YAMLError as exc:
                 print("Parsing config_file yaml failed with: {}".format(exc))
@@ -50,7 +60,15 @@ def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional
 
 
 def spot_has_arm(config_file_path: str, spot_name: str) -> bool:
-    """Check if Spot has an arm by logging in and instantiating a SpotWrapper"""
+    """Check if Spot has an arm querying the robot through SpotWrapper
+
+    Args:
+        config_file_path (str): Path to configuration yaml
+        spot_name (str): Name of spot
+
+    Returns:
+        bool: True if spot has an arm, False otherwise
+    """
     logger = logging.getLogger("spot_driver_launch")
     username, password, hostname, port, certificate = get_login_parameters(config_file_path)
     spot_wrapper = SpotWrapper(
