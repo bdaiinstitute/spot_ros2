@@ -97,6 +97,14 @@ The driver can publish both compressed images (under `/<Robot Name>/camera/<came
 
 The driver also has the option to publish a stitched image created from Spot's front left and front right cameras (similar to what is seen on the tablet). If you wish to enable this, launch the driver with `stitch_front_images:=True`, and the image will be published under `/<Robot Name>/camera/frontmiddle_virtual/image`. In order to receive meaningful stitched images, you will have to specify the parameters `virtual_camera_intrinsics`, `virtual_camera_projection_plane`, `virtual_camera_plane_distance`, and `stitched_image_row_padding` (see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for some default values). 
 
+> **_NOTE:_**  
+If your image publishing rate is very slow, you can try 
+> - connecting to your robot via ethernet cable 
+> - exporting a custom DDS profile we have provided by running the following in the same terminal your driver will run in, or adding to your `.bashrc`:
+> ```
+> export=FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_file>/custom_dds_profile.xml
+> ```
+
 ## Spot CAM
 Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:
     `initialize_spot_cam: True`
