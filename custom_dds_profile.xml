@@ -19,6 +19,10 @@
                     Set participant transports
                 -->
                 <userTransports>
+                    <!--
+                        Documentation: 
+                        https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/transport.html#comm-transports-configuration
+                    -->
                     <transport_id>udp_transport</transport_id>
                     <transport_id>shm_transport</transport_id>
                 </userTransports>
