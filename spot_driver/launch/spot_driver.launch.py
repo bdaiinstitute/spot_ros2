@@ -142,13 +142,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_image_publishers = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/spot_image_publishers.launch.py"]),
         launch_arguments={
-            "config_file": LaunchConfiguration("config_file"),
-            "depth_registered_mode": LaunchConfiguration("depth_registered_mode"),
-            "publish_point_clouds": LaunchConfiguration("publish_point_clouds"),
-            "uncompress_images": LaunchConfiguration("uncompress_images"),
-            "publish_compressed_images": LaunchConfiguration("publish_compressed_images"),
-            "stitch_front_images": LaunchConfiguration("stitch_front_images"),
-            "spot_name": LaunchConfiguration("spot_name"),
+            key: LaunchConfiguration(key)
+            for key in [
+                "config_file",
+                "depth_registered_mode",
+                "publish_point_clouds",
+                "uncompress_images",
+                "publish_compressed_images",
+                "stitch_front_images",
+                "spot_name",
+            ]
         }.items(),
         condition=IfCondition(LaunchConfiguration("launch_image_publishers")),
     )
@@ -185,7 +188,7 @@ def generate_launch_description() -> launch.LaunchDescription:
         DeclareLaunchArgument(
             "launch_image_publishers",
             default_value="True",
-            choices=["True", "False"],
+            choices=["True", "true", "False", "false"],
             description="Choose whether to launch the image publishing nodes from Spot.",
         )
     )
@@ -205,7 +208,8 @@ def generate_launch_description() -> launch.LaunchDescription:
     launch_args.append(
         DeclareLaunchArgument(
             "publish_point_clouds",
-            default_value="false",
+            default_value="False",
+            choices=["True", "true", "False", "false"],
             description=(
                 "If true, create and publish point clouds for each depth registered and RGB camera pair. Requires that"
                 " the depth_register_mode launch argument is set to a value that is not `disable`."
@@ -216,7 +220,7 @@ def generate_launch_description() -> launch.LaunchDescription:
         DeclareLaunchArgument(
             "uncompress_images",
             default_value="True",
-            choices=["True", "False"],
+            choices=["True", "true", "False", "false"],
             description="Choose whether to publish uncompressed images from Spot.",
         )
     )
@@ -224,7 +228,7 @@ def generate_launch_description() -> launch.LaunchDescription:
         DeclareLaunchArgument(
             "publish_compressed_images",
             default_value="False",
-            choices=["True", "False"],
+            choices=["True", "true", "False", "false"],
             description="Choose whether to publish compressed images from Spot.",
         )
     )
@@ -232,7 +236,7 @@ def generate_launch_description() -> launch.LaunchDescription:
         DeclareLaunchArgument(
             "stitch_front_images",
             default_value="False",
-            choices=["True", "False"],
+            choices=["True", "true", "False", "false"],
             description=(
                 "Choose whether to publish a stitched image constructed from Spot's front left and right cameras."
             ),
