@@ -100,9 +100,9 @@ The driver also has the option to publish a stitched image created from Spot's f
 > **_NOTE:_**  
 If your image publishing rate is very slow, you can try 
 > - connecting to your robot via ethernet cable 
-> - exporting a custom DDS profile we have provided by running the following in the same terminal your driver will run in:.
+> - exporting a custom DDS profile we have provided by running the following in the same terminal your driver will run in, or adding to your `.bashrc`:
 > ```
-> export=FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_file>/custom_profiles.xml
+> export=FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_file>/custom_dds_profile.xml
 > ```
 
 ## Spot CAM
