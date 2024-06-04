@@ -98,13 +98,12 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             " ",
         ]
     )
-
-    params = {"robot_description": robot_description}
+    robot_description_params = {"robot_description": robot_description}
     robot_state_publisher = launch_ros.actions.Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
-        parameters=[params],
+        parameters=[robot_description_params],
         namespace=spot_name,
     )
     ld.add_action(robot_state_publisher)
@@ -136,7 +135,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         }.items(),
         condition=IfCondition(launch_rviz),
     )
-
     ld.add_action(rviz)
 
     spot_image_publishers = IncludeLaunchDescription(
@@ -155,7 +153,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         }.items(),
         condition=IfCondition(LaunchConfiguration("launch_image_publishers")),
     )
-
     ld.add_action(spot_image_publishers)
 
 
@@ -176,7 +173,14 @@ def generate_launch_description() -> launch.LaunchDescription:
             description="apply namespace prefix to robot links and joints",
         )
     )
-    launch_args.append(DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?"))
+    launch_args.append(
+        DeclareLaunchArgument(
+            "launch_rviz",
+            default_value="False",
+            choices=["True", "true", "False", "false"],
+            description="Choose whether to launch RViz",
+        )
+    )
     launch_args.append(
         DeclareLaunchArgument(
             "rviz_config_file",
@@ -196,10 +200,11 @@ def generate_launch_description() -> launch.LaunchDescription:
         DeclareLaunchArgument(
             "depth_registered_mode",
             default_value="from_nodelets",
+            choices=["disable", "from_spot", "from_nodelets"],
             description=(
-                "One of [disable, from_spot, from_nodelets]. If `disable` is set, do not publish registered depth"
-                " images. If `from_spot` is set, request registered depth images from Spot through its SDK. If"
-                " `from_nodelets` is set, use depth_image_proc::RegisterNode component nodes running on the host"
+                "If `disable` is set, do not publish registered depth images."
+                " If `from_spot` is set, request registered depth images from Spot through its SDK."
+                " If `from_nodelets` is set, use depth_image_proc::RegisterNode component nodes running on the host"
                 " computer to create registered depth images (this reduces the computational load on Spot's internal"
                 " systems)."
             ),

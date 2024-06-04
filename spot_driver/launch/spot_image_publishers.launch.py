@@ -15,9 +15,12 @@ from spot_driver.launch.spot_launch_helpers import spot_has_arm
 
 
 class DepthRegisteredMode(Enum):
-    DISABLE = (0,)
-    FROM_SPOT = (1,)
-    FROM_NODELETS = (2,)
+    DISABLE = "disable"
+    FROM_SPOT = "from_spot"
+    FROM_NODELETS = "from_nodelets"
+
+    def __repr__(self) -> str:
+        return self.value
 
 
 def get_camera_sources(has_arm: bool) -> List[str]:
@@ -118,20 +121,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         has_arm = spot_has_arm(config_file_path=config_file.perform(context), spot_name=spot_name)
 
     depth_registered_mode_string = depth_registered_mode_config.perform(context).lower()
-    if depth_registered_mode_string == "from_spot":
-        depth_registered_mode = DepthRegisteredMode.FROM_SPOT
-    elif depth_registered_mode_string == "from_nodelets":
-        depth_registered_mode = DepthRegisteredMode.FROM_NODELETS
-    elif depth_registered_mode_string == "disable":
-        depth_registered_mode = DepthRegisteredMode.DISABLE
-    else:
-        print(
-            "Error: Invalid option `"
-            + depth_registered_mode_string
-            + "` provided for launch argument `depth_registered_mode`. Must be one of [disable, from_spot,"
-            " from_nodelets]."
-        )
-        return
+    depth_registered_mode = DepthRegisteredMode(depth_registered_mode_string)
 
     publish_point_clouds = True if publish_point_clouds_config.perform(context).lower() == "true" else False
     if depth_registered_mode is DepthRegisteredMode.DISABLE and publish_point_clouds:
@@ -214,10 +204,11 @@ def generate_launch_description() -> launch.LaunchDescription:
         DeclareLaunchArgument(
             "depth_registered_mode",
             default_value="from_nodelets",
+            choices=["disable", "from_spot", "from_nodelets"],
             description=(
-                "One of [disable, from_spot, from_nodelets]. If `disable` is set, do not publish registered depth"
-                " images. If `from_spot` is set, request registered depth images from Spot through its SDK. If"
-                " `from_nodelets` is set, use depth_image_proc::RegisterNode component nodes running on the host"
+                "If `disable` is set, do not publish registered depth images."
+                " If `from_spot` is set, request registered depth images from Spot through its SDK."
+                " If `from_nodelets` is set, use depth_image_proc::RegisterNode component nodes running on the host"
                 " computer to create registered depth images (this reduces the computational load on Spot's internal"
                 " systems)."
             ),
