@@ -1,0 +1,48 @@
+# Copyright (c) 2023 Boston Dynamics AI Institute, Inc.  All rights reserved.
+
+repos:
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  # Ruff version.
+  rev: 'v0.0.263'
+  hooks:
+    - id: ruff
+      args: ['--fix', '--config', 'pyproject.toml'] # we want this to refer to `bdai/pyproject.toml`
+- repo: https://github.com/psf/black
+  rev: 23.3.0
+  hooks:
+    - id: black
+      language_version: python3.10
+      args: ['--config', 'pyproject.toml'] # we want this to refer to `bdai/pyproject.toml`
+      verbose: true
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+  -   id: check-yaml
+  -   id: check-added-large-files
+  -   id: check-toml
+  -   id: end-of-file-fixer
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.2.0
+  hooks:
+  -   id: mypy
+      pass_filenames: false
+      additional_dependencies:
+      - protobuf
+      - types-protobuf
+      - types-requests
+      - types-simplejson
+      - types-ujson
+      - types-PyYAML
+      - types-toml
+      - types-six
+-   repo: https://github.com/ssciwr/clang-format-hook.git
+    rev: v12.0.1  # Use the sha / tag you want to point at
+    hooks:
+    -   id: clang-format
+        types_or: [c++, c, cuda]
+-   repo: https://github.com/cpplint/cpplint.git
+    rev: 1.6.1
+    hooks:
+    -   id: cpplint
+        args: ['--quiet']
+        exclude_types: [cuda]
