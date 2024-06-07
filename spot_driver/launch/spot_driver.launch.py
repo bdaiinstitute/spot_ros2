@@ -1,13 +1,9 @@
 # Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
-import logging
 import os
-from enum import Enum
-from typing import List, Optional, Tuple
 
 import launch
 import launch_ros
-import yaml
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
@@ -15,152 +11,9 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.substitutions import FindPackageShare
 
-from spot_wrapper.wrapper import SpotWrapper
+from spot_driver.launch.spot_launch_helpers import spot_has_arm
 
 THIS_PACKAGE = "spot_driver"
-
-
-class DepthRegisteredMode(Enum):
-    DISABLE = (0,)
-    FROM_SPOT = (1,)
-    FROM_NODELETS = (2,)
-
-
-def get_camera_sources(has_arm: bool) -> List[str]:
-    camera_sources = ["frontleft", "frontright", "left", "right", "back"]
-    if has_arm:
-        camera_sources.append("hand")
-    return camera_sources
-
-
-def create_depth_registration_nodelets(
-    context: launch.LaunchContext,
-    spot_name: LaunchConfiguration,
-    has_arm: bool,
-) -> List[launch_ros.descriptions.ComposableNode]:
-    """Create the list of depth_image_proc::RegisterNode composable nodes required to generate registered depth images
-    for Spot's cameras."""
-
-    composable_node_descriptions = []
-
-    for camera in get_camera_sources(has_arm):
-        composable_node_descriptions.append(
-            launch_ros.descriptions.ComposableNode(
-                package="depth_image_proc",
-                plugin="depth_image_proc::RegisterNode",
-                name="register_node_" + camera,
-                namespace=spot_name,
-                # Each entry in the remappings list is a tuple.
-                # The first element in the tuple is the internal name of the topic used within the nodelet.
-                # The second element is the external name of the topic used by other nodes in the system.
-                remappings=[
-                    ("depth/image_rect", PathJoinSubstitution(["depth", camera, "image"]).perform(context)),
-                    ("depth/camera_info", PathJoinSubstitution(["depth", camera, "camera_info"]).perform(context)),
-                    ("rgb/camera_info", PathJoinSubstitution(["camera", camera, "camera_info"]).perform(context)),
-                    (
-                        "depth_registered/image_rect",
-                        PathJoinSubstitution(["depth_registered", camera, "image"]).perform(context),
-                    ),
-                    (
-                        "depth_registered/camera_info",
-                        PathJoinSubstitution(["depth_registered", camera, "camera_info"]).perform(context),
-                    ),
-                ],
-            )
-        )
-    return composable_node_descriptions
-
-
-def create_point_cloud_nodelets(
-    context: launch.LaunchContext,
-    spot_name: LaunchConfiguration,
-    has_arm: bool,
-) -> List[launch_ros.descriptions.ComposableNode]:
-    """Create the list of depth_image_proc::PointCloudXyzrgbNode composable nodes required to generate point clouds for
-    each pair of RGB and registered depth cameras."""
-
-    composable_node_descriptions = []
-
-    for camera in get_camera_sources(has_arm):
-        composable_node_descriptions.append(
-            launch_ros.descriptions.ComposableNode(
-                package="depth_image_proc",
-                plugin="depth_image_proc::PointCloudXyzrgbNode",
-                name="point_cloud_xyzrgb_node_" + camera,
-                namespace=spot_name,
-                # Each entry in the remappings list is a tuple.
-                # The first element in the tuple is the internal name of the topic used within the nodelet.
-                # The second element is the external name of the topic used by other nodes in the system.
-                remappings=[
-                    ("rgb/camera_info", PathJoinSubstitution(["camera", camera, "camera_info"]).perform(context)),
-                    ("rgb/image_rect_color", PathJoinSubstitution(["camera", camera, "image"]).perform(context)),
-                    (
-                        "depth_registered/image_rect",
-                        PathJoinSubstitution(["depth_registered", camera, "image"]).perform(context),
-                    ),
-                    ("points", PathJoinSubstitution(["depth_registered", camera, "points"]).perform(context)),
-                ],
-            ),
-        )
-    return composable_node_descriptions
-
-
-def get_login_parameters(context: LaunchContext) -> Tuple[str, str, str, Optional[int], Optional[str]]:
-    """Obtain the username, password, hostname, and port of Spot from the environment variables or, if they are not
-    set, the configuration file yaml."""
-    # Get value from environment variables
-    username = os.getenv("BOSDYN_CLIENT_USERNAME")
-    password = os.getenv("BOSDYN_CLIENT_PASSWORD")
-    hostname = os.getenv("SPOT_IP")
-    portnum = os.getenv("SPOT_PORT")
-    port = int(portnum) if portnum else None
-    certificate = os.getenv("SPOT_CERTIFICATE")
-
-    # parse the yaml to determine if login information is set there
-    config_file_path = LaunchConfiguration("config_file").perform(context)
-    if os.path.isfile(config_file_path):
-        with open(config_file_path, "r") as config_yaml:
-            try:
-                config_dict = yaml.safe_load(config_yaml)
-                if ("/**" in config_dict) and ("ros__parameters" in config_dict["/**"]):
-                    ros_params = config_dict["/**"]["ros__parameters"]
-                    # only set username/password/hostname if they were not already set as environment variables.
-                    if (not username) and ("username" in ros_params):
-                        username = ros_params["username"]
-                    if (not password) and ("password" in ros_params):
-                        password = ros_params["password"]
-                    if (not hostname) and ("hostname" in ros_params):
-                        hostname = ros_params["hostname"]
-                    if not port and "port" in ros_params:
-                        port = ros_params["port"]
-                    if not certificate and "certificate" in ros_params:
-                        certificate = ros_params["certificate"]
-            except yaml.YAMLError as exc:
-                print("Parsing config_file yaml failed with: {}".format(exc))
-    if (not username) or (not password) or (not hostname):
-        raise ValueError(
-            "One or more of your login credentials has not been specified! Got invalid values of "
-            "[Username: '{}' Password: '{}' Hostname: '{}']. Ensure that your environment variables are set or "
-            "update your config_file yaml.".format(username, password, hostname)
-        )
-    return username, password, hostname, port, certificate
-
-
-def spot_has_arm(context: LaunchContext) -> bool:
-    """Check if Spot has an arm by logging in and instantiating a SpotWrapper"""
-    spot_name = LaunchConfiguration("spot_name").perform(context)
-    logger = logging.getLogger("spot_driver_launch")
-    username, password, hostname, port, certificate = get_login_parameters(context)
-    spot_wrapper = SpotWrapper(
-        username=username,
-        password=password,
-        hostname=hostname,
-        port=port,
-        cert_resource_glob=certificate,
-        robot_name=spot_name,
-        logger=logger,
-    )
-    return spot_wrapper.has_arm()
 
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
@@ -169,8 +22,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
-    depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
-    publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
 
     # if config_file has been set (and is not the default empty string) and is also not a file, do not launch anything.
@@ -182,33 +33,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
         has_arm = mock_has_arm
     else:
-        has_arm = spot_has_arm(context)
+        has_arm = spot_has_arm(config_file_path=config_file.perform(context), spot_name=spot_name)
 
     pkg_share = FindPackageShare("spot_description").find("spot_description")
-
-    depth_registered_mode_string = depth_registered_mode_config.perform(context).lower()
-    if depth_registered_mode_string == "from_spot":
-        depth_registered_mode = DepthRegisteredMode.FROM_SPOT
-    elif depth_registered_mode_string == "from_nodelets":
-        depth_registered_mode = DepthRegisteredMode.FROM_NODELETS
-    elif depth_registered_mode_string == "disable":
-        depth_registered_mode = DepthRegisteredMode.DISABLE
-    else:
-        print(
-            "Error: Invalid option `"
-            + depth_registered_mode_string
-            + "` provided for launch argument `depth_registered_mode`. Must be one of [disable, from_spot,"
-            " from_nodelets]."
-        )
-        return
-
-    publish_point_clouds = True if publish_point_clouds_config.perform(context).lower() == "true" else False
-    if depth_registered_mode is DepthRegisteredMode.DISABLE and publish_point_clouds:
-        print(
-            "Warning: Point cloud publisher nodelets will not be launched because depth_registered_mode is set to"
-            " `disable`. Set depth_registered_mode to `from_nodelets` or `from_spot` to enable point cloud publishing."
-        )
-        publish_point_clouds = False
 
     # Since spot_image_publisher_node is responsible for retrieving and publishing images, disable all image publishing
     # in spot_driver.
@@ -234,30 +61,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         namespace=spot_name,
     )
     ld.add_action(spot_driver_node)
-
-    uncompress_images = True if LaunchConfiguration("uncompress_images").perform(context).lower() == "true" else False
-    publish_compressed_images = (
-        True if LaunchConfiguration("publish_compressed_images").perform(context).lower() == "true" else False
-    )
-    spot_image_publisher_params = {
-        "spot_name": spot_name,
-        "uncompress_images": uncompress_images,
-        "publish_compressed_images": publish_compressed_images,
-    }
-
-    # If using nodelets to generate registered depth images, do not retrieve and publish registered depth images using
-    # spot_image_publisher_node.
-    if depth_registered_mode is not DepthRegisteredMode.FROM_SPOT:
-        spot_image_publisher_params.update({"publish_depth_registered": False})
-
-    spot_image_publisher_node = launch_ros.actions.Node(
-        package="spot_driver",
-        executable="spot_image_publisher_node",
-        output="screen",
-        parameters=[config_file, spot_image_publisher_params],
-        namespace=spot_name,
-    )
-    ld.add_action(spot_image_publisher_node)
 
     if not tf_prefix and spot_name:
         tf_prefix = PathJoinSubstitution([spot_name, ""])
@@ -295,13 +98,12 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             " ",
         ]
     )
-
-    params = {"robot_description": robot_description}
+    robot_description_params = {"robot_description": robot_description}
     robot_state_publisher = launch_ros.actions.Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
-        parameters=[params],
+        parameters=[robot_description_params],
         namespace=spot_name,
     )
     ld.add_action(robot_state_publisher)
@@ -333,48 +135,25 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         }.items(),
         condition=IfCondition(launch_rviz),
     )
-
     ld.add_action(rviz)
 
-    # Parse config options to create a list of composable node descriptions for the nodelets we want to run within the
-    # composable node container.
-    composable_node_descriptions = (
-        create_depth_registration_nodelets(context, spot_name, has_arm)
-        if depth_registered_mode is DepthRegisteredMode.FROM_NODELETS
-        else []
-    ) + (create_point_cloud_nodelets(context, spot_name, has_arm) if publish_point_clouds else [])
-    container = launch_ros.actions.ComposableNodeContainer(
-        name="container",
-        namespace=spot_name,
-        package="rclcpp_components",
-        executable="component_container_mt",
-        output="screen",
-        composable_node_descriptions=composable_node_descriptions,
+    spot_image_publishers = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/spot_image_publishers.launch.py"]),
+        launch_arguments={
+            key: LaunchConfiguration(key)
+            for key in [
+                "config_file",
+                "depth_registered_mode",
+                "publish_point_clouds",
+                "uncompress_images",
+                "publish_compressed_images",
+                "stitch_front_images",
+                "spot_name",
+            ]
+        }.items(),
+        condition=IfCondition(LaunchConfiguration("launch_image_publishers")),
     )
-    ld.add_action(container)
-
-    # add the image stitcher node
-    stitcher_params = {
-        "body_frame": f"{spot_name}/body" if spot_name else "body",
-        "virtual_camera_frame": f"{spot_name}/virtual_camera" if spot_name else "virtual_camera",
-    }
-    stitcher_prefix = f"/{spot_name}" if spot_name else ""
-    image_stitcher_node = launch_ros.actions.Node(
-        package="spot_driver",
-        executable="image_stitcher_node",
-        namespace=spot_name,
-        output="screen",
-        remappings=[
-            (f"{stitcher_prefix}/left/image", f"{stitcher_prefix}/camera/frontleft/image"),
-            (f"{stitcher_prefix}/left/camera_info", f"{stitcher_prefix}/camera/frontleft/camera_info"),
-            (f"{stitcher_prefix}/right/image", f"{stitcher_prefix}/camera/frontright/image"),
-            (f"{stitcher_prefix}/right/camera_info", f"{stitcher_prefix}/camera/frontright/camera_info"),
-            (f"{stitcher_prefix}/virtual_camera/image", f"{stitcher_prefix}/camera/frontmiddle_virtual/image"),
-        ],
-        parameters=[config_file, stitcher_params],
-        condition=IfCondition(LaunchConfiguration("stitch_front_images")),
-    )
-    ld.add_action(image_stitcher_node)
+    ld.add_action(spot_image_publishers)
 
 
 def generate_launch_description() -> launch.LaunchDescription:
@@ -394,7 +173,14 @@ def generate_launch_description() -> launch.LaunchDescription:
             description="apply namespace prefix to robot links and joints",
         )
     )
-    launch_args.append(DeclareLaunchArgument("launch_rviz", default_value="False", description="Launch RViz?"))
+    launch_args.append(
+        DeclareLaunchArgument(
+            "launch_rviz",
+            default_value="False",
+            choices=["True", "true", "False", "false"],
+            description="Choose whether to launch RViz",
+        )
+    )
     launch_args.append(
         DeclareLaunchArgument(
             "rviz_config_file",
@@ -404,12 +190,21 @@ def generate_launch_description() -> launch.LaunchDescription:
     )
     launch_args.append(
         DeclareLaunchArgument(
+            "launch_image_publishers",
+            default_value="True",
+            choices=["True", "true", "False", "false"],
+            description="Choose whether to launch the image publishing nodes from Spot.",
+        )
+    )
+    launch_args.append(
+        DeclareLaunchArgument(
             "depth_registered_mode",
             default_value="from_nodelets",
+            choices=["disable", "from_spot", "from_nodelets"],
             description=(
-                "One of [disable, from_spot, from_nodelets]. If `disable` is set, do not publish registered depth"
-                " images. If `from_spot` is set, request registered depth images from Spot through its SDK. If"
-                " `from_nodelets` is set, use depth_image_proc::RegisterNode component nodes running on the host"
+                "If `disable` is set, do not publish registered depth images."
+                " If `from_spot` is set, request registered depth images from Spot through its SDK."
+                " If `from_nodelets` is set, use depth_image_proc::RegisterNode component nodes running on the host"
                 " computer to create registered depth images (this reduces the computational load on Spot's internal"
                 " systems)."
             ),
@@ -418,7 +213,8 @@ def generate_launch_description() -> launch.LaunchDescription:
     launch_args.append(
         DeclareLaunchArgument(
             "publish_point_clouds",
-            default_value="false",
+            default_value="False",
+            choices=["True", "true", "False", "false"],
             description=(
                 "If true, create and publish point clouds for each depth registered and RGB camera pair. Requires that"
                 " the depth_register_mode launch argument is set to a value that is not `disable`."
@@ -429,7 +225,7 @@ def generate_launch_description() -> launch.LaunchDescription:
         DeclareLaunchArgument(
             "uncompress_images",
             default_value="True",
-            choices=["True", "False"],
+            choices=["True", "true", "False", "false"],
             description="Choose whether to publish uncompressed images from Spot.",
         )
     )
@@ -437,7 +233,7 @@ def generate_launch_description() -> launch.LaunchDescription:
         DeclareLaunchArgument(
             "publish_compressed_images",
             default_value="False",
-            choices=["True", "False"],
+            choices=["True", "true", "False", "false"],
             description="Choose whether to publish compressed images from Spot.",
         )
     )
@@ -445,7 +241,7 @@ def generate_launch_description() -> launch.LaunchDescription:
         DeclareLaunchArgument(
             "stitch_front_images",
             default_value="False",
-            choices=["True", "False"],
+            choices=["True", "true", "False", "false"],
             description=(
                 "Choose whether to publish a stitched image constructed from Spot's front left and right cameras."
             ),
