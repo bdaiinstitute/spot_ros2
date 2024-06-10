@@ -1444,7 +1444,7 @@ class SpotROS(Node):
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        proto_response = self.spot_wrapper.spot_mission.load_mission(request.request.node, request.request.leases)
+        proto_response = self.spot_wrapper.spot_mission.load_mission(request.request.root, request.request.leases)
         convert(proto_response, response.response)
         return response
 
