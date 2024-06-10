@@ -66,7 +66,7 @@ ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml
 
 ## Configuration
 
-The Spot login data hostname, username and password can be specified either as ROS parameters or as environment variables.  If using ROS parameters, see `spot_driver/config/spot_ros_example.yaml` for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
+The Spot login data hostname, username and password can be specified either as ROS parameters or as environment variables.  If using ROS parameters, see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
 ## Simple Robot Commands
 Many simple robot commands can be called as services from the command line once the driver is running. For example:
@@ -89,11 +89,23 @@ The full list of interfaces provided by the driver can be explored via `ros2 top
 See [`spot_examples`](spot_examples/) for some more complex examples of using the ROS 2 driver to control Spot, which typically use the action servers provided by the driver. 
 
 ## Images
+Perception data from Spot is handled through the `spot_image_publishers.launch.py` launchfile, which is launched by default from the driver. If you want to only view images from Spot, without bringing up any of the nodes to control the robot, you can also choose to run this launchfile independently.
+
 By default, the driver will publish RGB images as well as depth maps from the `frontleft`, `frontright`, `left`, `right`, and `back` cameras on Spot (plus `hand` if your Spot has an arm). If your Spot has greyscale cameras, you will need to set `rgb_cameras: False` in your configuration YAML file, or you will not recieve any image data. 
 
 By default, the driver does not publish point clouds. To enable this, launch the driver with `publish_point_clouds:=True`.
 
 The driver can publish both compressed images (under `/<Robot Name>/camera/<camera location>/compressed`) and uncompressed images (under `/<Robot Name>/camera/<camera location>/image`). By default, it will only publish the uncompressed images. You can turn (un)compressed images on/off by launching the driver with the flags `uncompress_images:=<True|False>` and `publish_compressed_images:=<True|False>`.
+
+The driver also has the option to publish a stitched image created from Spot's front left and front right cameras (similar to what is seen on the tablet). If you wish to enable this, launch the driver with `stitch_front_images:=True`, and the image will be published under `/<Robot Name>/camera/frontmiddle_virtual/image`. In order to receive meaningful stitched images, you will have to specify the parameters `virtual_camera_intrinsics`, `virtual_camera_projection_plane`, `virtual_camera_plane_distance`, and `stitched_image_row_padding` (see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for some default values). 
+
+> **_NOTE:_**  
+If your image publishing rate is very slow, you can try 
+> - connecting to your robot via ethernet cable 
+> - exporting a custom DDS profile we have provided by running the following in the same terminal your driver will run in, or adding to your `.bashrc`:
+> ```
+> export=FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_file>/custom_dds_profile.xml
+> ```
 
 ## Spot CAM
 Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:

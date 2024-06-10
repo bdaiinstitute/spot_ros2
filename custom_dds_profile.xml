@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dds xmlns="http://www.eprosima.com">
+    <profiles>
+        <transport_descriptors>
+            <transport_descriptor>
+                <transport_id>udp_transport</transport_id>
+                <type>UDPv4</type>
+            </transport_descriptor>
+            <transport_descriptor>
+                <transport_id>shm_transport</transport_id>
+                <segment_size>10485760</segment_size>
+                <maxMessageSize>5242880</maxMessageSize>
+                <type>SHM</type>
+            </transport_descriptor>
+        </transport_descriptors>
+        <participant profile_name="default" is_default_profile="true">
+            <rtps>
+                <!--
+                    Set participant transports
+                -->
+                <userTransports>
+                    <!--
+                        Documentation: 
+                        https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/transport.html#comm-transports-configuration
+                    -->
+                    <transport_id>udp_transport</transport_id>
+                    <transport_id>shm_transport</transport_id>
+                </userTransports>
+                <useBuiltinTransports>false</useBuiltinTransports>
+           </rtps>
+        </participant>
+    </profiles>
+</dds>

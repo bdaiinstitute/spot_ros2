@@ -14,8 +14,12 @@
   <depend>bosdyn</depend>
   <depend>bosdyn_msgs</depend>
   <depend>common_interfaces</depend>
+  <depend>cv_bridge</depend>
   <depend>depth_image_proc</depend>
   <depend>geometry_msgs</depend>
+  <depend>image_transport</depend>
+  <depend>libopencv-dev</depend>
+  <depend>message_filters</depend>
   <depend>nav_msgs</depend>
   <depend>protobuf</depend>
   <depend>rclcpp</depend>
@@ -23,6 +27,7 @@
   <depend>rosidl_default_runtime</depend>
   <depend>sensor_msgs</depend>
   <depend>spot_msgs</depend>
+  <depend>tf2_eigen</depend>
   <depend>tf2_ros</depend>
   <depend>tl_expected</depend>
 

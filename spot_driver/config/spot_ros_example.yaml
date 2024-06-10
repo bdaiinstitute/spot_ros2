@@ -20,3 +20,16 @@
     cmd_duration: 0.125 # Increase if spot stutters while walking
     rgb_cameras: True
     initialize_spot_cam: False
+
+    # The following parameters are used in the image stitcher node and were determined through a lot of manual tuning.
+    # They can be adjusted if the stitched image looks incorrect on your robot.
+
+    # Virtual camera intrinsic matrix [fx, 0, cx, 0, fy, cy, 0, 0, 1]
+    # fx stretches the image left-right, fy zooms in, cx moves the image left-right, cy moves the image up-down.
+    virtual_camera_intrinsics: [385.0, 0.0, 315.0, 0.0, 385.0, 844.0, 0.0, 0.0, 1.0]
+    # Plane that the stitched image is projected on with respect to the virtual camera frame. 
+    virtual_camera_projection_plane: [-0.15916, 0.0, 0.987253]
+    # The distance from the virtual camera frame to the projection plane
+    virtual_camera_plane_distance: 0.5
+    # The stitched image will be of size (<frontleft image width>, <frontleft image height> + row_padding)
+    stitched_image_row_padding: 1182
