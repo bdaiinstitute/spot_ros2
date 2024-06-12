@@ -258,7 +258,6 @@ class SpotROS(Node):
         self.declare_parameter("metrics_rate", 0.04)
         self.declare_parameter("lease_rate", 1.0)
         self.declare_parameter("world_objects_rate", 20.0)
-        self.declare_parameter("image_rate", 10.0)
         self.declare_parameter("graph_nav_pose_rate", 10.0)
 
         self.declare_parameter("publish_graph_nav_pose", False)
@@ -317,7 +316,6 @@ class SpotROS(Node):
             "metrics": self.get_parameter("metrics_rate").value,
             "lease": self.get_parameter("lease_rate").value,
             "world_objects": self.get_parameter("world_objects_rate").value,
-            "image": self.get_parameter("image_rate").value,
             "graph_nav_pose": self.get_parameter("graph_nav_pose_rate").value,
         }
         max_task_rate = float(max(self.rates.values()))
