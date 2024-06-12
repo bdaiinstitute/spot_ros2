@@ -246,7 +246,6 @@ class SpotROS(Node):
         self.declare_parameter("get_lease_on_action", True)
         self.declare_parameter("continually_try_stand", False)
 
-        self.declare_parameter("deadzone", 0.05)
         self.declare_parameter("estop_timeout", 9.0)
         self.declare_parameter("cmd_duration", 0.125)
         self.declare_parameter("start_estop", False)
@@ -333,7 +332,6 @@ class SpotROS(Node):
         if self.mock:
             self.mock_has_arm = self.get_parameter("mock_has_arm").value
 
-        self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
         self.async_tasks_rate: float = self.get_parameter("async_tasks_rate").value
         if self.async_tasks_rate < max_task_rate:
