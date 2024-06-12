@@ -3000,55 +3000,54 @@ class SpotROS(Node):
             self.get_logger().info("Driver successfully started!")
             self._printed_once = True
         self.get_logger().debug("Step/Update")
-        if rclpy.ok():
-            if self.spot_wrapper is not None:
-                self.spot_wrapper.updateTasks()  # Testing with Robot
-            self.get_logger().debug("UPDATE TASKS")
+        if self.spot_wrapper:
+            # Update tasks
+            self.spot_wrapper.updateTasks()
+            # Create and publish feedback message
             feedback_msg = Feedback()
-            if self.spot_wrapper:
-                feedback_msg.standing = self.spot_wrapper.is_standing
-                feedback_msg.sitting = self.spot_wrapper.is_sitting
-                feedback_msg.moving = self.spot_wrapper.is_moving
-                _id = self.spot_wrapper.id
-                try:
-                    feedback_msg.serial_number = _id.serial_number
-                    feedback_msg.species = _id.species
-                    feedback_msg.version = _id.version
-                    feedback_msg.nickname = _id.nickname
-                    feedback_msg.computer_serial_number = _id.computer_serial_number
-                except AttributeError:
-                    pass
+            feedback_msg.standing = self.spot_wrapper.is_standing
+            feedback_msg.sitting = self.spot_wrapper.is_sitting
+            feedback_msg.moving = self.spot_wrapper.is_moving
+            _id = self.spot_wrapper.id
+            try:
+                feedback_msg.serial_number = _id.serial_number
+                feedback_msg.species = _id.species
+                feedback_msg.version = _id.version
+                feedback_msg.nickname = _id.nickname
+                feedback_msg.computer_serial_number = _id.computer_serial_number
+            except AttributeError:
+                pass
             self.feedback_pub.publish(feedback_msg)
+            # create and publish mobility command message
             mobility_params_msg = MobilityParams()
-            if self.spot_wrapper is not None:
-                try:
-                    mobility_params = self.spot_wrapper.get_mobility_params()
-                    mobility_params_msg.body_control.position.x = (
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.x
-                    )
-                    mobility_params_msg.body_control.position.y = (
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.y
-                    )
-                    mobility_params_msg.body_control.position.z = (
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.z
-                    )
-                    mobility_params_msg.body_control.orientation.x = (
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.x
-                    )
-                    mobility_params_msg.body_control.orientation.y = (
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.y
-                    )
-                    mobility_params_msg.body_control.orientation.z = (
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.z
-                    )
-                    mobility_params_msg.body_control.orientation.w = (
-                        mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.w
-                    )
-                    mobility_params_msg.locomotion_hint = mobility_params.locomotion_hint
-                    mobility_params_msg.stair_hint = mobility_params.stair_hint
-                except Exception as e:
-                    self.get_logger().error("Error:{}".format(e))
-                    pass
+            try:
+                mobility_params = self.spot_wrapper.get_mobility_params()
+                mobility_params_msg.body_control.position.x = (
+                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.x
+                )
+                mobility_params_msg.body_control.position.y = (
+                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.y
+                )
+                mobility_params_msg.body_control.position.z = (
+                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.position.z
+                )
+                mobility_params_msg.body_control.orientation.x = (
+                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.x
+                )
+                mobility_params_msg.body_control.orientation.y = (
+                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.y
+                )
+                mobility_params_msg.body_control.orientation.z = (
+                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.z
+                )
+                mobility_params_msg.body_control.orientation.w = (
+                    mobility_params.body_control.base_offset_rt_footprint.points[0].pose.rotation.w
+                )
+                mobility_params_msg.locomotion_hint = mobility_params.locomotion_hint
+                mobility_params_msg.stair_hint = mobility_params.stair_hint
+            except Exception as e:
+                self.get_logger().error("Error:{}".format(e))
+                pass
             self.mobility_params_pub.publish(mobility_params_msg)
 
     def destroy_node(self) -> None:
