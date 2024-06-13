@@ -27,6 +27,7 @@ from bdai_ros2_wrappers.single_goal_multiple_action_servers import (
     SingleGoalMultipleActionServers,
 )
 from bosdyn.api import (
+    arm_command_pb2,
     geometry_pb2,
     gripper_camera_param_pb2,
     image_pb2,
@@ -44,6 +45,7 @@ from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
+    ArmVelocityCommandRequest,
     Camera,
     FullBodyCommandFeedback,
     GripperCommandFeedback,
@@ -495,6 +497,14 @@ class SpotROS(Node):
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
+        if has_arm:
+            self.create_subscription(
+                ArmVelocityCommandRequest,
+                "arm_velocity",
+                self.handle_arm_velocity_command,
+                1,
+                callback_group=self.group,
+            )
         self.create_service(
             Trigger,
             "claim",
@@ -2923,6 +2933,43 @@ class SpotROS(Node):
             response.message = error_str
 
         return response
+
+    def handle_arm_velocity_command(self, arm_velocity_command: ArmVelocityCommandRequest) -> None:
+        if self.spot_wrapper is None:
+            return
+
+        cylindrical_velocity = arm_command_pb2.ArmVelocityCommand.CylindricalVelocity()
+        cylindrical_velocity.linear_velocity.r = arm_velocity_command.command.cylindrical_velocity.linear_velocity.r
+        cylindrical_velocity.linear_velocity.theta = (
+            arm_velocity_command.command.cylindrical_velocity.linear_velocity.theta
+        )
+        cylindrical_velocity.linear_velocity.z = arm_velocity_command.command.cylindrical_velocity.linear_velocity.z
+
+        angular_velocity = geometry_pb2.Vec3(
+            x=arm_velocity_command.angular_velocity_of_hand_rt_odom_in_hand.x,
+            y=arm_velocity_command.angular_velocity_of_hand_rt_odom_in_hand.y,
+            z=arm_velocity_command.angular_velocity_of_hand_rt_odom_in_hand.z,
+        )
+
+        cartesian_velocity = arm_command_pb2.ArmVelocityCommand.CartesianVelocity()
+        cartesian_velocity.velocity_in_frame_name.x = (
+            arm_velocity_command.command.cartesian_velocity.velocity_in_frame_name.x
+        )
+        cartesian_velocity.velocity_in_frame_name.y = (
+            arm_velocity_command.command.cartesian_velocity.velocity_in_frame_name.y
+        )
+        cartesian_velocity.velocity_in_frame_name.z = (
+            arm_velocity_command.command.cartesian_velocity.velocity_in_frame_name.z
+        )
+        cartesian_velocity.frame_name = arm_velocity_command.command.cartesian_velocity.frame_name
+
+        proto_command = arm_command_pb2.ArmVelocityCommand.Request(
+            cylindrical_velocity=cylindrical_velocity,
+            angular_velocity_of_hand_rt_odom_in_hand=angular_velocity,
+            cartesian_velocity=cartesian_velocity,
+        )
+
+        return self.spot_wrapper.spot_arm.handle_arm_velocity(proto_command)
 
     def populate_camera_static_transforms(self, image_data: image_pb2.Image) -> None:
         """Check data received from one of the image tasks and use the transform snapshot to extract the camera frame
