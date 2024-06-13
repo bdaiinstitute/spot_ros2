@@ -1,0 +1,6 @@
+string upload_filepath
+bool initial_localization_fiducial   # Tells the initializer whether to use fiducials
+string initial_localization_waypoint # Waypoint id to trigger localization 
+---
+bool success
+string message

@@ -113,6 +113,7 @@ from spot_msgs.srv import (  # type: ignore
     GetVolume,
     GraphNavClearGraph,
     GraphNavGetLocalizationPose,
+    GraphNavInitialize,
     GraphNavSetLocalization,
     GraphNavUploadGraph,
     InitializeLens,
@@ -884,6 +885,13 @@ class SpotROS(Node):
             GraphNavClearGraph,
             "graph_nav_clear_graph",
             self.handle_graph_nav_clear_graph,
+            callback_group=self.group,
+        )
+
+        self.create_service(
+            GraphNavInitialize,
+            "graph_nav_initialize",
+            self.handle_graph_nav_initialize,
             callback_group=self.group,
         )
 
@@ -2694,6 +2702,28 @@ class SpotROS(Node):
             response.success = False
             response.message = f"Exception Error:{e}"
         return response
+    
+    def handle_graph_nav_initialize(
+        self,
+        request: GraphNavInitialize.Request,
+        response: GraphNavInitialize.Response,
+    ) -> GraphNavInitialize.Response:
+        if self.spot_wrapper is None:
+            self.get_logger().error("Spot wrapper is None")
+            response.success = False
+            response.message = "Spot wrapper is None"
+            return response
+
+        try:
+            self.spot_wrapper.spot_graph_nav.navigate_initial_localization(upload_path=request.upload_path, initial_localization_fiducial=request.initial_localization_fiducial, initial_localization_waypoint=request.initial_localization_waypoint)
+            self.get_logger().info("Initialized Localization")
+            response.success = True
+            response.message = "Success"
+        except Exception as e:
+            self.get_logger().error(f"Exception Error:{e}; \n {traceback.format_exc()}")
+            response.success = False
+            response.message = f"Exception Error:{e}"
+        return response
 
     def handle_list_graph(self, request: ListGraph.Request, response: ListGraph.Response) -> ListGraph.Response:
         """ROS service handler for listing graph_nav waypoint_ids"""
@@ -2847,6 +2877,7 @@ class SpotROS(Node):
             return response
 
         # run navigate_to
+
         resp = self.spot_wrapper.spot_graph_nav.navigate_to_existing_waypoint(waypoint_id=goal_handle.request.navigate_to)
         self.run_navigate_to = False
         feedback_thread.join()
