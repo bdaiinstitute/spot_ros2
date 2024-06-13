@@ -42,9 +42,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_driver_params = {
         "spot_name": spot_name,
         "mock_enable": mock_enable,
-        "publish_depth_registered": False,
-        "publish_depth": False,
-        "publish_rgb": False,
     }
 
     if mock_enable:
