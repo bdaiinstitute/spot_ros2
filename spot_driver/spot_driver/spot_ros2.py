@@ -10,7 +10,6 @@ import traceback
 import typing
 from dataclasses import dataclass
 from enum import Enum
-from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import bdai_ros2_wrappers.process as ros_process
@@ -29,7 +28,6 @@ from bdai_ros2_wrappers.single_goal_multiple_action_servers import (
 from bosdyn.api import (
     geometry_pb2,
     gripper_camera_param_pb2,
-    image_pb2,
     manipulation_api_pb2,
     robot_command_pb2,
     trajectory_pb2,
@@ -57,10 +55,8 @@ from bosdyn_msgs.msg import (
 from geometry_msgs.msg import (
     Pose,
     PoseStamped,
-    TransformStamped,
     Twist,
 )
-from google.protobuf.timestamp_pb2 import Timestamp
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -69,7 +65,6 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
-from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.robot_command_util as robot_command_util
@@ -77,9 +72,7 @@ import spot_driver.robot_command_util as robot_command_util
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
 from spot_driver.ros_helpers import (
-    bosdyn_data_to_image_and_camera_info_msgs,
     get_from_env_and_fall_back_to_param,
-    populate_transform_stamped,
 )
 from spot_msgs.action import (  # type: ignore
     ExecuteDance,
@@ -142,7 +135,6 @@ from spot_msgs.srv import (  # type: ignore
     RobotCommand as RobotCommandService,
 )
 from spot_wrapper.cam_wrapper import SpotCamCamera, SpotCamWrapper
-from spot_wrapper.spot_images import CameraSource
 from spot_wrapper.wrapper import SpotWrapper
 
 MAX_DURATION = 1e6
@@ -194,12 +186,6 @@ class WaitForGoal(object):
         self._at_goal = True
 
 
-class SpotImageType(str, Enum):
-    RGB = "visual"
-    Depth = "depth"
-    RegDepth = "depth_registered"
-
-
 def set_node_parameter_from_parameter_list(
     node: Node, parameter_list: Optional[typing.List[Parameter]], parameter_name: str
 ) -> None:
@@ -231,9 +217,6 @@ class SpotROS(Node):
         self.callbacks["lease"] = self.lease_callback
 
         self.group: CallbackGroup = MutuallyExclusiveCallbackGroup()
-        self.rgb_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
-        self.depth_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
-        self.depth_registered_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.graph_nav_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         rate = self.create_rate(100)
         self.node_rate: Rate = rate
@@ -246,20 +229,15 @@ class SpotROS(Node):
         self.declare_parameter("get_lease_on_action", True)
         self.declare_parameter("continually_try_stand", False)
 
-        self.declare_parameter("deadzone", 0.05)
         self.declare_parameter("estop_timeout", 9.0)
         self.declare_parameter("cmd_duration", 0.125)
         self.declare_parameter("start_estop", False)
-        self.declare_parameter("publish_rgb", True)
-        self.declare_parameter("publish_depth", True)
-        self.declare_parameter("publish_depth_registered", False)
         self.declare_parameter("rgb_cameras", True)
 
         # Declare rates for the spot_ros2 publishers, which are combined to a dictionary
         self.declare_parameter("metrics_rate", 0.04)
         self.declare_parameter("lease_rate", 1.0)
         self.declare_parameter("world_objects_rate", 20.0)
-        self.declare_parameter("image_rate", 10.0)
         self.declare_parameter("graph_nav_pose_rate", 10.0)
 
         self.declare_parameter("publish_graph_nav_pose", False)
@@ -302,9 +280,6 @@ class SpotROS(Node):
         self.get_lease_on_action: Parameter = self.get_parameter("get_lease_on_action")
         self.continually_try_stand: Parameter = self.get_parameter("continually_try_stand")
 
-        self.publish_rgb: Parameter = self.get_parameter("publish_rgb")
-        self.publish_depth: Parameter = self.get_parameter("publish_depth")
-        self.publish_depth_registered: Parameter = self.get_parameter("publish_depth_registered")
         self.rgb_cameras: Parameter = self.get_parameter("rgb_cameras")
 
         self.publish_graph_nav_pose: Parameter = self.get_parameter("publish_graph_nav_pose")
@@ -318,7 +293,6 @@ class SpotROS(Node):
             "metrics": self.get_parameter("metrics_rate").value,
             "lease": self.get_parameter("lease_rate").value,
             "world_objects": self.get_parameter("world_objects_rate").value,
-            "image": self.get_parameter("image_rate").value,
             "graph_nav_pose": self.get_parameter("graph_nav_pose_rate").value,
         }
         max_task_rate = float(max(self.rates.values()))
@@ -333,7 +307,6 @@ class SpotROS(Node):
         if self.mock:
             self.mock_has_arm = self.get_parameter("mock_has_arm").value
 
-        self.motion_deadzone: Parameter = self.get_parameter("deadzone")
         self.estop_timeout: Parameter = self.get_parameter("estop_timeout")
         self.async_tasks_rate: float = self.get_parameter("async_tasks_rate").value
         if self.async_tasks_rate < max_task_rate:
@@ -355,15 +328,6 @@ class SpotROS(Node):
         self.certificate: Optional[str] = (
             get_from_env_and_fall_back_to_param("SPOT_CERTIFICATE", self, "certificate", "") or None
         )
-
-        self.camera_static_transform_broadcaster: tf2_ros.StaticTransformBroadcaster = (
-            tf2_ros.StaticTransformBroadcaster(self)
-        )
-        # Static transform broadcaster is super simple and just a latched publisher. Every time we add a new static
-        # transform we must republish all static transforms from this source, otherwise the tree will be incomplete.
-        # We keep a list of all the static transforms we already have, so they can be republished, and so we can check
-        # which ones we already have
-        self.camera_static_transforms: List[TransformStamped] = []
 
         # Spot has 2 types of odometries: 'odom' and 'vision'
         # The former one is kinematic odometry and the second one is a combined odometry of vision and kinematics
@@ -460,17 +424,6 @@ class SpotROS(Node):
             all_cameras.append("hand")
         self.declare_parameter("cameras_used", all_cameras)
         self.cameras_used = self.get_parameter("cameras_used")
-
-        # Create the necessary publishers and timers
-        # if enable set up publisher for rgb images
-        if self.publish_rgb.value:
-            self.create_image_publisher(SpotImageType.RGB, self.rgb_callback_group)
-        # if enabled set up publisher for depth images
-        if self.publish_depth.value:
-            self.create_image_publisher(SpotImageType.Depth, self.depth_callback_group)
-        # if enable publish registered depth
-        if self.publish_depth_registered.value:
-            self.create_image_publisher(SpotImageType.RegDepth, self.depth_registered_callback_group)
 
         if self.publish_graph_nav_pose.value:
             # graph nav pose will be published both on a topic
@@ -1126,58 +1079,6 @@ class SpotROS(Node):
             self.graph_nav_pose_transform_broadcaster.sendTransform(seed_t_body_trans_msg)
         except Exception as e:
             self.get_logger().error(f"Exception: {e} \n {traceback.format_exc()}")
-
-    def create_image_publisher(self, image_type: SpotImageType, callback_group: CallbackGroup) -> None:
-        topic_name = image_type.value
-        publisher_name = image_type.value
-        # RGB is the only type with different naming scheme
-        if image_type == SpotImageType.RGB:
-            topic_name = "camera"
-            publisher_name = "image"
-        for camera_name in self.cameras_used.value:
-            setattr(
-                self,
-                f"{camera_name}_{publisher_name}_pub",
-                self.create_publisher(Image, f"{topic_name}/{camera_name}/image", 1),
-            )
-            setattr(
-                self,
-                f"{camera_name}_{publisher_name}_info_pub",
-                self.create_publisher(CameraInfo, f"{topic_name}/{camera_name}/camera_info", 1),
-            )
-        # create a timer for publishing
-        self.create_timer(
-            1 / self.rates["image"],
-            partial(self.publish_camera_images_callback, image_type),
-            callback_group=callback_group,
-        )
-
-    def publish_camera_images_callback(self, image_type: SpotImageType) -> None:
-        """
-        Publishes the camera images from a specific image type
-        """
-        if self.spot_wrapper is None:
-            return
-
-        publisher_name = image_type.value
-        # RGB is the only type with different naming scheme
-        if image_type == SpotImageType.RGB:
-            publisher_name = "image"
-
-        result = self.spot_wrapper.spot_images.get_images_by_cameras(
-            [CameraSource(camera_name, [image_type]) for camera_name in self.cameras_used.value]
-        )
-        for image_entry in result:
-            image_msg, camera_info = bosdyn_data_to_image_and_camera_info_msgs(
-                image_entry.image_response,
-                self.spot_wrapper.robotToLocalTime,
-                self.spot_wrapper.frame_prefix,
-            )
-            image_pub = getattr(self, f"{image_entry.camera_name}_{publisher_name}_pub")
-            image_info_pub = getattr(self, f"{image_entry.camera_name}_{publisher_name}_info_pub")
-            image_pub.publish(image_msg)
-            image_info_pub.publish(camera_info)
-            self.populate_camera_static_transforms(image_entry.image_response)
 
     def service_wrapper(
         self,
@@ -2923,76 +2824,6 @@ class SpotROS(Node):
             response.message = error_str
 
         return response
-
-    def populate_camera_static_transforms(self, image_data: image_pb2.Image) -> None:
-        """Check data received from one of the image tasks and use the transform snapshot to extract the camera frame
-        transforms. This is the transforms from body->frontleft->frontleft_fisheye, for example. These transforms
-        never change, but they may be calibrated slightly differently for each robot, so we need to generate the
-        transforms at runtime.
-        Args:
-        image_data: Image protobuf data from the wrapper
-        """
-        # We exclude the odometry frames from static transforms since they are not static. We can ignore the body
-        # frame because it is a child of odom or vision depending on the preferred_odom_frame, and will be published
-        # by the non-static transform publishing that is done by the state callback
-        excluded_frames = [
-            self.tf_name_vision_odom.value,
-            self.tf_name_kinematic_odom.value,
-            self.frame_prefix + "body",
-        ]
-
-        excluded_frames = [f[f.rfind("/") + 1 :] for f in excluded_frames]
-
-        # Special case handling for hand camera frames that reference the link "arm0.link_wr1" in their
-        # transform snapshots. This name only appears in hand camera transform snapshots and appears to
-        # be a bug in this particular image callback path.
-        #
-        # 1. We exclude publishing a static transform from arm0.link_wr1 -> body here because it depends
-        #    on the arm's position and a static transform would fix it to its initial position.
-        #
-        # 2. Below we rename the parent link "arm0.link_wr1" to "link_wr1" as it appears in robot state
-        #    which is used for publishing dynamic tfs elsewhere. Without this, the hand camera frame
-        #    positions would never properly update as no other pipelines reference "arm0.link_wr1".
-        #
-        # We save an RPC call to self.spot_wrapper.has_arm() and any extra complexity here as the link
-        # will not exist if the spot does not have an arm and the special case code will have no effect.
-        excluded_frames.append("arm0.link_wr1")
-
-        for frame_name in image_data.shot.transforms_snapshot.child_to_parent_edge_map:
-            if frame_name in excluded_frames:
-                continue
-
-            transform = image_data.shot.transforms_snapshot.child_to_parent_edge_map.get(frame_name)
-            parent_frame = transform.parent_frame_name
-
-            # special case handling of parent frame to sync with robot state naming, see above
-            if parent_frame == "arm0.link_wr1":
-                parent_frame = "arm_link_wr1"
-
-            existing_transforms = [
-                (transform.header.frame_id, transform.child_frame_id) for transform in self.camera_static_transforms
-            ]
-            if (
-                self.frame_prefix + parent_frame,
-                self.frame_prefix + frame_name,
-            ) in existing_transforms:
-                # We already extracted this transform
-                continue
-
-            if self.spot_wrapper is not None:
-                local_time = self.spot_wrapper.robotToLocalTime(image_data.shot.acquisition_time)
-            else:
-                local_time = Timestamp()
-            tf_time = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
-            static_tf = populate_transform_stamped(
-                tf_time,
-                parent_frame,
-                frame_name,
-                transform.parent_tform_child,
-                self.frame_prefix,
-            )
-            self.camera_static_transforms.append(static_tf)
-            self.camera_static_transform_broadcaster.sendTransform(self.camera_static_transforms)
 
     def step(self) -> None:
         """Update spot sensors"""
