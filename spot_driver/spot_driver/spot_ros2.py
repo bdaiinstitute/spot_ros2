@@ -55,7 +55,6 @@ from bosdyn_msgs.msg import (
 from geometry_msgs.msg import (
     Pose,
     PoseStamped,
-    TransformStamped,
     Twist,
 )
 from rclpy import Parameter
@@ -329,15 +328,6 @@ class SpotROS(Node):
         self.certificate: Optional[str] = (
             get_from_env_and_fall_back_to_param("SPOT_CERTIFICATE", self, "certificate", "") or None
         )
-
-        self.camera_static_transform_broadcaster: tf2_ros.StaticTransformBroadcaster = (
-            tf2_ros.StaticTransformBroadcaster(self)
-        )
-        # Static transform broadcaster is super simple and just a latched publisher. Every time we add a new static
-        # transform we must republish all static transforms from this source, otherwise the tree will be incomplete.
-        # We keep a list of all the static transforms we already have, so they can be republished, and so we can check
-        # which ones we already have
-        self.camera_static_transforms: List[TransformStamped] = []
 
         # Spot has 2 types of odometries: 'odom' and 'vision'
         # The former one is kinematic odometry and the second one is a combined odometry of vision and kinematics
