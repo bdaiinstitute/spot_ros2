@@ -2715,7 +2715,7 @@ class SpotROS(Node):
             return response
 
         try:
-            self.spot_wrapper.spot_graph_nav.navigate_initial_localization(upload_path=request.upload_path, initial_localization_fiducial=request.initial_localization_fiducial, initial_localization_waypoint=request.initial_localization_waypoint)
+            self.spot_wrapper.spot_graph_nav.navigate_initial_localization(upload_path=request.upload_filepath, initial_localization_fiducial=request.initial_localization_fiducial, initial_localization_waypoint=request.initial_localization_waypoint)
             self.get_logger().info("Initialized Localization")
             response.success = True
             response.message = "Success"
