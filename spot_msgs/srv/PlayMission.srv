@@ -1,0 +1,5 @@
+bosdyn_mission_api_msgs/PlayMissionRequest request
+---
+bosdyn_mission_api_msgs/PlayMissionResponse response
+bool success
+string message

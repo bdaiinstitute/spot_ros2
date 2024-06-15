@@ -29,6 +29,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(bosdyn_api_msgs REQUIRED)
 find_package(bosdyn_spot_api_msgs REQUIRED)
 find_package(bosdyn_spot_cam_api_msgs REQUIRED)
+find_package(bosdyn_mission_api_msgs REQUIRED)
 find_package(common_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -97,6 +98,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Dock.srv"
   "srv/GetGripperCameraParameters.srv"
   "srv/SetGripperCameraParameters.srv"
+  "srv/LoadMission.srv"
+  "srv/PlayMission.srv"
+  "srv/RestartMission.srv"
+  "srv/GetMissionInfo.srv"
+  "srv/GetMissionState.srv"
   "action/ExecuteDance.action"
   "action/NavigateTo.action"
   "action/RobotCommand.action"
@@ -106,6 +112,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     bosdyn_api_msgs
     bosdyn_spot_api_msgs
     bosdyn_spot_cam_api_msgs
+    bosdyn_mission_api_msgs
     builtin_interfaces
     common_interfaces
     geometry_msgs
