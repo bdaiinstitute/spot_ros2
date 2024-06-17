@@ -6,6 +6,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     apt-get install -yq --no-install-recommends \
     lcov \
     curl \
+    wget \
     python3-pip \
     python-is-python3 \
     python3-argcomplete \
@@ -17,9 +18,20 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     ros-humble-tl-expected && \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /repo
+# Create ROS workspace
+WORKDIR /ros_ws/src
 
-COPY . .
+# Clone driver code
+RUN git clone https://github.com/bdaiinstitute/spot_ros2.git .
 
+# Change gitmodule links to HTTPS to anonymously clone them
 RUN sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
 RUN git submodule update --init --recursive
+
+# Run install script
+RUN /ros_ws/src/install_spot_ros2.sh
+
+# Build packages with Colcon
+WORKDIR /ros_ws/
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build --symlink-install --packages-ignore proto2ros_tests
