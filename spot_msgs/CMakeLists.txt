@@ -97,6 +97,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Dock.srv"
   "srv/GetGripperCameraParameters.srv"
   "srv/SetGripperCameraParameters.srv"
+  "srv/OverrideGraspOrCarry.srv"
   "action/ExecuteDance.action"
   "action/NavigateTo.action"
   "action/RobotCommand.action"
