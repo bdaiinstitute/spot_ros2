@@ -36,7 +36,6 @@ from bosdyn.api import (
     world_object_pb2,
 )
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
-from bosdyn.api.robot_state_pb2 import ManipulatorState
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence, ChoreographyStatusResponse
 from bosdyn.client import math_helpers
@@ -126,8 +125,8 @@ from spot_msgs.srv import (  # type: ignore
     ListSounds,
     ListWorldObjects,
     LoadSound,
-    PlaySound,
     OverrideGraspOrCarry,
+    PlaySound,
     RetrieveLogpoint,
     SetGripperCameraParameters,
     SetLEDBrightness,
@@ -936,7 +935,7 @@ class SpotROS(Node):
                     request,
                     response,
                 ),
-                callback_group=self.group
+                callback_group=self.group,
             )
 
         self.execute_dance_as = ActionServer(
@@ -2949,8 +2948,9 @@ class SpotROS(Node):
             return response
         grasp_override = request.grasp_override.value
         carry_override = request.carry_override.value
-        response.success, response.message = self.spot_wrapper.spot_arm.override_grasp_or_carry(grasp_override,
-                                                                                                carry_override)
+        response.success, response.message = self.spot_wrapper.spot_arm.override_grasp_or_carry(
+            grasp_override, carry_override
+        )
         return response
 
     def populate_camera_static_transforms(self, image_data: image_pb2.Image) -> None:
