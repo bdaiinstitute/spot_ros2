@@ -2846,11 +2846,10 @@ class SpotROS(Node):
         response = OverrideGraspOrCarry.Response()
         if self.spot_wrapper is None or not self.spot_wrapper.has_arm():
             response.success = False
+            response.message = "Wrapper not available or spot has no arm"
             return response
-        grasp_override = request.grasp_override.value
-        carry_override = request.carry_override.value
         response.success, response.message = self.spot_wrapper.spot_arm.override_grasp_or_carry(
-            grasp_override, carry_override
+            request.grasp_override.value, request.carry_override.value
         )
         return response
 
