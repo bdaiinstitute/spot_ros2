@@ -118,6 +118,7 @@ from spot_msgs.srv import (  # type: ignore
     ListSounds,
     ListWorldObjects,
     LoadSound,
+    OverrideGraspOrCarry,
     PlaySound,
     RetrieveLogpoint,
     SetGripperCameraParameters,
@@ -872,6 +873,18 @@ class SpotROS(Node):
                 lambda request, response: self.service_wrapper(
                     "set_gripper_camera_parameters",
                     self.handle_set_gripper_camera_parameters,
+                    request,
+                    response,
+                ),
+                callback_group=self.group,
+            )
+
+            self.create_service(
+                OverrideGraspOrCarry,
+                "override_grasp_or_carry",
+                lambda request, response: self.service_wrapper(
+                    "override_grasp_or_carry",
+                    self.handle_override_grasp_or_carry,
                     request,
                     response,
                 ),
@@ -2823,6 +2836,21 @@ class SpotROS(Node):
             response.success = False
             response.message = error_str
 
+        return response
+
+    def handle_override_grasp_or_carry(
+        self,
+        request: OverrideGraspOrCarry.Request,
+        response: OverrideGraspOrCarry.Response,
+    ) -> OverrideGraspOrCarry.Response:
+        response = OverrideGraspOrCarry.Response()
+        if self.spot_wrapper is None or not self.spot_wrapper.has_arm():
+            response.success = False
+            response.message = "Wrapper not available or spot has no arm"
+            return response
+        response.success, response.message = self.spot_wrapper.spot_arm.override_grasp_or_carry(
+            request.grasp_override.value, request.carry_override.value
+        )
         return response
 
     def step(self) -> None:
