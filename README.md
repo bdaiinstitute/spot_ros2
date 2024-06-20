@@ -57,6 +57,22 @@ source install/local_setup.bash
 
 We suggest ignoring the `proto2ros_tests` package in the build as it is not necessary for running the driver. If you choose to build it, you will see a number of error messages from testing the failure paths. 
 
+### Alternative - Docker Image
+
+Alternatively, a Dockerfile is available that prepares a ready-to-run ROS2 Humble install with the Spot driver installed.
+
+No special precautions or actions need to be taken to build the image. Just clone the repository and run `docker build` in the root of the repo to build the image.
+
+No special actions need to be taken to run the image either. However, depending on what you intend to _do_ with the driver in your project, the following flags may be useful:
+
+| Flag     | Use             |
+| -------- | --------------- |
+| `--runtime nvidia` + `--gpus all`  | Use the [NVIDIA Container Runtime](https://developer.nvidia.com/container-runtime) to run the container with GPU acceleration |
+| `-e DISPLAY`  | Bind your display to the container in order to run GUI apps. Note that you will need to allow the Docker container to connect to your X11 server, which can be done in a number of ways ranging from disabling X11 authentication entirely, or by allowing the Docker daemon specifically to access your display server.  |
+| `--network host` | Use the host network directly. May help resolve issues connecting to Spot Wifi |
+
+The image does not have the `proto2ros_tests` package built. You'll need to build it yourself inside the container if you need to use it.
+
 # Spot ROS 2 Driver
 
 The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run:
