@@ -24,10 +24,6 @@ WORKDIR /ros_ws/src
 # Clone driver code
 RUN git clone https://github.com/bdaiinstitute/spot_ros2.git .
 
-# Change gitmodule links to HTTPS to anonymously clone them
-RUN sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
-RUN git submodule update --init --recursive
-
 # Run install script
 RUN /ros_ws/src/install_spot_ros2.sh
 
