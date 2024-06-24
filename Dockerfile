@@ -13,7 +13,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     python3-colcon-mixin \
     python3-rosdep \
     libpython3-dev \
-    python3-vcstool \
     ros-humble-tl-expected && \
     rm -rf /var/lib/apt/lists/*
 
