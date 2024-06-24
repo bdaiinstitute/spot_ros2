@@ -22,6 +22,7 @@ WORKDIR /ros_ws/src
 
 # Clone driver code
 RUN git clone https://github.com/bdaiinstitute/spot_ros2.git .
+RUN git submodule update --init --recursive
 
 # Run install script
 RUN /ros_ws/src/install_spot_ros2.sh
