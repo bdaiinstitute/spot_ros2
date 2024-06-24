@@ -4,7 +4,6 @@ FROM osrf/ros:humble-desktop-full
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     apt-get update -q && \
     apt-get install -yq --no-install-recommends \
-    lcov \
     curl \
     wget \
     python3-pip \
