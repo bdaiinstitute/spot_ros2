@@ -29,4 +29,4 @@ RUN /ros_ws/src/install_spot_ros2.sh
 # Build packages with Colcon
 WORKDIR /ros_ws/
 RUN . /opt/ros/humble/setup.sh && \
-    colcon build --symlink-install --packages-ignore proto2ros_tests
+    colcon build --symlink-install --packages-ignore proto2ros proto2ros_tests
