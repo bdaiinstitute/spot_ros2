@@ -12,8 +12,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     python3-colcon-common-extensions \
     python3-colcon-mixin \
     python3-rosdep \
-    libpython3-dev \
-    ros-humble-tl-expected && \
+    libpython3-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Create ROS workspace
