@@ -185,26 +185,38 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
 std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(const ::bosdyn::api::RobotState& robot_state,
                                                                            const google::protobuf::Duration& clock_skew,
                                                                            const bool is_using_vision) {
-  if (!robot_state.has_kinematic_state()) {
+  if (!robot_state.has_kinematic_state() || !robot_state.kinematic_state().has_transforms_snapshot()) {
     return std::nullopt;
   }
-
   const auto& kinematic_state = robot_state.kinematic_state();
   if (is_using_vision && !kinematic_state.has_velocity_of_body_in_vision()) {
     return std::nullopt;
   } else if (!is_using_vision && !kinematic_state.has_velocity_of_body_in_odom()) {
     return std::nullopt;
   }
-
   geometry_msgs::msg::TwistWithCovarianceStamped odom_twist_msg;
   // TODO(schornakj): need to add the frame ID here?
 
   const bosdyn::api::SE3Velocity& velocity_of_body_in_world =
       is_using_vision ? kinematic_state.velocity_of_body_in_vision() : kinematic_state.velocity_of_body_in_odom();
 
-  odom_twist_msg.header.stamp =
-      spot_ros2::robotTimeToLocalTime(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
-  convertToRos(velocity_of_body_in_world, odom_twist_msg.twist.twist);
+  // This now needs to be converted to velocity of body in body frame in order to follow ROS conventions.
+  // First get the transform from odom to body.
+  // This now needs to be converted to velocity of body in body frame in order to follow ROS conventions.
+  ::bosdyn::api::SE3Velocity velocity_of_body_in_body;
+  const std::string world_frame_name = is_using_vision ? "vision" : "odom";
+  const std::string body_frame_name = "body";
+  const bool success =
+      ::bosdyn::api::ExpressVelocityInNewFrame(kinematic_state.transforms_snapshot(), world_frame_name, body_frame_name,
+                                               velocity_of_body_in_world, &velocity_of_body_in_body);
+  if (!success) {
+    return std::nullopt;
+  }
+  // Then convert the twist into the body frame
+  // ...
+  convertToRos(velocity_of_body_in_body, odom_twist_msg.twist.twist);
+  odom_twist_msg.header.stamp = spot_ros2::robotTimeToLocalTime(kinematic_state.acquisition_timestamp(), clock_skew);
+  odom_twist_msg.header.frame_id = body_frame_name;
   return odom_twist_msg;
 }
 
