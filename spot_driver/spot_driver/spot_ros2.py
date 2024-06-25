@@ -405,7 +405,14 @@ class SpotROS(Node):
             if self.initialize_spot_cam:
                 try:
                     self.cam_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_cam_wrapper")
-                    self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
+                    self.spot_cam_wrapper = SpotCamWrapper(
+                        hostname=self.ip,
+                        username=self.username,
+                        password=self.password,
+                        port=self.port,
+                        logger=self.cam_logger,
+                        cert_resource_glob=self.certificate,
+                    )
                 except SystemError:
                     self.spot_cam_wrapper = None
 
