@@ -2913,7 +2913,8 @@ class SpotROS(Node):
     def destroy_node(self) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
         if self.spot_wrapper is not None:
-            if self.spot_wrapper.check_is_powered_on():
+            # If the driver owns the estop, we want to sit before powering off.
+            if self.spot_wrapper.check_is_powered_on() and self.start_estop.value:
                 self.spot_wrapper.sit()
             self.spot_wrapper.disconnect()
         super().destroy_node()
