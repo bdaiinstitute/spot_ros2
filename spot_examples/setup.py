@@ -23,6 +23,7 @@ setup(
             "arm_simple = spot_examples.arm_simple:main",
             "send_inverse_kinematics_requests = spot_examples.send_inverse_kinematics_requests:main",
             "batch_trajectory = spot_examples.batch_trajectory:main",
+            "navigate_to = spot_examples.spot_navigation_client:main"
         ],
     },
 )
