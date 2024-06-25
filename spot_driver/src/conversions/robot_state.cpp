@@ -208,8 +208,16 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(const
   // This now needs to be converted to velocity of body in body frame in order to follow ROS conventions.
   // First get the transform from odom to body.
   const auto& kinematic_state = robot_state.kinematic_state();
-  ::bosdyn::api::SE3Pose odom_tform_body;
-  if (!::bosdyn::api::GetWorldTformBody(kinematic_state.transforms_snapshot(), &odom_tform_body)) {
+  odom_twist_msg.header.stamp = spot_ros2::robotTimeToLocalTime(kinematic_state.acquisition_timestamp(), clock_skew);
+  const bosdyn::api::SE3Velocity velocity_of_body_in_odom = kinematic_state.velocity_of_body_in_odom();
+  // This now needs to be converted to velocity of body in body frame in order to follow ROS conventions.
+  ::bosdyn::api::SE3Velocity velocity_of_body_in_body;
+  const std::string odom_frame_name = "odom";
+  const std::string body_frame_name = "body";
+  const bool success =
+      ::bosdyn::api::ExpressVelocityInNewFrame(kinematic_state.transforms_snapshot(), odom_frame_name, body_frame_name,
+                                               velocity_of_body_in_odom, &velocity_of_body_in_body);
+  if (!success) {
     return std::nullopt;
   }
   // Then convert the twist into the body frame
