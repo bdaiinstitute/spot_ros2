@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace spot_ros2 {
 /**
@@ -37,6 +38,7 @@ class ParameterInterfaceBase {
   virtual bool getPublishDepthRegisteredImages() const = 0;
   virtual std::string getPreferredOdomFrame() const = 0;
   virtual std::string getSpotName() const = 0;
+  virtual std::vector<std::string> getCamerasUsed() const = 0;
 
  protected:
   // These are the definitions of the default values for optional parameters.
@@ -51,5 +53,6 @@ class ParameterInterfaceBase {
   static constexpr bool kDefaultPublishDepthImages{true};
   static constexpr bool kDefaultPublishDepthRegisteredImages{true};
   static constexpr auto kDefaultPreferredOdomFrame = "odom";
+  static constexpr auto kDefaultCamerasUsed = {"frontleft", "frontright", "left", "right", "back"};
 };
 }  // namespace spot_ros2

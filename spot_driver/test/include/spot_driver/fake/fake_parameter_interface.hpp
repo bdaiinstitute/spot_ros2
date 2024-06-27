@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace spot_ros2::test {
 class FakeParameterInterface : public ParameterInterfaceBase {
@@ -37,6 +38,15 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   std::string getPreferredOdomFrame() const override { return "odom"; }
 
   std::string getSpotName() const override { return spot_name; }
+
+  std::vector<std::string> getCamerasUsed() const override {
+    std::vector<std::string> kDefaultCamerasUsedVector;
+    for (const auto& camera : kDefaultCamerasUsed) {
+      std::string cameraString(camera);
+      kDefaultCamerasUsedVector.push_back(cameraString);
+    }
+    return kDefaultCamerasUsedVector;
+  }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};
   static constexpr auto kExampleUsername{"spot_user"};

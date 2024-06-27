@@ -13,6 +13,7 @@ constexpr auto kEnvVarNamePassword = "BOSDYN_CLIENT_PASSWORD";
 
 constexpr auto kParameterNameHostname = "hostname";
 constexpr auto kParameterNamePort = "port";
+constexpr auto kParameterNameCamerasUsed = "cameras_used";
 constexpr auto kParameterNameCertificate = "certificate";
 constexpr auto kParameterNameUsername = "username";
 constexpr auto kParameterNamePassword = "password";
@@ -182,6 +183,15 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const {
 
 std::string RclcppParameterInterface::getPreferredOdomFrame() const {
   return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
+}
+
+std::vector<std::string> RclcppParameterInterface::getCamerasUsed() const {
+  std::vector<std::string> kDefaultCamerasUsedVector;
+  for (const auto& camera : kDefaultCamerasUsed) {
+    std::string cameraString(camera);
+    kDefaultCamerasUsedVector.push_back(cameraString);
+  }
+  return declareAndGetParameter<std::vector<std::string>>(node_, kParameterNameCamerasUsed, kDefaultCamerasUsedVector);
 }
 
 std::string RclcppParameterInterface::getSpotName() const {
