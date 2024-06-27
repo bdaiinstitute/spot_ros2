@@ -35,7 +35,7 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
   [[nodiscard]] bool getPublishDepthRegisteredImages() const override;
   [[nodiscard]] std::string getPreferredOdomFrame() const override;
   [[nodiscard]] std::string getSpotName() const override;
-  [[nodiscard]] std::vector<std::string> getCamerasUsed() const override;
+  [[nodiscard]] std::vector<std::string> getCamerasUsed(bool has_arm) const override;
 
  private:
   std::shared_ptr<rclcpp::Node> node_;
