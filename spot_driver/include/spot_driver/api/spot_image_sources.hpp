@@ -45,9 +45,11 @@ namespace spot_ros2 {
  * @param get_depth_images Sets whether to request depth images.
  * @param get_depth_registered_images Sets whether to request registered depth images.
  * @param has_hand_camera Sets whether to request images from the hand camera.
+ * @param cameras_used List of cameras to stream from.
  * @return A set of ImageSources which represents all requested image and camera types.
  */
-[[nodiscard]] std::set<ImageSource> createImageSources(const std::vector<std::string> cameras_used,
-                                                       const bool get_rgb_images, const bool get_depth_images,
-                                                       const bool get_depth_registered_images);
+[[nodiscard]] std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
+                                                       const bool get_depth_registered_images,
+                                                       const bool has_hand_camera,
+                                                       const std::vector<std::string> cameras_used);
 }  // namespace spot_ros2

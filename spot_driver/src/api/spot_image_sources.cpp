@@ -105,16 +105,21 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
   }
 }
 
-std::set<ImageSource> createImageSources(const std::vector<std::string> cameras_used, const bool get_rgb_images,
-                                         const bool get_depth_images, const bool get_depth_registered_images) {
+std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
+                                         const bool get_depth_registered_images, const bool has_hand_camera,
+                                         const std::vector<std::string> cameras_used) {
   std::set<ImageSource> sources;
   std::vector<spot_ros2::SpotCamera> spot_cameras_used;
   for (const auto& camera : cameras_used) {
     try {
-      spot_cameras_used.push_back(kRosStringToSpotCamera.at(camera));
+      const auto spot_camera = kRosStringToSpotCamera.at(camera);
+      if ((spot_camera == SpotCamera::HAND) && (!has_hand_camera)) {
+        std::cout << "Can't add the hand camera, your robot doesn't have an arm" << std::endl;
+      } else {
+        spot_cameras_used.push_back(kRosStringToSpotCamera.at(camera));
+      }
     } catch (const std::out_of_range& e) {
-      // TODO handle this better
-      std::cout << "Invalid name " << camera << std::endl;
+      std::cout << "Invalid name: " << camera << ", skipping" << std::endl;
     }
   }
   if (get_rgb_images) {
