@@ -8,6 +8,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 namespace spot_ros2 {
 /**
@@ -46,7 +47,7 @@ namespace spot_ros2 {
  * @param has_hand_camera Sets whether to request images from the hand camera.
  * @return A set of ImageSources which represents all requested image and camera types.
  */
-[[nodiscard]] std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
-                                                       const bool get_depth_registered_images,
-                                                       const bool has_hand_camera);
+[[nodiscard]] std::set<ImageSource> createImageSources(const std::vector<std::string> cameras_used,
+                                                       const bool get_rgb_images, const bool get_depth_images,
+                                                       const bool get_depth_registered_images);
 }  // namespace spot_ros2

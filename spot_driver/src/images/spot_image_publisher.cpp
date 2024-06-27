@@ -96,7 +96,7 @@ bool SpotImagePublisher::initialize() {
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources =
-      createImageSources(publish_rgb_images, publish_depth_images, publish_depth_registered_images, has_arm_);
+      createImageSources(cameras_used, publish_rgb_images, publish_depth_images, publish_depth_registered_images);
 
   // Generate the image request message to capture the data from the specified image sources
   image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, publish_raw_rgb_cameras);
