@@ -134,6 +134,56 @@ TEST(SpotImageSources, fromSpotImageSourceName) {
               Eq(ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}));
 }
 
+TEST(SpotImageSources, getSpotCamerasUsed) {
+  std::vector<std::string> body_cameras = {"frontleft", "frontright", "left", "right", "back"};
+  std::vector<std::string> body_cameras_plus_hand = {"frontleft", "frontright", "left", "right", "back", "hand"};
+  std::vector<std::string> front_cameras = {"frontleft", "frontright"};
+  std::vector<std::string> front_cameras_plus_invalid_camera = {"frontleft", "frontright", "not_a_camera"};
+  // WHEN no cameras are requested, regardless of whether or not the robot has an arm
+  // THEN no SpotCameras are returned
+  EXPECT_THAT(getSpotCamerasUsed(true, std::vector<std::string>{}), IsEmpty());
+  EXPECT_THAT(getSpotCamerasUsed(false, std::vector<std::string>{}), IsEmpty());
+
+  // WHEN Spot has a hand camera, and all body cameras plus the hand camera are requested
+  // THEN SpotCameras for all body cameras plus the hand camera are returned.
+  EXPECT_THAT(getSpotCamerasUsed(true, body_cameras_plus_hand),
+              UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::BACK, SpotCamera::LEFT,
+                                   SpotCamera::RIGHT, SpotCamera::HAND));
+
+  // WHEN Spot does not have a hand camera, and all body cameras plus the hand camera are requested
+  // THEN SpotCameras for all body cameras are returned.
+  EXPECT_THAT(getSpotCamerasUsed(false, body_cameras_plus_hand),
+              UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::BACK, SpotCamera::LEFT,
+                                   SpotCamera::RIGHT));
+
+  // WHEN Spot has a hand camera, and all body cameras are requested
+  // THEN SpotCameras for all body cameras are returned.
+  EXPECT_THAT(getSpotCamerasUsed(true, body_cameras),
+              UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::BACK, SpotCamera::LEFT,
+                                   SpotCamera::RIGHT));
+
+  // WHEN Spot does not have a hand camera, and all body cameras are requested
+  // THEN SpotCameras for all body cameras are returned.
+  EXPECT_THAT(getSpotCamerasUsed(false, body_cameras),
+              UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::BACK, SpotCamera::LEFT,
+                                   SpotCamera::RIGHT));
+
+  // WHEN only the front cameras are requested, and the robot has a hand camera
+  // THEN SpotCameras for only the front cameras are returned
+  EXPECT_THAT(getSpotCamerasUsed(true, front_cameras),
+              UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT));
+
+  // WHEN only the front cameras are requested, and the robot does not have a hand camera
+  // THEN SpotCameras for only the front cameras are returned
+  EXPECT_THAT(getSpotCamerasUsed(false, front_cameras),
+              UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT));
+
+  // WHEN the front cameras and an invalid camera are requested
+  // THEN SpotCameras for only the front cameras are returned
+  EXPECT_THAT(getSpotCamerasUsed(false, front_cameras_plus_invalid_camera),
+              UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT));
+}
+
 // TODO(khughes-bdai): fix these tests for new function definition
 TEST(SpotImageSources, createImageSources) {
   std::vector<std::string> default_cameras_used = {"frontleft", "frontright", "left", "right", "back", "hand"};
