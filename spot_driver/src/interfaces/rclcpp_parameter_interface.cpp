@@ -189,8 +189,7 @@ std::vector<std::string> RclcppParameterInterface::getCamerasUsed(bool has_arm) 
   const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
   std::vector<std::string> kDefaultCamerasUsedVector;
   for (const auto& camera : kDefaultCamerasUsed) {
-    std::string cameraString(camera);
-    kDefaultCamerasUsedVector.push_back(cameraString);
+    kDefaultCamerasUsedVector.push_back(std::string(camera));
   }
   return declareAndGetParameter<std::vector<std::string>>(node_, kParameterNameCamerasUsed, kDefaultCamerasUsedVector);
 }

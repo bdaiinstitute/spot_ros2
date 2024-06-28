@@ -43,8 +43,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
     const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
     std::vector<std::string> kDefaultCamerasUsedVector;
     for (const auto& camera : kDefaultCamerasUsed) {
-      std::string cameraString(camera);
-      kDefaultCamerasUsedVector.push_back(cameraString);
+      kDefaultCamerasUsedVector.push_back(std::string(camera));
     }
     return kDefaultCamerasUsedVector;
   }

@@ -114,12 +114,13 @@ std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool g
     try {
       const auto spot_camera = kRosStringToSpotCamera.at(camera);
       if ((spot_camera == SpotCamera::HAND) && (!has_hand_camera)) {
-        std::cout << "Can't add the hand camera, your robot doesn't have an arm" << std::endl;
+        // Do nothing in this case, because the hand camera shouldn't be added if the robot doesn't have an arm.
       } else {
         spot_cameras_used.push_back(kRosStringToSpotCamera.at(camera));
       }
     } catch (const std::out_of_range& e) {
-      std::cout << "Invalid name: " << camera << ", skipping" << std::endl;
+      // If this input cannot be converted to a SpotCamera (e.g., because of a typo) we should just skip adding this
+      // camera.
     }
   }
   if (get_rgb_images) {

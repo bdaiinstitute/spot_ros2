@@ -90,9 +90,6 @@ bool SpotImagePublisher::initialize() {
   const auto uncompress_images = parameters_->getUncompressImages();
   const auto publish_compressed_images = parameters_->getPublishCompressedImages();
   const auto cameras_used = parameters_->getCamerasUsed(has_arm_);
-  for (const auto& camera : cameras_used) {
-    std::cout << camera << std::endl;
-  }
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
   const auto sources = createImageSources(publish_rgb_images, publish_depth_images, publish_depth_registered_images,
