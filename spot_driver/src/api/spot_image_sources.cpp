@@ -105,16 +105,15 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
   }
 }
 
-std::vector<spot_ros2::SpotCamera> getSpotCamerasUsed(const bool has_hand_camera,
-                                                      const std::vector<std::string>& cameras_used) {
-  std::vector<spot_ros2::SpotCamera> spot_cameras_used;
+std::set<SpotCamera> getSpotCamerasUsed(const bool has_hand_camera, const std::vector<std::string>& cameras_used) {
+  std::set<SpotCamera> spot_cameras_used;
   for (const auto& camera : cameras_used) {
     try {
       const auto spot_camera = kRosStringToSpotCamera.at(camera);
       if ((spot_camera == SpotCamera::HAND) && (!has_hand_camera)) {
         // Do nothing in this case, because the hand camera shouldn't be added if the robot doesn't have an arm.
       } else {
-        spot_cameras_used.push_back(kRosStringToSpotCamera.at(camera));
+        spot_cameras_used.insert(kRosStringToSpotCamera.at(camera));
       }
     } catch (const std::out_of_range& e) {
       // If this input cannot be converted to a SpotCamera (e.g., because of a typo) we should just skip adding this
