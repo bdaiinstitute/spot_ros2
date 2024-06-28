@@ -135,104 +135,105 @@ TEST(SpotImageSources, fromSpotImageSourceName) {
 }
 
 // TODO(khughes-bdai): fix these tests for new function definition
-// TEST(SpotImageSources, createImageSources) {
-//   // WHEN no image types are requested, regardless of whether or not the hand camera is requested
-//   // THEN no ImageSources are returned
-//   EXPECT_THAT(createImageSources(false, false, false, false), IsEmpty());
-//   EXPECT_THAT(createImageSources(false, false, false, true), IsEmpty());
+TEST(SpotImageSources, createImageSources) {
+  std::vector<std::string> default_cameras_used = {"frontleft", "frontright", "left", "right", "back", "hand"};
+  // WHEN no image types are requested, regardless of whether or not the hand camera is requested
+  // THEN no ImageSources are returned
+  EXPECT_THAT(createImageSources(false, false, false, false, default_cameras_used), IsEmpty());
+  EXPECT_THAT(createImageSources(false, false, false, true, default_cameras_used), IsEmpty());
 
-//   // WHEN RGB images are requested from the body cameras, excluding the hand camera
-//   // THEN image sources for all RGB body cameras are returned
-//   EXPECT_THAT(createImageSources(true, false, false, false),
-//               UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB},
-//                                    ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB},
-//                                    ImageSource{SpotCamera::BACK, SpotImageType::RGB},
-//                                    ImageSource{SpotCamera::LEFT, SpotImageType::RGB},
-//                                    ImageSource{SpotCamera::RIGHT, SpotImageType::RGB}));
+  // WHEN RGB images are requested from the body cameras, excluding the hand camera
+  // THEN image sources for all RGB body cameras are returned
+  EXPECT_THAT(createImageSources(true, false, false, false, default_cameras_used),
+              UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::BACK, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::LEFT, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::RIGHT, SpotImageType::RGB}));
 
-//   // WHEN RGB images are requested from the body cameras and the hand camera
-//   // THEN image sources for all RGB body cameras and the hand camera are returned
-//   EXPECT_THAT(createImageSources(true, false, false, true),
-//               UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB},
-//                                    ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB},
-//                                    ImageSource{SpotCamera::BACK, SpotImageType::RGB},
-//                                    ImageSource{SpotCamera::LEFT, SpotImageType::RGB},
-//                                    ImageSource{SpotCamera::RIGHT, SpotImageType::RGB},
-//                                    ImageSource{SpotCamera::HAND, SpotImageType::RGB}));
+  // WHEN RGB images are requested from the body cameras and the hand camera
+  // THEN image sources for all RGB body cameras and the hand camera are returned
+  EXPECT_THAT(createImageSources(true, false, false, true, default_cameras_used),
+              UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::BACK, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::LEFT, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::RIGHT, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::HAND, SpotImageType::RGB}));
 
-//   // WHEN depth images are requested from the body cameras, excluding the hand camera
-//   // THEN image sources for all depth body cameras are returned
-//   EXPECT_THAT(createImageSources(false, true, false, false),
-//               UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH},
-//                                    ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH},
-//                                    ImageSource{SpotCamera::BACK, SpotImageType::DEPTH},
-//                                    ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH},
-//                                    ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH}));
+  // WHEN depth images are requested from the body cameras, excluding the hand camera
+  // THEN image sources for all depth body cameras are returned
+  EXPECT_THAT(createImageSources(false, true, false, false, default_cameras_used),
+              UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::BACK, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH}));
 
-//   // WHEN depth images are requested from the body cameras and the hand camera
-//   // THEN image sources for all depth body cameras and the hand camera are returned
-//   EXPECT_THAT(createImageSources(false, true, false, true),
-//               UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH},
-//                                    ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH},
-//                                    ImageSource{SpotCamera::BACK, SpotImageType::DEPTH},
-//                                    ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH},
-//                                    ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH},
-//                                    ImageSource{SpotCamera::HAND, SpotImageType::DEPTH}));
+  // WHEN depth images are requested from the body cameras and the hand camera
+  // THEN image sources for all depth body cameras and the hand camera are returned
+  EXPECT_THAT(createImageSources(false, true, false, true, default_cameras_used),
+              UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::BACK, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::HAND, SpotImageType::DEPTH}));
 
-//   // WHEN registered depth images are requested from the body cameras, excluding the hand camera
-//   // THEN image sources for all registered depth body cameras are returned
-//   EXPECT_THAT(createImageSources(false, false, true, false),
-//               UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED},
-//                                    ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED},
-//                                    ImageSource{SpotCamera::BACK, SpotImageType::DEPTH_REGISTERED},
-//                                    ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED},
-//                                    ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED}));
+  // WHEN registered depth images are requested from the body cameras, excluding the hand camera
+  // THEN image sources for all registered depth body cameras are returned
+  EXPECT_THAT(createImageSources(false, false, true, false, default_cameras_used),
+              UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::BACK, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED}));
 
-//   // WHEN registered depth images are requested from the body cameras and the hand camera
-//   // THEN image sources for all registered depth body cameras and the hand camera are returned
-//   EXPECT_THAT(createImageSources(false, false, true, true),
-//               UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED},
-//                                    ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED},
-//                                    ImageSource{SpotCamera::BACK, SpotImageType::DEPTH_REGISTERED},
-//                                    ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED},
-//                                    ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED},
-//                                    ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}));
+  // WHEN registered depth images are requested from the body cameras and the hand camera
+  // THEN image sources for all registered depth body cameras and the hand camera are returned
+  EXPECT_THAT(createImageSources(false, false, true, true, default_cameras_used),
+              UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::BACK, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}));
 
-//   // WHEN RGB, depth, and registered images are requested from the body cameras, excluding the hand camera
-//   // THEN image sources for all camera types and all body cameras are returned
-//   EXPECT_THAT(
-//       createImageSources(true, true, true, false),
-//       UnorderedElementsAre(
-//           ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB},
-//           ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB}, ImageSource{SpotCamera::BACK, SpotImageType::RGB},
-//           ImageSource{SpotCamera::LEFT, SpotImageType::RGB}, ImageSource{SpotCamera::RIGHT, SpotImageType::RGB},
-//           ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH},
-//           ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH},
-//           ImageSource{SpotCamera::BACK, SpotImageType::DEPTH}, ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH},
-//           ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH},
-//           ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED},
-//           ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED},
-//           ImageSource{SpotCamera::BACK, SpotImageType::DEPTH_REGISTERED},
-//           ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED},
-//           ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED}));
+  // WHEN RGB, depth, and registered images are requested from the body cameras, excluding the hand camera
+  // THEN image sources for all camera types and all body cameras are returned
+  EXPECT_THAT(
+      createImageSources(true, true, true, false, default_cameras_used),
+      UnorderedElementsAre(
+          ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB},
+          ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB}, ImageSource{SpotCamera::BACK, SpotImageType::RGB},
+          ImageSource{SpotCamera::LEFT, SpotImageType::RGB}, ImageSource{SpotCamera::RIGHT, SpotImageType::RGB},
+          ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH},
+          ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH},
+          ImageSource{SpotCamera::BACK, SpotImageType::DEPTH}, ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH},
+          ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH},
+          ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED},
+          ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED},
+          ImageSource{SpotCamera::BACK, SpotImageType::DEPTH_REGISTERED},
+          ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED},
+          ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED}));
 
-//   // WHEN RGB, depth, and registered images are requested from the body cameras and the hand camera
-//   // THEN image sources for all camera types and all body cameras (plus the hand camera) are returned
-//   EXPECT_THAT(
-//       createImageSources(true, true, true, true),
-//       UnorderedElementsAre(
-//           ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB},
-//           ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB}, ImageSource{SpotCamera::BACK, SpotImageType::RGB},
-//           ImageSource{SpotCamera::LEFT, SpotImageType::RGB}, ImageSource{SpotCamera::RIGHT, SpotImageType::RGB},
-//           ImageSource{SpotCamera::HAND, SpotImageType::RGB}, ImageSource{SpotCamera::FRONTLEFT,
-//           SpotImageType::DEPTH}, ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH},
-//           ImageSource{SpotCamera::BACK, SpotImageType::DEPTH}, ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH},
-//           ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH}, ImageSource{SpotCamera::HAND, SpotImageType::DEPTH},
-//           ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED},
-//           ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED},
-//           ImageSource{SpotCamera::BACK, SpotImageType::DEPTH_REGISTERED},
-//           ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED},
-//           ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED},
-//           ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}));
-// }
+  // WHEN RGB, depth, and registered images are requested from the body cameras and the hand camera
+  // THEN image sources for all camera types and all body cameras (plus the hand camera) are returned
+  EXPECT_THAT(
+      createImageSources(true, true, true, true, default_cameras_used),
+      UnorderedElementsAre(
+          ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB},
+          ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB}, ImageSource{SpotCamera::BACK, SpotImageType::RGB},
+          ImageSource{SpotCamera::LEFT, SpotImageType::RGB}, ImageSource{SpotCamera::RIGHT, SpotImageType::RGB},
+          ImageSource{SpotCamera::HAND, SpotImageType::RGB}, ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH},
+          ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH},
+          ImageSource{SpotCamera::BACK, SpotImageType::DEPTH}, ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH},
+          ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH}, ImageSource{SpotCamera::HAND, SpotImageType::DEPTH},
+          ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED},
+          ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED},
+          ImageSource{SpotCamera::BACK, SpotImageType::DEPTH_REGISTERED},
+          ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED},
+          ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED},
+          ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}));
+}
 }  // namespace spot_ros2::images::test
