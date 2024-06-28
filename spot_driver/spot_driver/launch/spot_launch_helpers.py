@@ -20,8 +20,10 @@ def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:
         KeyError, YAMLError: If your yaml is formatted incorrectly
 
     Returns:
-        dict[str, Any]: dictionary of parameter_name: parameter_value
+        dict[str, Any]: dictionary of parameter_name: parameter_value.
     """
+    if not config_file_path:
+        return {}
     with open(config_file_path, "r") as config_yaml:
         config_dict = yaml.safe_load(config_yaml)
         ros_params = config_dict["/**"]["ros__parameters"]
@@ -78,19 +80,36 @@ def default_camera_sources(has_arm: bool) -> List[str]:
 
 
 def get_camera_sources(config_file_path: str, has_arm: bool) -> List[str]:
+    """Get the list of cameras to stream from. This will be taken from the config yaml if it exists and is correctly
+    formatted, and if not, it will default to all available cameras.
+
+    Args:
+        config_file_path (str): Path to your configuration yaml.
+        has_arm (bool): Whether or not your Spot has an arm.
+
+    Returns:
+        List[str]: List of cameras the driver will stream from.
+    """
+    default_sources = default_camera_sources(has_arm)
     ros_params = get_ros_param_dict(config_file_path)
     if "cameras_used" in ros_params:
         camera_sources = ros_params["cameras_used"]
-        # assert isinstance(camera_sources, list[str])
-        if "hand" in camera_sources and not has_arm:
+        if isinstance(camera_sources, List):
+            if "hand" in camera_sources and not has_arm:
+                print(
+                    f'Selected camera sources {camera_sources} contains "hand", but your robot doesn\'t have an arm --'
+                    " removing this from your camera sources"
+                )
+                camera_sources.remove("hand")
+            return camera_sources
+        else:
             print(
-                f'Selected camera sources {camera_sources} contains "hand", but your robot doesn\'t have an arm --'
-                " removing this from your camera sources"
+                f"Inputted camera sources {camera_sources} is not correctly formatted as a list! Defaulting to all"
+                " cameras enabled."
             )
-            camera_sources.remove("hand")
-        return camera_sources
+            return default_sources
     else:
-        return default_camera_sources(has_arm)
+        return default_sources
 
 
 def spot_has_arm(config_file_path: str, spot_name: str) -> bool:
