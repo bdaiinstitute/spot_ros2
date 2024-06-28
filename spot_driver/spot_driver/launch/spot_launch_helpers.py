@@ -8,6 +8,9 @@ import yaml
 
 from spot_wrapper.wrapper import SpotWrapper
 
+COLOR_END = "\33[0m"
+COLOR_YELLOW = "\33[33m"
+
 
 def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:
     """Get a dictionary of parameter_name: parameter_value from a ROS config yaml file.
@@ -66,8 +69,8 @@ def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional
     if (not username) or (not password) or (not hostname):
         raise ValueError(
             "One or more of your login credentials has not been specified! Got invalid values of "
-            "[Username: '{}' Password: '{}' Hostname: '{}']. Ensure that your environment variables are set or "
-            "update your config_file yaml.".format(username, password, hostname)
+            f"[Username: '{username}' Password: '{password}' Hostname: '{hostname}']. Ensure that your environment "
+            "variables are set or update your config_file yaml."
         )
     return username, password, hostname, port, certificate
 
@@ -79,37 +82,41 @@ def default_camera_sources(has_arm: bool) -> List[str]:
     return camera_sources
 
 
-def get_camera_sources(config_file_path: str, has_arm: bool) -> List[str]:
-    """Get the list of cameras to stream from. This will be taken from the config yaml if it exists and is correctly
-    formatted, and if not, it will default to all available cameras.
+def get_camera_sources_from_ros_params(ros_params: Dict[str, Any], has_arm: bool) -> List[str]:
+    """Get the list of cameras to stream from. This will be taken from the parameters in the config yaml if it exists
+    and is correctly formatted, and if not, it will default to all available cameras.
 
     Args:
-        config_file_path (str): Path to your configuration yaml.
+        ros_params (str): Dictionary of ros parameters from the config file.
         has_arm (bool): Whether or not your Spot has an arm.
 
     Returns:
         List[str]: List of cameras the driver will stream from.
     """
     default_sources = default_camera_sources(has_arm)
-    ros_params = get_ros_param_dict(config_file_path)
     if "cameras_used" in ros_params:
         camera_sources = ros_params["cameras_used"]
         if isinstance(camera_sources, List):
-            if "hand" in camera_sources and not has_arm:
-                print(
-                    f'Selected camera sources {camera_sources} contains "hand", but your robot doesn\'t have an arm --'
-                    " removing this from your camera sources"
-                )
-                camera_sources.remove("hand")
+            # Only keep the sources that are also present in the default list.This will filter out camera names that
+            # are incorrect (typos) or for example, the hand camera if it is listed but the robot doesn't have an arm.
+            camera_sources = [cam for cam in camera_sources if cam in default_sources]
             return camera_sources
         else:
             print(
-                f"Inputted camera sources {camera_sources} is not correctly formatted as a list! Defaulting to all"
-                " cameras enabled."
+                f"{COLOR_YELLOW}WARNING: Inputted camera sources '{camera_sources}' is not correctly formatted as a "
+                f"list! Defaulting to all cameras enabled.{COLOR_END}"
             )
             return default_sources
     else:
         return default_sources
+
+
+def get_camera_sources(config_file_path: str, has_arm: bool) -> List[str]:
+    """Wrapper around get_camera_sources_from_ros_params that grabs the ros parameters from the config file."""
+    camera_sources = get_camera_sources_from_ros_params(get_ros_param_dict(config_file_path), has_arm)
+    if len(camera_sources) == 0:
+        print(f"{COLOR_YELLOW}WARNING: No camera sources are selected. Was this intended?{COLOR_END}")
+    return camera_sources
 
 
 def spot_has_arm(config_file_path: str, spot_name: str) -> bool:

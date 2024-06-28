@@ -161,28 +161,29 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(container)
 
-    # add the image stitcher node
-    stitcher_params = {
-        "body_frame": f"{spot_name}/body" if spot_name else "body",
-        "virtual_camera_frame": f"{spot_name}/virtual_camera" if spot_name else "virtual_camera",
-    }
-    stitcher_prefix = f"/{spot_name}" if spot_name else ""
-    image_stitcher_node = launch_ros.actions.Node(
-        package="spot_driver",
-        executable="image_stitcher_node",
-        namespace=spot_name,
-        output="screen",
-        remappings=[
-            (f"{stitcher_prefix}/left/image", f"{stitcher_prefix}/camera/frontleft/image"),
-            (f"{stitcher_prefix}/left/camera_info", f"{stitcher_prefix}/camera/frontleft/camera_info"),
-            (f"{stitcher_prefix}/right/image", f"{stitcher_prefix}/camera/frontright/image"),
-            (f"{stitcher_prefix}/right/camera_info", f"{stitcher_prefix}/camera/frontright/camera_info"),
-            (f"{stitcher_prefix}/virtual_camera/image", f"{stitcher_prefix}/camera/frontmiddle_virtual/image"),
-        ],
-        parameters=[config_file, stitcher_params],
-        condition=IfCondition(LaunchConfiguration("stitch_front_images")),
-    )
-    ld.add_action(image_stitcher_node)
+    # add the image stitcher node, but only if frontleft and frontright cameras are enabled.
+    if "frontleft" in camera_sources and "frontright" in camera_sources:
+        stitcher_params = {
+            "body_frame": f"{spot_name}/body" if spot_name else "body",
+            "virtual_camera_frame": f"{spot_name}/virtual_camera" if spot_name else "virtual_camera",
+        }
+        stitcher_prefix = f"/{spot_name}" if spot_name else ""
+        image_stitcher_node = launch_ros.actions.Node(
+            package="spot_driver",
+            executable="image_stitcher_node",
+            namespace=spot_name,
+            output="screen",
+            remappings=[
+                (f"{stitcher_prefix}/left/image", f"{stitcher_prefix}/camera/frontleft/image"),
+                (f"{stitcher_prefix}/left/camera_info", f"{stitcher_prefix}/camera/frontleft/camera_info"),
+                (f"{stitcher_prefix}/right/image", f"{stitcher_prefix}/camera/frontright/image"),
+                (f"{stitcher_prefix}/right/camera_info", f"{stitcher_prefix}/camera/frontright/camera_info"),
+                (f"{stitcher_prefix}/virtual_camera/image", f"{stitcher_prefix}/camera/frontmiddle_virtual/image"),
+            ],
+            parameters=[config_file, stitcher_params],
+            condition=IfCondition(LaunchConfiguration("stitch_front_images")),
+        )
+        ld.add_action(image_stitcher_node)
 
 
 def generate_launch_description() -> launch.LaunchDescription:
