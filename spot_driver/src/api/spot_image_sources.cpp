@@ -107,7 +107,7 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
 
 std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
                                          const bool get_depth_registered_images, const bool has_hand_camera,
-                                         const std::vector<std::string> cameras_used) {
+                                         const std::vector<std::string>& cameras_used) {
   std::set<ImageSource> sources;
   std::vector<spot_ros2::SpotCamera> spot_cameras_used;
   for (const auto& camera : cameras_used) {

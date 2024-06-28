@@ -185,7 +185,7 @@ std::string RclcppParameterInterface::getPreferredOdomFrame() const {
   return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
 }
 
-std::vector<std::string> RclcppParameterInterface::getCamerasUsed(bool has_arm) const {
+std::vector<std::string> RclcppParameterInterface::getCamerasUsed(const bool has_arm) const {
   const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
   std::vector<std::string> kDefaultCamerasUsedVector;
   for (const auto& camera : kDefaultCamerasUsed) {

@@ -39,7 +39,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getSpotName() const override { return spot_name; }
 
-  std::vector<std::string> getCamerasUsed(bool has_arm) const override {
+  std::vector<std::string> getCamerasUsed(const bool has_arm) const override {
     const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
     std::vector<std::string> kDefaultCamerasUsedVector;
     for (const auto& camera : kDefaultCamerasUsed) {

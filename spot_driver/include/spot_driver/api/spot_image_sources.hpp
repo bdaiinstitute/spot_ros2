@@ -51,5 +51,5 @@ namespace spot_ros2 {
 [[nodiscard]] std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
                                                        const bool get_depth_registered_images,
                                                        const bool has_hand_camera,
-                                                       const std::vector<std::string> cameras_used);
+                                                       const std::vector<std::string>& cameras_used);
 }  // namespace spot_ros2
