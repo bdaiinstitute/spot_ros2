@@ -105,10 +105,8 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
   }
 }
 
-std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
-                                         const bool get_depth_registered_images, const bool has_hand_camera,
-                                         const std::vector<std::string>& cameras_used) {
-  std::set<ImageSource> sources;
+std::vector<spot_ros2::SpotCamera> getSpotCamerasUsed(const bool has_hand_camera,
+                                                      const std::vector<std::string>& cameras_used) {
   std::vector<spot_ros2::SpotCamera> spot_cameras_used;
   for (const auto& camera : cameras_used) {
     try {
@@ -123,6 +121,14 @@ std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool g
       // camera.
     }
   }
+  return spot_cameras_used;
+}
+
+std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
+                                         const bool get_depth_registered_images, const bool has_hand_camera,
+                                         const std::vector<std::string>& cameras_used) {
+  std::set<ImageSource> sources;
+  const auto spot_cameras_used = getSpotCamerasUsed(has_hand_camera, cameras_used);
   if (get_rgb_images) {
     for (const auto& camera : spot_cameras_used) {
       sources.insert(ImageSource{camera, SpotImageType::RGB});
