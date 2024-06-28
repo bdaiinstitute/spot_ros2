@@ -19,18 +19,33 @@ def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:
         config_file_path (str): Path to the config yaml.
 
     Raises:
-        FileNotFoundError: If the path to the config file doesn't exist.
-        KeyError, YAMLError: If your yaml is formatted incorrectly
+        FileNotFoundError: If the config file doesn't exist
+        YamlError: If the yaml cannot be parsed
+        ValueError: If the yaml file doesn't follow ROS conventions
 
     Returns:
         dict[str, Any]: dictionary of parameter_name: parameter_value.
+        If there is no config file, returns the empty dictionary.
     """
+    # an empty config file path is a valid way to start the driver, so here we just return the empty dictionary.
     if not config_file_path:
         return {}
-    with open(config_file_path, "r") as config_yaml:
-        config_dict = yaml.safe_load(config_yaml)
-        ros_params = config_dict["/**"]["ros__parameters"]
-        return ros_params
+    if os.path.isfile(config_file_path):
+        with open(config_file_path, "r") as config_yaml:
+            try:
+                config_dict = yaml.safe_load(config_yaml)
+                if ("/**" in config_dict) and ("ros__parameters" in config_dict["/**"]):
+                    ros_params = config_dict["/**"]["ros__parameters"]
+                    return ros_params
+                else:
+                    raise ValueError(
+                        "Your yaml file does not follow ROS conventions! Make sure it starts with '/**' and"
+                        " 'ros__parameters'."
+                    )
+            except yaml.YAMLError as exc:
+                raise yaml.YAMLError(f"Config file {config_file_path} couldn't be parsed: failed with '{exc}'")
+    else:
+        raise FileNotFoundError(f"Your config file {config_file_path} doesn't exist!")
 
 
 def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional[int], Optional[str]]:
@@ -56,15 +71,15 @@ def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional
 
     ros_params = get_ros_param_dict(config_file_path)
     # only set username/password/hostname if they were not already set as environment variables.
-    if (not username) and ("username" in ros_params):
+    if not username and "username" in ros_params:
         username = ros_params["username"]
-    if (not password) and ("password" in ros_params):
+    if not password and "password" in ros_params:
         password = ros_params["password"]
-    if (not hostname) and ("hostname" in ros_params):
+    if not hostname and "hostname" in ros_params:
         hostname = ros_params["hostname"]
-    if (not port) and ("port" in ros_params):
+    if not port and "port" in ros_params:
         port = ros_params["port"]
-    if (not certificate) and ("certificate" in ros_params):
+    if not certificate and "certificate" in ros_params:
         certificate = ros_params["certificate"]
     if (not username) or (not password) or (not hostname):
         raise ValueError(
@@ -97,16 +112,16 @@ def get_camera_sources_from_ros_params(ros_params: Dict[str, Any], has_arm: bool
     if "cameras_used" in ros_params:
         camera_sources = ros_params["cameras_used"]
         if isinstance(camera_sources, List):
-            # Only keep the sources that are also present in the default list.This will filter out camera names that
-            # are incorrect (typos) or for example, the hand camera if it is listed but the robot doesn't have an arm.
-            camera_sources = [cam for cam in camera_sources if cam in default_sources]
+            # check if the user inputted any camera that's not in the default sources.
+            invalid_cameras = [cam for cam in camera_sources if cam not in default_sources]
+            if invalid_cameras:
+                raise ValueError(
+                    f"Your camera sources {camera_sources} contain invalid cameras. Make sure the values are a subset"
+                    f" of {default_sources}!"
+                )
             return camera_sources
         else:
-            print(
-                f"{COLOR_YELLOW}WARNING: Inputted camera sources '{camera_sources}' is not correctly formatted as a "
-                f"list! Defaulting to all cameras enabled.{COLOR_END}"
-            )
-            return default_sources
+            raise ValueError(f"Your camera sources {camera_sources} are not formatted correctly as a list!")
     else:
         return default_sources
 
