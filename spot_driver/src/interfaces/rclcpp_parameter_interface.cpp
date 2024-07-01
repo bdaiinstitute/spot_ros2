@@ -211,7 +211,7 @@ tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterf
         spot_cameras_used.insert(spot_camera);
       }
     } catch (const std::out_of_range& e) {
-      return tl::make_unexpected("Cannot convert camera " + camera + " to a SpotCamera.");
+      return tl::make_unexpected("Cannot convert camera '" + camera + "' to a SpotCamera.");
     }
   }
   return spot_cameras_used;

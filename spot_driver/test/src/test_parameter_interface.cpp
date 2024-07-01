@@ -342,6 +342,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedSubsetWithHand) {
   // THEN this is an invalid choice of parameters.
   const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsFalse());
+  EXPECT_THAT(cameras_used_no_arm.error(), StrEq("Cannot add SpotCamera 'hand', the robot does not have an arm!"));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedWithInvalidCamera) {
@@ -356,7 +357,9 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedWithInvalidCamera) {
   // THEN the result is invalid for robots with and without arms, as the camera "not_a_camera" does not exist on Spot.
   const auto cameras_used_arm = parameter_interface.getCamerasUsed(true);
   EXPECT_THAT(cameras_used_arm.has_value(), IsFalse());
+  EXPECT_THAT(cameras_used_arm.error(), StrEq("Cannot convert camera 'not_a_camera' to a SpotCamera."));
   const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsFalse());
+  EXPECT_THAT(cameras_used_no_arm.error(), StrEq("Cannot convert camera 'not_a_camera' to a SpotCamera."));
 }
 }  // namespace spot_ros2::test
