@@ -185,11 +185,27 @@ std::string RclcppParameterInterface::getPreferredOdomFrame() const {
   return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
 }
 
-std::vector<std::string> RclcppParameterInterface::getCamerasUsed(const bool has_arm) const {
+std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getCamerasUsed(const bool has_arm) const {
   const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
   const std::vector<std::string> kDefaultCamerasUsedVector(std::begin(kDefaultCamerasUsed),
                                                            std::end(kDefaultCamerasUsed));
-  return declareAndGetParameter<std::vector<std::string>>(node_, kParameterNameCamerasUsed, kDefaultCamerasUsedVector);
+  const auto cameras_used_param =
+      declareAndGetParameter<std::vector<std::string>>(node_, kParameterNameCamerasUsed, kDefaultCamerasUsedVector);
+  std::set<spot_ros2::SpotCamera> spot_cameras_used;
+  for (const auto& camera : cameras_used_param) {
+    try {
+      const auto spot_camera = kRosStringToSpotCamera.at(camera);
+      if ((spot_camera == SpotCamera::HAND) && (!has_arm)) {
+        // Do nothing in this case, because the hand camera shouldn't be added if the robot doesn't have an arm.
+      } else {
+        spot_cameras_used.insert(spot_camera);
+      }
+    } catch (const std::out_of_range& e) {
+      // If this input cannot be converted to a SpotCamera (e.g., because of a typo) we should just skip adding this
+      // camera.
+    }
+  }
+  return spot_cameras_used;
 }
 
 std::string RclcppParameterInterface::getSpotName() const {

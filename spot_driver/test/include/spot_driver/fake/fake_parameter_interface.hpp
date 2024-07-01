@@ -5,6 +5,7 @@
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -39,11 +40,13 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getSpotName() const override { return spot_name; }
 
-  std::vector<std::string> getCamerasUsed(const bool has_arm) const override {
+  std::set<spot_ros2::SpotCamera> getCamerasUsed(const bool has_arm) const override {
     const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
-    const std::vector<std::string> kDefaultCamerasUsedVector(std::begin(kDefaultCamerasUsed),
-                                                             std::end(kDefaultCamerasUsed));
-    return kDefaultCamerasUsedVector;
+    std::set<spot_ros2::SpotCamera> spot_cameras_used;
+    for (const auto& camera : kDefaultCamerasUsed) {
+      spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
+    }
+    return spot_cameras_used;
   }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};

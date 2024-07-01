@@ -40,14 +40,6 @@ static const std::unordered_map<spot_ros2::SpotCamera, std::string> kSpotCameraT
 };
 
 /**
- * @brief Map from each ROS camera topic name to SpotCamera value.
- */
-static const std::unordered_map<std::string, spot_ros2::SpotCamera> kRosStringToSpotCamera{
-    {"back", SpotCamera::BACK}, {"frontleft", SpotCamera::FRONTLEFT}, {"frontright", SpotCamera::FRONTRIGHT},
-    {"hand", SpotCamera::HAND}, {"left", SpotCamera::LEFT},           {"right", SpotCamera::RIGHT},
-};
-
-/**
  * @brief Map from each ImageSource permutation to the corresponding fully-qualified source name used by the Spot API.
  */
 static const std::map<ImageSource, std::string> kImageSourceToAPISourceName = []() {
@@ -105,29 +97,11 @@ tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string
   }
 }
 
-std::set<SpotCamera> getSpotCamerasUsed(const bool has_hand_camera, const std::vector<std::string>& cameras_used) {
-  std::set<SpotCamera> spot_cameras_used;
-  for (const auto& camera : cameras_used) {
-    try {
-      const auto spot_camera = kRosStringToSpotCamera.at(camera);
-      if ((spot_camera == SpotCamera::HAND) && (!has_hand_camera)) {
-        // Do nothing in this case, because the hand camera shouldn't be added if the robot doesn't have an arm.
-      } else {
-        spot_cameras_used.insert(kRosStringToSpotCamera.at(camera));
-      }
-    } catch (const std::out_of_range& e) {
-      // If this input cannot be converted to a SpotCamera (e.g., because of a typo) we should just skip adding this
-      // camera.
-    }
-  }
-  return spot_cameras_used;
-}
-
 std::set<ImageSource> createImageSources(const bool get_rgb_images, const bool get_depth_images,
                                          const bool get_depth_registered_images, const bool has_hand_camera,
-                                         const std::vector<std::string>& cameras_used) {
+                                         const std::set<SpotCamera>& spot_cameras_used) {
   std::set<ImageSource> sources;
-  const auto spot_cameras_used = getSpotCamerasUsed(has_hand_camera, cameras_used);
+  // const auto spot_cameras_used = getSpotCamerasUsed(has_hand_camera, cameras_used);
   if (get_rgb_images) {
     for (const auto& camera : spot_cameras_used) {
       sources.insert(ImageSource{camera, SpotImageType::RGB});
