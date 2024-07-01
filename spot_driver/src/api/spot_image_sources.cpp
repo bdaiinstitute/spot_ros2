@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <tl_expected/expected.hpp>
 #include <unordered_map>
+#include <vector>
 
 namespace {
 using ImageSource = spot_ros2::ImageSource;

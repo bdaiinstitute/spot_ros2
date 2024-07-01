@@ -8,7 +8,6 @@
 
 #include <set>
 #include <string>
-#include <vector>
 
 namespace spot_ros2 {
 /**

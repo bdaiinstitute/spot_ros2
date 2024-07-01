@@ -3,6 +3,7 @@
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 
 #include <cstdlib>
+#include <vector>
 
 namespace {
 constexpr auto kEnvVarNameHostname = "SPOT_IP";

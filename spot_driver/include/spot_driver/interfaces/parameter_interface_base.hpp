@@ -6,7 +6,6 @@
 #include <set>
 #include <string>
 #include <tl_expected/expected.hpp>
-#include <vector>
 
 #include <spot_driver/types.hpp>
 

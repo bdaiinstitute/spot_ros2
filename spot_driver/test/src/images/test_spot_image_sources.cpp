@@ -141,6 +141,8 @@ TEST(SpotImageSources, createImageSources) {
   std::set<spot_ros2::SpotCamera> default_cameras_without_arm = {
       spot_ros2::SpotCamera::FRONTLEFT, spot_ros2::SpotCamera::FRONTRIGHT, spot_ros2::SpotCamera::LEFT,
       spot_ros2::SpotCamera::RIGHT, spot_ros2::SpotCamera::BACK};
+  std::set<spot_ros2::SpotCamera> only_front_cameras = {spot_ros2::SpotCamera::FRONTLEFT,
+                                                        spot_ros2::SpotCamera::FRONTRIGHT};
   // WHEN no image types are requested, regardless of whether or not the hand camera is requested
   // THEN no ImageSources are returned
   EXPECT_THAT(createImageSources(false, false, false, default_cameras_without_arm), IsEmpty());
@@ -239,5 +241,15 @@ TEST(SpotImageSources, createImageSources) {
           ImageSource{SpotCamera::LEFT, SpotImageType::DEPTH_REGISTERED},
           ImageSource{SpotCamera::RIGHT, SpotImageType::DEPTH_REGISTERED},
           ImageSource{SpotCamera::HAND, SpotImageType::DEPTH_REGISTERED}));
+
+  // WHEN RGB, depth, and registered images are requested from only the frontleft and frontright cameras
+  // THEN image sources for only these camera types are returned
+  EXPECT_THAT(createImageSources(true, true, true, only_front_cameras),
+              UnorderedElementsAre(ImageSource{SpotCamera::FRONTLEFT, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::RGB},
+                                   ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH},
+                                   ImageSource{SpotCamera::FRONTLEFT, SpotImageType::DEPTH_REGISTERED},
+                                   ImageSource{SpotCamera::FRONTRIGHT, SpotImageType::DEPTH_REGISTERED}));
 }
 }  // namespace spot_ros2::images::test
