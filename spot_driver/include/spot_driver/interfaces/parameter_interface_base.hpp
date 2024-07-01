@@ -41,6 +41,7 @@ class ParameterInterfaceBase {
   virtual bool getPublishDepthRegisteredImages() const = 0;
   virtual std::string getPreferredOdomFrame() const = 0;
   virtual std::string getSpotName() const = 0;
+  virtual std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(bool has_arm) const = 0;
   virtual std::set<spot_ros2::SpotCamera> getCamerasUsed(bool has_arm) const = 0;
 
  protected:

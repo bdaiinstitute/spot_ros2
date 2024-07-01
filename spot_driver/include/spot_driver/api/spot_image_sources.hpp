@@ -36,16 +36,6 @@ namespace spot_ros2 {
  */
 [[nodiscard]] tl::expected<ImageSource, std::string> fromSpotImageSourceName(const std::string& source_name);
 
-// /**
-//  * @brief Create a set of the Spot cameras to use from the list of cameras_used.
-
-//  * @param has_hand_camera Sets whether to request images from the hand camera.
-//  * @param cameras_used List of cameras to stream from.
-//  * @return A set of SpotCameras representing which cameras are enabled.
-//  */
-// [[nodiscard]] std::set<SpotCamera> getSpotCamerasUsed(const bool has_hand_camera,
-//                                                       const std::vector<std::string>& cameras_used);
-
 /**
  * @brief Create a set of image sources corresponding to the specified image types.
  * @details We represent the collection of ImageSources as a std::set to clearly communicate the requirement that we

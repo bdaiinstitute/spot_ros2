@@ -40,13 +40,17 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getSpotName() const override { return spot_name; }
 
-  std::set<spot_ros2::SpotCamera> getCamerasUsed(const bool has_arm) const override {
+  std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm) const override {
     const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
     std::set<spot_ros2::SpotCamera> spot_cameras_used;
     for (const auto& camera : kDefaultCamerasUsed) {
       spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
     }
     return spot_cameras_used;
+  }
+
+  std::set<spot_ros2::SpotCamera> getCamerasUsed(const bool has_arm) const override {
+    return getDefaultCamerasUsed(has_arm);
   }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};

@@ -185,6 +185,15 @@ std::string RclcppParameterInterface::getPreferredOdomFrame() const {
   return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
 }
 
+std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm) const {
+  const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+  std::set<spot_ros2::SpotCamera> spot_cameras_used;
+  for (const auto& camera : kDefaultCamerasUsed) {
+    spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
+  }
+  return spot_cameras_used;
+}
+
 std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getCamerasUsed(const bool has_arm) const {
   const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
   const std::vector<std::string> kDefaultCamerasUsedVector(std::begin(kDefaultCamerasUsed),
@@ -196,13 +205,16 @@ std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getCamerasUsed(const b
     try {
       const auto spot_camera = kRosStringToSpotCamera.at(camera);
       if ((spot_camera == SpotCamera::HAND) && (!has_arm)) {
-        // Do nothing in this case, because the hand camera shouldn't be added if the robot doesn't have an arm.
+        // Hand camera is not valid to add if the robot doesn't have an arm. Fall back to default sources.
+        // TODO(khughes) Log this (how?)
+        return getDefaultCamerasUsed(has_arm);
       } else {
         spot_cameras_used.insert(spot_camera);
       }
     } catch (const std::out_of_range& e) {
-      // If this input cannot be converted to a SpotCamera (e.g., because of a typo) we should just skip adding this
-      // camera.
+      // If any of the user inputs are invalid, just return the default.
+      // TODO(khughes) Log this (how?)
+      return getDefaultCamerasUsed(has_arm);
     }
   }
   return spot_cameras_used;
