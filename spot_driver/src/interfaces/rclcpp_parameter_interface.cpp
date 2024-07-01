@@ -194,7 +194,8 @@ std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(
   return spot_cameras_used;
 }
 
-std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getCamerasUsed(const bool has_arm) const {
+tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterface::getCamerasUsed(
+    const bool has_arm) const {
   const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
   const std::vector<std::string> kDefaultCamerasUsedVector(std::begin(kDefaultCamerasUsed),
                                                            std::end(kDefaultCamerasUsed));
@@ -205,16 +206,12 @@ std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getCamerasUsed(const b
     try {
       const auto spot_camera = kRosStringToSpotCamera.at(camera);
       if ((spot_camera == SpotCamera::HAND) && (!has_arm)) {
-        // Hand camera is not valid to add if the robot doesn't have an arm. Fall back to default sources.
-        // TODO(khughes) Log this (how?)
-        return getDefaultCamerasUsed(has_arm);
+        return tl::make_unexpected("Cannot add SpotCamera 'hand', the robot does not have an arm!");
       } else {
         spot_cameras_used.insert(spot_camera);
       }
     } catch (const std::out_of_range& e) {
-      // If any of the user inputs are invalid, just return the default.
-      // TODO(khughes) Log this (how?)
-      return getDefaultCamerasUsed(has_arm);
+      return tl::make_unexpected("Cannot convert camera " + camera + " to a SpotCamera.");
     }
   }
   return spot_cameras_used;

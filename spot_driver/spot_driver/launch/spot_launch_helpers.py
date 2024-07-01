@@ -99,11 +99,14 @@ def default_camera_sources(has_arm: bool) -> List[str]:
 
 def get_camera_sources_from_ros_params(ros_params: Dict[str, Any], has_arm: bool) -> List[str]:
     """Get the list of cameras to stream from. This will be taken from the parameters in the config yaml if it exists
-    and is correctly formatted, and if not, it will default to all available cameras.
+    and contains valid cameras. If this list contains invalid cameras, fall back to the default of all cameras.
 
     Args:
         ros_params (str): Dictionary of ros parameters from the config file.
         has_arm (bool): Whether or not your Spot has an arm.
+
+    Raises:
+        ValueError: If the parameter cameras_used is not formattted as a list.
 
     Returns:
         List[str]: List of cameras the driver will stream from.
@@ -115,10 +118,12 @@ def get_camera_sources_from_ros_params(ros_params: Dict[str, Any], has_arm: bool
             # check if the user inputted any camera that's not in the default sources.
             invalid_cameras = [cam for cam in camera_sources if cam not in default_sources]
             if invalid_cameras:
-                raise ValueError(
-                    f"Your camera sources {camera_sources} contain invalid cameras. Make sure the values are a subset"
-                    f" of {default_sources}!"
+                print(
+                    f"{COLOR_YELLOW}WARNING: Your camera sources {camera_sources} contain invalid cameras. Make sure"
+                    f" that the values are a subset of the default {default_sources}. Falling back to these default"
+                    f" sources instead.{COLOR_END}"
                 )
+                return default_sources
             return camera_sources
         else:
             raise ValueError(f"Your camera sources {camera_sources} are not formatted correctly as a list!")

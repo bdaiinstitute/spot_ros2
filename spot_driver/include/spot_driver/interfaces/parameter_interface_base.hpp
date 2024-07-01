@@ -5,6 +5,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <tl_expected/expected.hpp>
 #include <vector>
 
 #include <spot_driver/types.hpp>
@@ -42,7 +43,7 @@ class ParameterInterfaceBase {
   virtual std::string getPreferredOdomFrame() const = 0;
   virtual std::string getSpotName() const = 0;
   virtual std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(bool has_arm) const = 0;
-  virtual std::set<spot_ros2::SpotCamera> getCamerasUsed(bool has_arm) const = 0;
+  virtual tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(bool has_arm) const = 0;
 
  protected:
   // These are the definitions of the default values for optional parameters.

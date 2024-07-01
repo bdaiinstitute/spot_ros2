@@ -49,7 +49,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
     return spot_cameras_used;
   }
 
-  std::set<spot_ros2::SpotCamera> getCamerasUsed(const bool has_arm) const override {
+  tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(const bool has_arm) const override {
     return getDefaultCamerasUsed(has_arm);
   }
 

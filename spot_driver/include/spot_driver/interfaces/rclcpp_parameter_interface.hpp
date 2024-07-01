@@ -37,7 +37,8 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
   [[nodiscard]] std::string getPreferredOdomFrame() const override;
   [[nodiscard]] std::string getSpotName() const override;
   [[nodiscard]] std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm) const override;
-  [[nodiscard]] std::set<spot_ros2::SpotCamera> getCamerasUsed(const bool has_arm) const override;
+  [[nodiscard]] tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(
+      const bool has_arm) const override;
 
  private:
   std::shared_ptr<rclcpp::Node> node_;
