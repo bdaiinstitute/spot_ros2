@@ -208,9 +208,8 @@ tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterf
       const auto spot_camera = kRosStringToSpotCamera.at(camera);
       if ((spot_camera == SpotCamera::HAND) && (!has_arm)) {
         return tl::make_unexpected("Cannot add SpotCamera 'hand', the robot does not have an arm!");
-      } else {
-        spot_cameras_used.insert(spot_camera);
       }
+      spot_cameras_used.insert(spot_camera);
     } catch (const std::out_of_range& e) {
       return tl::make_unexpected("Cannot convert camera '" + camera + "' to a SpotCamera.");
     }

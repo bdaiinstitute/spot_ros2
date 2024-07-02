@@ -19,8 +19,7 @@ def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:
         config_file_path (str): Path to the config yaml.
 
     Raises:
-        FileNotFoundError: If the config file doesn't exist
-        YamlError: If the yaml cannot be parsed
+        YamlError: If the yaml can't be parsed
         ValueError: If the yaml file doesn't follow ROS conventions
 
     Returns:
@@ -30,22 +29,19 @@ def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:
     # an empty config file path is a valid way to start the driver, so here we just return the empty dictionary.
     if not config_file_path:
         return {}
-    if os.path.isfile(config_file_path):
-        with open(config_file_path, "r") as config_yaml:
-            try:
-                config_dict = yaml.safe_load(config_yaml)
-                if ("/**" in config_dict) and ("ros__parameters" in config_dict["/**"]):
-                    ros_params = config_dict["/**"]["ros__parameters"]
-                    return ros_params
-                else:
-                    raise ValueError(
-                        "Your yaml file does not follow ROS conventions! Make sure it starts with '/**' and"
-                        " 'ros__parameters'."
-                    )
-            except yaml.YAMLError as exc:
-                raise yaml.YAMLError(f"Config file {config_file_path} couldn't be parsed: failed with '{exc}'")
-    else:
-        raise FileNotFoundError(f"Your config file {config_file_path} doesn't exist!")
+    with open(config_file_path, "r") as config_yaml:
+        try:
+            config_dict = yaml.safe_load(config_yaml)
+            if ("/**" in config_dict) and ("ros__parameters" in config_dict["/**"]):
+                ros_params = config_dict["/**"]["ros__parameters"]
+                return ros_params
+            else:
+                raise ValueError(
+                    "Your yaml file does not follow ROS conventions! Make sure it starts with '/**' and"
+                    " 'ros__parameters'."
+                )
+        except yaml.YAMLError as exc:
+            raise yaml.YAMLError(f"Config file {config_file_path} couldn't be parsed: failed with '{exc}'")
 
 
 def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional[int], Optional[str]]:
