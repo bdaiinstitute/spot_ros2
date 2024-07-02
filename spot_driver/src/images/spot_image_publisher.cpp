@@ -95,7 +95,8 @@ bool SpotImagePublisher::initialize() {
   if (cameras_used_parameter.has_value()) {
     cameras_used = cameras_used_parameter.value();
   } else {
-    logger_->logWarn("Invalid cameras_used parameter! Defaulting to publishing from all cameras.");
+    logger_->logWarn("Invalid cameras_used parameter! Got error: " + cameras_used_parameter.error() +
+                     " Defaulting to publishing from all cameras.");
     cameras_used = parameters_->getDefaultCamerasUsed(has_arm_);
   }
 
