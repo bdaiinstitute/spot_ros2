@@ -409,7 +409,9 @@
         <xacro:include filename="$(find spot_description)/urdf/accessories.urdf.xacro" />
 
         <!-- Optional custom includes. -->
-        <xacro:include filename="$(optenv SPOT_URDF_EXTRAS empty.urdf)" />
+
+        <xacro:property name="default_empty_urdf" value="$(find spot_description)/urdf/empty.urdf" />
+        <xacro:include filename="$(optenv SPOT_URDF_EXTRAS ${default_empty_urdf})" />
 
         <!-- Include Arm if necessary-->
         <xacro:if value="${arm}">

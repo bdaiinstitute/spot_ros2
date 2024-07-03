@@ -15,13 +15,13 @@
     <!-- The actual macro containing the urdf of the h1-->
     <xacro:include filename="$(find spot_description)/urdf/spot.urdf.xacro" />
     <xacro:include filename="$(find spot_ros2_control)/xacro/spot_interfaces.ros2_control.xacro" />
-    <xacro:include filename="$(find h1_description)/xacro/spot.ros2_control.xacro" />
+    <xacro:include filename="$(find spot_ros2_control)/xacro/spot.ros2_control.xacro" />
 
     <!-- Adding Spot-->
-    <xacro:spot />
+    <xacro:load_spot arm="false" tf_prefix=""/>
     <!-- Adding the ros2control tags without hands-->
     <xacro:if value="${add_ros2control_tag_property}">
-        <xacro:spot_ros2_control />
+        <!-- <xacro:spot_ros2_control /> -->
         <xacro:spot_interface_ros2_control />
     </xacro:if>
 
