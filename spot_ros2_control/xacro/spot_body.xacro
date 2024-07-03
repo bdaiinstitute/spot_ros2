@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<robot name="h1" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Add ros2control tag-->
+    <xacro:arg name="add_ros2control_tag" default="true" />
+    <!-- Add ros2control tag-->
+    <xacro:arg name="hardware_interface_type" default="mock" />
+
+    <!-- we create propery object from the arguments to improve usability later on. Arg have less
+    options to be used in if statements-->
+    <xacro:property name="add_ros2control_tag_property" value="$(arg add_ros2control_tag)" />
+    <xacro:property name="hardware_interface_type_property" value="$(arg hardware_interface_type)" />
+
+    <!-- The actual macro containing the urdf of the h1-->
+    <xacro:include filename="$(find spot_description)/urdf/spot.urdf.xacro" />
+    <xacro:include filename="$(find spot_ros2_control)/xacro/spot_interfaces.ros2_control.xacro" />
+    <xacro:include filename="$(find h1_description)/xacro/spot.ros2_control.xacro" />
+
+    <!-- Adding Spot-->
+    <xacro:spot />
+    <!-- Adding the ros2control tags without hands-->
+    <xacro:if value="${add_ros2control_tag_property}">
+        <xacro:spot_ros2_control />
+        <xacro:spot_interface_ros2_control />
+    </xacro:if>
+
+</robot>
