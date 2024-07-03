@@ -12,16 +12,7 @@
             <state_interface name="effort_commanded" />
             <state_interface name="p_gain_commanded" />
             <state_interface name="d_gain_commanded" />
-            <state_interface name="emergency_position_commanded" />
-            <state_interface name="emergency_velocity_commanded" />
-            <state_interface name="emergency_effort_commanded" />
-            <state_interface name="emergency_p_gain_commanded" />
-            <state_interface name="emergency_d_gain_commanded" />
-            <state_interface name="applied_position_commanded" />
-            <state_interface name="applied_velocity_commanded" />
-            <state_interface name="applied_effort_commanded" />
-            <state_interface name="applied_p_gain_commanded" />
-            <state_interface name="applied_d_gain_commanded" />
+
             <command_interface name="position">
                 <param name="min">${position_min}</param>
                 <param name="max">${position_max}</param>
@@ -36,11 +27,6 @@
             </command_interface>
             <command_interface name="p_gain" />
             <command_interface name="d_gain" />
-            <command_interface name="emergency_position" />
-            <command_interface name="emergency_velocity" />
-            <command_interface name="emergency_effort" />
-            <command_interface name="emergency_p_gain" />
-            <command_interface name="emergency_d_gain" />
         </joint>
     </xacro:macro>
 
