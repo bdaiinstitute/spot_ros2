@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <xacro:macro name="spot_ros2_control" params="interface_type">
+    <xacro:macro name="spot_ros2_control" params="interface_type has_arm">
         <ros2_control name="SpotSystem" type="system">
             <hardware>
             <!-- TODO: This custom plugin (does not exist yet) can be the one interacting with the spot sdk. -->
@@ -14,11 +14,15 @@
                 <param name="state_following_offset">0.0</param>
             </xacro:if>
             </hardware>
-            <!-- Add the joints -->
+            <!-- Add the legs -->
             <xacro:leg front_or_rear="front" left_or_right="left" />
             <xacro:leg front_or_rear="front" left_or_right="right" />
             <xacro:leg front_or_rear="rear" left_or_right="left" />
             <xacro:leg front_or_rear="rear" left_or_right="right" />
+            <!-- Add the arm + the gripper if the robot has an arm -->
+            <xacro:if value="${has_arm}">
+                <xacro:arm/>
+            </xacro:if>
         </ros2_control>
     </xacro:macro>
 

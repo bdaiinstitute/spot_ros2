@@ -20,8 +20,16 @@ def generate_launch_description():
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(
+            "has_arm",
+            default_value="false",
+            choices=["true", "false"],
+            description="Whether the robot has an arm",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "controllers_file",
-            default_value="spot_controllers.yaml",
+            default_value="spot_controllers_without_arm.yaml",
             description="YAML file with the controllers configuration.",
         )
     )
@@ -52,7 +60,8 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "xacro", description_file]),
-            " has_arm:=false",
+            " has_arm:=",
+            LaunchConfiguration("has_arm"),
         ]
     )
 

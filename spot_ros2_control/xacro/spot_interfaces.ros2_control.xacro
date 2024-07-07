@@ -42,4 +42,30 @@
             position_min="-2.793" position_max="-0.255" velocity_max="100" load_max="100" />
     </xacro:macro>
 
+    <xacro:macro name="arm">
+        <xacro:ros2_control_joint joint_name="arm_sh0"
+            position_min="-2.168" position_max="3.142" velocity_max="100" load_max="100" />
+
+        <xacro:ros2_control_joint joint_name="arm_sh1"
+            position_min="-3.142" position_max="0.524" velocity_max="100" load_max="100" />
+
+        <xacro:ros2_control_joint joint_name="arm_el0"
+            position_min="0.000" position_max="3.142" velocity_max="100" load_max="100" />
+
+        <xacro:ros2_control_joint joint_name="arm_el1"
+            position_min="-2.793" position_max="2.793" velocity_max="100" load_max="100" />
+
+        <xacro:ros2_control_joint joint_name="arm_wr0"
+            position_min="-1.833" position_max="1.833" velocity_max="100" load_max="100" />
+
+        <xacro:ros2_control_joint joint_name="arm_wr1"
+            position_min="-2.880" position_max="2.880" velocity_max="100" load_max="100" />
+
+        <!-- TODO: this is the gripper joint. This could be its own interface to support robotsd
+        with custom grippers, but would involve modifying the URDFs in spot description. -->
+        <xacro:ros2_control_joint joint_name="arm_f1x"
+            position_min="-1.570" position_max="0.000" velocity_max="100" load_max="100" />
+
+    </xacro:macro>
+
 </robot>

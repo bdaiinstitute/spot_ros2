@@ -7,9 +7,8 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(spot_description REQUIRED)
 
 if(BUILD_TESTING)
@@ -23,6 +22,19 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+add_executable(robot_squat src/robot_squat.cpp)
+ament_target_dependencies(robot_squat
+  rclcpp
+  std_msgs
+)
+add_executable(arm_wiggle src/arm_wiggle.cpp)
+ament_target_dependencies(arm_wiggle
+  rclcpp
+  std_msgs
+)
+install(TARGETS robot_squat arm_wiggle
+  DESTINATION lib/${PROJECT_NAME})
 
 install(
   DIRECTORY xacro launch config rviz
