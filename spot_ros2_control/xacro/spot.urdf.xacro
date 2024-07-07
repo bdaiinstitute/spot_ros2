@@ -23,8 +23,7 @@
     <xacro:load_spot arm="${has_arm_property}" tf_prefix=""/>
     <!-- Adding the ros2control tags without hands-->
     <xacro:if value="${add_ros2control_tag_property}">
-        <!-- <xacro:spot_ros2_control /> -->
-        <xacro:spot_interface_ros2_control />
+        <xacro:spot_ros2_control interface_type="mock"/>
     </xacro:if>
 
 </robot>

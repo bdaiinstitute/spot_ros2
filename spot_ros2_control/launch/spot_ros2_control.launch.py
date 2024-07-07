@@ -28,7 +28,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "description_file",
-            default_value="spot_body.xacro",
+            default_value="spot.urdf.xacro",
             description="URDF/XACRO description file with the robot.",
         )
     )
@@ -52,6 +52,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "xacro", description_file]),
+            " has_arm:=false",
         ]
     )
 
@@ -114,14 +115,6 @@ def generate_launch_description():
         )
     )
 
-    # Delay rviz start after Joint State Broadcaster to avoid unnecessary warning output.
-    delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[rviz_node],
-        )
-    )
-
     # Delay loading and activation of robot_controller after `joint_state_broadcaster`
     delay_robot_controller_spawners_after_joint_state_broadcaster_spawner = []
     for controller in robot_controller_spawners:
@@ -144,7 +137,7 @@ def generate_launch_description():
         + [
             control_node,
             robot_state_pub_node,
-            delay_rviz_after_joint_state_broadcaster_spawner,
+            rviz_node,
             delay_joint_state_broadcaster_spawner_after_ros2_control_node,
         ]
         + delay_robot_controller_spawners_after_joint_state_broadcaster_spawner

@@ -1,31 +1,23 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <!-- <xacro:macro name="spot_ros2_control">
-        <xacro:if value="${hardware_interface_type_property == 'mock'}">
-            <ros2_control name="SpotSystem" type="system">
-                <hardware>
-                    <plugin>spot_ros2_control/SpotMockJointHardwareInterface</plugin>
-                </hardware>
-                <xacro:leg front_or_back="front" left_or_right="left" />
-                <xacro:leg front_or_back="front" left_or_right="right" />
-                <xacro:leg front_or_back="back" left_or_right="left" />
-                <xacro:leg front_or_back="back" left_or_right="right" />
-            </ros2_control>
-        </xacro:if>
-    </xacro:macro> -->
-
-    <xacro:macro name="spot_interface_ros2_control">
-        <ros2_control name="RobotInterfaceSystem" type="system">
+    <xacro:macro name="spot_ros2_control" params="interface_type">
+        <ros2_control name="SpotSystem" type="system">
             <hardware>
+            <!-- <xacro:if value="${interface_type == 'spot-sdk'}">
+                <plugin>spot_ros2_control/SpotMockJointHardwareInterface</plugin>
+            </xacro:if> -->
+            <xacro:if value="${interface_type == 'mock'}">
                 <plugin>mock_components/GenericSystem</plugin>
                 <param name="mock_sensor_commands">false</param>
                 <param name="state_following_offset">0.0</param>
+            </xacro:if>
             </hardware>
-            <!-- <xacro:leg front_or_back="front" left_or_right="left" />
+            <!-- Add the joints -->
+            <xacro:leg front_or_back="front" left_or_right="left" />
             <xacro:leg front_or_back="front" left_or_right="right" />
             <xacro:leg front_or_back="back" left_or_right="left" />
-            <xacro:leg front_or_back="back" left_or_right="right" /> -->
+            <xacro:leg front_or_back="back" left_or_right="right" />
         </ros2_control>
     </xacro:macro>
 
