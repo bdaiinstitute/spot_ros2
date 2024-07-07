@@ -16,7 +16,7 @@ class WiggleArm : public rclcpp::Node {
     const auto timer_rate = std::chrono::duration<double>{get_parameter("timer_rate").as_double()};
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
     timer_ = create_wall_timer(timer_rate, std::bind(&WiggleArm::timer_callback, this));
-    // This assumes the robot has an arm
+    // This assumes the robot has an arm+gripper (19 joints)
     command_start.data = std::vector<double>(19, 0.0);
     command_wiggle1.data = std::vector<double>(19, 0.0);
     command_wiggle1.data.at(16) += 1.0;

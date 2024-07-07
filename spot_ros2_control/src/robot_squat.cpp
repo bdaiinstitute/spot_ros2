@@ -1,3 +1,5 @@
+// based off: https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/joint_control/noarm_squat.py
+
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -14,7 +16,7 @@ class RobotSquat : public rclcpp::Node {
     const auto timer_rate = std::chrono::duration<double>{get_parameter("timer_rate").as_double()};
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
     timer_ = create_wall_timer(timer_rate, std::bind(&RobotSquat::timer_callback, this));
-    // This assumes the robot has an arm
+    // This assumes the robot has no arm (12 joints)
     command_stand.data = std::vector<double>(12, 0.0);
     command_squat.data = {0.15, 1.3, -2.25, -0.15, 1.3, -2.25, 0.15, 1.3, -2.25, -0.15, 1.3, -2.25};
   }
