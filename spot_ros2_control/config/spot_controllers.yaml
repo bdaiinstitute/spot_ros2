@@ -24,12 +24,12 @@ forward_position_controller:
       - front_right_hip_x
       - front_right_hip_y
       - front_right_knee
-      - back_left_hip_x
-      - back_left_hip_y
-      - back_left_knee
-      - back_right_hip_x
-      - back_right_hip_y
-      - back_right_knee
+      - rear_left_hip_x
+      - rear_left_hip_y
+      - rear_left_knee
+      - rear_right_hip_x
+      - rear_right_hip_y
+      - rear_right_knee
     interface_name: position
 
 
@@ -42,12 +42,12 @@ joint_trajectory_controller:
       - front_right_hip_x
       - front_right_hip_y
       - front_right_knee
-      - back_left_hip_x
-      - back_left_hip_y
-      - back_left_knee
-      - back_right_hip_x
-      - back_right_hip_y
-      - back_right_knee
+      - rear_left_hip_x
+      - rear_left_hip_y
+      - rear_left_knee
+      - rear_right_hip_x
+      - rear_right_hip_y
+      - rear_right_knee
 
     command_interfaces:
       - position
@@ -74,12 +74,12 @@ displacement_controller:
       - front_right_hip_x
       - front_right_hip_y
       - front_right_knee
-      - back_left_hip_x
-      - back_left_hip_y
-      - back_left_knee
-      - back_right_hip_x
-      - back_right_hip_y
-      - back_right_knee
+      - rear_left_hip_x
+      - rear_left_hip_y
+      - rear_left_knee
+      - rear_right_hip_x
+      - rear_right_hip_y
+      - rear_right_knee
 
     interface_name: position
 

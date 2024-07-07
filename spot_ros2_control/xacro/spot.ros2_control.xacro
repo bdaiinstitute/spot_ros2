@@ -14,10 +14,10 @@
             </xacro:if>
             </hardware>
             <!-- Add the joints -->
-            <xacro:leg front_or_back="front" left_or_right="left" />
-            <xacro:leg front_or_back="front" left_or_right="right" />
-            <xacro:leg front_or_back="back" left_or_right="left" />
-            <xacro:leg front_or_back="back" left_or_right="right" />
+            <xacro:leg front_or_rear="front" left_or_right="left" />
+            <xacro:leg front_or_rear="front" left_or_right="right" />
+            <xacro:leg front_or_rear="rear" left_or_right="left" />
+            <xacro:leg front_or_rear="rear" left_or_right="right" />
         </ros2_control>
     </xacro:macro>
 

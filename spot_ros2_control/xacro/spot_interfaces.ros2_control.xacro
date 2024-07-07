@@ -30,14 +30,14 @@
         </joint>
     </xacro:macro>
 
-    <xacro:macro name="leg" params="left_or_right front_or_back">
-        <xacro:ros2control_joint joint_name="${front_or_back}_${left_or_right}_hip_x"
+    <xacro:macro name="leg" params="left_or_right front_or_rear">
+        <xacro:ros2control_joint joint_name="${front_or_rear}_${left_or_right}_hip_x"
             position_min="-0.785" position_max="0.785" velocity_max="100" effort_max="100" />
 
-        <xacro:ros2control_joint joint_name="${front_or_back}_${left_or_right}_hip_y"
+        <xacro:ros2control_joint joint_name="${front_or_rear}_${left_or_right}_hip_y"
             position_min="-0.899" position_max="2.295" velocity_max="100" effort_max="100" />
 
-        <xacro:ros2control_joint joint_name="${front_or_back}_${left_or_right}_knee"
+        <xacro:ros2control_joint joint_name="${front_or_rear}_${left_or_right}_knee"
             position_min="-2.793" position_max="-0.255" velocity_max="100" effort_max="100" />
     </xacro:macro>
 
