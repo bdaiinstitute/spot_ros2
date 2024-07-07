@@ -25,7 +25,7 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  DIRECTORY xacro
+  DIRECTORY xacro launch
   DESTINATION share/${PROJECT_NAME}
 )
 
