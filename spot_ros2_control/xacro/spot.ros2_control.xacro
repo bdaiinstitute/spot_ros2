@@ -4,8 +4,9 @@
     <xacro:macro name="spot_ros2_control" params="interface_type">
         <ros2_control name="SpotSystem" type="system">
             <hardware>
+            <!-- TODO: This custom plugin (does not exist yet) can be the one interacting with the spot sdk. -->
             <!-- <xacro:if value="${interface_type == 'spot-sdk'}">
-                <plugin>spot_ros2_control/SpotMockJointHardwareInterface</plugin>
+                <plugin>spot_ros2_control/SpotJointHardwareInterface</plugin>
             </xacro:if> -->
             <xacro:if value="${interface_type == 'mock'}">
                 <plugin>mock_components/GenericSystem</plugin>

@@ -188,4 +188,4 @@ hardware_interface::return_type SpotMockJointHardwareInterface::write(const rclc
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(spot_ros2_control::SpotMockJointHardwareInterface, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(spot_ros2_control::SpotHardwareInterface, hardware_interface::SystemInterface)

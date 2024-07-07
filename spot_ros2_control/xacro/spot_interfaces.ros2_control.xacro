@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <xacro:macro name="ros2control_joint"
-        params="joint_name position_min:=0.0 position_max:=0.0 velocity_max effort_max">
+    <xacro:macro name="ros2_control_joint"
+        params="joint_name position_min:=0.0 position_max:=0.0 velocity_max load_max">
         <joint name="${joint_name}">
             <state_interface name="position" />
             <state_interface name="velocity" />
-            <state_interface name="effort" />
+            <state_interface name="load" />
             <state_interface name="position_commanded" />
             <state_interface name="velocity_commanded" />
-            <state_interface name="effort_commanded" />
-            <state_interface name="p_gain_commanded" />
-            <state_interface name="d_gain_commanded" />
+            <state_interface name="load_commanded" />
+            <state_interface name="k_q_p_commanded" />
+            <state_interface name="k_qd_p_commanded" />
 
             <command_interface name="position">
                 <param name="min">${position_min}</param>
@@ -21,24 +21,25 @@
                 <param name="min">${-velocity_max}</param>
                 <param name="max">${velocity_max}</param>
             </command_interface>
-            <command_interface name="effort">
-                <param name="min">${-effort_max}</param>
-                <param name="max">${effort_max}</param>
+            <command_interface name="load">
+                <param name="min">${-load_max}</param>
+                <param name="max">${load_max}</param>
             </command_interface>
-            <command_interface name="p_gain" />
-            <command_interface name="d_gain" />
+            <command_interface name="k_q_p" />
+            <command_interface name="k_qd_p" />
         </joint>
     </xacro:macro>
 
+    <!-- TODO: find actual velocity and load bounds. -->
     <xacro:macro name="leg" params="left_or_right front_or_rear">
-        <xacro:ros2control_joint joint_name="${front_or_rear}_${left_or_right}_hip_x"
-            position_min="-0.785" position_max="0.785" velocity_max="100" effort_max="100" />
+        <xacro:ros2_control_joint joint_name="${front_or_rear}_${left_or_right}_hip_x"
+            position_min="-0.785" position_max="0.785" velocity_max="100" load_max="100" />
 
-        <xacro:ros2control_joint joint_name="${front_or_rear}_${left_or_right}_hip_y"
-            position_min="-0.899" position_max="2.295" velocity_max="100" effort_max="100" />
+        <xacro:ros2_control_joint joint_name="${front_or_rear}_${left_or_right}_hip_y"
+            position_min="-0.899" position_max="2.295" velocity_max="100" load_max="100" />
 
-        <xacro:ros2control_joint joint_name="${front_or_rear}_${left_or_right}_knee"
-            position_min="-2.793" position_max="-0.255" velocity_max="100" effort_max="100" />
+        <xacro:ros2_control_joint joint_name="${front_or_rear}_${left_or_right}_knee"
+            position_min="-2.793" position_max="-0.255" velocity_max="100" load_max="100" />
     </xacro:macro>
 
 </robot>
