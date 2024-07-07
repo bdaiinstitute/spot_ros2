@@ -1,0 +1,91 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    forward_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    displacement_controller:
+      type: displacement_controller/DisplacementController
+
+
+forward_position_controller:
+  ros__parameters:
+    joints:
+      - front_left_hip_x
+      - front_left_hip_y
+      - front_left_knee
+      - front_right_hip_x
+      - front_right_hip_y
+      - front_right_knee
+      - back_left_hip_x
+      - back_left_hip_y
+      - back_left_knee
+      - back_right_hip_x
+      - back_right_hip_y
+      - back_right_knee
+    interface_name: position
+
+
+joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - front_left_hip_x
+      - front_left_hip_y
+      - front_left_knee
+      - front_right_hip_x
+      - front_right_hip_y
+      - front_right_knee
+      - back_left_hip_x
+      - back_left_hip_y
+      - back_left_knee
+      - back_right_hip_x
+      - back_right_hip_y
+      - back_right_knee
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    state_publish_rate: 50.0 # Defaults to 50
+    action_monitor_rate: 20.0 # Defaults to 20
+
+    allow_partial_joints_goal: false # Defaults to false
+    constraints:
+      stopped_velocity_tolerance: 0.01 # Defaults to 0.01
+      goal_time: 0.0 # Defaults to 0.0 (start immediately)
+
+
+displacement_controller:
+  ros__parameters:
+    joints:
+      - front_left_hip_x
+      - front_left_hip_y
+      - front_left_knee
+      - front_right_hip_x
+      - front_right_hip_y
+      - front_right_knee
+      - back_left_hip_x
+      - back_left_hip_y
+      - back_left_knee
+      - back_right_hip_x
+      - back_right_hip_y
+      - back_right_knee
+
+    interface_name: position
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity

@@ -25,7 +25,7 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  DIRECTORY xacro launch
+  DIRECTORY xacro launch config rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
