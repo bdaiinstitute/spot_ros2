@@ -5,13 +5,18 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# find dependencies
+# Dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-
+# ROS 2 control specific dependencies
+find_package(controller_manager REQUIRED)
+# find_package(hardware_interface REQUIRED)
+# find_package(controller_interface REQUIRED)
+# find_package(pluginlib REQUIRED)
+# messages
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
-
+# Spot URDF files
 find_package(spot_description REQUIRED)
 
 if(BUILD_TESTING)

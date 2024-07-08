@@ -23,7 +23,7 @@ def generate_launch_description():
                 ),
                 launch_arguments={
                     "has_arm": "true",
-                    "controllers_file": "spot_controllers_with_arm.yaml",
+                    "controllers_config": "spot_controllers_with_arm.yaml",
                     "robot_controller": "forward_position_controller",
                 }.items(),
             ),
