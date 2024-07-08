@@ -7,28 +7,43 @@
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
-class RobotSquat : public rclcpp::Node {
+class NoarmSquat : public rclcpp::Node {
  public:
-  RobotSquat() : Node("robot_squat"), standing{true} {
+  NoarmSquat() : Node("noarm_squat"), standing{true}, initialized{false} {
     declare_parameter("timer_rate", 5.0);
     const auto timer_rate = std::chrono::duration<double>{get_parameter("timer_rate").as_double()};
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
-    timer_ = create_wall_timer(timer_rate, std::bind(&RobotSquat::timer_callback, this));
-    // This assumes the robot has no arm (12 joints)
-    command_stand.data = std::vector<double>(12, 0.0);
-    command_squat.data = {0.15, 1.3, -2.25, -0.15, 1.3, -2.25, 0.15, 1.3, -2.25, -0.15, 1.3, -2.25};
+    joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
+        "joint_states", 10, std::bind(&NoarmSquat::joint_states_callback, this, std::placeholders::_1));
+    timer_ = create_wall_timer(timer_rate, std::bind(&NoarmSquat::timer_callback, this));
   }
 
  private:
   std_msgs::msg::Float64MultiArray command_squat;
   std_msgs::msg::Float64MultiArray command_stand;
   bool standing;
+  bool initialized;
   rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr command_pub_;
 
+  void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
+    if (!initialized) {
+      RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
+      // This assumes the robot has no arm (12 joints)
+      command_stand.data = msg.position;
+      command_squat.data = {0.15, 1.3, -2.25, -0.15, 1.3, -2.25, 0.15, 1.3, -2.25, -0.15, 1.3, -2.25};
+      initialized = true;
+    }
+  }
+
   void timer_callback() {
+    if (!initialized) {
+      return;
+    }
     if (standing) {
       RCLCPP_INFO_STREAM(get_logger(), "Command squat");
       command_pub_->publish(command_squat);
@@ -43,7 +58,7 @@ class RobotSquat : public rclcpp::Node {
 
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<RobotSquat>());
+  rclcpp::spin(std::make_shared<NoarmSquat>());
   rclcpp::shutdown();
   return 0;
 }

@@ -27,6 +27,6 @@ def generate_launch_description():
                     "robot_controller": "forward_position_controller",
                 }.items(),
             ),
-            Node(package="spot_ros2_control", executable="arm_wiggle", name="arm_wiggle", output="screen"),
+            Node(package="spot_ros2_control", executable="wiggle_arm", name="wiggle_arm", output="screen"),
         ]
     )

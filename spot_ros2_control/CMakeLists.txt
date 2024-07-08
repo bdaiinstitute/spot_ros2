@@ -8,7 +8,10 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+
+find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+
 find_package(spot_description REQUIRED)
 
 if(BUILD_TESTING)
@@ -23,17 +26,19 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(robot_squat src/robot_squat.cpp)
-ament_target_dependencies(robot_squat
+add_executable(noarm_squat src/noarm_squat.cpp)
+ament_target_dependencies(noarm_squat
   rclcpp
+  sensor_msgs
   std_msgs
 )
-add_executable(arm_wiggle src/arm_wiggle.cpp)
-ament_target_dependencies(arm_wiggle
+add_executable(wiggle_arm src/wiggle_arm.cpp)
+ament_target_dependencies(wiggle_arm
   rclcpp
+  sensor_msgs
   std_msgs
 )
-install(TARGETS robot_squat arm_wiggle
+install(TARGETS noarm_squat wiggle_arm
   DESTINATION lib/${PROJECT_NAME})
 
 install(
