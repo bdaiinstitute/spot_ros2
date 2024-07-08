@@ -23,8 +23,8 @@ class WiggleArm : public rclcpp::Node {
 
  private:
   std_msgs::msg::Float64MultiArray command_start;
-  std_msgs::msg::Float64MultiArray command_wiggle1;
-  std_msgs::msg::Float64MultiArray command_wiggle2;
+  std_msgs::msg::Float64MultiArray command_wiggle_down;
+  std_msgs::msg::Float64MultiArray command_wiggle_up;
   int state;
   bool initialized;
   rclcpp::TimerBase::SharedPtr timer_;
@@ -36,12 +36,12 @@ class WiggleArm : public rclcpp::Node {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
       // This assumes the robot has an arm+gripper (19 joints)
       command_start.data = msg.position;
-      command_wiggle1.data = msg.position;
-      command_wiggle1.data.at(16) += 1.0;
-      command_wiggle1.data.at(18) -= 0.5;
-      command_wiggle2.data = msg.position;
-      command_wiggle2.data.at(16) -= 1.0;
-      command_wiggle2.data.at(18) -= 0.5;
+      command_wiggle_down.data = msg.position;
+      command_wiggle_down.data.at(16) += 1.0;
+      command_wiggle_down.data.at(18) -= 0.5;
+      command_wiggle_up.data = msg.position;
+      command_wiggle_up.data.at(16) -= 1.0;
+      command_wiggle_up.data.at(18) -= 0.5;
       initialized = true;
     }
   }
@@ -51,14 +51,14 @@ class WiggleArm : public rclcpp::Node {
       return;
     }
     if (state == 0) {
-      RCLCPP_INFO_STREAM(get_logger(), "Command Wiggle 1");
-      command_pub_->publish(command_wiggle1);
+      RCLCPP_INFO_STREAM(get_logger(), "Command Wiggle Down");
+      command_pub_->publish(command_wiggle_down);
     } else if (state == 1) {
       RCLCPP_INFO_STREAM(get_logger(), "Command Start");
       command_pub_->publish(command_start);
     } else if (state == 2) {
-      RCLCPP_INFO_STREAM(get_logger(), "Command Wiggle 2");
-      command_pub_->publish(command_wiggle2);
+      RCLCPP_INFO_STREAM(get_logger(), "Command Wiggle Up");
+      command_pub_->publish(command_wiggle_up);
     } else if (state == 3) {
       RCLCPP_INFO_STREAM(get_logger(), "Command Start");
       command_pub_->publish(command_start);
