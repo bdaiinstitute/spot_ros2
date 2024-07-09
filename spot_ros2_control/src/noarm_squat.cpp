@@ -45,11 +45,11 @@ class NoarmSquat : public rclcpp::Node {
       return;
     }
     if (standing) {
-      RCLCPP_INFO_STREAM(get_logger(), "Command squat");
+      RCLCPP_INFO_STREAM(get_logger(), "Squat");
       command_pub_->publish(command_squat);
       standing = false;
     } else {
-      RCLCPP_INFO_STREAM(get_logger(), "Command stand");
+      RCLCPP_INFO_STREAM(get_logger(), "Stand");
       command_pub_->publish(command_stand);
       standing = true;
     }

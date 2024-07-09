@@ -10,9 +10,11 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
+enum WiggleState { START, WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP };
+
 class WiggleArm : public rclcpp::Node {
  public:
-  WiggleArm() : Node("wiggle_arm"), state{0}, initialized{false} {
+  WiggleArm() : Node("wiggle_arm"), wiggle_state{WIGGLE_DOWN}, initialized{false} {
     declare_parameter("timer_rate", 5.0);
     const auto timer_rate = std::chrono::duration<double>{get_parameter("timer_rate").as_double()};
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
@@ -25,7 +27,7 @@ class WiggleArm : public rclcpp::Node {
   std_msgs::msg::Float64MultiArray command_start;
   std_msgs::msg::Float64MultiArray command_wiggle_down;
   std_msgs::msg::Float64MultiArray command_wiggle_up;
-  int state;
+  WiggleState wiggle_state;
   bool initialized;
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
@@ -50,22 +52,31 @@ class WiggleArm : public rclcpp::Node {
     if (!initialized) {
       return;
     }
-    if (state == 0) {
-      RCLCPP_INFO_STREAM(get_logger(), "Command Wiggle Down");
-      command_pub_->publish(command_wiggle_down);
-    } else if (state == 1) {
-      RCLCPP_INFO_STREAM(get_logger(), "Command Start");
-      command_pub_->publish(command_start);
-    } else if (state == 2) {
-      RCLCPP_INFO_STREAM(get_logger(), "Command Wiggle Up");
-      command_pub_->publish(command_wiggle_up);
-    } else if (state == 3) {
-      RCLCPP_INFO_STREAM(get_logger(), "Command Start");
-      command_pub_->publish(command_start);
-    }
-    state += 1;
-    if (state >= 4) {
-      state = 0;
+    switch (wiggle_state) {
+      case START:
+        RCLCPP_INFO_STREAM(get_logger(), "Starting Pose");
+        command_pub_->publish(command_start);
+        wiggle_state = WIGGLE_DOWN;
+        break;
+      case WIGGLE_DOWN:
+        RCLCPP_INFO_STREAM(get_logger(), "Wiggle Down");
+        command_pub_->publish(command_wiggle_down);
+        wiggle_state = WIGGLE_MIDDLE;
+        break;
+      case WIGGLE_MIDDLE:
+        RCLCPP_INFO_STREAM(get_logger(), "Starting Pose");
+        command_pub_->publish(command_start);
+        wiggle_state = WIGGLE_UP;
+        break;
+      case WIGGLE_UP:
+        RCLCPP_INFO_STREAM(get_logger(), "Wiggle Up");
+        command_pub_->publish(command_wiggle_up);
+        wiggle_state = START;
+        break;
+      default:
+        RCLCPP_INFO_STREAM(get_logger(), "Invalid Wiggle State");
+        wiggle_state = START;
+        break;
     }
   }
 };
