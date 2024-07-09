@@ -30,7 +30,7 @@
         </joint>
     </xacro:macro>
 
-    <!-- TODO: find actual velocity and load bounds. -->
+    <!-- TODO: find the correct velocity and load bounds, the values from the spot_description urdfs are wrong. -->
     <xacro:macro name="leg" params="left_or_right front_or_rear">
         <xacro:ros2_control_joint joint_name="${front_or_rear}_${left_or_right}_hip_x"
             position_min="-0.785" position_max="0.785" velocity_max="100" load_max="100" />
@@ -61,8 +61,8 @@
         <xacro:ros2_control_joint joint_name="arm_wr1"
             position_min="-2.880" position_max="2.880" velocity_max="100" load_max="100" />
 
-        <!-- TODO: this is the gripper joint. This could be its own interface to support robotsd
-        with custom grippers, but would involve modifying the URDFs in spot description. -->
+        <!-- This is the gripper joint. This could be its own interface to support robots
+        with custom grippers, but would involve modifying the URDFs in spot_description. -->
         <xacro:ros2_control_joint joint_name="arm_f1x"
             position_min="-1.570" position_max="0.000" velocity_max="100" load_max="100" />
 

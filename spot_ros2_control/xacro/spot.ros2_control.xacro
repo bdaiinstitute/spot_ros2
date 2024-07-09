@@ -2,17 +2,20 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <xacro:macro name="spot_ros2_control" params="interface_type has_arm">
+        <!-- Currently implements a simple system interface that covers all joints of the robot.
+        In the future, we could make different hardware interfaces for the body, arm, etc. -->
         <ros2_control name="SpotSystem" type="system">
             <hardware>
-            <!-- TODO: This custom plugin (does not exist yet) can be the one interacting with the spot sdk. -->
-            <!-- <xacro:if value="${interface_type == 'spot-sdk'}">
-                <plugin>spot_ros2_control/SpotJointHardwareInterface</plugin>
-            </xacro:if> -->
             <xacro:if value="${interface_type == 'mock'}">
                 <plugin>mock_components/GenericSystem</plugin>
                 <param name="mock_sensor_commands">false</param>
                 <param name="state_following_offset">0.0</param>
             </xacro:if>
+            <!-- TODO: Make a custom plugin that interacts with the spot sdk. -->
+            <!-- <xacro:if value="${interface_type == 'spot-sdk'}">
+                <plugin>spot_ros2_control/SpotJointHardwareInterface</plugin>
+                    <param> ....
+            </xacro:if> -->
             </hardware>
             <!-- Add the legs -->
             <xacro:leg front_or_rear="front" left_or_right="left" />
