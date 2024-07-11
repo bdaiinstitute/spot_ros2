@@ -185,10 +185,9 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
 std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(const ::bosdyn::api::RobotState& robot_state,
                                                                            const google::protobuf::Duration& clock_skew,
                                                                            const bool is_using_vision) {
-  if (!robot_state.has_kinematic_state()) {
+  if (!robot_state.has_kinematic_state() || !robot_state.kinematic_state().has_transforms_snapshot()) {
     return std::nullopt;
   }
-
   const auto& kinematic_state = robot_state.kinematic_state();
   if (is_using_vision && !kinematic_state.has_velocity_of_body_in_vision()) {
     return std::nullopt;
@@ -208,7 +207,7 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(const
   const std::string world_frame_name = is_using_vision ? "vision" : "odom";
   const std::string body_frame_name = "body";
   const bool success =
-      ::bosdyn::api::ExpressVelocityInNewFrame(kinematic_state.transforms_snapshot(), odom_frame_name, body_frame_name,
+      ::bosdyn::api::ExpressVelocityInNewFrame(kinematic_state.transforms_snapshot(), world_frame_name, body_frame_name,
                                                velocity_of_body_in_world, &velocity_of_body_in_body);
   if (!success) {
     return std::nullopt;
