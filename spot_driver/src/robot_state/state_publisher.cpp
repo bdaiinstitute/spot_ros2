@@ -63,7 +63,11 @@ void StatePublisher::timerCallback() {
                          getFootState(robot_state),
                          getEstopStates(robot_state, clock_skew),
                          getJointStates(robot_state, clock_skew, frame_prefix_),
+<<<<<<< HEAD
                          getTf(robot_state, clock_skew, frame_prefix_, full_tf_root_id_),
+=======
+                         getTf(robot_state, clock_skew, frame_prefix_, full_odom_frame_id_),
+>>>>>>> 5aec322e (Account for possible world frame being vision instead of odom)
                          getOdomTwist(robot_state, clock_skew, is_using_vision_),
                          getOdom(robot_state, clock_skew, frame_prefix_, is_using_vision_),
                          getPowerState(robot_state, clock_skew),
