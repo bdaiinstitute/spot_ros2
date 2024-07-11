@@ -599,7 +599,7 @@ TEST(RobotStateConversions, TestGetOdomMissingBodyVelocityOdom) {
               Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
 
   // WHEN we try to create an Odometry message from the RobotState
-  const auto out = getOdom(robot_state, clock_skew, "prefix/", true);
+  const auto out = getOdom(robot_state, clock_skew, "prefix/", false);
 
   // THEN this does not succeed
   ASSERT_THAT(out.has_value(), IsFalse());
@@ -635,7 +635,7 @@ TEST(RobotStateConversions, TestGetOdomInvalidTransformSnapshot) {
   timestamp.set_seconds(99);
   timestamp.set_nanos(0);
   addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
-  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+  addBodyVelocityVision(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
                1.0, 0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
