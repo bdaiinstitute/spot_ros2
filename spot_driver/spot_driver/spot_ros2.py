@@ -248,6 +248,8 @@ class SpotROS(Node):
         self.declare_parameter("spot_name", "")
         self.declare_parameter("mock_enable", False)
 
+        self.declare_parameter("gripperless", False)
+
         # When we send very long trajectories to Spot, we create batches of
         # given size. If we do not batch a long trajectory, Spot will reject it.
         self.declare_parameter(self.TRAJECTORY_BATCH_SIZE_PARAM, 100)
@@ -286,6 +288,8 @@ class SpotROS(Node):
         self.publish_graph_nav_pose: Parameter = self.get_parameter("publish_graph_nav_pose")
         self.graph_nav_seed_frame: str = self.get_parameter("graph_nav_seed_frame").value
         self.initialize_spot_cam: bool = self.get_parameter("initialize_spot_cam").value
+
+        self.gripperless: bool = self.get_parameter("gripperless").value
 
         self._wait_for_goal: Optional[WaitForGoal] = None
         self.goal_handle: Optional[ServerGoalHandle] = None
@@ -412,6 +416,7 @@ class SpotROS(Node):
                         port=self.port,
                         logger=self.cam_logger,
                         cert_resource_glob=self.certificate,
+                        gripperless=self.gripperless,
                     )
                 except SystemError:
                     self.spot_cam_wrapper = None
@@ -428,7 +433,7 @@ class SpotROS(Node):
         has_arm = self.mock_has_arm
         if self.spot_wrapper is not None:
             has_arm = self.spot_wrapper.has_arm()
-        if has_arm:
+        if has_arm and not self.gripperless:
             all_cameras.append("hand")
         self.declare_parameter("cameras_used", all_cameras)
         self.cameras_used = self.get_parameter("cameras_used")
@@ -564,22 +569,23 @@ class SpotROS(Node):
                 callback_group=self.group,
             )
 
-            self.create_service(
-                Trigger,
-                "open_gripper",
-                lambda request, response: self.service_wrapper(
-                    "open_gripper", self.handle_open_gripper, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "close_gripper",
-                lambda request, response: self.service_wrapper(
-                    "close_gripper", self.handle_close_gripper, request, response
-                ),
-                callback_group=self.group,
-            )
+            if not self.gripperless:
+                self.create_service(
+                    Trigger,
+                    "open_gripper",
+                    lambda request, response: self.service_wrapper(
+                        "open_gripper", self.handle_open_gripper, request, response
+                    ),
+                    callback_group=self.group,
+                )
+                self.create_service(
+                    Trigger,
+                    "close_gripper",
+                    lambda request, response: self.service_wrapper(
+                        "close_gripper", self.handle_close_gripper, request, response
+                    ),
+                    callback_group=self.group,
+                )
 
         self.create_service(
             SetBool,
@@ -861,7 +867,7 @@ class SpotROS(Node):
             self.handle_graph_nav_set_localization,
             callback_group=self.group,
         )
-        if has_arm:
+        if has_arm and self.gripperless:
             self.create_service(
                 GetGripperCameraParameters,
                 "get_gripper_camera_parameters",
