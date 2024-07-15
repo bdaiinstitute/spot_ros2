@@ -43,5 +43,5 @@
     # The stitched image will be of size (<frontleft image width>, <frontleft image height> + row_padding)
     stitched_image_row_padding: 1182
 
-    # Change to false if missing gripper on arm
+    # Change to True if missing gripper on arm
     gripperless: False
