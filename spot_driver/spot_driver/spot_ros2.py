@@ -1843,8 +1843,7 @@ class SpotROS(Node):
     def handle_max_vel(self, request: SetVelocity.Request, response: SetVelocity.Response) -> SetVelocity.Response:
         """
         Handle a max_velocity service call. This will modify the mobility params to have a limit on the maximum
-        velocity that the robot can move during motion commands. This affects trajectory commands and velocity
-        commands
+        velocity that the robot can move during motion commands. This affects trajectory commands
         Args:
             response: SetVelocity.Response containing response
             request: SetVelocity.Request containing requested maximum velocity
@@ -1862,7 +1861,12 @@ class SpotROS(Node):
                         request.velocity_limit.linear.x,
                         request.velocity_limit.linear.y,
                         request.velocity_limit.angular.z,
-                    ).to_proto()
+                    ).to_proto(),
+                    min_vel=math_helpers.SE2Velocity(
+                        -request.velocity_limit.linear.x,
+                        -request.velocity_limit.linear.y,
+                        -request.velocity_limit.angular.z,
+                    ).to_proto(),
                 )
             )
             self.spot_wrapper.set_mobility_params(mobility_params)
