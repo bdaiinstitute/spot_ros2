@@ -11,7 +11,7 @@
                 <param name="mock_sensor_commands">false</param>
                 <param name="state_following_offset">0.0</param>
             </xacro:if>
-            <!-- TODO: Make a custom plugin that interacts with the spot sdk. -->
+            <!-- TODO Make a custom plugin that interacts with the spot sdk. -->
             <!-- <xacro:if value="${interface_type == 'spot-sdk'}">
                 <plugin>spot_ros2_control/SpotJointHardwareInterface</plugin>
                     <param> ....
