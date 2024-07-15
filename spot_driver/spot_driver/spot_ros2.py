@@ -2735,6 +2735,7 @@ class SpotROS(Node):
         self.run_dance_feedback = False
         feedback_thread.join()
 
+        execute_dance_handle.succeed()
         result = ExecuteDance.Result()
         result.success = res
         result.message = msg
