@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+    <!-- The interfaces in this are modeled after the parameters from low level control in the spot sdk. -->
     <xacro:macro name="ros2_control_joint"
         params="joint_name position_min:=0.0 position_max:=0.0 velocity_max effort_max">
         <joint name="${joint_name}">

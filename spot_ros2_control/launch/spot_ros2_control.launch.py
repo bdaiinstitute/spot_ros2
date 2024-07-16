@@ -31,8 +31,8 @@ def generate_launch_description():
     robot_controller_arg = DeclareLaunchArgument(
         "robot_controller",
         default_value="forward_position_controller",
-        # This must match the controllers_config file
-        choices=["forward_position_controller", "joint_trajectory_controller"],
+        # This must match the controllers_config file. Right now this only has one option.
+        choices=["forward_position_controller"],
         description="Robot controller to start.",
     )
 
