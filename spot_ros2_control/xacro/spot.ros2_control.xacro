@@ -11,11 +11,12 @@
                 <param name="mock_sensor_commands">false</param>
                 <param name="state_following_offset">0.0</param>
             </xacro:if>
-            <!-- TODO Make a custom plugin that interacts with the spot sdk. -->
-            <!-- <xacro:if value="${interface_type == 'spot-sdk'}">
-                <plugin>spot_ros2_control/SpotJointHardwareInterface</plugin>
-                    <param> ....
-            </xacro:if> -->
+            <xacro:if value="${interface_type == 'spot-sdk'}">
+                <plugin>spot_ros2_control/SpotHardware</plugin>
+                <param name="example_param_hw_start_duration_sec">0</param>
+                <param name="example_param_hw_stop_duration_sec">3.0</param>
+                <param name="example_param_hw_slowdown">100</param>
+            </xacro:if>
             </hardware>
             <!-- Add the legs -->
             <xacro:leg front_or_rear="front" left_or_right="left" />
