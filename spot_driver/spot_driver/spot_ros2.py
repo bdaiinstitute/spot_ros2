@@ -248,6 +248,8 @@ class SpotROS(Node):
         self.declare_parameter("spot_name", "")
         self.declare_parameter("mock_enable", False)
 
+        self.declare_parameter("gripperless", False)
+
         # When we send very long trajectories to Spot, we create batches of
         # given size. If we do not batch a long trajectory, Spot will reject it.
         self.declare_parameter(self.TRAJECTORY_BATCH_SIZE_PARAM, 100)
@@ -286,6 +288,8 @@ class SpotROS(Node):
         self.publish_graph_nav_pose: Parameter = self.get_parameter("publish_graph_nav_pose")
         self.graph_nav_seed_frame: str = self.get_parameter("graph_nav_seed_frame").value
         self.initialize_spot_cam: bool = self.get_parameter("initialize_spot_cam").value
+
+        self.gripperless: bool = self.get_parameter("gripperless").value
 
         self._wait_for_goal: Optional[WaitForGoal] = None
         self.goal_handle: Optional[ServerGoalHandle] = None
@@ -405,7 +409,15 @@ class SpotROS(Node):
             if self.initialize_spot_cam:
                 try:
                     self.cam_logger = rcutils_logger.RcutilsLogger(name=f"{name_with_dot}spot_cam_wrapper")
-                    self.spot_cam_wrapper = SpotCamWrapper(self.ip, self.username, self.password, self.cam_logger)
+                    self.spot_cam_wrapper = SpotCamWrapper(
+                        hostname=self.ip,
+                        username=self.username,
+                        password=self.password,
+                        port=self.port,
+                        logger=self.cam_logger,
+                        cert_resource_glob=self.certificate,
+                        gripperless=self.gripperless,
+                    )
                 except SystemError:
                     self.spot_cam_wrapper = None
 
@@ -421,7 +433,7 @@ class SpotROS(Node):
         has_arm = self.mock_has_arm
         if self.spot_wrapper is not None:
             has_arm = self.spot_wrapper.has_arm()
-        if has_arm:
+        if has_arm and not self.gripperless:
             all_cameras.append("hand")
         self.declare_parameter("cameras_used", all_cameras)
         self.cameras_used = self.get_parameter("cameras_used")
@@ -557,22 +569,23 @@ class SpotROS(Node):
                 callback_group=self.group,
             )
 
-            self.create_service(
-                Trigger,
-                "open_gripper",
-                lambda request, response: self.service_wrapper(
-                    "open_gripper", self.handle_open_gripper, request, response
-                ),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "close_gripper",
-                lambda request, response: self.service_wrapper(
-                    "close_gripper", self.handle_close_gripper, request, response
-                ),
-                callback_group=self.group,
-            )
+            if not self.gripperless:
+                self.create_service(
+                    Trigger,
+                    "open_gripper",
+                    lambda request, response: self.service_wrapper(
+                        "open_gripper", self.handle_open_gripper, request, response
+                    ),
+                    callback_group=self.group,
+                )
+                self.create_service(
+                    Trigger,
+                    "close_gripper",
+                    lambda request, response: self.service_wrapper(
+                        "close_gripper", self.handle_close_gripper, request, response
+                    ),
+                    callback_group=self.group,
+                )
 
         self.create_service(
             SetBool,
@@ -854,7 +867,7 @@ class SpotROS(Node):
             self.handle_graph_nav_set_localization,
             callback_group=self.group,
         )
-        if has_arm:
+        if has_arm and self.gripperless:
             self.create_service(
                 GetGripperCameraParameters,
                 "get_gripper_camera_parameters",
@@ -1836,8 +1849,7 @@ class SpotROS(Node):
     def handle_max_vel(self, request: SetVelocity.Request, response: SetVelocity.Response) -> SetVelocity.Response:
         """
         Handle a max_velocity service call. This will modify the mobility params to have a limit on the maximum
-        velocity that the robot can move during motion commands. This affects trajectory commands and velocity
-        commands
+        velocity that the robot can move during motion commands. This affects trajectory commands
         Args:
             response: SetVelocity.Response containing response
             request: SetVelocity.Request containing requested maximum velocity
@@ -1855,7 +1867,12 @@ class SpotROS(Node):
                         request.velocity_limit.linear.x,
                         request.velocity_limit.linear.y,
                         request.velocity_limit.angular.z,
-                    ).to_proto()
+                    ).to_proto(),
+                    min_vel=math_helpers.SE2Velocity(
+                        -request.velocity_limit.linear.x,
+                        -request.velocity_limit.linear.y,
+                        -request.velocity_limit.angular.z,
+                    ).to_proto(),
                 )
             )
             self.spot_wrapper.set_mobility_params(mobility_params)
@@ -2724,6 +2741,7 @@ class SpotROS(Node):
         self.run_dance_feedback = False
         feedback_thread.join()
 
+        execute_dance_handle.succeed()
         result = ExecuteDance.Result()
         result.success = res
         result.message = msg
@@ -2913,8 +2931,9 @@ class SpotROS(Node):
     def destroy_node(self) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
         if self.spot_wrapper is not None:
-            if self.spot_wrapper.check_is_powered_on():
-                self.spot_wrapper.sit()
+            if self.spot_wrapper.check_is_powered_on() and self.start_estop.value:
+                self.get_logger().info("Sitting down...")
+                self.spot_wrapper.sit_blocking()
             self.spot_wrapper.disconnect()
         super().destroy_node()
 
