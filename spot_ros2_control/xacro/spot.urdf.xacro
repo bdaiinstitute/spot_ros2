@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<robot name="spot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:arg name="has_arm" default="false" />
+    <xacro:arg name="add_ros2_control_tag" default="true" />
+    <xacro:arg name="hardware_interface_type" default="mock" />
+
+    <!-- Create property object from the arguments to improve usability later on -->
+    <xacro:property name="has_arm_property" value="$(arg has_arm)" />
+    <xacro:property name="add_ros2_control_tag_property" value="$(arg add_ros2_control_tag)" />
+    <xacro:property name="hardware_interface_type_property" value="$(arg hardware_interface_type)" />
+
+    <!-- Macro containing the URDF for Spot -->
+    <xacro:include filename="$(find spot_description)/urdf/spot_macro.xacro" />
+    <!-- Macros for loading the ROS 2 control tags -->
+    <xacro:include filename="$(find spot_ros2_control)/xacro/spot_interfaces.ros2_control.xacro" />
+    <xacro:include filename="$(find spot_ros2_control)/xacro/spot.ros2_control.xacro" />
+
+    <!-- Adding Spot-->
+    <xacro:load_spot arm="${has_arm_property}" tf_prefix=""/>
+    <!-- Adding the ROS 2 control tags -->
+    <xacro:if value="${add_ros2_control_tag_property}">
+        <xacro:spot_ros2_control interface_type="${hardware_interface_type_property}" has_arm="${has_arm_property}"/>
+    </xacro:if>
+
+</robot>
