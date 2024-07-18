@@ -1,7 +1,7 @@
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -9,6 +9,12 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     return LaunchDescription(
         [
+            DeclareLaunchArgument(
+                "hardware_interface",
+                default_value="mock",
+                choices=["mock", "spot-sdk"],
+                description="Hardware interface to load",
+            ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     [
@@ -21,6 +27,7 @@ def generate_launch_description():
                     "has_arm": "false",
                     "controllers_config": "spot_controllers_without_arm.yaml",
                     "robot_controller": "forward_position_controller",
+                    "hardware_interface": LaunchConfiguration("hardware_interface"),
                 }.items(),
             ),
             Node(package="spot_ros2_control", executable="noarm_squat", name="noarm_squat", output="screen"),
