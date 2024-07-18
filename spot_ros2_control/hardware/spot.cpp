@@ -30,12 +30,13 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   }
 
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
+  interfaces_per_joint_ = 3;
   hw_start_sec_ = stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
   hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
   hw_slowdown_ = stod(info_.hardware_parameters["example_param_hw_slowdown"]);
   // END: This part here is for exemplary purposes - Please do not copy to your production code
-  hw_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
+  hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // RRBotSystemPositionOnly has exactly one state and command interface on each joint
@@ -105,6 +106,7 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
 
   // reset values always when configuring hardware
   for (uint i = 0; i < hw_states_.size(); i++) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "hw states %d", i);
     hw_states_[i] = 0;
     hw_commands_[i] = 0;
   }
@@ -119,12 +121,12 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++) {
     const auto joint = info_.joints.at(i);
-    state_interfaces.emplace_back(
-        hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_POSITION, &hw_states_[3 * i]));
-    state_interfaces.emplace_back(
-        hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_VELOCITY, &hw_states_[3 * i + 1]));
-    state_interfaces.emplace_back(
-        hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_EFFORT, &hw_states_[3 * i + 2]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_POSITION,
+                                                                     &hw_states_[interfaces_per_joint_ * i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_VELOCITY,
+                                                                     &hw_states_[interfaces_per_joint_ * i + 1]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_EFFORT,
+                                                                     &hw_states_[interfaces_per_joint_ * i + 2]));
   }
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return state interfaces");
@@ -145,12 +147,12 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
     //   joint_command_interface.name.c_str()); command_interfaces.emplace_back(hardware_interface::CommandInterface(
     //     joint.name, joint_command_interface, &hw_commands_[3*i+j]));
     // }
-    command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_POSITION, &hw_commands_[3 * i]));
-    command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[3 * i + 1]));
-    command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_EFFORT, &hw_commands_[3 * i + 2]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_POSITION,
+                                                                         &hw_commands_[interfaces_per_joint_ * i]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_VELOCITY,
+                                                                         &hw_commands_[interfaces_per_joint_ * i + 1]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_EFFORT,
+                                                                         &hw_commands_[interfaces_per_joint_ * i + 2]));
   }
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return command interfaces");

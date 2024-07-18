@@ -63,6 +63,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
   double hw_stop_sec_;
   double hw_slowdown_;
 
+  int interfaces_per_joint_;
+
   // Store the command for the simulated robot
   std::vector<double> hw_commands_;
   std::vector<double> hw_states_;
