@@ -13,12 +13,12 @@
 class NoarmSquat : public rclcpp::Node {
  public:
   NoarmSquat() : Node("noarm_squat"), standing{true}, initialized{false} {
-    declare_parameter("timer_rate", 5.0);
-    const auto timer_rate = std::chrono::duration<double>{get_parameter("timer_rate").as_double()};
+    declare_parameter("command_interval_sec", 3.0);  // how frequently to send commands
+    const auto command_interval_sec = std::chrono::duration<double>{get_parameter("command_interval_sec").as_double()};
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
         "joint_states", 10, std::bind(&NoarmSquat::joint_states_callback, this, std::placeholders::_1));
-    timer_ = create_wall_timer(timer_rate, std::bind(&NoarmSquat::timer_callback, this));
+    timer_ = create_wall_timer(command_interval_sec, std::bind(&NoarmSquat::timer_callback, this));
   }
 
  private:

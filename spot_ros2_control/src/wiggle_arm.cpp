@@ -12,15 +12,19 @@
 
 enum WiggleState { START, WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP };
 
+// TODO(khughes): make a struct or enum that maps joint name to ID number once we get more complicated examples.
+static const auto WR0_JOINT = 16;
+static const auto F1X_JOINT = 18;
+
 class WiggleArm : public rclcpp::Node {
  public:
   WiggleArm() : Node("wiggle_arm"), wiggle_state{WIGGLE_DOWN}, initialized{false} {
-    declare_parameter("timer_rate", 5.0);
-    const auto timer_rate = std::chrono::duration<double>{get_parameter("timer_rate").as_double()};
+    declare_parameter("command_interval_sec", 3.0);  // how frequently to send commands
+    const auto command_interval_sec = std::chrono::duration<double>{get_parameter("command_interval_sec").as_double()};
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
         "joint_states", 10, std::bind(&WiggleArm::joint_states_callback, this, std::placeholders::_1));
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
-    timer_ = create_wall_timer(timer_rate, std::bind(&WiggleArm::timer_callback, this));
+    timer_ = create_wall_timer(command_interval_sec, std::bind(&WiggleArm::timer_callback, this));
   }
 
  private:
@@ -39,11 +43,11 @@ class WiggleArm : public rclcpp::Node {
       // This assumes the robot has an arm+gripper (19 joints)
       command_start.data = msg.position;
       command_wiggle_down.data = msg.position;
-      command_wiggle_down.data.at(16) += 1.0;
-      command_wiggle_down.data.at(18) -= 0.5;
+      command_wiggle_down.data.at(WR0_JOINT) += 1.0;
+      command_wiggle_down.data.at(F1X_JOINT) -= 0.5;
       command_wiggle_up.data = msg.position;
-      command_wiggle_up.data.at(16) -= 1.0;
-      command_wiggle_up.data.at(18) -= 0.5;
+      command_wiggle_up.data.at(WR0_JOINT) -= 1.0;
+      command_wiggle_up.data.at(F1X_JOINT) -= 0.5;
       initialized = true;
     }
   }
