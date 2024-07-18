@@ -95,15 +95,6 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifecycle::State& /*previous_state*/) {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Configuring ...please wait...");
-
-  for (int i = 0; i < hw_start_sec_; i++) {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "%.1f seconds left...", hw_start_sec_ - i);
-  }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
   // reset values always when configuring hardware
   for (uint i = 0; i < hw_states_.size(); i++) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "hw states %d", i);
@@ -140,13 +131,6 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
   // info_.joints[i].state_interfaces[0].name
   for (uint i = 0; i < info_.joints.size(); i++) {
     const auto joint = info_.joints.at(i);
-    // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "i = %d joint %s", i, joint.name.c_str());
-    // for (uint j = 0; j < joint.command_interfaces.size(); j++){
-    //   const auto joint_command_interface = joint.command_interfaces[j];
-    //   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "j = %d joint command interfaces %s", j,
-    //   joint_command_interface.name.c_str()); command_interfaces.emplace_back(hardware_interface::CommandInterface(
-    //     joint.name, joint_command_interface, &hw_commands_[3*i+j]));
-    // }
     command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_POSITION,
                                                                          &hw_commands_[interfaces_per_joint_ * i]));
     command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_VELOCITY,
@@ -161,15 +145,6 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecycle::State& /*previous_state*/) {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Activating ...please wait...");
-
-  for (int i = 0; i < hw_start_sec_; i++) {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "%.1f seconds left...", hw_start_sec_ - i);
-  }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
   // command and state should be equal when starting
   for (uint i = 0; i < hw_states_.size(); i++) {
     hw_commands_[i] = hw_states_[i];
@@ -181,45 +156,34 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Deactivating ...please wait...");
-
-  for (int i = 0; i < hw_stop_sec_; i++) {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "%.1f seconds left...", hw_stop_sec_ - i);
-  }
-
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Successfully deactivated!");
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Reading...");
+  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Reading...");
 
   for (uint i = 0; i < hw_states_.size(); i++) {
     // Simulate movement
     hw_states_[i] = hw_states_[i] + (hw_commands_[i] - hw_states_[i]) / hw_slowdown_;
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Got state %.5f for joint %d!", hw_states_[i], i);
+    // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Got state %.5f for joint %d!", hw_states_[i], i);
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Joints successfully read!");
+  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Joints successfully read!");
   // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Writing...");
+  // // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
+  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Writing...");
 
-  for (uint i = 0; i < hw_commands_.size(); i++) {
-    // Simulate sending commands to the hardware
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Got command %.5f for joint %d!", hw_commands_[i], i);
-  }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Joints successfully written!");
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  // for (uint i = 0; i < hw_commands_.size(); i++) {
+  //   // Simulate sending commands to the hardware
+  //   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Got command %.5f for joint %d!", hw_commands_[i], i);
+  // }
+  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Joints successfully written!");
+  // // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;
 }
