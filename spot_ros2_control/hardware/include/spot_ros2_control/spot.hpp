@@ -28,6 +28,14 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "spot_ros2_control/visibility_control.h"
 
+#include "bosdyn/client/lease/lease_keepalive.h"
+#include "bosdyn/client/robot_command/robot_command_client.h"
+#include "bosdyn/client/robot_command/robot_command_helpers.h"
+#include "bosdyn/client/sdk/client_sdk.h"
+#include "bosdyn/client/service_client/client_header_handling.h"
+#include "bosdyn/client/time_sync/time_sync_helpers.h"
+#include "bosdyn/client/util/cli_util.h"
+
 namespace spot_ros2_control {
 class SpotHardware : public hardware_interface::SystemInterface {
  public:
@@ -64,6 +72,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
   double hw_slowdown_;
 
   int interfaces_per_joint_;
+
+  std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
 
   // Store the command for the simulated robot
   std::vector<double> hw_commands_;

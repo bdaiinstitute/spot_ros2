@@ -91,6 +91,20 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Success!!!!");
 
+  // Create a Client SDK object.
+  client_sdk_ = ::bosdyn::client::CreateStandardSDK("SpotHardware");
+
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Client SDK Initialized");
+
+  const std::string hostname = "10.0.0.3";
+  auto robot_result = client_sdk_->CreateRobot(hostname);
+  if (!robot_result) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot");
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Created robot");
+  auto robot_ = robot_result.move();
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Done~");
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
