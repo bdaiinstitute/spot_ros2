@@ -2473,7 +2473,8 @@ class SpotROS(Node):
         if not self.spot_wrapper:
             self.get_logger().info(f"Mock mode, received command vel {data}")
             return
-        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z, self.cmd_duration)
+        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z, self.cmd_duration, height = data.linear.z)
+
 
     def body_pose_callback(self, data: Pose) -> None:
         """Callback for cmd_vel command"""
