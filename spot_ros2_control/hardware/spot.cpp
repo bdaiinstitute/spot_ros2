@@ -42,7 +42,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    // RRBotSystemPositionOnly has exactly one state and command interface on each joint
+    // Assumes three state and three command interfaces for each joint (position, velocity, and effort).
     if (joint.command_interfaces.size() != 3) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' has %zu command interfaces found. 5 expected.",
                    joint.name.c_str(), joint.command_interfaces.size());
