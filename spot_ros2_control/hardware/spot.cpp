@@ -44,7 +44,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Assumes three state and three command interfaces for each joint (position, velocity, and effort).
     if (joint.command_interfaces.size() != 3) {
-      RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' has %zu command interfaces found. 5 expected.",
+      RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' has %zu command interfaces found. 3 expected.",
                    joint.name.c_str(), joint.command_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
@@ -68,7 +68,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     }
 
     if (joint.state_interfaces.size() != 3) {
-      RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' has %zu state interface. 8 expected.",
+      RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' has %zu state interface. 3 expected.",
                    joint.name.c_str(), joint.state_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
@@ -92,7 +92,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     }
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Interfaces are correct!");
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Correct number of joint interfaces!");
 
   // Create a Client SDK object.
   client_sdk_ = ::bosdyn::client::CreateStandardSDK("SpotHardware");
@@ -101,10 +101,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot");
     return hardware_interface::CallbackReturn::ERROR;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Created robot");
   auto robot_ = robot_result.move();
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Done~");
-
   ::bosdyn::common::Status status = robot_->Authenticate(username, password);
   if (!status) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"),
@@ -112,7 +109,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
                 username.c_str(), password.c_str());
     return hardware_interface::CallbackReturn::ERROR;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Authenticated");
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot successfully authenticated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
