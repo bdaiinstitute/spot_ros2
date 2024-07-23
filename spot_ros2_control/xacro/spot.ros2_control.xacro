@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <xacro:macro name="spot_ros2_control" params="interface_type has_arm">
+    <xacro:macro name="spot_ros2_control" params="interface_type has_arm hostname username password config_file">
         <!-- Currently implements a simple system interface that covers all joints of the robot.
         In the future, we could make different hardware interfaces for the body, arm, etc. -->
         <ros2_control name="SpotSystem" type="system">
@@ -16,6 +16,16 @@
                 <param name="example_param_hw_start_duration_sec">0</param>
                 <param name="example_param_hw_stop_duration_sec">3.0</param>
                 <param name="example_param_hw_slowdown">100</param>
+                <!-- <xacro:property name="yaml_file" value="$(arg config_file)"/>
+                <param name="test" value="${yaml_file}"/>
+                <xacro:property name="yaml_dict" value="${xacro.load_yaml(yaml_file)}"/>
+                <xacro:property name="ros_params" value="${yaml_dict['/**']['ros__parameters']}"/> -->
+                <xacro:property name="hostname_property" value="$(optenv SPOT_IP ${hostname})"/>
+                <xacro:property name="username_property" value="$(optenv BOSDYN_CLIENT_USERNAME ${username})"/>
+                <xacro:property name="password_property" value="$(optenv BOSDYN_CLIENT_PASSWORD ${password})"/>
+                <param name="hostname">${hostname_property}</param>
+                <param name="username">${username_property}</param>
+                <param name="password">${password_property}</param>
             </xacro:if>
             </hardware>
             <!-- Add the legs -->

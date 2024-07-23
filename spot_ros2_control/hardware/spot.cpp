@@ -34,6 +34,9 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hw_start_sec_ = stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
   hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
   hw_slowdown_ = stod(info_.hardware_parameters["example_param_hw_slowdown"]);
+  const auto hostname = info_.hardware_parameters["hostname"];
+  const auto username = info_.hardware_parameters["username"];
+  const auto password = info_.hardware_parameters["password"];
   // END: This part here is for exemplary purposes - Please do not copy to your production code
   hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
@@ -93,12 +96,10 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   // Create a Client SDK object.
   client_sdk_ = ::bosdyn::client::CreateStandardSDK("SpotHardware");
-  const std::string hostname = "10.0.0.3";
-  const std::string username = "username";
-  const std::string password = "password";
   auto robot_result = client_sdk_->CreateRobot(hostname);
   if (!robot_result) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot");
+    return hardware_interface::CallbackReturn::ERROR;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Created robot");
   auto robot_ = robot_result.move();
@@ -106,7 +107,10 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   ::bosdyn::common::Status status = robot_->Authenticate(username, password);
   if (!status) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not authenticate robot");
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"),
+                "Could not authenticate robot with hostname: %s username: %s password: %s", hostname.c_str(),
+                username.c_str(), password.c_str());
+    return hardware_interface::CallbackReturn::ERROR;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Authenticated");
 
