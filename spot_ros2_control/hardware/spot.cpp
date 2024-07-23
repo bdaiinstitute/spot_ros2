@@ -133,26 +133,43 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Time sync complete");
 
-  // // Estop check
-  // status = EstopStatusCheck(robot.get());
-  // if (!status) {
-  //     return status;
-  // }
-  // std::cout << "------E-Stop Configured" << std::endl;
+  // Verify the robot is not estopped and that an external application has registered and holds
+  // an estop endpoint.
+  auto estop_status = robot_->IsEstopped();
+  if (!estop_status) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not check estop status");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (estop_status.response) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is e-stopped, cannot continue.");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Estop check complete!");
 
-  // // Lease acquire
-  // status = AcquireLease(robot.get());
-  // if (!status) {
-  //     return status;
-  // }
-  // std::cout << "------Lease Acquired" << std::endl;
+  // Now acquire a lease. First create a lease client.
+  ::bosdyn::client::Result<::bosdyn::client::LeaseClient*> lease_client_resp =
+      robot_->EnsureServiceClient<::bosdyn::client::LeaseClient>();
+  if (!lease_client_resp) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create lease client");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  ::bosdyn::client::LeaseClient* lease_client = lease_client_resp.response;
+  // Then acquire the lease for the body.
+  auto lease_res = lease_client->AcquireLease("body");
+  if (!lease_res) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not acquire body lease");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
 
-  // // Power on motors
-  // status = PowerOnMotors(robot.get());
-  // if (!status) {
-  //     return status;
-  // }
-  // std::cout << "------Robot has powered on." << std::endl;
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease acquired!!");
+
+  // Power on the robot.
+  auto power_status = robot_->PowerOnMotors(std::chrono::seconds(60), 1.0);
+  if (!power_status) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not power on the robot");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered on!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
