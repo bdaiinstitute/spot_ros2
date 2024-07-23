@@ -111,13 +111,56 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot successfully authenticated!");
 
+  // Establish time synchronization with the robot
+  ::bosdyn::client::Result<::bosdyn::client::TimeSyncClient*> time_sync_client_resp =
+      robot_->EnsureServiceClient<::bosdyn::client::TimeSyncClient>();
+  if (!time_sync_client_resp.status) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create time sync client");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Created time sync client");
+  ::bosdyn::client::TimeSyncClient* time_sync_client = time_sync_client_resp.response;
+  ::bosdyn::client::TimeSyncThread time_sync_thread(time_sync_client);
+  if (time_sync_thread.HasEstablishedTimeSync()) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Faulty establishment of time sync");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  // Start time sync
+  time_sync_thread.Start();
+  if (!time_sync_thread.WaitForSync(std::chrono::seconds(5))) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Failed to establish time sync before timing out");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Time sync complete");
+
+  // // Estop check
+  // status = EstopStatusCheck(robot.get());
+  // if (!status) {
+  //     return status;
+  // }
+  // std::cout << "------E-Stop Configured" << std::endl;
+
+  // // Lease acquire
+  // status = AcquireLease(robot.get());
+  // if (!status) {
+  //     return status;
+  // }
+  // std::cout << "------Lease Acquired" << std::endl;
+
+  // // Power on motors
+  // status = PowerOnMotors(robot.get());
+  // if (!status) {
+  //     return status;
+  // }
+  // std::cout << "------Robot has powered on." << std::endl;
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifecycle::State& /*previous_state*/) {
   // reset values always when configuring hardware
   for (uint i = 0; i < hw_states_.size(); i++) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "hw states %d", i);
+    // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "hw states %d", i);
     hw_states_[i] = 0;
     hw_commands_[i] = 0;
   }
