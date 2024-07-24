@@ -84,10 +84,12 @@ class SpotHardware : public hardware_interface::SystemInterface {
   ::bosdyn::client::LeaseClient* lease_client_;
   ::bosdyn::client::RobotStateStreamingClient* state_client_;
 
+  bool authenticate_robot(const std::string hostname, const std::string usernmame, const std::string password);
   bool start_time_sync();
   bool check_estop();
   bool get_lease();
   bool power_on();
+  bool start_state_stream();
   void release_lease();
 
   // Store the command for the simulated robot

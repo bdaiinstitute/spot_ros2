@@ -94,48 +94,25 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Correct number of joint interfaces!");
 
-  // Create a Client SDK object.
-  client_sdk_ = ::bosdyn::client::CreateStandardSDK("SpotHardware");
-  auto robot_result = client_sdk_->CreateRobot(hostname);
-  if (!robot_result) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot");
+  // Set up the robot using the BD SDK
+  if (!authenticate_robot(hostname, username, password)) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-  robot_ = robot_result.move();
-  ::bosdyn::common::Status status = robot_->Authenticate(username, password);
-  if (!status) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"),
-                "Could not authenticate robot with hostname: %s username: %s password: %s", hostname.c_str(),
-                username.c_str(), password.c_str());
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot successfully authenticated!");
-
   if (!start_time_sync()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-
   if (!check_estop()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-
   if (!get_lease()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-
   if (!power_on()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-
-  // Start state streaming
-  auto robot_state_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotStateStreamingClient>();
-  if (!robot_state_stream_client_resp) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot state client");
+  if (!start_state_stream()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot State Client created");
-  state_client_ = robot_state_stream_client_resp.move();
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -241,6 +218,27 @@ hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/
   return hardware_interface::return_type::OK;
 }
 
+bool SpotHardware::authenticate_robot(const std::string hostname, const std::string username,
+                                      const std::string password) {
+  // Create a Client SDK object.
+  client_sdk_ = ::bosdyn::client::CreateStandardSDK("SpotHardware");
+  auto robot_result = client_sdk_->CreateRobot(hostname);
+  if (!robot_result) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot");
+    return false;
+  }
+  robot_ = robot_result.move();
+  ::bosdyn::common::Status status = robot_->Authenticate(username, password);
+  if (!status) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"),
+                "Could not authenticate robot with hostname: %s username: %s password: %s", hostname.c_str(),
+                username.c_str(), password.c_str());
+    return false;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot successfully authenticated!");
+  return true;
+}
+
 bool SpotHardware::start_time_sync() {
   // Establish time synchronization with the robot
   ::bosdyn::client::Result<::bosdyn::client::TimeSyncClient*> time_sync_client_resp =
@@ -310,6 +308,18 @@ bool SpotHardware::power_on() {
     return false;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered on!");
+  return true;
+}
+
+bool SpotHardware::start_state_stream() {
+  // Start state streaming
+  auto robot_state_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotStateStreamingClient>();
+  if (!robot_state_stream_client_resp) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot state client");
+    return false;
+  }
+  state_client_ = robot_state_stream_client_resp.move();
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot State Client created");
   return true;
 }
 
