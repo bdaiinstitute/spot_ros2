@@ -171,6 +171,15 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered on!");
 
+  // Start state streaming
+  auto robot_state_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotStateStreamingClient>();
+  if (!robot_state_stream_client_resp) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot state client");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot State Client created");
+  auto robot_state_stream_client = robot_state_stream_client_resp.move();
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
