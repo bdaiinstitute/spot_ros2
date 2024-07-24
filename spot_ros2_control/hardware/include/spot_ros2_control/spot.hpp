@@ -63,6 +63,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
   hardware_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
   SPOT_ROS2_CONTROL_PUBLIC
+  hardware_interface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State& previous_state) override;
+
+  SPOT_ROS2_CONTROL_PUBLIC
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   SPOT_ROS2_CONTROL_PUBLIC
@@ -78,7 +81,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
   std::unique_ptr<::bosdyn::client::Robot> robot_;
-  ::bosdyn::client::LeaseClient* lease_client;
+  ::bosdyn::client::LeaseClient* lease_client_;
+  ::bosdyn::client::RobotStateStreamingClient* state_client_;
 
   // Store the command for the simulated robot
   std::vector<double> hw_commands_;
