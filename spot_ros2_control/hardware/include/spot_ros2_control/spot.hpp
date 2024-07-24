@@ -77,6 +77,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
   int interfaces_per_joint_;
 
   std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
+  std::unique_ptr<::bosdyn::client::Robot> robot_;
+  ::bosdyn::client::LeaseClient* lease_client;
 
   // Store the command for the simulated robot
   std::vector<double> hw_commands_;

@@ -101,7 +101,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot");
     return hardware_interface::CallbackReturn::ERROR;
   }
-  auto robot_ = robot_result.move();
+  robot_ = robot_result.move();
   ::bosdyn::common::Status status = robot_->Authenticate(username, password);
   if (!status) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"),
@@ -153,7 +153,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create lease client");
     return hardware_interface::CallbackReturn::ERROR;
   }
-  ::bosdyn::client::LeaseClient* lease_client = lease_client_resp.response;
+  lease_client = lease_client_resp.response;
   // Then acquire the lease for the body.
   auto lease_res = lease_client->AcquireLease("body");
   if (!lease_res) {
@@ -243,8 +243,25 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
+// void Spot::ReturnLease() {
+//   ::bosdyn::client::Result<::bosdyn::client::LeaseClient*> lease_client_resp =
+//       robot_->EnsureServiceClient<::bosdyn::client::LeaseClient>();
+//   ::bosdyn::client::LeaseClient* lease_client = lease_client_resp.response;
+
+//   bosdyn::api::ReturnLeaseRequest msg;
+//   auto lease_result = robot_->GetWallet()->GetOwnedLeaseProto("body");
+//   msg.mutable_lease()->CopyFrom(lease_result.response);
+//   auto resp = lease_client->ReturnLease(msg);
+//   std::cout << resp.status.DebugString() << std::endl;
+// }
 
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Deactivating!");
+  bosdyn::api::ReturnLeaseRequest msg;
+  auto lease_result = robot_->GetWallet()->GetOwnedLeaseProto("body");
+  msg.mutable_lease()->CopyFrom(lease_result.response);
+  auto resp = lease_client->ReturnLease(msg);
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return lease status: %s", resp.status.DebugString().c_str());
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
