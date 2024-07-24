@@ -111,65 +111,21 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot successfully authenticated!");
 
-  // Establish time synchronization with the robot
-  ::bosdyn::client::Result<::bosdyn::client::TimeSyncClient*> time_sync_client_resp =
-      robot_->EnsureServiceClient<::bosdyn::client::TimeSyncClient>();
-  if (!time_sync_client_resp.status) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create time sync client");
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Created time sync client");
-  ::bosdyn::client::TimeSyncClient* time_sync_client = time_sync_client_resp.response;
-  ::bosdyn::client::TimeSyncThread time_sync_thread(time_sync_client);
-  if (time_sync_thread.HasEstablishedTimeSync()) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Faulty establishment of time sync");
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  // Start time sync
-  time_sync_thread.Start();
-  if (!time_sync_thread.WaitForSync(std::chrono::seconds(5))) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Failed to establish time sync before timing out");
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Time sync complete");
-
-  // Verify the robot is not estopped and that an external application has registered and holds
-  // an estop endpoint.
-  auto estop_status = robot_->IsEstopped();
-  if (!estop_status) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not check estop status");
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (estop_status.response) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is e-stopped, cannot continue.");
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Estop check complete!");
-
-  // Now acquire a lease. First create a lease client.
-  ::bosdyn::client::Result<::bosdyn::client::LeaseClient*> lease_client_resp =
-      robot_->EnsureServiceClient<::bosdyn::client::LeaseClient>();
-  if (!lease_client_resp) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create lease client");
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  lease_client_ = lease_client_resp.response;
-  // Then acquire the lease for the body.
-  auto lease_res = lease_client_->AcquireLease("body");
-  if (!lease_res) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not acquire body lease");
+  if (!start_time_sync()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease acquired!!");
-
-  // Power on the robot.
-  auto power_status = robot_->PowerOnMotors(std::chrono::seconds(60), 1.0);
-  if (!power_status) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not power on the robot");
+  if (!check_estop()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered on!");
+
+  if (!get_lease()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  if (!power_on()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
 
   // Start state streaming
   auto robot_state_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotStateStreamingClient>();
@@ -246,21 +202,13 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
 
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Deactivating!");
-  bosdyn::api::ReturnLeaseRequest msg;
-  auto lease_result = robot_->GetWallet()->GetOwnedLeaseProto("body");
-  msg.mutable_lease()->CopyFrom(lease_result.response);
-  auto resp = lease_client_->ReturnLease(msg);
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return lease status: %s", resp.status.DebugString().c_str());
+  release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Shutting down");
-  bosdyn::api::ReturnLeaseRequest msg;
-  auto lease_result = robot_->GetWallet()->GetOwnedLeaseProto("body");
-  msg.mutable_lease()->CopyFrom(lease_result.response);
-  auto resp = lease_client_->ReturnLease(msg);
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return lease status: %s", resp.status.DebugString().c_str());
+  release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -291,6 +239,87 @@ hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/
   // // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;
+}
+
+bool SpotHardware::start_time_sync() {
+  // Establish time synchronization with the robot
+  ::bosdyn::client::Result<::bosdyn::client::TimeSyncClient*> time_sync_client_resp =
+      robot_->EnsureServiceClient<::bosdyn::client::TimeSyncClient>();
+  if (!time_sync_client_resp.status) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create time sync client");
+    return false;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Created time sync client");
+  ::bosdyn::client::TimeSyncClient* time_sync_client = time_sync_client_resp.response;
+  ::bosdyn::client::TimeSyncThread time_sync_thread(time_sync_client);
+  if (time_sync_thread.HasEstablishedTimeSync()) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Faulty establishment of time sync");
+    return false;
+  }
+  // Start time sync
+  time_sync_thread.Start();
+  if (!time_sync_thread.WaitForSync(std::chrono::seconds(5))) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Failed to establish time sync before timing out");
+    return false;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Time sync complete");
+  return true;
+}
+
+bool SpotHardware::check_estop() {
+  // Verify the robot is not estopped and that an external application has registered and holds
+  // an estop endpoint.
+  auto estop_status = robot_->IsEstopped();
+  if (!estop_status) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not check estop status");
+    return false;
+  }
+  if (estop_status.response) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is e-stopped, cannot continue.");
+    return false;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Estop check complete!");
+  return true;
+}
+
+bool SpotHardware::get_lease() {
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Getting Lease");
+  // First create a lease client.
+  ::bosdyn::client::Result<::bosdyn::client::LeaseClient*> lease_client_resp =
+      robot_->EnsureServiceClient<::bosdyn::client::LeaseClient>();
+  if (!lease_client_resp) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create lease client");
+    return false;
+  }
+  lease_client_ = lease_client_resp.response;
+  // Then acquire the lease for the body.
+  auto lease_res = lease_client_->AcquireLease("body");
+  if (!lease_res) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not acquire body lease");
+    return false;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease acquired!!");
+  return true;
+}
+
+bool SpotHardware::power_on() {
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powering on...");
+  auto power_status = robot_->PowerOnMotors(std::chrono::seconds(60), 1.0);
+  if (!power_status) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not power on the robot");
+    return false;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered on!");
+  return true;
+}
+
+void SpotHardware::release_lease() {
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Releasing Lease");
+  bosdyn::api::ReturnLeaseRequest msg;
+  auto lease_result = robot_->GetWallet()->GetOwnedLeaseProto("body");
+  msg.mutable_lease()->CopyFrom(lease_result.response);
+  auto resp = lease_client_->ReturnLease(msg);
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return lease status: %s", resp.status.DebugString().c_str());
 }
 
 }  // namespace spot_ros2_control
