@@ -110,9 +110,11 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   if (!power_on()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-  if (!start_state_stream()) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
+  StateStreamingHandler state_streaming_handler;
+  // if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming,
+  //                                 &controller, std::placeholders::_1))) {
+  //   return hardware_interface::CallbackReturn::ERROR;
+  // }
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -221,7 +223,7 @@ hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/
 bool SpotHardware::authenticate_robot(const std::string hostname, const std::string username,
                                       const std::string password) {
   // Create a Client SDK object.
-  client_sdk_ = ::bosdyn::client::CreateStandardSDK("SpotHardware");
+  auto client_sdk_ = ::bosdyn::client::CreateStandardSDK("SpotHardware");
   auto robot_result = client_sdk_->CreateRobot(hostname);
   if (!robot_result) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot");
@@ -311,7 +313,24 @@ bool SpotHardware::power_on() {
   return true;
 }
 
-bool SpotHardware::start_state_stream() {
+void state_stream_loop(std::stop_token stop_token, ::bosdyn::client::RobotStateStreamingClient* stateStreamClient,
+                       StateHandler&& state_policy) {
+  ::bosdyn::api::RobotStateStreamResponse latest_state_stream_response;
+
+  while (!stop_token.stop_requested()) {
+    // Get robot state stream
+    auto robot_state_stream = stateStreamClient->GetRobotStateStream();
+    if (!robot_state_stream) {
+      std::cout << "Failed to get the robot stream state: " << robot_state_stream.status.DebugString() << std::endl;
+      continue;
+    }
+    std::cout << "Got state" << std::endl;
+    latest_state_stream_response = std::move(robot_state_stream.response);
+    state_policy(latest_state_stream_response);
+  }
+}
+
+bool SpotHardware::start_state_stream(StateHandler&& state_policy) {
   // Start state streaming
   auto robot_state_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotStateStreamingClient>();
   if (!robot_state_stream_client_resp) {
@@ -320,7 +339,14 @@ bool SpotHardware::start_state_stream() {
   }
   state_client_ = robot_state_stream_client_resp.move();
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot State Client created");
+
+  state_thread_ = std::jthread(&spot_ros2_control::state_stream_loop, state_client_, state_policy);
   return true;
+}
+
+void SpotHardware::stop_state_stream() {
+  state_thread_.request_stop();
+  state_thread_.join();
 }
 
 void SpotHardware::release_lease() {

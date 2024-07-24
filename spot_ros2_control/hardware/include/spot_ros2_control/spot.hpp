@@ -15,8 +15,10 @@
 #ifndef SPOT_ROS2_CONTROL__SPOT_HPP_
 #define SPOT_ROS2_CONTROL__SPOT_HPP_
 
+#include <functional>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "hardware_interface/handle.hpp"
@@ -39,7 +41,27 @@
 #include "bosdyn/client/time_sync/time_sync_helpers.h"
 #include "bosdyn/client/util/cli_util.h"
 
+using StateHandler = std::function<void(::bosdyn::api::RobotStateStreamResponse&)>;
+
 namespace spot_ros2_control {
+
+class StateStreamingHandler {
+ public:
+  void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state) {
+    auto& position_msg = robot_state.joint_states().position();
+    auto& velocity_msg = robot_state.joint_states().velocity();
+    auto& load_msg = robot_state.joint_states().load();
+
+    current_position_ = {position_msg.begin(), position_msg.end()};
+    current_velocity_ = {velocity_msg.begin(), velocity_msg.end()};
+    current_load_ = {load_msg.begin(), load_msg.end()};
+  }
+
+ private:
+  std::vector<float> current_position_;
+  std::vector<float> current_velocity_;
+  std::vector<float> current_load_;
+};
 class SpotHardware : public hardware_interface::SystemInterface {
  public:
   RCLCPP_SHARED_PTR_DEFINITIONS(SpotHardware)
@@ -79,17 +101,21 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   int interfaces_per_joint_;
 
-  std::unique_ptr<::bosdyn::client::ClientSdk> client_sdk_;
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   ::bosdyn::client::LeaseClient* lease_client_;
   ::bosdyn::client::RobotStateStreamingClient* state_client_;
+  ::bosdyn::api::RobotStateStreamResponse latest_state_response_;
+
+  std::jthread state_thread_;
 
   bool authenticate_robot(const std::string hostname, const std::string usernmame, const std::string password);
   bool start_time_sync();
   bool check_estop();
   bool get_lease();
   bool power_on();
-  bool start_state_stream();
+  bool start_state_stream(StateHandler&& state_policy);
+  // void state_stream_loop(std::stop_token stop_token);
+  void stop_state_stream();
   void release_lease();
 
   // Store the command for the simulated robot

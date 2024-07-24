@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
+set(CMAKE_CXX_STANDARD 20)
+
 # Taken from spot_driver CMakeLists
 list(APPEND CMAKE_PREFIX_PATH /opt/spot-cpp-sdk)
 
