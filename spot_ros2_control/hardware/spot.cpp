@@ -26,17 +26,40 @@
 namespace spot_ros2_control {
 
 void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state) {
-  std::cout << "hellooo" << std::endl;
   auto& position_msg = robot_state.joint_states().position();
   auto& velocity_msg = robot_state.joint_states().velocity();
   auto& load_msg = robot_state.joint_states().load();
+  // current_position_.clear();
+  // current_velocity_.clear();
+  // current_load_.clear();
 
-  std::cout << "got msgs" << std::endl;
+  std::cout << "Pos ";
+  for (const auto& elem : position_msg) {
+    std::cout << elem << " ";
+  }
+  std::cout << std::endl;
+  std::cout << "position size: " << current_position_.size() << std::endl;
+  std::cout << "vel ";
+  for (const auto& elem : velocity_msg) {
+    std::cout << elem << " ";
+  }
+  std::cout << std::endl;
+  std::cout << "velocity size: " << current_velocity_.size() << std::endl;
+  std::cout << "load ";
+  for (const auto& elem : load_msg) {
+    std::cout << elem << " ";
+  }
+  std::cout << std::endl;
+  std::cout << "load size: " << current_load_.size() << std::endl;
+
   // something is funky about these lines. Segfaults.
   // current_position_ = {position_msg.begin(), position_msg.end()};
-  // std::cout << "im guessing i don't get here" << std::endl;
   // current_velocity_ = {velocity_msg.begin(), velocity_msg.end()};
   // current_load_ = {load_msg.begin(), load_msg.end()};
+
+  // This sometimes works sometimes does not
+  // std::vector<float> current_position_tmp = {position_msg.begin(), position_msg.end()};
+  // current_position_ = current_position_tmp;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -197,12 +220,14 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
 
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Deactivating!");
+  stop_state_stream();
   release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Shutting down");
+  stop_state_stream();
   release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -337,14 +362,11 @@ void state_stream_loop(std::stop_token stop_token, ::bosdyn::client::RobotStateS
     // Get robot state stream
     auto robot_state_stream = stateStreamClient->GetRobotStateStream();
     if (!robot_state_stream) {
-      std::cout << "Failed to get the robot stream state: " << robot_state_stream.status.DebugString() << std::endl;
+      RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Failed to get robot state");
       continue;
     }
-    std::cout << "Got state" << std::endl;
     latest_state_stream_response = std::move(robot_state_stream.response);
-    std::cout << "Okay" << std::endl;
     state_policy(latest_state_stream_response);
-    std::cout << "dfadsfadsfasdfasefdasdfasdf" << std::endl;
   }
 }
 
@@ -363,6 +385,7 @@ bool SpotHardware::start_state_stream(StateHandler&& state_policy) {
 }
 
 void SpotHardware::stop_state_stream() {
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping State Stream");
   state_thread_.request_stop();
   state_thread_.join();
 }
