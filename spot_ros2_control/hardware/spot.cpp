@@ -24,6 +24,21 @@
 #include "rclcpp/rclcpp.hpp"
 
 namespace spot_ros2_control {
+
+void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state) {
+  std::cout << "hellooo" << std::endl;
+  auto& position_msg = robot_state.joint_states().position();
+  auto& velocity_msg = robot_state.joint_states().velocity();
+  auto& load_msg = robot_state.joint_states().load();
+
+  std::cout << "got msgs" << std::endl;
+  // something is funky about these lines. Segfaults.
+  // current_position_ = {position_msg.begin(), position_msg.end()};
+  // std::cout << "im guessing i don't get here" << std::endl;
+  // current_velocity_ = {velocity_msg.begin(), velocity_msg.end()};
+  // current_load_ = {load_msg.begin(), load_msg.end()};
+}
+
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -110,11 +125,12 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   if (!power_on()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
+
   StateStreamingHandler state_streaming_handler;
-  // if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming,
-  //                                 &controller, std::placeholders::_1))) {
-  //   return hardware_interface::CallbackReturn::ERROR;
-  // }
+  if (!start_state_stream(
+          std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler, std::placeholders::_1))) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -326,7 +342,9 @@ void state_stream_loop(std::stop_token stop_token, ::bosdyn::client::RobotStateS
     }
     std::cout << "Got state" << std::endl;
     latest_state_stream_response = std::move(robot_state_stream.response);
+    std::cout << "Okay" << std::endl;
     state_policy(latest_state_stream_response);
+    std::cout << "dfadsfadsfasdfasefdasdfasdf" << std::endl;
   }
 }
 
