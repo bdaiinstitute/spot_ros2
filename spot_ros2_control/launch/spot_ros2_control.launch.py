@@ -42,11 +42,6 @@ def generate_launch_description():
         choices=["mock", "spot-sdk"],
         description="Hardware interface to load",
     )
-    config_file_arg = DeclareLaunchArgument(
-        "config_file",
-        default_value=PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "config", "spot_params.yaml"]),
-        description="Configuration file to use",
-    )
 
     # Generate the robot description
     robot_urdf = Command(
@@ -60,8 +55,6 @@ def generate_launch_description():
             LaunchConfiguration("has_arm"),
             " hardware_interface_type:=",
             LaunchConfiguration("hardware_interface"),
-            " config_file:=",
-            LaunchConfiguration("config_file"),
         ]
     )
     robot_description = {"robot_description": robot_urdf}
@@ -114,7 +107,6 @@ def generate_launch_description():
             description_file_arg,
             robot_controller_arg,
             hardware_interface_arg,
-            config_file_arg,
             ros2_control_node,
             robot_state_publisher_node,
             joint_state_broadcaster_spawner_node,
