@@ -1,3 +1,7 @@
+// File modified. Modifications Copyright (c) 2024 Boston Dynamics AI Institute LLC.
+// All rights reserved.
+
+// --------------------------------------------------------------
 // Copyright 2021 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");

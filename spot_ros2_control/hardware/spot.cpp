@@ -1,3 +1,7 @@
+// File modified. Modifications Copyright (c) 2024 Boston Dynamics AI Institute LLC.
+// All rights reserved.
+
+// --------------------------------------------------------------
 // Copyright 2020 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,8 +58,6 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  interfaces_per_joint_ = 3;
   const auto hostname = info_.hardware_parameters["hostname"];
   const auto username = info_.hardware_parameters["username"];
   const auto password = info_.hardware_parameters["password"];

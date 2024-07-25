@@ -1,3 +1,7 @@
+// File modified. Modifications Copyright (c) 2024 Boston Dynamics AI Institute LLC.
+// All rights reserved.
+
+// --------------------------------------------------------------
 // Copyright 2020 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,12 +93,13 @@ class SpotHardware : public hardware_interface::SystemInterface {
   hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
  private:
-  int interfaces_per_joint_;
+  // TODO(khughes): Hard coding this for now, but there should be a cleaner way to do this.
+  // The 3 interfaces are position, velocity, and effort.
+  int interfaces_per_joint_ = 3;
 
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   ::bosdyn::client::LeaseClient* lease_client_;
   ::bosdyn::client::RobotStateStreamingClient* state_client_;
-  ::bosdyn::api::RobotStateStreamResponse latest_state_response_;
 
   std::jthread state_thread_;
   StateStreamingHandler state_streaming_handler_;
