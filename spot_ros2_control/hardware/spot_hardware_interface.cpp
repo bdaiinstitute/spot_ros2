@@ -57,11 +57,11 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
   }
+  // Get and save parameters
+  hostname = info_.hardware_parameters["hostname"];
+  username = info_.hardware_parameters["username"];
+  password = info_.hardware_parameters["password"];
 
-  const auto hostname = info_.hardware_parameters["hostname"];
-  const auto username = info_.hardware_parameters["username"];
-  const auto password = info_.hardware_parameters["password"];
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
   hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
 
@@ -117,28 +117,6 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   }
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Correct number of joint interfaces!");
-
-  // Set up the robot using the BD SDK
-  if (!authenticate_robot(hostname, username, password)) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (!start_time_sync()) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (!check_estop()) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (!get_lease()) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (!power_on()) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-
-  if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler_,
-                                    std::placeholders::_1))) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -197,7 +175,26 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
   for (uint i = 0; i < hw_states_.size(); i++) {
     hw_commands_[i] = hw_states_[i];
   }
-
+  // Set up the robot using the BD SDK.
+  if (!authenticate_robot(hostname, username, password)) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!start_time_sync()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!check_estop()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!get_lease()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!power_on()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler_,
+                                    std::placeholders::_1))) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Successfully activated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -235,16 +232,7 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
 }
 
 hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  // // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Writing...");
-
-  // for (uint i = 0; i < hw_commands_.size(); i++) {
-  //   // Simulate sending commands to the hardware
-  //   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Got command %.5f for joint %d!", hw_commands_[i], i);
-  // }
-  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Joints successfully written!");
-  // // END: This part here is for exemplary purposes - Please do not copy to your production code
-
+  // This function will be responsible for sending commands to the robot via the BD SDK -- currently unimplemented.
   return hardware_interface::return_type::OK;
 }
 

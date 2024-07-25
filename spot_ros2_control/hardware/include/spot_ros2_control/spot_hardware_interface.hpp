@@ -97,13 +97,21 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // The 3 interfaces are position, velocity, and effort.
   size_t interfaces_per_joint_ = 3;
 
+  // Login info
+  std::string hostname;
+  std::string username;
+  std::string password;
+
+  // Shared BD clients.
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   ::bosdyn::client::LeaseClient* lease_client_;
   ::bosdyn::client::RobotStateStreamingClient* state_client_;
 
+  // Thread for reading the state of the robot.
   std::jthread state_thread_;
   StateStreamingHandler state_streaming_handler_;
 
+  // Functions that interact with the BD SDK to set up the robot and get the robot states.
   bool authenticate_robot(const std::string hostname, const std::string usernmame, const std::string password);
   bool start_time_sync();
   bool check_estop();
