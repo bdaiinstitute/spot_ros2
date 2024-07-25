@@ -1,6 +1,0 @@
-/**:
-  ros__parameters:
-    # Login information:
-    username: "username"
-    password: "password"
-    hostname: "10.0.0.3"
