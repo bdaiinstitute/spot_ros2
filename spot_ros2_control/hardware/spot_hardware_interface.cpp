@@ -115,26 +115,19 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
-
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Correct number of joint interfaces!");
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifecycle::State& /*previous_state*/) {
   // reset values always when configuring hardware
   for (uint i = 0; i < hw_states_.size(); i++) {
-    // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "hw states %d", i);
-    hw_states_[i] = 0;
-    hw_commands_[i] = 0;
+    hw_states_.at(i) = 0;
+    hw_commands_.at(i) = 0;
   }
-
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Successfully configured!");
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 std::vector<hardware_interface::StateInterface> SpotHardware::export_state_interfaces() {
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Export state interfaces");
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++) {
     const auto joint = info_.joints.at(i);
@@ -145,16 +138,11 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_EFFORT,
                                                                      &hw_states_[interfaces_per_joint_ * i + 2]));
   }
-
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return state interfaces");
-
   return state_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_interfaces() {
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Export command interfaces");
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  // info_.joints[i].state_interfaces[0].name
   for (uint i = 0; i < info_.joints.size(); i++) {
     const auto joint = info_.joints.at(i);
     command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_POSITION,
@@ -164,9 +152,6 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
     command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_EFFORT,
                                                                          &hw_commands_[interfaces_per_joint_ * i + 2]));
   }
-
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return command interfaces");
-
   return command_interfaces;
 }
 
@@ -195,38 +180,45 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
                                     std::placeholders::_1))) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Successfully activated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Deactivating!");
   stop_state_stream();
   release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Shutting down");
   stop_state_stream();
   release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  const auto joint_pos = state_streaming_handler_.get_position();
-  const auto joint_vel = state_streaming_handler_.get_velocity();
-  const auto joint_load = state_streaming_handler_.get_load();
+  const auto& joint_pos = state_streaming_handler_.get_position();
+  const auto& joint_vel = state_streaming_handler_.get_velocity();
+  const auto& joint_load = state_streaming_handler_.get_load();
   // wait for them to be initialized
   if (joint_pos.size() == 0 || joint_vel.size() == 0 || joint_load.size() == 0) {
     return hardware_interface::return_type::OK;
   }
-  // read into joint states
-  for (uint i = 0; i < hw_states_.size(); i += 3) {
-    hw_states_.at(i) = joint_pos.at(i / 3);
-    hw_states_.at(i + 1) = joint_vel.at(i / 3);
-    hw_states_.at(i + 2) = joint_load.at(i / 3);
+  // Ensure that the states received from the Spot SDK will fit into the hw_states_ vector
+  const auto states_size = hw_states_.size();
+  if (interfaces_per_joint_ * joint_pos.size() != states_size ||
+      interfaces_per_joint_ * joint_vel.size() != states_size ||
+      interfaces_per_joint_ * joint_load.size() != states_size) {
+    RCLCPP_FATAL(
+        rclcpp::get_logger("SpotHardware"),
+        "The number of joints and interfaces does not match with the outputted joint states from the Spot SDK!");
+    return hardware_interface::return_type::ERROR;
+  }
+  // Read values into joint states
+  for (uint i = 0; i < states_size; i += interfaces_per_joint_) {
+    hw_states_.at(i) = joint_pos.at(i / interfaces_per_joint_);
+    hw_states_.at(i + 1) = joint_vel.at(i / interfaces_per_joint_);
+    hw_states_.at(i + 2) = joint_load.at(i / interfaces_per_joint_);
   }
   return hardware_interface::return_type::OK;
 }
