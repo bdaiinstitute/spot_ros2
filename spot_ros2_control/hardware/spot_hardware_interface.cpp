@@ -16,7 +16,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "spot_ros2_control/spot.hpp"
+#include "spot_ros2_control/spot_hardware_interface.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -67,7 +67,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Assumes three state and three command interfaces for each joint (position, velocity, and effort).
-    if (joint.command_interfaces.size() != 3) {
+    if (joint.command_interfaces.size() != interfaces_per_joint_) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' has %zu command interfaces found. 3 expected.",
                    joint.name.c_str(), joint.command_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
@@ -91,7 +91,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    if (joint.state_interfaces.size() != 3) {
+    if (joint.state_interfaces.size() != interfaces_per_joint_) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' has %zu state interface. 3 expected.",
                    joint.name.c_str(), joint.state_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
