@@ -89,11 +89,6 @@ class SpotHardware : public hardware_interface::SystemInterface {
   hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
  private:
-  // Parameters for the RRBot simulation
-  double hw_start_sec_;
-  double hw_stop_sec_;
-  double hw_slowdown_;
-
   int interfaces_per_joint_;
 
   std::unique_ptr<::bosdyn::client::Robot> robot_;
@@ -110,11 +105,10 @@ class SpotHardware : public hardware_interface::SystemInterface {
   bool get_lease();
   bool power_on();
   bool start_state_stream(StateHandler&& state_policy);
-  // void state_stream_loop(std::stop_token stop_token);
   void stop_state_stream();
   void release_lease();
 
-  // Store the command for the simulated robot
+  // Store the commands and states for the robot.
   std::vector<double> hw_commands_;
   std::vector<double> hw_states_;
 };

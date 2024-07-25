@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
+# This is here so we can use jthread from C++ 20
 set(CMAKE_CXX_STANDARD 20)
 
 # Taken from spot_driver CMakeLists

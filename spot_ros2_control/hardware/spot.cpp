@@ -56,9 +56,6 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   interfaces_per_joint_ = 3;
-  hw_start_sec_ = stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
-  hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
-  hw_slowdown_ = stod(info_.hardware_parameters["example_param_hw_slowdown"]);
   const auto hostname = info_.hardware_parameters["hostname"];
   const auto username = info_.hardware_parameters["username"];
   const auto password = info_.hardware_parameters["password"];
@@ -219,9 +216,6 @@ hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecy
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Reading joint states. HW states size: %d", hw_states_.size());
-  // hw_states_ is of size 19 for robot with an arm
-
   const auto joint_pos = state_streaming_handler_.get_position();
   const auto joint_vel = state_streaming_handler_.get_velocity();
   const auto joint_load = state_streaming_handler_.get_load();
@@ -235,7 +229,6 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     hw_states_.at(i + 1) = joint_vel.at(i / 3);
     hw_states_.at(i + 2) = joint_load.at(i / 3);
   }
-  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Joints successfully read!");
   return hardware_interface::return_type::OK;
 }
 
