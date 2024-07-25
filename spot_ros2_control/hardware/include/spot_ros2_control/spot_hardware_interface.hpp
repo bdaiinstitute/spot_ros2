@@ -52,9 +52,9 @@ namespace spot_ros2_control {
 class StateStreamingHandler {
  public:
   void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
-  const std::vector<float>& get_position();
-  const std::vector<float>& get_velocity();
-  const std::vector<float>& get_load();
+  [[nodiscard]] const std::vector<float>& get_position() const;
+  [[nodiscard]] const std::vector<float>& get_velocity() const;
+  [[nodiscard]] const std::vector<float>& get_load() const;
 
  private:
   std::vector<float> current_position_;

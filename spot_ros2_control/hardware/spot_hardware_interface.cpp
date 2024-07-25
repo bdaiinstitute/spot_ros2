@@ -43,13 +43,13 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   current_load_ = {load_msg.begin(), load_msg.end()};
 }
 
-const std::vector<float>& StateStreamingHandler::get_position() {
+const std::vector<float>& StateStreamingHandler::get_position() const {
   return current_position_;
 }
-const std::vector<float>& StateStreamingHandler::get_velocity() {
+const std::vector<float>& StateStreamingHandler::get_velocity() const {
   return current_velocity_;
 }
-const std::vector<float>& StateStreamingHandler::get_load() {
+const std::vector<float>& StateStreamingHandler::get_load() const {
   return current_load_;
 }
 
@@ -130,7 +130,7 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
 std::vector<hardware_interface::StateInterface> SpotHardware::export_state_interfaces() {
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++) {
-    const auto joint = info_.joints.at(i);
+    const auto& joint = info_.joints.at(i);
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_POSITION,
                                                                      &hw_states_[interfaces_per_joint_ * i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_VELOCITY,
@@ -144,7 +144,7 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
 std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_interfaces() {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++) {
-    const auto joint = info_.joints.at(i);
+    const auto& joint = info_.joints.at(i);
     command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_POSITION,
                                                                          &hw_commands_[interfaces_per_joint_ * i]));
     command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_VELOCITY,
@@ -157,9 +157,7 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
 
 hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecycle::State& /*previous_state*/) {
   // command and state should be equal when starting
-  for (uint i = 0; i < hw_states_.size(); i++) {
-    hw_commands_[i] = hw_states_[i];
-  }
+  hw_commands_.assign(hw_states_.begin(), hw_states_.end());
   // Set up the robot using the BD SDK.
   if (!authenticate_robot(hostname_, username_, password_)) {
     return hardware_interface::CallbackReturn::ERROR;
