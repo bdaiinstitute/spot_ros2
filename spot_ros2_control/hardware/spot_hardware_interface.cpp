@@ -228,17 +228,17 @@ hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/
   return hardware_interface::return_type::OK;
 }
 
-bool SpotHardware::authenticate_robot(const std::string hostname, const std::string username,
-                                      const std::string password) {
+bool SpotHardware::authenticate_robot(const std::string& hostname, const std::string& username,
+                                      const std::string& password) {
   // Create a Client SDK object.
-  auto client_sdk_ = ::bosdyn::client::CreateStandardSDK("SpotHardware");
-  auto robot_result = client_sdk_->CreateRobot(hostname);
+  const auto client_sdk = ::bosdyn::client::CreateStandardSDK("SpotHardware");
+  auto robot_result = client_sdk->CreateRobot(hostname);
   if (!robot_result) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create robot");
     return false;
   }
   robot_ = robot_result.move();
-  ::bosdyn::common::Status status = robot_->Authenticate(username, password);
+  const ::bosdyn::common::Status status = robot_->Authenticate(username, password);
   if (!status) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"),
                 "Could not authenticate robot with hostname: %s username: %s password: %s", hostname.c_str(),
@@ -277,7 +277,7 @@ bool SpotHardware::start_time_sync() {
 bool SpotHardware::check_estop() {
   // Verify the robot is not estopped and that an external application has registered and holds
   // an estop endpoint.
-  auto estop_status = robot_->IsEstopped();
+  const auto estop_status = robot_->IsEstopped();
   if (!estop_status) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not check estop status");
     return false;
@@ -301,7 +301,7 @@ bool SpotHardware::get_lease() {
   }
   lease_client_ = lease_client_resp.response;
   // Then acquire the lease for the body.
-  auto lease_res = lease_client_->AcquireLease("body");
+  const auto lease_res = lease_client_->AcquireLease("body");
   if (!lease_res) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not acquire body lease");
     return false;
@@ -312,7 +312,7 @@ bool SpotHardware::get_lease() {
 
 bool SpotHardware::power_on() {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powering on...");
-  auto power_status = robot_->PowerOnMotors(std::chrono::seconds(60), 1.0);
+  const auto power_status = robot_->PowerOnMotors(std::chrono::seconds(60), 1.0);
   if (!power_status) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not power on the robot");
     return false;
