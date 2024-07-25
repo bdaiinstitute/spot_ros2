@@ -52,9 +52,9 @@ namespace spot_ros2_control {
 class StateStreamingHandler {
  public:
   void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
-  std::vector<float> get_position();
-  std::vector<float> get_velocity();
-  std::vector<float> get_load();
+  const std::vector<float>& get_position();
+  const std::vector<float>& get_velocity();
+  const std::vector<float>& get_load();
 
  private:
   std::vector<float> current_position_;
@@ -98,9 +98,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
   static constexpr size_t interfaces_per_joint_ = 3;
 
   // Login info
-  std::string hostname;
-  std::string username;
-  std::string password;
+  std::string hostname_;
+  std::string username_;
+  std::string password_;
 
   // Shared BD clients.
   std::unique_ptr<::bosdyn::client::Robot> robot_;

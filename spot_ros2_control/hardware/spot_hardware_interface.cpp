@@ -43,13 +43,13 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   current_load_ = {load_msg.begin(), load_msg.end()};
 }
 
-std::vector<float> StateStreamingHandler::get_position() {
+const std::vector<float>& StateStreamingHandler::get_position() {
   return current_position_;
 }
-std::vector<float> StateStreamingHandler::get_velocity() {
+const std::vector<float>& StateStreamingHandler::get_velocity() {
   return current_velocity_;
 }
-std::vector<float> StateStreamingHandler::get_load() {
+const std::vector<float>& StateStreamingHandler::get_load() {
   return current_load_;
 }
 
@@ -58,9 +58,9 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     return hardware_interface::CallbackReturn::ERROR;
   }
   // Get and save parameters
-  hostname = info_.hardware_parameters["hostname"];
-  username = info_.hardware_parameters["username"];
-  password = info_.hardware_parameters["password"];
+  hostname_ = info_.hardware_parameters["hostname"];
+  username_ = info_.hardware_parameters["username"];
+  password_ = info_.hardware_parameters["password"];
 
   hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
@@ -161,7 +161,7 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
     hw_commands_[i] = hw_states_[i];
   }
   // Set up the robot using the BD SDK.
-  if (!authenticate_robot(hostname, username, password)) {
+  if (!authenticate_robot(hostname_, username_, password_)) {
     return hardware_interface::CallbackReturn::ERROR;
   }
   if (!start_time_sync()) {
