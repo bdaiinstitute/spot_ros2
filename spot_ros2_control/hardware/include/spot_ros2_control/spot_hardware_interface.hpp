@@ -112,7 +112,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   StateStreamingHandler state_streaming_handler_;
 
   // Functions that interact with the BD SDK to set up the robot and get the robot states.
-  bool authenticate_robot(const std::string hostname, const std::string usernmame, const std::string password);
+  bool authenticate_robot(const std::string& hostname, const std::string& username, const std::string& password);
   bool start_time_sync();
   bool check_estop();
   bool get_lease();
