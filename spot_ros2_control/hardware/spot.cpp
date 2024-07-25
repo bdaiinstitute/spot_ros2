@@ -29,37 +29,14 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   auto& position_msg = robot_state.joint_states().position();
   auto& velocity_msg = robot_state.joint_states().velocity();
   auto& load_msg = robot_state.joint_states().load();
-  // current_position_.clear();
-  // current_velocity_.clear();
-  // current_load_.clear();
 
-  std::cout << "Pos ";
-  for (const auto& elem : position_msg) {
-    std::cout << elem << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "current position size: " << current_position_.size() << std::endl;
-  std::cout << "vel ";
-  for (const auto& elem : velocity_msg) {
-    std::cout << elem << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "current velocity size: " << current_velocity_.size() << std::endl;
-  std::cout << "load ";
-  for (const auto& elem : load_msg) {
-    std::cout << elem << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "current load size: " << current_load_.size() << std::endl;
+  // order is:
+  // leg: fl hip x, fl hip y, fl knee, fr..., rl...., rr...,
+  // arm: sh0, sh1, el0, el1, wr0, wr1, f1x
 
-  // something is funky about these lines. Segfaults.
   current_position_ = {position_msg.begin(), position_msg.end()};
   current_velocity_ = {velocity_msg.begin(), velocity_msg.end()};
   current_load_ = {load_msg.begin(), load_msg.end()};
-
-  // This sometimes works sometimes does not
-  // std::vector<float> current_position_tmp = {position_msg.begin(), position_msg.end()};
-  // current_position_ = current_position_tmp;
 }
 
 std::vector<float> StateStreamingHandler::get_position() {
@@ -141,14 +118,6 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   }
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Correct number of joint interfaces!");
-
-  const auto pos_test = state_streaming_handler_.get_position();
-  std::cout << "POS TEST LEN " << pos_test.size() << std::endl;
-  const auto vel_test = state_streaming_handler_.get_velocity();
-  std::cout << "VEL TEST LEN " << vel_test.size() << std::endl;
-  const auto load_test = state_streaming_handler_.get_load();
-  std::cout << "LOAD TEST LEN " << load_test.size() << std::endl;
-  // return hardware_interface::CallbackReturn::ERROR;
 
   // Set up the robot using the BD SDK
   if (!authenticate_robot(hostname, username, password)) {
@@ -250,17 +219,23 @@ hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecy
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Reading...");
+  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Reading joint states. HW states size: %d", hw_states_.size());
+  // hw_states_ is of size 19 for robot with an arm
 
-  for (uint i = 0; i < hw_states_.size(); i++) {
-    // Simulate movement
-    hw_states_[i] = hw_states_[i] + (hw_commands_[i] - hw_states_[i]) / hw_slowdown_;
-    // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Got state %.5f for joint %d!", hw_states_[i], i);
+  const auto joint_pos = state_streaming_handler_.get_position();
+  const auto joint_vel = state_streaming_handler_.get_velocity();
+  const auto joint_load = state_streaming_handler_.get_load();
+  // wait for them to be initialized
+  if (joint_pos.size() == 0 || joint_vel.size() == 0 || joint_load.size() == 0) {
+    return hardware_interface::return_type::OK;
+  }
+  // read into joint states
+  for (uint i = 0; i < hw_states_.size(); i += 3) {
+    hw_states_.at(i) = joint_pos.at(i / 3);
+    hw_states_.at(i + 1) = joint_vel.at(i / 3);
+    hw_states_.at(i + 2) = joint_load.at(i / 3);
   }
   // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Joints successfully read!");
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
   return hardware_interface::return_type::OK;
 }
 
