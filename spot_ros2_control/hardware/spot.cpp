@@ -38,28 +38,38 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
     std::cout << elem << " ";
   }
   std::cout << std::endl;
-  std::cout << "position size: " << current_position_.size() << std::endl;
+  std::cout << "current position size: " << current_position_.size() << std::endl;
   std::cout << "vel ";
   for (const auto& elem : velocity_msg) {
     std::cout << elem << " ";
   }
   std::cout << std::endl;
-  std::cout << "velocity size: " << current_velocity_.size() << std::endl;
+  std::cout << "current velocity size: " << current_velocity_.size() << std::endl;
   std::cout << "load ";
   for (const auto& elem : load_msg) {
     std::cout << elem << " ";
   }
   std::cout << std::endl;
-  std::cout << "load size: " << current_load_.size() << std::endl;
+  std::cout << "current load size: " << current_load_.size() << std::endl;
 
   // something is funky about these lines. Segfaults.
-  // current_position_ = {position_msg.begin(), position_msg.end()};
-  // current_velocity_ = {velocity_msg.begin(), velocity_msg.end()};
-  // current_load_ = {load_msg.begin(), load_msg.end()};
+  current_position_ = {position_msg.begin(), position_msg.end()};
+  current_velocity_ = {velocity_msg.begin(), velocity_msg.end()};
+  current_load_ = {load_msg.begin(), load_msg.end()};
 
   // This sometimes works sometimes does not
   // std::vector<float> current_position_tmp = {position_msg.begin(), position_msg.end()};
   // current_position_ = current_position_tmp;
+}
+
+std::vector<float> StateStreamingHandler::get_position() {
+  return current_position_;
+}
+std::vector<float> StateStreamingHandler::get_velocity() {
+  return current_velocity_;
+}
+std::vector<float> StateStreamingHandler::get_load() {
+  return current_load_;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -132,6 +142,14 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Correct number of joint interfaces!");
 
+  const auto pos_test = state_streaming_handler_.get_position();
+  std::cout << "POS TEST LEN " << pos_test.size() << std::endl;
+  const auto vel_test = state_streaming_handler_.get_velocity();
+  std::cout << "VEL TEST LEN " << vel_test.size() << std::endl;
+  const auto load_test = state_streaming_handler_.get_load();
+  std::cout << "LOAD TEST LEN " << load_test.size() << std::endl;
+  // return hardware_interface::CallbackReturn::ERROR;
+
   // Set up the robot using the BD SDK
   if (!authenticate_robot(hostname, username, password)) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -149,9 +167,8 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  StateStreamingHandler state_streaming_handler;
-  if (!start_state_stream(
-          std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler, std::placeholders::_1))) {
+  if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler_,
+                                    std::placeholders::_1))) {
     return hardware_interface::CallbackReturn::ERROR;
   }
   return hardware_interface::CallbackReturn::SUCCESS;
