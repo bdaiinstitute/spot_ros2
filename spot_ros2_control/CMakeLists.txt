@@ -91,6 +91,6 @@ install(TARGETS spot_ros2_control
 )
 
 ament_export_targets(export_spot_ros2_control HAS_LIBRARY_TARGET)
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS} bosdyn)
 
 ament_package()

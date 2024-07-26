@@ -164,8 +164,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
    */
   bool power_on();
   /**
-   * @brief Start streaming the state of the robot.
-   * @param state_policy TODO
+   * @brief Start streaming the state of the robot, and attach a callback to it
+   * @param state_policy a functor to call with new state updates
    * @return True if state stream thread successfully created, false otherwise.
    */
   bool start_state_stream(StateHandler&& state_policy);

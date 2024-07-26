@@ -26,8 +26,7 @@
 // Source:
 // https://github.com/ros-controls/ros2_control_demos/blob/master/example_1/hardware/include/ros2_control_demo_example_1/visibility_control.h
 
-#ifndef SPOT_ROS2_CONTROL__VISIBILITY_CONTROL_H_
-#define SPOT_ROS2_CONTROL__VISIBILITY_CONTROL_H_
+#pragma once
 
 // This logic was borrowed (then namespaced) from the examples on the gcc wiki:
 //     https://gcc.gnu.org/wiki/Visibility
@@ -59,5 +58,3 @@
 #endif
 #define SPOT_ROS2_CONTROL_PUBLIC_TYPE
 #endif
-
-#endif  // SPOT_ROS2_CONTROL__VISIBILITY_CONTROL_H_
