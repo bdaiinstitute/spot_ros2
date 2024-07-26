@@ -242,23 +242,14 @@ bool SpotHardware::authenticate_robot(const std::string& hostname, const std::st
 }
 
 bool SpotHardware::start_time_sync() {
-  // Establish time synchronization with the robot
-  ::bosdyn::client::Result<::bosdyn::client::TimeSyncClient*> time_sync_client_resp =
-      robot_->EnsureServiceClient<::bosdyn::client::TimeSyncClient>();
-  if (!time_sync_client_resp.status) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not create time sync client");
+  auto start_response = robot_->StartTimeSync();
+  auto time_sync_thread_resp = robot_->GetTimeSyncThread();
+  if (!time_sync_thread_resp.status) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Could not get time sync thread from robot");
     return false;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Created time sync client");
-  ::bosdyn::client::TimeSyncClient* time_sync_client = time_sync_client_resp.response;
-  ::bosdyn::client::TimeSyncThread time_sync_thread(time_sync_client);
-  if (time_sync_thread.HasEstablishedTimeSync()) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Faulty establishment of time sync");
-    return false;
-  }
-  // Start time sync
-  time_sync_thread.Start();
-  if (!time_sync_thread.WaitForSync(std::chrono::seconds(5))) {
+  auto time_sync_thread = time_sync_thread_resp.response;
+  if (!time_sync_thread->WaitForSync(std::chrono::seconds(5))) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Failed to establish time sync before timing out");
     return false;
   }
