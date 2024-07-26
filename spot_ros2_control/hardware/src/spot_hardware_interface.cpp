@@ -34,9 +34,9 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
 
-  current_position_ = {position_msg.begin(), position_msg.end()};
-  current_velocity_ = {velocity_msg.begin(), velocity_msg.end()};
-  current_load_ = {load_msg.begin(), load_msg.end()};
+  current_position_.assign(position_msg.begin(), position_msg.end());
+  current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
+  current_load_.assign(load_msg.begin(), load_msg.end());
 }
 
 const std::vector<float>& StateStreamingHandler::get_position() const {
@@ -116,16 +116,14 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
 hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifecycle::State& /*previous_state*/) {
   // reset values always when configuring hardware
-  for (uint i = 0; i < hw_states_.size(); i++) {
-    hw_states_.at(i) = 0;
-    hw_commands_.at(i) = 0;
-  }
+  hw_states_.assign(hw_states_.size(), 0);
+  hw_commands_.assign(hw_commands_.size(), 0);
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 std::vector<hardware_interface::StateInterface> SpotHardware::export_state_interfaces() {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (uint i = 0; i < info_.joints.size(); i++) {
+  for (size_t i = 0; i < info_.joints.size(); i++) {
     const auto& joint = info_.joints.at(i);
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_POSITION,
                                                                      &hw_states_[interfaces_per_joint_ * i]));
@@ -195,7 +193,7 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   const auto& joint_vel = state_streaming_handler_.get_velocity();
   const auto& joint_load = state_streaming_handler_.get_load();
   // wait for them to be initialized
-  if (joint_pos.size() == 0 || joint_vel.size() == 0 || joint_load.size() == 0) {
+  if (joint_pos.empty() || joint_vel.empty() || joint_load.empty()) {
     return hardware_interface::return_type::OK;
   }
   // Ensure that the states received from the Spot SDK will fit into the hw_states_ vector
@@ -209,10 +207,10 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     return hardware_interface::return_type::ERROR;
   }
   // Read values into joint states
-  for (uint i = 0; i < states_size; i += interfaces_per_joint_) {
-    hw_states_.at(i) = joint_pos.at(i / interfaces_per_joint_);
-    hw_states_.at(i + 1) = joint_vel.at(i / interfaces_per_joint_);
-    hw_states_.at(i + 2) = joint_load.at(i / interfaces_per_joint_);
+  for (size_t i = 0; i < joint_pos.size(); ++i) {
+    hw_states_.at(i * interfaces_per_joint_) = joint_pos.at(i);
+    hw_states_.at(i * interfaces_per_joint_ + 1) = joint_vel.at(i);
+    hw_states_.at(i * interfaces_per_joint_ + 2) = joint_load.at(i);
   }
   return hardware_interface::return_type::OK;
 }
