@@ -14,10 +14,10 @@ Pytest automatically discovers all fixtures defined in the file "conftest.py".
 # warning that we want disabled.
 # pylint: disable=redefined-outer-name
 
-import tempfile
-import typing
 import os
 import pathlib
+import tempfile
+import typing
 
 import bdai_ros2_wrappers.scope as ros_scope
 import domain_coordinator
@@ -49,6 +49,7 @@ os.environ.update(
         "FASTRTPS_DEFAULT_PROFILES_FILE": str(TEST_PATH / "profile.xml"),
     }
 )
+
 
 # pylint: disable=invalid-name,unused-argument
 @spot_wrapper.testing.fixture
@@ -145,7 +146,9 @@ def spot_graph_description(simple_spot: SpotFixture, domain_id: int) -> typing.I
         yield launch.LaunchDescription(
             [
                 launch.actions.SetEnvironmentVariable("ROS_DOMAIN_ID", str(domain_id)),
-                launch.actions.SetEnvironmentVariable(name="RMW_IMPLEMENTATION", value=os.environ["RMW_IMPLEMENTATION"]),
+                launch.actions.SetEnvironmentVariable(
+                    name="RMW_IMPLEMENTATION", value=os.environ["RMW_IMPLEMENTATION"]
+                ),
                 launch.actions.SetEnvironmentVariable(
                     name="FASTRTPS_DEFAULT_PROFILES_FILE", value=os.environ["FASTRTPS_DEFAULT_PROFILES_FILE"]
                 ),
