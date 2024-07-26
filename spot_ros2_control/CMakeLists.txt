@@ -42,7 +42,7 @@ endif()
 add_library(
   spot_ros2_control
   SHARED
-  hardware/spot_hardware_interface.cpp
+  hardware/src/spot_hardware_interface.cpp
 )
 target_compile_features(spot_ros2_control PUBLIC cxx_std_17)
 target_include_directories(spot_ros2_control PUBLIC
