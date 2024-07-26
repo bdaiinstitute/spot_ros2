@@ -34,10 +34,6 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
 
-  // order is:
-  // leg: fl hip x, fl hip y, fl knee, fr..., rl...., rr...,
-  // arm: sh0, sh1, el0, el1, wr0, wr1, f1x
-
   current_position_ = {position_msg.begin(), position_msg.end()};
   current_velocity_ = {velocity_msg.begin(), velocity_msg.end()};
   current_load_ = {load_msg.begin(), load_msg.end()};

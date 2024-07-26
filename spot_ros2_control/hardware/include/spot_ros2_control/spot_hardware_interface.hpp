@@ -16,8 +16,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPOT_ROS2_CONTROL__SPOT_HPP_
-#define SPOT_ROS2_CONTROL__SPOT_HPP_
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -51,12 +50,34 @@ namespace spot_ros2_control {
 
 class StateStreamingHandler {
  public:
+  /**
+   * @brief Update member variables with the current position, velocity, and load of the robot's joints.
+   * @param robot_state Robot state protobuf holding the current joint state of the robot.
+   */
   void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
+  // The following functions return the current joint state of the robot.
+  // The first 12 entries will be the leg joints in the following order:
+  // FL hip x, FL hip y, FL knee, FR hip x, FR hip y, FR knee, RL hip x, RL hip y, RL knee, RR hip x, RR hip y, RR knee
+  // And, if the robot has an arm, the 7 arm joints follow in this order:
+  // sh0, sh1, el0, el1, wr0, wr1, f1x
+  /**
+   * @brief Get the current joint positions of the robot
+   * @return vector of current joint positions in rad
+   */
   [[nodiscard]] const std::vector<float>& get_position() const;
+  /**
+   * @brief Get the current joint velocities of the robot
+   * @return vector of current joint velocities in rad/s
+   */
   [[nodiscard]] const std::vector<float>& get_velocity() const;
+  /**
+   * @brief Get the current joint loads of the robot
+   * @return vector of current joint loads in Nm
+   */
   [[nodiscard]] const std::vector<float>& get_load() const;
 
  private:
+  // Stores the current position, velocity, and load of the robot's joints.
   std::vector<float> current_position_;
   std::vector<float> current_velocity_;
   std::vector<float> current_load_;
@@ -109,23 +130,57 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Thread for reading the state of the robot.
   std::jthread state_thread_;
+  // Simple class used in the state streaming thread that stores the current joint states of the robot.
   StateStreamingHandler state_streaming_handler_;
 
-  // Functions that interact with the BD SDK to set up the robot and get the robot states.
+  // The following are functions that interact with the BD SDK to set up the robot and get the robot states.
+
+  /**
+   * @brief Create the ::bosdyn::client::Robot object and authenticate with the login information
+   * @param hostname IP address of the robot
+   * @param username Username for robot login
+   * @param password Password for robot login
+   * @return True if robot object is successfully created and authenticated, false otherwise.
+   */
   bool authenticate_robot(const std::string& hostname, const std::string& username, const std::string& password);
+  /**
+   * @brief Start time sync threads with the ::bosdyn::client::Robot object
+   * @return True if time sync successfully initialized and started, false otherwise.
+   */
   bool start_time_sync();
+  /**
+   * @brief Check the estop status of the robot
+   * @return True if robot is not e-stopped, false otherwise.
+   */
   bool check_estop();
+  /**
+   * @brief Get the body lease of the robot
+   * @return True if lease client successfully created and body lease is acquired, false otherwise.
+   */
   bool get_lease();
+  /**
+   * @brief Power the robot on
+   * @return True if successfully powered on, false otherwise.
+   */
   bool power_on();
+  /**
+   * @brief Start streaming the state of the robot.
+   * @param state_policy TODO
+   * @return True if state stream thread successfully created, false otherwise.
+   */
   bool start_state_stream(StateHandler&& state_policy);
+  /**
+   * @brief Stop streaming the state of the robot by shutting down the associated threads.
+   */
   void stop_state_stream();
+  /**
+   * @brief Release the body lease of the robot.
+   */
   void release_lease();
 
-  // Store the commands and states for the robot.
+  // Vectors for storing the commands and states for the robot.
   std::vector<double> hw_commands_;
   std::vector<double> hw_states_;
 };
 
 }  // namespace spot_ros2_control
-
-#endif  // SPOT_ROS2_CONTROL__SPOT_HPP_
