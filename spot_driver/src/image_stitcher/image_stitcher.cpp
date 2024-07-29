@@ -419,12 +419,13 @@ void ImageStitcher::callback(const std::shared_ptr<const Image>& image_left,
     // Virtual camera transform only has to be broadcast once since it is static wrt the body
     camera_handle_->broadcast(camera_->getTransform(), info_left->header.stamp);
   }
+  const auto current_stamp = info_left->header.stamp;
   // The rest of the time we should just be stitching and publishing
   const auto image_stitched = camera_->stitch(image_left, image_right);
+  image_stitched->header.stamp = current_stamp;
   // The only reason we have to remake this every time is to update the time stamp
-  const auto info_stitched =
-      toCameraInfo(info_left->header.stamp, camera_handle_->getCameraFrame(), image_stitched->width,
-                   image_stitched->height, camera_handle_->getIntrinsics());
+  const auto info_stitched = toCameraInfo(current_stamp, camera_handle_->getCameraFrame(), image_stitched->width,
+                                          image_stitched->height, camera_handle_->getIntrinsics());
   camera_handle_->publish(*image_stitched, info_stitched);
 }
 
