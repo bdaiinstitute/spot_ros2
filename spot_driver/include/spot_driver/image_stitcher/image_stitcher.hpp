@@ -116,6 +116,9 @@ class RclcppCameraHandle : public CameraHandleBase {
   image_transport::ImageTransport image_transport_;
   image_transport::CameraPublisher camera_publisher_;
   RclcppTfBroadcasterInterface tf_broadcaster_;
+  std::string spot_name_;
+  std::string frame_prefix_;
+  std::string camera_prefix_;
   std::string body_frame_;
   std::string camera_frame_;
   cv::Matx33d intrinsics_;
