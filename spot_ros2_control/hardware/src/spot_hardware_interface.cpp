@@ -34,19 +34,13 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
 
-  current_position_.assign(position_msg.begin(), position_msg.end());
-  current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
-  current_load_.assign(load_msg.begin(), load_msg.end());
+  joint_states_.position.assign(position_msg.begin(), position_msg.end());
+  joint_states_.velocity.assign(velocity_msg.begin(), velocity_msg.end());
+  joint_states_.load.assign(load_msg.begin(), load_msg.end());
 }
 
-const std::vector<float>& StateStreamingHandler::get_position() const {
-  return current_position_;
-}
-const std::vector<float>& StateStreamingHandler::get_velocity() const {
-  return current_velocity_;
-}
-const std::vector<float>& StateStreamingHandler::get_load() const {
-  return current_load_;
+JointStates StateStreamingHandler::get_joint_states() const {
+  return joint_states_;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -187,9 +181,10 @@ hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecy
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  const auto& joint_pos = state_streaming_handler_.get_position();
-  const auto& joint_vel = state_streaming_handler_.get_velocity();
-  const auto& joint_load = state_streaming_handler_.get_load();
+  const auto joint_states = state_streaming_handler_.get_joint_states();
+  const auto& joint_pos = joint_states.position;
+  const auto& joint_vel = joint_states.velocity;
+  const auto& joint_load = joint_states.load;
   // wait for them to be initialized
   if (joint_pos.empty() || joint_vel.empty() || joint_load.empty()) {
     return hardware_interface::return_type::OK;

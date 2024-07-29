@@ -48,6 +48,17 @@ using StateHandler = std::function<void(::bosdyn::api::RobotStateStreamResponse&
 
 namespace spot_ros2_control {
 
+struct JointStates {
+  // This struct is used to hold a set of joint states of the robot.
+  // The first 12 entries will be the leg joints in the following order:
+  // FL hip x, FL hip y, FL knee, FR hip x, FR hip y, FR knee, RL hip x, RL hip y, RL knee, RR hip x, RR hip y, RR knee
+  // And, if the robot has an arm, the 7 arm joints follow in this order:
+  // sh0, sh1, el0, el1, wr0, wr1, f1x
+  std::vector<float> position;  // in rad
+  std::vector<float> velocity;  // in rad/s
+  std::vector<float> load;      // in Nm
+};
+
 class StateStreamingHandler {
  public:
   /**
@@ -55,32 +66,15 @@ class StateStreamingHandler {
    * @param robot_state Robot state protobuf holding the current joint state of the robot.
    */
   void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
-  // The following functions return the current joint state of the robot.
-  // The first 12 entries will be the leg joints in the following order:
-  // FL hip x, FL hip y, FL knee, FR hip x, FR hip y, FR knee, RL hip x, RL hip y, RL knee, RR hip x, RR hip y, RR knee
-  // And, if the robot has an arm, the 7 arm joints follow in this order:
-  // sh0, sh1, el0, el1, wr0, wr1, f1x
   /**
-   * @brief Get the current joint positions of the robot
-   * @return vector of current joint positions in rad
+   * @brief Get a struct of the current joint states of the robot.
+   * @return JointStates struct containing vectors of position, velocity, and load values.
    */
-  [[nodiscard]] const std::vector<float>& get_position() const;
-  /**
-   * @brief Get the current joint velocities of the robot
-   * @return vector of current joint velocities in rad/s
-   */
-  [[nodiscard]] const std::vector<float>& get_velocity() const;
-  /**
-   * @brief Get the current joint loads of the robot
-   * @return vector of current joint loads in Nm
-   */
-  [[nodiscard]] const std::vector<float>& get_load() const;
+  [[nodiscard]] JointStates get_joint_states() const;
 
  private:
   // Stores the current position, velocity, and load of the robot's joints.
-  std::vector<float> current_position_;
-  std::vector<float> current_velocity_;
-  std::vector<float> current_load_;
+  JointStates joint_states_;
 };
 class SpotHardware : public hardware_interface::SystemInterface {
  public:
