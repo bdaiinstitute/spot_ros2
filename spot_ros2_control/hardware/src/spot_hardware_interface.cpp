@@ -183,8 +183,6 @@ hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_life
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
-  stop_state_stream();
-  release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
