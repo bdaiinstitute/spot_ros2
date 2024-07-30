@@ -43,11 +43,10 @@ from spot_wrapper.testing.fixtures import SpotFixture
 from spot_wrapper.testing.mocks import MockSpot
 
 TEST_PATH = pathlib.Path(__file__).parent
-TEST_PROFILE_PATH = TEST_PATH.parent
 os.environ.update(
     {
         "RMW_IMPLEMENTATION": "rmw_fastrtps_cpp",
-        "FASTRTPS_DEFAULT_PROFILES_FILE": str(TEST_PROFILE_PATH / "profile.xml"),
+        "FASTRTPS_DEFAULT_PROFILES_FILE": str(TEST_PATH.parent / "profile.xml"),
     }
 )
 
