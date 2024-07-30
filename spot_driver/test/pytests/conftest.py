@@ -46,7 +46,7 @@ TEST_PATH = pathlib.Path(__file__).parent
 os.environ.update(
     {
         "RMW_IMPLEMENTATION": "rmw_fastrtps_cpp",
-        "FASTRTPS_DEFAULT_PROFILES_FILE": str(TEST_PATH / "profile.xml"),
+        "FASTRTPS_DEFAULT_PROFILES_FILE": str(TEST_PATH.parent / "profile.xml"),
     }
 )
 
