@@ -70,7 +70,10 @@ class StateStreamingHandler {
    * @brief Get a struct of the current joint states of the robot.
    * @return JointStates struct containing vectors of position, velocity, and load values.
    */
-  [[nodiscard]] JointStates get_joint_states() const;
+  [[nodiscard]] JointStates get_joint_states();
+
+  // responsible for ensuring read/writes of joint states do not happen at the same time.
+  std::mutex mutex_;
 
  private:
   // Stores the current position, velocity, and load of the robot's joints.

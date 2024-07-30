@@ -30,23 +30,23 @@
 namespace spot_ros2_control {
 
 void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state) {
-  // set up lock guard here
+  // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
+  // Get joint states from the robot and write them to the joint_states_ struct
   const auto& position_msg = robot_state.joint_states().position();
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
-
   joint_states_.position.assign(position_msg.begin(), position_msg.end());
   joint_states_.velocity.assign(velocity_msg.begin(), velocity_msg.end());
   joint_states_.load.assign(load_msg.begin(), load_msg.end());
 }
 
-JointStates StateStreamingHandler::get_joint_states() const {
-  // set up lock guard here
-  // only have to set this up in this class.
+JointStates StateStreamingHandler::get_joint_states() {
+  // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
+  // Return the joint_states_ struct
   return joint_states_;
-  // whenever I make a copy, memory allocation will happen (since joint_states_ has vectors).
+  // TODO(khughes) whenever I make a copy, memory allocation will happen (since joint_states_ has vectors).
   // allocating memory within the controller loop is a bad idea bc it can mess up latencies --
   // no guarantee on how long this will take.
   // this should instead take in a reference of this struct and in the function
