@@ -36,21 +36,18 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& position_msg = robot_state.joint_states().position();
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
-  joint_states_.position.assign(position_msg.begin(), position_msg.end());
-  joint_states_.velocity.assign(velocity_msg.begin(), velocity_msg.end());
-  joint_states_.load.assign(load_msg.begin(), load_msg.end());
+  current_position_.assign(position_msg.begin(), position_msg.end());
+  current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
+  current_load_.assign(load_msg.begin(), load_msg.end());
 }
 
-JointStates StateStreamingHandler::get_joint_states() {
+void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
-  // Return the joint_states_ struct
-  return joint_states_;
-  // TODO(khughes) whenever I make a copy, memory allocation will happen (since joint_states_ has vectors).
-  // allocating memory within the controller loop is a bad idea bc it can mess up latencies --
-  // no guarantee on how long this will take.
-  // this should instead take in a reference of this struct and in the function
-  // read in from the internal structs into the one that is passed in.
+  // Fill in members of the joint states stuct passed in by reference.
+  joint_states.position.assign(current_position_.begin(), current_position_.end());
+  joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
+  joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -191,10 +188,10 @@ hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecy
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  const auto joint_states = state_streaming_handler_.get_joint_states();
-  const auto& joint_pos = joint_states.position;
-  const auto& joint_vel = joint_states.velocity;
-  const auto& joint_load = joint_states.load;
+  state_streaming_handler_.get_joint_states(joint_states_);
+  const auto& joint_pos = joint_states_.position;
+  const auto& joint_vel = joint_states_.velocity;
+  const auto& joint_load = joint_states_.load;
   // wait for them to be initialized
   if (joint_pos.empty() || joint_vel.empty() || joint_load.empty()) {
     return hardware_interface::return_type::OK;
