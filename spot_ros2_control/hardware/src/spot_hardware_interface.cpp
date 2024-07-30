@@ -119,6 +119,37 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   // reset values always when configuring hardware
   hw_states_.assign(hw_states_.size(), 0);
   hw_commands_.assign(hw_commands_.size(), 0);
+  // Set up the robot using the BD SDK and start command streaming.
+  if (!authenticate_robot(hostname_, username_, password_)) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!start_time_sync()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler_,
+                                    std::placeholders::_1))) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecycle::State& /*previous_state*/) {
+  // This can be added when we start command streaming.
+
+  // if (!check_estop()) {
+  //   return hardware_interface::CallbackReturn::ERROR;
+  // }
+  // if (!get_lease()) {
+  //   return hardware_interface::CallbackReturn::ERROR;
+  // }
+  // if (!power_on()) {
+  //   release_lease();
+  //   return hardware_interface::CallbackReturn::ERROR;
+  // }
+
+  // Once command streaming is implemented, this initialization should go here.
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -150,40 +181,15 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
   return command_interfaces;
 }
 
-hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecycle::State& /*previous_state*/) {
-  // Set up the robot using the BD SDK.
-  if (!authenticate_robot(hostname_, username_, password_)) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (!start_time_sync()) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (!check_estop()) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (!get_lease()) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (!power_on()) {
-    release_lease();
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-  if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler_,
-                                    std::placeholders::_1))) {
-    release_lease();
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-
-  return hardware_interface::CallbackReturn::SUCCESS;
-}
-
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
-  stop_state_stream();
-  release_lease();
+  // Once command streaming is enabled, this should release the lease and stop command streaming
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
+  stop_state_stream();
+  // Once command streaming is enabled, this should also release the lease and stop command streaming
+  // (if not already deactivated)
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
