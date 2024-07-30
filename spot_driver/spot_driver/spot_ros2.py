@@ -416,7 +416,6 @@ class SpotROS(Node):
                         port=self.port,
                         logger=self.cam_logger,
                         cert_resource_glob=self.certificate,
-                        gripperless=self.gripperless,
                     )
                 except SystemError:
                     self.spot_cam_wrapper = None
