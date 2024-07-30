@@ -30,6 +30,8 @@
 namespace spot_ros2_control {
 
 void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state) {
+  // set up lock guard here
+  const std::lock_guard<std::mutex> lock(mutex_);
   const auto& position_msg = robot_state.joint_states().position();
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
@@ -40,7 +42,15 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
 }
 
 JointStates StateStreamingHandler::get_joint_states() const {
+  // set up lock guard here
+  // only have to set this up in this class.
+  const std::lock_guard<std::mutex> lock(mutex_);
   return joint_states_;
+  // whenever I make a copy, memory allocation will happen (since joint_states_ has vectors).
+  // allocating memory within the controller loop is a bad idea bc it can mess up latencies --
+  // no guarantee on how long this will take.
+  // this should instead take in a reference of this struct and in the function
+  // read in from the internal structs into the one that is passed in.
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {

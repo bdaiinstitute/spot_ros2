@@ -75,6 +75,7 @@ class StateStreamingHandler {
  private:
   // Stores the current position, velocity, and load of the robot's joints.
   JointStates joint_states_;
+  // put a mutex here
 };
 class SpotHardware : public hardware_interface::SystemInterface {
  public:
