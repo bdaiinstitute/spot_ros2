@@ -428,14 +428,9 @@ class SpotROS(Node):
                 self.get_logger().error(error_msg)
                 raise ValueError(error_msg)
 
-        all_cameras = ["frontleft", "frontright", "left", "right", "back"]
         has_arm = self.mock_has_arm
         if self.spot_wrapper is not None:
             has_arm = self.spot_wrapper.has_arm()
-        if has_arm and not self.gripperless:
-            all_cameras.append("hand")
-        self.declare_parameter("cameras_used", all_cameras)
-        self.cameras_used = self.get_parameter("cameras_used")
 
         if self.publish_graph_nav_pose.value:
             # graph nav pose will be published both on a topic
@@ -866,7 +861,7 @@ class SpotROS(Node):
             self.handle_graph_nav_set_localization,
             callback_group=self.group,
         )
-        if has_arm and self.gripperless:
+        if has_arm and not self.gripperless:
             self.create_service(
                 GetGripperCameraParameters,
                 "get_gripper_camera_parameters",
