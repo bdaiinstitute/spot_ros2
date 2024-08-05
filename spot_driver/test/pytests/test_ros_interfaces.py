@@ -81,7 +81,9 @@ class SpotDriverTest(unittest.TestCase):
         FEEDBACK_INVALID = -128
 
         dummy_command = RobotCommand()
-        self.assertEqual(self.spot_ros2._robot_command_goal_complete(dummy_command, None), GoalResponse.IN_PROGRESS, "Empty Command")
+        self.assertEqual(
+            self.spot_ros2._robot_command_goal_complete(dummy_command, None), GoalResponse.IN_PROGRESS, "Empty Command"
+        )
 
         feedback = RobotCommandFeedback()
 
@@ -103,7 +105,9 @@ class SpotDriverTest(unittest.TestCase):
             fullbody_feedback.feedback.FEEDBACK_STOP_FEEDBACK_SET
         )
         self.assertEqual(
-            self.spot_ros2._robot_command_goal_complete(dummy_command, feedback), GoalResponse.SUCCESS, "FEEDBACK_STOP_FEEDBACK_SET"
+            self.spot_ros2._robot_command_goal_complete(dummy_command, feedback),
+            GoalResponse.SUCCESS,
+            "FEEDBACK_STOP_FEEDBACK_SET",
         )
 
         """ Testing FREEZE_FEEDBACK_SET """
@@ -111,7 +115,9 @@ class SpotDriverTest(unittest.TestCase):
             fullbody_feedback.feedback.FEEDBACK_FREEZE_FEEDBACK_SET
         )
         self.assertEqual(
-            self.spot_ros2._robot_command_goal_complete(dummy_command, feedback), GoalResponse.SUCCESS, "FEEDBACK_FREEZE_FEEDBACK_SET"
+            self.spot_ros2._robot_command_goal_complete(dummy_command, feedback),
+            GoalResponse.SUCCESS,
+            "FEEDBACK_FREEZE_FEEDBACK_SET",
         )
 
         """ Testing SELFRIGHT_FEEDBACK_SET """
@@ -389,7 +395,7 @@ class SpotDriverTest(unittest.TestCase):
         feedback.command.synchronized_feedback.arm_command_feedback.feedback.arm_cartesian_feedback.status.value = (
             arm_command_feedback.feedback.arm_cartesian_feedback.status.STATUS_TRAJECTORY_CANCELLED
         )
-        
+
         self.assertEqual(
             self.spot_ros2._robot_command_goal_complete(dummy_command, feedback),
             GoalResponse.FAILED,
@@ -858,7 +864,9 @@ class SpotDriverTest(unittest.TestCase):
         )
         # Stop commands provide no feedback, therefore expect SUCCESS
         self.assertEqual(
-            self.spot_ros2._robot_command_goal_complete(dummy_command, feedback), GoalResponse.SUCCESS, "FEEDBACK_STOP_FEEDBACK_SET"
+            self.spot_ros2._robot_command_goal_complete(dummy_command, feedback),
+            GoalResponse.SUCCESS,
+            "FEEDBACK_STOP_FEEDBACK_SET",
         )
 
         """ Testing stop feedback """
@@ -879,7 +887,9 @@ class SpotDriverTest(unittest.TestCase):
         # mobility command feedback is not set, this could be caused by a command that finishes and resets the feedback status.
         # because of this case, it will return success as long as no other synchronous commands are run afterwards.
         self.assertEqual(
-            self.spot_ros2._robot_command_goal_complete(dummy_command, feedback), GoalResponse.SUCCESS, "MOBILITY | FEEDBACK_NOT_SET"
+            self.spot_ros2._robot_command_goal_complete(dummy_command, feedback),
+            GoalResponse.SUCCESS,
+            "MOBILITY | FEEDBACK_NOT_SET",
         )
 
         """ Testing unknown command """
