@@ -26,6 +26,7 @@
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/rclcpp_tf_broadcaster_interface.hpp>
 #include <spot_driver/interfaces/tf_listener_interface_base.hpp>
+#include <spot_msgs/msg/homography.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -115,6 +116,7 @@ class RclcppCameraHandle : public CameraHandleBase {
  private:
   image_transport::ImageTransport image_transport_;
   image_transport::CameraPublisher camera_publisher_;
+  std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::Homography>> homography_publisher_;
   RclcppTfBroadcasterInterface tf_broadcaster_;
   std::string body_frame_;
   std::string camera_frame_;
@@ -122,6 +124,7 @@ class RclcppCameraHandle : public CameraHandleBase {
   cv::Vec3d plane_normal_;
   double plane_distance_;
   int row_padding_;
+  spot_msgs::msg::Homography homography_msg_;
 };
 
 struct MiddleCamera {

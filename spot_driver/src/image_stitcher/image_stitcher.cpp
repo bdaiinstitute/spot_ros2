@@ -238,10 +238,13 @@ RclcppCameraHandle::RclcppCameraHandle(const std::shared_ptr<rclcpp::Node>& node
   plane_distance_ = node->declare_parameter("virtual_camera_plane_distance", 1.);
   // Amount to increase the size of the stitched image rows from the original camera image rows
   row_padding_ = node->declare_parameter("stitched_image_row_padding", 0);
+
+  homography_publisher_ = node->create_publisher<spot_msgs::msg::Homography>("stitcher/homography", 10);
 }
 
 void RclcppCameraHandle::publish(const Image& image, const CameraInfo& info) const {
   camera_publisher_.publish(image, info);
+  homography_publisher_->publish(homography_msg_);
 }
 
 void RclcppCameraHandle::broadcast(const Transform& tf, const Time& stamp) {
