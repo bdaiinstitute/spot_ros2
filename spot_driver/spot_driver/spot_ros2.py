@@ -1904,14 +1904,16 @@ class SpotROS(Node):
         # return None to continue processing the command feedback
         return None
 
-    def _process_full_body_command_feedback(self, command: FullBodyCommand, feedback: FullBodyCommandFeedback) -> GoalResponse:
+    def _process_full_body_command_feedback(
+        self, command: FullBodyCommand, feedback: FullBodyCommandFeedback
+    ) -> GoalResponse:
         # NOTE: Spot powers off on roll over to battery change pose. For Spot <=4.0.2 software,
         # this can result in the battery change pose command being overriden before reporting
         # any battery change pose feedback of success. The following clause is a best-effort
         # attempt to deal gracefully with this.
         if command.command.which == command.command.COMMAND_BATTERY_CHANGE_POSE_REQUEST_SET:
             powered_off = self.spot_wrapper and not self.spot_wrapper.check_is_powered_on()
-            command_overriden = (feedback.status.value == RobotCommandFeedbackStatusStatus.STATUS_COMMAND_OVERRIDDEN)
+            command_overriden = feedback.status.value == RobotCommandFeedbackStatusStatus.STATUS_COMMAND_OVERRIDDEN
             if command_overriden and powered_off:
                 return GoalResponse.SUCCESS
 
