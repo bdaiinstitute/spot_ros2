@@ -43,12 +43,14 @@ from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
     Camera,
+    FullBodyCommand,
     FullBodyCommandFeedback,
     GripperCommandFeedback,
     Logpoint,
     ManipulationApiFeedbackResponse,
     MobilityCommandFeedback,
     PtzDescription,
+    RobotCommand,
     RobotCommandFeedback,
     RobotCommandFeedbackStatusStatus,
 )
@@ -1902,7 +1904,19 @@ class SpotROS(Node):
         # return None to continue processing the command feedback
         return None
 
-    def _process_full_body_command_feedback(self, feedback: FullBodyCommandFeedback) -> GoalResponse:
+    def _process_full_body_command_feedback(
+        self, command: FullBodyCommand, feedback: FullBodyCommandFeedback
+    ) -> GoalResponse:
+        # NOTE: Spot powers off on roll over to battery change pose. For Spot <=4.0.2 software,
+        # this can result in the battery change pose command being overriden before reporting
+        # any battery change pose feedback of success. The following clause is a best-effort
+        # attempt to deal gracefully with this.
+        if command.command.which == command.command.COMMAND_BATTERY_CHANGE_POSE_REQUEST_SET:
+            powered_off = not self.spot_wrapper or not self.spot_wrapper.check_is_powered_on()
+            command_overriden = feedback.status.value == RobotCommandFeedbackStatusStatus.STATUS_COMMAND_OVERRIDDEN
+            if command_overriden and powered_off:
+                return GoalResponse.SUCCESS
+
         maybe_goal_response = self._process_feedback_status(feedback.status.value)
         if maybe_goal_response is not None:
             return maybe_goal_response
@@ -2071,15 +2085,16 @@ class SpotROS(Node):
             return GoalResponse.IN_PROGRESS
         return GoalResponse.SUCCESS
 
-    def _robot_command_goal_complete(self, feedback: RobotCommandFeedback) -> GoalResponse:
+    def _robot_command_goal_complete(self, command: RobotCommand, feedback: RobotCommandFeedback) -> GoalResponse:
         if feedback is None:
             # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
 
         choice = feedback.command.command_choice
         if choice == feedback.command.COMMAND_FULL_BODY_FEEDBACK_SET:
+            full_body_command = command.command.full_body_command
             full_body_feedback = feedback.command.full_body_feedback
-            return self._process_full_body_command_feedback(full_body_feedback)
+            return self._process_full_body_command_feedback(full_body_command, full_body_feedback)
 
         elif choice == feedback.command.COMMAND_SYNCHRONIZED_FEEDBACK_SET:
             # The idea here is that a synchronized command can have arm, mobility, and/or gripper
@@ -2190,7 +2205,7 @@ class SpotROS(Node):
             rclpy.ok()
             and goal_handle.is_active
             and not goal_handle.is_cancel_requested
-            and self._robot_command_goal_complete(feedback) == GoalResponse.IN_PROGRESS
+            and self._robot_command_goal_complete(ros_command, feedback) == GoalResponse.IN_PROGRESS
         ):
             # We keep looping and send batches at the expected times until the
             # last batch succeeds. We always send the next batch before the
@@ -2219,7 +2234,7 @@ class SpotROS(Node):
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
 
-        result.success = self._robot_command_goal_complete(feedback) == GoalResponse.SUCCESS
+        result.success = self._robot_command_goal_complete(ros_command, feedback) == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
