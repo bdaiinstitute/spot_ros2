@@ -321,8 +321,7 @@ void state_stream_loop(std::stop_token stop_token, ::bosdyn::client::RobotStateS
       RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to get robot state");
       continue;
     }
-    latest_state_stream_response = std::move(robot_state_stream.response);
-    state_policy(latest_state_stream_response);
+    state_policy(std::move(robot_state_stream.response));
   }
 }
 
