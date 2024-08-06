@@ -14,6 +14,10 @@ class NoarmSquat : public rclcpp::Node {
  public:
   NoarmSquat() : Node("noarm_squat"), standing{true}, initialized{false} {
     declare_parameter("command_interval_sec", 3.0);  // how frequently to send commands
+    declare_parameter("stand_joint_angles", std::vector<double>{});
+    declare_parameter("squat_joint_angles", std::vector<double>{});
+    command_stand_.data = get_parameter("stand_joint_angles").as_double_array();
+    command_squat_.data = get_parameter("squat_joint_angles").as_double_array();
     const auto command_interval_sec = std::chrono::duration<double>{get_parameter("command_interval_sec").as_double()};
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
@@ -22,8 +26,9 @@ class NoarmSquat : public rclcpp::Node {
   }
 
  private:
-  std_msgs::msg::Float64MultiArray command_squat;
-  std_msgs::msg::Float64MultiArray command_stand;
+  std_msgs::msg::Float64MultiArray command_squat_;
+  std_msgs::msg::Float64MultiArray command_stand_;
+  std::vector<double> initial_joint_positions_;
   bool standing;
   bool initialized;
   rclcpp::TimerBase::SharedPtr timer_;
@@ -33,9 +38,7 @@ class NoarmSquat : public rclcpp::Node {
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
     if (!initialized) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
-      // This assumes the robot has no arm (12 joints)
-      command_stand.data = msg.position;
-      command_squat.data = {0.15, 1.3, -2.25, -0.15, 1.3, -2.25, 0.15, 1.3, -2.25, -0.15, 1.3, -2.25};
+      initial_joint_positions_ = msg.position;
       initialized = true;
     }
   }
@@ -46,11 +49,11 @@ class NoarmSquat : public rclcpp::Node {
     }
     if (standing) {
       RCLCPP_INFO_STREAM(get_logger(), "Squat");
-      command_pub_->publish(command_squat);
+      command_pub_->publish(command_squat_);
       standing = false;
     } else {
       RCLCPP_INFO_STREAM(get_logger(), "Stand");
-      command_pub_->publish(command_stand);
+      command_pub_->publish(command_stand_);
       standing = true;
     }
   }

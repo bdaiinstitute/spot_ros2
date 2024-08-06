@@ -24,6 +24,14 @@ def generate_launch_description():
                     "hardware_interface": "mock",
                 }.items(),
             ),
-            Node(package="spot_ros2_control", executable="noarm_squat", name="noarm_squat", output="screen"),
+            Node(
+                package="spot_ros2_control",
+                executable="noarm_squat",
+                name="noarm_squat",
+                output="screen",
+                parameters=[
+                    PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "config", "examples_config.yaml"])
+                ],
+            ),
         ]
     )
