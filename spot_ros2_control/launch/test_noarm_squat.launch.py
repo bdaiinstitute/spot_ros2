@@ -21,6 +21,7 @@ def generate_launch_description():
                     "has_arm": "false",
                     "controllers_config": "spot_controllers_without_arm.yaml",
                     "robot_controller": "forward_position_controller",
+                    "hardware_interface": "mock",
                 }.items(),
             ),
             Node(package="spot_ros2_control", executable="noarm_squat", name="noarm_squat", output="screen"),

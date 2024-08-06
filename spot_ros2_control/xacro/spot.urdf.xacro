@@ -5,11 +5,9 @@
     <xacro:arg name="has_arm" default="false" />
     <xacro:arg name="add_ros2_control_tag" default="true" />
     <xacro:arg name="hardware_interface_type" default="mock" />
-
-    <!-- Create property object from the arguments to improve usability later on -->
-    <xacro:property name="has_arm_property" value="$(arg has_arm)" />
-    <xacro:property name="add_ros2_control_tag_property" value="$(arg add_ros2_control_tag)" />
-    <xacro:property name="hardware_interface_type_property" value="$(arg hardware_interface_type)" />
+    <xacro:arg name="hostname" default="10.0.0.3" />
+    <xacro:arg name="username" default="username" />
+    <xacro:arg name="password" default="password" />
 
     <!-- Macro containing the URDF for Spot -->
     <xacro:include filename="$(find spot_description)/urdf/spot_macro.xacro" />
@@ -18,10 +16,14 @@
     <xacro:include filename="$(find spot_ros2_control)/xacro/spot.ros2_control.xacro" />
 
     <!-- Adding Spot-->
-    <xacro:load_spot arm="${has_arm_property}" tf_prefix=""/>
+    <xacro:load_spot arm="$(arg has_arm)" tf_prefix=""/>
     <!-- Adding the ROS 2 control tags -->
-    <xacro:if value="${add_ros2_control_tag_property}">
-        <xacro:spot_ros2_control interface_type="${hardware_interface_type_property}" has_arm="${has_arm_property}"/>
+    <xacro:if value="$(arg add_ros2_control_tag)">
+        <xacro:spot_ros2_control interface_type="$(arg hardware_interface_type)" 
+                                 has_arm="$(arg has_arm)" 
+                                 hostname="$(arg hostname)" 
+                                 username="$(arg username)" 
+                                 password="$(arg password)" />
     </xacro:if>
 
 </robot>

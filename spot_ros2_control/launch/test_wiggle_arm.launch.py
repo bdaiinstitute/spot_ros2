@@ -21,6 +21,7 @@ def generate_launch_description():
                     "has_arm": "true",
                     "controllers_config": "spot_controllers_with_arm.yaml",
                     "robot_controller": "forward_position_controller",
+                    "hardware_interface": "mock",
                 }.items(),
             ),
             Node(package="spot_ros2_control", executable="wiggle_arm", name="wiggle_arm", output="screen"),

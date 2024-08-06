@@ -1,0 +1,9 @@
+<library path="spot_ros2_control">
+  <class name="spot_ros2_control/SpotHardware"
+         type="spot_ros2_control::SpotHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Generic Hardware Interface for Spot.
+    </description>
+  </class>
+</library>

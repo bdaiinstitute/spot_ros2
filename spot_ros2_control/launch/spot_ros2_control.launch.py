@@ -35,6 +35,13 @@ def generate_launch_description():
         choices=["forward_position_controller"],
         description="Robot controller to start.",
     )
+    hardware_interface_arg = DeclareLaunchArgument(
+        "hardware_interface",
+        default_value="mock",
+        # Must match the xacro file options for which plugin to load
+        choices=["mock", "spot-sdk"],
+        description="Hardware interface to load",
+    )
 
     # Generate the robot description
     robot_urdf = Command(
@@ -46,6 +53,8 @@ def generate_launch_description():
             ),
             " has_arm:=",
             LaunchConfiguration("has_arm"),
+            " hardware_interface_type:=",
+            LaunchConfiguration("hardware_interface"),
         ]
     )
     robot_description = {"robot_description": robot_urdf}
@@ -97,6 +106,7 @@ def generate_launch_description():
             controllers_config_arg,
             description_file_arg,
             robot_controller_arg,
+            hardware_interface_arg,
             ros2_control_node,
             robot_state_publisher_node,
             joint_state_broadcaster_spawner_node,

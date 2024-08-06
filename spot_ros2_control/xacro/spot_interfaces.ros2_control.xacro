@@ -1,18 +1,12 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <!-- The interfaces in this are modeled after the parameters from low level control in the spot sdk. -->
     <xacro:macro name="ros2_control_joint"
         params="joint_name position_min:=0.0 position_max:=0.0 velocity_max effort_max">
         <joint name="${joint_name}">
             <state_interface name="position" />
             <state_interface name="velocity" />
             <state_interface name="effort" />
-            <state_interface name="position_commanded" />
-            <state_interface name="velocity_commanded" />
-            <state_interface name="effort_commanded" />
-            <state_interface name="k_q_p_commanded" />
-            <state_interface name="k_qd_p_commanded" />
 
             <command_interface name="position">
                 <param name="min">${position_min}</param>
@@ -26,8 +20,10 @@
                 <param name="min">${-effort_max}</param>
                 <param name="max">${effort_max}</param>
             </command_interface>
-            <command_interface name="k_q_p" />
-            <command_interface name="k_qd_p" />
+            <!-- TODO at some point, this should be a part of the command interface so we can have a 
+            one-to-one mapping to the spot sdk implementation. -->
+            <!-- <command_interface name="k_q_p" />
+            <command_interface name="k_qd_p" /> -->
         </joint>
     </xacro:macro>
 
