@@ -62,6 +62,8 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
 
+  njoints_ = hw_states_.size() / interfaces_per_joint_;
+
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Assumes three state and three command interfaces for each joint (position, velocity, and effort).
     if (joint.command_interfaces.size() != interfaces_per_joint_) {
@@ -119,6 +121,11 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   // reset values always when configuring hardware
   hw_states_.assign(hw_states_.size(), 0);
   hw_commands_.assign(hw_commands_.size(), 0);
+  // allocate the sizes of these vectors ahead of time
+  joint_states_.position.assign(njoints_, 0);
+  joint_states_.velocity.assign(njoints_, 0);
+  joint_states_.load.assign(njoints_, 0);
+
   // Set up the robot using the BD SDK and start command streaming.
   if (!authenticate_robot(hostname_, username_, password_)) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -194,6 +201,7 @@ hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecy
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/) {
+  stop_state_stream();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -355,6 +363,10 @@ bool SpotHardware::start_state_stream(StateHandler&& state_policy) {
 }
 
 void SpotHardware::stop_state_stream() {
+  if (!state_stream_started_) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "State stream already stopped");
+    return;
+  }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping State Stream");
   state_thread_.request_stop();
   state_thread_.join();

@@ -118,6 +118,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // TODO(khughes): Hard coding this for now, but there should be a cleaner way to do this.
   // The 3 interfaces are position, velocity, and effort.
   static constexpr size_t interfaces_per_joint_ = 3;
+  size_t njoints_;
 
   // Login info
   std::string hostname_;
