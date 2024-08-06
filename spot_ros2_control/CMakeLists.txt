@@ -25,10 +25,13 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   sensor_msgs
   std_msgs
   spot_description
+  Eigen3
 )
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
+
+include_directories(${Eigen3_INCLUDE_DIRS})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -66,6 +69,7 @@ add_executable(noarm_squat examples/src/noarm_squat.cpp)
 ament_target_dependencies(noarm_squat
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
+target_link_libraries(noarm_squat Eigen3::Eigen)
 add_executable(wiggle_arm examples/src/wiggle_arm.cpp)
 ament_target_dependencies(wiggle_arm
   ${THIS_PACKAGE_INCLUDE_DEPENDS}

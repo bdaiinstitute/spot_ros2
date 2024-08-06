@@ -13,22 +13,30 @@
 class NoarmSquat : public rclcpp::Node {
  public:
   NoarmSquat() : Node("noarm_squat"), standing{true}, initialized{false} {
-    declare_parameter("command_interval_sec", 3.0);  // how frequently to send commands
     declare_parameter("stand_joint_angles", std::vector<double>{});
     declare_parameter("squat_joint_angles", std::vector<double>{});
+    declare_parameter("command_rate", 50.0);       // how frequently to send commands in Hz
+    declare_parameter("seconds_per_motion", 5.0);  // how many seconds the squat and stand motions should take
+
     command_stand_.data = get_parameter("stand_joint_angles").as_double_array();
     command_squat_.data = get_parameter("squat_joint_angles").as_double_array();
-    const auto command_interval_sec = std::chrono::duration<double>{get_parameter("command_interval_sec").as_double()};
+    command_rate_ = get_parameter("command_rate").as_double();
+    seconds_per_motion_ = get_parameter("seconds_per_motion").as_double();
+
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
         "joint_states", 10, std::bind(&NoarmSquat::joint_states_callback, this, std::placeholders::_1));
-    timer_ = create_wall_timer(command_interval_sec, std::bind(&NoarmSquat::timer_callback, this));
+    timer_ = create_wall_timer((std::chrono::milliseconds)((int)(1000. / command_rate_)),
+                               std::bind(&NoarmSquat::timer_callback, this));
   }
 
  private:
+  std::vector<std_msgs::msg::Float64MultiArray> standup_commands_;
   std_msgs::msg::Float64MultiArray command_squat_;
   std_msgs::msg::Float64MultiArray command_stand_;
   std::vector<double> initial_joint_positions_;
+  int command_rate_;
+  double seconds_per_motion_;
   bool standing;
   bool initialized;
   rclcpp::TimerBase::SharedPtr timer_;
@@ -42,6 +50,8 @@ class NoarmSquat : public rclcpp::Node {
       initialized = true;
     }
   }
+
+  void get_standup_commands() {}
 
   void timer_callback() {
     if (!initialized) {
