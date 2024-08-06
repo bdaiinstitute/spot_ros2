@@ -62,11 +62,11 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "SPOT_ROS2_CONTROL_BUILDING_D
 # Export hardware plugins
 pluginlib_export_plugin_description_file(hardware_interface spot_ros2_control.xml)
 
-add_executable(noarm_squat src/noarm_squat.cpp)
+add_executable(noarm_squat examples/src/noarm_squat.cpp)
 ament_target_dependencies(noarm_squat
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
-add_executable(wiggle_arm src/wiggle_arm.cpp)
+add_executable(wiggle_arm examples/src/wiggle_arm.cpp)
 ament_target_dependencies(wiggle_arm
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )

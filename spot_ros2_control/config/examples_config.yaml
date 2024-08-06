@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    robot_state_rate: 30.0
+    stand_joint_angles: []
+    squat_joint_angles: []
