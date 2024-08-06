@@ -242,9 +242,12 @@ RclcppCameraHandle::RclcppCameraHandle(const std::shared_ptr<rclcpp::Node>& node
   homography_publisher_ = node->create_publisher<spot_msgs::msg::Homography>("stitcher/homography", 10);
 }
 
-void RclcppCameraHandle::publish(const Image& image, const CameraInfo& info) const {
+void RclcppCameraHandle::publishImages(const Image& image, const CameraInfo& info) const {
   camera_publisher_.publish(image, info);
-  homography_publisher_->publish(homography_msg_);
+}
+
+void RclcppCameraHandle::publishHomography(const Homography& homography) const {
+  homography_publisher_->publish(homography);
 }
 
 void RclcppCameraHandle::broadcast(const Transform& tf, const Time& stamp) {
@@ -375,6 +378,19 @@ Transform MiddleCamera::getTransform() {
   return msg;
 }
 
+Homography MiddleCamera::getHomography() {
+  Homography homography_msg;
+  const auto& homography_left = homography_[0];
+  const auto& homography_right = homography_[1];
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      homography_msg.left.push_back(homography_left(i, j));
+      homography_msg.right.push_back(homography_right(i, j));
+    }
+  }
+  return homography_msg;
+}
+
 ImageStitcher::ImageStitcher(std::unique_ptr<CameraSynchronizerBase> synchronizer,
                              std::unique_ptr<TfListenerInterfaceBase> tf_listener,
                              std::unique_ptr<CameraHandleBase> camera_handle,
@@ -388,6 +404,7 @@ ImageStitcher::ImageStitcher(std::unique_ptr<CameraSynchronizerBase> synchronize
              const std::shared_ptr<const Image>& image_right, const std::shared_ptr<const CameraInfo>& info_right) {
         callback(image_left, info_left, image_right, info_right);
       });
+  homography_msg_ = camera_->getHomography();
 }
 
 void ImageStitcher::callback(const std::shared_ptr<const Image>& image_left,
@@ -435,7 +452,8 @@ void ImageStitcher::callback(const std::shared_ptr<const Image>& image_left,
   // The only reason we have to remake this every time is to update the time stamp
   const auto info_stitched = toCameraInfo(current_stamp, camera_frame, image_stitched->width, image_stitched->height,
                                           camera_handle_->getIntrinsics());
-  camera_handle_->publish(*image_stitched, info_stitched);
+  camera_handle_->publishImages(*image_stitched, info_stitched);
+  camera_handle_->publishHomography(homography_msg_);
 }
 
 }  // namespace spot_ros2

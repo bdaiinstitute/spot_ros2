@@ -54,6 +54,7 @@ virtual camera intrinsics
 namespace spot_ros2 {
 using Image = sensor_msgs::msg::Image;
 using CameraInfo = sensor_msgs::msg::CameraInfo;
+using Homography = spot_msgs::msg::Homography;
 using Transform = geometry_msgs::msg::Transform;
 using Time = builtin_interfaces::msg::Time;
 using DualImageCallbackFn =
@@ -90,7 +91,8 @@ class RclcppCameraSynchronizer : public CameraSynchronizerBase {
 class CameraHandleBase {
  public:
   virtual ~CameraHandleBase() = default;
-  virtual void publish(const Image& image, const CameraInfo& info) const = 0;
+  virtual void publishImages(const Image& image, const CameraInfo& info) const = 0;
+  virtual void publishHomography(const Homography& homography) const = 0;
   virtual void broadcast(const Transform& tf, const Time& stamp) = 0;
   virtual std::string getBodyFrame() const = 0;
   virtual std::string getCameraFrame() const = 0;
@@ -104,7 +106,8 @@ class RclcppCameraHandle : public CameraHandleBase {
  public:
   explicit RclcppCameraHandle(const std::shared_ptr<rclcpp::Node>& node);
 
-  void publish(const Image& image, const CameraInfo& info) const override;
+  void publishImages(const Image& image, const CameraInfo& info) const override;
+  void publishHomography(const Homography& homography) const override;
   void broadcast(const Transform& tf, const Time& stamp) override;
   std::string getBodyFrame() const override;
   std::string getCameraFrame() const override;
@@ -116,7 +119,7 @@ class RclcppCameraHandle : public CameraHandleBase {
  private:
   image_transport::ImageTransport image_transport_;
   image_transport::CameraPublisher camera_publisher_;
-  std::shared_ptr<rclcpp::Publisher<spot_msgs::msg::Homography>> homography_publisher_;
+  std::shared_ptr<rclcpp::Publisher<Homography>> homography_publisher_;
   RclcppTfBroadcasterInterface tf_broadcaster_;
   std::string body_frame_;
   std::string camera_frame_;
@@ -124,7 +127,6 @@ class RclcppCameraHandle : public CameraHandleBase {
   cv::Vec3d plane_normal_;
   double plane_distance_;
   int row_padding_;
-  spot_msgs::msg::Homography homography_msg_;
 };
 
 struct MiddleCamera {
@@ -132,6 +134,7 @@ struct MiddleCamera {
                int row_padding, const Transform& body_tform_left, const Transform& body_tform_right,
                const CameraInfo& info_left, const CameraInfo& info_right);
   Image::SharedPtr stitch(const std::shared_ptr<const Image>& left, const std::shared_ptr<const Image>& right);
+  Homography getHomography();
   Transform getTransform();
 
  private:
@@ -180,5 +183,7 @@ class ImageStitcher {
   std::unique_ptr<LoggerInterfaceBase> logger_;
 
   std::optional<MiddleCamera> camera_;
+
+  Homography homography_msg_;
 };
 }  // namespace spot_ros2
