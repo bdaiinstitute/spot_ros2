@@ -106,6 +106,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
   hardware_interface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State& previous_state) override;
 
   SPOT_ROS2_CONTROL_PUBLIC
+  hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) override;
+
+  SPOT_ROS2_CONTROL_PUBLIC
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   SPOT_ROS2_CONTROL_PUBLIC
@@ -133,6 +136,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
   std::jthread state_thread_;
   // Simple class used in the state streaming thread that stores the current joint states of the robot.
   StateStreamingHandler state_streaming_handler_;
+  bool state_stream_started_ = false;
+  bool robot_authenticated_ = false;
 
   // The following are functions that interact with the BD SDK to set up the robot and get the robot states.
 

@@ -193,6 +193,10 @@ hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecy
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
+hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/) {
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
   state_streaming_handler_.get_joint_states(joint_states_);
   const auto& joint_pos = joint_states_.position;
@@ -228,6 +232,10 @@ hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/
 
 bool SpotHardware::authenticate_robot(const std::string& hostname, const std::string& username,
                                       const std::string& password) {
+  if (robot_authenticated_) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot already authenticated!");
+    return true;
+  }
   // Create a Client SDK object.
   const auto client_sdk = ::bosdyn::client::CreateStandardSDK("SpotHardware");
   auto robot_result = client_sdk->CreateRobot(hostname);
@@ -244,6 +252,7 @@ bool SpotHardware::authenticate_robot(const std::string& hostname, const std::st
     return false;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot successfully authenticated!");
+  robot_authenticated_ = true;
   return true;
 }
 
@@ -327,6 +336,10 @@ void state_stream_loop(std::stop_token stop_token, ::bosdyn::client::RobotStateS
 }
 
 bool SpotHardware::start_state_stream(StateHandler&& state_policy) {
+  if (state_stream_started_) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "State stream has already been started!");
+    return true;
+  }
   // Start state streaming
   auto robot_state_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotStateStreamingClient>();
   if (!robot_state_stream_client_resp) {
@@ -337,6 +350,7 @@ bool SpotHardware::start_state_stream(StateHandler&& state_policy) {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot State Client created");
 
   state_thread_ = std::jthread(&spot_ros2_control::state_stream_loop, state_client_, state_policy);
+  state_stream_started_ = true;
   return true;
 }
 
@@ -344,6 +358,7 @@ void SpotHardware::stop_state_stream() {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping State Stream");
   state_thread_.request_stop();
   state_thread_.join();
+  state_stream_started_ = false;
 }
 
 void SpotHardware::release_lease() {
