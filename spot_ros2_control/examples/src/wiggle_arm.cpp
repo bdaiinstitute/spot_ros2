@@ -50,9 +50,6 @@ class WiggleArm : public rclcpp::Node {
   std::vector<double> wiggle_up_offsets_;
   std::vector<double> wiggle_down_offsets_;
 
-  std::vector<double> diff_up_;
-  std::vector<double> diff_down_;
-
   // Command to send to the robot
   std_msgs::msg::Float64MultiArray command_;
 
@@ -71,10 +68,6 @@ class WiggleArm : public rclcpp::Node {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
       nominal_joint_angles_ = msg.position;
       command_.data = msg.position;
-      for (size_t i=0; i<njoints_to_wiggle_; i++){
-        diff_up_.push_back(wiggle_up_offsets_.at(i) - nominal_joint_angles_.at(i));
-        diff_down_.push_back(wiggle_down_offsets_.at(i) - nominal_joint_angles_.at(i));
-      }
       initialized = true;
     }
   }
@@ -87,15 +80,19 @@ class WiggleArm : public rclcpp::Node {
       RCLCPP_INFO_STREAM(get_logger(), "Reset");
       switch (wiggle_state) {
         case START:
+          RCLCPP_INFO_STREAM(get_logger(), "Down");
           wiggle_state = WIGGLE_DOWN;
           break;
         case WIGGLE_DOWN:
+          RCLCPP_INFO_STREAM(get_logger(), "Middle");
           wiggle_state = WIGGLE_MIDDLE;
           break;
         case WIGGLE_MIDDLE:
+          RCLCPP_INFO_STREAM(get_logger(), "Up");
           wiggle_state = WIGGLE_UP;
           break;
         case WIGGLE_UP:
+          RCLCPP_INFO_STREAM(get_logger(), "start");
           wiggle_state = START;
           break;
       }
@@ -106,17 +103,26 @@ class WiggleArm : public rclcpp::Node {
       case START:
         for (size_t i = 0; i < njoints_to_wiggle_; i++) {
           const auto joint = joints_to_wiggle_.at(i);
-          command_.data.at(joint) = percentage * diff_up_.at(i) + nominal_joint_angles_.at(joint);
+          command_.data.at(joint) = (1-percentage) * wiggle_up_offsets_.at(i) + nominal_joint_angles_.at(joint);
         }
         break;
       case WIGGLE_DOWN:
-
+        for (size_t i = 0; i < njoints_to_wiggle_; i++) {
+          const auto joint = joints_to_wiggle_.at(i);
+          command_.data.at(joint) = percentage * wiggle_down_offsets_.at(i) + nominal_joint_angles_.at(joint);
+        }
         break;
       case WIGGLE_MIDDLE:
-
+        for (size_t i = 0; i < njoints_to_wiggle_; i++) {
+          const auto joint = joints_to_wiggle_.at(i);
+          command_.data.at(joint) = (1-percentage) * wiggle_down_offsets_.at(i) + nominal_joint_angles_.at(joint);
+        }
         break;
       case WIGGLE_UP:
-
+        for (size_t i = 0; i < njoints_to_wiggle_; i++) {
+          const auto joint = joints_to_wiggle_.at(i);
+          command_.data.at(joint) = percentage * wiggle_up_offsets_.at(i) + nominal_joint_angles_.at(joint);
+        }
         break;
     }
     command_pub_->publish(command_);
