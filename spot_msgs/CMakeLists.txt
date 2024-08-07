@@ -56,7 +56,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LeaseResource.msg"
   "msg/PowerState.msg"
   "msg/SystemFaultState.msg"
-  "msg/Homography.msg"
+  "msg/StitcherHomographies.msg"
   "srv/ChoreographyRecordedStateToAnimation.srv"
   "srv/ChoreographyStartRecordingState.srv"
   "srv/ChoreographyStopRecordingState.srv"

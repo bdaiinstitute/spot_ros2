@@ -239,7 +239,7 @@ RclcppCameraHandle::RclcppCameraHandle(const std::shared_ptr<rclcpp::Node>& node
   // Amount to increase the size of the stitched image rows from the original camera image rows
   row_padding_ = node->declare_parameter("stitched_image_row_padding", 0);
 
-  homography_publisher_ = node->create_publisher<spot_msgs::msg::Homography>("stitcher/homography", 10);
+  homography_publisher_ = node->create_publisher<Homography>("stitcher/homographies", 10);
 }
 
 void RclcppCameraHandle::publishImages(const Image& image, const CameraInfo& info) const {

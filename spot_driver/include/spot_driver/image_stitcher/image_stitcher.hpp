@@ -26,7 +26,7 @@
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/rclcpp_tf_broadcaster_interface.hpp>
 #include <spot_driver/interfaces/tf_listener_interface_base.hpp>
-#include <spot_msgs/msg/homography.hpp>
+#include <spot_msgs/msg/stitcher_homographies.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -54,7 +54,7 @@ virtual camera intrinsics
 namespace spot_ros2 {
 using Image = sensor_msgs::msg::Image;
 using CameraInfo = sensor_msgs::msg::CameraInfo;
-using Homography = spot_msgs::msg::Homography;
+using Homography = spot_msgs::msg::StitcherHomographies;
 using Transform = geometry_msgs::msg::Transform;
 using Time = builtin_interfaces::msg::Time;
 using DualImageCallbackFn =
