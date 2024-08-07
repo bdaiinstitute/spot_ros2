@@ -24,6 +24,14 @@ def generate_launch_description():
                     "hardware_interface": "mock",
                 }.items(),
             ),
-            Node(package="spot_ros2_control", executable="wiggle_arm", name="wiggle_arm", output="screen"),
+            Node(
+                package="spot_ros2_control",
+                executable="wiggle_arm",
+                name="wiggle_arm",
+                output="screen",
+                parameters=[
+                    PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "config", "examples_config.yaml"])
+                ],
+            ),
         ]
     )
