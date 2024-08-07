@@ -45,9 +45,9 @@ class NoarmSquat : public rclcpp::Node {
   std::vector<double> stand_joint_angles_;
   std::vector<double> squat_joint_angles_;
   std::vector<double> diff_squat_stand_;
-  std::vector<double> diff_init_squat_;
+  std::vector<double> diff_squat_init_;
   std_msgs::msg::Float64MultiArray command_;
-  std::vector<double> initial_joint_positions_;
+  std::vector<double> init_joint_angles_;
   SquatState squat_state;
   int command_rate_;
   double seconds_per_motion_;
@@ -62,7 +62,10 @@ class NoarmSquat : public rclcpp::Node {
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
     if (!initialized_) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
-      initial_joint_positions_ = msg.position;
+      init_joint_angles_ = msg.position;
+      for (int i = 0; i < njoints_; i++) {
+        diff_squat_init_.push_back(squat_joint_angles_.at(i) - init_joint_angles_.at(i));
+      }
       initialized_ = true;
     }
   }
@@ -72,12 +75,37 @@ class NoarmSquat : public rclcpp::Node {
       return;
     }
     if (count_ > points_per_motion_) {
-      RCLCPP_INFO_STREAM(get_logger(), "Reset");
+      RCLCPP_INFO_STREAM(get_logger(), "Resetting");
+      switch (squat_state) {
+        case INITIALIZING:
+          squat_state = SQUATTING;
+          break;
+        case SQUATTING:
+          squat_state = STANDING;
+          break;
+        case STANDING:
+          squat_state = SQUATTING;
+          break;
+      }
       count_ = 0;
     }
     const double percentage = count_ / static_cast<float>(points_per_motion_);
-    for (int i = 0; i < 12; i++) {
-      command_.data.at(i) = percentage * diff_squat_stand_.at(i) + stand_joint_angles_.at(i);
+    switch (squat_state) {
+      case INITIALIZING:
+        for (int i = 0; i < 12; i++) {
+          command_.data.at(i) = percentage * diff_squat_init_.at(i) + init_joint_angles_.at(i);
+        }
+        break;
+      case SQUATTING:
+        for (int i = 0; i < 12; i++) {
+          command_.data.at(i) = percentage * -diff_squat_stand_.at(i) + squat_joint_angles_.at(i);
+        }
+        break;
+      case STANDING:
+        for (int i = 0; i < 12; i++) {
+          command_.data.at(i) = percentage * diff_squat_stand_.at(i) + stand_joint_angles_.at(i);
+        }
+        break;
     }
     command_pub_->publish(command_);
     count_++;
