@@ -19,12 +19,21 @@ static const auto F1X_JOINT = 18;
 class WiggleArm : public rclcpp::Node {
  public:
   WiggleArm() : Node("wiggle_arm"), wiggle_state{WIGGLE_DOWN}, initialized{false} {
-    declare_parameter("command_interval_sec", 3.0);  // how frequently to send commands
-    const auto command_interval_sec = std::chrono::duration<double>{get_parameter("command_interval_sec").as_double()};
+    declare_parameter("joints_to_wiggle", std::vector<int>{});
+    declare_parameter("wiggle_up_offsets", std::vector<double>{});
+    declare_parameter("wiggle_down_offsets", std::vector<double>{});
+    declare_parameter("command_rate", 50.0);       // how frequently to send commands in Hz
+    declare_parameter("seconds_per_motion", 2.0);  // how many seconds the squat and stand motions should take
+
+    const auto command_rate = get_parameter("command_rate").as_double();
+    const auto seconds_per_motion = get_parameter("seconds_per_motion").as_double();
+    points_per_motion_ = static_cast<int>(command_rate * seconds_per_motion);
+
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
         "joint_states", 10, std::bind(&WiggleArm::joint_states_callback, this, std::placeholders::_1));
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
-    timer_ = create_wall_timer(command_interval_sec, std::bind(&WiggleArm::timer_callback, this));
+    timer_ = create_wall_timer((std::chrono::milliseconds)(static_cast<int>(1000. / command_rate)),
+                               std::bind(&WiggleArm::timer_callback, this));
   }
 
  private:
@@ -32,6 +41,7 @@ class WiggleArm : public rclcpp::Node {
   std_msgs::msg::Float64MultiArray command_wiggle_down;
   std_msgs::msg::Float64MultiArray command_wiggle_up;
   WiggleState wiggle_state;
+  int points_per_motion_;
   bool initialized;
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
