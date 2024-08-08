@@ -50,6 +50,27 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
 
+void StateStreamingHandler::handle_command_streaming(::bosdyn::api::JointControlStreamResponse& robot_state) {
+  // lock so that read/write doesn't happen at the same time
+  const std::lock_guard<std::mutex> lock(mutex_);
+  // Get joint states from the robot and write them to the joint_states_ struct
+  const auto& position_msg = robot_state.joint_states().position();
+  const auto& velocity_msg = robot_state.joint_states().velocity();
+  const auto& load_msg = robot_state.joint_states().load();
+  current_position_.assign(position_msg.begin(), position_msg.end());
+  current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
+  current_load_.assign(load_msg.begin(), load_msg.end());
+}
+
+void CommandStreamingHandler::command_joint_states(JointStates& joint_states_command) {
+  // lock so that read/write doesn't happen at the same time
+  const std::lock_guard<std::mutex> lock(mutex_);
+  // Fill in members of the joint states stuct passed in by reference.
+  joint_states_command.position.assign(current_position_.begin(), current_position_.end());
+  joint_states_command.velocity.assign(current_velocity_.begin(), current_velocity_.end());
+  joint_states_command.load.assign(current_load_.begin(), current_load_.end());
+}
+
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -134,6 +155,10 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
     return hardware_interface::CallbackReturn::ERROR;
   }
   if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler_,
+                                    std::placeholders::_1))) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!start_command_stream(std::bind(&CommandStreamingHandler::handle_command_streaming, &command_streaming_handler_,
                                     std::placeholders::_1))) {
     return hardware_interface::CallbackReturn::ERROR;
   }
@@ -371,6 +396,25 @@ void SpotHardware::stop_state_stream() {
   state_thread_.request_stop();
   state_thread_.join();
   state_stream_started_ = false;
+}
+
+bool SpotHardware::start_command_stream(StateHandler&& command_policy) {
+  if (command_stream_started_) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Command stream has already been started!");
+    return true;
+  }
+  // Start state streaming
+  auto robot_command_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotStateStreamingClient>();
+  if (!robot_state_stream_client_resp) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not create robot state client");
+    return false;
+  }
+  state_client_ = robot_command_stream_client_resp.move();
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot State Client created");
+
+  command_thread_ = std::jthread(&spot_ros2_control::command_stream_loop, command_client_, command_policy);
+  command_stream_started_ = true;
+  return true;
 }
 
 void SpotHardware::release_lease() {
