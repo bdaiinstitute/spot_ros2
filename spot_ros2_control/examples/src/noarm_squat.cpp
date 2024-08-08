@@ -60,8 +60,9 @@ class NoarmSquat : public rclcpp::Node {
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr command_pub_;
 
+  /// @brief Callback for receiving joint states messages used to store the nominal joint angles of the robot
+  /// @param msg ROS message containing joint states
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
-    // Used to save the starting joint angles
     if (!initialized_) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
       init_joint_angles_ = msg.position;
@@ -69,9 +70,9 @@ class NoarmSquat : public rclcpp::Node {
     }
   }
 
+  /// @brief We start in INITIALIZING (going from initial joint angles to squatting joint angles).
+  /// Then we just switch indefinitely between SQUATTING and SITTING.
   void state_transition() {
-    // We start in initializing (going from initial position to squatting position)
-    // Then we just switch indefinitely between squatting and sitting.
     switch (squat_state_) {
       case SquatState::INITIALIZING:
         squat_state_ = SquatState::SQUATTING;
@@ -113,6 +114,7 @@ class NoarmSquat : public rclcpp::Node {
     }
   }
 
+  /// @brief Send commands to the robot depending on the current state to ensure a smooth trajectory
   void timer_callback() {
     // Wait to send commands until we have initialized with the starting joint angles
     if (!initialized_) {

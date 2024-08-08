@@ -59,8 +59,9 @@ class WiggleArm : public rclcpp::Node {
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr command_pub_;
 
+  /// @brief Callback for receiving joint states messages used to store the nominal joint angles of the robot
+  /// @param msg ROS message containing joint states
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
-    // Save the starting joint angles
     if (!initialized_) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
       nominal_joint_angles_ = msg.position;
@@ -69,9 +70,9 @@ class WiggleArm : public rclcpp::Node {
     }
   }
 
+  /// @brief Rotates from WIGGLE_DOWN -> WIGGLE_MIDDLE -> WIGGLE_UP -> RESET -> WIGGLE_DOWN -> ...
+  /// WIGGLE_MIDDLE and RESET are moving towards the same set of nominal joint angles, just from different directions.
   void state_transition() {
-    // We rotate from WIGGLE_DOWN -> WIGGLE_MIDDLE -> WIGGLE_UP -> RESET -> WIGGLE_DOWN ...
-    // WIGGLE_MIDDLE and RESET are moving towards the same initial pose of the robot, just from different directions.
     switch (wiggle_state_) {
       case WiggleState::WIGGLE_DOWN:
         wiggle_state_ = WiggleState::WIGGLE_MIDDLE;
@@ -101,7 +102,7 @@ class WiggleArm : public rclcpp::Node {
     }
   }
 
-  /// @brief Given the state, fill the command with the appropriate desired joint angles to ensure a smooth trajectory.
+  /// @brief Given the state, fill the command with the appropriate desired joint angles
   /// @param percentage Percentage through the current state/motion we are currently at, from 0-1.
   void populate_command_from_state(double percentage) {
     switch (wiggle_state_) {
@@ -120,6 +121,7 @@ class WiggleArm : public rclcpp::Node {
     }
   }
 
+  /// @brief Send commands to the robot depending on the current state to ensure a smooth trajectory
   void timer_callback() {
     // Wait to send commands until we have initialized with the starting joint angles
     if (!initialized_) {
