@@ -29,9 +29,7 @@ def generate_launch_description():
                 executable="noarm_squat",
                 name="noarm_squat",
                 output="screen",
-                parameters=[
-                    PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "config", "examples_config.yaml"])
-                ],
+                parameters=[PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "config", "examples.yaml"])],
             ),
         ]
     )

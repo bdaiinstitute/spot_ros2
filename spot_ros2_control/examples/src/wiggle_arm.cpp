@@ -12,10 +12,6 @@
 
 enum WiggleState { WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP, RESET };
 
-// TODO(khughes): make a struct or enum that maps joint name to ID number once we get more complicated examples.
-static const auto WR0_JOINT = 16;
-static const auto F1X_JOINT = 18;
-
 class WiggleArm : public rclcpp::Node {
  public:
   WiggleArm() : Node("wiggle_arm"), wiggle_state{WIGGLE_DOWN}, initialized{false} {
