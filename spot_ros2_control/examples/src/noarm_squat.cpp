@@ -100,7 +100,7 @@ class NoarmSquat : public rclcpp::Node {
       count_ = 0;
     }
     // Percentage we are through the desired motion
-    const double percentage = count_ / static_cast<float>(points_per_motion_);
+    const double percentage = static_cast<float>(count_) / points_per_motion_;
     // Fill in the command with the appropriate joint angles given the state
     switch (squat_state_) {
       case INITIALIZING:
@@ -119,7 +119,7 @@ class NoarmSquat : public rclcpp::Node {
         }
         break;
     }
-    // Publish the command
+    // Publish the command and increment count
     command_pub_->publish(command_);
     count_++;
   }

@@ -10,7 +10,7 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
-enum WiggleState { START, WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP };
+enum WiggleState { WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP, RESET };
 
 // TODO(khughes): make a struct or enum that maps joint name to ID number once we get more complicated examples.
 static const auto WR0_JOINT = 16;
@@ -18,7 +18,7 @@ static const auto F1X_JOINT = 18;
 
 class WiggleArm : public rclcpp::Node {
  public:
-  WiggleArm() : Node("wiggle_arm"), wiggle_state{START}, initialized{false} {
+  WiggleArm() : Node("wiggle_arm"), wiggle_state{WIGGLE_DOWN}, initialized{false} {
     declare_parameter("joints_to_wiggle", std::vector<int>{});
     declare_parameter("wiggle_up_offsets", std::vector<double>{});
     declare_parameter("wiggle_down_offsets", std::vector<double>{});
@@ -35,8 +35,6 @@ class WiggleArm : public rclcpp::Node {
 
     njoints_to_wiggle_ = joints_to_wiggle_.size();
 
-    std::cout << "NJOINTS TO WIGGLE " << njoints_to_wiggle_ << std::endl;
-
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
         "joint_states", 10, std::bind(&WiggleArm::joint_states_callback, this, std::placeholders::_1));
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
@@ -46,24 +44,24 @@ class WiggleArm : public rclcpp::Node {
 
  private:
   std::vector<double> nominal_joint_angles_;
-  std::vector<long> joints_to_wiggle_;
+  std::vector<int64_t> joints_to_wiggle_;
   std::vector<double> wiggle_up_offsets_;
   std::vector<double> wiggle_down_offsets_;
-
+  size_t njoints_to_wiggle_;
   // Command to send to the robot
   std_msgs::msg::Float64MultiArray command_;
-
+  // Parameters
   WiggleState wiggle_state;
   int points_per_motion_;
   bool initialized;
   int count_;
-  size_t njoints_to_wiggle_;
   // Timer, publishers, subscribers
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr command_pub_;
 
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
+    // Save the starting joint angles
     if (!initialized) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
       nominal_joint_angles_ = msg.position;
@@ -73,16 +71,14 @@ class WiggleArm : public rclcpp::Node {
   }
 
   void timer_callback() {
+    // Only send a command if we have initialized with the starting joint angles
     if (!initialized) {
       return;
     }
+    // Check if we need to switch state
     if (count_ > points_per_motion_) {
       RCLCPP_INFO_STREAM(get_logger(), "Reset");
       switch (wiggle_state) {
-        case START:
-          RCLCPP_INFO_STREAM(get_logger(), "Down");
-          wiggle_state = WIGGLE_DOWN;
-          break;
         case WIGGLE_DOWN:
           RCLCPP_INFO_STREAM(get_logger(), "Middle");
           wiggle_state = WIGGLE_MIDDLE;
@@ -92,20 +88,20 @@ class WiggleArm : public rclcpp::Node {
           wiggle_state = WIGGLE_UP;
           break;
         case WIGGLE_UP:
-          RCLCPP_INFO_STREAM(get_logger(), "start");
-          wiggle_state = START;
+          RCLCPP_INFO_STREAM(get_logger(), "Reset");
+          wiggle_state = RESET;
+          break;
+        case RESET:
+          RCLCPP_INFO_STREAM(get_logger(), "Down");
+          wiggle_state = WIGGLE_DOWN;
           break;
       }
       count_ = 0;
     }
-    const double percentage = count_ / static_cast<float>(points_per_motion_);
+    // Percentage we are through the desired motion
+    const double percentage = static_cast<float>(count_) / points_per_motion_;
+    // Fill in the command with the appropriate joint angles given the state
     switch (wiggle_state) {
-      case START:
-        for (size_t i = 0; i < njoints_to_wiggle_; i++) {
-          const auto joint = joints_to_wiggle_.at(i);
-          command_.data.at(joint) = (1-percentage) * wiggle_up_offsets_.at(i) + nominal_joint_angles_.at(joint);
-        }
-        break;
       case WIGGLE_DOWN:
         for (size_t i = 0; i < njoints_to_wiggle_; i++) {
           const auto joint = joints_to_wiggle_.at(i);
@@ -115,7 +111,7 @@ class WiggleArm : public rclcpp::Node {
       case WIGGLE_MIDDLE:
         for (size_t i = 0; i < njoints_to_wiggle_; i++) {
           const auto joint = joints_to_wiggle_.at(i);
-          command_.data.at(joint) = (1-percentage) * wiggle_down_offsets_.at(i) + nominal_joint_angles_.at(joint);
+          command_.data.at(joint) = (1 - percentage) * wiggle_down_offsets_.at(i) + nominal_joint_angles_.at(joint);
         }
         break;
       case WIGGLE_UP:
@@ -124,7 +120,14 @@ class WiggleArm : public rclcpp::Node {
           command_.data.at(joint) = percentage * wiggle_up_offsets_.at(i) + nominal_joint_angles_.at(joint);
         }
         break;
+      case RESET:
+        for (size_t i = 0; i < njoints_to_wiggle_; i++) {
+          const auto joint = joints_to_wiggle_.at(i);
+          command_.data.at(joint) = (1 - percentage) * wiggle_up_offsets_.at(i) + nominal_joint_angles_.at(joint);
+        }
+        break;
     }
+    // Publish the command and increment count
     command_pub_->publish(command_);
     count_++;
   }
