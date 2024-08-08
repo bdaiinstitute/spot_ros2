@@ -45,6 +45,7 @@
 #include "bosdyn/client/util/cli_util.h"
 
 using StateHandler = std::function<void(::bosdyn::api::RobotStateStreamResponse&)>;
+using CommandHandler = std::function<void(::bosdyn::api::JointControlStreamResponse&)>;
 
 namespace spot_ros2_control {
 
@@ -80,6 +81,29 @@ class StateStreamingHandler {
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
+
+class CommandStreamingHandler {
+ public:
+  /**
+   * @brief Command position, velocity, and load of the robot's joints.
+   * @param robot_state Robot state protobuf holding the current joint state of the robot.
+   */
+  void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
+  /**
+   * @brief Get a struct of the current joint states of the robot.
+   * @return JointStates struct containing vectors of position, velocity, and load values.
+   */
+  void get_joint_states(JointStates& joint_states);
+
+ private:
+  // Stores the current position, velocity, and load of the robot's joints.
+  std::vector<float> current_position_;
+  std::vector<float> current_velocity_;
+  std::vector<float> current_load_;
+  // responsible for ensuring read/writes of joint states do not happen at the same time.
+  std::mutex mutex_;
+};
+
 class SpotHardware : public hardware_interface::SystemInterface {
  public:
   RCLCPP_SHARED_PTR_DEFINITIONS(SpotHardware)
@@ -139,6 +163,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
   StateStreamingHandler state_streaming_handler_;
   bool state_stream_started_ = false;
   bool robot_authenticated_ = false;
+
+  CommandStreamingHandler command_streaming_handler_;
+  bool command_stream_started_ = false;
 
   // The following are functions that interact with the BD SDK to set up the robot and get the robot states.
 
