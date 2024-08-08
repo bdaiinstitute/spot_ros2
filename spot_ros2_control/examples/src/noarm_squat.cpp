@@ -80,7 +80,7 @@ class NoarmSquat : public rclcpp::Node {
   }
 
   void timer_callback() {
-    // Only send a command if we have initialized with the starting joint angles
+    // Wait to send commands until we have initialized with the starting joint angles
     if (!initialized_) {
       return;
     }
