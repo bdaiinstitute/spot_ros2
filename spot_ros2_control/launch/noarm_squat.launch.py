@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -18,12 +20,18 @@ def generate_launch_description():
                     ]
                 ),
                 launch_arguments={
-                    "has_arm": "true",
-                    "controllers_config": "spot_controllers_with_arm.yaml",
+                    "has_arm": "false",
+                    "controllers_config": "spot_controllers_without_arm.yaml",
                     "robot_controller": "forward_position_controller",
                     "hardware_interface": "mock",
                 }.items(),
             ),
-            Node(package="spot_ros2_control", executable="wiggle_arm", name="wiggle_arm", output="screen"),
+            Node(
+                package="spot_ros2_control",
+                executable="noarm_squat",
+                name="noarm_squat",
+                output="screen",
+                parameters=[PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "config", "examples.yaml"])],
+            ),
         ]
     )
