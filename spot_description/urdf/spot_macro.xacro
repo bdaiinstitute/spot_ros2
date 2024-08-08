@@ -3,6 +3,7 @@
 <robot name="spot" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:macro name="load_spot" params="
     arm:=false
+    feet:=false
     tf_prefix">
 
         <link name="${tf_prefix}body">
@@ -415,6 +416,12 @@
         <xacro:if value="${arm}">
             <xacro:include filename="$(find spot_description)/urdf/spot_arm_macro.urdf" />
             <xacro:load_arm tf_prefix="${tf_prefix}" />
+        </xacro:if>
+
+        <!-- Include links at feet if necessary -->
+        <xacro:if value="${feet}">
+            <xacro:include filename="$(find spot_description)/urdf/spot_feet_macro.urdf" />
+            <xacro:load_feet tf_prefix="${tf_prefix}" />
         </xacro:if>
     </xacro:macro>
 </robot>
