@@ -31,6 +31,10 @@ class WiggleArm : public rclcpp::Node {
 
     njoints_to_wiggle_ = joints_to_wiggle_.size();
 
+    if ((wiggle_up_offsets_.size() != njoints_to_wiggle_) || (wiggle_down_offsets_.size() != njoints_to_wiggle_)) {
+      throw std::logic_error("Wiggle offsets must be the same size as joints_to_wiggle!");
+    }
+
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
         "joint_states", 10, std::bind(&WiggleArm::joint_states_callback, this, std::placeholders::_1));
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
