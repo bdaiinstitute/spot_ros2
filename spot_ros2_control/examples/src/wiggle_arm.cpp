@@ -94,9 +94,9 @@ class WiggleArm : public rclcpp::Node {
   /// @param percentage Percentage of the motion (from 0-1) we are at. 0 corresponds to being at nominal_joint_angles_
   /// and 1 corresponds to being at nominal_joint_angles_+offsets, anything in between is calculated as a linear
   /// interpolation between the two.
-  void populate_command(std::vector<double>& offsets, double percentage) {
+  void populate_command(const std::vector<double>& offsets, double percentage) {
     // when percentage is 1, fill command with baseline + offsets. When percentage is 0, fill with baseline.
-    for (size_t i = 0; i < njoints_to_wiggle_; i++) {
+    for (size_t i = 0; i < njoints_to_wiggle_; ++i) {
       const auto joint = joints_to_wiggle_.at(i);
       command_.data.at(joint) = percentage * offsets.at(i) + nominal_joint_angles_.at(joint);
     }

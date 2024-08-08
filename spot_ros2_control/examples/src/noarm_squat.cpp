@@ -92,8 +92,8 @@ class NoarmSquat : public rclcpp::Node {
   /// @param percentage Percentage of the motion (from 0-1) we are at. 0 corresponds to being at baseline
   /// and 1 corresponds to being at goal, anything in between is calculated as a linear interpolation between
   /// the two.
-  void populate_command(std::vector<double>& baseline, std::vector<double>& goal, double percentage) {
-    for (size_t i = 0; i < njoints_; i++) {
+  void populate_command(const std::vector<double>& baseline, const std::vector<double>& goal, double percentage) {
+    for (size_t i = 0; i < njoints_; ++i) {
       command_.data.at(i) = percentage * (goal.at(i) - baseline.at(i)) + baseline.at(i);
     }
   }
