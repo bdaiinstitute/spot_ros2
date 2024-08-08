@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
