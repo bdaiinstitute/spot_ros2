@@ -69,6 +69,57 @@ class WiggleArm : public rclcpp::Node {
     }
   }
 
+  void state_transition() {
+    // We rotate from WIGGLE_DOWN -> WIGGLE_MIDDLE -> WIGGLE_UP -> RESET -> WIGGLE_DOWN ...
+    // WIGGLE_MIDDLE and RESET are moving towards the same initial pose of the robot, just from different directions.
+    switch (wiggle_state_) {
+      case WiggleState::WIGGLE_DOWN:
+        wiggle_state_ = WiggleState::WIGGLE_MIDDLE;
+        break;
+      case WiggleState::WIGGLE_MIDDLE:
+        wiggle_state_ = WiggleState::WIGGLE_UP;
+        break;
+      case WiggleState::WIGGLE_UP:
+        wiggle_state_ = WiggleState::RESET;
+        break;
+      case WiggleState::RESET:
+        wiggle_state_ = WiggleState::WIGGLE_DOWN;
+        break;
+    }
+  }
+
+  /// @brief Fills in the command to send to the robot
+  /// @param offsets Vector of offsets to apply to joints_to_wiggle.
+  /// @param percentage Percentage of the motion (from 0-1) we are at. 0 corresponds to being at nominal_joint_angles_
+  /// and 1 corresponds to being at nominal_joint_angles_+offsets, anything in between is calculated as a linear
+  /// interpolation between the two.
+  void populate_command(std::vector<double>& offsets, double percentage) {
+    // when percentage is 1, fill command with baseline + offsets. When percentage is 0, fill with baseline.
+    for (size_t i = 0; i < njoints_to_wiggle_; i++) {
+      const auto joint = joints_to_wiggle_.at(i);
+      command_.data.at(joint) = percentage * offsets.at(i) + nominal_joint_angles_.at(joint);
+    }
+  }
+
+  /// @brief Given the state, fill the command with the appropriate desired joint angles to ensure a smooth trajectory.
+  /// @param percentage Percentage through the current state/motion we are currently at, from 0-1.
+  void populate_command_from_state(double percentage) {
+    switch (wiggle_state_) {
+      case WiggleState::WIGGLE_DOWN:
+        populate_command(wiggle_down_offsets_, percentage);
+        break;
+      case WiggleState::WIGGLE_MIDDLE:
+        populate_command(wiggle_down_offsets_, 1 - percentage);
+        break;
+      case WiggleState::WIGGLE_UP:
+        populate_command(wiggle_up_offsets_, percentage);
+        break;
+      case WiggleState::RESET:
+        populate_command(wiggle_up_offsets_, 1 - percentage);
+        break;
+    }
+  }
+
   void timer_callback() {
     // Wait to send commands until we have initialized with the starting joint angles
     if (!initialized_) {
@@ -76,51 +127,13 @@ class WiggleArm : public rclcpp::Node {
     }
     // Check if we need to switch state
     if (count_ > points_per_motion_) {
-      switch (wiggle_state_) {
-        case WiggleState::WIGGLE_DOWN:
-          wiggle_state_ = WiggleState::WIGGLE_MIDDLE;
-          break;
-        case WiggleState::WIGGLE_MIDDLE:
-          wiggle_state_ = WiggleState::WIGGLE_UP;
-          break;
-        case WiggleState::WIGGLE_UP:
-          wiggle_state_ = WiggleState::RESET;
-          break;
-        case WiggleState::RESET:
-          wiggle_state_ = WiggleState::WIGGLE_DOWN;
-          break;
-      }
+      state_transition();
       count_ = 0;
     }
     // Percentage we are through the desired motion
     const double percentage = static_cast<float>(count_) / points_per_motion_;
     // Fill in the command with the appropriate joint angles given the state
-    switch (wiggle_state_) {
-      case WiggleState::WIGGLE_DOWN:
-        for (size_t i = 0; i < njoints_to_wiggle_; i++) {
-          const auto joint = joints_to_wiggle_.at(i);
-          command_.data.at(joint) = percentage * wiggle_down_offsets_.at(i) + nominal_joint_angles_.at(joint);
-        }
-        break;
-      case WiggleState::WIGGLE_MIDDLE:
-        for (size_t i = 0; i < njoints_to_wiggle_; i++) {
-          const auto joint = joints_to_wiggle_.at(i);
-          command_.data.at(joint) = (1 - percentage) * wiggle_down_offsets_.at(i) + nominal_joint_angles_.at(joint);
-        }
-        break;
-      case WiggleState::WIGGLE_UP:
-        for (size_t i = 0; i < njoints_to_wiggle_; i++) {
-          const auto joint = joints_to_wiggle_.at(i);
-          command_.data.at(joint) = percentage * wiggle_up_offsets_.at(i) + nominal_joint_angles_.at(joint);
-        }
-        break;
-      case WiggleState::RESET:
-        for (size_t i = 0; i < njoints_to_wiggle_; i++) {
-          const auto joint = joints_to_wiggle_.at(i);
-          command_.data.at(joint) = (1 - percentage) * wiggle_up_offsets_.at(i) + nominal_joint_angles_.at(joint);
-        }
-        break;
-    }
+    populate_command_from_state(percentage);
     // Publish the command and increment count
     command_pub_->publish(command_);
     count_++;

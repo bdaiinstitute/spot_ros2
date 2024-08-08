@@ -30,10 +30,6 @@ class NoarmSquat : public rclcpp::Node {
       throw std::logic_error("Squat joint angles is the wrong size!");
     }
 
-    for (size_t i = 0; i < njoints_; i++) {
-      diff_squat_stand_.push_back(squat_joint_angles_.at(i) - stand_joint_angles_.at(i));
-    }
-
     points_per_motion_ = static_cast<int>(command_rate * seconds_per_motion);
     command_.data = std::vector<double>(njoints_, 0.0);
 
@@ -51,9 +47,6 @@ class NoarmSquat : public rclcpp::Node {
   std::vector<double> stand_joint_angles_;
   std::vector<double> squat_joint_angles_;
   std::vector<double> init_joint_angles_;
-  // For storing differences relevant for calculating the interpolation
-  std::vector<double> diff_squat_stand_;
-  std::vector<double> diff_squat_init_;
   // Command we send to the robot
   std_msgs::msg::Float64MultiArray command_;
   // Parameters and info about state
@@ -72,10 +65,51 @@ class NoarmSquat : public rclcpp::Node {
     if (!initialized_) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
       init_joint_angles_ = msg.position;
-      for (size_t i = 0; i < njoints_; i++) {
-        diff_squat_init_.push_back(squat_joint_angles_.at(i) - init_joint_angles_.at(i));
-      }
       initialized_ = true;
+    }
+  }
+
+  void state_transition() {
+    // We start in initializing (going from initial position to squatting position)
+    // Then we just switch indefinitely between squatting and sitting.
+    switch (squat_state_) {
+      case SquatState::INITIALIZING:
+        squat_state_ = SquatState::SQUATTING;
+        break;
+      case SquatState::SQUATTING:
+        squat_state_ = SquatState::STANDING;
+        break;
+      case SquatState::STANDING:
+        squat_state_ = SquatState::SQUATTING;
+        break;
+    }
+  }
+
+  /// @brief Fills in the command to send to the robot
+  /// @param baseline Vector of joint angles to start at
+  /// @param goal Vector of joint angles to finish at
+  /// @param percentage Percentage of the motion (from 0-1) we are at. 0 corresponds to being at baseline
+  /// and 1 corresponds to being at goal, anything in between is calculated as a linear interpolation between
+  /// the two.
+  void populate_command(std::vector<double>& baseline, std::vector<double>& goal, double percentage) {
+    for (size_t i = 0; i < njoints_; i++) {
+      command_.data.at(i) = percentage * (goal.at(i) - baseline.at(i)) + baseline.at(i);
+    }
+  }
+
+  /// @brief Given the state, fill the command with the appropriate desired joint angles to ensure a smooth trajectory.
+  /// @param percentage Percentage through the current state/motion we are currently at, from 0-1.
+  void populate_command_from_state(double percentage) {
+    switch (squat_state_) {
+      case SquatState::INITIALIZING:
+        populate_command(init_joint_angles_, squat_joint_angles_, percentage);
+        break;
+      case SquatState::SQUATTING:
+        populate_command(squat_joint_angles_, stand_joint_angles_, percentage);
+        break;
+      case SquatState::STANDING:
+        populate_command(stand_joint_angles_, squat_joint_angles_, percentage);
+        break;
     }
   }
 
@@ -86,39 +120,13 @@ class NoarmSquat : public rclcpp::Node {
     }
     // Check if we need to switch state
     if (count_ > points_per_motion_) {
-      switch (squat_state_) {
-        case SquatState::INITIALIZING:
-          squat_state_ = SquatState::SQUATTING;
-          break;
-        case SquatState::SQUATTING:
-          squat_state_ = SquatState::STANDING;
-          break;
-        case SquatState::STANDING:
-          squat_state_ = SquatState::SQUATTING;
-          break;
-      }
+      state_transition();
       count_ = 0;
     }
     // Percentage we are through the desired motion
     const double percentage = static_cast<float>(count_) / points_per_motion_;
     // Fill in the command with the appropriate joint angles given the state
-    switch (squat_state_) {
-      case SquatState::INITIALIZING:
-        for (size_t i = 0; i < njoints_; i++) {
-          command_.data.at(i) = percentage * diff_squat_init_.at(i) + init_joint_angles_.at(i);
-        }
-        break;
-      case SquatState::SQUATTING:
-        for (size_t i = 0; i < njoints_; i++) {
-          command_.data.at(i) = percentage * -diff_squat_stand_.at(i) + squat_joint_angles_.at(i);
-        }
-        break;
-      case SquatState::STANDING:
-        for (size_t i = 0; i < njoints_; i++) {
-          command_.data.at(i) = percentage * diff_squat_stand_.at(i) + stand_joint_angles_.at(i);
-        }
-        break;
-    }
+    populate_command_from_state(percentage);
     // Publish the command and increment count
     command_pub_->publish(command_);
     count_++;
