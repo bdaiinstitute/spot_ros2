@@ -26,6 +26,9 @@ def generate_launch_description() -> launch.LaunchDescription:
             ),
             DeclareLaunchArgument(name="arm", default_value="False", description="Flag to enable arm"),
             DeclareLaunchArgument(
+                name="feet", default_value="False", description="Flag to enable putting frames at the feet"
+            ),
+            DeclareLaunchArgument(
                 "tf_prefix", default_value='""', description="Apply namespace prefix to robot links and joints"
             ),
             DeclareLaunchArgument("namespace", default_value="", description="Namespace for robot tf topic"),
@@ -40,6 +43,8 @@ def generate_launch_description() -> launch.LaunchDescription:
                                 LaunchConfiguration("model"),
                                 " arm:=",
                                 LaunchConfiguration("arm"),
+                                " feet:=",
+                                LaunchConfiguration("feet"),
                                 " tf_prefix:=",
                                 LaunchConfiguration("tf_prefix"),
                             ]
