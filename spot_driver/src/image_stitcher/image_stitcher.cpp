@@ -404,7 +404,6 @@ ImageStitcher::ImageStitcher(std::unique_ptr<CameraSynchronizerBase> synchronize
              const std::shared_ptr<const Image>& image_right, const std::shared_ptr<const CameraInfo>& info_right) {
         callback(image_left, info_left, image_right, info_right);
       });
-  homography_msg_ = camera_->getHomography();
 }
 
 void ImageStitcher::callback(const std::shared_ptr<const Image>& image_left,
@@ -453,7 +452,7 @@ void ImageStitcher::callback(const std::shared_ptr<const Image>& image_left,
   const auto info_stitched = toCameraInfo(current_stamp, camera_frame, image_stitched->width, image_stitched->height,
                                           camera_handle_->getIntrinsics());
   camera_handle_->publishImages(*image_stitched, info_stitched);
-  camera_handle_->publishHomography(homography_msg_);
+  camera_handle_->publishHomography(camera_->getHomography());
 }
 
 }  // namespace spot_ros2
