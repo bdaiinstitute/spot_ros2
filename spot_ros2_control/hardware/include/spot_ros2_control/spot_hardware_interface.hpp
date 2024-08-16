@@ -88,19 +88,19 @@ class CommandStreamingHandler {
    * @brief Command position, velocity, and load of the robot's joints.
    * @param robot_state Robot state protobuf holding the current joint state of the robot.
    */
-  void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
+  void handle_command_streaming(::bosdyn::api::JointControlStreamResponse& response);
   /**
    * @brief Get a struct of the current joint states of the robot.
    * @return JointStates struct containing vectors of position, velocity, and load values.
    */
-  void get_joint_states(JointStates& joint_states);
+  void command_joint_states(JointStates& joint_states);
 
  private:
-  // Stores the current position, velocity, and load of the robot's joints.
-  std::vector<float> current_position_;
-  std::vector<float> current_velocity_;
-  std::vector<float> current_load_;
-  // responsible for ensuring read/writes of joint states do not happen at the same time.
+  // Stores the commanded position, velocity, and effort of the robot's joints.
+  std::vector<float> position_command_;
+  std::vector<float> velocity_command_;
+  std::vector<float> effort_command_;
+  // responsible for ensuring read/writes of joint commands do not happen at the same time.
   std::mutex mutex_;
 };
 
@@ -153,6 +153,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   ::bosdyn::client::LeaseClient* lease_client_;
   ::bosdyn::client::RobotStateStreamingClient* state_client_;
+  ::bosdyn::client::RobotCommandStreamingClient* command_client_;
 
   // Holds joint states of the robot received from the BD SDK
   JointStates joint_states_;
@@ -164,8 +165,10 @@ class SpotHardware : public hardware_interface::SystemInterface {
   bool state_stream_started_ = false;
   bool robot_authenticated_ = false;
 
-  CommandStreamingHandler command_streaming_handler_;
+  // Holds joint commands for the robot 
   bool command_stream_started_ = false;
+  
+  ::bosdyn::client::TimeSyncEndpoint* endpoint_ = nullptr;
 
   // The following are functions that interact with the BD SDK to set up the robot and get the robot states.
 
@@ -211,6 +214,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
    * @brief Release the body lease of the robot.
    */
   void release_lease();
+
+  void send_command(const JointStates& joint_commands);
 
   // Vectors for storing the commands and states for the robot.
   std::vector<double> hw_commands_;
