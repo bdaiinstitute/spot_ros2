@@ -50,25 +50,30 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
 
-void StateStreamingHandler::handle_command_streaming(::bosdyn::api::JointControlStreamResponse& robot_state) {
+void CommandStreamingHandler::handle_command_streaming(::bosdyn::api::JointControlStreamResponse& response) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
   // Get joint states from the robot and write them to the joint_states_ struct
-  const auto& position_msg = robot_state.joint_states().position();
-  const auto& velocity_msg = robot_state.joint_states().velocity();
-  const auto& load_msg = robot_state.joint_states().load();
+  const auto& status_msg = response.status();
+  const auto& message_msg = response.message();
+  joint_cmd_status_.assign(status_msg.begin(), status_msg.end());
+  joint_cmd_msg_.assign(message_msg.begin(), message_msg.end());
+
+  const auto& position_msg = joint_control.joint_states().position();
+  const auto& velocity_msg = joint_control.joint_states().velocity();
+  const auto& load_msg = joint_control.joint_states().load();
   current_position_.assign(position_msg.begin(), position_msg.end());
   current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
   current_load_.assign(load_msg.begin(), load_msg.end());
 }
 
-void CommandStreamingHandler::command_joint_states(JointStates& joint_states_command) {
+void CommandStreamingHandler::command_joint_states(JointStates& joint_commands) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
-  // Fill in members of the joint states stuct passed in by reference.
-  joint_states_command.position.assign(current_position_.begin(), current_position_.end());
-  joint_states_command.velocity.assign(current_velocity_.begin(), current_velocity_.end());
-  joint_states_command.load.assign(current_load_.begin(), current_load_.end());
+  // Fill in members of the joint states command stuct passed in by reference.
+  position_command_.assign(joint_commands.position.begin(), joint_commands.position.end());
+  velocity_command_.assign(joint_commands.velocity.begin(), joint_commands.velocity.end());
+  effort_command_.assign(joint_commands.load.begin(), joint_commands.load.end());
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -260,6 +265,18 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
 
 hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
   // This function will be responsible for sending commands to the robot via the BD SDK -- currently unimplemented.
+  if (hasInfinite(position_command_) || hasInfinite(effort_command_) ||
+      hasInfinite(velocity_command_)) {
+    return hardware_interface::return_type::ERROR;
+  }
+  if (velocity_joint_interface_running_) {
+    robot_->writeOnce(velocity_command_);
+  } else if (effort_interface_running_) {
+    robot_->writeOnce(effort_command_);
+  } else if (position_joint_interface_running_ && !first_position_update_ ) {
+    robot_->writeOnce(hw_position_commands_);
+  }
+
   return hardware_interface::return_type::OK;
 }
 
@@ -398,23 +415,95 @@ void SpotHardware::stop_state_stream() {
   state_stream_started_ = false;
 }
 
-bool SpotHardware::start_command_stream(StateHandler&& command_policy) {
+bool SpotHardware::start_command_stream() {
   if (command_stream_started_) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Command stream has already been started!");
     return true;
   }
-  // Start state streaming
-  auto robot_command_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotStateStreamingClient>();
+  // Start command streaming
+  auto robot_command_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotCommandClient>();
   if (!robot_state_stream_client_resp) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not create robot state client");
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not create robot command client");
     return false;
   }
-  state_client_ = robot_command_stream_client_resp.move();
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot State Client created");
+  command_stream_client_ = robot_command_stream_client_resp.response;
 
-  command_thread_ = std::jthread(&spot_ros2_control::command_stream_loop, command_client_, command_policy);
-  command_stream_started_ = true;
+  auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
+  if (!endpoint_result) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get timesync endpoint");
+    return false;
+  }
+
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Client successfully created!");
+
+  bosdyn::api::RobotCommand joint_command = ::bosdyn::client::JointCommand();
+  auto joint_res = robot_command_client->RobotCommand(joint_command);
+  if (!joint_res.status) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to activate joint control mode");
+  }
+
+  command_client_started_ = true;
   return true;
+}
+
+void SpotHardware::send_command(const JointStates& joint_commands) {
+  if (!command_service_started_) {
+    auto robot_command_service_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotCommandStreamingClient>();
+    command_stream_service_ = robot_command_service_resp.response;
+    command_service_started_ = true;
+  }
+
+  std::vector<float> position = joint_commands.position;
+  std::vector<float> velocity = joint_commands.velocity;
+  std::vector<float> load = joint_commands.load;
+
+  ::bosdyn::api::JointControlStreamRequest request;
+
+  // build protobuf 
+  auto* joint_cmd = request.mutable_joint_command();
+
+  joint_cmd->mutable_position()->Assign(position.begin(), position.end());
+  joint_cmd->mutable_velocity()->Assign(velocity.begin(), velocity.end());
+  joint_cmd->mutable_load()->Assign(load.begin(), load.end());
+
+  // Gain values (from spot-rl)
+  std::vector<float> kp = {624, 936, 286, 624, 936, 286,
+                           624, 936, 286, 624, 936, 286};
+  std::vector<float> kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04,
+                           5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
+  std::vector<float> vel = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                            0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
+  joint_cmd->mutable_gains()->mutable_k_q_p()->Assign(kp.begin(), kp.end());
+  joint_cmd->mutable_gains()->mutable_k_qd_p()->Assign(kd.begin(), kd.end());
+
+  if (endpoint_ == nullptr) {
+    auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
+    if (!endpoint_result) {
+      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get timesync endpoint");
+    }
+    endpoint_ = endpoint_result.response;
+  }
+
+  auto time_point_local = ::bosdyn::common::TimePoint(
+      std::chrono::system_clock::now() + std::chrono::milliseconds(50));
+
+  ::bosdyn::common::RobotTimeConverter converter = endpoint_->GetRobotTimeConverter();
+  joint_cmd->mutable_end_time()->CopyFrom(converter.RobotTimestampFromLocal(time_point_local));
+
+  // Let it extrapolate the command a little
+  joint_cmd->mutable_extrapolation_duration()->CopyFrom(
+      google::protobuf::util::TimeUtil::NanosecondsToDuration(5 * 1e6));
+
+  // Set user key for latency tracking
+  joint_cmd->set_user_command_key(0);
+
+  // Send joint stream command
+  auto joint_control_stream = command_stream_service_->JointControlStream(request);
+  if (!joint_control_stream) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to send command: '%s'", 
+                  joint_control_stream.status.DebugString());
+  }
 }
 
 void SpotHardware::release_lease() {
