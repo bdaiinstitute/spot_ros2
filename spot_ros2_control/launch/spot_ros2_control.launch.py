@@ -24,7 +24,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if hardware_interface == "robot":
         config_file = LaunchConfiguration("config_file").perform(context)
         has_arm = spot_has_arm(config_file_path=config_file, spot_name="")
-        username, password, hostname, _, _ = get_login_parameters(config_file)
+        username, password, hostname = get_login_parameters(config_file)[:3]
         login_params = f" hostname:={hostname} username:={username} password:={password}"
     else:
         has_arm = mock_has_arm
