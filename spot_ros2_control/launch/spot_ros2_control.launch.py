@@ -16,8 +16,9 @@ from spot_driver.launch.spot_launch_helpers import get_login_parameters, spot_ha
 
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
-    hardware_interface = LaunchConfiguration("hardware_interface").perform(context)
-    has_arm = IfCondition(LaunchConfiguration("has_arm")).evaluate(context)
+    hardware_interface: str = LaunchConfiguration("hardware_interface").perform(context)
+    controllers_config: str = LaunchConfiguration("controllers_config").perform(context)
+    has_arm: bool = IfCondition(LaunchConfiguration("has_arm")).evaluate(context)
 
     # This will override the `has_arm` argument with the actual value from the robot.
     # The `has_arm` argument is still useful for testing different robot types in mock mode.
@@ -45,18 +46,22 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     robot_description = {"robot_description": robot_urdf}
 
-    # Configuration files
-    controller_config_file = PathJoinSubstitution(
-        [FindPackageShare("spot_ros2_control"), "config", LaunchConfiguration("controllers_config")]
-    )
+    # Configuration for the controller.
+    # If not controller is selected, use the appropriate default given if the robot has an arm or not.
+    # Else, just use the yaml that is passed in.
+    if controllers_config == "":
+        default_config_file_name = "spot_controllers_with_arm.yaml" if has_arm else "spot_controllers_without_arm.yaml"
+        controllers_config = PathJoinSubstitution(
+            [FindPackageShare("spot_ros2_control"), "config", default_config_file_name]
+        )
 
-    # Nodes
+    # Add nodes
     ld.add_action(
         Node(
             package="controller_manager",
             executable="ros2_control_node",
             output="both",
-            parameters=[robot_description, controller_config_file],
+            parameters=[robot_description, controllers_config],
         )
     )
     ld.add_action(
@@ -117,7 +122,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "controllers_config",
-                default_value="spot_controllers_without_arm.yaml",
+                default_value="",
                 description="YAML file for configuring the controllers.",
             ),
             DeclareLaunchArgument(
