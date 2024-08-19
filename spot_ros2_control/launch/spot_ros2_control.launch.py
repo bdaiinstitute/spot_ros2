@@ -21,14 +21,14 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     mock_has_arm: bool = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
 
     # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_has_arm.
-    login_params = ""
     if hardware_interface == "robot":
         config_file = LaunchConfiguration("config_file").perform(context)
-        has_arm = spot_has_arm(config_file_path=config_file, spot_name="Test")
+        has_arm = spot_has_arm(config_file_path=config_file, spot_name="")
         username, password, hostname, _, _ = get_login_parameters(config_file)
         login_params = f" hostname:={hostname} username:={username} password:={password}"
     else:
         has_arm = mock_has_arm
+        login_params = ""
 
     # Generate the robot description based off if the robot has an arm.
     robot_urdf = Command(
