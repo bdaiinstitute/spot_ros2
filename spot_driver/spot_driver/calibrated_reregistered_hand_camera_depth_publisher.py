@@ -8,8 +8,8 @@ If the updated results from the calibration in spot_wrapper/spot_wrapper/calibra
 can be populated into the underlying bosdyn API, then the default registered depth image
 could be used without this script.
 
-Wile it is possible to calibrate the gripper camera entirely under the hood, but is no way to
-only set the intrinsic/extrinsic parameters.
+While it is possible to calibrate the gripper camera entirely under the hood, there is no way to
+only set the intrinsic/extrinsic parameters (to preserve control over calibration parameters)
 
 This script assumes you have a calibration generated with /spot_wrapper/spot_wrapper/calibration
 """
