@@ -20,8 +20,7 @@ def generate_launch_description():
                     ]
                 ),
                 launch_arguments={
-                    "has_arm": "true",
-                    "controllers_config": "spot_controllers_with_arm.yaml",
+                    "mock_has_arm": "true",
                     "robot_controller": "forward_position_controller",
                     "hardware_interface": "mock",
                 }.items(),
