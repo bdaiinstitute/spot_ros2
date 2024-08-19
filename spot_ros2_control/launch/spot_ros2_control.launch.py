@@ -2,6 +2,7 @@
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.conditions import IfCondition
 from launch.substitutions import (
     Command,
     FindExecutable,
@@ -11,12 +12,21 @@ from launch.substitutions import (
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+from spot_driver.launch.spot_launch_helpers import get_login_parameters, spot_has_arm
+
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
-    config_file = LaunchConfiguration("config_file").perform(context)
-    print("CONFIG FILE")
-    print(config_file)
-    # has_arm = spot_has_arm(config_file_path=config_file, spot_name="Test")
+    hardware_interface = LaunchConfiguration("hardware_interface").perform(context)
+    has_arm = IfCondition(LaunchConfiguration("has_arm")).evaluate(context)
+
+    # This will override the `has_arm` argument with the actual value from the robot.
+    # The `has_arm` argument is still useful for testing different robot types in mock mode.
+    login_info_string = ""
+    if hardware_interface == "spot-sdk":
+        config_file = LaunchConfiguration("config_file").perform(context)
+        has_arm = spot_has_arm(config_file_path=config_file, spot_name="Test")
+        username, password, hostname, _, _ = get_login_parameters(config_file)
+        login_info_string = f" hostname:={hostname} username:={username} password:={password}"
 
     # Generate the robot description
     robot_urdf = Command(
@@ -27,9 +37,10 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                 [FindPackageShare("spot_ros2_control"), "xacro", LaunchConfiguration("description_file")]
             ),
             " has_arm:=",
-            LaunchConfiguration("has_arm"),
+            str(has_arm),
             " hardware_interface_type:=",
             LaunchConfiguration("hardware_interface"),
+            login_info_string,
         ]
     )
     robot_description = {"robot_description": robot_urdf}
@@ -38,7 +49,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     controller_config_file = PathJoinSubstitution(
         [FindPackageShare("spot_ros2_control"), "config", LaunchConfiguration("controllers_config")]
     )
-    rviz_config_file = PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "rviz", "spot_ros2_control.rviz"])
 
     # Nodes
     ld.add_action(
@@ -81,7 +91,10 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             executable="rviz2",
             name="rviz2",
             output="log",
-            arguments=["-d", rviz_config_file],
+            arguments=[
+                "-d",
+                PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "rviz", "spot_ros2_control.rviz"]),
+            ],
         )
     )
     return
