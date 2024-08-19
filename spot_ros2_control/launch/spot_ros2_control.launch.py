@@ -22,7 +22,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_has_arm.
     login_info_string = ""
-    if hardware_interface == "spot-sdk":
+    if hardware_interface == "robot":
         config_file = LaunchConfiguration("config_file").perform(context)
         has_arm = spot_has_arm(config_file_path=config_file, spot_name="Test")
         username, password, hostname, _, _ = get_login_parameters(config_file)
@@ -113,7 +113,7 @@ def generate_launch_description():
                 "hardware_interface",
                 default_value="mock",
                 # Must match the xacro file options for which plugin to load
-                choices=["mock", "spot-sdk"],
+                choices=["mock", "robot"],
                 description="Hardware interface to load.",
             ),
             DeclareLaunchArgument(
