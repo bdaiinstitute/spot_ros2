@@ -201,6 +201,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(
   PROGRAMS
   spot_driver/spot_ros2.py
+  spot_driver/calibrated_reregistered_hand_camera_depth_publisher.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME spot_ros2
   )

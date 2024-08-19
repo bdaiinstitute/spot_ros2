@@ -123,6 +123,11 @@ If your image publishing rate is very slow, you can try
 > export=FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_file>/custom_dds_profile.xml
 > ```
 
+## Optional Automatic Hand Stereo Camera Calibration Routine
+A custom Automatic Hand Stereo Camera Calibration Routine exists in the ```spot_wrapper``` submodule, where the
+output results can be used with ROS 2 for better RGB to Depth correspondence. 
+See the readme at ```/spot_wrapper/spot_spot_wrapper/calibration/README.md``` for more information.
+
 ## Spot CAM
 Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:
     `initialize_spot_cam: True`
