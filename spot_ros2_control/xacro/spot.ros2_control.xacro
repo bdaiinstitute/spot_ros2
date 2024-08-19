@@ -13,8 +13,6 @@
             </xacro:if>
             <xacro:if value="${interface_type == 'robot'}">
                 <plugin>spot_ros2_control/SpotHardware</plugin>
-                <!-- eventually it would be ideal to be able to optionally load these from yaml as well (with
-                xacro.load_yaml) as we support putting the login info into a config file in the spot driver.-->
                 <param name="hostname">$(optenv SPOT_IP ${hostname})</param>
                 <param name="username">$(optenv BOSDYN_CLIENT_USERNAME ${username})</param>
                 <param name="password">$(optenv BOSDYN_CLIENT_PASSWORD ${password})</param>

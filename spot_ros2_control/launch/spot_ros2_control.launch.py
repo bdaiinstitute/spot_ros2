@@ -21,16 +21,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     mock_has_arm: bool = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
 
     # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_has_arm.
-    login_info_string = ""
+    login_params = ""
     if hardware_interface == "robot":
         config_file = LaunchConfiguration("config_file").perform(context)
         has_arm = spot_has_arm(config_file_path=config_file, spot_name="Test")
         username, password, hostname, _, _ = get_login_parameters(config_file)
-        login_info_string = f" hostname:={hostname} username:={username} password:={password}"
+        login_params = f" hostname:={hostname} username:={username} password:={password}"
     else:
         has_arm = mock_has_arm
 
-    # Generate the robot description based off the arm status.
+    # Generate the robot description based off if the robot has an arm.
     robot_urdf = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -40,7 +40,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             str(has_arm),
             " hardware_interface_type:=",
             LaunchConfiguration("hardware_interface"),
-            login_info_string,
+            login_params,
         ]
     )
     robot_description = {"robot_description": robot_urdf}
@@ -114,7 +114,11 @@ def generate_launch_description():
                 default_value="mock",
                 # Must match the xacro file options for which plugin to load
                 choices=["mock", "robot"],
-                description="Hardware interface to load.",
+                description=(
+                    "Hardware interface to load. 'mock' loads a simple interface useful for testing that forwards"
+                    " commands directly to state. 'robot' uses a custom hardware interface using the Spot C++ SDK to"
+                    " connect to the physical robot."
+                ),
             ),
             DeclareLaunchArgument(
                 "config_file",
