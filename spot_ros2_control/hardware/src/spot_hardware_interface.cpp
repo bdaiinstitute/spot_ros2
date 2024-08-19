@@ -26,6 +26,7 @@
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "google/protobuf/util/time_util.h"
 
 namespace spot_ros2_control {
 
@@ -48,32 +49,7 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.position.assign(current_position_.begin(), current_position_.end());
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
   joint_states.load.assign(current_load_.begin(), current_load_.end());
-}
-
-void CommandStreamingHandler::handle_command_streaming(::bosdyn::api::JointControlStreamResponse& response) {
-  // lock so that read/write doesn't happen at the same time
-  const std::lock_guard<std::mutex> lock(mutex_);
-  // Get joint states from the robot and write them to the joint_states_ struct
-  const auto& status_msg = response.status();
-  const auto& message_msg = response.message();
-  joint_cmd_status_.assign(status_msg.begin(), status_msg.end());
-  joint_cmd_msg_.assign(message_msg.begin(), message_msg.end());
-
-  const auto& position_msg = joint_control.joint_states().position();
-  const auto& velocity_msg = joint_control.joint_states().velocity();
-  const auto& load_msg = joint_control.joint_states().load();
-  current_position_.assign(position_msg.begin(), position_msg.end());
-  current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
-  current_load_.assign(load_msg.begin(), load_msg.end());
-}
-
-void CommandStreamingHandler::command_joint_states(JointStates& joint_commands) {
-  // lock so that read/write doesn't happen at the same time
-  const std::lock_guard<std::mutex> lock(mutex_);
-  // Fill in members of the joint states command stuct passed in by reference.
-  position_command_.assign(joint_commands.position.begin(), joint_commands.position.end());
-  velocity_command_.assign(joint_commands.velocity.begin(), joint_commands.velocity.end());
-  effort_command_.assign(joint_commands.load.begin(), joint_commands.load.end());
+  
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -163,8 +139,7 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
                                     std::placeholders::_1))) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-  if (!start_command_stream(std::bind(&CommandStreamingHandler::handle_command_streaming, &command_streaming_handler_,
-                                    std::placeholders::_1))) {
+  if (!start_command_stream()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
 
@@ -174,16 +149,16 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
 hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecycle::State& /*previous_state*/) {
   // This can be added when we start command streaming.
 
-  // if (!check_estop()) {
-  //   return hardware_interface::CallbackReturn::ERROR;
-  // }
-  // if (!get_lease()) {
-  //   return hardware_interface::CallbackReturn::ERROR;
-  // }
-  // if (!power_on()) {
-  //   release_lease();
-  //   return hardware_interface::CallbackReturn::ERROR;
-  // }
+  if (!check_estop()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!get_lease()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!power_on()) {
+    release_lease();
+    return hardware_interface::CallbackReturn::ERROR;
+  }
 
   // Once command streaming is implemented, this initialization should go here.
 
@@ -260,22 +235,50 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     hw_states_.at(i * interfaces_per_joint_ + 1) = joint_vel.at(i);
     hw_states_.at(i * interfaces_per_joint_ + 2) = joint_load.at(i);
   }
+
+  // Set initial command values to current state
+  if (!init_state_) {
+    hw_commands_ = hw_states_;
+    init_state_ = true;
+  }
+
   return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
   // This function will be responsible for sending commands to the robot via the BD SDK -- currently unimplemented.
-  if (hasInfinite(position_command_) || hasInfinite(effort_command_) ||
-      hasInfinite(velocity_command_)) {
+  if (!command_stream_started_) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Command streaming was not started");
     return hardware_interface::return_type::ERROR;
   }
-  if (velocity_joint_interface_running_) {
-    robot_->writeOnce(velocity_command_);
-  } else if (effort_interface_running_) {
-    robot_->writeOnce(effort_command_);
-  } else if (position_joint_interface_running_ && !first_position_update_ ) {
-    robot_->writeOnce(hw_position_commands_);
+
+  // JointStates joint_state;
+  for (std::size_t i = 0; i < info_.joints.size(); ++i)
+  {
+    // only send commands to the interfaces that are defined for this joint
+    for (const auto& interface : info_.joints[i].command_interfaces)
+    {
+      if (interface.name == hardware_interface::HW_IF_POSITION)
+      {
+        command_states_.position.emplace_back(hw_commands_[interfaces_per_joint_ * i]);
+      }
+      else if (interface.name == hardware_interface::HW_IF_VELOCITY)
+      {
+        command_states_.velocity.emplace_back(hw_commands_[interfaces_per_joint_ * i + 1]);
+      }
+      else if (interface.name == hardware_interface::HW_IF_EFFORT)
+      {
+        command_states_.load.emplace_back(hw_commands_[interfaces_per_joint_ * i + 2]);
+      }
+      else
+      {
+        RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Joint '%s' has unsupported command interfaces found: %s.",
+                         info_.joints[i].name.c_str(), interface.name.c_str());
+        return hardware_interface::return_type::ERROR;
+      }
+    }
   }
+  send_command(command_states_);
 
   return hardware_interface::return_type::OK;
 }
@@ -422,11 +425,11 @@ bool SpotHardware::start_command_stream() {
   }
   // Start command streaming
   auto robot_command_stream_client_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotCommandClient>();
-  if (!robot_state_stream_client_resp) {
+  if (!robot_command_stream_client_resp) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not create robot command client");
     return false;
   }
-  command_stream_client_ = robot_command_stream_client_resp.response;
+  auto command_client_ = robot_command_stream_client_resp.response;
 
   auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
   if (!endpoint_result) {
@@ -436,23 +439,26 @@ bool SpotHardware::start_command_stream() {
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Client successfully created!");
 
-  bosdyn::api::RobotCommand joint_command = ::bosdyn::client::JointCommand();
-  auto joint_res = robot_command_client->RobotCommand(joint_command);
+  bosdyn::api::RobotCommand joint_command = ::bosdyn::api::JointCommand();
+  auto joint_res = command_client_->RobotCommand(joint_command);
   if (!joint_res.status) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to activate joint control mode");
   }
 
-  command_client_started_ = true;
+  auto robot_command_stream_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotCommandStreamingClient>();
+  if (!robot_command_stream_resp) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not create robot command streaming client");
+    return false;
+  }
+  command_stream_service_ = robot_command_stream_resp.response;
+
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Streaming Client successfully created!");
+
+  command_stream_started_ = true;
   return true;
 }
 
 void SpotHardware::send_command(const JointStates& joint_commands) {
-  if (!command_service_started_) {
-    auto robot_command_service_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotCommandStreamingClient>();
-    command_stream_service_ = robot_command_service_resp.response;
-    command_service_started_ = true;
-  }
-
   std::vector<float> position = joint_commands.position;
   std::vector<float> velocity = joint_commands.velocity;
   std::vector<float> load = joint_commands.load;
