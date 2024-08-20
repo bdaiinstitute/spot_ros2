@@ -159,6 +159,11 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
     return hardware_interface::CallbackReturn::ERROR;
   }
 
+  // Set up command_states struct, initialized to zeros
+  command_states_.position = std::vector<float>(info_.joints.size(), 0.0);
+  command_states_.velocity = std::vector<float>(info_.joints.size(), 0.0);
+  command_states_.load = std::vector<float>(info_.joints.size(), 0.0);
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -250,22 +255,10 @@ hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/
     return hardware_interface::return_type::ERROR;
   }
 
-  // JointStates joint_state;
   for (std::size_t i = 0; i < info_.joints.size(); ++i) {
-    // only send commands to the interfaces that are defined for this joint
-    for (const auto& interface : info_.joints[i].command_interfaces) {
-      if (interface.name == hardware_interface::HW_IF_POSITION) {
-        command_states_.position.emplace_back(hw_commands_[interfaces_per_joint_ * i]);
-      } else if (interface.name == hardware_interface::HW_IF_VELOCITY) {
-        command_states_.velocity.emplace_back(hw_commands_[interfaces_per_joint_ * i + 1]);
-      } else if (interface.name == hardware_interface::HW_IF_EFFORT) {
-        command_states_.load.emplace_back(hw_commands_[interfaces_per_joint_ * i + 2]);
-      } else {
-        RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Joint '%s' has unsupported command interfaces found: %s.",
-                     info_.joints[i].name.c_str(), interface.name.c_str());
-        return hardware_interface::return_type::ERROR;
-      }
-    }
+    command_states_.position.at(i) = hw_commands_[interfaces_per_joint_ * i];
+    command_states_.velocity.at(i) = hw_commands_[interfaces_per_joint_ * i + 1];
+    command_states_.load.at(i) = hw_commands_[interfaces_per_joint_ * i + 2];
   }
   send_command(command_states_);
 
