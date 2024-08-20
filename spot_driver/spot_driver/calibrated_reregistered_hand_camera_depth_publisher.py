@@ -16,7 +16,7 @@ This script assumes you have a calibration generated with /spot_wrapper/spot_wra
 import argparse
 from typing import Optional
 
-import bdai_ros2_wrapper.scope as ros_scope
+import bdai_ros2_wrappers.scope as ros_scope
 import bdai_ros2_wrappers.process as ros_process
 import cv2
 import numpy as np
