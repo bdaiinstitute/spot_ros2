@@ -139,16 +139,11 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
                                     std::placeholders::_1))) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-  if (!start_command_stream()) {
-    return hardware_interface::CallbackReturn::ERROR;
-  }
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecycle::State& /*previous_state*/) {
-  // This can be added when we start command streaming.
-
   if (!check_estop()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
@@ -160,7 +155,10 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  // Once command streaming is implemented, this initialization should go here.
+  // Initialize command streaming
+  if (!start_command_stream()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -194,14 +192,15 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
-  // Once command streaming is enabled, this should release the lease and stop command streaming
+  release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
   stop_state_stream();
-  // Once command streaming is enabled, this should also release the lease and stop command streaming
-  // (if not already deactivated)
+  if (!power_off()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -372,6 +371,17 @@ bool SpotHardware::power_on() {
   return true;
 }
 
+bool SpotHardware::power_off() {
+  bosdyn::api::RobotCommand poweroff_command = ::bosdyn::client::SafePowerOffCommand();
+  auto poweroff_res = command_client_->RobotCommand(poweroff_command);
+  if (!poweroff_res) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to complete the safe power off command");
+    return false;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered off!");
+  return true;
+}
+
 void state_stream_loop(std::stop_token stop_token, ::bosdyn::client::RobotStateStreamingClient* stateStreamClient,
                        StateHandler&& state_policy) {
   ::bosdyn::api::RobotStateStreamResponse latest_state_stream_response;
@@ -429,7 +439,7 @@ bool SpotHardware::start_command_stream() {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not create robot command client");
     return false;
   }
-  auto command_client_ = robot_command_stream_client_resp.response;
+  command_client_ = robot_command_stream_client_resp.response;
 
   auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
   if (!endpoint_result) {
@@ -439,7 +449,8 @@ bool SpotHardware::start_command_stream() {
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Client successfully created!");
 
-  bosdyn::api::RobotCommand joint_command = ::bosdyn::api::JointCommand();
+  // bosdyn::api::RobotCommand joint_command = ::bosdyn::api::JointCommand();
+  bosdyn::api::RobotCommand joint_command = ::bosdyn::client::JointCommand();
   auto joint_res = command_client_->RobotCommand(joint_command);
   if (!joint_res.status) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to activate joint control mode");
@@ -508,7 +519,7 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
   auto joint_control_stream = command_stream_service_->JointControlStream(request);
   if (!joint_control_stream) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to send command: '%s'", 
-                  joint_control_stream.status.DebugString());
+                  joint_control_stream.status.DebugString().c_str());
   }
 }
 

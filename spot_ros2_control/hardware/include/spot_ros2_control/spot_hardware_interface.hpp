@@ -39,6 +39,7 @@
 #include "bosdyn/client/robot_command/robot_command_streaming_client.h"
 #include "bosdyn/client/robot_state/robot_state_client.h"
 #include "bosdyn/client/robot_state/robot_state_streaming_client.h"
+#include "bosdyn/client/robot_command/robot_command_builder.h"
 #include "bosdyn/client/sdk/client_sdk.h"
 #include "bosdyn/client/service_client/client_header_handling.h"
 #include "bosdyn/client/time_sync/time_sync_helpers.h"
@@ -131,6 +132,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   ::bosdyn::client::LeaseClient* lease_client_;
   ::bosdyn::client::RobotStateStreamingClient* state_client_;
   ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_;
+  ::bosdyn::client::RobotCommandClient* command_client_;
 
   // Holds joint states of the robot received from the BD SDK
   JointStates joint_states_;
@@ -179,6 +181,11 @@ class SpotHardware : public hardware_interface::SystemInterface {
    * @return True if successfully powered on, false otherwise.
    */
   bool power_on();
+  /**
+   * @brief Power the robot off
+   * @return True if successfully powered off, false otherwise.
+   */
+  bool power_off();
   /**
    * @brief Start streaming the state of the robot, and attach a callback to it
    * @param state_policy a functor to call with new state updates
