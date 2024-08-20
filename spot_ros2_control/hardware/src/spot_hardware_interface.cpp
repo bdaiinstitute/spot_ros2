@@ -469,10 +469,23 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
   joint_cmd->mutable_velocity()->Assign(velocity.begin(), velocity.end());
   joint_cmd->mutable_load()->Assign(load.begin(), load.end());
 
-  // Gain values (from spot-rl)
-  std::vector<float> kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
-  std::vector<float> kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
-  std::vector<float> vel = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  // Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
+  // NOTE: these should be different depending on number of joints the robot has (arm or none)
+  // Right now this is just temporary to see if we can get the commands accepted by robot
+  std::vector<float> vel(njoints_, 0.0);
+  std::vector<float> kp;
+  std::vector<float> kd;
+  if (njoints_ == 19) {
+    kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
+    kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
+          5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
+  } else if (njoints_ == 12) {
+    kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
+    kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
+  } else {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "WRONG # OF JOINTS");
+    return;
+  }
 
   joint_cmd->mutable_gains()->mutable_k_q_p()->Assign(kp.begin(), kp.end());
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Assign(kd.begin(), kd.end());
@@ -481,6 +494,7 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
     auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
     if (!endpoint_result) {
       RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get timesync endpoint");
+      return;
     }
     endpoint_ = endpoint_result.response;
   }
