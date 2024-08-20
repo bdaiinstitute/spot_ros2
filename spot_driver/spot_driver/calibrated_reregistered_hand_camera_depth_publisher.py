@@ -16,8 +16,8 @@ This script assumes you have a calibration generated with /spot_wrapper/spot_wra
 import argparse
 from typing import Optional
 
-import bdai_ros2_wrappers.scope as ros_scope
 import bdai_ros2_wrappers.process as ros_process
+import bdai_ros2_wrappers.scope as ros_scope
 import cv2
 import numpy as np
 import open3d as o3d
@@ -158,7 +158,7 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
         return depth_image.astype(np.uint16)
 
     def calculate_undistortion_parameters(self) -> None:
-        h, w = self.calibibration["depth_image_dim"]
+        h, w = self.calibration["depth_image_dim"]
         new_camera_matrix, _ = cv2.getOptimalNewCameraMatrix(
             self.calibration["camera_matrix_depth"], self.calibration["dist_coeffs_depth"], (w, h), 1, (w, h)
         )
