@@ -16,8 +16,8 @@ This script assumes you have a calibration generated with /spot_wrapper/spot_wra
 import argparse
 from typing import Optional
 
-import bdai_ros2_wrappers.process as ros_process
 import bdai_ros2_wrapper.scope as ros_scope
+import bdai_ros2_wrappers.process as ros_process
 import cv2
 import numpy as np
 import open3d as o3d
@@ -56,7 +56,7 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
         self.calibration["robot_name"] = robot_name
         self.calibration["topic_name"] = topic_name
         self.calibration["undistort"] = undistort
-        
+
         for param_name, param_val in self.calibration.items():
             self.node.get_logger().info(f"Setting the parameter {param_name} to a default value of {param_val}")
             self.node.declare_parameter(param_name, param_val)
@@ -67,9 +67,9 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
             elif "dim" not in param_name and "name" not in param_name and "undistort" not in param_name:
                 self.calibration[param_name] = np.array(self.calibration[param_name])
 
-        if self.calibration['undistort']:
+        if self.calibration["undistort"]:
             self.calculate_undistortion_parameters()
-        
+
         self.cv_bridge = CvBridge()
 
         reregistered_depth_topic = f"/{self.calibration['robot_name']}/{topic_name}"
@@ -81,7 +81,6 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
         self.raw_depth_img_sub = self.node.create_subscription(
             Image, raw_depth_topic, self.republish_registered_depth_callback, 10
         )
-
 
     def republish_registered_depth_callback(self, msg: Image) -> None:
         if self.calibration["rgb_image_dim"][0] != 0:
@@ -103,19 +102,21 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
             )
 
     def depth_img_to_pointcloud(
-        self, depth_img: np.ndarray, undistort: bool = False, depth_scale: float = 1000.0, 
-        depth_max: float = 10) -> o3d.t.geometry.PointCloud:
+        self, depth_img: np.ndarray, undistort: bool = False, depth_scale: float = 1000.0, depth_max: float = 10
+    ) -> o3d.t.geometry.PointCloud:
         depth_img = depth_img.astype(np.float32)
 
         if undistort:
-            undistorted_depth_img = cv2.remap(depth_img, 
-                                              self.calibration['depth_image_undistort_map1'], 
-                                              self.calibration['depth_image_undistort_map2'], 
-                                              interpolation=cv2.INTER_NEAREST)
+            undistorted_depth_img = cv2.remap(
+                depth_img,
+                self.calibration["depth_image_undistort_map1"],
+                self.calibration["depth_image_undistort_map2"],
+                interpolation=cv2.INTER_NEAREST,
+            )
         else:
             undistorted_depth_img = depth_img
 
-        intrinsic_tensor = o3d.core.Tensor(self.calibration['camera_matrix_depth'], dtype=o3d.core.Dtype.Float32)
+        intrinsic_tensor = o3d.core.Tensor(self.calibration["camera_matrix_depth"], dtype=o3d.core.Dtype.Float32)
 
         depth_tensor = o3d.core.Tensor(undistorted_depth_img, dtype=o3d.core.Dtype.Float32)
         depth_image = o3d.t.geometry.Image(depth_tensor)
@@ -128,8 +129,9 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
         )
         return pointcloud_pcd
 
-    def pointcloud_to_depth_img(self, pointcloud: o3d.t.geometry.PointCloud, 
-                                depth_scale: float = 1000.0, depth_max: float = 10) -> np.ndarray:
+    def pointcloud_to_depth_img(
+        self, pointcloud: o3d.t.geometry.PointCloud, depth_scale: float = 1000.0, depth_max: float = 10
+    ) -> np.ndarray:
         # Convert the extrinsic matrix from a NumPy array to an Open3D tensor
         extrinsic_np = np.eye(4)
         extrinsic_np[:3, :3] = self.calibration["depth_t_rgb_R"]
@@ -155,22 +157,23 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
         depth_image = np.asarray(rgbd_image.depth)
         return depth_image.astype(np.uint16)
 
-    def calculate_undistortion_parameters(self):
+    def calculate_undistortion_parameters(self) -> None:
         h, w = self.calibibration["depth_image_dim"]
-        new_camera_matrix, _ = cv2.getOptimalNewCameraMatrix(self.calibration["camera_matrix_depth"], 
-                                                                 self.calibration["dist_coeffs_depth"], 
-                                                                 (w, h), 1, (w, h))
+        new_camera_matrix, _ = cv2.getOptimalNewCameraMatrix(
+            self.calibration["camera_matrix_depth"], self.calibration["dist_coeffs_depth"], (w, h), 1, (w, h)
+        )
         map1, map2 = cv2.initUndistortRectifyMap(
-                self.calibration["camera_matrix_depth"], 
-                self.calibration["dist_coeffs_depth"], 
-                None, 
-                new_camera_matrix, 
-                (w, h), 
-                cv2.CV_32FC1
-            )
+            self.calibration["camera_matrix_depth"],
+            self.calibration["dist_coeffs_depth"],
+            None,
+            new_camera_matrix,
+            (w, h),
+            cv2.CV_32FC1,
+        )
         self.calibration["depth_image_undistort_map1"] = map1
         self.calibration["depth_image_undistort_map2"] = map2
         self.calibration["camera_matrix_depth"] = new_camera_matrix
+
 
 def extract_calibration_parameters(calibration_path: str, tag: str) -> dict:
     try:
