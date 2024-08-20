@@ -430,13 +430,16 @@ bool SpotHardware::start_command_stream() {
     return false;
   }
 
+  command_client_->AddTimeSyncEndpoint(endpoint_result.response);
+
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Client successfully created!");
 
-  // bosdyn::api::RobotCommand joint_command = ::bosdyn::api::JointCommand();
   bosdyn::api::RobotCommand joint_command = ::bosdyn::client::JointCommand();
   auto joint_res = command_client_->RobotCommand(joint_command);
   if (!joint_res.status) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to activate joint control mode");
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Message: %s", joint_res.status.DebugString().c_str());
+    return false;
   }
 
   auto robot_command_stream_resp = robot_->EnsureServiceClient<::bosdyn::client::RobotCommandStreamingClient>();
