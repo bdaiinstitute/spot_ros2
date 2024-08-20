@@ -34,12 +34,12 @@
 #include "spot_ros2_control/visibility_control.h"
 
 #include "bosdyn/client/lease/lease_keepalive.h"
+#include "bosdyn/client/robot_command/robot_command_builder.h"
 #include "bosdyn/client/robot_command/robot_command_client.h"
 #include "bosdyn/client/robot_command/robot_command_helpers.h"
 #include "bosdyn/client/robot_command/robot_command_streaming_client.h"
 #include "bosdyn/client/robot_state/robot_state_client.h"
 #include "bosdyn/client/robot_state/robot_state_streaming_client.h"
-#include "bosdyn/client/robot_command/robot_command_builder.h"
 #include "bosdyn/client/sdk/client_sdk.h"
 #include "bosdyn/client/service_client/client_header_handling.h"
 #include "bosdyn/client/time_sync/time_sync_helpers.h"

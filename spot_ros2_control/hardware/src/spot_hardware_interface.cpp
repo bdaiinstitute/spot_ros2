@@ -24,9 +24,9 @@
 #include <memory>
 #include <vector>
 
+#include "google/protobuf/util/time_util.h"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "google/protobuf/util/time_util.h"
 
 namespace spot_ros2_control {
 
@@ -49,7 +49,6 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.position.assign(current_position_.begin(), current_position_.end());
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
   joint_states.load.assign(current_load_.begin(), current_load_.end());
-  
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -252,27 +251,18 @@ hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/
   }
 
   // JointStates joint_state;
-  for (std::size_t i = 0; i < info_.joints.size(); ++i)
-  {
+  for (std::size_t i = 0; i < info_.joints.size(); ++i) {
     // only send commands to the interfaces that are defined for this joint
-    for (const auto& interface : info_.joints[i].command_interfaces)
-    {
-      if (interface.name == hardware_interface::HW_IF_POSITION)
-      {
+    for (const auto& interface : info_.joints[i].command_interfaces) {
+      if (interface.name == hardware_interface::HW_IF_POSITION) {
         command_states_.position.emplace_back(hw_commands_[interfaces_per_joint_ * i]);
-      }
-      else if (interface.name == hardware_interface::HW_IF_VELOCITY)
-      {
+      } else if (interface.name == hardware_interface::HW_IF_VELOCITY) {
         command_states_.velocity.emplace_back(hw_commands_[interfaces_per_joint_ * i + 1]);
-      }
-      else if (interface.name == hardware_interface::HW_IF_EFFORT)
-      {
+      } else if (interface.name == hardware_interface::HW_IF_EFFORT) {
         command_states_.load.emplace_back(hw_commands_[interfaces_per_joint_ * i + 2]);
-      }
-      else
-      {
+      } else {
         RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Joint '%s' has unsupported command interfaces found: %s.",
-                         info_.joints[i].name.c_str(), interface.name.c_str());
+                     info_.joints[i].name.c_str(), interface.name.c_str());
         return hardware_interface::return_type::ERROR;
       }
     }
@@ -476,7 +466,7 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
 
   ::bosdyn::api::JointControlStreamRequest request;
 
-  // build protobuf 
+  // build protobuf
   auto* joint_cmd = request.mutable_joint_command();
 
   joint_cmd->mutable_position()->Assign(position.begin(), position.end());
@@ -484,12 +474,9 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
   joint_cmd->mutable_load()->Assign(load.begin(), load.end());
 
   // Gain values (from spot-rl)
-  std::vector<float> kp = {624, 936, 286, 624, 936, 286,
-                           624, 936, 286, 624, 936, 286};
-  std::vector<float> kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04,
-                           5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
-  std::vector<float> vel = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                            0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  std::vector<float> kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
+  std::vector<float> kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
+  std::vector<float> vel = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
   joint_cmd->mutable_gains()->mutable_k_q_p()->Assign(kp.begin(), kp.end());
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Assign(kd.begin(), kd.end());
@@ -502,8 +489,7 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
     endpoint_ = endpoint_result.response;
   }
 
-  auto time_point_local = ::bosdyn::common::TimePoint(
-      std::chrono::system_clock::now() + std::chrono::milliseconds(50));
+  auto time_point_local = ::bosdyn::common::TimePoint(std::chrono::system_clock::now() + std::chrono::milliseconds(50));
 
   ::bosdyn::common::RobotTimeConverter converter = endpoint_->GetRobotTimeConverter();
   joint_cmd->mutable_end_time()->CopyFrom(converter.RobotTimestampFromLocal(time_point_local));
@@ -518,8 +504,8 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
   // Send joint stream command
   auto joint_control_stream = command_stream_service_->JointControlStream(request);
   if (!joint_control_stream) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to send command: '%s'", 
-                  joint_control_stream.status.DebugString().c_str());
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to send command: '%s'",
+                 joint_control_stream.status.DebugString().c_str());
   }
 }
 
