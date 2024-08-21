@@ -477,9 +477,6 @@ bool SpotHardware::start_command_stream() {
   joint_cmd->mutable_extrapolation_duration()->CopyFrom(
       google::protobuf::util::TimeUtil::NanosecondsToDuration(5 * 1e6));
 
-  // Set user key for latency tracking
-  joint_cmd->set_user_command_key(0);
-
   command_stream_started_ = true;
   return true;
 }
