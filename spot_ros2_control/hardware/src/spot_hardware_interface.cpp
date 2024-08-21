@@ -451,28 +451,12 @@ bool SpotHardware::start_command_stream() {
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Streaming Client successfully created!");
 
-  command_stream_started_ = true;
-  return true;
-}
-
-void SpotHardware::send_command(const JointStates& joint_commands) {
-  std::vector<float> position = joint_commands.position;
-  std::vector<float> velocity = joint_commands.velocity;
-  std::vector<float> load = joint_commands.load;
-
-  ::bosdyn::api::JointControlStreamRequest request;
-
-  // build protobuf
-  auto* joint_cmd = request.mutable_joint_command();
-
-  joint_cmd->mutable_position()->Assign(position.begin(), position.end());
-  joint_cmd->mutable_velocity()->Assign(velocity.begin(), velocity.end());
-  joint_cmd->mutable_load()->Assign(load.begin(), load.end());
-
+  // Fill in the parts of the joint streaming command request that are constant.
+  auto* joint_cmd = joint_request_.mutable_joint_command();
   // Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
   // NOTE: these should be different depending on number of joints the robot has (arm or none)
   // Right now this is just temporary to see if we can get the commands accepted by robot
-  std::vector<float> vel(njoints_, 0.0);
+  // This should be handled via a parameter in the future.
   std::vector<float> kp;
   std::vector<float> kd;
   if (njoints_ == 19) {
@@ -484,11 +468,33 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
     kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
   } else {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "WRONG # OF JOINTS");
-    return;
+    return false;
   }
-
   joint_cmd->mutable_gains()->mutable_k_q_p()->Assign(kp.begin(), kp.end());
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Assign(kd.begin(), kd.end());
+
+  // Let it extrapolate the command a little
+  joint_cmd->mutable_extrapolation_duration()->CopyFrom(
+      google::protobuf::util::TimeUtil::NanosecondsToDuration(5 * 1e6));
+
+  // Set user key for latency tracking
+  joint_cmd->set_user_command_key(0);
+
+  command_stream_started_ = true;
+  return true;
+}
+
+void SpotHardware::send_command(const JointStates& joint_commands) {
+  std::vector<float> position = joint_commands.position;
+  std::vector<float> velocity = joint_commands.velocity;
+  std::vector<float> load = joint_commands.load;
+
+  // build protobuf
+  auto* joint_cmd = joint_request_.mutable_joint_command();
+
+  joint_cmd->mutable_position()->Assign(position.begin(), position.end());
+  joint_cmd->mutable_velocity()->Assign(velocity.begin(), velocity.end());
+  joint_cmd->mutable_load()->Assign(load.begin(), load.end());
 
   if (endpoint_ == nullptr) {
     auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
@@ -504,18 +510,12 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
   ::bosdyn::common::RobotTimeConverter converter = endpoint_->GetRobotTimeConverter();
   joint_cmd->mutable_end_time()->CopyFrom(converter.RobotTimestampFromLocal(time_point_local));
 
-  // Let it extrapolate the command a little
-  joint_cmd->mutable_extrapolation_duration()->CopyFrom(
-      google::protobuf::util::TimeUtil::NanosecondsToDuration(5 * 1e6));
-
-  // Set user key for latency tracking
-  joint_cmd->set_user_command_key(0);
-
   // Send joint stream command
-  auto joint_control_stream = command_stream_service_->JointControlStream(request);
+  auto joint_control_stream = command_stream_service_->JointControlStream(joint_request_);
   if (!joint_control_stream) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to send command: '%s'",
                  joint_control_stream.status.DebugString().c_str());
+    return;
   }
 }
 
