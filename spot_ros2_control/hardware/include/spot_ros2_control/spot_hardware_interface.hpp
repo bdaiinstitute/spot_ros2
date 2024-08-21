@@ -151,6 +151,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   ::bosdyn::client::TimeSyncEndpoint* endpoint_ = nullptr;
 
+  ::bosdyn::api::JointControlStreamRequest joint_request_;
+
   // The following are functions that interact with the BD SDK to set up the robot and get the robot states.
 
   /**
