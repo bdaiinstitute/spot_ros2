@@ -223,8 +223,12 @@ def cli() -> argparse.ArgumentParser:
         help="A calibration saved with the multi-stereo charuco calibration utility",
     )
     parser.add_argument(
-        "--robot_name", dest="robot_name", default=None, required=False, type=str, 
-        help="Spot Robot namespace. Don't supply this argument if there's no namespace."
+        "--robot_name",
+        dest="robot_name",
+        default=None,
+        required=False,
+        type=str,
+        help="Spot Robot namespace. Don't supply this argument if there's no namespace.",
     )
     parser.add_argument(
         "--tag", dest="tag", default="default", type=str, help="What tag to load from the calibration file"
