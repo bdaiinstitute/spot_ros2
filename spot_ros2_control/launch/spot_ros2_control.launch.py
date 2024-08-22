@@ -1,5 +1,8 @@
 # Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+import os
 
+import yaml
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
@@ -14,11 +17,42 @@ from launch_ros.substitutions import FindPackageShare
 
 from spot_driver.launch.spot_launch_helpers import get_login_parameters, spot_has_arm
 
+THIS_PACKAGE = "spot_ros2_control"
+
+
+def create_controllers_config(spot_name: str, has_arm: bool) -> None:
+    """Writes a configuration file for rviz to visualize a single spot robot"""
+
+    arm_text = "with_arm" if has_arm else "without_arm"
+    print("arm text", arm_text)
+    template_filename = os.path.join(
+        get_package_share_directory(THIS_PACKAGE), "config", f"spot_default_controllers_{arm_text}.yaml"
+    )
+    output_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "config", "spot_default_controllers.yaml")
+
+    with open(template_filename, "r") as template_file:
+        config = yaml.safe_load(template_file)
+
+        if spot_name:
+            forward_position_controller_joints = config["forward_position_controller"]["ros__parameters"]["joints"]
+            config["forward_position_controller"]["ros__parameters"]["joints"] = [
+                f"{spot_name}/{joint}" for joint in forward_position_controller_joints
+            ]
+            print(forward_position_controller_joints)
+            config[f"{spot_name}/controller_manager"] = config["controller_manager"]
+            del config["controller_manager"]
+            config[f"{spot_name}/forward_position_controller"] = config["forward_position_controller"]
+            del config["forward_position_controller"]
+
+    with open(output_filename, "w") as out_file:
+        yaml.dump(config, out_file)
+
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     hardware_interface: str = LaunchConfiguration("hardware_interface").perform(context)
     controllers_config: str = LaunchConfiguration("controllers_config").perform(context)
     mock_has_arm: bool = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
+    spot_name: str = LaunchConfiguration("spot_name").perform(context)
 
     # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_has_arm.
     if hardware_interface == "robot":
@@ -30,14 +64,19 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         has_arm = mock_has_arm
         login_params = ""
 
+    tf_prefix = f"{spot_name}/" if spot_name else ""
+    print("TF PREFIX", tf_prefix)
+
     # Generate the robot description based off if the robot has an arm.
     robot_urdf = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "xacro", "spot.urdf.xacro"]),
+            PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "xacro", "spot.urdf.xacro"]),
             " has_arm:=",
             str(has_arm),
+            " tf_prefix:=",
+            tf_prefix,
             " hardware_interface_type:=",
             LaunchConfiguration("hardware_interface"),
             login_params,
@@ -49,9 +88,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     # If not controller is selected, use the appropriate default given if the robot has an arm or not.
     # Else, just use the yaml that is passed in.
     if controllers_config == "":
-        default_config_file = "spot_controllers_with_arm.yaml" if has_arm else "spot_controllers_without_arm.yaml"
+        create_controllers_config(spot_name, has_arm)
         controllers_config = PathJoinSubstitution(
-            [FindPackageShare("spot_ros2_control"), "config", default_config_file]
+            [FindPackageShare(THIS_PACKAGE), "config", "spot_default_controllers.yaml"]
         )
 
     # Add nodes
@@ -61,6 +100,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             executable="ros2_control_node",
             output="both",
             parameters=[robot_description, controllers_config],
+            namespace=spot_name,
         )
     )
     ld.add_action(
@@ -69,24 +109,23 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             executable="robot_state_publisher",
             output="both",
             parameters=[robot_description],
+            namespace=spot_name,
         )
     )
     ld.add_action(
         Node(
             package="controller_manager",
             executable="spawner",
-            arguments=[
-                "joint_state_broadcaster",
-                "--controller-manager",
-                "/controller_manager",
-            ],
+            arguments=["joint_state_broadcaster", "-c", "controller_manager"],
+            namespace=spot_name,
         )
     )
     ld.add_action(
         Node(
             package="controller_manager",
             executable="spawner",
-            arguments=[LaunchConfiguration("robot_controller"), "-c", "/controller_manager"],
+            arguments=[LaunchConfiguration("robot_controller"), "-c", "controller_manager"],
+            namespace=spot_name,
         )
     )
     ld.add_action(
@@ -97,7 +136,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             output="log",
             arguments=[
                 "-d",
-                PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "rviz", "spot_ros2_control.rviz"]),
+                PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz"]),
+                "-f",
+                f"{spot_name}/body",
             ],
             condition=IfCondition(LaunchConfiguration("launch_rviz")),
         )
@@ -151,6 +192,11 @@ def generate_launch_description():
                 default_value="True",
                 choices=["True", "true", "False", "false"],
                 description="Flag to enable rviz.",
+            ),
+            DeclareLaunchArgument(
+                "spot_name",
+                default_value="",
+                description="Name of the Spot that will be used as a namespace.",
             ),
         ]
     )
