@@ -32,9 +32,10 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
         self,
         calibration_path: Optional[str] = None,
         tag: str = "default",
-        robot_name: str = "spot",
+        robot_name: Optional[str] = None,
         topic_name: str = "depth_registered/hand_custom_cal/image",
         undistort: bool = False,
+        raw_depth_topic_suffix: Optional[str] = "/depth/hand/image",
     ):
         self.node = ros_scope.node()
 
@@ -53,7 +54,11 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
         else:
             self.calibration = extract_calibration_parameters(calibration_path=calibration_path, tag=tag)
 
-        self.calibration["robot_name"] = robot_name
+        if robot_name is not None:
+            self.calibration["robot_name"] = "/" + robot_name  # insert leading slash
+        else:
+            self.calibration["robot_name"] = ""
+            self.node.get_logger().warning("No robot name supplied, assuming no namespace.")
         self.calibration["topic_name"] = topic_name
         self.calibration["undistort"] = undistort
 
@@ -72,11 +77,13 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
 
         self.cv_bridge = CvBridge()
 
-        reregistered_depth_topic = f"/{self.calibration['robot_name']}/{topic_name}"
+        # by this point, if robot_name was not supplied or is None, robot_name is empty str
+        reregistered_depth_topic = f"{self.calibration['robot_name']}/{topic_name}"
+        raw_depth_topic = f"{self.calibration['robot_name']}{raw_depth_topic_suffix}"
+
         self.node.get_logger().info(f"Creating reregistered depth publisher to {reregistered_depth_topic}")
         self.reregistered_depth_img_pub = self.node.create_publisher(Image, reregistered_depth_topic, 10)
 
-        raw_depth_topic = f"/{self.calibration['robot_name']}/depth/hand/image"
         self.node.get_logger().info(f"Creating subscriber to raw depth at {raw_depth_topic}")
         self.raw_depth_img_sub = self.node.create_subscription(
             Image, raw_depth_topic, self.republish_registered_depth_callback, 10
@@ -216,7 +223,7 @@ def cli() -> argparse.ArgumentParser:
         help="A calibration saved with the multi-stereo charuco calibration utility",
     )
     parser.add_argument(
-        "--robot_name", dest="robot_name", default="spot", required=False, type=str, help="Spot Robot namespace"
+        "--robot_name", dest="robot_name", default=None, required=False, type=str, help="Spot Robot namespace"
     )
     parser.add_argument(
         "--tag", dest="tag", default="default", type=str, help="What tag to load from the calibration file"
@@ -226,7 +233,7 @@ def cli() -> argparse.ArgumentParser:
         dest="topic",
         default="depth_registered/hand_custom_cal/image",
         type=str,
-        help="what topic suffix to publish the reregistered image at.",
+        help="what topic suffix to publish the reregistered image at. No leading slash!",
     )
     parser.add_argument(
         "--undistort",
