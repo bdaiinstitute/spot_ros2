@@ -21,7 +21,7 @@ THIS_PACKAGE = "spot_ros2_control"
 
 
 def create_controllers_config(spot_name: str, has_arm: bool) -> None:
-    """Writes a configuration file for rviz to visualize a single spot robot"""
+    """Writes a configuration file used to put the ros2 control nodes into a namespace."""
 
     arm_text = "with_arm" if has_arm else "without_arm"
     template_filename = os.path.join(
@@ -47,7 +47,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
 
 
 def create_rviz_config(spot_name: str) -> None:
-    """Writes a configuration file for rviz to visualize a single spot robot"""
+    """Writes a configuration file for rviz to visualize a robot launched in a namespace."""
 
     template_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "template.rviz")
     output_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz")
@@ -84,7 +84,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         login_params = ""
 
     tf_prefix = f"{spot_name}/" if spot_name else ""
-    print("TF PREFIX", tf_prefix)
 
     # Generate the robot description based off if the robot has an arm.
     robot_urdf = Command(
