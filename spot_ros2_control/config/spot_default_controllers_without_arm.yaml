@@ -1,10 +1,8 @@
 # Some built in controllers, taken from
 # https://github.com/ros-controls/roscon2022_workshop/blob/master/controlko_bringup/config/rrbot_controllers.yaml
 
-# We use the global namespace so that this config can be used regardless of the namespace chosen at launch time.
 controller_manager:
   ros__parameters:
-    # Controller manager parameters
     update_rate: 333  # Hz
 
     joint_state_broadcaster:

@@ -21,7 +21,17 @@ THIS_PACKAGE = "spot_ros2_control"
 
 
 def create_controllers_config(spot_name: str, has_arm: bool) -> None:
-    """Writes a configuration file used to put the ros2 control nodes into a namespace."""
+    """Writes a configuration file used to put the ros2 control nodes into a namespace.
+    This is necessary as if your ros2 control nodes are launched in a namespace, the configuration yaml used
+    must also reflect this same namespace when defining parameters of your controllers.
+
+    The generated file will be put in `<package share of spot_ros2 control>/config/spot_default_controllers.yaml`.
+
+    Args:
+        spot_name (str): Name of spot. If it's the empty string, the default controller file with no namespace is used.
+        has_arm (bool): Whether or not your robot has an arm. Necessary for defining the joints that the forward
+                        position controller should use.
+    """
 
     arm_text = "with_arm" if has_arm else "without_arm"
     template_filename = os.path.join(
@@ -47,7 +57,14 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
 
 
 def create_rviz_config(spot_name: str) -> None:
-    """Writes a configuration file for rviz to visualize a robot launched in a namespace."""
+    """Writes a configuration file for rviz to visualize a robot launched in a namespace. This follows the same
+    convention defined in spot_driver/launch/rviz.launch.py, and is necessary as you need to specify
+    different topics in the rviz config file depending on the namespace.
+
+    The generated file will be put in `<package share of spot_ros2 control>/rviz/spot_ros2_control.rviz`.
+
+    Args:
+        spot_name (str): Name of Spot corresponding to the namespace the nodes are launched in."""
 
     template_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "template.rviz")
     output_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz")
@@ -102,10 +119,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     robot_description = {"robot_description": robot_urdf}
 
-    # Configuration for the controller.
-    # If not controller is selected, use the appropriate default given if the robot has an arm or not.
-    # Else, just use the yaml that is passed in.
+    # If not controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
     if controllers_config == "":
+        # Generate spot_default_controllers.yaml depending on namespace and whether the robot has an arm.
         create_controllers_config(spot_name, has_arm)
         controllers_config = PathJoinSubstitution(
             [FindPackageShare(THIS_PACKAGE), "config", "spot_default_controllers.yaml"]
@@ -146,6 +162,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             namespace=spot_name,
         )
     )
+    # Generate rviz configuration file based on the chosen namespace
     create_rviz_config(spot_name)
     ld.add_action(
         Node(
@@ -153,10 +170,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             executable="rviz2",
             name="rviz2",
             output="log",
-            arguments=[
-                "-d",
-                PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz"]),
-            ],
+            arguments=["-d", PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz"])],
             condition=IfCondition(LaunchConfiguration("launch_rviz")),
             namespace=spot_name,
         )
