@@ -206,6 +206,11 @@ install(
   )
 install(
   PROGRAMS
+  spot_driver/calibrated_reregistered_hand_camera_depth_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+  )
+install(
+  PROGRAMS
   spot_driver/spot_alerts.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME spot_alerts
