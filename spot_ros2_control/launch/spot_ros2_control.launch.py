@@ -24,7 +24,6 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
     """Writes a configuration file for rviz to visualize a single spot robot"""
 
     arm_text = "with_arm" if has_arm else "without_arm"
-    print("arm text", arm_text)
     template_filename = os.path.join(
         get_package_share_directory(THIS_PACKAGE), "config", f"spot_default_controllers_{arm_text}.yaml"
     )
@@ -38,11 +37,31 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
             config["forward_position_controller"]["ros__parameters"]["joints"] = [
                 f"{spot_name}/{joint}" for joint in forward_position_controller_joints
             ]
-            print(forward_position_controller_joints)
             config[f"{spot_name}/controller_manager"] = config["controller_manager"]
             del config["controller_manager"]
             config[f"{spot_name}/forward_position_controller"] = config["forward_position_controller"]
             del config["forward_position_controller"]
+
+    with open(output_filename, "w") as out_file:
+        yaml.dump(config, out_file)
+
+
+def create_rviz_config(spot_name: str) -> None:
+    """Writes a configuration file for rviz to visualize a single spot robot"""
+
+    template_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "template.rviz")
+    output_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz")
+
+    with open(template_filename, "r") as template_file:
+        config = yaml.safe_load(template_file)
+
+        if spot_name:
+            # replace fixed frame with robot body frame
+            config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{spot_name}/body"
+            # Add robot models for each robot
+            for display in config["Visualization Manager"]["Displays"]:
+                if "RobotModel" in display["Class"]:
+                    display["Description Topic"]["Value"] = f"/{spot_name}/robot_description"
 
     with open(output_filename, "w") as out_file:
         yaml.dump(config, out_file)
@@ -128,6 +147,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             namespace=spot_name,
         )
     )
+    create_rviz_config(spot_name)
     ld.add_action(
         Node(
             package="rviz2",
@@ -137,10 +157,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             arguments=[
                 "-d",
                 PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz"]),
-                "-f",
-                f"{spot_name}/body",
             ],
             condition=IfCondition(LaunchConfiguration("launch_rviz")),
+            namespace=spot_name,
         )
     )
     return
