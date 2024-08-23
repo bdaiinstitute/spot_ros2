@@ -119,7 +119,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     robot_description = {"robot_description": robot_urdf}
 
-    # If not controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
+    # If no controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
     if controllers_config == "":
         # Generate spot_default_controllers.yaml depending on namespace and whether the robot has an arm.
         create_controllers_config(spot_name, has_arm)
