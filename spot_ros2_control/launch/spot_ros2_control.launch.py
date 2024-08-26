@@ -37,12 +37,13 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
     template_filename = os.path.join(
         get_package_share_directory(THIS_PACKAGE), "config", f"spot_default_controllers_{arm_text}.yaml"
     )
-    output_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "config", "spot_default_controllers.yaml")
 
-    with open(template_filename, "r") as template_file:
-        config = yaml.safe_load(template_file)
-
-        if spot_name:
+    if spot_name:
+        output_filename = os.path.join(
+            get_package_share_directory(THIS_PACKAGE), "config", "spot_default_controllers.yaml"
+        )
+        with open(template_filename, "r") as template_file:
+            config = yaml.safe_load(template_file)
             forward_position_controller_joints = config["forward_position_controller"]["ros__parameters"]["joints"]
             config["forward_position_controller"]["ros__parameters"]["joints"] = [
                 f"{spot_name}/{joint}" for joint in forward_position_controller_joints
@@ -51,37 +52,43 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
             del config["controller_manager"]
             config[f"{spot_name}/forward_position_controller"] = config["forward_position_controller"]
             del config["forward_position_controller"]
+        with open(output_filename, "w") as out_file:
+            yaml.dump(config, out_file)
+        return output_filename
+    else:
+        # We do not need to do anything -- the template filename is the default for no namespace.
+        return template_filename
 
-    with open(output_filename, "w") as out_file:
-        yaml.dump(config, out_file)
 
-
-def create_rviz_config(spot_name: str) -> None:
-    """Writes a configuration file for rviz to visualize a robot launched in a namespace. This follows the same
-    convention defined in spot_driver/launch/rviz.launch.py, and is necessary as you need to specify
-    different topics in the rviz config file depending on the namespace.
-
-    The generated file will be put in `<package share of spot_ros2 control>/rviz/spot_ros2_control.rviz`.
+def create_rviz_config(spot_name: str) -> str:
+    """Writes a configuration file for rviz to visualize a robot launched in a namespace. This is necessary as you need
+    to specify different topics in the rviz config file depending on the namespace.
 
     Args:
-        spot_name (str): Name of Spot corresponding to the namespace the nodes are launched in."""
+        spot_name (str): Name of Spot corresponding to the namespace the nodes are launched in.
+
+    Returns:
+        str: Path to RViz config file to use
+    """
 
     template_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "template.rviz")
-    output_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz")
 
-    with open(template_filename, "r") as template_file:
-        config = yaml.safe_load(template_file)
-
-        if spot_name:
+    if spot_name:
+        output_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz")
+        with open(template_filename, "r") as template_file:
+            config = yaml.safe_load(template_file)
             # replace fixed frame with robot body frame
             config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{spot_name}/body"
             # Add robot models for each robot
             for display in config["Visualization Manager"]["Displays"]:
                 if "RobotModel" in display["Class"]:
                     display["Description Topic"]["Value"] = f"/{spot_name}/robot_description"
-
-    with open(output_filename, "w") as out_file:
-        yaml.dump(config, out_file)
+        with open(output_filename, "w") as out_file:
+            yaml.dump(config, out_file)
+        return output_filename
+    else:
+        # We do not need to do anything -- the template filename is the default for no namespace.
+        return template_filename
 
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
@@ -123,9 +130,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if controllers_config == "":
         # Generate spot_default_controllers.yaml depending on namespace and whether the robot has an arm.
         create_controllers_config(spot_name, has_arm)
-        controllers_config = PathJoinSubstitution(
-            [FindPackageShare(THIS_PACKAGE), "config", "spot_default_controllers.yaml"]
-        )
+        controllers_config = create_controllers_config(spot_name, has_arm)
 
     # Add nodes
     ld.add_action(
@@ -163,14 +168,13 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         )
     )
     # Generate rviz configuration file based on the chosen namespace
-    create_rviz_config(spot_name)
     ld.add_action(
         Node(
             package="rviz2",
             executable="rviz2",
             name="rviz2",
             output="log",
-            arguments=["-d", PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz"])],
+            arguments=["-d", create_rviz_config(spot_name)],
             condition=IfCondition(LaunchConfiguration("launch_rviz")),
             namespace=spot_name,
         )
