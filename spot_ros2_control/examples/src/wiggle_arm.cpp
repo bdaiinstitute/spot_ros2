@@ -34,7 +34,7 @@ class WiggleArm : public rclcpp::Node {
 
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
         "joint_states", 10, std::bind(&WiggleArm::joint_states_callback, this, std::placeholders::_1));
-    command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
+    command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("forward_position_controller/commands", 10);
     const auto timer_period =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<double>(1. / command_rate));
     timer_ = create_wall_timer(timer_period, std::bind(&WiggleArm::timer_callback, this));
