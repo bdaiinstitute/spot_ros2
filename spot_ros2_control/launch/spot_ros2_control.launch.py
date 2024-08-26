@@ -1,5 +1,6 @@
 # Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 import os
+from tempfile import NamedTemporaryFile
 
 import yaml
 from ament_index_python.packages import get_package_share_directory
@@ -25,12 +26,13 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
     This is necessary as if your ros2 control nodes are launched in a namespace, the configuration yaml used
     must also reflect this same namespace when defining parameters of your controllers.
 
-    The generated file will be put in `<package share of spot_ros2 control>/config/spot_default_controllers.yaml`.
-
     Args:
         spot_name (str): Name of spot. If it's the empty string, the default controller file with no namespace is used.
         has_arm (bool): Whether or not your robot has an arm. Necessary for defining the joints that the forward
                         position controller should use.
+
+    Returns:
+        str: Path to controllers config file to use
     """
 
     arm_text = "with_arm" if has_arm else "without_arm"
@@ -39,9 +41,6 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
     )
 
     if spot_name:
-        output_filename = os.path.join(
-            get_package_share_directory(THIS_PACKAGE), "config", "spot_default_controllers.yaml"
-        )
         with open(template_filename, "r") as template_file:
             config = yaml.safe_load(template_file)
             forward_position_controller_joints = config["forward_position_controller"]["ros__parameters"]["joints"]
@@ -52,9 +51,9 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
             del config["controller_manager"]
             config[f"{spot_name}/forward_position_controller"] = config["forward_position_controller"]
             del config["forward_position_controller"]
-        with open(output_filename, "w") as out_file:
+        with NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as out_file:
             yaml.dump(config, out_file)
-        return output_filename
+            return out_file.name
     else:
         # We do not need to do anything -- the template filename is the default for no namespace.
         return template_filename
@@ -74,7 +73,6 @@ def create_rviz_config(spot_name: str) -> str:
     template_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "template.rviz")
 
     if spot_name:
-        output_filename = os.path.join(get_package_share_directory(THIS_PACKAGE), "rviz", "spot_ros2_control.rviz")
         with open(template_filename, "r") as template_file:
             config = yaml.safe_load(template_file)
             # replace fixed frame with robot body frame
@@ -83,9 +81,9 @@ def create_rviz_config(spot_name: str) -> str:
             for display in config["Visualization Manager"]["Displays"]:
                 if "RobotModel" in display["Class"]:
                     display["Description Topic"]["Value"] = f"/{spot_name}/robot_description"
-        with open(output_filename, "w") as out_file:
+        with NamedTemporaryFile(suffix=".rviz", mode="w", delete=False) as out_file:
             yaml.dump(config, out_file)
-        return output_filename
+            return out_file.name
     else:
         # We do not need to do anything -- the template filename is the default for no namespace.
         return template_filename
