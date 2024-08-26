@@ -33,7 +33,7 @@ class NoarmSquat : public rclcpp::Node {
     points_per_motion_ = static_cast<int>(command_rate * seconds_per_motion);
     command_.data = std::vector<double>(njoints_, 0.0);
 
-    command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/forward_position_controller/commands", 10);
+    command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("forward_position_controller/commands", 10);
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
         "joint_states", 10, std::bind(&NoarmSquat::joint_states_callback, this, std::placeholders::_1));
 

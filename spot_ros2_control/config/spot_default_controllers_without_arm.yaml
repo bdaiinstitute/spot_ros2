@@ -11,9 +11,6 @@ controller_manager:
     forward_position_controller:
       type: forward_command_controller/ForwardCommandController
 
-    joint_trajectory_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
-
 
 forward_position_controller:
   ros__parameters:
@@ -30,11 +27,4 @@ forward_position_controller:
       - rear_right_hip_x
       - rear_right_hip_y
       - rear_right_knee
-      - arm_sh0
-      - arm_sh1
-      - arm_el0
-      - arm_el1
-      - arm_wr0
-      - arm_wr1
-      - arm_f1x
     interface_name: position
