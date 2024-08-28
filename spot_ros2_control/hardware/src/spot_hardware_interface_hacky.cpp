@@ -33,8 +33,8 @@ namespace spot_ros2_control {
 void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
+  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Handling state");
   // Get joint states from the robot and write them to the joint_states_ struct
-  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "State streaming");
   const auto& position_msg = robot_state.joint_states().position();
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
@@ -46,6 +46,7 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
 void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Getting joint states");
   // Fill in members of the joint states stuct passed in by reference.
   joint_states.position.assign(current_position_.begin(), current_position_.end());
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
@@ -215,8 +216,11 @@ hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecyc
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Reading...");
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Reading....");
   state_streaming_handler_.get_joint_states(joint_states_);
+// for (const auto& joint : joint_states_.position) {
+//   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Joint: %f \n", joint);
+// }
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;
@@ -252,7 +256,7 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
 
 hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
   // This function will be responsible for sending commands to the robot via the BD SDK -- currently unimplemented.
-  // RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Writing...");
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Writing....");
   if (!command_stream_started_) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Command streaming was not started");
     return hardware_interface::return_type::ERROR;
@@ -455,7 +459,6 @@ bool SpotHardware::start_command_stream() {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Streaming Client successfully created!");
 
   // Fill in the parts of the joint streaming command request that are constant.
-  ::bosdyn::client::SetRequestHeader("SpotHardware", &joint_request_); 
   auto* joint_cmd = joint_request_.mutable_joint_command();
   // Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
   // NOTE: these should be different depending on number of joints the robot has (arm or none)
@@ -489,13 +492,51 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
   std::vector<float> position = joint_commands.position;
   std::vector<float> velocity = joint_commands.velocity;
   std::vector<float> load = joint_commands.load;
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Ndofs? %li %li %li", position.size(), velocity.size(), load.size());
+  
+  int N_DOFS = 19;
 
   // build protobuf
-  auto* joint_cmd = joint_request_.mutable_joint_command();
+  ::bosdyn::api::JointControlStreamRequest request;
+  ::bosdyn::client::SetRequestHeader("SpotHardware", &request); 
+  auto* joint_cmd = request.mutable_joint_command();
 
-  joint_cmd->mutable_position()->Assign(position.begin(), position.end());
-  joint_cmd->mutable_velocity()->Assign(velocity.begin(), velocity.end());
-  joint_cmd->mutable_load()->Assign(load.begin(), load.end());
+  joint_cmd->mutable_gains()->mutable_k_q_p()->Reserve(N_DOFS);
+  joint_cmd->mutable_gains()->mutable_k_qd_p()->Reserve(N_DOFS);
+  joint_cmd->mutable_position()->Reserve(N_DOFS);
+  joint_cmd->mutable_velocity()->Reserve(N_DOFS);
+  joint_cmd->mutable_load()->Reserve(N_DOFS);
+
+  for (int i = 0; i < N_DOFS; i++) {
+      joint_cmd->mutable_gains()->mutable_k_q_p()->Add();
+      joint_cmd->mutable_gains()->mutable_k_qd_p()->Add();
+      joint_cmd->mutable_position()->Add();
+      joint_cmd->mutable_velocity()->Add();
+      joint_cmd->mutable_load()->Add();
+  }
+
+  std::vector<float> kp;
+  std::vector<float> kd;
+  if (N_DOFS == 19) {
+    kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
+    kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
+          5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
+  } else if (njoints_ == 12) {
+    kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
+    kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
+  } else {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "WRONG # OF JOINTS");
+    return;
+  }
+
+  for (int joint_idx = 0; joint_idx < N_DOFS; joint_idx++) {
+    joint_cmd->mutable_gains()->set_k_q_p(joint_idx, kp[joint_idx]);
+    joint_cmd->mutable_gains()->set_k_qd_p(joint_idx, kd[joint_idx]);
+      
+    joint_cmd->set_position(joint_idx, position[joint_idx]);
+    joint_cmd->set_velocity(joint_idx, velocity[joint_idx]);
+    joint_cmd->set_load(joint_idx, load[joint_idx]);
+  }
 
   if (endpoint_ == nullptr) {
     auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
@@ -506,13 +547,15 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
     endpoint_ = endpoint_result.response;
   }
 
-  auto time_point_local = ::bosdyn::common::TimePoint(std::chrono::system_clock::now() + std::chrono::milliseconds(50));
+  auto time_point_local = ::bosdyn::common::TimePoint(std::chrono::system_clock::now() + std::chrono::nanoseconds(100*1000*1000));
 
   ::bosdyn::common::RobotTimeConverter converter = endpoint_->GetRobotTimeConverter();
   joint_cmd->mutable_end_time()->CopyFrom(converter.RobotTimestampFromLocal(time_point_local));
 
+  // joint_cmd->mutable_extrapolation_duration()->CopyFrom(google::protobuf::util::TimeUtil::NanosecondsToDuration(5*1e6));
+
   // Send joint stream command
-  auto joint_control_stream = command_stream_service_->JointControlStream(joint_request_);
+  auto joint_control_stream = command_stream_service_->JointControlStream(request);
   if (!joint_control_stream) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to send command: '%s'",
                  joint_control_stream.status.DebugString().c_str());

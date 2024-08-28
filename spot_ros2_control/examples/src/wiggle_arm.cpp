@@ -33,7 +33,7 @@ class WiggleArm : public rclcpp::Node {
     }
 
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
-        "joint_states", 10, std::bind(&WiggleArm::joint_states_callback, this, std::placeholders::_1));
+        "Ethernet0/joint_states", 10, std::bind(&WiggleArm::joint_states_callback, this, std::placeholders::_1));
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("forward_position_controller/commands", 10);
     const auto timer_period =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<double>(1. / command_rate));
@@ -67,6 +67,10 @@ class WiggleArm : public rclcpp::Node {
       nominal_joint_angles_ = msg.position;
       command_.data = msg.position;
       initialized_ = true;
+      RCLCPP_INFO_STREAM(get_logger(), "joint angles: ");
+      for (const auto& name : msg.name) {
+        std::cout << name << std::endl;
+      }
     }
   }
 
