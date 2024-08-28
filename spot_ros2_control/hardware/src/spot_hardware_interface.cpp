@@ -477,6 +477,9 @@ bool SpotHardware::start_command_stream() {
   joint_cmd->mutable_extrapolation_duration()->CopyFrom(
       google::protobuf::util::TimeUtil::NanosecondsToDuration(5 * 1e6));
 
+  // WITHOUT THIS NO COMMANDS WILL BE ACCEPTED!!!!
+  ::bosdyn::client::SetRequestHeader("SpotHardware", &joint_request_);
+
   command_stream_started_ = true;
   return true;
 }
