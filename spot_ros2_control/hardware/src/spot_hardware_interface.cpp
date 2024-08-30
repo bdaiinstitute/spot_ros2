@@ -493,7 +493,7 @@ void SpotHardware::stop_command_stream() {
     return;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping Command Stream");
-  command_stream_started = false;
+  command_stream_started_ = false;
 }
 
 

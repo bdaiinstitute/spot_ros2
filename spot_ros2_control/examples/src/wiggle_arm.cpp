@@ -13,13 +13,13 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
-static const std::unordered_map<std::string, size_t> kJointNameToIndex{
-    {"front_left_hip_x", 0},  {"front_left_hip_y", 1}, {"front_left_knee", 2},   {"front_right_hip_x", 3},
-    {"front_right_hip_y", 4}, {"front_right_knee", 5}, {"rear_left_hip_x", 6},   {"rear_left_hip_y", 7},
-    {"rear_left_knee", 8},    {"rear_right_hip_x", 9}, {"rear_right_hip_y", 10}, {"rear_right_knee", 11},
-    {"arm_sh0", 12},          {"arm_sh1", 13},         {"arm_el0", 14},          {"arm_el1", 15},
-    {"arm_wr0", 16},          {"arm_wr1", 17},         {"arm_f1x", 18},
-};
+// static const std::unordered_map<std::string, size_t> kJointNameToIndex{
+//     {"front_left_hip_x", 0},  {"front_left_hip_y", 1}, {"front_left_knee", 2},   {"front_right_hip_x", 3},
+//     {"front_right_hip_y", 4}, {"front_right_knee", 5}, {"rear_left_hip_x", 6},   {"rear_left_hip_y", 7},
+//     {"rear_left_knee", 8},    {"rear_right_hip_x", 9}, {"rear_right_hip_y", 10}, {"rear_right_knee", 11},
+//     {"arm_sh0", 12},          {"arm_sh1", 13},         {"arm_el0", 14},          {"arm_el1", 15},
+//     {"arm_wr0", 16},          {"arm_wr1", 17},         {"arm_f1x", 18},
+// };
 
 enum class WiggleState { WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP, RESET };
 
@@ -71,23 +71,23 @@ class WiggleArm : public rclcpp::Node {
   /// @param msg ROS message containing joint states
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
     if (!initialized_) {
-      bool successful = true;
-      RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
-      // ensure the joint angles are read in in the order that we expect the command to be in.
-      const auto njoints = msg.position.size();
-      nominal_joint_angles_.resize(njoints);
-      for (size_t i = 0; i < njoints; i++) {
-        // get the joint name
-        const auto joint_name = msg.name.at(i);
-        try {
-          const auto joint_index = kJointNameToIndex.at(joint_name);
-          nominal_joint_angles_.at(joint_index) = msg.position.at(i);
-        } catch (const std::out_of_range& e) {
-          RCLCPP_INFO_STREAM(get_logger(), "Invalid joint: " << joint_name);
-          successful = false;
-          break;
-        }
-      }
+      bool successful = verify_joint_order(msg, nominal_joint_angles_);
+      // RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
+      // // ensure the joint angles are read in in the order that we expect the command to be in.
+      // const auto njoints = msg.position.size();
+      // nominal_joint_angles_.resize(njoints);
+      // for (size_t i = 0; i < njoints; i++) {
+      //   // get the joint name
+      //   const auto joint_name = msg.name.at(i);
+      //   try {
+      //     const auto joint_index = kJointNameToIndex.at(joint_name);
+      //     nominal_joint_angles_.at(joint_index) = msg.position.at(i);
+      //   } catch (const std::out_of_range& e) {
+      //     RCLCPP_INFO_STREAM(get_logger(), "Invalid joint: " << joint_name);
+      //     successful = false;
+      //     break;
+      //   }
+      // }
       if (successful) {
         command_.data = nominal_joint_angles_;
         initialized_ = true;

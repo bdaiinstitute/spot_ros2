@@ -32,6 +32,7 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "spot_ros2_control/visibility_control.h"
+#include "spot_ros2_control/spot_joint_map.hpp"
 
 #include "bosdyn/client/lease/lease_keepalive.h"
 #include "bosdyn/client/robot_command/robot_command_builder.h"
@@ -210,7 +211,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
    /**
    * @brief Stop streaming the command streaming. 
    */
-  void stop_state_stream();
+  void stop_command_stream();
   /**
    * @brief Send a joint command to the robot.
    * @param joint_commands contains position, velocity, and load
