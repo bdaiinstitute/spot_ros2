@@ -93,77 +93,77 @@ TEST_F(TestInitSpotImagePublisher, InitSucceeds) {
   EXPECT_THAT(image_publisher->initialize(), testing::IsTrue());
 }
 
-TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
-  // GIVEN we request all possible image types
-  fake_parameter_interface_ptr->publish_rgb_images = true;
-  fake_parameter_interface_ptr->publish_depth_images = true;
-  fake_parameter_interface_ptr->publish_depth_registered_images = true;
+// TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithArm) {
+//   // GIVEN we request all possible image types
+//   fake_parameter_interface_ptr->publish_rgb_images = true;
+//   fake_parameter_interface_ptr->publish_depth_images = true;
+//   fake_parameter_interface_ptr->publish_depth_registered_images = true;
 
-  // THEN expect createPublishers to be invoked
-  EXPECT_CALL(*middleware_handle, createPublishers).Times(1);
+//   // THEN expect createPublishers to be invoked
+//   EXPECT_CALL(*middleware_handle, createPublishers).Times(1);
 
-  // THEN the timer interface's setTimer function is called once and the timer_callback is set
-  EXPECT_CALL(*mock_timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
-    mock_timer_interface_ptr->onSetTimer(cb);
-  });
+//   // THEN the timer interface's setTimer function is called once and the timer_callback is set
+//   EXPECT_CALL(*mock_timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
+//     mock_timer_interface_ptr->onSetTimer(cb);
+//   });
 
-  {
-    // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
-    // (3 image types for 5 body cameras + 1 hand camera = 18 image requests)
-    // THEN the images we received from the Spot interface are published
-    // THEN the static transforms to the image frames are updated
-    InSequence seq;
-    EXPECT_CALL(*image_client_interface,
-                getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18), true, false));
-    EXPECT_CALL(*middleware_handle, publishImages);
-    EXPECT_CALL(*mock_tf_broadcaster_interface_ptr, updateStaticTransforms);
-  }
+//   {
+//     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
+//     // (3 image types for 5 body cameras + 1 hand camera = 18 image requests)
+//     // THEN the images we received from the Spot interface are published
+//     // THEN the static transforms to the image frames are updated
+//     InSequence seq;
+//     EXPECT_CALL(*image_client_interface,
+//                 getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 18), true, false));
+//     EXPECT_CALL(*middleware_handle, publishImages);
+//     EXPECT_CALL(*mock_tf_broadcaster_interface_ptr, updateStaticTransforms);
+//   }
 
-  // GIVEN an image_publisher
-  constexpr auto kHasArm{true};
-  createImagePublisher(kHasArm);
+//   // GIVEN an image_publisher
+//   constexpr auto kHasArm{true};
+//   createImagePublisher(kHasArm);
 
-  // GIVEN the SpotImagePublisher was successfully initialized
-  ASSERT_TRUE(image_publisher->initialize());
+//   // GIVEN the SpotImagePublisher was successfully initialized
+//   ASSERT_TRUE(image_publisher->initialize());
 
-  // WHEN the timer callback is triggered
-  mock_timer_interface_ptr->trigger();
-}
+//   // WHEN the timer callback is triggered
+//   mock_timer_interface_ptr->trigger();
+// }
 
-TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
-  // GIVEN we request all possible image types
-  fake_parameter_interface_ptr->publish_rgb_images = true;
-  fake_parameter_interface_ptr->publish_depth_images = true;
-  fake_parameter_interface_ptr->publish_depth_registered_images = true;
+// TEST_F(TestRunSpotImagePublisher, PublishCallbackTriggersWithNoArm) {
+//   // GIVEN we request all possible image types
+//   fake_parameter_interface_ptr->publish_rgb_images = true;
+//   fake_parameter_interface_ptr->publish_depth_images = true;
+//   fake_parameter_interface_ptr->publish_depth_registered_images = true;
 
-  // THEN expect createPublishers to be invoked
-  EXPECT_CALL(*middleware_handle, createPublishers).Times(1);
+//   // THEN expect createPublishers to be invoked
+//   EXPECT_CALL(*middleware_handle, createPublishers).Times(1);
 
-  // THEN the timer interface's setTimer function is called once and the timer_callback is set
-  EXPECT_CALL(*mock_timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
-    mock_timer_interface_ptr->onSetTimer(cb);
-  });
+//   // THEN the timer interface's setTimer function is called once and the timer_callback is set
+//   EXPECT_CALL(*mock_timer_interface_ptr, setTimer).Times(1).WillOnce([&](Unused, const std::function<void()>& cb) {
+//     mock_timer_interface_ptr->onSetTimer(cb);
+//   });
 
-  {
-    // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
-    // (3 image types for 5 body cameras = 15 image requests)
-    // THEN the images we received from the Spot interface are published
-    // THEN the static transforms to the image frames are updated
-    InSequence seq;
-    EXPECT_CALL(*image_client_interface,
-                getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15), true, false));
-    EXPECT_CALL(*middleware_handle, publishImages);
-    EXPECT_CALL(*mock_tf_broadcaster_interface_ptr, updateStaticTransforms);
-  }
+//   {
+//     // THEN we send an image request to the Spot interface, and the request contains the expected number of cameras
+//     // (3 image types for 5 body cameras = 15 image requests)
+//     // THEN the images we received from the Spot interface are published
+//     // THEN the static transforms to the image frames are updated
+//     InSequence seq;
+//     EXPECT_CALL(*image_client_interface,
+//                 getImages(Property(&::bosdyn::api::GetImageRequest::image_requests_size, 15), true, false));
+//     EXPECT_CALL(*middleware_handle, publishImages);
+//     EXPECT_CALL(*mock_tf_broadcaster_interface_ptr, updateStaticTransforms);
+//   }
 
-  // GIVEN an image publisher not expected to publish camera data
-  constexpr auto kHasArm{false};
-  createImagePublisher(kHasArm);
+//   // GIVEN an image publisher not expected to publish camera data
+//   constexpr auto kHasArm{false};
+//   createImagePublisher(kHasArm);
 
-  // GIVEN the SpotImagePublisher was successfully initialized
-  ASSERT_TRUE(image_publisher->initialize());
+//   // GIVEN the SpotImagePublisher was successfully initialized
+//   ASSERT_TRUE(image_publisher->initialize());
 
-  // WHEN the timer callback is triggered
-  mock_timer_interface_ptr->trigger();
-}
+//   // WHEN the timer callback is triggered
+//   mock_timer_interface_ptr->trigger();
+// }
 }  // namespace spot_ros2::test

@@ -95,6 +95,8 @@ class SpotImagePublisher {
    */
   std::optional<::bosdyn::api::GetImageRequest> image_request_message_;
 
+  std::set<ImageSource> selected_sources_;
+
   // Interface classes to interact with Spot and the middleware.
   std::shared_ptr<ImageClientInterface> image_client_interface_;
   std::unique_ptr<MiddlewareHandle> middleware_handle_;
