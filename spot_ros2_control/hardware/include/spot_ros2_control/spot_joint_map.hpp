@@ -19,6 +19,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
@@ -29,6 +30,12 @@
 
 namespace spot_ros2_control {
 
+/// @brief Number of joints we expect if the robot has an arm
+static const int kNjointsArm = 19;
+/// @brief Number of joints we expect if the robot has no arm
+static const int kNjointsNoArm = 12;
+
+/// @brief Maps joint name to desired joint index for robots with arms
 static const std::unordered_map<std::string, size_t> kJointNameToIndexWithArm{
     {"front_left_hip_x", 0},  {"front_left_hip_y", 1}, {"front_left_knee", 2},   {"front_right_hip_x", 3},
     {"front_right_hip_y", 4}, {"front_right_knee", 5}, {"rear_left_hip_x", 6},   {"rear_left_hip_y", 7},
@@ -36,43 +43,47 @@ static const std::unordered_map<std::string, size_t> kJointNameToIndexWithArm{
     {"arm_sh0", 12},          {"arm_sh1", 13},         {"arm_el0", 14},          {"arm_el1", 15},
     {"arm_wr0", 16},          {"arm_wr1", 17},         {"arm_f1x", 18},
 };
+/// @brief Maps joint name to joint index for robots without arms.
 static const std::unordered_map<std::string, size_t> kJointNameToIndexWithoutArm{
     {"front_left_hip_x", 0},  {"front_left_hip_y", 1}, {"front_left_knee", 2},   {"front_right_hip_x", 3},
     {"front_right_hip_y", 4}, {"front_right_knee", 5}, {"rear_left_hip_x", 6},   {"rear_left_hip_y", 7},
     {"rear_left_knee", 8},    {"rear_right_hip_x", 9}, {"rear_right_hip_y", 10}, {"rear_right_knee", 11},
 };
 
-bool verify_joint_order(const sensor_msgs::msg::JointState& msg, std::vector<double> nominal_joint_angles_) {
-  RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Received starting joint states");
-  // ensure the joint angles are read in in the order that we expect the command to be in.
+/// @brief Given a list of joints from a JointStates message, put them in the correct order that the Spot Hardware
+/// interface expects.
+/// @param msg JointStates message
+/// @param ordered_joint_angles_ Joint positions from the joint state message following the correct order.
+/// @return boolean indicating if the joint angles got ordered successfully.
+bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& ordered_joint_angles_) {
   const auto njoints = msg.position.size();
-  nominal_joint_angles_.resize(njoints);
+  ordered_joint_angles_.resize(njoints);
   static const std::unordered_map<std::string, size_t> kJointNameToIndex;
   // Different joint index maps for arm-full and arm-less
   switch (njoints) {
     // case without arm
-    case 12:
+    case kNjointsNoArm:
       for (size_t i = 0; i < njoints; i++) {
         // get the joint name
         const auto joint_name = msg.name.at(i);
         try {
           const auto joint_index = kJointNameToIndexWithoutArm.at(joint_name);
-          nominal_joint_angles_.at(joint_index) = msg.position.at(i);
+          ordered_joint_angles_.at(joint_index) = msg.position.at(i);
         } catch (const std::out_of_range& e) {
-          RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid joint: " << joint_name);
+          RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid joint: " << joint_name);
           return false;
         }
       }
       return true;
 
     // case with arm
-    case 19:
+    case kNjointsArm:
       for (size_t i = 0; i < njoints; i++) {
         // get the joint name
         const auto joint_name = msg.name.at(i);
         try {
           const auto joint_index = kJointNameToIndexWithArm.at(joint_name);
-          nominal_joint_angles_.at(joint_index) = msg.position.at(i);
+          ordered_joint_angles_.at(joint_index) = msg.position.at(i);
         } catch (const std::out_of_range& e) {
           RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid joint: " << joint_name);
           return false;
