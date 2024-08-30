@@ -496,7 +496,6 @@ void SpotHardware::stop_command_stream() {
   command_stream_started_ = false;
 }
 
-
 void SpotHardware::send_command(const JointStates& joint_commands) {
   const std::vector<float> position = joint_commands.position;
   const std::vector<float> velocity = joint_commands.velocity;
