@@ -207,6 +207,10 @@ class SpotHardware : public hardware_interface::SystemInterface {
    * @return True if command stream clients were successfully created, false otherwise.
    */
   bool start_command_stream();
+   /**
+   * @brief Stop streaming the command streaming. 
+   */
+  void stop_state_stream();
   /**
    * @brief Send a joint command to the robot.
    * @param joint_commands contains position, velocity, and load

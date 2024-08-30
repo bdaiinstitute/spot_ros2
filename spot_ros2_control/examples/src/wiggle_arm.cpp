@@ -75,7 +75,7 @@ class WiggleArm : public rclcpp::Node {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
       // ensure the joint angles are read in in the order that we expect the command to be in.
       const auto njoints = msg.position.size();
-      nominal_joint_angles_ = std::vector<double>(njoints);
+      nominal_joint_angles_.resize(njoints);
       for (size_t i = 0; i < njoints; i++) {
         // get the joint name
         const auto joint_name = msg.name.at(i);

@@ -156,6 +156,8 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
 
   // Initialize command streaming
   if (!start_command_stream()) {
+    release_lease();
+    power_off();
     return hardware_interface::CallbackReturn::ERROR;
   }
 
@@ -202,6 +204,7 @@ hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_life
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
   stop_state_stream();
+  release_lease();
   if (!power_off()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
@@ -484,10 +487,20 @@ bool SpotHardware::start_command_stream() {
   return true;
 }
 
+void SpotHardware::stop_command_stream() {
+  if (!command_stream_started_) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Command stream already stopped");
+    return;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping Command Stream");
+  command_stream_started = false;
+}
+
+
 void SpotHardware::send_command(const JointStates& joint_commands) {
-  std::vector<float> position = joint_commands.position;
-  std::vector<float> velocity = joint_commands.velocity;
-  std::vector<float> load = joint_commands.load;
+  const std::vector<float> position = joint_commands.position;
+  const std::vector<float> velocity = joint_commands.velocity;
+  const std::vector<float> load = joint_commands.load;
 
   // build protobuf
   auto* joint_cmd = joint_request_.mutable_joint_command();
