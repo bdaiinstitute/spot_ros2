@@ -50,6 +50,15 @@ static const std::unordered_map<std::string, size_t> kJointNameToIndexWithoutArm
     {"rear_left_knee", 8},    {"rear_right_hip_x", 9}, {"rear_right_hip_y", 10}, {"rear_right_knee", 11},
 };
 
+// TODO(tcappellari): Find a cleaner + better way to load and change these
+// kp and kd gains for a robot without an arm
+static const std::vector<float> no_arm_kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
+static const std::vector<float> no_arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
+// kp and kd gains for a robot with an arm
+static const std::vector<float> arm_kp = {624, 936, 286,  624, 936, 286, 624, 936, 286, 624,
+                                          936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
+static const std::vector<float> arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
+                                          5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
 /// @brief Given a list of joints from a JointStates message, put them in the correct order that the Spot Hardware
 /// interface expects.
 /// @param msg JointStates message

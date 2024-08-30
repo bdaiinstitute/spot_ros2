@@ -462,17 +462,22 @@ bool SpotHardware::start_command_stream() {
   // This should be handled via a parameter in the future.
   std::vector<float> kp;
   std::vector<float> kd;
-  if (njoints_ == 19) {
-    kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
-    kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
-          5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
-  } else if (njoints_ == 12) {
-    kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
-    kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
-  } else {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "WRONG # OF JOINTS");
-    return false;
+
+  // Assign k values depending on if the robot has an arm or not
+  switch (njoints_) {
+    case spot_ros2_control::kNjointsArm:
+      kp = spot_ros2_control::arm_kp;
+      kd = spot_ros2_control::arm_kd;
+      break;
+    case spot_ros2_control::kNjointsNoArm:
+      kp = spot_ros2_control::no_arm_kp;
+      kd = spot_ros2_control::no_arm_kd;
+      break;
+    default:
+      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "WRONG # OF JOINTS");
+      return false;
   }
+
   joint_cmd->mutable_gains()->mutable_k_q_p()->Assign(kp.begin(), kp.end());
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Assign(kd.begin(), kd.end());
 
