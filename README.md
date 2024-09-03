@@ -136,7 +136,7 @@ For the robot and target setup described in [```/spot_wrapper/spot_wrapper/calib
 
 ```
 python3 spot_wrapper/spot_wrapper/calibrate_spot_hand_camera_cli.py --ip <IP> -u user -pw <SECRET> --data_path ~/my_collection/ \
---save_data True --result_path ~/my_collection/calibrated.yaml --photo_utilization_ratio 1 --stereo_pairs "[(1,0)]" \
+--save_data --result_path ~/my_collection/calibrated.yaml --photo_utilization_ratio 1 --stereo_pairs "[(1,0)]" \
 --spot_rgb_photo_width=640 --spot_rgb_photo_height=480 --tag default
 ```
 
