@@ -51,6 +51,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> None:
             del config["controller_manager"]
             config[f"{spot_name}/forward_position_controller"] = config["forward_position_controller"]
             del config["forward_position_controller"]
+
         with NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as out_file:
             yaml.dump(config, out_file)
             return out_file.name

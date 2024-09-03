@@ -11,6 +11,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
+#include "spot_ros2_control/spot_joint_map.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
 enum class WiggleState { WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP, RESET };
@@ -64,9 +65,12 @@ class WiggleArm : public rclcpp::Node {
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
     if (!initialized_) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
-      nominal_joint_angles_ = msg.position;
-      command_.data = msg.position;
-      initialized_ = true;
+      bool successful = spot_ros2_control::order_joints(msg, nominal_joint_angles_);
+      if (successful) {
+        command_.data = nominal_joint_angles_;
+        RCLCPP_INFO_STREAM(get_logger(), "Initialized! Robot will begin to move.");
+        initialized_ = true;
+      }
     }
   }
 

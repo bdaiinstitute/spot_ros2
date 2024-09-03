@@ -31,9 +31,11 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "spot_ros2_control/spot_joint_map.hpp"
 #include "spot_ros2_control/visibility_control.h"
 
 #include "bosdyn/client/lease/lease_keepalive.h"
+#include "bosdyn/client/robot_command/robot_command_builder.h"
 #include "bosdyn/client/robot_command/robot_command_client.h"
 #include "bosdyn/client/robot_command/robot_command_helpers.h"
 #include "bosdyn/client/robot_command/robot_command_streaming_client.h"
@@ -80,6 +82,7 @@ class StateStreamingHandler {
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
+
 class SpotHardware : public hardware_interface::SystemInterface {
  public:
   RCLCPP_SHARED_PTR_DEFINITIONS(SpotHardware)
@@ -125,13 +128,20 @@ class SpotHardware : public hardware_interface::SystemInterface {
   std::string username_;
   std::string password_;
 
+  // Power status
+  bool powered_on_ = false;
+
   // Shared BD clients.
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   ::bosdyn::client::LeaseClient* lease_client_;
   ::bosdyn::client::RobotStateStreamingClient* state_client_;
+  ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_;
+  ::bosdyn::client::RobotCommandClient* command_client_;
 
   // Holds joint states of the robot received from the BD SDK
   JointStates joint_states_;
+  // Holds joint commands for the robot to send to BD SDK
+  JointStates command_states_;
 
   // Thread for reading the state of the robot.
   std::jthread state_thread_;
@@ -139,6 +149,13 @@ class SpotHardware : public hardware_interface::SystemInterface {
   StateStreamingHandler state_streaming_handler_;
   bool state_stream_started_ = false;
   bool robot_authenticated_ = false;
+
+  bool command_stream_started_ = false;
+  bool init_state_ = false;
+
+  ::bosdyn::client::TimeSyncEndpoint* endpoint_ = nullptr;
+
+  ::bosdyn::api::JointControlStreamRequest joint_request_;
 
   // The following are functions that interact with the BD SDK to set up the robot and get the robot states.
 
@@ -171,6 +188,11 @@ class SpotHardware : public hardware_interface::SystemInterface {
    */
   bool power_on();
   /**
+   * @brief Power the robot off
+   * @return True if successfully powered off, false otherwise.
+   */
+  bool power_off();
+  /**
    * @brief Start streaming the state of the robot, and attach a callback to it
    * @param state_policy a functor to call with new state updates
    * @return True if state stream thread successfully created, false otherwise.
@@ -184,6 +206,20 @@ class SpotHardware : public hardware_interface::SystemInterface {
    * @brief Release the body lease of the robot.
    */
   void release_lease();
+  /**
+   * @brief Start streaming commands to the robot, and attach a callback to it
+   * @return True if command stream clients were successfully created, false otherwise.
+   */
+  bool start_command_stream();
+  /**
+   * @brief Stop streaming commands to the robot.
+   */
+  void stop_command_stream();
+  /**
+   * @brief Send a joint command to the robot.
+   * @param joint_commands contains position, velocity, and load
+   */
+  void send_command(const JointStates& joint_commands);
 
   // Vectors for storing the commands and states for the robot.
   std::vector<double> hw_commands_;
