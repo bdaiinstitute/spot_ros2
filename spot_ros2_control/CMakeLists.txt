@@ -70,7 +70,9 @@ add_executable(wiggle_arm examples/src/wiggle_arm.cpp)
 ament_target_dependencies(wiggle_arm
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
+
 add_executable(joint_command_passthrough examples/src/joint_command_passthrough.cpp)
+target_link_libraries(joint_command_passthrough spot_ros2_control)
 ament_target_dependencies(joint_command_passthrough
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
