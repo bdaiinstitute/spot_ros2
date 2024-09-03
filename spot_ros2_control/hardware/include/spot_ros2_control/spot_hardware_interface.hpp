@@ -128,6 +128,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
   std::string username_;
   std::string password_;
 
+  // Power status
+  bool powered_on_ = false;
+
   // Shared BD clients.
   std::unique_ptr<::bosdyn::client::Robot> robot_;
   ::bosdyn::client::LeaseClient* lease_client_;

@@ -349,6 +349,10 @@ bool SpotHardware::get_lease() {
 }
 
 bool SpotHardware::power_on() {
+  if (powered_on_) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is already powered on.");
+    return true;
+  }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powering on...");
   const auto power_status = robot_->PowerOnMotors(std::chrono::seconds(60), 1.0);
   if (!power_status) {
@@ -356,10 +360,15 @@ bool SpotHardware::power_on() {
     return false;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered on!");
+  powered_on_ = true;
   return true;
 }
 
 bool SpotHardware::power_off() {
+  if (!powered_on_) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is already powered off.");
+    return true;
+  }
   bosdyn::api::RobotCommand poweroff_command = ::bosdyn::client::SafePowerOffCommand();
   auto poweroff_res = command_client_->RobotCommand(poweroff_command);
   if (!poweroff_res) {
@@ -367,6 +376,7 @@ bool SpotHardware::power_off() {
     return false;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered off!");
+  powered_on_ = false;
   return true;
 }
 
@@ -458,7 +468,7 @@ bool SpotHardware::start_command_stream() {
 
   // Fill in the parts of the joint streaming command request that are constant.
   auto* joint_cmd = joint_request_.mutable_joint_command();
-  
+
   std::vector<float> kp;
   std::vector<float> kd;
 
