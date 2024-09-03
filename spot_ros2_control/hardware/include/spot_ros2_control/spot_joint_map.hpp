@@ -31,9 +31,9 @@
 namespace spot_ros2_control {
 
 /// @brief Number of joints we expect if the robot has an arm
-static const int kNjointsArm = 19;
+inline constexpr int kNjointsArm = 19;
 /// @brief Number of joints we expect if the robot has no arm
-static const int kNjointsNoArm = 12;
+inline constexpr int kNjointsNoArm = 12;
 
 /// @brief Maps joint name to desired joint index for robots with arms
 static const std::unordered_map<std::string, size_t> kJointNameToIndexWithArm{
@@ -51,6 +51,10 @@ static const std::unordered_map<std::string, size_t> kJointNameToIndexWithoutArm
 };
 
 // TODO(tcappellari): Find a cleaner + better way to load and change these
+// Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
+// NOTE: these should be different depending on number of joints the robot has (arm or none)
+// Right now this is just temporary to see if we can get the commands accepted by robot
+// This could be handled via a parameter in the future.
 // kp and kd gains for a robot without an arm
 static const std::vector<float> no_arm_kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
 static const std::vector<float> no_arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
@@ -64,10 +68,9 @@ static const std::vector<float> arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.
 /// @param msg JointStates message
 /// @param ordered_joint_angles_ Joint positions from the joint state message following the correct order.
 /// @return boolean indicating if the joint angles got ordered successfully.
-bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& ordered_joint_angles_) {
+bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& ordered_joint_angles) {
   const auto njoints = msg.position.size();
-  ordered_joint_angles_.resize(njoints);
-  static const std::unordered_map<std::string, size_t> kJointNameToIndex;
+  ordered_joint_angles.resize(njoints);
   // Different joint index maps for arm-full and arm-less
   switch (njoints) {
     // case without arm
@@ -77,7 +80,7 @@ bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& 
         const auto joint_name = msg.name.at(i);
         try {
           const auto joint_index = kJointNameToIndexWithoutArm.at(joint_name);
-          ordered_joint_angles_.at(joint_index) = msg.position.at(i);
+          ordered_joint_angles.at(joint_index) = msg.position.at(i);
         } catch (const std::out_of_range& e) {
           RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid joint: " << joint_name);
           return false;
@@ -92,7 +95,7 @@ bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& 
         const auto joint_name = msg.name.at(i);
         try {
           const auto joint_index = kJointNameToIndexWithArm.at(joint_name);
-          ordered_joint_angles_.at(joint_index) = msg.position.at(i);
+          ordered_joint_angles.at(joint_index) = msg.position.at(i);
         } catch (const std::out_of_range& e) {
           RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid joint: " << joint_name);
           return false;

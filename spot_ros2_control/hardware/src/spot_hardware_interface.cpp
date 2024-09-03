@@ -198,12 +198,14 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
+  stop_command_stream();
   release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
   stop_state_stream();
+  stop_command_stream();
   release_lease();
   if (!power_off()) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -456,10 +458,7 @@ bool SpotHardware::start_command_stream() {
 
   // Fill in the parts of the joint streaming command request that are constant.
   auto* joint_cmd = joint_request_.mutable_joint_command();
-  // Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
-  // NOTE: these should be different depending on number of joints the robot has (arm or none)
-  // Right now this is just temporary to see if we can get the commands accepted by robot
-  // This should be handled via a parameter in the future.
+  
   std::vector<float> kp;
   std::vector<float> kd;
 
@@ -502,9 +501,9 @@ void SpotHardware::stop_command_stream() {
 }
 
 void SpotHardware::send_command(const JointStates& joint_commands) {
-  const std::vector<float> position = joint_commands.position;
-  const std::vector<float> velocity = joint_commands.velocity;
-  const std::vector<float> load = joint_commands.load;
+  const std::vector<float>& position = joint_commands.position;
+  const std::vector<float>& velocity = joint_commands.velocity;
+  const std::vector<float>& load = joint_commands.load;
 
   // build protobuf
   auto* joint_cmd = joint_request_.mutable_joint_command();

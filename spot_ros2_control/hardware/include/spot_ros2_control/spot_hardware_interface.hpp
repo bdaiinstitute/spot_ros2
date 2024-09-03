@@ -209,7 +209,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
    */
   bool start_command_stream();
   /**
-   * @brief Stop streaming the command streaming.
+   * @brief Stop streaming commands to the robot.
    */
   void stop_command_stream();
   /**
