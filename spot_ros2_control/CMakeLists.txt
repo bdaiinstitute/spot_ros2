@@ -73,7 +73,13 @@ ament_target_dependencies(wiggle_arm
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 target_link_libraries(wiggle_arm spot_ros2_control)
-install(TARGETS noarm_squat wiggle_arm
+add_executable(joint_command_passthrough examples/src/joint_command_passthrough.cpp)
+ament_target_dependencies(joint_command_passthrough
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+target_link_libraries(joint_command_passthrough spot_ros2_control)
+
+install(TARGETS noarm_squat wiggle_arm joint_command_passthrough
   DESTINATION lib/${PROJECT_NAME})
 
 install(
