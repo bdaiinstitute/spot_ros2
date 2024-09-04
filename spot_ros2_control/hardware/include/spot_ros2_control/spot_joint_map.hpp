@@ -75,9 +75,9 @@ bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& 
   switch (njoints) {
     // case without arm
     case kNjointsNoArm:
-      for (size_t i = 0; i < njoints; i++) {
+      for (size_t i = 0; i < njoints; ++i) {
         // get the joint name
-        const auto joint_name = msg.name.at(i);
+        const auto& joint_name = msg.name.at(i);
         try {
           const auto joint_index = kJointNameToIndexWithoutArm.at(joint_name);
           ordered_joint_angles.at(joint_index) = msg.position.at(i);
@@ -112,7 +112,7 @@ bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& 
 /// @brief Given a joint name (possibly with namespace), return the joint index
 /// @param joint_str string name of joint
 /// @param has_arm whether or not the spot has an arm (default true)
-/// @return int joint index
+/// @return joint index
 int get_joint_index(const std::string& joint_str, bool has_arm = true) {
   // Check if the joint_str has a namespace - if so, remove it
   size_t namespace_pos = joint_str.find("/");

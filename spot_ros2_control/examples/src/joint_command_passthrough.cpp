@@ -75,7 +75,7 @@ class JointCommandPassthrough : public rclcpp::Node {
       spot_command_.data[joint_idx] = msg.position[i];
     }
 
-    count_++;
+    ++count_;
     RCLCPP_INFO(get_logger(), "Forwarding command %i", count_);
 
     command_pub_->publish(spot_command_);
