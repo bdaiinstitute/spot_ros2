@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.22)
 
 # This is here so we can use jthread from C++ 20
 set(CMAKE_CXX_STANDARD 20)
@@ -49,10 +49,7 @@ target_include_directories(spot_ros2_control PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
 $<INSTALL_INTERFACE:include/spot_ros2_control>
 )
-target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client_static)
-ament_target_dependencies(
-  spot_ros2_control PUBLIC
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client_static ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
