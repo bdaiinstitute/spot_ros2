@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.-->
 <library path="spot_ros2_control">
   <class name="spot_ros2_control/SpotHardware"
          type="spot_ros2_control::SpotHardware"
