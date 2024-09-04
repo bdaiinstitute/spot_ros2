@@ -109,4 +109,23 @@ bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& 
   }
 }
 
+/// @brief Given a joint name (possibly with namespace), return the joint index
+/// @param joint_str string name of joint
+/// @param has_arm whether or not the spot has an arm (default true)
+/// @return int joint index
+int get_joint_index(const std::string& joint_str, bool has_arm = true) {
+  // Check if the joint_str has a namespace - if so, remove it
+  size_t namespace_pos = joint_str.find("/");
+  std::string joint_name = (namespace_pos != std::string::npos) ? joint_str.substr(namespace_pos + 1) : joint_str;
+
+  if (kJointNameToIndexWithArm.find(joint_name) == kJointNameToIndexWithArm.end() &&
+      kJointNameToIndexWithoutArm.find(joint_name) == kJointNameToIndexWithoutArm.end()) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Cannot find joint %s in joint map.", joint_name.c_str());
+    return -1;
+  }
+  int joint_idx = has_arm ? kJointNameToIndexWithArm.at(joint_name) : kJointNameToIndexWithoutArm.at(joint_name);
+
+  return joint_idx;
+}
+
 }  // namespace spot_ros2_control
