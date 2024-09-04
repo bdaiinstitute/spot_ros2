@@ -24,7 +24,8 @@ You can then run the launchfile with the following command:
 ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=robot config_file:=path/to/spot_ros.yaml
 ```
 
-This hardware interface currently does not accept commands but will stream the joint angles of the robot using the low level API at ~333 Hz. 
+This hardware interface can stream the joint angles of the robot using the low level API at ~333 Hz. 
+Both state streaming and command streaming are implemented. 
 
 ## Mock
 
@@ -40,7 +41,7 @@ By default, this will load a robot with no arm. If you want your mock robot to h
 
 Examples are provided to replicate [these joint control examples](https://github.com/boston-dynamics/spot-cpp-sdk/tree/master/cpp/examples/joint_control) from Boston Dynamics. They are currently only supported in `mock` mode, but are designed to show how you can send commands to the robot using the built in forward position controller.
 
-Run the following commands to test these examples:
+Run the following commands to test these examples after launching `spot_ros2_control.launch.py`:
 ```bash
 ros2 launch spot_ros2_control noarm_squat.launch.py
 ```
