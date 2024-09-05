@@ -59,6 +59,7 @@ from geometry_msgs.msg import (
     PoseStamped,
     Twist,
 )
+from sensor_msgs.msg import JointState
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -457,6 +458,7 @@ class SpotROS(Node):
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
+        self.create_subscription(JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 1, callback_group=self.group)
         self.create_service(
             Trigger,
             "claim",
@@ -2520,6 +2522,23 @@ class SpotROS(Node):
         mobility_params = self.spot_wrapper.get_mobility_params()
         mobility_params.body_control.CopyFrom(body_control)
         self.spot_wrapper.set_mobility_params(mobility_params)
+
+    def arm_joint_cmd_callback(self, data: JointState) -> None:
+        if not self.spot_wrapper:
+            self.get_logger().info(f"Mock mode, received arm joint commdn {data}")
+            return
+        self.get_logger().info("Received joint command!")
+        arm_joint_names = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1"]
+        arm_joints: List[float] = []
+
+        for joint in zip(data.name, data.position, strict=False):
+            self.get_logger().info(f"Found joint {joint[0]}")
+            joint_name = joint[0].split("/", 1)[1]
+            self.get_logger().info(f"Found joint {joint_name}")
+            if joint_name in arm_joint_names:
+                self.get_logger().info(f"Adding {joint_name}")
+                arm_joints[arm_joint_names.index(joint_name)] = joint[1]
+        # self.spot_wrapper.arm_joint_cmd()
 
     def handle_graph_nav_get_localization_pose(
         self,
