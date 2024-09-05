@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<!--
+Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+-->
 <package format="3">
   <name>spot_ros2_control</name>
   <version>0.0.0</version>
