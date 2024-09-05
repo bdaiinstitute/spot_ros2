@@ -46,54 +46,6 @@ add_library(
   SHARED
   hardware/src/spot_hardware_interface.cpp
 )
-target_compile_features(spot_ros2_control PUBLIC cxx_std_17)
-target_include_directories(spot_ros2_control PUBLIC
-$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
-$<INSTALL_INTERFACE:include/spot_ros2_control>
-)
-target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client_static)
-ament_target_dependencies(
-  spot_ros2_control PUBLIC
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
-)
-
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(${PROJECT_NAME} PRIVATE "SPOT_ROS2_CONTROL_BUILDING_DLL")
-
-# Export hardware plugins
-pluginlib_export_plugin_description_file(hardware_interface spot_ros2_control.xml)
-
-# Add the hardware interface
-add_library(
-  spot_ros2_control
-  SHARED
-  hardware/src/spot_hardware_interface.cpp
-)
-target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
-target_include_directories(spot_ros2_control PUBLIC
-$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
-$<INSTALL_INTERFACE:include/spot_ros2_control>
-)
-target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client_static)
-ament_target_dependencies(
-  spot_ros2_control PUBLIC
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
-)
-
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(${PROJECT_NAME} PRIVATE "SPOT_ROS2_CONTROL_BUILDING_DLL")
-
-# Export hardware plugins
-pluginlib_export_plugin_description_file(hardware_interface spot_ros2_control.xml)
-
-# Add the hardware interface
-add_library(
-  spot_ros2_control
-  SHARED
-  hardware/src/spot_hardware_interface.cpp
-)
 target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
 target_include_directories(spot_ros2_control PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
