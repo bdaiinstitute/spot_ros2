@@ -20,7 +20,6 @@ class JointCommandPassthrough : public rclcpp::Node {
     JointCommandPassthrough() : Node("joint_passthrough") {
 
         std::string robot_namespace = declare_parameter("robot_namespace", "Spot");
-        RCLCPP_ERROR(get_logger(), "Spot name is %s", robot_namespace.c_str());
         std::string joint_state_topic = robot_namespace + "/" + declare_parameter("joint_state_topic", "joint_states");
         std::string joint_commands_topic =
             robot_namespace + "/" + declare_parameter("joint_commands_topic", "joint_commands");
