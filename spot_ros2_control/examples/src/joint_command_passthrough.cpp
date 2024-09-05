@@ -20,7 +20,7 @@ class JointCommandPassthrough : public rclcpp::Node {
     JointCommandPassthrough() : Node("joint_passthrough") {
 
         std::string robot_namespace = declare_parameter("robot_namespace", "Spot");
-
+        RCLCPP_ERROR(get_logger(), "Spot name is %s", robot_namespace.c_str());
         std::string joint_state_topic = robot_namespace + "/" + declare_parameter("joint_state_topic", "joint_states");
         std::string joint_commands_topic =
             robot_namespace + "/" + declare_parameter("joint_commands_topic", "joint_commands");
@@ -31,15 +31,15 @@ class JointCommandPassthrough : public rclcpp::Node {
         joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
             joint_state_topic, 10,
             std::bind(&JointCommandPassthrough::joint_states_callback, this,
-                      std::placeholders::_1)); // todo (llee): make this topic name a parameter
+                      std::placeholders::_1));
 
         joint_commands_sub_ = create_subscription<sensor_msgs::msg::JointState>(
             joint_commands_topic, 10,
             std::bind(&JointCommandPassthrough::joint_commands_callback, this,
-                      std::placeholders::_1)); // todo (llee): make this topic name a parameter
+                      std::placeholders::_1));
 
         command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>(
-            controller_commands_topic, 10); // todo (llee): make this topic name a parameter
+            controller_commands_topic, 10);
 
         spot_command_.data.reserve(spot_ros2_control::kNjointsArm);
     }
