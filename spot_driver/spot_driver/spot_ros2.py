@@ -2528,17 +2528,16 @@ class SpotROS(Node):
             self.get_logger().info(f"Mock mode, received arm joint commdn {data}")
             return
         self.get_logger().info("Received joint command!")
-        arm_joint_names = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1"]
-        arm_joints: List[float] = []
 
-        for joint in zip(data.name, data.position, strict=False):
-            self.get_logger().info(f"Found joint {joint[0]}")
-            joint_name = joint[0].split("/", 1)[1]
-            self.get_logger().info(f"Found joint {joint_name}")
-            if joint_name in arm_joint_names:
-                self.get_logger().info(f"Adding {joint_name}")
-                arm_joints[arm_joint_names.index(joint_name)] = joint[1]
-        # self.spot_wrapper.arm_joint_cmd()
+        arm_joint_map = {"sh0": 0.0, "sh1": 0.0, "el0": 0.0, "el1": 0.0, "wr0": 0.0, "wr1": 0.0}
+
+        for joint in zip(data.name, data.position):
+            for joint_name in arm_joint_map.keys():
+                if joint_name in joint[0]:
+                    arm_joint_map[joint_name] = joint[1]
+                    continue
+
+        self.spot_wrapper.arm_joint_cmd()
 
     def handle_graph_nav_get_localization_pose(
         self,
