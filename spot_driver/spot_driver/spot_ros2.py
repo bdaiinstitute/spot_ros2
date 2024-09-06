@@ -2534,20 +2534,13 @@ class SpotROS(Node):
             self.get_logger().warning(f"Expected {len(arm_joint_map)} joints, but received {len(data.name)}")
             return
 
-        for joint in zip(data.name, data.position):
+        for (name, position) in zip(data.name, data.position):
             for joint_name in arm_joint_map.keys():
-                if joint_name in joint[0]:
-                    arm_joint_map[joint_name] = joint[1]
+                if joint_name in name:
+                    arm_joint_map[joint_name] = position
                     continue
 
-        self.spot_wrapper.arm_joint_cmd(
-            arm_joint_map["sh0"],
-            arm_joint_map["sh1"],
-            arm_joint_map["el0"],
-            arm_joint_map["el1"],
-            arm_joint_map["wr0"],
-            arm_joint_map["wr1"],
-        )
+        self.spot_wrapper.arm_joint_cmd(**arm_joint_map)
 
     def handle_graph_nav_get_localization_pose(
         self,
