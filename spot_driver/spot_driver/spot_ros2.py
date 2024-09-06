@@ -458,7 +458,7 @@ class SpotROS(Node):
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
-        self.create_subscription(JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 1, callback_group=self.group)
+        self.create_subscription(JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group)
         self.create_service(
             Trigger,
             "claim",
@@ -2527,9 +2527,10 @@ class SpotROS(Node):
         if not self.spot_wrapper:
             self.get_logger().info(f"Mock mode, received arm joint commdn {data}")
             return
-        self.get_logger().info("Received joint command!")
-
         arm_joint_map = {"sh0": 0.0, "sh1": 0.0, "el0": 0.0, "el1": 0.0, "wr0": 0.0, "wr1": 0.0}
+        if len(data.name) != len(arm_joint_map):
+            self.get_logger().warning(f"Expected {len(arm_joint_map)} joints, but received {len(data.name)}")
+            return
 
         for joint in zip(data.name, data.position):
             for joint_name in arm_joint_map.keys():
@@ -2537,7 +2538,14 @@ class SpotROS(Node):
                     arm_joint_map[joint_name] = joint[1]
                     continue
 
-        self.spot_wrapper.arm_joint_cmd()
+        self.spot_wrapper.arm_joint_cmd(
+            arm_joint_map["sh0"], 
+            arm_joint_map["sh1"], 
+            arm_joint_map["el0"], 
+            arm_joint_map["el1"], 
+            arm_joint_map["wr0"], 
+            arm_joint_map["wr1"]
+        )
 
     def handle_graph_nav_get_localization_pose(
         self,
