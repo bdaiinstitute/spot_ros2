@@ -59,7 +59,6 @@ from geometry_msgs.msg import (
     PoseStamped,
     Twist,
 )
-from sensor_msgs.msg import JointState
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -68,6 +67,7 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
+from sensor_msgs.msg import JointState
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.robot_command_util as robot_command_util
@@ -458,7 +458,9 @@ class SpotROS(Node):
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
-        self.create_subscription(JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group)
+        self.create_subscription(
+            JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
+        )
         self.create_service(
             Trigger,
             "claim",
@@ -2539,12 +2541,12 @@ class SpotROS(Node):
                     continue
 
         self.spot_wrapper.arm_joint_cmd(
-            arm_joint_map["sh0"], 
-            arm_joint_map["sh1"], 
-            arm_joint_map["el0"], 
-            arm_joint_map["el1"], 
-            arm_joint_map["wr0"], 
-            arm_joint_map["wr1"]
+            arm_joint_map["sh0"],
+            arm_joint_map["sh1"],
+            arm_joint_map["el0"],
+            arm_joint_map["el1"],
+            arm_joint_map["wr0"],
+            arm_joint_map["wr1"],
         )
 
     def handle_graph_nav_get_localization_pose(
