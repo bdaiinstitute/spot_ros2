@@ -2529,16 +2529,26 @@ class SpotROS(Node):
         if not self.spot_wrapper:
             self.get_logger().info(f"Mock mode, received arm joint commdn {data}")
             return
-        arm_joint_map = {"sh0": 0.0, "sh1": 0.0, "el0": 0.0, "el1": 0.0, "wr0": 0.0, "wr1": 0.0}
+        arm_joint_map = {"sh0": None, "sh1": None, "el0": None, "el1": None, "wr0": None, "wr1": None}
+        # Check we have the right number of joints for the arm
         if len(data.name) != len(arm_joint_map):
             self.get_logger().warning(f"Expected {len(arm_joint_map)} joints, but received {len(data.name)}")
             return
 
+        # Need to match the joint names in the JointState message to the joint names in the order we expect for spot.
+        # Depending on how the Spot is launched, the joint names could come in with a namespace or arm precusor such as
+        # `Spot/arm_sh0` or "arm_sh0" or simply just "sh0" 
         for (name, position) in zip(data.name, data.position):
             for joint_name in arm_joint_map.keys():
                 if joint_name in name:
                     arm_joint_map[joint_name] = position
                     continue
+
+        # Check that all the arm joints were filled in
+        for name, joint in arm_joint_map.items():
+            if joint is None:
+                self.get_logger().warning(f"Expected a value for joint {name}, but did not receive one")
+                return
 
         self.spot_wrapper.arm_joint_cmd(**arm_joint_map)
 
