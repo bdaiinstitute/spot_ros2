@@ -19,11 +19,11 @@ class JointCommandPassthrough : public rclcpp::Node {
  public:
   JointCommandPassthrough() : Node("joint_passthrough") {
     std::string robot_namespace = declare_parameter("robot_namespace", "Spot");
-    std::string joint_state_topic = robot_namespace + "/" + declare_parameter("joint_state_topic", "joint_states");
-    std::string joint_commands_topic =
-        robot_namespace + "/" + declare_parameter("joint_commands_topic", "joint_commands");
+    robot_namespace = robot_namespace.empty() ? "" : robot_namespace + "/";
+    std::string joint_state_topic = robot_namespace + declare_parameter("joint_state_topic", "joint_states");
+    std::string joint_commands_topic = robot_namespace + declare_parameter("joint_commands_topic", "joint_commands");
     std::string controller_commands_topic =
-        robot_namespace + "/" + declare_parameter("controller_commands_topic", "forward_position_controller/commands");
+        robot_namespace + declare_parameter("controller_commands_topic", "forward_position_controller/commands");
 
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
         joint_state_topic, 10, std::bind(&JointCommandPassthrough::joint_states_callback, this, std::placeholders::_1));
