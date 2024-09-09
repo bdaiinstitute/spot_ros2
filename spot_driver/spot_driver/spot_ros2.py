@@ -2537,8 +2537,8 @@ class SpotROS(Node):
 
         # Need to match the joint names in the JointState message to the joint names in the order we expect for spot.
         # Depending on how the Spot is launched, the joint names could come in with a namespace or arm precusor such as
-        # `Spot/arm_sh0` or "arm_sh0" or simply just "sh0" 
-        for (name, position) in zip(data.name, data.position):
+        # `Spot/arm_sh0` or "arm_sh0" or simply just "sh0"
+        for name, position in zip(data.name, data.position):
             for joint_name in arm_joint_map.keys():
                 if joint_name in name:
                     arm_joint_map[joint_name] = position
