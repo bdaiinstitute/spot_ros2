@@ -179,7 +179,7 @@ ros2 launch spot_driver point_cloud_xyzrgb.launch.py spot_name:=ROBOT_NAME camer
 To see what the new calibration looks like:
 ```
 # In seperate terminals
-ros2 bag play drop_in_test
+ros2 bag play drop_in_test --topics /${ROBOT_NAME}/depth/hand/image /${ROBOT_NAME}/camera/hand/camera_info /${ROBOT_NAME}/joint_states /${ROBOT_NAME}/camera/hand/image
 ros2 run spot_driver calibrated_reregistered_hand_camera_depth_publisher.py --robot_name $ROBOT_NAME --calibration_path $CALIBRATION_PATH --topic depth_registered/hand/image
 ros2 launch spot_driver point_cloud_xyzrgb.launch.py spot_name:=ROBOT_NAME camera:=hand
 ```
