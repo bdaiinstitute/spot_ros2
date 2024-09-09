@@ -57,7 +57,7 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
             self.calibration = extract_calibration_parameters(calibration_path=calibration_path, tag=tag)
 
         if robot_name is not None:
-            self.calibration["robot_name"] = "/" + robot_name  # insert leading slash
+            self.calibration["robot_name"] = robot_name
         else:
             self.calibration["robot_name"] = ""
             self.node.get_logger().warning("No robot name supplied, assuming no namespace.")
