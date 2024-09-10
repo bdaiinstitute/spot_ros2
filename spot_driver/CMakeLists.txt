@@ -10,6 +10,12 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_CUDA_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+endif()
+
 set(THIS_PACKAGE_INCLUDE_ROS_DEPENDS
   bosdyn_api_msgs
   bosdyn_spot_api_msgs
