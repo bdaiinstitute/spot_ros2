@@ -67,6 +67,7 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
+from sensor_msgs.msg import JointState
 from std_srvs.srv import SetBool, Trigger
 
 import spot_driver.robot_command_util as robot_command_util
@@ -457,6 +458,9 @@ class SpotROS(Node):
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
+        self.create_subscription(
+            JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
+        )
         self.create_service(
             Trigger,
             "claim",
@@ -2520,6 +2524,33 @@ class SpotROS(Node):
         mobility_params = self.spot_wrapper.get_mobility_params()
         mobility_params.body_control.CopyFrom(body_control)
         self.spot_wrapper.set_mobility_params(mobility_params)
+
+    def arm_joint_cmd_callback(self, data: JointState) -> None:
+        if not self.spot_wrapper:
+            self.get_logger().info(f"Mock mode, received arm joint commdn {data}")
+            return
+        arm_joint_map = {"sh0": None, "sh1": None, "el0": None, "el1": None, "wr0": None, "wr1": None}
+        # Check we have the right number of joints for the arm
+        if len(data.name) != len(arm_joint_map):
+            self.get_logger().warning(f"Expected {len(arm_joint_map)} joints, but received {len(data.name)}")
+            return
+
+        # Need to match the joint names in the JointState message to the joint names in the order we expect for spot.
+        # Depending on how the Spot is launched, the joint names could come in with a namespace or arm precusor such as
+        # `Spot/arm_sh0` or "arm_sh0" or simply just "sh0"
+        for name, position in zip(data.name, data.position):
+            for joint_name in arm_joint_map.keys():
+                if joint_name in name:
+                    arm_joint_map[joint_name] = position
+                    continue
+
+        # Check that all the arm joints were filled in
+        for name, joint in arm_joint_map.items():
+            if joint is None:
+                self.get_logger().warning(f"Expected a value for joint {name}, but did not receive one")
+                return
+
+        self.spot_wrapper.arm_joint_cmd(**arm_joint_map)
 
     def handle_graph_nav_get_localization_pose(
         self,
