@@ -11,7 +11,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.substitutions import FindPackageShare
 
-from spot_driver.launch.spot_launch_helpers import declare_image_publisher_args, spot_has_arm
+from spot_driver.launch.spot_launch_helpers import IMAGE_PUBLISHER_ARGS, declare_image_publisher_args, spot_has_arm
 
 THIS_PACKAGE = "spot_driver"
 
@@ -137,16 +137,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_image_publishers = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/spot_image_publishers.launch.py"]),
         launch_arguments={
-            key: LaunchConfiguration(key)
-            for key in [
-                "config_file",
-                "depth_registered_mode",
-                "publish_point_clouds",
-                "uncompress_images",
-                "publish_compressed_images",
-                "stitch_front_images",
-                "spot_name",
-            ]
+            key: LaunchConfiguration(key) for key in ["config_file", "spot_name"] + IMAGE_PUBLISHER_ARGS
         }.items(),
         condition=IfCondition(LaunchConfiguration("launch_image_publishers")),
     )

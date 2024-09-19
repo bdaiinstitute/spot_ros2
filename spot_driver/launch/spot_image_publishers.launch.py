@@ -1,7 +1,6 @@
 # Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 import os
-from enum import Enum
 from typing import List
 
 import launch
@@ -11,16 +10,12 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
-from spot_driver.launch.spot_launch_helpers import declare_image_publisher_args, get_camera_sources, spot_has_arm
-
-
-class DepthRegisteredMode(Enum):
-    DISABLE = "disable"
-    FROM_SPOT = "from_spot"
-    FROM_NODELETS = "from_nodelets"
-
-    def __repr__(self) -> str:
-        return self.value
+from spot_driver.launch.spot_launch_helpers import (
+    DepthRegisteredMode,
+    declare_image_publisher_args,
+    get_camera_sources,
+    spot_has_arm,
+)
 
 
 def create_depth_registration_nodelets(

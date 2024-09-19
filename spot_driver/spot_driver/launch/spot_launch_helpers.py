@@ -2,6 +2,7 @@
 
 import logging
 import os
+from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
@@ -21,19 +22,34 @@ IMAGE_PUBLISHER_ARGS = [
 ]
 
 
+class DepthRegisteredMode(Enum):
+    DISABLE = "disable"
+    FROM_SPOT = "from_spot"
+    FROM_NODELETS = "from_nodelets"
+
+    def __repr__(self) -> str:
+        return self.value
+
+
 def declare_image_publisher_args() -> List[DeclareLaunchArgument]:
+    """Generates launch arguments for each element in IMAGE_PUBLISHER_ARGS. This is useful to avoid copying and pasting
+    the same launch arguments multiple times launchfiles that call the spot_image_publishers launchfile.
+
+    Returns:
+        List[DeclareLaunchArgument]: List of DeclareLaunchArguments useful for image publishing.
+    """
     launch_args = []
     launch_args.append(
         DeclareLaunchArgument(
             "depth_registered_mode",
-            default_value="from_nodelets",
-            choices=["disable", "from_spot", "from_nodelets"],
+            default_value=DepthRegisteredMode.FROM_NODELETS.value,
+            choices=[e.value for e in DepthRegisteredMode],
             description=(
-                "If `disable` is set, do not publish registered depth images."
-                " If `from_spot` is set, request registered depth images from Spot through its SDK."
-                " If `from_nodelets` is set, use depth_image_proc::RegisterNode component nodes running on the host"
-                " computer to create registered depth images (this reduces the computational load on Spot's internal"
-                " systems)."
+                f"If `{DepthRegisteredMode.DISABLE.value}` is set, do not publish registered depth images."
+                f" If `{DepthRegisteredMode.FROM_SPOT.value}` is set, request registered depth images from Spot through"
+                f" its SDK. If `{DepthRegisteredMode.FROM_NODELETS.value}` is set, use depth_image_proc::RegisterNode"
+                " component nodes running on the host computer to create registered depth images (this reduces the"
+                " computational load on Spot's internal systems)."
             ),
         )
     )
