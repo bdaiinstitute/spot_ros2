@@ -5,11 +5,76 @@ import os
 from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
+from launch.actions import DeclareLaunchArgument
 
 from spot_wrapper.wrapper import SpotWrapper
 
 COLOR_END = "\33[0m"
 COLOR_YELLOW = "\33[33m"
+
+IMAGE_PUBLISHER_ARGS = [
+    "depth_registered_mode",
+    "publish_point_clouds",
+    "uncompress_images",
+    "publish_compressed_images",
+    "stitch_front_images",
+]
+
+
+def declare_image_publisher_args() -> List[DeclareLaunchArgument]:
+    launch_args = []
+    launch_args.append(
+        DeclareLaunchArgument(
+            "depth_registered_mode",
+            default_value="from_nodelets",
+            choices=["disable", "from_spot", "from_nodelets"],
+            description=(
+                "If `disable` is set, do not publish registered depth images."
+                " If `from_spot` is set, request registered depth images from Spot through its SDK."
+                " If `from_nodelets` is set, use depth_image_proc::RegisterNode component nodes running on the host"
+                " computer to create registered depth images (this reduces the computational load on Spot's internal"
+                " systems)."
+            ),
+        )
+    )
+    launch_args.append(
+        DeclareLaunchArgument(
+            "publish_point_clouds",
+            default_value="False",
+            choices=["True", "true", "False", "false"],
+            description=(
+                "If true, create and publish point clouds for each depth registered and RGB camera pair. Requires that"
+                " the depth_register_mode launch argument is set to a value that is not `disable`."
+            ),
+        )
+    )
+    launch_args.append(
+        DeclareLaunchArgument(
+            "uncompress_images",
+            default_value="True",
+            choices=["True", "true", "False", "false"],
+            description="Choose whether to publish uncompressed images from Spot.",
+        )
+    )
+    launch_args.append(
+        DeclareLaunchArgument(
+            "publish_compressed_images",
+            default_value="False",
+            choices=["True", "true", "False", "false"],
+            description="Choose whether to publish compressed images from Spot.",
+        )
+    )
+    launch_args.append(
+        DeclareLaunchArgument(
+            "stitch_front_images",
+            default_value="False",
+            choices=["True", "true", "False", "false"],
+            description=(
+                "Choose whether to publish a stitched image constructed from Spot's front left and right cameras."
+            ),
+        )
+    )
+    return launch_args
 
 
 def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:

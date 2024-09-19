@@ -5,8 +5,9 @@ from tempfile import NamedTemporaryFile
 import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     Command,
     FindExecutable,
@@ -175,6 +176,39 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             output="log",
             arguments=["-d", create_rviz_config(spot_name)],
             condition=IfCondition(LaunchConfiguration("launch_rviz")),
+            namespace=spot_name,
+        )
+    )
+
+    # launch image publishers
+    ld.add_action(
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                [PathJoinSubstitution([FindPackageShare("spot_driver"), "launch", "spot_image_publishers.launch.py"])]
+            ),
+            launch_arguments={
+                "config_file": config_file,
+                "spot_name": spot_name,
+            }.items(),
+        )
+    )
+    # launch object sync node (for fiducials)
+    ld.add_action(
+        Node(
+            package="spot_driver",
+            executable="object_synchronizer_node",
+            output="screen",
+            parameters=[config_file, {"spot_name": spot_name}],
+            namespace=spot_name,
+        )
+    )
+    # launch state publisher node (useful for publishing odom & other statuses)
+    ld.add_action(
+        Node(
+            package="spot_driver",
+            executable="state_publisher_node",
+            output="screen",
+            parameters=[config_file, {"spot_name": spot_name}],
             namespace=spot_name,
         )
     )

@@ -11,7 +11,7 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
-from spot_driver.launch.spot_launch_helpers import get_camera_sources, spot_has_arm
+from spot_driver.launch.spot_launch_helpers import declare_image_publisher_args, get_camera_sources, spot_has_arm
 
 
 class DepthRegisteredMode(Enum):
@@ -199,58 +199,8 @@ def generate_launch_description() -> launch.LaunchDescription:
             description="Path to configuration file for the driver.",
         )
     )
-    launch_args.append(
-        DeclareLaunchArgument(
-            "depth_registered_mode",
-            default_value="from_nodelets",
-            choices=["disable", "from_spot", "from_nodelets"],
-            description=(
-                "If `disable` is set, do not publish registered depth images."
-                " If `from_spot` is set, request registered depth images from Spot through its SDK."
-                " If `from_nodelets` is set, use depth_image_proc::RegisterNode component nodes running on the host"
-                " computer to create registered depth images (this reduces the computational load on Spot's internal"
-                " systems)."
-            ),
-        )
-    )
-    launch_args.append(
-        DeclareLaunchArgument(
-            "publish_point_clouds",
-            default_value="False",
-            choices=["True", "true", "False", "false"],
-            description=(
-                "If true, create and publish point clouds for each depth registered and RGB camera pair. Requires that"
-                " the depth_register_mode launch argument is set to a value that is not `disable`."
-            ),
-        )
-    )
-    launch_args.append(
-        DeclareLaunchArgument(
-            "uncompress_images",
-            default_value="True",
-            choices=["True", "true", "False", "false"],
-            description="Choose whether to publish uncompressed images from Spot.",
-        )
-    )
-    launch_args.append(
-        DeclareLaunchArgument(
-            "publish_compressed_images",
-            default_value="False",
-            choices=["True", "true", "False", "false"],
-            description="Choose whether to publish compressed images from Spot.",
-        )
-    )
-    launch_args.append(
-        DeclareLaunchArgument(
-            "stitch_front_images",
-            default_value="False",
-            choices=["True", "true", "False", "false"],
-            description=(
-                "Choose whether to publish a stitched image constructed from Spot's front left and right cameras."
-            ),
-        )
-    )
     launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
+    launch_args += declare_image_publisher_args()
 
     ld = launch.LaunchDescription(launch_args)
 
