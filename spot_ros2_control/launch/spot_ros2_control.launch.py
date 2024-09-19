@@ -93,17 +93,17 @@ def create_rviz_config(spot_name: str) -> str:
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     hardware_interface: str = LaunchConfiguration("hardware_interface").perform(context)
     controllers_config: str = LaunchConfiguration("controllers_config").perform(context)
-    mock_has_arm: bool = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
+    mock_arm: bool = IfCondition(LaunchConfiguration("mock_arm")).evaluate(context)
     spot_name: str = LaunchConfiguration("spot_name").perform(context)
 
-    # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_has_arm.
+    # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_arm.
     if hardware_interface == "robot":
         config_file = LaunchConfiguration("config_file").perform(context)
-        has_arm = spot_has_arm(config_file_path=config_file, spot_name="")
+        arm = spot_has_arm(config_file_path=config_file, spot_name="")
         username, password, hostname = get_login_parameters(config_file)[:3]
         login_params = f" hostname:={hostname} username:={username} password:={password}"
     else:
-        has_arm = mock_has_arm
+        arm = mock_arm
         login_params = ""
 
     tf_prefix = f"{spot_name}/" if spot_name else ""
@@ -113,9 +113,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "xacro", "spot.urdf.xacro"]),
-            " has_arm:=",
-            str(has_arm),
+            PathJoinSubstitution([FindPackageShare("spot_description"), "urdf", "spot.urdf.xacro"]),
+            " add_ros2_control_tag:=True arm:=",
+            str(arm),
             " tf_prefix:=",
             tf_prefix,
             " hardware_interface_type:=",
@@ -128,8 +128,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     # If no controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
     if controllers_config == "":
         # Generate spot_default_controllers.yaml depending on namespace and whether the robot has an arm.
-        create_controllers_config(spot_name, has_arm)
-        controllers_config = create_controllers_config(spot_name, has_arm)
+        create_controllers_config(spot_name, arm)
+        controllers_config = create_controllers_config(spot_name, arm)
 
     # Add nodes
     ld.add_action(
@@ -217,7 +217,7 @@ def generate_launch_description():
                 description="Robot controller to start. Must match an entry in controller_config.",
             ),
             DeclareLaunchArgument(
-                "mock_has_arm",
+                "mock_arm",
                 default_value="false",
                 choices=["True", "true", "False", "false"],
                 description="If in hardware_interface:=mock mode, whether or not the mocked robot has an arm.",
