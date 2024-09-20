@@ -24,8 +24,16 @@ You can then run the launchfile with the following command:
 ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=robot config_file:=path/to/spot_ros.yaml
 ```
 
-This hardware interface can stream the joint angles of the robot using the low level API at ~333 Hz. 
-Both state streaming and command streaming are implemented. 
+If you wish to launch these nodes in a namespace, add the argument `spot_name:=<Robot Name>`.
+
+This hardware interface will stream the joint angles of the robot using the low level API at 333 Hz onto the topic `/<Robot Name>/low_level/joint_states`.
+
+Commands can be sent on the topic `/<Robot Name>/forward_position_controller/commands`. This will forward position commands directly to the spot sdk through the hardware interface. 
+
+> [!CAUTION]
+> When using the forward position controller, there is no safety mechanism in place to ensure smooth motion. The ordering of the command must match the ordering of the joints specified in the controller configuration file ([here for robots with an arm](config/spot_default_controllers_with_arm.yaml) or [here for robots without an arm](config/spot_default_controllers_without_arm.yaml)).
+
+
 
 ## Mock
 
