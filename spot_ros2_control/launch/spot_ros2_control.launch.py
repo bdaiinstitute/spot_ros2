@@ -261,8 +261,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "robot_controller",
                 default_value="forward_position_controller",
-                choices=["forward_position_controller"],
-                description="Robot controller to start. Must match an entry in controller_config.",
+                description="Robot controller to start. Must match an entry in controllers_config.",
             ),
             DeclareLaunchArgument(
                 "mock_arm",

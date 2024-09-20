@@ -31,9 +31,10 @@ This hardware interface will stream the joint angles of the robot using the low 
 Commands can be sent on the topic `/<Robot Name>/forward_position_controller/commands`. This will forward position commands directly to the spot sdk through the hardware interface. 
 
 > [!CAUTION]
-> When using the forward position controller, there is no safety mechanism in place to ensure smooth motion. The ordering of the command must match the ordering of the joints specified in the controller configuration file ([here for robots with an arm](config/spot_default_controllers_with_arm.yaml) or [here for robots without an arm](config/spot_default_controllers_without_arm.yaml)).
+> When using the forward position controller, there is no safety mechanism in place to ensure smooth motion. The ordering of the command must match the ordering of the joints specified in the controller configuration file ([here for robots with an arm](config/spot_default_controllers_with_arm.yaml) or [here for robots without an arm](config/spot_default_controllers_without_arm.yaml)), and the robot can move in unpredictable and dangerous ways if this is not set correctly. Make sure to keep a safe distance from the robot when working with this controller and ensure the e-stop can easily be pressed if needed.
 
-
+Additionally, the state publisher node, object synchronization node, and image publisher nodes from [`spot_driver`](../spot_driver/) will get launched by default when running on the robot to provide extra information such as odometry topics and camera feeds.
+To turn off the image publishers (which can cause problems with bandwidth), add the launch argument `launch_image_publishers:=false`.
 
 ## Mock
 
