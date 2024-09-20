@@ -103,10 +103,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_name: str = LaunchConfiguration("spot_name").perform(context)
     config_file: str = LaunchConfiguration("config_file").perform(context)
 
-    on_robot = hardware_interface == "robot"
-
     # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_arm.
-    if on_robot:
+    if hardware_interface == "robot":
         arm = spot_has_arm(config_file_path=config_file, spot_name="")
         username, password, hostname = get_login_parameters(config_file)[:3]
         login_params = f" hostname:={hostname} username:={username} password:={password}"
@@ -188,8 +186,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             namespace=spot_name,
         )
     )
-    # Optionally launch extra nodes for state and image publishing if on the robot
-    if on_robot:
+    # Finally, launch extra nodes for state and image publishing if we are running on a robot.
+    if hardware_interface == "robot":
         # launch image publishers
         ld.add_action(
             IncludeLaunchDescription(
