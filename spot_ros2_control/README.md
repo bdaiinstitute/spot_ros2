@@ -1,6 +1,6 @@
 # spot_ros2_control
 
-This is a ROS 2 package designed to communicate with Spot's low level API through ROS 2 control. It sets up a hardware interface that can be either `mock` or connected to the robot using the [Spot C++ SDK](https://github.com/boston-dynamics/spot-cpp-sdk) (currently in progress). By default, it loads a standard joint state broadcaster and forward position controller provided from `ros2_control`.
+This is a ROS 2 package designed to communicate with Spot's low level API through ROS 2 control. It sets up a hardware interface that can be either `mock` or connected to the robot using the [Spot C++ SDK](https://github.com/boston-dynamics/spot-cpp-sdk). By default, it loads a standard joint state broadcaster and forward position controller provided from `ros2_control`.
 
 ## On-robot
 
@@ -44,7 +44,7 @@ To use a mock hardware interface, run:
 ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=mock
 ```
 
-By default, this will load a robot with no arm. If you want your mock robot to have an arm, add the launch argument `mock_has_arm:=True`. 
+By default, this will load a robot with no arm. If you want your mock robot to have an arm, add the launch argument `mock_arm:=True`. 
 
 ## Examples
 
