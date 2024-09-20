@@ -27,7 +27,7 @@ from spot_driver.launch.spot_launch_helpers import (
 THIS_PACKAGE = "spot_ros2_control"
 
 
-def create_controllers_config(spot_name: str, has_arm: bool) -> None:
+def create_controllers_config(spot_name: str, has_arm: bool) -> str:
     """Writes a configuration file used to put the ros2 control nodes into a namespace.
     This is necessary as if your ros2 control nodes are launched in a namespace, the configuration yaml used
     must also reflect this same namespace when defining parameters of your controllers.
@@ -136,7 +136,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     # If no controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
     if controllers_config == "":
         # Generate spot_default_controllers.yaml depending on namespace and whether the robot has an arm.
-        create_controllers_config(spot_name, arm)
         controllers_config = create_controllers_config(spot_name, arm)
 
     # Add nodes
@@ -147,6 +146,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             output="both",
             parameters=[robot_description, controllers_config],
             namespace=spot_name,
+            remappings=[(f"/{tf_prefix}joint_states", f"/{tf_prefix}low_level/joint_states")],
         )
     )
     ld.add_action(
@@ -156,6 +156,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             output="both",
             parameters=[robot_description],
             namespace=spot_name,
+            remappings=[(f"/{tf_prefix}joint_states", f"/{tf_prefix}low_level/joint_states")],
         )
     )
     ld.add_action(
