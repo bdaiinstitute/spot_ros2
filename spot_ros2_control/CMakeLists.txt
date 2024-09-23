@@ -90,7 +90,7 @@ install(
 )
 
 install(
-  DIRECTORY xacro launch config rviz
+  DIRECTORY launch config rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
