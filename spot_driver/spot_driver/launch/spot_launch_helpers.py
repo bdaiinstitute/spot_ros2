@@ -23,6 +23,9 @@ IMAGE_PUBLISHER_ARGS = [
 
 
 class DepthRegisteredMode(Enum):
+    """Options for obtaining depth registered images images from Spot. We can request them from Spot's SDK, generate
+    them using `depth_image_proc`'s nodelets, or just not publish them at all."""
+
     DISABLE = "disable"
     FROM_SPOT = "from_spot"
     FROM_NODELETS = "from_nodelets"
