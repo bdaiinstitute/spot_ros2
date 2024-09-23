@@ -69,6 +69,7 @@ static const std::vector<float> arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.
 /// @param ordered_joint_angles_ Joint positions from the joint state message following the correct order.
 /// @return boolean indicating if the joint angles got ordered successfully.
 bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& ordered_joint_angles) {
+  // this needs to be fixed so that it works if the joints are namespaced
   const auto njoints = msg.position.size();
   ordered_joint_angles.resize(njoints);
   // Different joint index maps for arm-full and arm-less
