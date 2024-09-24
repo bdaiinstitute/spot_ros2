@@ -19,9 +19,12 @@ enum class WiggleState { WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP, RESET };
 class WiggleArm : public rclcpp::Node {
  public:
   WiggleArm() : Node("wiggle_arm"), wiggle_state_{WiggleState::WIGGLE_DOWN}, initialized_{false} {
-    joints_to_wiggle_ = declare_parameter("joints_to_wiggle", std::vector<int>{});
-    wiggle_up_offsets_ = declare_parameter("wiggle_up_offsets", std::vector<double>{});
-    wiggle_down_offsets_ = declare_parameter("wiggle_down_offsets", std::vector<double>{});
+    // Indices of the joints to wiggle. This corresponds to WR0 and F1X
+    joints_to_wiggle_ = declare_parameter("joints_to_wiggle", std::vector<int>{16, 18});
+    // Offset from starting position of each joints_to_wiggle for the first wiggle (up)
+    wiggle_up_offsets_ = declare_parameter("wiggle_up_offsets", std::vector<double>{1.0, -0.5});
+    // Offset from starting position of each joints_to_wiggle for the second wiggle (down)
+    wiggle_down_offsets_ = declare_parameter("wiggle_down_offsets", std::vector<double>{-1.0, -0.5});
     const auto command_rate = declare_parameter("command_rate", 50.0);  // how frequently to send commands in Hz
     const auto seconds_per_motion =
         declare_parameter("seconds_per_motion", 2.0);  // how many seconds each wiggle should take
@@ -34,7 +37,7 @@ class WiggleArm : public rclcpp::Node {
     }
 
     joint_states_sub_ = create_subscription<sensor_msgs::msg::JointState>(
-        "joint_states", 10, std::bind(&WiggleArm::joint_states_callback, this, std::placeholders::_1));
+        "low_level/joint_states", 10, std::bind(&WiggleArm::joint_states_callback, this, std::placeholders::_1));
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("forward_position_controller/commands", 10);
     const auto timer_period =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<double>(1. / command_rate));
