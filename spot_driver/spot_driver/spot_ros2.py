@@ -2574,19 +2574,6 @@ class SpotROS(Node):
 
         self.spot_wrapper.arm_joint_cmd(**arm_joint_map)
 
-    def _gripper_joint_cmd_callback(self, data: JointState) -> None:
-        if not self.spot_wrapper:
-            self.get_logger().info(f"Mock mode, received a gripper joint command {data}")
-            return
-        if len(data.name) != 1:
-            self.get_logger().warning(f"Expected 1 gripper joint, but received {len(data.name)}")
-            return
-        if "f1x" in data.name[0]:
-            self.spot_wrapper.spot_arm.gripper_angle_open(data.position[0])
-        else:
-            self.get_logger().warning(f"Gripper joint name of {data.name[0]} is not an expected gripper joint name")
-            return
-
     def handle_graph_nav_get_localization_pose(
         self,
         request: GraphNavGetLocalizationPose.Response,
