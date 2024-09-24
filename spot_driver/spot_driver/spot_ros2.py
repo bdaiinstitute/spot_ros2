@@ -1303,7 +1303,7 @@ class SpotROS(Node):
     def handle_gripper_angle(
         self, request: SetGripperAngle.Request, response: SetGripperAngle.Response
     ) -> SetGripperAngle.Response:
-        """ROS service to set the gripper angle between 0-90"""
+        """ROS service to set the gripper angle between 0-90 degrees"""
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
