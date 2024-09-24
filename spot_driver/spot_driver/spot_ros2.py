@@ -124,6 +124,7 @@ from spot_msgs.srv import (  # type: ignore
     OverrideGraspOrCarry,
     PlaySound,
     RetrieveLogpoint,
+    SetGripperAngle,
     SetGripperCameraParameters,
     SetLEDBrightness,
     SetLocomotion,
@@ -458,9 +459,6 @@ class SpotROS(Node):
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
-        self.create_subscription(
-            JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
-        )
         self.create_service(
             Trigger,
             "claim",
@@ -568,6 +566,9 @@ class SpotROS(Node):
                 lambda request, response: self.service_wrapper("arm_carry", self.handle_arm_carry, request, response),
                 callback_group=self.group,
             )
+            self.create_subscription(
+                JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
+            )
 
             if not self.gripperless:
                 self.create_service(
@@ -583,6 +584,14 @@ class SpotROS(Node):
                     "close_gripper",
                     lambda request, response: self.service_wrapper(
                         "close_gripper", self.handle_close_gripper, request, response
+                    ),
+                    callback_group=self.group,
+                )
+                self.create_service(
+                    SetGripperAngle,
+                    "set_gripper_angle",
+                    lambda request, response: self.service_wrapper(
+                        "set_gripper_angle", self.handle_gripper_angle, request, response
                     ),
                     callback_group=self.group,
                 )
@@ -1289,6 +1298,19 @@ class SpotROS(Node):
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message = self.spot_wrapper.spot_arm.gripper_close()
+        return response
+
+    def handle_gripper_angle(
+        self, request: SetGripperAngle.Request, response: SetGripperAngle.Response
+    ) -> SetGripperAngle.Response:
+        """ROS service to set the gripper angle between 0-90"""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.spot_arm.gripper_angle_open(
+            gripper_ang=request.gripper_angle, ensure_power_on_and_stand=False
+        )
         return response
 
     def handle_clear_behavior_fault(
@@ -2527,7 +2549,7 @@ class SpotROS(Node):
 
     def arm_joint_cmd_callback(self, data: JointState) -> None:
         if not self.spot_wrapper:
-            self.get_logger().info(f"Mock mode, received arm joint commdn {data}")
+            self.get_logger().info(f"Mock mode, received arm joint command {data}")
             return
         arm_joint_map = {"sh0": None, "sh1": None, "el0": None, "el1": None, "wr0": None, "wr1": None}
         # Check we have the right number of joints for the arm
@@ -2551,6 +2573,19 @@ class SpotROS(Node):
                 return
 
         self.spot_wrapper.arm_joint_cmd(**arm_joint_map)
+
+    def _gripper_joint_cmd_callback(self, data: JointState) -> None:
+        if not self.spot_wrapper:
+            self.get_logger().info(f"Mock mode, received a gripper joint command {data}")
+            return
+        if len(data.name) != 1:
+            self.get_logger().warning(f"Expected 1 gripper joint, but received {len(data.name)}")
+            return
+        if "f1x" in data.name[0]:
+            self.spot_wrapper.spot_arm.gripper_angle_open(data.position[0])
+        else:
+            self.get_logger().warning(f"Gripper joint name of {data.name[0]} is not an expected gripper joint name")
+            return
 
     def handle_graph_nav_get_localization_pose(
         self,
