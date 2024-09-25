@@ -17,7 +17,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   std_msgs
 )
 
-message(STATUS "hello")
 
 find_package(ament_cmake REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -29,38 +28,38 @@ generate_parameter_library(
   include/spot_ros2_controllers/spot_passthrough_controller_parameters.yaml
 )
 
-add_library(spot_passthrough_controller SHARED
+add_library(spot_ros2_controllers SHARED
   src/spot_passthrough_controller.cpp
 )
-target_compile_features(spot_passthrough_controller PUBLIC cxx_std_17)
-target_include_directories(spot_passthrough_controller PUBLIC
+target_compile_features(spot_ros2_controllers PUBLIC cxx_std_17)
+target_include_directories(spot_ros2_controllers PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include/spot_passthrough_controller>
+  $<INSTALL_INTERFACE:include/spot_ros2_controllers>
 )
-target_link_libraries(spot_passthrough_controller PUBLIC
+target_link_libraries(spot_ros2_controllers PUBLIC
   spot_passthrough_controller_parameters forward_command_controller::forward_command_controller
 )
-ament_target_dependencies(spot_passthrough_controller PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_target_dependencies(spot_ros2_controllers PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
-target_compile_definitions(spot_passthrough_controller PRIVATE "SPOT_PASSTHROUGH_CONTROLLER_BUILDING_DLL")
+target_compile_definitions(spot_ros2_controllers PRIVATE "SPOT_PASSTHROUGH_CONTROLLER_BUILDING_DLL")
 pluginlib_export_plugin_description_file(controller_interface spot_passthrough_controller.xml)
 
 install(
   DIRECTORY include/
-  DESTINATION include/spot_passthrough_controller
+  DESTINATION include/spot_ros2_controllers
 )
 install(
   TARGETS
-    # spot_passthrough_controller
+    spot_ros2_controllers
     spot_passthrough_controller_parameters
-  EXPORT export_spot_passthrough_controller
+  EXPORT export_spot_ros2_controllers
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   INCLUDES DESTINATION include
 )
 
-ament_export_targets(export_spot_passthrough_controller HAS_LIBRARY_TARGET)
+ament_export_targets(export_spot_ros2_controllers HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
