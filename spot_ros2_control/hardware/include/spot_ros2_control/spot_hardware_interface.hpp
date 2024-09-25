@@ -31,8 +31,8 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "spot_ros2_control/hardware_visibility_control.h"
 #include "spot_ros2_control/spot_joint_map.hpp"
-#include "spot_ros2_control/visibility_control.h"
 
 #include "bosdyn/client/lease/lease_keepalive.h"
 #include "bosdyn/client/robot_command/robot_command_builder.h"
