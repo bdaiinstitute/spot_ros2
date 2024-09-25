@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "forward_command_controller/forward_command_controller/forward_controllers_base.hpp"
-#include "spot_passthrough_controller_parameters.hpp"  // NOLINT
+#include "spot_passthrough_controller_parameters.hpp"  // NOLINT(build/include_subdir)
 #include "spot_ros2_controllers/controller_visibility_control.h"
 
 namespace spot_ros2_controllers {
