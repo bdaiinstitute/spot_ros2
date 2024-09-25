@@ -11,7 +11,7 @@ controller_manager:
     forward_position_controller:
       type: forward_command_controller/ForwardCommandController
 
-    spot_passthrough_controller1:
+    spot_passthrough_controller:
       type: spot_ros2_controllers/SpotPassthroughController
 
 
@@ -32,7 +32,7 @@ forward_position_controller:
       - rear_right_knee
     interface_name: position
 
-spot_passthrough_controller1:
+spot_passthrough_controller:
   ros__parameters:
     joints:
       - front_left_hip_x
