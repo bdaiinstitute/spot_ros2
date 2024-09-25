@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "spot_ros2_control/spot_passthrough_controller.hpp"
+#include "spot_ros2_controllers/spot_passthrough_controller.hpp"
 
 #include <algorithm>
 #include <memory>
