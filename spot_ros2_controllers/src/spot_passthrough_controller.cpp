@@ -42,13 +42,14 @@ controller_interface::CallbackReturn SpotPassthroughController::read_parameters(
     return controller_interface::CallbackReturn::ERROR;
   }
 
-  if (params_.interface_name.empty()) {
+  if (params_.interface_names.empty()) {
     RCLCPP_ERROR(get_node()->get_logger(), "'interface_name' parameter was empty");
     return controller_interface::CallbackReturn::ERROR;
   }
-
-  for (const auto& joint : params_.joints) {
-    command_interface_types_.push_back(joint + "/" + params_.interface_name);
+  for (const auto& interface_name : params_.interface_names) {
+    for (const auto& joint : params_.joints) {
+      command_interface_types_.push_back(joint + "/" + interface_name);
+    }
   }
 
   return controller_interface::CallbackReturn::SUCCESS;

@@ -17,6 +17,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   std_msgs
 )
 
+message(STATUS "hello")
+
 find_package(ament_cmake REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -36,7 +38,7 @@ target_include_directories(spot_passthrough_controller PUBLIC
   $<INSTALL_INTERFACE:include/spot_passthrough_controller>
 )
 target_link_libraries(spot_passthrough_controller PUBLIC
-  spot_passthrough_controller_parameters forward_command_controller
+  spot_passthrough_controller_parameters forward_command_controller::forward_command_controller
 )
 ament_target_dependencies(spot_passthrough_controller PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
