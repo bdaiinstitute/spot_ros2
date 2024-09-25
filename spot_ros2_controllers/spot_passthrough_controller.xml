@@ -1,5 +1,5 @@
 <library path="spot_passthrough_controller">
-  <class name="spot_ros2_control/SpotPassthroughController" type="spot_ros2_control::SpotPassthroughController" base_class_type="controller_interface::ControllerInterface">
+  <class name="spot_ros2_controllers/SpotPassthroughController" type="spot_ros2_controllers::SpotPassthroughController" base_class_type="controller_interface::ControllerInterface">
   <description>
     General passthrough controller that can forward commands for a set of joints over a set of interfaces.
   </description>

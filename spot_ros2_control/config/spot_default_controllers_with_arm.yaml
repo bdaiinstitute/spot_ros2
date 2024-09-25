@@ -12,7 +12,7 @@ controller_manager:
       type: forward_command_controller/ForwardCommandController
 
     spot_passthrough_controller:
-      type: spot_ros2_control/SpotPassthroughController
+      type: spot_ros2_controllers/SpotPassthroughController
 
 
 forward_position_controller:
