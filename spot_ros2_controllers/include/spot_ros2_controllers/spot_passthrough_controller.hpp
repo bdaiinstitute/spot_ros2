@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "forward_command_controller/forward_controllers_base.hpp"
+#include "forward_command_controller/forward_command_controller/forward_controllers_base.hpp"
 #include "spot_passthrough_controller_parameters.hpp"
 #include "spot_ros2_controllers/controller_visibility_control.h"
 
