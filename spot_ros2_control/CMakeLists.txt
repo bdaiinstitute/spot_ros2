@@ -20,8 +20,10 @@ find_package(bosdyn REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   controller_interface
+  forward_command_controller
   controller_manager
   pluginlib
+  generate_parameter_library
   rclcpp
   rclcpp_lifecycle
   sensor_msgs
@@ -40,7 +42,12 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-# Add the hardware interface
+generate_parameter_library(
+  spot_passthrough_controller_parameters
+  controllers/include/spot_ros2_control/spot_passthrough_controller_parameters.yaml
+)
+
+# Add the hardware interface and the custom controller
 add_library(
   spot_ros2_control
   SHARED
@@ -56,7 +63,7 @@ target_include_directories(spot_ros2_control PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/controllers/include>
 $<INSTALL_INTERFACE:include/spot_ros2_control>
 )
-target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client_static)
+target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client_static spot_passthrough_controller_parameters)
 ament_target_dependencies(
   spot_ros2_control PUBLIC
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
@@ -69,6 +76,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "SPOT_PASSTHROUGH_CONTROLLER_
 
 # Export hardware plugins
 pluginlib_export_plugin_description_file(hardware_interface spot_ros2_control.xml)
+pluginlib_export_plugin_description_file(controller_interface spot_passthrough_controller.xml)
 # export the controller plugin here
 # pluginlib_export_plugin_description_file(...)
 
@@ -98,11 +106,16 @@ install(
 )
 
 install(
+  DIRECTORY controllers/include/
+  DESTINATION include/${PROJECT_NAME}
+)
+
+install(
   DIRECTORY launch config rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(TARGETS spot_ros2_control
+install(TARGETS spot_ros2_control spot_passthrough_controller_parameters
   EXPORT export_spot_ros2_control
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
