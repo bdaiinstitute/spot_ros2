@@ -22,7 +22,7 @@
 #include "spot_passthrough_controller_parameters.hpp"
 #include "spot_ros2_controllers/controller_visibility_control.h"
 
-namespace spot_ros2_control {
+namespace spot_ros2_controllers {
 /**
  * \brief Multi interface forward command controller for a set of interfaces.
  *
@@ -50,4 +50,4 @@ class SpotPassthroughController : public forward_command_controller::ForwardCont
   Params params_;
 };
 
-}  // namespace spot_ros2_control
+}  // namespace spot_ros2_controllers

@@ -23,7 +23,7 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/qos.hpp"
 
-namespace spot_ros2_control {
+namespace spot_ros2_controllers {
 SpotPassthroughController::SpotPassthroughController() : ForwardControllersBase() {}
 
 void SpotPassthroughController::declare_parameters() {
@@ -55,8 +55,8 @@ controller_interface::CallbackReturn SpotPassthroughController::read_parameters(
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
-}  // namespace spot_ros2_control
+}  // namespace spot_ros2_controllers
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(spot_ros2_control::SpotPassthroughController, controller_interface::ControllerInterface)
+PLUGINLIB_EXPORT_CLASS(spot_ros2_controllers::SpotPassthroughController, controller_interface::ControllerInterface)
