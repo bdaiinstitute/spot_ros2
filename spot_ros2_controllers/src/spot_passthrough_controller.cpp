@@ -46,6 +46,9 @@ controller_interface::CallbackReturn SpotPassthroughController::read_parameters(
     RCLCPP_ERROR(get_node()->get_logger(), "'interface_name' parameter was empty");
     return controller_interface::CallbackReturn::ERROR;
   }
+
+  // Example: if you input joints [1,2,3] and interfaces [A,B,C] as parameters, the order of the command will be
+  // [1/A, 1/B, 1/C, 2/A, 2/B, 2/C, 3/A, 3/B, 3/C]
   for (const auto& interface_name : params_.interface_names) {
     for (const auto& joint : params_.joints) {
       command_interface_types_.push_back(joint + "/" + interface_name);
