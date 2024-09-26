@@ -56,9 +56,6 @@ add_library(
 target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
 target_include_directories(spot_ros2_control PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
-$<INSTALL_INTERFACE:include/spot_ros2_control>
-)
-target_include_directories(spot_ros2_control PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/controllers/include>
 $<INSTALL_INTERFACE:include/spot_ros2_control>
 )
