@@ -33,8 +33,8 @@ add_library(spot_ros2_controllers SHARED
 )
 target_compile_features(spot_ros2_controllers PUBLIC cxx_std_17)
 target_include_directories(spot_ros2_controllers PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include/spot_ros2_controllers>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>                # This points to the source directory
+  $<INSTALL_INTERFACE:include/hello/spot_ros2_controllers>        # Must match the line to install()
 )
 target_link_libraries(spot_ros2_controllers PUBLIC
   spot_passthrough_controller_parameters forward_command_controller::forward_command_controller
@@ -47,7 +47,7 @@ pluginlib_export_plugin_description_file(controller_interface spot_passthrough_c
 
 install(
   DIRECTORY include/
-  DESTINATION include/spot_ros2_controllers
+  DESTINATION include/hello/spot_ros2_controllers
 )
 install(
   TARGETS
