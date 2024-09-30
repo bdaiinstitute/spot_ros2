@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "forward_command_controller/forward_command_controller/forward_controllers_base.hpp"
-#include "spot_passthrough_controller_parameters.hpp"  // NOLINT(build/include_subdir)
+#include "forward_state_controller_parameters.hpp"  // NOLINT(build/include_subdir)
 #include "spot_ros2_control/controller_visibility_control.h"
 
 namespace spot_ros2_control {
@@ -34,17 +34,17 @@ namespace spot_ros2_control {
  * Subscribes to:
  * - \b commands (std_msgs::msg::Float64MultiArray) : The commands to apply.
  */
-class SpotPassthroughController : public forward_command_controller::ForwardControllersBase {
+class ForwardStateController : public forward_command_controller::ForwardControllersBase {
  public:
-  SPOT_PASSTHROUGH_CONTROLLER_PUBLIC
-  SpotPassthroughController();
+  FORWARD_STATE_CONTROLLER_PUBLIC
+  ForwardStateController();
 
  protected:
   void declare_parameters() override;
   controller_interface::CallbackReturn read_parameters() override;
 
-  using Params = spot_passthrough_controller::Params;
-  using ParamListener = spot_passthrough_controller::ParamListener;
+  using Params = forward_state_controller::Params;
+  using ParamListener = forward_state_controller::ParamListener;
 
   std::shared_ptr<ParamListener> param_listener_;
   Params params_;

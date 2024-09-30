@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "spot_ros2_control/spot_passthrough_controller.hpp"
+#include "spot_ros2_control/forward_state_controller.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -24,13 +24,13 @@
 #include "rclcpp/qos.hpp"
 
 namespace spot_ros2_control {
-SpotPassthroughController::SpotPassthroughController() : ForwardControllersBase() {}
+ForwardStateController::ForwardStateController() : ForwardControllersBase() {}
 
-void SpotPassthroughController::declare_parameters() {
+void ForwardStateController::declare_parameters() {
   param_listener_ = std::make_shared<ParamListener>(get_node());
 }
 
-controller_interface::CallbackReturn SpotPassthroughController::read_parameters() {
+controller_interface::CallbackReturn ForwardStateController::read_parameters() {
   if (!param_listener_) {
     RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during init");
     return controller_interface::CallbackReturn::ERROR;
@@ -62,4 +62,4 @@ controller_interface::CallbackReturn SpotPassthroughController::read_parameters(
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(spot_ros2_control::SpotPassthroughController, controller_interface::ControllerInterface)
+PLUGINLIB_EXPORT_CLASS(spot_ros2_control::ForwardStateController, controller_interface::ControllerInterface)
