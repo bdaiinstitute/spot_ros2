@@ -20,13 +20,13 @@
 
 #include "forward_command_controller/forward_command_controller/forward_controllers_base.hpp"
 #include "forward_state_controller_parameters.hpp"  // NOLINT(build/include_subdir)
-#include "spot_ros2_control/controller_visibility_control.h"
+#include "spot_ros2_control/visibility_control.h"
 
 namespace spot_ros2_control {
 /**
- * \brief Multi interface forward command controller for a set of interfaces.
+ * \brief Forward command controller for a set of interfaces.
  *
- * This class forwards the command signal down to a set of interfaces on the specified joint.
+ * This class forwards the command signal for a set of interfaces over a set of joints.
  *
  * \param joints Names of the joint to control.
  * \param interface_names Names of the interfaces to command.
@@ -36,7 +36,7 @@ namespace spot_ros2_control {
  */
 class ForwardStateController : public forward_command_controller::ForwardControllersBase {
  public:
-  FORWARD_STATE_CONTROLLER_PUBLIC
+  SPOT_ROS2_CONTROL_PUBLIC
   ForwardStateController();
 
  protected:

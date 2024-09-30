@@ -55,6 +55,7 @@ add_library(
 )
 target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
 target_include_directories(spot_ros2_control PUBLIC
+$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/controllers/include>
 $<INSTALL_INTERFACE:include/spot_ros2_control>
@@ -63,7 +64,8 @@ target_link_libraries(spot_ros2_control
                       PUBLIC 
                       bosdyn::bosdyn_client_static
                       forward_state_controller_parameters
-                      forward_command_controller::forward_command_controller)
+                      forward_command_controller::forward_command_controller
+                      )
 ament_target_dependencies(
   spot_ros2_control PUBLIC
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
@@ -97,6 +99,11 @@ target_link_libraries(joint_command_passthrough spot_ros2_control)
 
 install(TARGETS noarm_squat wiggle_arm joint_command_passthrough
   DESTINATION lib/${PROJECT_NAME})
+
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
+)
 
 install(
   DIRECTORY hardware/include/
