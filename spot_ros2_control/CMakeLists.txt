@@ -42,8 +42,8 @@ if(BUILD_TESTING)
 endif()
 
 generate_parameter_library(
-  spot_passthrough_controller_parameters
-  controllers/include/spot_ros2_control/spot_passthrough_controller_parameters.yaml
+  forward_state_controller_parameters
+  controllers/include/spot_ros2_control/forward_state_controller_parameters.yaml
 )
 
 # Add the hardware interface
@@ -51,7 +51,7 @@ add_library(
   spot_ros2_control
   SHARED
   hardware/src/spot_hardware_interface.cpp
-  controllers/src/spot_passthrough_controller.cpp
+  controllers/src/forward_state_controller.cpp
 )
 target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
 target_include_directories(spot_ros2_control PUBLIC
@@ -62,7 +62,7 @@ $<INSTALL_INTERFACE:include/spot_ros2_control>
 target_link_libraries(spot_ros2_control
                       PUBLIC 
                       bosdyn::bosdyn_client_static
-                      spot_passthrough_controller_parameters
+                      forward_state_controller_parameters
                       forward_command_controller::forward_command_controller)
 ament_target_dependencies(
   spot_ros2_control PUBLIC
@@ -76,7 +76,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "SPOT_ROS2_CONTROL_BUILDING_D
 
 # Export hardware plugins
 pluginlib_export_plugin_description_file(hardware_interface spot_ros2_control.xml)
-pluginlib_export_plugin_description_file(controller_interface spot_passthrough_controller.xml)
+pluginlib_export_plugin_description_file(controller_interface forward_state_controller.xml)
 
 # Add example nodes and install them
 add_executable(noarm_squat examples/src/noarm_squat.cpp)
@@ -113,7 +113,7 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(TARGETS spot_ros2_control spot_passthrough_controller_parameters
+install(TARGETS spot_ros2_control forward_state_controller_parameters
   EXPORT export_spot_ros2_control
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

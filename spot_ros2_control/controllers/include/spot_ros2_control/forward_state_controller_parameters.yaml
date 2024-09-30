@@ -1,4 +1,4 @@
-spot_passthrough_controller:
+forward_state_controller:
   joints: {
     type: string_array,
     default_value: [],
