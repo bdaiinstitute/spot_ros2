@@ -24,7 +24,7 @@
 #include "rclcpp/qos.hpp"
 
 namespace spot_ros2_control {
-ForwardStateController::ForwardStateController() : ForwardControllersBase() {}
+ForwardStateController::ForwardStateController() : forward_command_controller::ForwardControllersBase() {}
 
 void ForwardStateController::declare_parameters() {
   param_listener_ = std::make_shared<ParamListener>(get_node());
