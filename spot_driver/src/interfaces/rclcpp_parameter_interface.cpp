@@ -26,6 +26,8 @@ constexpr auto kParameterNamePublishCompressedImages = "publish_compressed_image
 constexpr auto kParameterNamePublishDepthImages = "publish_depth";
 constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
+constexpr auto kParameterSpotName = "spot_name";
+constexpr auto kParameterFramePrefix = "frame_prefix";
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and
@@ -186,6 +188,10 @@ std::string RclcppParameterInterface::getPreferredOdomFrame() const {
   return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
 }
 
+std::optional<std::string> RclcppParameterInterface::getFramePrefix() const {
+  return declareAndGetParameter<std::string>(node_, kParameterFramePrefix);
+}
+
 std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm) const {
   const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
   std::set<spot_ros2::SpotCamera> spot_cameras_used;
@@ -217,14 +223,23 @@ tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterf
   return spot_cameras_used;
 }
 
-std::string RclcppParameterInterface::getSpotName() const {
-  // The spot_name parameter always matches the namespace of this node, minus the leading `/` character.
+std::string RclcppParameterInterface::getSpotNameWithFallbackToNamespace() const {
+  // We use the explicit robot_name parameter value if provided.
+  // If the spot_name parameter is not found explicitly, then we expect it to always match the namespace of this node,
+  // minus the leading `/` character.
   try {
-    return std::string{node_->get_namespace()}.substr(1);
+    const std::optional<std::string> spot_name = declareAndGetParameter<std::string>(node_, kParameterSpotName);
+    return spot_name.value_or(std::string{node_->get_namespace()}.substr(1));
   } catch (const std::out_of_range& e) {
     // get_namespace() should not return an empty string, but we handle this situation just in case.
     // Note that if no namespace was set when creating the node, get_namespace() will return `/`.
     return "";
   }
+}
+
+std::string RclcppParameterInterface::getFramePrefixWithDefaultFallback() const {
+  const std::string robot_name = getSpotNameWithFallbackToNamespace();
+  const std::optional<std::string> frame_prefix = getFramePrefix();
+  return frame_prefix.value_or(!robot_name.empty() ? robot_name + "/" : "");
 }
 }  // namespace spot_ros2
