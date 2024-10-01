@@ -116,6 +116,7 @@ def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:
     with open(config_file_path, "r") as config_yaml:
         try:
             config_dict = yaml.safe_load(config_yaml)
+            # FIXME: this will not generalize if explicit node names are used in the yaml config
             if ("/**" in config_dict) and ("ros__parameters" in config_dict["/**"]):
                 ros_params = config_dict["/**"]["ros__parameters"]
                 return ros_params
@@ -128,7 +129,7 @@ def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:
             raise yaml.YAMLError(f"Config file {config_file_path} couldn't be parsed: failed with '{exc}'")
 
 
-def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional[int], Optional[str]]:
+def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional[int], Optional[str], Optional[str]]:
     """Obtain the username, password, hostname, port, and certificate of Spot from the environment variables or,
     if they are not set, the configuration file yaml.
 
@@ -148,6 +149,7 @@ def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional
     portnum = os.getenv("SPOT_PORT")
     port = int(portnum) if portnum else None
     certificate = os.getenv("SPOT_CERTIFICATE")
+    spot_name: Optional[str] = None
 
     ros_params = get_ros_param_dict(config_file_path)
     # only set username/password/hostname if they were not already set as environment variables.
@@ -167,7 +169,9 @@ def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional
             f"[Username: '{username}' Password: '{password}' Hostname: '{hostname}']. Ensure that your environment "
             "variables are set or update your config_file yaml."
         )
-    return username, password, hostname, port, certificate
+    if "spot_name" in ros_params and ros_params["spot_name"]:
+        spot_name = ros_params["spot_name"]
+    return username, password, hostname, port, certificate, spot_name
 
 
 def default_camera_sources(has_arm: bool, gripperless: bool) -> List[str]:
@@ -223,25 +227,23 @@ def get_camera_sources(config_file_path: str, has_arm: bool) -> List[str]:
     return camera_sources
 
 
-def spot_has_arm(config_file_path: str, spot_name: str) -> bool:
+def spot_has_arm(config_file_path: str) -> bool:
     """Check if Spot has an arm querying the robot through SpotWrapper
 
     Args:
         config_file_path (str): Path to configuration yaml
-        spot_name (str): Name of spot
 
     Returns:
         bool: True if spot has an arm, False otherwise
     """
     logger = logging.getLogger("spot_driver_launch")
-    username, password, hostname, port, certificate = get_login_parameters(config_file_path)
+    username, password, hostname, port, certificate, spot_name = get_login_parameters(config_file_path)
     spot_wrapper = SpotWrapper(
         username=username,
         password=password,
         hostname=hostname,
         port=port,
         cert_resource_glob=certificate,
-        robot_name=spot_name,
         logger=logger,
     )
     return spot_wrapper.has_arm()

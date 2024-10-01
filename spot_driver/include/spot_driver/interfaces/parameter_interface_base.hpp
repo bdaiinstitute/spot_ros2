@@ -40,11 +40,13 @@ class ParameterInterfaceBase {
   virtual bool getPublishDepthImages() const = 0;
   virtual bool getPublishDepthRegisteredImages() const = 0;
   virtual std::string getPreferredOdomFrame() const = 0;
-  virtual std::string getSpotName() const = 0;
+  virtual std::optional<std::string> getFramePrefix() const = 0;
+  virtual std::string getSpotNameWithFallbackToNamespace() const = 0;
   virtual bool getGripperless() const = 0;
   virtual std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(bool has_arm, bool gripperless) const = 0;
   virtual tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(bool has_arm,
                                                                                     bool gripperless) const = 0;
+  virtual std::string getFramePrefixWithDefaultFallback() const = 0;
 
  protected:
   // These are the definitions of the default values for optional parameters.

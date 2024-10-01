@@ -211,7 +211,11 @@ RclcppCameraHandle::RclcppCameraHandle(const std::shared_ptr<rclcpp::Node>& node
           image_transport_.advertiseCamera("virtual_camera/image", 1)},  // Remap to actual topic in launch file
       tf_broadcaster_{node} {
   const auto spot_name = node->declare_parameter("spot_name", "");
-  const auto frame_prefix = spot_name.empty() ? "" : spot_name + "/";
+  std::cout << "image_stitcher -> got spot_name: " << spot_name << std::endl; //FIXME(debug): this is only for debug
+  //FIXME(params-refactor): this should be refactored using the general parameter interface, we should NOT be modifying
+  // the string value explicitly like this !
+  const auto frame_prefix = spot_name.empty() ? "" : spot_name + "_";
+  std::cout << "image_stitcher -> using frame_prefix: " << frame_prefix << std::endl; //FIXME(debug): this is only for debug
   // Name of the frame to relate the virtual camera with respect to
   const auto body_frame_param = node->declare_parameter("body_frame", "body");
   body_frame_ = frame_prefix + body_frame_param;

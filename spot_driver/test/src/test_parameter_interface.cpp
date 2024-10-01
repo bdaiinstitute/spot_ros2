@@ -119,7 +119,7 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithNamespace) {
 
   // WHEN we call getSpotName
   // THEN the parameter interface returns the namespace of the node
-  EXPECT_THAT(parameter_interface.getSpotName(), StrEq(kNamespace));
+  EXPECT_THAT(parameter_interface.getSpotNameWithFallbackToNamespace(), StrEq(kNamespace));
 }
 
 TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithEmptyNamespace) {
@@ -130,7 +130,7 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithEmptyNamespace) {
 
   // WHEN we call getSpotName
   // THEN the parameter interface returns an empty string
-  EXPECT_THAT(parameter_interface.getSpotName(), IsEmpty());
+  EXPECT_THAT(parameter_interface.getSpotNameWithFallbackToNamespace(), IsEmpty());
 }
 
 TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithDefaultNamespace) {
@@ -141,7 +141,7 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithDefaultNamespace) {
 
   // WHEN we call getSpotName
   // THEN the parameter interface returns an empty string
-  EXPECT_THAT(parameter_interface.getSpotName(), IsEmpty());
+  EXPECT_THAT(parameter_interface.getSpotNameWithFallbackToNamespace(), IsEmpty());
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromEnvVars) {

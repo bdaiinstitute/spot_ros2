@@ -38,7 +38,9 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getPreferredOdomFrame() const override { return "odom"; }
 
-  std::string getSpotName() const override { return spot_name; }
+  std::optional<std::string> getFramePrefix() const override { return std::nullopt; }
+
+  std::string getSpotNameWithFallbackToNamespace() const override { return spot_name; }
 
   bool getGripperless() const override { return gripperless; }
 
@@ -55,6 +57,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
                                                                             const bool gripperless) const override {
     return getDefaultCamerasUsed(has_arm, gripperless);
   }
+
+  std::string getFramePrefixWithDefaultFallback() const override { return spot_name + "/"; }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};
   static constexpr auto kExampleUsername{"spot_user"};

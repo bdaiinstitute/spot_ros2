@@ -15,12 +15,13 @@ from spot_driver.launch.spot_launch_helpers import (
     declare_image_publisher_args,
     get_camera_sources,
     spot_has_arm,
+    get_ros_param_dict,
 )
 
 
 def create_depth_registration_nodelets(
     context: launch.LaunchContext,
-    spot_name: LaunchConfiguration,
+    spot_name: str,
     camera_sources: List[str],
 ) -> List[launch_ros.descriptions.ComposableNode]:
     """Create the list of depth_image_proc::RegisterNode composable nodes required to generate registered depth images
@@ -58,7 +59,7 @@ def create_depth_registration_nodelets(
 
 def create_point_cloud_nodelets(
     context: launch.LaunchContext,
-    spot_name: LaunchConfiguration,
+    spot_name: str,
     camera_sources: List[str],
 ) -> List[launch_ros.descriptions.ComposableNode]:
     """Create the list of depth_image_proc::PointCloudXyzrgbNode composable nodes required to generate point clouds for
@@ -92,7 +93,6 @@ def create_point_cloud_nodelets(
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     config_file = LaunchConfiguration("config_file")
-    spot_name = LaunchConfiguration("spot_name").perform(context)
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
@@ -102,11 +102,14 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if (config_file_path != "") and (not os.path.isfile(config_file_path)):
         raise FileNotFoundError("Configuration file '{}' does not exist!".format(config_file_path))
 
+    ros_params = get_ros_param_dict(config_file_path)
+    spot_name: str = ros_params["spot_name"] if "spot_name" in ros_params else ""
+
     if mock_enable:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
         has_arm = mock_has_arm
     else:
-        has_arm = spot_has_arm(config_file_path=config_file.perform(context), spot_name=spot_name)
+        has_arm = spot_has_arm(config_file_path=config_file.perform(context))
 
     camera_sources = get_camera_sources(config_file_path, has_arm)
 
@@ -122,7 +125,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         publish_point_clouds = False
 
     spot_image_publisher_params = {
-        key: LaunchConfiguration(key) for key in ["spot_name", "uncompress_images", "publish_compressed_images"]
+        key: LaunchConfiguration(key) for key in ["uncompress_images", "publish_compressed_images"]
     }
 
     # If using nodelets to generate registered depth images, do not retrieve and publish registered depth images using
@@ -194,7 +197,6 @@ def generate_launch_description() -> launch.LaunchDescription:
             description="Path to configuration file for the driver.",
         )
     )
-    launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
     launch_args += declare_image_publisher_args()
 
     ld = launch.LaunchDescription(launch_args)
