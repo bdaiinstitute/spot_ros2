@@ -21,7 +21,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   controller_interface
   controller_manager
-  # forward_command_controller
+  forward_command_controller
   pluginlib
   rclcpp
   rclcpp_lifecycle
@@ -41,10 +41,10 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-# generate_parameter_library(
-#   forward_state_controller_parameters
-#   controllers/include/spot_ros2_control/forward_state_controller_parameters.yaml
-# )
+generate_parameter_library(
+  forward_state_controller_parameters
+  controllers/include/spot_ros2_control/forward_state_controller_parameters.yaml
+)
 
 # Add the hardware interface
 add_library(
@@ -57,13 +57,13 @@ target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
 target_include_directories(spot_ros2_control PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
-# $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/controllers/include>
+$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/controllers/include>
 $<INSTALL_INTERFACE:include/spot_ros2_control>
 )
 target_link_libraries(spot_ros2_control
                       PUBLIC 
                       bosdyn::bosdyn_client_static
-                      # forward_state_controller_parameters
+                      forward_state_controller_parameters
                       # forward_command_controller::forward_command_controller
                       )
 ament_target_dependencies(
@@ -110,10 +110,10 @@ install(
   DESTINATION include/${PROJECT_NAME}
 )
 
-# install(
-#   DIRECTORY controllers/include/
-#   DESTINATION include/${PROJECT_NAME}
-# )
+install(
+  DIRECTORY controllers/include/
+  DESTINATION include/${PROJECT_NAME}
+)
 
 install(
   DIRECTORY launch config rviz
@@ -121,7 +121,7 @@ install(
 )
 
 install(TARGETS spot_ros2_control 
-                # forward_state_controller_parameters
+                forward_state_controller_parameters
   EXPORT export_spot_ros2_control
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
