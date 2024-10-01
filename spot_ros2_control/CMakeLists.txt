@@ -64,7 +64,7 @@ target_link_libraries(spot_ros2_control
                       PUBLIC 
                       bosdyn::bosdyn_client_static
                       forward_state_controller_parameters
-                      # forward_command_controller::forward_command_controller
+                      forward_command_controller::forward_command_controller
                       )
 ament_target_dependencies(
   spot_ros2_control PUBLIC
