@@ -51,7 +51,7 @@ add_library(
   spot_ros2_control
   SHARED
   hardware/src/spot_hardware_interface.cpp
-  # controllers/src/forward_state_controller.cpp
+  # controllers/src/forward_state_controller.cpp  # THIS IS THE LINE!!!!!! AHHHH!!!
 )
 target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
 target_include_directories(spot_ros2_control PUBLIC
