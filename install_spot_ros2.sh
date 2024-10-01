@@ -1,5 +1,5 @@
 ARCH="amd64"
-SDK_VERSION="4.0.2"
+SDK_VERSION="4.1.0"
 MSG_VERSION="${SDK_VERSION}"
 ROS_DISTRO=humble
 HELP=$'--arm64: Installs ARM64 version'
