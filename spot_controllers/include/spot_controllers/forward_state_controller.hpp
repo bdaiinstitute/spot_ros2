@@ -1,4 +1,8 @@
-// Copyright 2021 Stogl Robotics Consulting UG (haftungsbescrhänkt)
+// File modified. Modifications Copyright (c) 2024 Boston Dynamics AI Institute LLC.
+// All rights reserved.
+
+// --------------------------------------------------------------
+// Copyright 2020 PAL Robotics S.L.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
