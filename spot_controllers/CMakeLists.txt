@@ -5,7 +5,6 @@ cmake_minimum_required(VERSION 3.22)
 # This is here so we can use jthread from C++ 20
 set(CMAKE_CXX_STANDARD 20)
 
-
 project(spot_controllers)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -49,11 +48,10 @@ target_include_directories(spot_controllers PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 $<INSTALL_INTERFACE:include/spot_controllers>
 )
-target_link_libraries(spot_controllers
-                      PUBLIC 
-                      forward_state_controller_parameters
-                      forward_command_controller::forward_command_controller
-                      )
+target_link_libraries(
+  spot_controllers PUBLIC 
+  forward_state_controller_parameters forward_command_controller::forward_command_controller
+)
 ament_target_dependencies(
   spot_controllers PUBLIC
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
@@ -63,16 +61,13 @@ ament_target_dependencies(
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME} PRIVATE "SPOT_CONTROLLERS_BUILDING_DLL")
 
-
-# Export hardware plugins
+# Export controller plugin
 pluginlib_export_plugin_description_file(controller_interface spot_controllers.xml)
-
 
 install(
   DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
-
 
 install(TARGETS spot_controllers forward_state_controller_parameters
   EXPORT export_spot_controllers
