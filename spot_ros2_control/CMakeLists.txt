@@ -19,15 +19,14 @@ find_package(ament_cmake REQUIRED)
 find_package(bosdyn REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
-  controller_interface
   controller_manager
-  forward_command_controller
   pluginlib
   rclcpp
   rclcpp_lifecycle
   sensor_msgs
   std_msgs
   spot_description
+  spot_controllers
 )
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -41,31 +40,20 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-generate_parameter_library(
-  forward_state_controller_parameters
-  controllers/include/spot_ros2_control/forward_state_controller_parameters.yaml
-)
-
 # Add the hardware interface
 add_library(
   spot_ros2_control
   SHARED
   hardware/src/spot_hardware_interface.cpp
-  controllers/src/forward_state_controller.cpp
 )
 target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
 target_include_directories(spot_ros2_control PUBLIC
-$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
-$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/controllers/include>
 $<INSTALL_INTERFACE:include/spot_ros2_control>
 )
 target_link_libraries(spot_ros2_control
                       PUBLIC 
-                      bosdyn::bosdyn_client_static
-                      forward_state_controller_parameters
-                      forward_command_controller::forward_command_controller
-                      )
+                      bosdyn::bosdyn_client_static)
 ament_target_dependencies(
   spot_ros2_control PUBLIC
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
@@ -78,7 +66,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "SPOT_ROS2_CONTROL_BUILDING_D
 
 # Export hardware plugins
 pluginlib_export_plugin_description_file(hardware_interface spot_ros2_control.xml)
-pluginlib_export_plugin_description_file(controller_interface forward_state_controller.xml)
 
 # Add example nodes and install them
 add_executable(noarm_squat examples/src/noarm_squat.cpp)
@@ -101,17 +88,7 @@ install(TARGETS noarm_squat wiggle_arm joint_command_passthrough
   DESTINATION lib/${PROJECT_NAME})
 
 install(
-  DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
-)
-
-install(
   DIRECTORY hardware/include/
-  DESTINATION include/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY controllers/include/
   DESTINATION include/${PROJECT_NAME}
 )
 
@@ -120,7 +97,7 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(TARGETS spot_ros2_control forward_state_controller_parameters
+install(TARGETS spot_ros2_control
   EXPORT export_spot_ros2_control
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
