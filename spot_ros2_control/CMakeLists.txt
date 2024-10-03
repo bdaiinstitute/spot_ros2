@@ -19,7 +19,6 @@ find_package(ament_cmake REQUIRED)
 find_package(bosdyn REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
-  controller_interface
   controller_manager
   pluginlib
   rclcpp
@@ -27,6 +26,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   sensor_msgs
   std_msgs
   spot_description
+  spot_controllers
 )
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -48,8 +48,8 @@ add_library(
 )
 target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
 target_include_directories(spot_ros2_control PUBLIC
-$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
-$<INSTALL_INTERFACE:include/spot_ros2_control>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
+  $<INSTALL_INTERFACE:include/spot_ros2_control>
 )
 target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client_static)
 ament_target_dependencies(
@@ -61,24 +61,17 @@ ament_target_dependencies(
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME} PRIVATE "SPOT_ROS2_CONTROL_BUILDING_DLL")
 
-# Export hardware plugins
+# Export hardware plugin
 pluginlib_export_plugin_description_file(hardware_interface spot_ros2_control.xml)
 
 # Add example nodes and install them
 add_executable(noarm_squat examples/src/noarm_squat.cpp)
-# ament_target_dependencies(noarm_squat
-#   ${THIS_PACKAGE_INCLUDE_DEPENDS}
-# )
 target_link_libraries(noarm_squat spot_ros2_control)
+
 add_executable(wiggle_arm examples/src/wiggle_arm.cpp)
-# ament_target_dependencies(wiggle_arm
-#   ${THIS_PACKAGE_INCLUDE_DEPENDS}
-# )
 target_link_libraries(wiggle_arm spot_ros2_control)
+
 add_executable(joint_command_passthrough examples/src/joint_command_passthrough.cpp)
-# ament_target_dependencies(joint_command_passthrough
-#   ${THIS_PACKAGE_INCLUDE_DEPENDS}
-# )
 target_link_libraries(joint_command_passthrough spot_ros2_control)
 
 install(TARGETS noarm_squat wiggle_arm joint_command_passthrough

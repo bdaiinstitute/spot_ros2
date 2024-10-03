@@ -34,8 +34,8 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
 
     Args:
         spot_name (str): Name of spot. If it's the empty string, the default controller file with no namespace is used.
-        has_arm (bool): Whether or not your robot has an arm. Necessary for defining the joints that the forward
-                        position controller should use.
+        has_arm (bool): Whether or not your robot has an arm. Necessary for defining the joints that the controllers
+                        should use.
 
     Returns:
         str: Path to controllers config file to use
@@ -49,14 +49,15 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
     if spot_name:
         with open(template_filename, "r") as template_file:
             config = yaml.safe_load(template_file)
-            forward_position_controller_joints = config["forward_position_controller"]["ros__parameters"]["joints"]
-            config["forward_position_controller"]["ros__parameters"]["joints"] = [
-                f"{spot_name}/{joint}" for joint in forward_position_controller_joints
-            ]
             config[f"{spot_name}/controller_manager"] = config["controller_manager"]
             del config["controller_manager"]
-            config[f"{spot_name}/forward_position_controller"] = config["forward_position_controller"]
-            del config["forward_position_controller"]
+            keys_to_namespace = ["forward_position_controller", "forward_state_controller"]
+
+            for key in keys_to_namespace:
+                key_joints = config[key]["ros__parameters"]["joints"]
+                config[key]["ros__parameters"]["joints"] = [f"{spot_name}/{joint}" for joint in key_joints]
+                config[f"{spot_name}/{key}"] = config[key]
+                del config[key]
 
         with NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as out_file:
             yaml.dump(config, out_file)
