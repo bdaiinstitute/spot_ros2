@@ -19,6 +19,7 @@ enum class WiggleState { WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP, RESET };
 class WiggleArm : public rclcpp::Node {
  public:
   WiggleArm() : Node("wiggle_arm"), wiggle_state_{WiggleState::WIGGLE_DOWN}, initialized_{false} {
+    robot_name = declare_parameter("robot_name", "");
     // Indices of the joints to wiggle. This corresponds to WR0 and F1X
     joints_to_wiggle_ = declare_parameter("joints_to_wiggle", std::vector<int>{16, 18});
     // Offset from starting position of each joints_to_wiggle for the first wiggle (up)
