@@ -63,6 +63,13 @@ static const std::vector<float> arm_kp = {624, 936, 286,  624, 936, 286, 624, 93
                                           936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
 static const std::vector<float> arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
                                           5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
+
+void printMap(const std::unordered_map<std::string, size_t>& myMap) {
+  std::cout << "MAP " << std::endl;
+  for (const auto& pair : myMap) {
+    std::cout << pair.first << ": " << pair.second << std::endl;
+  }
+}
 /// @brief Given a list of joints from a JointStates message, put them in the correct order that the Spot Hardware
 /// interface expects.
 /// @param msg JointStates message
@@ -82,6 +89,7 @@ bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& 
       for (const auto& pair : kJointNameToIndexWithoutArm) {
         newMap[prefix + pair.first] = pair.second;
       }
+      printMap(newMap);
       for (size_t i = 0; i < njoints; ++i) {
         // get the joint name
         const auto& joint_name = msg.name.at(i);
@@ -97,11 +105,15 @@ bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& 
 
     // case with arm
     case kNjointsArm:
+      for (const auto& pair : kJointNameToIndexWithArm) {
+        newMap[prefix + pair.first] = pair.second;
+      }
+      printMap(newMap);
       for (size_t i = 0; i < njoints; i++) {
         // get the joint name
         const auto joint_name = msg.name.at(i);
         try {
-          const auto joint_index = kJointNameToIndexWithArm.at(joint_name);
+          const auto joint_index = newMap.at(joint_name);
           ordered_joint_angles.at(joint_index) = msg.position.at(i);
         } catch (const std::out_of_range& e) {
           RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid joint: " << joint_name);
