@@ -68,19 +68,25 @@ static const std::vector<float> arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.
 /// @param msg JointStates message
 /// @param ordered_joint_angles_ Joint positions from the joint state message following the correct order.
 /// @return boolean indicating if the joint angles got ordered successfully.
-bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& ordered_joint_angles) {
+bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& ordered_joint_angles,
+                  std::string robot_name) {
   // this needs to be fixed so that it works if the joints are namespaced
   const auto njoints = msg.position.size();
   ordered_joint_angles.resize(njoints);
+  std::string prefix = robot_name.empty() ? "" : robot_name + "/";
+  std::unordered_map<std::string, size_t> newMap;
   // Different joint index maps for arm-full and arm-less
   switch (njoints) {
     // case without arm
     case kNjointsNoArm:
+      for (const auto& pair : kJointNameToIndexWithoutArm) {
+        newMap[prefix + pair.first] = pair.second;
+      }
       for (size_t i = 0; i < njoints; ++i) {
         // get the joint name
         const auto& joint_name = msg.name.at(i);
         try {
-          const auto joint_index = kJointNameToIndexWithoutArm.at(joint_name);
+          const auto joint_index = newMap.at(joint_name);
           ordered_joint_angles.at(joint_index) = msg.position.at(i);
         } catch (const std::out_of_range& e) {
           RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid joint: " << joint_name);

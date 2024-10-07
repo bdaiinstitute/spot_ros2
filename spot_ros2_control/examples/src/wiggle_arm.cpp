@@ -45,6 +45,7 @@ class WiggleArm : public rclcpp::Node {
   }
 
  private:
+  std::string robot_name;
   // stores joint angles and desired offsets
   std::vector<double> nominal_joint_angles_;
   std::vector<int64_t> joints_to_wiggle_;
@@ -68,7 +69,7 @@ class WiggleArm : public rclcpp::Node {
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
     if (!initialized_) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
-      bool successful = spot_ros2_control::order_joints(msg, nominal_joint_angles_);
+      bool successful = spot_ros2_control::order_joints(msg, nominal_joint_angles_, robot_name);
       if (successful) {
         command_.data = nominal_joint_angles_;
         RCLCPP_INFO_STREAM(get_logger(), "Initialized! Robot will begin to move.");
