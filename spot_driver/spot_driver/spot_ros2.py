@@ -569,6 +569,9 @@ class SpotROS(Node):
             self.create_subscription(
                 JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
             )
+            self.create_subscription(
+                PoseStamped, "arm_pose_commands", self.arm_pose_cmd_callback, 100, callback_group=self.group
+            )
 
             if not self.gripperless:
                 self.create_service(
@@ -2530,7 +2533,7 @@ class SpotROS(Node):
     def body_pose_callback(self, data: Pose) -> None:
         """Callback for cmd_vel command"""
         if self.spot_wrapper is None:
-            self.get_logger().info("Mock mode, received command vel " + str(data))
+            self.get_logger().info("Mock mode, received command pose " + str(data))
             return
         q = Quaternion()
         q.x = data.orientation.x
@@ -2573,6 +2576,27 @@ class SpotROS(Node):
                 return
 
         self.spot_wrapper.arm_joint_cmd(**arm_joint_map)
+
+    def arm_pose_cmd_callback(self, data: PoseStamped) -> None:
+        if not self.spot_wrapper:
+            self.get_logger().info(f"Mock mode, received arm pose command {data}")
+            return
+        result = self.spot_wrapper.spot_arm.hand_pose(
+            x=data.pose.position.x,
+            y=data.pose.position.y,
+            z=data.pose.position.z,
+            qx=data.pose.orientation.x,
+            qy=data.pose.orientation.y,
+            qz=data.pose.orientation.z,
+            qw=data.pose.orientation.w,
+            ref_frame=data.header.frame_id,
+            duration=self.cmd_duration,
+            ensure_power_on_and_stand=False,
+        )
+        if not result[0]:
+            self.get_logger().warning(f"Failed to go to arm pose: {result[1]}")
+        else:
+            self.get_logger().info("Successfully went to arm pose")
 
     def handle_graph_nav_get_localization_pose(
         self,
