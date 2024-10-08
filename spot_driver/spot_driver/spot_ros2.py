@@ -2579,7 +2579,7 @@ class SpotROS(Node):
 
     def arm_pose_cmd_callback(self, data: PoseStamped) -> None:
         if not self.spot_wrapper:
-            self.get_logger().info(f"mock mode, received arm pose command {data}")
+            self.get_logger().info(f"Mock mode, received arm pose command {data}")
             return
         result = self.spot_wrapper.spot_arm.hand_pose(
             x=data.pose.position.x,
