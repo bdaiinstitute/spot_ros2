@@ -74,58 +74,47 @@ void printMap(const std::unordered_map<std::string, size_t>& myMap) {
 /// interface expects.
 /// @param msg JointStates message
 /// @param ordered_joint_angles_ Joint positions from the joint state message following the correct order.
+/// @param robot_namespace Namespace that the ros2 control stack was launched in.
 /// @return boolean indicating if the joint angles got ordered successfully.
 bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& ordered_joint_angles,
-                  std::string robot_name) {
-  // this needs to be fixed so that it works if the joints are namespaced
+                  std::string robot_namespace) {
   const auto njoints = msg.position.size();
-  ordered_joint_angles.resize(njoints);
-  std::string prefix = robot_name.empty() ? "" : robot_name + "/";
-  std::unordered_map<std::string, size_t> newMap;
-  // Different joint index maps for arm-full and arm-less
-  switch (njoints) {
-    // case without arm
-    case kNjointsNoArm:
-      for (const auto& pair : kJointNameToIndexWithoutArm) {
-        newMap[prefix + pair.first] = pair.second;
-      }
-      printMap(newMap);
-      for (size_t i = 0; i < njoints; ++i) {
-        // get the joint name
-        const auto& joint_name = msg.name.at(i);
-        try {
-          const auto joint_index = newMap.at(joint_name);
-          ordered_joint_angles.at(joint_index) = msg.position.at(i);
-        } catch (const std::out_of_range& e) {
-          RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid joint: " << joint_name);
-          return false;
-        }
-      }
-      return true;
-
-    // case with arm
-    case kNjointsArm:
-      for (const auto& pair : kJointNameToIndexWithArm) {
-        newMap[prefix + pair.first] = pair.second;
-      }
-      printMap(newMap);
-      for (size_t i = 0; i < njoints; i++) {
-        // get the joint name
-        const auto joint_name = msg.name.at(i);
-        try {
-          const auto joint_index = newMap.at(joint_name);
-          ordered_joint_angles.at(joint_index) = msg.position.at(i);
-        } catch (const std::out_of_range& e) {
-          RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid joint: " << joint_name);
-          return false;
-        }
-      }
-      return true;
-
-    default:
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid number of joints: " << njoints);
-      return false;
+  bool has_arm;
+  if (njoints == kNjointsArm) {
+    has_arm = true;
+  } else if (njoints == kNjointsNoArm) {
+    has_arm = false;
+  } else {
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid number of joints: " << njoints);
+    return false;
   }
+
+  ordered_joint_angles.resize(njoints);
+  std::unordered_map<std::string, size_t> jointMap;
+  std::unordered_map<std::string, size_t> defaultMap = has_arm ? kJointNameToIndexWithArm : kJointNameToIndexWithoutArm;
+  if (robot_namespace.empty()) {
+    jointMap = defaultMap;
+  } else {
+    std::string joint_prefix = robot_namespace + "/";
+    for (const auto& pair : defaultMap) {
+      jointMap[joint_prefix + pair.first] = pair.second;
+    }
+  }
+
+  printMap(jointMap);
+
+  for (size_t i = 0; i < njoints; ++i) {
+    // get the joint name
+    const auto& joint_name = msg.name.at(i);
+    try {
+      const auto joint_index = jointMap.at(joint_name);
+      ordered_joint_angles.at(joint_index) = msg.position.at(i);
+    } catch (const std::out_of_range& e) {
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid joint: " << joint_name);
+      return false;
+    }
+  }
+  return true;
 }
 
 /// @brief Given a joint name (possibly with namespace), return the joint index
