@@ -91,24 +91,29 @@ bool SpotImagePublisher::initialize() {
   const auto publish_compressed_images = parameters_->getPublishCompressedImages();
 
   std::set<spot_ros2::SpotCamera> cameras_used;
+  std::set<spot_ros2::SpotCamera> default_cameras_used = parameters_->getDefaultCamerasUsed(has_arm_);
   const auto cameras_used_parameter = parameters_->getCamerasUsed(has_arm_);
   if (cameras_used_parameter.has_value()) {
     cameras_used = cameras_used_parameter.value();
   } else {
     logger_->logWarn("Invalid cameras_used parameter! Got error: " + cameras_used_parameter.error() +
                      " Defaulting to publishing from all cameras.");
-    cameras_used = parameters_->getDefaultCamerasUsed(has_arm_);
+    cameras_used = default_cameras_used;
   }
 
   // Generate the set of image sources based on which cameras the user has requested that we publish
-  const auto sources =
+  const auto default_sources = createImageSources(publish_rgb_images, publish_depth_images,
+                                                  publish_depth_registered_images, default_cameras_used);
+
+  selected_sources_ =
       createImageSources(publish_rgb_images, publish_depth_images, publish_depth_registered_images, cameras_used);
 
   // Generate the image request message to capture the data from the specified image sources
-  image_request_message_ = createImageRequest(sources, has_rgb_cameras, rgb_image_quality, publish_raw_rgb_cameras);
+  image_request_message_ =
+      createImageRequest(default_sources, has_rgb_cameras, rgb_image_quality, publish_raw_rgb_cameras);
 
   // Create a publisher for each image source
-  middleware_handle_->createPublishers(sources, uncompress_images, publish_compressed_images);
+  middleware_handle_->createPublishers(selected_sources_, uncompress_images, publish_compressed_images);
 
   // Create a timer to request and publish images at a fixed rate
   timer_->setTimer(kImageCallbackPeriod, [this, uncompress_images, publish_compressed_images]() {
@@ -124,8 +129,8 @@ void SpotImagePublisher::timerCallback(bool uncompress_images, bool publish_comp
     return;
   }
 
-  const auto image_result =
-      image_client_interface_->getImages(*image_request_message_, uncompress_images, publish_compressed_images);
+  const auto image_result = image_client_interface_->getImages(*image_request_message_, uncompress_images,
+                                                               publish_compressed_images, selected_sources_);
   if (!image_result.has_value()) {
     logger_->logError(std::string{"Failed to get images: "}.append(image_result.error()));
     return;

@@ -154,7 +154,8 @@ DefaultImageClient::DefaultImageClient(::bosdyn::client::ImageClient* image_clie
 
 tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdyn::api::GetImageRequest request,
                                                                          bool uncompress_images,
-                                                                         bool publish_compressed_images) {
+                                                                         bool publish_compressed_images,
+                                                                         std::set<ImageSource> selected_sources) {
   std::shared_future<::bosdyn::client::GetImageResultType> get_image_result_future =
       image_client_->GetImageAsync(request);
 
@@ -170,40 +171,40 @@ tl::expected<GetImagesResult, std::string> DefaultImageClient::getImages(::bosdy
 
   GetImagesResult out;
   for (const auto& image_response : get_image_result.response.image_responses()) {
-    const auto& image = image_response.shot().image();
-    auto data = image.data();
-
-    const auto info_msg = toCameraInfoMsg(image_response, robot_name_, clock_skew_result.value());
-    if (!info_msg) {
-      return tl::make_unexpected("Failed to convert SDK image response to ROS CameraInfo message: " + info_msg.error());
-    }
-
     const auto& camera_name = image_response.source().name();
     const auto get_source_name_result = fromSpotImageSourceName(camera_name);
     if (!get_source_name_result.has_value()) {
       return tl::make_unexpected("Failed to convert API image source name to ImageSource: " +
                                  get_source_name_result.error());
     }
-
-    if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG && publish_compressed_images) {
-      const auto compressed_image_msg =
-          toCompressedImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
-      if (!compressed_image_msg) {
-        return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " +
-                                   compressed_image_msg.error());
+    const auto image_source = get_source_name_result.value();
+    if (selected_sources.find(image_source) != selected_sources.end()) {
+      // Camera is in the selected sources list and we should get the image
+      const auto& image = image_response.shot().image();
+      const auto info_msg = toCameraInfoMsg(image_response, robot_name_, clock_skew_result.value());
+      if (!info_msg) {
+        return tl::make_unexpected("Failed to convert SDK image response to ROS CameraInfo message: " +
+                                   info_msg.error());
       }
-      out.compressed_images_.try_emplace(get_source_name_result.value(),
-                                         CompressedImageWithCameraInfo{compressed_image_msg.value(), info_msg.value()});
-    }
-
-    if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG || uncompress_images) {
-      const auto image_msg = getDecompressImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
-      if (!image_msg) {
-        return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());
+      if (image.format() == bosdyn::api::Image_Format_FORMAT_JPEG && publish_compressed_images) {
+        const auto compressed_image_msg =
+            toCompressedImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
+        if (!compressed_image_msg) {
+          return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " +
+                                     compressed_image_msg.error());
+        }
+        out.compressed_images_.try_emplace(
+            image_source, CompressedImageWithCameraInfo{compressed_image_msg.value(), info_msg.value()});
       }
-      out.images_.try_emplace(get_source_name_result.value(), ImageWithCameraInfo{image_msg.value(), info_msg.value()});
+      if (image.format() != bosdyn::api::Image_Format_FORMAT_JPEG || uncompress_images) {
+        const auto image_msg = getDecompressImageMsg(image_response.shot(), robot_name_, clock_skew_result.value());
+        if (!image_msg) {
+          return tl::make_unexpected("Failed to convert SDK image response to ROS Image message: " + image_msg.error());
+        }
+        out.images_.try_emplace(image_source, ImageWithCameraInfo{image_msg.value(), info_msg.value()});
+      }
     }
-
+    // We always should get the transforms for all cameras.
     const auto transforms_result = getImageTransforms(image_response, robot_name_, clock_skew_result.value());
     if (transforms_result.has_value()) {
       out.transforms_.insert(out.transforms_.end(), transforms_result.value().begin(), transforms_result.value().end());

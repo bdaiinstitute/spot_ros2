@@ -9,6 +9,7 @@
 #include <tl_expected/expected.hpp>
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -33,7 +34,7 @@ class ImageClientInterface {
   ImageClientInterface& operator=(const ImageClientInterface&) = delete;
   virtual ~ImageClientInterface() = default;
   virtual tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request,
-                                                               bool uncompress_images,
-                                                               bool publish_compressed_images) = 0;
+                                                               bool uncompress_images, bool publish_compressed_images,
+                                                               std::set<ImageSource> selected_sources) = 0;
 };
 }  // namespace spot_ros2

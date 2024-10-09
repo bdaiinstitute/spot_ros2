@@ -9,6 +9,7 @@
 #include <spot_driver/interfaces/image_client_interface.hpp>
 
 #include <memory>
+#include <set>
 #include <string>
 
 namespace spot_ros2 {
@@ -22,7 +23,8 @@ class DefaultImageClient : public ImageClientInterface {
 
   [[nodiscard]] tl::expected<GetImagesResult, std::string> getImages(::bosdyn::api::GetImageRequest request,
                                                                      bool uncompress_images,
-                                                                     bool publish_compressed_images) override;
+                                                                     bool publish_compressed_images,
+                                                                     std::set<ImageSource> selected_sources) override;
 
  private:
   ::bosdyn::client::ImageClient* image_client_;

@@ -6,12 +6,13 @@
 
 #include <spot_driver/interfaces/image_client_interface.hpp>
 
+#include <set>
 #include <string>
 
 namespace spot_ros2::test {
 class MockImageClient : public ImageClientInterface {
  public:
-  MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages, (::bosdyn::api::GetImageRequest, bool, bool),
-              (override));
+  MOCK_METHOD((tl::expected<GetImagesResult, std::string>), getImages,
+              (::bosdyn::api::GetImageRequest, bool, bool, std::set<ImageSource>), (override));
 };
 }  // namespace spot_ros2::test
