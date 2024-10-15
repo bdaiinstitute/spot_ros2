@@ -50,18 +50,6 @@ using StateHandler = std::function<void(::bosdyn::api::RobotStateStreamResponse&
 
 namespace spot_ros2_control {
 
-// Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
-// This will be handled via a parameter in the future so there is the option to change them, for now they are hardcoded
-
-// kp and kd gains for a robot without an arm
-const std::vector<float> no_arm_kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
-const std::vector<float> no_arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
-// kp and kd gains for a robot with an arm
-const std::vector<float> arm_kp = {624, 936, 286,  624, 936, 286, 624, 936, 286, 624,
-                                   936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
-const std::vector<float> arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
-                                   5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
-
 struct JointStates {
   // This struct is used to hold a set of joint states of the robot.
   // The first 12 entries will be the leg joints in the following order:
