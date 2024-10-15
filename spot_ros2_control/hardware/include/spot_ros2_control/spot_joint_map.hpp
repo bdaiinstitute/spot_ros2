@@ -66,16 +66,16 @@ static const std::unordered_map<std::string, size_t> kJointNameToIndexWithoutArm
 /// @param has_arm Boolean indicating if the arm joint angles should be included in the map
 /// @return Unordered map that takes joint name to joint index.
 std::unordered_map<std::string, size_t> get_namespaced_joint_map(const std::string& spot_name, bool has_arm) {
-  const auto defaultMap = has_arm ? kJointNameToIndexWithArm : kJointNameToIndexWithoutArm;
+  const auto default_map = has_arm ? kJointNameToIndexWithArm : kJointNameToIndexWithoutArm;
   if (spot_name.empty()) {
-    return defaultMap;
+    return default_map;
   }
-  std::unordered_map<std::string, size_t> namespacedMap;
+  std::unordered_map<std::string, size_t> namespaced_map;
   const std::string joint_prefix = spot_name + "/";
-  for (const auto& pair : defaultMap) {
-    namespacedMap[joint_prefix + pair.first] = pair.second;
+  for (const auto& pair : default_map) {
+    namespaced_map[joint_prefix + pair.first] = pair.second;
   }
-  return namespacedMap;
+  return namespaced_map;
 }
 
 /// @brief Given a list of joints from a JointStates message, put them in the correct order that the Spot Hardware
@@ -102,13 +102,13 @@ bool order_joint_states(const sensor_msgs::msg::JointState& input_joint_states,
   output_joint_states.velocity.resize(njoints);
   output_joint_states.effort.resize(njoints);
 
-  const auto jointMap = get_namespaced_joint_map(spot_name, has_arm);
+  const auto joint_map = get_namespaced_joint_map(spot_name, has_arm);
 
   for (size_t i = 0; i < njoints; ++i) {
     // get the joint name
     const auto& joint_name = input_joint_states.name.at(i);
     try {
-      const auto joint_index = jointMap.at(joint_name);
+      const auto joint_index = joint_map.at(joint_name);
       output_joint_states.name.at(joint_index) = joint_name;
       output_joint_states.position.at(joint_index) = input_joint_states.position.at(i);
       output_joint_states.velocity.at(joint_index) = input_joint_states.velocity.at(i);
