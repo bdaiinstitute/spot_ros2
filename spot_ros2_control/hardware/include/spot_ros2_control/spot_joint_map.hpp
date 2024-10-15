@@ -76,8 +76,8 @@ void printMap(const std::unordered_map<std::string, size_t>& myMap) {
 /// @param ordered_joint_angles_ A JointStates message that will be ordered properly
 /// @param robot_namespace Namespace that the ros2 control stack was launched in.
 /// @return boolean indicating if the joint angles got ordered successfully.
-bool order_joints(const sensor_msgs::msg::JointState& input_joint_states,
-                  sensor_msgs::msg::JointState& output_joint_states, std::string robot_namespace) {
+bool order_joint_states(const sensor_msgs::msg::JointState& input_joint_states,
+                        sensor_msgs::msg::JointState& output_joint_states, std::string robot_namespace) {
   const auto njoints = input_joint_states.position.size();
   bool has_arm;
   if (njoints == kNjointsArm) {
@@ -132,7 +132,7 @@ int get_joint_index(const std::string& joint_str, bool has_arm = true) {
 
   if (kJointNameToIndexWithArm.find(joint_name) == kJointNameToIndexWithArm.end() &&
       kJointNameToIndexWithoutArm.find(joint_name) == kJointNameToIndexWithoutArm.end()) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Cannot find joint %s in joint map.", joint_name.c_str());
+    RCLCPP_ERROR(rclcpp::get_logger("SpotJointMap"), "Cannot find joint %s in joint map.", joint_name.c_str());
     return -1;
   }
   int joint_idx = has_arm ? kJointNameToIndexWithArm.at(joint_name) : kJointNameToIndexWithoutArm.at(joint_name);
