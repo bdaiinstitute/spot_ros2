@@ -52,10 +52,11 @@ By default, this will load a robot with no arm. If you want your mock robot to h
 
 Examples are provided to replicate [these joint control examples](https://github.com/boston-dynamics/spot-cpp-sdk/tree/master/cpp/examples/joint_control) from Boston Dynamics. They are designed to show how you can send commands to the robot using the built in forward position controller, and can be run in `mock` mode or on the real robot.
 
-Run the following commands to test these examples after launching `spot_ros2_control.launch.py`:
+Run the following commands to test these examples after launching `spot_ros2_control.launch.py`. If your robot does not have an arm:
 ```bash
 ros2 launch spot_ros2_control noarm_squat.launch.py
 ```
+Or, if your robot does have an arm:
 ```bash
 ros2 launch spot_ros2_control wiggle_arm.launch.py
 ```

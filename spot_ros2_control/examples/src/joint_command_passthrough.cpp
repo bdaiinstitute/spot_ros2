@@ -12,7 +12,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "spot_ros2_control/spot_ros2_control_utilities.hpp"
+#include "spot_ros2_control/spot_joint_map.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
 class JointCommandPassthrough : public rclcpp::Node {
