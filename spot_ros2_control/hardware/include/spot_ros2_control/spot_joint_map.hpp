@@ -24,7 +24,6 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "std_msgs/msg/float64_multi_array.hpp"
 
 #pragma once
 
@@ -54,13 +53,13 @@ static const std::unordered_map<std::string, size_t> kJointNameToIndexWithoutArm
 /// @param spot_name Namespace that the ros2 control stack was launched in that prefixes the joint names
 /// @param has_arm Boolean indicating if the arm joint angles should be included in the map
 /// @return Unordered map that takes joint name to joint index.
-std::unordered_map<std::string, size_t> get_namespaced_joint_map(std::string spot_name, bool has_arm) {
-  std::unordered_map<std::string, size_t> defaultMap = has_arm ? kJointNameToIndexWithArm : kJointNameToIndexWithoutArm;
+std::unordered_map<std::string, size_t> get_namespaced_joint_map(const std::string& spot_name, bool has_arm) {
+  const auto defaultMap = has_arm ? kJointNameToIndexWithArm : kJointNameToIndexWithoutArm;
   if (spot_name.empty()) {
     return defaultMap;
   }
   std::unordered_map<std::string, size_t> namespacedMap;
-  std::string joint_prefix = spot_name + "/";
+  const std::string joint_prefix = spot_name + "/";
   for (const auto& pair : defaultMap) {
     namespacedMap[joint_prefix + pair.first] = pair.second;
   }
@@ -74,7 +73,7 @@ std::unordered_map<std::string, size_t> get_namespaced_joint_map(std::string spo
 /// @param spot_name Namespace that the ros2 control stack was launched in that prefixes the joint names
 /// @return boolean indicating if the joint angles got ordered successfully.
 bool order_joint_states(const sensor_msgs::msg::JointState& input_joint_states,
-                        sensor_msgs::msg::JointState& output_joint_states, std::string spot_name) {
+                        sensor_msgs::msg::JointState& output_joint_states, const std::string& spot_name) {
   const auto njoints = input_joint_states.position.size();
   bool has_arm;
   if (njoints == kNjointsArm) {
