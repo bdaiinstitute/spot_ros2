@@ -50,14 +50,31 @@ static const std::unordered_map<std::string, size_t> kJointNameToIndexWithoutArm
     {"rear_left_knee", 8},    {"rear_right_hip_x", 9}, {"rear_right_hip_y", 10}, {"rear_right_knee", 11},
 };
 
+/// @brief Return the joint name to index map depending on the namespace and if the robot has an arm.
+/// @param spot_name Namespace that the ros2 control stack was launched in that prefixes the joint names
+/// @param has_arm Boolean indicating if the arm joint angles should be included in the map
+/// @return Unordered map that takes joint name to joint index.
+std::unordered_map<std::string, size_t> get_namespaced_joint_map(std::string spot_name, bool has_arm) {
+  std::unordered_map<std::string, size_t> defaultMap = has_arm ? kJointNameToIndexWithArm : kJointNameToIndexWithoutArm;
+  if (spot_name.empty()) {
+    return defaultMap;
+  }
+  std::unordered_map<std::string, size_t> namespacedMap;
+  std::string joint_prefix = spot_name + "/";
+  for (const auto& pair : defaultMap) {
+    namespacedMap[joint_prefix + pair.first] = pair.second;
+  }
+  return namespacedMap;
+}
+
 /// @brief Given a list of joints from a JointStates message, put them in the correct order that the Spot Hardware
 /// interface expects.
 /// @param input_joint_states The JointStates message received from the robot
-/// @param ordered_joint_angles_ A JointStates message that will be ordered properly
-/// @param robot_namespace Namespace that the ros2 control stack was launched in.
+/// @param output_joint_states A JointStates message that will be ordered properly
+/// @param spot_name Namespace that the ros2 control stack was launched in that prefixes the joint names
 /// @return boolean indicating if the joint angles got ordered successfully.
 bool order_joint_states(const sensor_msgs::msg::JointState& input_joint_states,
-                        sensor_msgs::msg::JointState& output_joint_states, std::string robot_namespace) {
+                        sensor_msgs::msg::JointState& output_joint_states, std::string spot_name) {
   const auto njoints = input_joint_states.position.size();
   bool has_arm;
   if (njoints == kNjointsArm) {
@@ -72,16 +89,8 @@ bool order_joint_states(const sensor_msgs::msg::JointState& input_joint_states,
   output_joint_states.position.resize(njoints);
   output_joint_states.velocity.resize(njoints);
   output_joint_states.effort.resize(njoints);
-  std::unordered_map<std::string, size_t> jointMap;
-  std::unordered_map<std::string, size_t> defaultMap = has_arm ? kJointNameToIndexWithArm : kJointNameToIndexWithoutArm;
-  if (robot_namespace.empty()) {
-    jointMap = defaultMap;
-  } else {
-    std::string joint_prefix = robot_namespace + "/";
-    for (const auto& pair : defaultMap) {
-      jointMap[joint_prefix + pair.first] = pair.second;
-    }
-  }
+
+  const auto jointMap = get_namespaced_joint_map(spot_name, has_arm);
 
   for (size_t i = 0; i < njoints; ++i) {
     // get the joint name

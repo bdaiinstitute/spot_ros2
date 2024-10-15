@@ -50,9 +50,8 @@ using StateHandler = std::function<void(::bosdyn::api::RobotStateStreamResponse&
 
 namespace spot_ros2_control {
 
-// TODO(tcappellari): Find a cleaner + better way to load and change these
 // Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
-// This will be handled via a parameter in the future.
+// This will be handled via a parameter in the future so there is the option to change them, for now they are hardcoded
 
 // kp and kd gains for a robot without an arm
 const std::vector<float> no_arm_kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
