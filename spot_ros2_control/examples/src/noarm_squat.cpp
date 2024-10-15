@@ -75,8 +75,10 @@ class NoarmSquat : public rclcpp::Node {
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
     if (!initialized_) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
-      bool successful = spot_ros2_control::order_joints(msg, init_joint_angles_, robot_name);
+      sensor_msgs::msg::JointState ordered_joint_angles;
+      bool successful = spot_ros2_control::order_joints(msg, ordered_joint_angles, robot_name);
       if (successful) {
+        init_joint_angles_ = ordered_joint_angles.position;
         RCLCPP_INFO_STREAM(get_logger(), "Initialized! Robot will begin to move.");
         initialized_ = true;
       }

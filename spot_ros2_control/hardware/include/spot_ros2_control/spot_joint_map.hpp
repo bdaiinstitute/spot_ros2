@@ -72,24 +72,26 @@ void printMap(const std::unordered_map<std::string, size_t>& myMap) {
 }
 /// @brief Given a list of joints from a JointStates message, put them in the correct order that the Spot Hardware
 /// interface expects.
-/// @param msg JointStates message
-/// @param ordered_joint_angles_ Joint positions from the joint state message following the correct order.
+/// @param input_joint_states The JointStates message received from the robot
+/// @param ordered_joint_angles_ A JointStates message that will be ordered properly
 /// @param robot_namespace Namespace that the ros2 control stack was launched in.
 /// @return boolean indicating if the joint angles got ordered successfully.
-bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& ordered_joint_angles,
-                  std::string robot_namespace) {
-  const auto njoints = msg.position.size();
+bool order_joints(const sensor_msgs::msg::JointState& input_joint_states,
+                  sensor_msgs::msg::JointState& output_joint_states, std::string robot_namespace) {
+  const auto njoints = input_joint_states.position.size();
   bool has_arm;
   if (njoints == kNjointsArm) {
     has_arm = true;
   } else if (njoints == kNjointsNoArm) {
     has_arm = false;
   } else {
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid number of joints: " << njoints);
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid number of joints: " << njoints);
     return false;
   }
 
-  ordered_joint_angles.resize(njoints);
+  output_joint_states.position.resize(njoints);
+  output_joint_states.velocity.resize(njoints);
+  output_joint_states.effort.resize(njoints);
   std::unordered_map<std::string, size_t> jointMap;
   std::unordered_map<std::string, size_t> defaultMap = has_arm ? kJointNameToIndexWithArm : kJointNameToIndexWithoutArm;
   if (robot_namespace.empty()) {
@@ -105,10 +107,12 @@ bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& 
 
   for (size_t i = 0; i < njoints; ++i) {
     // get the joint name
-    const auto& joint_name = msg.name.at(i);
+    const auto& joint_name = input_joint_states.name.at(i);
     try {
       const auto joint_index = jointMap.at(joint_name);
-      ordered_joint_angles.at(joint_index) = msg.position.at(i);
+      output_joint_states.position.at(joint_index) = input_joint_states.position.at(i);
+      output_joint_states.velocity.at(joint_index) = input_joint_states.velocity.at(i);
+      output_joint_states.effort.at(joint_index) = input_joint_states.effort.at(i);
     } catch (const std::out_of_range& e) {
       RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid joint: " << joint_name);
       return false;
