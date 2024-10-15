@@ -97,6 +97,7 @@ bool order_joint_states(const sensor_msgs::msg::JointState& input_joint_states,
     return false;
   }
 
+  output_joint_states.name.resize(njoints);
   output_joint_states.position.resize(njoints);
   output_joint_states.velocity.resize(njoints);
   output_joint_states.effort.resize(njoints);
@@ -108,6 +109,7 @@ bool order_joint_states(const sensor_msgs::msg::JointState& input_joint_states,
     const auto& joint_name = input_joint_states.name.at(i);
     try {
       const auto joint_index = jointMap.at(joint_name);
+      output_joint_states.name.at(joint_index) = joint_name;
       output_joint_states.position.at(joint_index) = input_joint_states.position.at(i);
       output_joint_states.velocity.at(joint_index) = input_joint_states.velocity.at(i);
       output_joint_states.effort.at(joint_index) = input_joint_states.effort.at(i);
