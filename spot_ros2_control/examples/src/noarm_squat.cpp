@@ -29,7 +29,7 @@ class NoarmSquat : public rclcpp::Node {
     const auto seconds_per_motion =
         declare_parameter("seconds_per_motion", 2.0);  // how many seconds the squat and stand motions should take
 
-    robot_name = declare_parameter("robot_name", "");
+    spot_name = declare_parameter("spot_name", "");
 
     if (stand_joint_angles_.size() != njoints_) {
       throw std::logic_error("Stand joint angles is the wrong size!");
@@ -37,7 +37,6 @@ class NoarmSquat : public rclcpp::Node {
     if (squat_joint_angles_.size() != njoints_) {
       throw std::logic_error("Squat joint angles is the wrong size!");
     }
-    RCLCPP_INFO_STREAM(get_logger(), "Robot name" << robot_name);
 
     points_per_motion_ = static_cast<int>(command_rate * seconds_per_motion);
     command_.data = std::vector<double>(njoints_, 0.0);
@@ -52,7 +51,7 @@ class NoarmSquat : public rclcpp::Node {
   }
 
  private:
-  std::string robot_name;
+  std::string spot_name;
   // For storing joint angles
   std::vector<double> stand_joint_angles_;
   std::vector<double> squat_joint_angles_;
@@ -76,7 +75,7 @@ class NoarmSquat : public rclcpp::Node {
     if (!initialized_) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
       sensor_msgs::msg::JointState ordered_joint_angles;
-      bool successful = spot_ros2_control::order_joint_states(msg, ordered_joint_angles, robot_name);
+      bool successful = spot_ros2_control::order_joint_states(msg, ordered_joint_angles, spot_name);
       if (successful) {
         init_joint_angles_ = ordered_joint_angles.position;
         RCLCPP_INFO_STREAM(get_logger(), "Initialized! Robot will begin to move.");

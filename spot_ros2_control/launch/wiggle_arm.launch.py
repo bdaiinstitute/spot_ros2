@@ -19,7 +19,7 @@ def generate_launch_description():
                 executable="wiggle_arm",
                 name="wiggle_arm",
                 output="screen",
-                parameters=[{"robot_name": LaunchConfiguration("spot_name")}],
+                parameters=[{"spot_name": LaunchConfiguration("spot_name")}],
                 namespace=LaunchConfiguration("spot_name"),
             ),
         ]

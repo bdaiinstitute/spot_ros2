@@ -19,7 +19,7 @@ enum class WiggleState { WIGGLE_DOWN, WIGGLE_MIDDLE, WIGGLE_UP, RESET };
 class WiggleArm : public rclcpp::Node {
  public:
   WiggleArm() : Node("wiggle_arm"), wiggle_state_{WiggleState::WIGGLE_DOWN}, initialized_{false} {
-    robot_name = declare_parameter("robot_name", "");
+    spot_name = declare_parameter("spot_name", "");
     // Indices of the joints to wiggle. This corresponds to WR0 and F1X
     joints_to_wiggle_ = declare_parameter("joints_to_wiggle", std::vector<int>{16, 18});
     // Offset from starting position of each joints_to_wiggle for the first wiggle (up)
@@ -46,7 +46,7 @@ class WiggleArm : public rclcpp::Node {
   }
 
  private:
-  std::string robot_name;
+  std::string spot_name;
   // stores joint angles and desired offsets
   std::vector<double> nominal_joint_angles_;
   std::vector<int64_t> joints_to_wiggle_;
@@ -71,7 +71,7 @@ class WiggleArm : public rclcpp::Node {
     if (!initialized_) {
       RCLCPP_INFO_STREAM(get_logger(), "Received starting joint states");
       sensor_msgs::msg::JointState ordered_joint_angles;
-      bool successful = spot_ros2_control::order_joint_states(msg, ordered_joint_angles, robot_name);
+      bool successful = spot_ros2_control::order_joint_states(msg, ordered_joint_angles, spot_name);
       if (successful) {
         nominal_joint_angles_ = ordered_joint_angles.position;
         command_.data = nominal_joint_angles_;

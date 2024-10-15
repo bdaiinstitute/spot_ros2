@@ -50,12 +50,6 @@ static const std::unordered_map<std::string, size_t> kJointNameToIndexWithoutArm
     {"rear_left_knee", 8},    {"rear_right_hip_x", 9}, {"rear_right_hip_y", 10}, {"rear_right_knee", 11},
 };
 
-void printMap(const std::unordered_map<std::string, size_t>& myMap) {
-  std::cout << "MAP " << std::endl;
-  for (const auto& pair : myMap) {
-    std::cout << pair.first << ": " << pair.second << std::endl;
-  }
-}
 /// @brief Given a list of joints from a JointStates message, put them in the correct order that the Spot Hardware
 /// interface expects.
 /// @param input_joint_states The JointStates message received from the robot
@@ -88,8 +82,6 @@ bool order_joint_states(const sensor_msgs::msg::JointState& input_joint_states,
       jointMap[joint_prefix + pair.first] = pair.second;
     }
   }
-
-  printMap(jointMap);
 
   for (size_t i = 0; i < njoints; ++i) {
     // get the joint name
