@@ -49,6 +49,7 @@ add_library(
 target_compile_features(spot_ros2_control PUBLIC cxx_std_20)
 target_include_directories(spot_ros2_control PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utilities/include>
   $<INSTALL_INTERFACE:include/spot_ros2_control>
 )
 target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client_static)
@@ -79,6 +80,11 @@ install(TARGETS noarm_squat wiggle_arm joint_command_passthrough
 
 install(
   DIRECTORY hardware/include/
+  DESTINATION include/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY utilities/include/
   DESTINATION include/${PROJECT_NAME}
 )
 
