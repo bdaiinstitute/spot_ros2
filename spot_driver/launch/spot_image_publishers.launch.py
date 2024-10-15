@@ -14,8 +14,8 @@ from spot_driver.launch.spot_launch_helpers import (
     DepthRegisteredMode,
     declare_image_publisher_args,
     get_camera_sources,
-    spot_has_arm,
     get_ros_param_dict,
+    spot_has_arm,
 )
 
 
@@ -163,7 +163,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if "frontleft" in camera_sources and "frontright" in camera_sources:
         virtual_camera_frame = "frontmiddle_virtual"
         stitcher_params = {
-            "spot_name": spot_name,
             "body_frame": "body",
             "virtual_camera_frame": virtual_camera_frame,
         }
