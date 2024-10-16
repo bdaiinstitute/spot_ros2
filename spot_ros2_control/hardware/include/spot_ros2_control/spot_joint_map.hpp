@@ -80,12 +80,12 @@ std::unordered_map<std::string, size_t> get_namespaced_joint_map(const std::stri
 
 /// @brief Given a list of joints from a JointStates message, put them in the correct order that the Spot Hardware
 /// interface expects.
+/// @param spot_name Namespace that the ros2 control stack was launched in that prefixes the joint names
 /// @param input_joint_states The JointStates message received from the robot
 /// @param output_joint_states A JointStates message that will be ordered properly
-/// @param spot_name Namespace that the ros2 control stack was launched in that prefixes the joint names
 /// @return boolean indicating if the joint angles got ordered successfully.
-bool order_joint_states(const sensor_msgs::msg::JointState& input_joint_states,
-                        sensor_msgs::msg::JointState& output_joint_states, const std::string& spot_name) {
+bool order_joint_states(const std::string& spot_name, const sensor_msgs::msg::JointState& input_joint_states,
+                        sensor_msgs::msg::JointState& output_joint_states) {
   const auto njoints = input_joint_states.position.size();
   bool has_arm;
   if (njoints == kNjointsArm) {
