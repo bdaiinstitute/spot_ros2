@@ -19,6 +19,7 @@ def generate_launch_description():
                 executable="noarm_squat",
                 name="noarm_squat",
                 output="screen",
+                parameters=[{"spot_name": LaunchConfiguration("spot_name")}],
                 namespace=LaunchConfiguration("spot_name"),
             ),
         ]

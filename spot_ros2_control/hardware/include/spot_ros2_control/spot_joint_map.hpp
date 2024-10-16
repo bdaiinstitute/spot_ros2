@@ -24,11 +24,22 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "std_msgs/msg/float64_multi_array.hpp"
 
 #pragma once
 
 namespace spot_ros2_control {
+
+// Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
+// This will be handled via a parameter in the future so there is the option to change them, for now they are hardcoded
+
+// kp and kd gains for a robot without an arm
+const std::vector<float> no_arm_kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
+const std::vector<float> no_arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
+// kp and kd gains for a robot with an arm
+const std::vector<float> arm_kp = {624, 936, 286,  624, 936, 286, 624, 936, 286, 624,
+                                   936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
+const std::vector<float> arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
+                                   5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
 
 /// @brief Number of joints we expect if the robot has an arm
 inline constexpr int kNjointsArm = 19;
@@ -50,64 +61,64 @@ static const std::unordered_map<std::string, size_t> kJointNameToIndexWithoutArm
     {"rear_left_knee", 8},    {"rear_right_hip_x", 9}, {"rear_right_hip_y", 10}, {"rear_right_knee", 11},
 };
 
-// TODO(tcappellari): Find a cleaner + better way to load and change these
-// Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
-// NOTE: these should be different depending on number of joints the robot has (arm or none)
-// Right now this is just temporary to see if we can get the commands accepted by robot
-// This could be handled via a parameter in the future.
-// kp and kd gains for a robot without an arm
-static const std::vector<float> no_arm_kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
-static const std::vector<float> no_arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
-// kp and kd gains for a robot with an arm
-static const std::vector<float> arm_kp = {624, 936, 286,  624, 936, 286, 624, 936, 286, 624,
-                                          936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
-static const std::vector<float> arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
-                                          5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
+/// @brief Return the joint name to index map depending on the namespace and if the robot has an arm.
+/// @param spot_name Namespace that the ros2 control stack was launched in that prefixes the joint names
+/// @param has_arm Boolean indicating if the arm joint angles should be included in the map
+/// @return Unordered map that takes joint name to joint index.
+std::unordered_map<std::string, size_t> get_namespaced_joint_map(const std::string& spot_name, bool has_arm) {
+  const auto default_map = has_arm ? kJointNameToIndexWithArm : kJointNameToIndexWithoutArm;
+  if (spot_name.empty()) {
+    return default_map;
+  }
+  std::unordered_map<std::string, size_t> namespaced_map;
+  const std::string joint_prefix = spot_name + "/";
+  for (const auto& pair : default_map) {
+    namespaced_map[joint_prefix + pair.first] = pair.second;
+  }
+  return namespaced_map;
+}
+
 /// @brief Given a list of joints from a JointStates message, put them in the correct order that the Spot Hardware
 /// interface expects.
-/// @param msg JointStates message
-/// @param ordered_joint_angles_ Joint positions from the joint state message following the correct order.
+/// @param spot_name Namespace that the ros2 control stack was launched in that prefixes the joint names
+/// @param input_joint_states The JointStates message received from the robot
+/// @param output_joint_states A JointStates message that will be ordered properly
 /// @return boolean indicating if the joint angles got ordered successfully.
-bool order_joints(const sensor_msgs::msg::JointState& msg, std::vector<double>& ordered_joint_angles) {
-  // this needs to be fixed so that it works if the joints are namespaced
-  const auto njoints = msg.position.size();
-  ordered_joint_angles.resize(njoints);
-  // Different joint index maps for arm-full and arm-less
-  switch (njoints) {
-    // case without arm
-    case kNjointsNoArm:
-      for (size_t i = 0; i < njoints; ++i) {
-        // get the joint name
-        const auto& joint_name = msg.name.at(i);
-        try {
-          const auto joint_index = kJointNameToIndexWithoutArm.at(joint_name);
-          ordered_joint_angles.at(joint_index) = msg.position.at(i);
-        } catch (const std::out_of_range& e) {
-          RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid joint: " << joint_name);
-          return false;
-        }
-      }
-      return true;
-
-    // case with arm
-    case kNjointsArm:
-      for (size_t i = 0; i < njoints; i++) {
-        // get the joint name
-        const auto joint_name = msg.name.at(i);
-        try {
-          const auto joint_index = kJointNameToIndexWithArm.at(joint_name);
-          ordered_joint_angles.at(joint_index) = msg.position.at(i);
-        } catch (const std::out_of_range& e) {
-          RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid joint: " << joint_name);
-          return false;
-        }
-      }
-      return true;
-
-    default:
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), "Invalid number of joints: " << njoints);
-      return false;
+bool order_joint_states(const std::string& spot_name, const sensor_msgs::msg::JointState& input_joint_states,
+                        sensor_msgs::msg::JointState& output_joint_states) {
+  const auto njoints = input_joint_states.position.size();
+  bool has_arm;
+  if (njoints == kNjointsArm) {
+    has_arm = true;
+  } else if (njoints == kNjointsNoArm) {
+    has_arm = false;
+  } else {
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid number of joints: " << njoints);
+    return false;
   }
+
+  output_joint_states.name.resize(njoints);
+  output_joint_states.position.resize(njoints);
+  output_joint_states.velocity.resize(njoints);
+  output_joint_states.effort.resize(njoints);
+
+  const auto joint_map = get_namespaced_joint_map(spot_name, has_arm);
+
+  for (size_t i = 0; i < njoints; ++i) {
+    // get the joint name
+    const auto& joint_name = input_joint_states.name.at(i);
+    try {
+      const auto joint_index = joint_map.at(joint_name);
+      output_joint_states.name.at(joint_index) = joint_name;
+      output_joint_states.position.at(joint_index) = input_joint_states.position.at(i);
+      output_joint_states.velocity.at(joint_index) = input_joint_states.velocity.at(i);
+      output_joint_states.effort.at(joint_index) = input_joint_states.effort.at(i);
+    } catch (const std::out_of_range& e) {
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid joint: " << joint_name);
+      return false;
+    }
+  }
+  return true;
 }
 
 /// @brief Given a joint name (possibly with namespace), return the joint index
@@ -121,7 +132,7 @@ int get_joint_index(const std::string& joint_str, bool has_arm = true) {
 
   if (kJointNameToIndexWithArm.find(joint_name) == kJointNameToIndexWithArm.end() &&
       kJointNameToIndexWithoutArm.find(joint_name) == kJointNameToIndexWithoutArm.end()) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Cannot find joint %s in joint map.", joint_name.c_str());
+    RCLCPP_ERROR(rclcpp::get_logger("SpotJointMap"), "Cannot find joint %s in joint map.", joint_name.c_str());
     return -1;
   }
   int joint_idx = has_arm ? kJointNameToIndexWithArm.at(joint_name) : kJointNameToIndexWithoutArm.at(joint_name);
