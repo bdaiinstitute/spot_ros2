@@ -2590,8 +2590,8 @@ class SpotROS(Node):
             qz=data.pose.orientation.z,
             qw=data.pose.orientation.w,
             ref_frame=data.header.frame_id,
-            duration=self.cmd_duration,
             ensure_power_on_and_stand=False,
+            blocking=False,
         )
         if not result[0]:
             self.get_logger().warning(f"Failed to go to arm pose: {result[1]}")
