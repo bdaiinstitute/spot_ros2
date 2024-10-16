@@ -4,7 +4,7 @@
 Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 -->
 <package format="3">
-  <name>spot_ros2_control</name>
+  <name>spot_hardware_interface</name>
   <version>0.0.0</version>
   <description>Package for using ROS 2 control to use the low-level functionality of Spot.</description>
   <maintainer email="engineering@theaiinstitute.com">AI Institute</maintainer>
@@ -17,14 +17,8 @@ Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>bosdyn</depend>
-  <depend>std_msgs</depend>
-  <depend>sensor_msgs</depend>
 
-  <exec_depend>controller_manager</exec_depend>
   <exec_depend>spot_description</exec_depend>
-  <exec_depend>spot_driver</exec_depend>
-  <exec_depend>spot_controllers</exec_depend>
-  <exec_depend>spot_hardware_interface</exec_depend>
   <exec_depend>xacro</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
