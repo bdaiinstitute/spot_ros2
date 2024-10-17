@@ -97,28 +97,6 @@ inline const std::set<std::string, std::less<>> kSpotInternalFrames{
 };
 
 /**
- * @brief Given an input string and a prefix string which is a substring starting at the beginning of the input string,
- * return a new string which is the difference between the input string and the prefix string.
- * @param input
- * @param prefix
- * @return A new string which is the difference between the input string and the prefix string.
- */
-std::string stripPrefix(const std::string& input, const std::string& prefix) {
-  const std::size_t prefix_index = input.find(prefix);
-  if (prefix_index == std::string::npos) {
-    // The input does not contain the prefix
-    return input;
-  }
-  if (prefix_index > 0) {
-    // The input does contain the prefix substring, but it does not begin at the start of the input.
-    // Return the unmodified input.
-    return input;
-  }
-
-  return input.substr(prefix.size());
-}
-
-/**
  * @brief Create string messages corresponding to the values of the MutateWorldObjectResponse_Status enum.
  * @param status Enum to convert.
  * @return The string corresponding to the enum.
@@ -329,13 +307,14 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
       world_object_update_timer_{std::move(world_object_update_timer)},
       tf_broadcaster_timer_{std::move(tf_broadcaster_timer)},
       clock_interface_{std::move(clock_interface)} {
-  const auto spot_name = parameter_interface_->getSpotName();
-  frame_prefix_ = spot_name.empty() ? "" : spot_name + "/";
+  frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
 
-  preferred_base_frame_ = stripPrefix(parameter_interface_->getPreferredOdomFrame(), frame_prefix_);
-  preferred_base_frame_with_prefix_ = preferred_base_frame_.find('/') == std::string::npos
-                                          ? spot_name + "/" + preferred_base_frame_
-                                          : preferred_base_frame_;
+  // TODO(param-refactor): this was refactored to match the logic from state_publisher,
+  // find out if the stripping and re-adding wasn't done in the particular way intentionally for something
+  const std::string preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
+  preferred_base_frame_ = stripPrefix(preferred_odom_frame, frame_prefix_);
+  preferred_base_frame_with_prefix_ =
+      preferred_odom_frame.find('/') == std::string::npos ? frame_prefix_ + preferred_odom_frame : preferred_odom_frame;
 
   // TODO(khughes): This is temporarily disabled to reduce driver's spew about TF extrapolation.
   // world_object_update_timer_->setTimer(kWorldObjectSyncPeriod, [this]() {
