@@ -23,7 +23,7 @@
 
 # Overview
 This is a ROS 2 package for Boston Dynamics' Spot. The package contains all necessary topics, services and actions to teleoperate or navigate Spot.
-This package is derived from this [ROS 1 package](https://github.com/heuristicus/spot_ros). This package currently corresponds to version 4.0.2 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v4.0.2).
+This package is derived from this [ROS 1 package](https://github.com/heuristicus/spot_ros). This package currently corresponds to version 4.1.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v4.1.0).
 
 ## Prerequisites
 This package is tested for Ubuntu 22.04 and ROS 2 Humble, which can be installed following [this guide](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html). 
