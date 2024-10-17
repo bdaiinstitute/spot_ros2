@@ -5,9 +5,6 @@ cmake_minimum_required(VERSION 3.22)
 # This is here so we can use jthread from C++ 20
 set(CMAKE_CXX_STANDARD 20)
 
-# Taken from spot_driver CMakeLists
-list(APPEND CMAKE_PREFIX_PATH /opt/spot-cpp-sdk)
-
 project(spot_ros2_control)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -16,8 +13,8 @@ endif()
 
 # Dependencies
 find_package(ament_cmake REQUIRED)
-find_package(bosdyn REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
+  bosdyn_cmake_module
   hardware_interface
   controller_manager
   pluginlib
@@ -31,6 +28,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
+find_package(bosdyn REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -51,7 +49,7 @@ target_include_directories(spot_ros2_control PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
   $<INSTALL_INTERFACE:include/spot_ros2_control>
 )
-target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client_static)
+target_link_libraries(spot_ros2_control PUBLIC bosdyn::bosdyn_client)
 ament_target_dependencies(
   spot_ros2_control PUBLIC
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
