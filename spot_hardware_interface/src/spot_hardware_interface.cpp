@@ -475,12 +475,14 @@ bool SpotHardware::start_command_stream() {
   // Assign k values depending on if the robot has an arm or not
   switch (njoints_) {
     case spot_hardware_interface::kNjointsArm:
-      kp = spot_hardware_interface::arm_kp;
-      kd = spot_hardware_interface::arm_kd;
+      kp.assign(std::begin(spot_hardware_interface::kDefaultKpArm), std::end(spot_hardware_interface::kDefaultKpArm));
+      kd.assign(std::begin(spot_hardware_interface::kDefaultKdArm), std::end(spot_hardware_interface::kDefaultKdArm));
       break;
     case spot_hardware_interface::kNjointsNoArm:
-      kp = spot_hardware_interface::no_arm_kp;
-      kd = spot_hardware_interface::no_arm_kd;
+      kp.assign(std::begin(spot_hardware_interface::kDefaultKpNoArm),
+                std::end(spot_hardware_interface::kDefaultKpNoArm));
+      kd.assign(std::begin(spot_hardware_interface::kDefaultKdNoArm),
+                std::end(spot_hardware_interface::kDefaultKdNoArm));
       break;
     default:
       RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "WRONG # OF JOINTS");

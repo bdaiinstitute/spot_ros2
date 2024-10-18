@@ -17,27 +17,32 @@
 // limitations under the License.
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #pragma once
 
 namespace spot_hardware_interface {
 
-// Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
-// This will be handled via a parameter in the future so there is the option to change them, for now they are hardcoded
-
-// kp and kd gains for a robot without an arm
-const std::vector<float> no_arm_kp = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
-const std::vector<float> no_arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
-// kp and kd gains for a robot with an arm
-const std::vector<float> arm_kp = {624, 936, 286,  624, 936, 286, 624, 936, 286, 624,
-                                   936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
-const std::vector<float> arm_kd = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
-                                   5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
+/// @brief Number of joints we expect if the robot has no arm
+inline constexpr int kNjointsNoArm = 12;
 
 /// @brief Number of joints we expect if the robot has an arm
 inline constexpr int kNjointsArm = 19;
-/// @brief Number of joints we expect if the robot has no arm
-inline constexpr int kNjointsNoArm = 12;
+
+// Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
+// This will be handled via a parameter in the future so there is the option to change them, for now they are hardcoded
+
+/// @brief Default Kp gains for robot without an arm
+inline constexpr float kDefaultKpNoArm[] = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
+
+/// @brief Default Kd gains for robot without an arm
+inline constexpr float kDefaultKdNoArm[] = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
+
+/// @brief Default Kp gains for robot with an arm
+inline constexpr float kDefaultKpArm[] = {624, 936, 286,  624, 936, 286, 624, 936, 286, 624,
+                                          936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
+
+/// @brief Default Kd gains for robot with an arm
+inline constexpr float kDefaultKdArm[] = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
+                                          5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
 
 }  // namespace spot_hardware_interface
