@@ -487,8 +487,10 @@ bool SpotHardware::start_command_stream() {
       return false;
   }
 
-  joint_cmd->mutable_gains()->mutable_k_q_p()->Assign(kp.begin(), kp.end());
-  joint_cmd->mutable_gains()->mutable_k_qd_p()->Assign(kd.begin(), kd.end());
+  joint_cmd->mutable_gains()->mutable_k_q_p()->Clear();
+  joint_cmd->mutable_gains()->mutable_k_q_p()->Add(kp.begin(), kp.end());
+  joint_cmd->mutable_gains()->mutable_k_qd_p()->Clear();
+  joint_cmd->mutable_gains()->mutable_k_qd_p()->Add(kd.begin(), kd.end());
 
   // Let it extrapolate the command a little
   joint_cmd->mutable_extrapolation_duration()->CopyFrom(
@@ -518,9 +520,12 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
   // build protobuf
   auto* joint_cmd = joint_request_.mutable_joint_command();
 
-  joint_cmd->mutable_position()->Assign(position.begin(), position.end());
-  joint_cmd->mutable_velocity()->Assign(velocity.begin(), velocity.end());
-  joint_cmd->mutable_load()->Assign(load.begin(), load.end());
+  joint_cmd->mutable_position()->Clear();
+  joint_cmd->mutable_position()->Add(position.begin(), position.end());
+  joint_cmd->mutable_velocity()->Clear();
+  joint_cmd->mutable_velocity()->Add(velocity.begin(), velocity.end());
+  joint_cmd->mutable_load()->Clear();
+  joint_cmd->mutable_load()->Add(load.begin(), load.end());
 
   if (endpoint_ == nullptr) {
     auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();

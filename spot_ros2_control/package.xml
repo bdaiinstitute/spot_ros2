@@ -16,8 +16,6 @@ Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
-  <depend>bosdyn</depend>
-  <depend>bosdyn_cmake_module</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
 

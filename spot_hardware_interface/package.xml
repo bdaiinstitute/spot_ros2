@@ -17,6 +17,7 @@ Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>bosdyn</depend>
+  <depend>bosdyn_cmake_module</depend>
 
   <exec_depend>spot_description</exec_depend>
   <exec_depend>xacro</exec_depend>
