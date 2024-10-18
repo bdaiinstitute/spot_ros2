@@ -38,7 +38,9 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getPreferredOdomFrame() const override { return "odom"; }
 
-  std::string getSpotName() const override { return spot_name; }
+  std::optional<std::string> getFramePrefix() const override { return std::nullopt; }
+
+  std::string getSpotNameWithFallbackToNamespace() const override { return spot_name; }
 
   std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm) const override {
     const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
@@ -52,6 +54,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(const bool has_arm) const override {
     return getDefaultCamerasUsed(has_arm);
   }
+
+  std::string getFramePrefixWithDefaultFallback() const override { return spot_name + "/"; }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};
   static constexpr auto kExampleUsername{"spot_user"};
