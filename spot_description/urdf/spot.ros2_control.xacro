@@ -76,7 +76,7 @@
                 <param name="state_following_offset">0.0</param>
             </xacro:if>
             <xacro:if value="${interface_type == 'robot'}">
-                <plugin>spot_ros2_control/SpotHardware</plugin>
+                <plugin>spot_hardware_interface/SpotHardware</plugin>
                 <param name="hostname">$(optenv SPOT_IP ${hostname})</param>
                 <param name="username">$(optenv BOSDYN_CLIENT_USERNAME ${username})</param>
                 <param name="password">$(optenv BOSDYN_CLIENT_PASSWORD ${password})</param>

@@ -44,7 +44,7 @@ add_library(
 target_compile_features(spot_hardware_interface PUBLIC cxx_std_20)
 target_include_directories(spot_hardware_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include/spot_hardware_interface>
+  $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(spot_hardware_interface PUBLIC bosdyn::bosdyn_client_static)
 ament_target_dependencies(
@@ -62,7 +62,7 @@ pluginlib_export_plugin_description_file(hardware_interface spot_hardware_interf
 
 install(
   DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
+  DESTINATION include
 )
 
 install(TARGETS spot_hardware_interface
