@@ -14,14 +14,10 @@ endif()
 # Dependencies
 find_package(ament_cmake REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
-  controller_manager
   rclcpp
   rclcpp_lifecycle
   sensor_msgs
   std_msgs
-  spot_description
-  spot_controllers
-  spot_hardware_interface
 )
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
