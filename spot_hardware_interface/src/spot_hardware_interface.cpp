@@ -16,7 +16,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "spot_ros2_control/spot_hardware_interface.hpp"
+#include "spot_hardware_interface/spot_hardware_interface.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -28,7 +28,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-namespace spot_ros2_control {
+namespace spot_hardware_interface {
 
 void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state) {
   // lock so that read/write doesn't happen at the same time
@@ -410,7 +410,7 @@ bool SpotHardware::start_state_stream(StateHandler&& state_policy) {
   state_client_ = robot_state_stream_client_resp.move();
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot State Client created");
 
-  state_thread_ = std::jthread(&spot_ros2_control::state_stream_loop, state_client_, state_policy);
+  state_thread_ = std::jthread(&spot_hardware_interface::state_stream_loop, state_client_, state_policy);
   state_stream_started_ = true;
   return true;
 }
@@ -474,13 +474,15 @@ bool SpotHardware::start_command_stream() {
 
   // Assign k values depending on if the robot has an arm or not
   switch (njoints_) {
-    case spot_ros2_control::kNjointsArm:
-      kp = spot_ros2_control::arm_kp;
-      kd = spot_ros2_control::arm_kd;
+    case spot_hardware_interface::kNjointsArm:
+      kp.assign(std::begin(spot_hardware_interface::kDefaultKpArm), std::end(spot_hardware_interface::kDefaultKpArm));
+      kd.assign(std::begin(spot_hardware_interface::kDefaultKdArm), std::end(spot_hardware_interface::kDefaultKdArm));
       break;
-    case spot_ros2_control::kNjointsNoArm:
-      kp = spot_ros2_control::no_arm_kp;
-      kd = spot_ros2_control::no_arm_kd;
+    case spot_hardware_interface::kNjointsNoArm:
+      kp.assign(std::begin(spot_hardware_interface::kDefaultKpNoArm),
+                std::end(spot_hardware_interface::kDefaultKpNoArm));
+      kd.assign(std::begin(spot_hardware_interface::kDefaultKdNoArm),
+                std::end(spot_hardware_interface::kDefaultKdNoArm));
       break;
     default:
       RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "WRONG # OF JOINTS");
@@ -559,8 +561,8 @@ void SpotHardware::release_lease() {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return lease status: %s", resp.status.DebugString().c_str());
 }
 
-}  // namespace spot_ros2_control
+}  // namespace spot_hardware_interface
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(spot_ros2_control::SpotHardware, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(spot_hardware_interface::SpotHardware, hardware_interface::SystemInterface)
