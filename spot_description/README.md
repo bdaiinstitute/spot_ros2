@@ -79,3 +79,10 @@ desired_mass = {
 }
 print(world.get_urdf_inertial(use_diagonal_inertia=True, desired_mass=desired_mass))
 ```
+
+## ROS 2 Control
+The Spot model also has the option to be constructed with ROS 2 control tags, which is used in the [`spot_ros2_control`](../spot_ros2_control/) package. To get the plain URDF file containing these tags, run
+
+```
+ros2 run xacro xacro -o ./urdf/out/spot_ros2_control.urdf ./urdf/spot.urdf.xacro add_ros2_control_tag:=True
+```

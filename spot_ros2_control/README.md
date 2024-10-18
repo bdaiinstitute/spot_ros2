@@ -1,6 +1,6 @@
 # spot_ros2_control
 
-This is a ROS 2 package designed to communicate with Spot's joint control API through ROS 2 control. It uses the hardware interface provided in the [`spot_hardware_interface`](../spot_hardware_interface/) package to connect to the robot, and also supports a `mock` hardware interface that forwards commands directly to state. By default, it loads a standard joint state broadcaster and forward position controller provided from `ros2_control`. An alternative controller from [`spot_controllers`](../spot_controllers/) that forwards position, velocity, and effort commands at the same time is also available.
+This is a ROS 2 package designed to communicate with Spot's joint control API through ROS 2 control. It uses the hardware interface provided in the [`spot_hardware_interface`](../spot_hardware_interface/) package to connect to the robot (and also supports a `mock` hardware interface that forwards commands directly to state). By default, it loads a standard joint state broadcaster and forward position controller provided from `ros2_control`. An alternative controller from [`spot_controllers`](../spot_controllers/) that forwards position, velocity, and effort commands at the same time is also available.
 
 ## On-robot
 
