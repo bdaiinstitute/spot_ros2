@@ -6,7 +6,7 @@ Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 <package format="3">
   <name>spot_ros2_control</name>
   <version>0.0.0</version>
-  <description>Package for using ROS 2 control to use the low-level functionality of Spot.</description>
+  <description>Package for using ROS 2 control to use Spot's joint control API</description>
   <maintainer email="engineering@theaiinstitute.com">AI Institute</maintainer>
   <license>MIT</license>
 

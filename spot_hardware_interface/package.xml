@@ -6,7 +6,7 @@ Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 <package format="3">
   <name>spot_hardware_interface</name>
   <version>0.0.0</version>
-  <description>Package for using ROS 2 control to use the low-level functionality of Spot.</description>
+  <description>Package containing a ROS 2 control hardware interface for Spot using its joint control API</description>
   <maintainer email="engineering@theaiinstitute.com">AI Institute</maintainer>
   <license>MIT</license>
 
