@@ -14,7 +14,6 @@ endif()
 # Dependencies
 find_package(ament_cmake REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
-  bosdyn_cmake_module
   controller_manager
   rclcpp
   rclcpp_lifecycle
@@ -27,7 +26,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
-find_package(bosdyn REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
