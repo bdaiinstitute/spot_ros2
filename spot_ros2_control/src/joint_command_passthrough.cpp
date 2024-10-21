@@ -12,6 +12,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
+#include "spot_hardware_interface/spot_constants.hpp"
 #include "spot_ros2_control/spot_joint_map.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
@@ -34,7 +35,7 @@ class JointCommandPassthrough : public rclcpp::Node {
 
     command_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>(controller_commands_topic, 10);
 
-    spot_command_.data.reserve(spot_ros2_control::kNjointsArm);
+    spot_command_.data.reserve(spot_hardware_interface::kNjointsArm);
   }
 
  private:
@@ -47,15 +48,16 @@ class JointCommandPassthrough : public rclcpp::Node {
 
   void joint_states_callback(const sensor_msgs::msg::JointState& msg) {
     // Keep track of the current joint positions
-    if (msg.name.size() != static_cast<std::vector<int>::size_type>(spot_ros2_control::kNjointsArm)) {
-      RCLCPP_ERROR(get_logger(), "Expected %i dofs, but got %li", spot_ros2_control::kNjointsArm, msg.name.size());
+    if (msg.name.size() != static_cast<std::vector<int>::size_type>(spot_hardware_interface::kNjointsArm)) {
+      RCLCPP_ERROR(get_logger(), "Expected %i dofs, but got %li", spot_hardware_interface::kNjointsArm,
+                   msg.name.size());
       return;
     }
 
     spot_command_.data.clear();
-    spot_command_.data.resize(spot_ros2_control::kNjointsArm);
+    spot_command_.data.resize(spot_hardware_interface::kNjointsArm);
 
-    for (int i = 0; i < spot_ros2_control::kNjointsArm; ++i) {
+    for (int i = 0; i < spot_hardware_interface::kNjointsArm; ++i) {
       int joint_idx = spot_ros2_control::get_joint_index(msg.name[i]);
       if (joint_idx < 0) {
         return;
