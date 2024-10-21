@@ -24,15 +24,11 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
+#include "spot_hardware_interface/spot_constants.hpp"
 
 #pragma once
 
 namespace spot_ros2_control {
-
-/// @brief Number of joints we expect if the robot has an arm
-inline constexpr int kNjointsArm = 19;
-/// @brief Number of joints we expect if the robot has no arm
-inline constexpr int kNjointsNoArm = 12;
 
 /// @brief Maps joint name to desired joint index for robots with arms
 static const std::unordered_map<std::string, size_t> kJointNameToIndexWithArm{

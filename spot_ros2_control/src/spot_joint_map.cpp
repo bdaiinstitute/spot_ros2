@@ -19,9 +19,9 @@ bool order_joint_states(const std::string& spot_name, const sensor_msgs::msg::Jo
                         sensor_msgs::msg::JointState& output_joint_states) {
   const auto njoints = input_joint_states.position.size();
   bool has_arm;
-  if (njoints == kNjointsArm) {
+  if (njoints == spot_hardware_interface::kNjointsArm) {
     has_arm = true;
-  } else if (njoints == kNjointsNoArm) {
+  } else if (njoints == spot_hardware_interface::kNjointsNoArm) {
     has_arm = false;
   } else {
     RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotJointMap"), "Invalid number of joints: " << njoints);
