@@ -30,14 +30,15 @@ inline constexpr int kNjointsArm = 19;
 // This will be handled via a parameter in the future so there is the option to change them, for now they are hardcoded
 
 /// @brief Default Kp gains for robot without an arm
-inline constexpr float kDefaultKpNoArm[] = {624, 936, 286, 624, 936, 286, 624, 936, 286, 624, 936, 286};
+inline constexpr float kDefaultKpNoArm[] = {624.0, 936.0, 286.0, 624.0, 936.0, 286.0,
+                                            624.0, 936.0, 286.0, 624.0, 936.0, 286.0};
 
 /// @brief Default Kd gains for robot without an arm
 inline constexpr float kDefaultKdNoArm[] = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
 
 /// @brief Default Kp gains for robot with an arm
-inline constexpr float kDefaultKpArm[] = {624, 936, 286,  624, 936, 286, 624, 936, 286, 624,
-                                          936, 286, 1020, 255, 204, 102, 102, 102, 16.0};
+inline constexpr float kDefaultKpArm[] = {624.0, 936.0, 286.0,  624.0, 936.0, 286.0, 624.0, 936.0, 286.0, 624.0,
+                                          936.0, 286.0, 1020.0, 255.0, 204.0, 102.0, 102.0, 102.0, 16.0};
 
 /// @brief Default Kd gains for robot with an arm
 inline constexpr float kDefaultKdArm[] = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
