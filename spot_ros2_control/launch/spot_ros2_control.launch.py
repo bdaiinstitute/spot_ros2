@@ -20,6 +20,7 @@ from launch_ros.substitutions import FindPackageShare
 from spot_driver.launch.spot_launch_helpers import (
     IMAGE_PUBLISHER_ARGS,
     declare_image_publisher_args,
+    get_ros_param_dict,
     get_login_parameters,
     spot_has_arm,
 )
@@ -106,9 +107,19 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_arm.
     if hardware_interface == "robot":
-        arm = spot_has_arm(config_file_path=config_file, spot_name="")
-        username, password, hostname = get_login_parameters(config_file)[:3]
-        login_params = f" hostname:={hostname} username:={username} password:={password}"
+        # arm = spot_has_arm(config_file_path=config_file, spot_name="")
+        arm = True
+        # username, password, hostname = get_login_parameters(config_file)[:3]
+        username = "user"
+        password = "password"
+        hostname = "hostname"
+        login_params = f" hostname:={hostname} username:={username} password:={password} "
+        param_dict = get_ros_param_dict(config_file)
+        gains_str = ""
+        if "kp" in param_dict and "kd" in param_dict:
+            kp = ' '.join(map(str, param_dict["kp"]))
+            kd = ' '.join(map(str, param_dict["kd"]))
+            gains_str = f"kp:=\"{kp}\" kd:=\"{kd}\" "
     else:
         arm = mock_arm
         login_params = ""
@@ -128,8 +139,10 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             " hardware_interface_type:=",
             LaunchConfiguration("hardware_interface"),
             login_params,
+            gains_str,
         ]
     )
+    # print(robot_urdf.perform(context))
     robot_description = {"robot_description": robot_urdf}
 
     # If no controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
