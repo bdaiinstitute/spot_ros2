@@ -60,16 +60,61 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   username_ = info_.hardware_parameters["username"];
   password_ = info_.hardware_parameters["password"];
 
-  const auto kp = info_.hardware_parameters["kp"];
-  const auto kd = info_.hardware_parameters["kd"];
-
-  std::cout << "\n\n\n\n\nKP " << kp << std::endl;
-  std::cout << "\n\n\n\n\nKD " << kd << std::endl;
+  // Get the user-passed in KP and KD values.
+  const auto kp_string = info_.hardware_parameters["kp"];
+  const auto kd_string = info_.hardware_parameters["kd"];
+  std::istringstream kp_stream(kp_string);
+  kp_.assign(std::istream_iterator<float>(kp_stream), std::istream_iterator<float>());
+  std::istringstream kd_stream(kd_string);
+  kd_.assign(std::istream_iterator<float>(kd_stream), std::istream_iterator<float>());
 
   hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
 
   njoints_ = hw_states_.size() / interfaces_per_joint_;
+
+  if (njoints_ == kNjointsArm) {
+    if (kp_.size() != kNjointsArm) {
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kp has %ld entries, expected %d. Falling back to default gains.",
+                  kp_.size(), kNjointsArm);
+      kp_.assign(std::begin(spot_hardware_interface::kDefaultKpArm), std::end(spot_hardware_interface::kDefaultKpArm));
+    }
+    if (kd_.size() != kNjointsArm) {
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kd has %ld entries, expected %d. Falling back to default gains.",
+                  kd_.size(), kNjointsArm);
+      kd_.assign(std::begin(spot_hardware_interface::kDefaultKdArm), std::end(spot_hardware_interface::kDefaultKdArm));
+    }
+  } else if (njoints_ == kNjointsNoArm) {
+    if (kp_.size() != kNjointsNoArm) {
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kp has %ld entries, expected %d. Falling back to default gains.",
+                  kp_.size(), kNjointsNoArm);
+      kp_.assign(std::begin(spot_hardware_interface::kDefaultKpNoArm),
+                 std::end(spot_hardware_interface::kDefaultKpNoArm));
+    }
+    if (kd_.size() != kNjointsNoArm) {
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kd has %ld entries, expected %d. Falling back to default gains.",
+                  kd_.size(), kNjointsArm);
+      kd_.assign(std::begin(spot_hardware_interface::kDefaultKdNoArm),
+                 std::end(spot_hardware_interface::kDefaultKdNoArm));
+    }
+  } else {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"),
+                 "Got %ld joints, expected either %d (Spot with arm) or %d (Spot without arm)!!", njoints_, kNjointsArm,
+                 kNjointsNoArm);
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  std::cout << "KP ";
+  for (auto p : kp_) {
+    std::cout << p << " ";
+  }
+  std::cout << std::endl;
+
+  std::cout << "KD ";
+  for (auto d : kd_) {
+    std::cout << d << " ";
+  }
+  std::cout << std::endl;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Assumes three state and three command interfaces for each joint (position, velocity, and effort).
@@ -475,30 +520,10 @@ bool SpotHardware::start_command_stream() {
   // Fill in the parts of the joint streaming command request that are constant.
   auto* joint_cmd = joint_request_.mutable_joint_command();
 
-  std::vector<float> kp;
-  std::vector<float> kd;
-
-  // Assign k values depending on if the robot has an arm or not
-  switch (njoints_) {
-    case spot_hardware_interface::kNjointsArm:
-      kp.assign(std::begin(spot_hardware_interface::kDefaultKpArm), std::end(spot_hardware_interface::kDefaultKpArm));
-      kd.assign(std::begin(spot_hardware_interface::kDefaultKdArm), std::end(spot_hardware_interface::kDefaultKdArm));
-      break;
-    case spot_hardware_interface::kNjointsNoArm:
-      kp.assign(std::begin(spot_hardware_interface::kDefaultKpNoArm),
-                std::end(spot_hardware_interface::kDefaultKpNoArm));
-      kd.assign(std::begin(spot_hardware_interface::kDefaultKdNoArm),
-                std::end(spot_hardware_interface::kDefaultKdNoArm));
-      break;
-    default:
-      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "WRONG # OF JOINTS");
-      return false;
-  }
-
   joint_cmd->mutable_gains()->mutable_k_q_p()->Clear();
-  joint_cmd->mutable_gains()->mutable_k_q_p()->Add(kp.begin(), kp.end());
+  joint_cmd->mutable_gains()->mutable_k_q_p()->Add(kp_.begin(), kp_.end());
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Clear();
-  joint_cmd->mutable_gains()->mutable_k_qd_p()->Add(kd.begin(), kd.end());
+  joint_cmd->mutable_gains()->mutable_k_qd_p()->Add(kd_.begin(), kd_.end());
 
   // Let it extrapolate the command a little
   joint_cmd->mutable_extrapolation_duration()->CopyFrom(

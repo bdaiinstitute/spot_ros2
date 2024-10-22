@@ -20,6 +20,7 @@
 
 #include <functional>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -127,6 +128,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
   std::string hostname_;
   std::string username_;
   std::string password_;
+
+  std::vector<float> kp_;
+  std::vector<float> kd_;
 
   // Power status
   bool powered_on_ = false;
