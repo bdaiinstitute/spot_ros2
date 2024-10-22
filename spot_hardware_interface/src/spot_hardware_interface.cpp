@@ -60,6 +60,12 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   username_ = info_.hardware_parameters["username"];
   password_ = info_.hardware_parameters["password"];
 
+  const auto kp = info_.hardware_parameters["kp"];
+  const auto kd = info_.hardware_parameters["kd"];
+
+  std::cout << "\n\n\n\n\nKP " << kp << std::endl;
+  std::cout << "\n\n\n\n\nKD " << kd << std::endl;
+
   hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
 
