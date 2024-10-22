@@ -117,8 +117,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         param_dict = get_ros_param_dict(config_file)
         gains_str = ""
         if "kp" in param_dict and "kd" in param_dict:
-            kp = ' '.join(map(str, param_dict["kp"]))
-            kd = ' '.join(map(str, param_dict["kd"]))
+            kp = " ".join(map(str, param_dict["kp"]))
+            kd = " ".join(map(str, param_dict["kd"]))
             gains_str = f"kp:=\"{kp}\" kd:=\"{kd}\" "
     else:
         arm = mock_arm
