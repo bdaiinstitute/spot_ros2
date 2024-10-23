@@ -73,33 +73,38 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   njoints_ = hw_states_.size() / interfaces_per_joint_;
 
+  bool has_arm;
   if (njoints_ == kNjointsArm) {
-    if (kp_.size() != kNjointsArm) {
-      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kp has %ld entries, expected %d. Falling back to default gains.",
-                  kp_.size(), kNjointsArm);
-      kp_.assign(std::begin(kDefaultKpArm), std::end(kDefaultKpArm));
-    }
-    if (kd_.size() != kNjointsArm) {
-      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kd has %ld entries, expected %d. Falling back to default gains.",
-                  kd_.size(), kNjointsArm);
-      kd_.assign(std::begin(kDefaultKdArm), std::end(kDefaultKdArm));
-    }
+    has_arm = true;
   } else if (njoints_ == kNjointsNoArm) {
-    if (kp_.size() != kNjointsNoArm) {
-      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kp has %ld entries, expected %d. Falling back to default gains.",
-                  kp_.size(), kNjointsNoArm);
-      kp_.assign(std::begin(kDefaultKpNoArm), std::end(kDefaultKpNoArm));
-    }
-    if (kd_.size() != kNjointsNoArm) {
-      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kd has %ld entries, expected %d. Falling back to default gains.",
-                  kd_.size(), kNjointsArm);
-      kd_.assign(std::begin(kDefaultKdNoArm), std::end(kDefaultKdNoArm));
-    }
+    has_arm = false;
   } else {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"),
                  "Got %ld joints, expected either %d (Spot with arm) or %d (Spot without arm)!!", njoints_, kNjointsArm,
                  kNjointsNoArm);
     return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  // Check if the gains are the correct size given the defaults, and fall back to defaults if not.
+  // If no parameter is specified, the defaults will automatically be used as kp_ and kd_ will be size 0.
+
+  const auto default_kp = has_arm ? kDefaultKpArm : kDefaultKpNoArm;
+  const auto default_kd = has_arm ? kDefaultKdArm : kDefaultKdNoArm;
+
+  if (kp_.size() != njoints_) {
+    if (!kp_.empty()) {
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kp has %ld entries, expected %d. Falling back to default gains.",
+                  kp_.size(), njoints_);
+    }
+    kp_.assign(std::begin(default_kp), std::end(default_kp));
+  }
+
+  if (kd_.size() != njoints_) {
+    if (!kd_.empty()) {
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kd has %ld entries, expected %d. Falling back to default gains.",
+                  kd_.size(), njoints_);
+    }
+    kd_.assign(std::begin(default_kd), std::end(default_kd));
   }
 
   std::cout << "KP ";
