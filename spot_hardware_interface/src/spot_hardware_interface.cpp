@@ -73,11 +73,14 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   njoints_ = hw_states_.size() / interfaces_per_joint_;
 
-  bool has_arm;
+  // check that the number of joints matches what we expect, and determine default kp/kd from this
+  std::vector<float> default_kp, default_kd;
   if (njoints_ == kNjointsArm) {
-    has_arm = true;
+    default_kp.assign(std::begin(kDefaultKpArm), std::end(kDefaultKpArm));
+    default_kd.assign(std::begin(kDefaultKdArm), std::end(kDefaultKdArm));
   } else if (njoints_ == kNjointsNoArm) {
-    has_arm = false;
+    default_kp.assign(std::begin(kDefaultKpNoArm), std::end(kDefaultKpNoArm));
+    default_kd.assign(std::begin(kDefaultKdNoArm), std::end(kDefaultKdNoArm));
   } else {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"),
                  "Got %ld joints, expected either %d (Spot with arm) or %d (Spot without arm)!!", njoints_, kNjointsArm,
@@ -86,14 +89,11 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   }
 
   // Check if the gains are the correct size given the defaults, and fall back to defaults if not.
-  // If no parameter is specified, the defaults will automatically be used as kp_ and kd_ will be size 0.
-
-  const auto default_kp = has_arm ? kDefaultKpArm : kDefaultKpNoArm;
-  const auto default_kd = has_arm ? kDefaultKdArm : kDefaultKdNoArm;
-
+  // If no parameter is specified, the defaults will automatically be used as kp_ and kd_ will be of size 0.
   if (kp_.size() != njoints_) {
     if (!kp_.empty()) {
-      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kp has %ld entries, expected %d. Falling back to default gains.",
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"),
+                  "Kp has %ld entries, expected %ld. Check your config file! Falling back to default gains.",
                   kp_.size(), njoints_);
     }
     kp_.assign(std::begin(default_kp), std::end(default_kp));
@@ -101,23 +101,12 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   if (kd_.size() != njoints_) {
     if (!kd_.empty()) {
-      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"), "Kd has %ld entries, expected %d. Falling back to default gains.",
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"),
+                  "Kd has %ld entries, expected %ld. Check your config file! Falling back to default gains.",
                   kd_.size(), njoints_);
     }
     kd_.assign(std::begin(default_kd), std::end(default_kd));
   }
-
-  std::cout << "KP ";
-  for (auto p : kp_) {
-    std::cout << p << " ";
-  }
-  std::cout << std::endl;
-
-  std::cout << "KD ";
-  for (auto d : kd_) {
-    std::cout << d << " ";
-  }
-  std::cout << std::endl;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Assumes three state and three command interfaces for each joint (position, velocity, and effort).
