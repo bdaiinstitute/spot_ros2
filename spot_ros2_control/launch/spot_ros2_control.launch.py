@@ -105,26 +105,30 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_name: str = LaunchConfiguration("spot_name").perform(context)
     config_file: str = LaunchConfiguration("config_file").perform(context)
 
+    # Default parameters used in the URDF if not connected to a robot
+    arm = mock_arm
+    login_params = ""
+    gain_params = ""
+
+    # If running on robot, query if it has an arm, and parse config for login parameters and gains
     if hardware_interface == "robot":
-        # If connected to a physical robot, query if it has an arm, and parse config for login parameters and gains
         arm = spot_has_arm(config_file_path=config_file, spot_name="")
         username, password, hostname = get_login_parameters(config_file)[:3]
         login_params = f" hostname:={hostname} username:={username} password:={password} "
         param_dict = get_ros_param_dict(config_file)
-        gain_params = ""
-        if "kp" in param_dict and "kd" in param_dict:
+        if "kp" in param_dict:
+            # we pass the gains to the xacro as space-separated strings as the hardware interface already reads in all
+            # of its hardware parameters as strings and reduces the amount of parsing necessary there.
+            # eg: kp: [1, 2, 3] in the config file will get translated to the string "1 2 3" here
             kp = " ".join(map(str, param_dict["kp"]))
+            gain_params += f'kp:="{kp}" '
+        if "kd" in param_dict:
             kd = " ".join(map(str, param_dict["kd"]))
-            gain_params = f'kp:="{kp}" kd:="{kd}" '
-    else:
-        # If we are mocking, use mock_arm instead. Login/gain parameters don't need to be set.
-        arm = mock_arm
-        login_params = ""
-        gain_params = ""
+            gain_params += f'kd:="{kd}" '
 
     tf_prefix = f"{spot_name}/" if spot_name else ""
 
-    # Generate the robot description based off if the robot has an arm.
+    # Generate the robot description containing the ros2 control tags and hardware interface parameters.
     robot_urdf = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
