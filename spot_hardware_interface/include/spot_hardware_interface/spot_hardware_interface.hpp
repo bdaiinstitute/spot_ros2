@@ -129,8 +129,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
   std::string username_;
   std::string password_;
 
-  std::vector<float> kp_;
-  std::vector<float> kd_;
+  // Stores gains to be used in the joint level command
+  std::vector<float> k_q_p_;
+  std::vector<float> k_qd_p_;
 
   // Power status
   bool powered_on_ = false;
