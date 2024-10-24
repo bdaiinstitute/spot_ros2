@@ -14,10 +14,11 @@
   <!-- Parameters for ROS 2 control -->
   <xacro:arg name="add_ros2_control_tag" default="false" />
   <xacro:arg name="hardware_interface_type" default="mock" />
-  <xacro:arg name="tf_prefix" default="" />
   <xacro:arg name="hostname" default="10.0.0.3" />
   <xacro:arg name="username" default="username" />
   <xacro:arg name="password" default="password" />
+  <xacro:arg name="k_q_p" default="" />
+  <xacro:arg name="k_qd_p" default="" />
 
   <!-- Load Spot -->
   <xacro:load_spot
@@ -32,7 +33,9 @@
                                hostname="$(arg hostname)" 
                                username="$(arg username)" 
                                password="$(arg password)" 
-                               tf_prefix="$(arg tf_prefix)" />
+                               tf_prefix="$(arg tf_prefix)" 
+                               k_q_p="$(arg k_q_p)" 
+                               k_qd_p="$(arg k_qd_p)" />
   </xacro:if>
 
 </robot>
