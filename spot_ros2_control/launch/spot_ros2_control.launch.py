@@ -105,20 +105,22 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_name: str = LaunchConfiguration("spot_name").perform(context)
     config_file: str = LaunchConfiguration("config_file").perform(context)
 
-    # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_arm.
     if hardware_interface == "robot":
+        # If connected to a physical robot, query if it has an arm, and parse config for login parameters and gains
         arm = spot_has_arm(config_file_path=config_file, spot_name="")
         username, password, hostname = get_login_parameters(config_file)[:3]
         login_params = f" hostname:={hostname} username:={username} password:={password} "
         param_dict = get_ros_param_dict(config_file)
-        gains_str = ""
+        gain_params = ""
         if "kp" in param_dict and "kd" in param_dict:
             kp = " ".join(map(str, param_dict["kp"]))
             kd = " ".join(map(str, param_dict["kd"]))
-            gains_str = f'kp:="{kp}" kd:="{kd}" '
+            gain_params = f'kp:="{kp}" kd:="{kd}" '
     else:
+        # If we are mocking, use mock_arm instead. Login/gain parameters don't need to be set.
         arm = mock_arm
         login_params = ""
+        gain_params = ""
 
     tf_prefix = f"{spot_name}/" if spot_name else ""
 
@@ -135,10 +137,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             " hardware_interface_type:=",
             LaunchConfiguration("hardware_interface"),
             login_params,
-            gains_str,
+            gain_params,
         ]
     )
-    # print(robot_urdf.perform(context))
     robot_description = {"robot_description": robot_urdf}
 
     # If no controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
