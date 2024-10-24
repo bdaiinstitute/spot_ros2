@@ -116,15 +116,15 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         username, password, hostname = get_login_parameters(config_file)[:3]
         login_params = f" hostname:={hostname} username:={username} password:={password} "
         param_dict = get_ros_param_dict(config_file)
-        if "kp" in param_dict:
+        if "k_q_p" in param_dict:
             # we pass the gains to the xacro as space-separated strings as the hardware interface already reads in all
             # of its hardware parameters as strings and reduces the amount of parsing necessary there.
-            # eg: kp: [1, 2, 3] in the config file will get translated to the string "1 2 3" here
-            kp = " ".join(map(str, param_dict["kp"]))
-            gain_params += f'kp:="{kp}" '
-        if "kd" in param_dict:
-            kd = " ".join(map(str, param_dict["kd"]))
-            gain_params += f'kd:="{kd}" '
+            # eg: k_q_p: [1, 2, 3] in the config file will get translated to the string "1 2 3" here
+            k_q_p = " ".join(map(str, param_dict["k_q_p"]))
+            gain_params += f'k_q_p:="{k_q_p}" '
+        if "k_qd_p" in param_dict:
+            k_qd_p = " ".join(map(str, param_dict["k_qd_p"]))
+            gain_params += f'k_qd_p:="{k_qd_p}" '
 
     tf_prefix = f"{spot_name}/" if spot_name else ""
 

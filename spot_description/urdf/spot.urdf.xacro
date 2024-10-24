@@ -17,8 +17,8 @@
   <xacro:arg name="hostname" default="10.0.0.3" />
   <xacro:arg name="username" default="username" />
   <xacro:arg name="password" default="password" />
-  <xacro:arg name="kp" default="" />
-  <xacro:arg name="kd" default="" />
+  <xacro:arg name="k_q_p" default="" />
+  <xacro:arg name="k_qd_p" default="" />
 
   <!-- Load Spot -->
   <xacro:load_spot
@@ -34,8 +34,8 @@
                                username="$(arg username)" 
                                password="$(arg password)" 
                                tf_prefix="$(arg tf_prefix)" 
-                               kd="$(arg kd)" 
-                               kp="$(arg kp)" />
+                               k_q_p="$(arg k_q_p)" 
+                               k_qd_p="$(arg k_qd_p)" />
   </xacro:if>
 
 </robot>
