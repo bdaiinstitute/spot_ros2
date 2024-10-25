@@ -24,6 +24,14 @@ You can then run the launchfile with the following command:
 ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=robot config_file:=path/to/spot_ros.yaml
 ```
 
+Joint level gains can also be specified in this same config file under the parameter names `k_q_p` and `k_qd_p`. If you do not specify these parameters, the default gains from the `spot-sdk` joint control examples are used during command streaming. The example below shows a valid configuration for a robot with an arm as each list contains 19 elements. More information on how these gains are used by Spot can be found [here](https://dev.bostondynamics.com/docs/concepts/joint_control/readme).
+```
+/**:
+  ros__parameters:
+    k_q_p: [624.0, 936.0, 286.0,  624.0, 936.0, 286.0, 624.0, 936.0, 286.0, 624.0, 936.0, 286.0, 1020.0, 255.0, 204.0, 102.0, 102.0, 102.0, 16.0]
+    k_qd_p: [5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32]
+```
+
 If you wish to launch these nodes in a namespace, add the argument `spot_name:=<Robot Name>`.
 
 This hardware interface will stream the joint angles of the robot at 333 Hz onto the topic `/<Robot Name>/low_level/joint_states`.

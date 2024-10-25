@@ -51,6 +51,23 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
 
+std::vector<float> SpotHardware::parse_gains_parameter(const std::string gains_string,
+                                                       const std::vector<float>& default_gains,
+                                                       const std::string gain_name) {
+  std::istringstream gains_stream(gains_string);
+  std::vector<float> gains((std::istream_iterator<float>(gains_stream)), (std::istream_iterator<float>()));
+  const auto expected_size = default_gains.size();
+  if (gains.size() != expected_size) {
+    if (!gains.empty()) {
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"),
+                  "%s has %ld entries, expected %ld. Check your config file! Falling back to default gains.",
+                  gain_name.c_str(), gains.size(), expected_size);
+    }
+    return default_gains;
+  }
+  return gains;
+}
+
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -59,14 +76,6 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hostname_ = info_.hardware_parameters["hostname"];
   username_ = info_.hardware_parameters["username"];
   password_ = info_.hardware_parameters["password"];
-
-  // Get the user-passed in KP and KD values.
-  const auto k_q_p_string = info_.hardware_parameters["k_q_p"];
-  const auto k_qd_p_string = info_.hardware_parameters["k_qd_p"];
-  std::istringstream k_q_p_stream(k_q_p_string);
-  k_q_p_.assign(std::istream_iterator<float>(k_q_p_stream), std::istream_iterator<float>());
-  std::istringstream k_qd_p_stream(k_qd_p_string);
-  k_qd_p_.assign(std::istream_iterator<float>(k_qd_p_stream), std::istream_iterator<float>());
 
   hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
@@ -88,25 +97,13 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  // Check if the gains are the correct size given the defaults, and fall back to defaults if not.
-  // If no parameter is specified, the defaults will automatically be used as k_q_p_ and k_qd_p_ will be of size 0.
-  if (k_q_p_.size() != njoints_) {
-    if (!k_q_p_.empty()) {
-      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"),
-                  "Kp has %ld entries, expected %ld. Check your config file! Falling back to default gains.",
-                  k_q_p_.size(), njoints_);
-    }
-    k_q_p_.assign(std::begin(default_k_q_p), std::end(default_k_q_p));
-  }
+  // Get the user-passed in k_q_p and k_q_d values.
+  const std::string k_q_p_string = info_.hardware_parameters["k_q_p"];
+  const std::string k_qd_p_string = info_.hardware_parameters["k_qd_p"];
 
-  if (k_qd_p_.size() != njoints_) {
-    if (!k_qd_p_.empty()) {
-      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"),
-                  "Kd has %ld entries, expected %ld. Check your config file! Falling back to default gains.",
-                  k_qd_p_.size(), njoints_);
-    }
-    k_qd_p_.assign(std::begin(default_k_qd_p), std::end(default_k_qd_p));
-  }
+  // Determine the gains that should be used on robot.
+  k_q_p_ = parse_gains_parameter(k_q_p_string, default_k_q_p, "k_q_p");
+  k_qd_p_ = parse_gains_parameter(k_qd_p_string, default_k_qd_p, "k_qd_p");
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Assumes three state and three command interfaces for each joint (position, velocity, and effort).

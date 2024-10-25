@@ -121,10 +121,10 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             # of its hardware parameters as strings and reduces the amount of parsing necessary there.
             # eg: k_q_p: [1, 2, 3] in the config file will get translated to the string "1 2 3" here
             k_q_p = " ".join(map(str, param_dict["k_q_p"]))
-            gain_params += f'k_q_p:="{k_q_p}" '
+            gain_params += f' k_q_p:="{k_q_p}"'
         if "k_qd_p" in param_dict:
             k_qd_p = " ".join(map(str, param_dict["k_qd_p"]))
-            gain_params += f'k_qd_p:="{k_qd_p}" '
+            gain_params += f' k_qd_p:="{k_qd_p}"'
 
     tf_prefix = f"{spot_name}/" if spot_name else ""
 
