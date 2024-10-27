@@ -22,6 +22,10 @@ using ::testing::UnorderedElementsAre;
 constexpr auto kNodeName = "my_node_name";
 constexpr auto kNamespace = "my_namespace";
 
+static constexpr auto kSpotName = "my_spot_name";
+static constexpr auto kFramePrefix = "some_random_prefix_/_";
+static constexpr auto kFramePrefixSeparator = "/";
+
 constexpr auto kEnvVarNameHostname = "SPOT_IP";
 constexpr auto kEnvVarNamePort = "SPOT_PORT";
 constexpr auto kEnvVarNameCertificate = "SPOT_CERTIFICATE";
@@ -117,7 +121,7 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithNamespace) {
   // GIVEN we create a RclcppParameterInterface using this node
   RclcppParameterInterface parameter_interface{node};
 
-  // WHEN we call getSpotName
+  // WHEN we call getSpotNameWithFallbackToNamespace
   // THEN the parameter interface returns the namespace of the node
   EXPECT_THAT(parameter_interface.getSpotNameWithFallbackToNamespace(), StrEq(kNamespace));
 }
@@ -128,7 +132,7 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithEmptyNamespace) {
   // GIVEN we create a RclcppParameterInterface using this node
   RclcppParameterInterface parameter_interface{node};
 
-  // WHEN we call getSpotName
+  // WHEN we call getSpotNameWithFallbackToNamespace
   // THEN the parameter interface returns an empty string
   EXPECT_THAT(parameter_interface.getSpotNameWithFallbackToNamespace(), IsEmpty());
 }
@@ -139,9 +143,27 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithDefaultNamespace) {
   // GIVEN we create a RclcppParameterInterface using this node
   RclcppParameterInterface parameter_interface{node};
 
-  // WHEN we call getSpotName
+  // WHEN we call getSpotNameWithFallbackToNamespace
   // THEN the parameter interface returns an empty string
   EXPECT_THAT(parameter_interface.getSpotNameWithFallbackToNamespace(), IsEmpty());
+}
+
+TEST_F(RclcppParameterInterfaceTest, GetSpotNameFromExplicitParameter) {
+  // GIVEN we create rclcpp nodes with and without a specific namespace
+  const auto node = std::make_shared<rclcpp::Node>(kNodeName);
+  const auto namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we set the spot name config parameter to an explicit value
+  node->declare_parameter("spot_name", kSpotName);
+  namespaced_node->declare_parameter("spot_name", kSpotName);
+
+  // GIVEN we create a RclcppParameterInterface using these nodes
+  RclcppParameterInterface parameter_interface_a{node};
+  RclcppParameterInterface parameter_interface_b{namespaced_node};
+
+  // WHEN we call getSpotNameWithFallbackToNamespace
+  // THEN the parameter interface returns the explicit spot name in both cases
+  EXPECT_THAT(parameter_interface_a.getSpotNameWithFallbackToNamespace(), StrEq(kSpotName));
+  EXPECT_THAT(parameter_interface_b.getSpotNameWithFallbackToNamespace(), StrEq(kSpotName));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromEnvVars) {
@@ -195,6 +217,9 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   node_->declare_parameter("publish_depth", publish_depth_images_parameter);
   constexpr auto publish_depth_registered_images_parameter = false;
   node_->declare_parameter("publish_depth_registered", publish_depth_registered_images_parameter);
+  constexpr auto preferred_odom_frame_parameter = "vision";
+  node_->declare_parameter("preferred_odom_frame", preferred_odom_frame_parameter);
+  node_->declare_parameter("frame_prefix", kFramePrefix);
 
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
@@ -213,6 +238,8 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   EXPECT_THAT(parameter_interface.getPublishRGBImages(), Eq(publish_rgb_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), Eq(publish_depth_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), Eq(publish_depth_registered_images_parameter));
+  EXPECT_THAT(parameter_interface.getPreferredOdomFrame(), StrEq(preferred_odom_frame_parameter));
+  EXPECT_THAT(parameter_interface.getFramePrefix(), Optional(kFramePrefix));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameters) {
@@ -272,6 +299,8 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   EXPECT_THAT(parameter_interface.getPublishRGBImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), IsTrue());
+  EXPECT_THAT(parameter_interface.getPreferredOdomFrame(), StrEq("odom"));
+  EXPECT_THAT(parameter_interface.getFramePrefix(), Eq(std::nullopt));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithArm) {
@@ -433,4 +462,76 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSelectedCamerasUsedGripperless) {
   EXPECT_THAT(cameras_used_arm.error(), StrEq("Cannot add SpotCamera 'hand', the robot is gripperless!"));
 }
 
+
+TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromNamespaceFallback) {
+  // GIVEN we create rclcpp nodes with and without a specific namespace
+  const auto node = std::make_shared<rclcpp::Node>(kNodeName);
+  const auto namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we create a RclcppParameterInterface using these nodes
+  RclcppParameterInterface parameter_interface_a{node};
+  RclcppParameterInterface parameter_interface_b{namespaced_node};
+
+  // WHEN we call getFramePrefixWithDefaultFallback
+  // THEN the parameter interface returns a frame prefix based on the nodes' namespaces
+  const std::string expected_prefix = std::string(kNamespace) + kFramePrefixSeparator;
+  EXPECT_THAT(parameter_interface_a.getFramePrefixWithDefaultFallback(), StrEq(""));
+  EXPECT_THAT(parameter_interface_b.getFramePrefixWithDefaultFallback(), StrEq(expected_prefix));
+}
+
+TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromSpotNameFallback) {
+  // GIVEN we create rclcpp nodes with and without a specific namespace
+  const auto node = std::make_shared<rclcpp::Node>(kNodeName);
+  const auto namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we set the spot name config parameter to an explicit value
+  node->declare_parameter("spot_name", kSpotName);
+  namespaced_node->declare_parameter("spot_name", kSpotName);
+
+  // GIVEN we create a RclcppParameterInterface using these nodes
+  RclcppParameterInterface parameter_interface_a{node};
+  RclcppParameterInterface parameter_interface_b{namespaced_node};
+
+  // WHEN we call getFramePrefixWithDefaultFallback
+  // THEN the parameter interface returns a frame prefix based on the spot name in both cases
+  const std::string expected_prefix = std::string(kSpotName) + kFramePrefixSeparator;
+  EXPECT_THAT(parameter_interface_a.getFramePrefixWithDefaultFallback(), StrEq(expected_prefix));
+  EXPECT_THAT(parameter_interface_b.getFramePrefixWithDefaultFallback(), StrEq(expected_prefix));
+}
+
+TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromExplicitParameter) {
+  const auto verifyExpectedFramePrefix = [](std::shared_ptr<rclcpp::Node> node,
+                                            std::shared_ptr<rclcpp::Node> namespaced_node) -> void {
+    // GIVEN we create a RclcppParameterInterface using these nodes
+    RclcppParameterInterface parameter_interface_a{node};
+    RclcppParameterInterface parameter_interface_b{namespaced_node};
+
+    // WHEN we call getFramePrefixWithDefaultFallback
+    // THEN the parameter interface returns the explicit frame prefix in both cases
+    EXPECT_THAT(parameter_interface_a.getFramePrefixWithDefaultFallback(), StrEq(kFramePrefix));
+    EXPECT_THAT(parameter_interface_b.getFramePrefixWithDefaultFallback(), StrEq(kFramePrefix));
+  };
+
+  // Set up first test scenario.
+  // GIVEN we create rclcpp nodes with and without a specific namespace
+  auto node = std::make_shared<rclcpp::Node>(kNodeName);
+  auto namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we only set the frame prefix config parameter to an explicit value, without any spot name
+  node->declare_parameter("frame_prefix", kFramePrefix);
+  namespaced_node->declare_parameter("frame_prefix", kFramePrefix);
+  // Finish first test scenario.
+  verifyExpectedFramePrefix(node, namespaced_node);
+
+  // Set up second test scenario.
+  // NOTE: We're creating new nodes for the second test scenario, since we can't undeclare statically typed parameters.
+  node.reset();
+  namespaced_node.reset();
+  node = std::make_shared<rclcpp::Node>(kNodeName);
+  namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we set both, the spot name and frame prefix, config parameters to explicit values
+  node->declare_parameter("spot_name", kSpotName);
+  namespaced_node->declare_parameter("spot_name", kSpotName);
+  node->declare_parameter("frame_prefix", kFramePrefix);
+  namespaced_node->declare_parameter("frame_prefix", kFramePrefix);
+  // Finish second test scenario.
+  verifyExpectedFramePrefix(node, namespaced_node);
+}
 }  // namespace spot_ros2::test
