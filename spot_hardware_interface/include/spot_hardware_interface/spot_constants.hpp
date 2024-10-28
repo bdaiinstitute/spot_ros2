@@ -26,8 +26,8 @@ inline constexpr int kNjointsNoArm = 12;
 /// @brief Number of joints we expect if the robot has an arm
 inline constexpr int kNjointsArm = 19;
 
-// Gain values https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
-// This will be handled via a parameter in the future so there is the option to change them, for now they are hardcoded
+// Default gain values obtained from
+// https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/constants.hpp
 
 /// @brief Default k_q_p gains for robot without an arm
 inline constexpr float kDefaultKqpNoArm[] = {624.0, 936.0, 286.0, 624.0, 936.0, 286.0,
@@ -36,11 +36,13 @@ inline constexpr float kDefaultKqpNoArm[] = {624.0, 936.0, 286.0, 624.0, 936.0, 
 /// @brief Default k_qd_p gains for robot without an arm
 inline constexpr float kDefaultKqdpNoArm[] = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04};
 
-/// @brief Default k_q_p gains for robot with an arm
+/// @brief Default k_q_p gains for robot with an arm (note that the first 12 elements that correspond to the leg joints
+/// are the same as `kDefaultKqpNoArm`)
 inline constexpr float kDefaultKqpArm[] = {624.0, 936.0, 286.0,  624.0, 936.0, 286.0, 624.0, 936.0, 286.0, 624.0,
                                            936.0, 286.0, 1020.0, 255.0, 204.0, 102.0, 102.0, 102.0, 16.0};
 
-/// @brief Default k_qd_p gains for robot with an arm
+/// @brief Default k_qd_p gains for robot with an arm (note that the first 12 elements that correspond to the leg joints
+/// are the same as `kDefaultKqdpNoArm`)
 inline constexpr float kDefaultKqdpArm[] = {5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20, 5.20, 2.04, 5.20,
                                             5.20, 2.04, 10.2, 15.3, 10.2, 2.04, 2.04, 2.04, 0.32};
 
