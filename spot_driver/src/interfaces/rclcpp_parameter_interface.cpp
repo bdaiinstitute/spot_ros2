@@ -191,8 +191,9 @@ bool RclcppParameterInterface::getGripperless() const {
   return declareAndGetParameter<bool>(node_, kParameterNameGripperless, kDefaultGripperless);
 }
 
-std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm) const {
-  const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm,
+                                                                                const bool gripperless) const {
+  const auto kDefaultCamerasUsed = (has_arm && !gripperless) ? kCamerasWithHand : kCamerasWithoutHand;
   std::set<spot_ros2::SpotCamera> spot_cameras_used;
   for (const auto& camera : kDefaultCamerasUsed) {
     spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
@@ -201,8 +202,8 @@ std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(
 }
 
 tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterface::getCamerasUsed(
-    const bool has_arm) const {
-  const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+    const bool has_arm, const bool gripperless) const {
+  const auto kDefaultCamerasUsed = (has_arm && !gripperless) ? kCamerasWithHand : kCamerasWithoutHand;
   const std::vector<std::string> kDefaultCamerasUsedVector(std::begin(kDefaultCamerasUsed),
                                                            std::end(kDefaultCamerasUsed));
   const auto cameras_used_param =

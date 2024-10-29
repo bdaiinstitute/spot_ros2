@@ -281,7 +281,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithArm) {
 
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN we get the default of all available cameras.
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true, false);
   EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_arm.value(),
               UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::LEFT, SpotCamera::RIGHT,
@@ -298,7 +298,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithoutArm) {
 
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN we get the default of all available cameras.
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false, false);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_no_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT,
                                                                 SpotCamera::LEFT, SpotCamera::RIGHT, SpotCamera::BACK));
@@ -314,11 +314,11 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedSubset) {
 
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN the returned values match the values we used when declaring the parameters, regardless of if there is an arm
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true, false);
   EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT));
 
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false, false);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_no_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT));
 }
@@ -333,14 +333,14 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedSubsetWithHand) {
 
   // WHEN we call the functions to get the config values from the parameter interface if the robot has an arm
   // THEN the returned values match the values we used when declaring the parameters
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true, false);
   EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_arm.value(),
               UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::HAND));
 
   // WHEN we call the functions to get the config values from the parameter interface if the robot does not have an arm
   // THEN this is an invalid choice of parameters.
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false, false);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsFalse());
   EXPECT_THAT(cameras_used_no_arm.error(), StrEq("Cannot add SpotCamera 'hand', the robot does not have an arm!"));
 }
@@ -355,10 +355,10 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedWithInvalidCamera) {
 
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN the result is invalid for robots with and without arms, as the camera "not_a_camera" does not exist on Spot.
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true, false);
   EXPECT_THAT(cameras_used_arm.has_value(), IsFalse());
   EXPECT_THAT(cameras_used_arm.error(), StrEq("Cannot convert camera 'not_a_camera' to a SpotCamera."));
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false, false);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsFalse());
   EXPECT_THAT(cameras_used_no_arm.error(), StrEq("Cannot convert camera 'not_a_camera' to a SpotCamera."));
 }

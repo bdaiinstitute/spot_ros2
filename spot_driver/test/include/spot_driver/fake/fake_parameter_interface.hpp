@@ -42,8 +42,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   bool getGripperless() const override { return gripperless; }
 
-  std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm) const override {
-    const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+  std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm, const bool gripperless) const override {
+    const auto kDefaultCamerasUsed = (has_arm && !gripperless) ? kCamerasWithHand : kCamerasWithoutHand;
     std::set<spot_ros2::SpotCamera> spot_cameras_used;
     for (const auto& camera : kDefaultCamerasUsed) {
       spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
@@ -51,8 +51,9 @@ class FakeParameterInterface : public ParameterInterfaceBase {
     return spot_cameras_used;
   }
 
-  tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(const bool has_arm) const override {
-    return getDefaultCamerasUsed(has_arm);
+  tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(const bool has_arm,
+                                                                            const bool gripperless) const override {
+    return getDefaultCamerasUsed(has_arm, gripperless);
   }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};
