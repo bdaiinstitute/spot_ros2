@@ -279,9 +279,13 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithArm) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot with an arm, and without custom gripperless firmware
+  bool arm = true;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN we get the default of all available cameras.
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true, false);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_arm.value(),
               UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::LEFT, SpotCamera::RIGHT,
@@ -296,9 +300,13 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithoutArm) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot without an arm, and without custom gripperless firmware
+  bool arm = false;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN we get the default of all available cameras.
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false, false);
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_no_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT,
                                                                 SpotCamera::LEFT, SpotCamera::RIGHT, SpotCamera::BACK));
@@ -312,13 +320,22 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedSubset) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot with an arm, and without custom gripperless firmware
+  bool arm = true;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface
-  // THEN the returned values match the values we used when declaring the parameters, regardless of if there is an arm
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true, false);
+  // THEN the returned values match the values we used when declaring the parameters
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT));
 
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false, false);
+  // GIVEN we are operating on a robot without an arm
+  arm = false;
+
+  // WHEN we call the functions to get the config values from the parameter interface
+  // THEN the returned values match the values we used when declaring the parameters
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_no_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT));
 }
@@ -331,16 +348,21 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedSubsetWithHand) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot with an arm, and without custom gripperless firmware
+  bool arm = true;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface if the robot has an arm
   // THEN the returned values match the values we used when declaring the parameters
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true, false);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_arm.value(),
               UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::HAND));
 
   // WHEN we call the functions to get the config values from the parameter interface if the robot does not have an arm
   // THEN this is an invalid choice of parameters.
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false, false);
+  arm = false;
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsFalse());
   EXPECT_THAT(cameras_used_no_arm.error(), StrEq("Cannot add SpotCamera 'hand', the robot does not have an arm!"));
 }
@@ -353,13 +375,62 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedWithInvalidCamera) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot with an arm, and without custom gripperless firmware
+  bool arm = true;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN the result is invalid for robots with and without arms, as the camera "not_a_camera" does not exist on Spot.
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true, false);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_arm.has_value(), IsFalse());
   EXPECT_THAT(cameras_used_arm.error(), StrEq("Cannot convert camera 'not_a_camera' to a SpotCamera."));
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false, false);
+  arm = false;
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsFalse());
   EXPECT_THAT(cameras_used_no_arm.error(), StrEq("Cannot convert camera 'not_a_camera' to a SpotCamera."));
 }
+
+TEST_F(RclcppParameterInterfaceEnvVarTest, GetDefaultCamerasUsedGripperless) {
+  // GIVEN we create a RclcppParameterInterface using the node
+  RclcppParameterInterface parameter_interface{node_};
+
+  // GIVEN we are operating on a robot with an arm, and WITH custom gripperless firmware
+  bool arm = true;
+  bool gripperless = true;
+
+  // WHEN we call the functions to get the config values from the parameter interface
+  // THEN we get the default of all available cameras, excluding the hand!
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
+  EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
+  EXPECT_THAT(cameras_used_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT,
+                                                             SpotCamera::LEFT, SpotCamera::RIGHT, SpotCamera::BACK));
+
+  // WHEN gripperless is set to true on a robot without an arm
+  // THEN we still get the default of all available cameras, excluding the hand
+  arm = false;
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
+  EXPECT_THAT(cameras_used_no_arm.has_value(), IsTrue());
+  EXPECT_THAT(cameras_used_no_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT,
+                                                                SpotCamera::LEFT, SpotCamera::RIGHT, SpotCamera::BACK));
+}
+
+TEST_F(RclcppParameterInterfaceEnvVarTest, GetSelectedCamerasUsedGripperless) {
+  // GIVEN we set cameras used to a subset of the available cameras including the hand camera
+  const std::vector<std::string> cameras_used_parameter = {"frontleft", "frontright", "hand"};
+  node_->declare_parameter("cameras_used", cameras_used_parameter);
+
+  // GIVEN we create a RclcppParameterInterface using the node
+  RclcppParameterInterface parameter_interface{node_};
+
+  // GIVEN we are operating on a robot with an arm, and WITH custom gripperless firmware
+  bool arm = true;
+  bool gripperless = true;
+
+  // WHEN we call the functions to get the config values from the parameter interface
+  // THEN this is an invalid choice of parameters, as the hand camera is not available on gripperless robots.
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
+  EXPECT_THAT(cameras_used_arm.has_value(), IsFalse());
+  EXPECT_THAT(cameras_used_arm.error(), StrEq("Cannot add SpotCamera 'hand', the robot is gripperless!"));
+}
+
 }  // namespace spot_ros2::test
