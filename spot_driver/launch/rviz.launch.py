@@ -26,9 +26,10 @@ def create_rviz_config(robot_name: str, tf_prefix: str) -> None:
     with open(RVIZ_TEMPLATE_FILENAME, "r") as template_file:
         config = yaml.safe_load(template_file)
 
-        if robot_name:
+        if tf_prefix:
             # replace fixed frame with robot body frame
             config["Visualization Manager"]["Global Options"]["Fixed Frame"] = f"{tf_prefix}vision"
+        if robot_name:
             # Add robot models for each robot
             for display in config["Visualization Manager"]["Displays"]:
                 if "RobotModel" in display["Class"]:
