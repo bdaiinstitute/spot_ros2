@@ -60,7 +60,7 @@ class ParameterInterfaceBase {
   static constexpr bool kDefaultPublishDepthRegisteredImages{true};
   static constexpr auto kDefaultPreferredOdomFrame = "odom";
   static constexpr bool kDefaultGripperless{false};
-  static constexpr auto kCamerasWithHand = {"frontleft", "frontright", "left", "right", "back"};
-  static constexpr auto kCamerasWithoutHand = {"frontleft", "frontright", "left", "right", "back", "hand"};
+  static constexpr auto kCamerasWithoutHand = {"frontleft", "frontright", "left", "right", "back"};
+  static constexpr auto kCamerasWithHand = {"frontleft", "frontright", "left", "right", "back", "hand"};
 };
 }  // namespace spot_ros2

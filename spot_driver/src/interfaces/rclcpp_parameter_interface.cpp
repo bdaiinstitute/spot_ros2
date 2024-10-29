@@ -193,9 +193,11 @@ bool RclcppParameterInterface::getGripperless() const {
 
 std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm,
                                                                                 const bool gripperless) const {
-  const auto kDefaultCamerasUsed = (has_arm && !gripperless) ? kCamerasWithHand : kCamerasWithoutHand;
+  const bool has_hand_camera = has_arm && (!gripperless);
+  const auto kDefaultCamerasUsed = (has_hand_camera) ? kCamerasWithHand : kCamerasWithoutHand;
   std::set<spot_ros2::SpotCamera> spot_cameras_used;
   for (const auto& camera : kDefaultCamerasUsed) {
+    std::cout << "get default cameras used " << camera << std::endl;
     spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
   }
   return spot_cameras_used;
@@ -203,7 +205,8 @@ std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(
 
 tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterface::getCamerasUsed(
     const bool has_arm, const bool gripperless) const {
-  const auto kDefaultCamerasUsed = (has_arm && !gripperless) ? kCamerasWithHand : kCamerasWithoutHand;
+  const bool has_hand_camera = has_arm && (!gripperless);
+  const auto kDefaultCamerasUsed = (has_hand_camera) ? kCamerasWithHand : kCamerasWithoutHand;
   const std::vector<std::string> kDefaultCamerasUsedVector(std::begin(kDefaultCamerasUsed),
                                                            std::end(kDefaultCamerasUsed));
   const auto cameras_used_param =
@@ -214,6 +217,8 @@ tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterf
       const auto spot_camera = kRosStringToSpotCamera.at(camera);
       if ((spot_camera == SpotCamera::HAND) && (!has_arm)) {
         return tl::make_unexpected("Cannot add SpotCamera 'hand', the robot does not have an arm!");
+      } else if ((spot_camera == SpotCamera::HAND) && gripperless) {
+        return tl::make_unexpected("Cannot add SpotCamera 'hand', the robot is gripperless!");
       }
       spot_cameras_used.insert(spot_camera);
     } catch (const std::out_of_range& e) {
