@@ -20,10 +20,6 @@
                 <param name="min">${-effort_max}</param>
                 <param name="max">${effort_max}</param>
             </command_interface>
-            <!-- TODO at some point, this should be a part of the command interface so we can have a 
-            one-to-one mapping to the spot sdk implementation. -->
-            <!-- <command_interface name="k_q_p" />
-            <command_interface name="k_qd_p" /> -->
         </joint>
     </xacro:macro>
 
@@ -65,7 +61,7 @@
 
     </xacro:macro>
 
-    <xacro:macro name="spot_ros2_control" params="interface_type has_arm hostname username password tf_prefix">
+    <xacro:macro name="spot_ros2_control" params="interface_type has_arm hostname username password tf_prefix k_q_p k_qd_p">
         <!-- Currently implements a simple system interface that covers all joints of the robot.
         In the future, we could make different hardware interfaces for the body, arm, etc. -->
         <ros2_control name="SpotSystem" type="system">
@@ -80,6 +76,8 @@
                 <param name="hostname">$(optenv SPOT_IP ${hostname})</param>
                 <param name="username">$(optenv BOSDYN_CLIENT_USERNAME ${username})</param>
                 <param name="password">$(optenv BOSDYN_CLIENT_PASSWORD ${password})</param>
+                <param name="k_q_p">${k_q_p}</param>
+                <param name="k_qd_p">${k_qd_p}</param>
             </xacro:if>
             </hardware>
             <!-- Add the legs -->

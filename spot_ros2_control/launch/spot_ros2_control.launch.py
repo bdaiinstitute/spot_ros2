@@ -21,6 +21,7 @@ from spot_driver.launch.spot_launch_helpers import (
     IMAGE_PUBLISHER_ARGS,
     declare_image_publisher_args,
     get_login_parameters,
+    get_ros_param_dict,
     spot_has_arm,
 )
 
@@ -104,18 +105,30 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_name: str = LaunchConfiguration("spot_name").perform(context)
     config_file: str = LaunchConfiguration("config_file").perform(context)
 
-    # If connected to a physical robot, query if it has an arm. Otherwise, use the value in mock_arm.
+    # Default parameters used in the URDF if not connected to a robot
+    arm = mock_arm
+    login_params = ""
+    gain_params = ""
+
+    # If running on robot, query if it has an arm, and parse config for login parameters and gains
     if hardware_interface == "robot":
         arm = spot_has_arm(config_file_path=config_file, spot_name="")
         username, password, hostname = get_login_parameters(config_file)[:3]
-        login_params = f" hostname:={hostname} username:={username} password:={password}"
-    else:
-        arm = mock_arm
-        login_params = ""
+        login_params = f" hostname:={hostname} username:={username} password:={password} "
+        param_dict = get_ros_param_dict(config_file)
+        if "k_q_p" in param_dict:
+            # we pass the gains to the xacro as space-separated strings as the hardware interface needs to read in all
+            # of its hardware parameters as strings, and it is easier to parse them out from the config file here.
+            # eg: k_q_p: [1, 2, 3] in the config file will get translated to the string "1 2 3" here
+            k_q_p = " ".join(map(str, param_dict["k_q_p"]))
+            gain_params += f' k_q_p:="{k_q_p}" '
+        if "k_qd_p" in param_dict:
+            k_qd_p = " ".join(map(str, param_dict["k_qd_p"]))
+            gain_params += f' k_qd_p:="{k_qd_p}" '
 
     tf_prefix = f"{spot_name}/" if spot_name else ""
 
-    # Generate the robot description based off if the robot has an arm.
+    # Generate the robot description containing the ros2 control tags and hardware interface parameters.
     robot_urdf = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -128,6 +141,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             " hardware_interface_type:=",
             LaunchConfiguration("hardware_interface"),
             login_params,
+            gain_params,
         ]
     )
     robot_description = {"robot_description": robot_urdf}

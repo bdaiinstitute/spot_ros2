@@ -20,6 +20,7 @@
 
 #include <functional>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -128,6 +129,10 @@ class SpotHardware : public hardware_interface::SystemInterface {
   std::string username_;
   std::string password_;
 
+  // Stores gains to be used in the joint level command
+  std::vector<float> k_q_p_;
+  std::vector<float> k_qd_p_;
+
   // Power status
   bool powered_on_ = false;
 
@@ -156,6 +161,17 @@ class SpotHardware : public hardware_interface::SystemInterface {
   ::bosdyn::client::TimeSyncEndpoint* endpoint_ = nullptr;
 
   ::bosdyn::api::JointControlStreamRequest joint_request_;
+
+  /// @brief Gains are passed in as hardware parameters as a space separated string. This function translates this
+  /// information into the corresponding std::vector to be used in constructing the robot streaming command.
+  /// @param gain_string Space separated string of k_q_p or k_qd_p values  -- e.g., "1.0 2.0 3.0"
+  /// @param default_gains Vector of default gains to fall back to if the input is not formatted correctly.
+  /// @param gain_name Human readable name of the parameter parsed -- e.g., "k_q_p". Used in logging a warning if the
+  /// input is malformed.
+  /// @return The input gain_string formatted as an std::vector if it is the appropriate number of elements, and
+  /// default_gains if not.
+  std::vector<float> parse_gains_parameter(const std::string gains_string, const std::vector<float>& default_gains,
+                                           const std::string gain_name);
 
   // The following are functions that interact with the BD SDK to set up the robot and get the robot states.
 

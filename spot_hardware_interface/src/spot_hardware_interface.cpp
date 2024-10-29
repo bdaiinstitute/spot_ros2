@@ -51,6 +51,23 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
 
+std::vector<float> SpotHardware::parse_gains_parameter(const std::string gains_string,
+                                                       const std::vector<float>& default_gains,
+                                                       const std::string gain_name) {
+  std::istringstream gains_stream(gains_string);
+  std::vector<float> gains((std::istream_iterator<float>(gains_stream)), (std::istream_iterator<float>()));
+  const auto expected_size = default_gains.size();
+  if (gains.size() != expected_size) {
+    if (!gains.empty()) {
+      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"),
+                  "%s has %ld entries, expected %ld. Check your config file! Falling back to default gains.",
+                  gain_name.c_str(), gains.size(), expected_size);
+    }
+    return default_gains;
+  }
+  return gains;
+}
+
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -64,6 +81,29 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
 
   njoints_ = hw_states_.size() / interfaces_per_joint_;
+
+  // check that the number of joints matches what we expect, and determine default k_q_p/k_qd_p from this
+  std::vector<float> default_k_q_p, default_k_qd_p;
+  if (njoints_ == kNjointsArm) {
+    default_k_q_p.assign(std::begin(kDefaultKqpArm), std::end(kDefaultKqpArm));
+    default_k_qd_p.assign(std::begin(kDefaultKqdpArm), std::end(kDefaultKqdpArm));
+  } else if (njoints_ == kNjointsNoArm) {
+    default_k_q_p.assign(std::begin(kDefaultKqpNoArm), std::end(kDefaultKqpNoArm));
+    default_k_qd_p.assign(std::begin(kDefaultKqdpNoArm), std::end(kDefaultKqdpNoArm));
+  } else {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"),
+                 "Got %ld joints, expected either %d (Spot with arm) or %d (Spot without arm)!!", njoints_, kNjointsArm,
+                 kNjointsNoArm);
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  // Get the user-passed in k_q_p and k_q_d values.
+  const std::string k_q_p_string = info_.hardware_parameters["k_q_p"];
+  const std::string k_qd_p_string = info_.hardware_parameters["k_qd_p"];
+
+  // Determine the gains that should be used on robot.
+  k_q_p_ = parse_gains_parameter(k_q_p_string, default_k_q_p, "k_q_p");
+  k_qd_p_ = parse_gains_parameter(k_qd_p_string, default_k_qd_p, "k_qd_p");
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Assumes three state and three command interfaces for each joint (position, velocity, and effort).
@@ -469,30 +509,10 @@ bool SpotHardware::start_command_stream() {
   // Fill in the parts of the joint streaming command request that are constant.
   auto* joint_cmd = joint_request_.mutable_joint_command();
 
-  std::vector<float> kp;
-  std::vector<float> kd;
-
-  // Assign k values depending on if the robot has an arm or not
-  switch (njoints_) {
-    case spot_hardware_interface::kNjointsArm:
-      kp.assign(std::begin(spot_hardware_interface::kDefaultKpArm), std::end(spot_hardware_interface::kDefaultKpArm));
-      kd.assign(std::begin(spot_hardware_interface::kDefaultKdArm), std::end(spot_hardware_interface::kDefaultKdArm));
-      break;
-    case spot_hardware_interface::kNjointsNoArm:
-      kp.assign(std::begin(spot_hardware_interface::kDefaultKpNoArm),
-                std::end(spot_hardware_interface::kDefaultKpNoArm));
-      kd.assign(std::begin(spot_hardware_interface::kDefaultKdNoArm),
-                std::end(spot_hardware_interface::kDefaultKdNoArm));
-      break;
-    default:
-      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "WRONG # OF JOINTS");
-      return false;
-  }
-
   joint_cmd->mutable_gains()->mutable_k_q_p()->Clear();
-  joint_cmd->mutable_gains()->mutable_k_q_p()->Add(kp.begin(), kp.end());
+  joint_cmd->mutable_gains()->mutable_k_q_p()->Add(k_q_p_.begin(), k_q_p_.end());
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Clear();
-  joint_cmd->mutable_gains()->mutable_k_qd_p()->Add(kd.begin(), kd.end());
+  joint_cmd->mutable_gains()->mutable_k_qd_p()->Add(k_qd_p_.begin(), k_qd_p_.end());
 
   // Let it extrapolate the command a little
   joint_cmd->mutable_extrapolation_duration()->CopyFrom(
