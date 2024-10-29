@@ -40,6 +40,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getSpotName() const override { return spot_name; }
 
+  bool getGripperless() const override { return gripperless; }
+
   std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm) const override {
     const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
     std::set<spot_ros2::SpotCamera> spot_cameras_used;
@@ -64,6 +66,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   bool publish_rgb_images = ParameterInterfaceBase::kDefaultPublishRGBImages;
   bool publish_depth_images = ParameterInterfaceBase::kDefaultPublishDepthImages;
   bool publish_depth_registered_images = ParameterInterfaceBase::kDefaultPublishDepthRegisteredImages;
+  bool gripperless = ParameterInterfaceBase::kDefaultGripperless;
   std::string spot_name;
 };
 }  // namespace spot_ros2::test

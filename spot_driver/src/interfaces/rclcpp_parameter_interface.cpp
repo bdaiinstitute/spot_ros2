@@ -26,6 +26,7 @@ constexpr auto kParameterNamePublishCompressedImages = "publish_compressed_image
 constexpr auto kParameterNamePublishDepthImages = "publish_depth";
 constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
+constexpr auto kParameterNameGripperless = "gripperless";
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and
@@ -184,6 +185,10 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const {
 
 std::string RclcppParameterInterface::getPreferredOdomFrame() const {
   return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
+}
+
+bool RclcppParameterInterface::getGripperless() const {
+  return declareAndGetParameter<bool>(node_, kParameterNameGripperless, kDefaultGripperless);
 }
 
 std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm) const {
