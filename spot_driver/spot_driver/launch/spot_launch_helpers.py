@@ -3,10 +3,12 @@
 import logging
 import os
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import yaml
+from launch import LaunchContext
 from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 
 from spot_wrapper.wrapper import SpotWrapper
 
@@ -247,3 +249,31 @@ def spot_has_arm(config_file_path: str) -> bool:
         logger=logger,
     )
     return spot_wrapper.has_arm()
+
+
+def substitute_launch_parameters(
+    config_file_path: Union[str, LaunchConfiguration],
+    substitutions: Dict[str, LaunchConfiguration],
+    context: LaunchContext,
+) -> Dict[str, Any]:
+    """Pass the given ROS launch parameter substitutions into parameters from the ROS config yaml file.
+
+    Args:
+        config_file_path (str | LaunchConfiguration): Path to the config yaml.
+        substitutions (Dict[str, LaunchConfiguration]): Dictionary of parameter_name: parameter_value containing the
+                                                        desired launch parameter substitutions.
+        context (LaunchContext): Context for acquiring the launch configuration inner values.
+
+    Returns:
+        dict[str, Any]: dictionary of the substituted parameter_name: parameter_value.
+        If there is no config file, returns a dictionary containing only the given substitutions.
+        If there is no config file and the substitutions don't have any values, returns an empty dictionary.
+    """
+    config_params: Dict[str, Any] = get_ros_param_dict(
+        config_file_path if isinstance(config_file_path, str) else config_file_path.perform(context)
+    )
+    for key, value in substitutions.items():
+        if value.perform(context):
+            config_params[key] = value
+
+    return config_params

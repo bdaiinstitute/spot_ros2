@@ -14,8 +14,8 @@ from spot_driver.launch.spot_launch_helpers import (
     DepthRegisteredMode,
     declare_image_publisher_args,
     get_camera_sources,
-    get_ros_param_dict,
     spot_has_arm,
+    substitute_launch_parameters,
 )
 
 
@@ -93,6 +93,8 @@ def create_point_cloud_nodelets(
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     config_file = LaunchConfiguration("config_file")
+    spot_name_arg = LaunchConfiguration("spot_name")
+    tf_prefix_arg = LaunchConfiguration("tf_prefix")
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")
     publish_point_clouds_config = LaunchConfiguration("publish_point_clouds")
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
@@ -102,8 +104,20 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if (config_file_path != "") and (not os.path.isfile(config_file_path)):
         raise FileNotFoundError("Configuration file '{}' does not exist!".format(config_file_path))
 
-    ros_params = get_ros_param_dict(config_file_path)
-    spot_name: str = ros_params["spot_name"] if "spot_name" in ros_params else ""
+    substitutions = {
+        "spot_name": spot_name_arg,
+        "frame_prefix": tf_prefix_arg,
+    }
+    configured_params = substitute_launch_parameters(config_file, substitutions, context)
+    spot_name: str = (
+        (
+            configured_params["spot_name"]
+            if isinstance(configured_params["spot_name"], str)
+            else configured_params["spot_name"].perform(context)
+        )
+        if "spot_name" in configured_params
+        else ""
+    )
 
     if mock_enable:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
@@ -137,7 +151,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         package="spot_driver",
         executable="spot_image_publisher_node",
         output="screen",
-        parameters=[config_file, spot_image_publisher_params],
+        parameters=[configured_params, spot_image_publisher_params],
         namespace=spot_name,
     )
     ld.add_action(spot_image_publisher_node)
@@ -180,7 +194,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                 (f"{cam_prefix}/virtual_camera/image", f"{cam_prefix}/camera/{virtual_camera_frame}/image"),
                 (f"{cam_prefix}/virtual_camera/camera_info", f"{cam_prefix}/camera/{virtual_camera_frame}/camera_info"),
             ],
-            parameters=[config_file, stitcher_params],
+            parameters=[configured_params, stitcher_params],
             condition=IfCondition(LaunchConfiguration("stitch_front_images")),
         )
         ld.add_action(image_stitcher_node)
@@ -196,6 +210,14 @@ def generate_launch_description() -> launch.LaunchDescription:
             description="Path to configuration file for the driver.",
         )
     )
+    launch_args.append(
+        DeclareLaunchArgument(
+            "tf_prefix",
+            default_value="",
+            description="apply namespace prefix to robot links and joints",
+        )
+    )
+    launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
     launch_args += declare_image_publisher_args()
 
     ld = launch.LaunchDescription(launch_args)

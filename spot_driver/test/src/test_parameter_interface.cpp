@@ -498,8 +498,8 @@ TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromSpotNameFallback) {
 }
 
 TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromExplicitParameter) {
-  const auto verifyExpectedFramePrefix = [](std::shared_ptr<rclcpp::Node> node,
-                                            std::shared_ptr<rclcpp::Node> namespaced_node) -> void {
+  static constexpr auto verifyExpectedFramePrefix = [](std::shared_ptr<rclcpp::Node> node,
+                                                       std::shared_ptr<rclcpp::Node> namespaced_node) -> void {
     // GIVEN we create a RclcppParameterInterface using these nodes
     RclcppParameterInterface parameter_interface_a{node};
     RclcppParameterInterface parameter_interface_b{namespaced_node};
