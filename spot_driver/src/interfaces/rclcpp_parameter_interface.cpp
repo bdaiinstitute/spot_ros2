@@ -197,7 +197,6 @@ std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(
   const auto kDefaultCamerasUsed = (has_hand_camera) ? kCamerasWithHand : kCamerasWithoutHand;
   std::set<spot_ros2::SpotCamera> spot_cameras_used;
   for (const auto& camera : kDefaultCamerasUsed) {
-    std::cout << "get default cameras used " << camera << std::endl;
     spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
   }
   return spot_cameras_used;
