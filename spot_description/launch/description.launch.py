@@ -40,6 +40,12 @@ def generate_launch_description() -> launch.LaunchDescription:
                 description="Flag to enable putting frames at the feet",
             ),
             DeclareLaunchArgument(
+                name="gripperless",
+                default_value="False",
+                choices=["True", "true", "False", "false"],
+                description="Flag to remove the gripper from the arm model",
+            ),
+            DeclareLaunchArgument(
                 "tf_prefix", default_value='""', description="Apply namespace prefix to robot links and joints"
             ),
             DeclareLaunchArgument("namespace", default_value="", description="Namespace for robot tf topic"),
@@ -56,6 +62,8 @@ def generate_launch_description() -> launch.LaunchDescription:
                                 LaunchConfiguration("arm"),
                                 " feet:=",
                                 LaunchConfiguration("feet"),
+                                " gripperless:=",
+                                LaunchConfiguration("gripperless"),
                                 " tf_prefix:=",
                                 LaunchConfiguration("tf_prefix"),
                             ]
