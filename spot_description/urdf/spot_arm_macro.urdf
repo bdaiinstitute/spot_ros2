@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <robot name="spot_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="load_arm" params="
-    tf_prefix gripperless">
+    tf_prefix gripperless custom_gripper_base_link">
+
+    <!-- Useful boolean variable for determining if custom gripper base link should be used in the xacro -->
+    <xacro:property name="use_custom_gripper_base_link" value="${gripperless and custom_gripper_base_link!=''}"/>
 
     <link name="${tf_prefix}arm_link_sh0">
       <visual>
@@ -202,9 +205,11 @@
     </joint>
 
     <xacro:if value="${gripperless}">
-      <!-- This link needs to still be defined as to not break WR1 joint but can't include the meshes below, as these
-      includes parts of the gripper. -->
-      <link name="${tf_prefix}arm_link_wr1" />
+      <xacro:unless value="${use_custom_gripper_base_link}">
+        <!-- Here this link needs to still be defined as to not break WR1 joint but can't include the meshes below, as
+        these include parts of the gripper. Otherwise custom gripper base link will be used as the child of WR1 -->
+        <link name="${tf_prefix}arm_link_wr1" />
+      </xacro:unless>
     </xacro:if>
     <xacro:unless value="${gripperless}">
       <link name="${tf_prefix}arm_link_wr1">
@@ -250,11 +255,20 @@
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
       <axis xyz="1 0 0" />
       <parent link="${tf_prefix}arm_link_wr0" />
-      <child link="${tf_prefix}arm_link_wr1" />
+      <!-- Child link can be different depending on gripperless status: -->
+      <xacro:if value="${use_custom_gripper_base_link}">
+        <!-- can optionally be the custom link specified via arg -->
+        <child link="${custom_gripper_base_link}" />
+      </xacro:if>
+      <xacro:unless value="${use_custom_gripper_base_link}">
+        <!-- else defaults to normal arm_link_wr1 -->
+        <child link="${tf_prefix}arm_link_wr1" />
+      </xacro:unless>
       <limit effort="30.3" velocity="10.0" lower="-2.87979326579064354163"
         upper="2.87979326579064354163" />
     </joint>
 
+    <!-- Finger joint and link shouldn't be included if gripperless -->
     <xacro:unless value="${gripperless}">
       <link name="${tf_prefix}arm_link_fngr">
         <visual>
