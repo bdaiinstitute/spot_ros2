@@ -7,12 +7,18 @@
   <xacro:include filename="$(find spot_description)/urdf/spot.ros2_control.xacro" />
 
   <!-- General parameters -->
-  <xacro:arg name="arm" default="false" />
-  <xacro:arg name="feet" default="false" />
+
+  <!-- String that will be prepended to all joints and links-->
   <xacro:arg name="tf_prefix" default="" />
 
-  <!-- Parameters used if Spot has an arm but not a gripper, or is outfitted with a custom gripper. -->
+  <!-- Set to true if Spot has an arm -->
+  <xacro:arg name="arm" default="false" />
+
+  <!-- Set to true if Spot has an arm but not a gripper -->
   <xacro:arg name="gripperless" default="false" />
+
+  <!-- Set to true to put links at the feet of Spot -->
+  <xacro:arg name="feet" default="false" />
 
   <!-- Parameters for ROS 2 control -->
   <xacro:arg name="add_ros2_control_tag" default="false" />
@@ -28,8 +34,7 @@
     arm="$(arg arm)"
     feet="$(arg feet)"
     tf_prefix="$(arg tf_prefix)" 
-    gripperless="$(arg gripperless)"
-    custom_gripper_base_link=""/>
+    gripperless="$(arg gripperless)"/>
 
   <!-- Adding the ROS 2 control tags -->
   <xacro:if value="$(arg add_ros2_control_tag)">
