@@ -5,7 +5,7 @@
     arm:=false
     feet:=false
     gripperless:=false
-    custom_gripper_base_link
+    custom_gripper_base_link:=''
     tf_prefix">
 
         <link name="${tf_prefix}body">
