@@ -170,9 +170,9 @@ def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional
     return username, password, hostname, port, certificate
 
 
-def default_camera_sources(has_arm: bool) -> List[str]:
+def default_camera_sources(has_arm: bool, gripperless: bool) -> List[str]:
     camera_sources = ["frontleft", "frontright", "left", "right", "back"]
-    if has_arm:
+    if has_arm and not gripperless:
         camera_sources.append("hand")
     return camera_sources
 
@@ -191,7 +191,11 @@ def get_camera_sources_from_ros_params(ros_params: Dict[str, Any], has_arm: bool
     Returns:
         List[str]: List of cameras the driver will stream from.
     """
-    default_sources = default_camera_sources(has_arm)
+    gripperless = False
+    if "gripperless" in ros_params:
+        if isinstance(ros_params["gripperless"], bool):
+            gripperless = ros_params["gripperless"]
+    default_sources = default_camera_sources(has_arm, gripperless)
     if "cameras_used" in ros_params:
         camera_sources = ros_params["cameras_used"]
         if isinstance(camera_sources, List):

@@ -26,6 +26,7 @@ constexpr auto kParameterNamePublishCompressedImages = "publish_compressed_image
 constexpr auto kParameterNamePublishDepthImages = "publish_depth";
 constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
+constexpr auto kParameterNameGripperless = "gripperless";
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and
@@ -186,8 +187,14 @@ std::string RclcppParameterInterface::getPreferredOdomFrame() const {
   return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
 }
 
-std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm) const {
-  const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+bool RclcppParameterInterface::getGripperless() const {
+  return declareAndGetParameter<bool>(node_, kParameterNameGripperless, kDefaultGripperless);
+}
+
+std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm,
+                                                                                const bool gripperless) const {
+  const bool has_hand_camera = has_arm && (!gripperless);
+  const auto kDefaultCamerasUsed = (has_hand_camera) ? kCamerasWithHand : kCamerasWithoutHand;
   std::set<spot_ros2::SpotCamera> spot_cameras_used;
   for (const auto& camera : kDefaultCamerasUsed) {
     spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
@@ -196,8 +203,9 @@ std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(
 }
 
 tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterface::getCamerasUsed(
-    const bool has_arm) const {
-  const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+    const bool has_arm, const bool gripperless) const {
+  const bool has_hand_camera = has_arm && (!gripperless);
+  const auto kDefaultCamerasUsed = (has_hand_camera) ? kCamerasWithHand : kCamerasWithoutHand;
   const std::vector<std::string> kDefaultCamerasUsedVector(std::begin(kDefaultCamerasUsed),
                                                            std::end(kDefaultCamerasUsed));
   const auto cameras_used_param =
@@ -208,6 +216,8 @@ tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterf
       const auto spot_camera = kRosStringToSpotCamera.at(camera);
       if ((spot_camera == SpotCamera::HAND) && (!has_arm)) {
         return tl::make_unexpected("Cannot add SpotCamera 'hand', the robot does not have an arm!");
+      } else if ((spot_camera == SpotCamera::HAND) && gripperless) {
+        return tl::make_unexpected("Cannot add SpotCamera 'hand', the robot is gripperless!");
       }
       spot_cameras_used.insert(spot_camera);
     } catch (const std::out_of_range& e) {

@@ -40,8 +40,10 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getSpotName() const override { return spot_name; }
 
-  std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm) const override {
-    const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+  bool getGripperless() const override { return gripperless; }
+
+  std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm, const bool gripperless) const override {
+    const auto kDefaultCamerasUsed = (has_arm && !gripperless) ? kCamerasWithHand : kCamerasWithoutHand;
     std::set<spot_ros2::SpotCamera> spot_cameras_used;
     for (const auto& camera : kDefaultCamerasUsed) {
       spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
@@ -49,8 +51,9 @@ class FakeParameterInterface : public ParameterInterfaceBase {
     return spot_cameras_used;
   }
 
-  tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(const bool has_arm) const override {
-    return getDefaultCamerasUsed(has_arm);
+  tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(const bool has_arm,
+                                                                            const bool gripperless) const override {
+    return getDefaultCamerasUsed(has_arm, gripperless);
   }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};
@@ -64,6 +67,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   bool publish_rgb_images = ParameterInterfaceBase::kDefaultPublishRGBImages;
   bool publish_depth_images = ParameterInterfaceBase::kDefaultPublishDepthImages;
   bool publish_depth_registered_images = ParameterInterfaceBase::kDefaultPublishDepthRegisteredImages;
+  bool gripperless = ParameterInterfaceBase::kDefaultGripperless;
   std::string spot_name;
 };
 }  // namespace spot_ros2::test
