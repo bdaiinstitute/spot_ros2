@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <robot name="spot_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="load_arm" params="
-    tf_prefix">
+    tf_prefix gripperless custom_gripper_base_link">
+
+    <!-- Useful boolean variable for determining if custom gripper base link should be used in the xacro -->
+    <xacro:property name="use_custom_gripper_base_link" value="${gripperless and custom_gripper_base_link!=''}"/>
 
     <link name="${tf_prefix}arm_link_sh0">
       <visual>
@@ -201,107 +204,127 @@
         upper="1.83259571459404613236" />
     </joint>
 
-    <link name="${tf_prefix}arm_link_wr1">
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_wr1.obj" />
-        </geometry>
-        <material name="arm_link_wr1">
-          <color rgba="0.2 0.2 0.2 1" />
-        </material>
-      </visual>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/arm_link_wr1.obj" />
-        </geometry>
-      </collision>
-      <collision>
-      <geometry>
-        <mesh filename="package://spot_description/meshes/arm/collision/front_jaw.obj" />
-      </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/middle_jaw.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/jaw_tooth.obj" />
-        </geometry>
-      </collision>
-      <inertial>
-        <origin rpy="0.006393076449033863 0.2928526604761865 -0.022814984050994802"
-          xyz="0.12516802549362183 0.00010137435310753062 -0.013997982256114483" />
-        <mass value="0.785" />
-        <inertia ixx="0.00076741362048185" ixy="0.0" ixz="0.0" iyy="0.0017628124054271809" iyz="0.0"
-          izz="0.0016818105865345951" />
-      </inertial>
-    </link>
+    <xacro:if value="${gripperless}">
+      <xacro:unless value="${use_custom_gripper_base_link}">
+        <!-- Here this link needs to still be defined as to not break WR1 joint but can't include the meshes below, as
+        these include parts of the gripper. Otherwise custom gripper base link will be used as the child of WR1 -->
+        <link name="${tf_prefix}arm_link_wr1" />
+      </xacro:unless>
+    </xacro:if>
+    <xacro:unless value="${gripperless}">
+      <link name="${tf_prefix}arm_link_wr1">
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/visual/arm_link_wr1.obj" />
+          </geometry>
+          <material name="arm_link_wr1">
+            <color rgba="0.2 0.2 0.2 1" />
+          </material>
+        </visual>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/arm_link_wr1.obj" />
+          </geometry>
+        </collision>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/front_jaw.obj" />
+          </geometry>
+        </collision>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/middle_jaw.obj" />
+          </geometry>
+        </collision>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/jaw_tooth.obj" />
+          </geometry>
+        </collision>
+        <inertial>
+          <origin rpy="0.006393076449033863 0.2928526604761865 -0.022814984050994802"
+            xyz="0.12516802549362183 0.00010137435310753062 -0.013997982256114483" />
+          <mass value="0.785" />
+          <inertia ixx="0.00076741362048185" ixy="0.0" ixz="0.0" iyy="0.0017628124054271809" iyz="0.0"
+            izz="0.0016818105865345951" />
+        </inertial>
+      </link>
+    </xacro:unless>
     <joint name="${tf_prefix}arm_wr1" type="revolute">
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
       <axis xyz="1 0 0" />
       <parent link="${tf_prefix}arm_link_wr0" />
-      <child link="${tf_prefix}arm_link_wr1" />
+      <!-- Child link can be different depending on gripperless status: -->
+      <xacro:if value="${use_custom_gripper_base_link}">
+        <!-- can optionally be the custom link specified via arg -->
+        <child link="${custom_gripper_base_link}" />
+      </xacro:if>
+      <xacro:unless value="${use_custom_gripper_base_link}">
+        <!-- else defaults to normal arm_link_wr1 -->
+        <child link="${tf_prefix}arm_link_wr1" />
+      </xacro:unless>
       <limit effort="30.3" velocity="10.0" lower="-2.87979326579064354163"
         upper="2.87979326579064354163" />
     </joint>
 
-    <link name="${tf_prefix}arm_link_fngr">
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/visual/arm_link_fngr.obj" />
-        </geometry>
-        <material name="arm_link_fngr">
-          <color rgba="0.2 0.2 0.2 1" />
-        </material>
-      </visual>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/left_hinge.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/left_finger.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/left_tooth.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/right_hinge.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/right_finger.obj" />
-        </geometry>
-      </collision>
-      <collision>
-        <geometry>
-          <mesh filename="package://spot_description/meshes/arm/collision/right_tooth.obj" />
-        </geometry>
-      </collision>
-      <inertial>
-        <origin rpy="0.0003416659657240473 0.3751670012784243 -0.004058661249495721"
-          xyz="0.04787873849272728 -0.00020676758140325546 -0.01628788933157921" />
-        <mass value="0.2" />
-        <inertia ixx="0.0001439963634171048" ixy="0.0" ixz="0.0" iyy="0.0003007126997998294"
-          iyz="0.0" izz="0.0003912783268020657" />
-      </inertial>
-    </link>
-    <joint name="${tf_prefix}arm_f1x" type="revolute">
-      <origin xyz="0.11745 0 0.014820" rpy="0 0 0" />
-      <axis xyz="0.0 1.0 0.0" />
-      <parent link="${tf_prefix}arm_link_wr1" />
-      <child link="${tf_prefix}arm_link_fngr" />
-      <limit effort="15.32" velocity="10.0" lower="-1.57" upper="0.0" />
-    </joint>
+    <!-- Finger joint and link shouldn't be included if gripperless -->
+    <xacro:unless value="${gripperless}">
+      <link name="${tf_prefix}arm_link_fngr">
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/visual/arm_link_fngr.obj" />
+          </geometry>
+          <material name="arm_link_fngr">
+            <color rgba="0.2 0.2 0.2 1" />
+          </material>
+        </visual>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/left_hinge.obj" />
+          </geometry>
+        </collision>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/left_finger.obj" />
+          </geometry>
+        </collision>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/left_tooth.obj" />
+          </geometry>
+        </collision>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/right_hinge.obj" />
+          </geometry>
+        </collision>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/right_finger.obj" />
+          </geometry>
+        </collision>
+        <collision>
+          <geometry>
+            <mesh filename="package://spot_description/meshes/arm/collision/right_tooth.obj" />
+          </geometry>
+        </collision>
+        <inertial>
+          <origin rpy="0.0003416659657240473 0.3751670012784243 -0.004058661249495721"
+            xyz="0.04787873849272728 -0.00020676758140325546 -0.01628788933157921" />
+          <mass value="0.2" />
+          <inertia ixx="0.0001439963634171048" ixy="0.0" ixz="0.0" iyy="0.0003007126997998294"
+            iyz="0.0" izz="0.0003912783268020657" />
+        </inertial>
+      </link>
+      <joint name="${tf_prefix}arm_f1x" type="revolute">
+        <origin xyz="0.11745 0 0.014820" rpy="0 0 0" />
+        <axis xyz="0.0 1.0 0.0" />
+        <parent link="${tf_prefix}arm_link_wr1" />
+        <child link="${tf_prefix}arm_link_fngr" />
+        <limit effort="15.32" velocity="10.0" lower="-1.57" upper="0.0" />
+      </joint>
+    </xacro:unless>
   </xacro:macro>
 </robot>

@@ -4,6 +4,8 @@
     <xacro:macro name="load_spot" params="
     arm:=false
     feet:=false
+    gripperless:=false
+    custom_gripper_base_link:=''
     tf_prefix">
 
         <link name="${tf_prefix}body">
@@ -417,7 +419,9 @@
         <!-- Include Arm if necessary-->
         <xacro:if value="${arm}">
             <xacro:include filename="$(find spot_description)/urdf/spot_arm_macro.urdf" />
-            <xacro:load_arm tf_prefix="${tf_prefix}" />
+            <xacro:load_arm tf_prefix="${tf_prefix}"
+                            gripperless="${gripperless}"
+                            custom_gripper_base_link="${custom_gripper_base_link}" />
         </xacro:if>
 
         <!-- Include links at feet if necessary -->
