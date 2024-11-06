@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <robot name="spot_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="load_arm" params="
-    tf_prefix gripperless custom_gripper_base_link">
+    tf_prefix
+    gripperless:=false
+    custom_gripper_base_link:=''">
 
     <!-- Useful boolean variable for determining if custom gripper base link should be used in the xacro -->
     <xacro:property name="use_custom_gripper_base_link" value="${gripperless and custom_gripper_base_link!=''}"/>
