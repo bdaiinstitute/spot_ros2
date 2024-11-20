@@ -193,10 +193,6 @@ std::optional<std::string> RclcppParameterInterface::getFramePrefix() const {
   return declareAndGetParameter<std::string>(node_, kParameterFramePrefix);
 }
 
-std::optional<std::string> RclcppParameterInterface::getFramePrefix() const {
-  return declareAndGetParameter<std::string>(node_, kParameterFramePrefix);
-}
-
 bool RclcppParameterInterface::getGripperless() const {
   return declareAndGetParameter<bool>(node_, kParameterNameGripperless, kDefaultGripperless);
 }
