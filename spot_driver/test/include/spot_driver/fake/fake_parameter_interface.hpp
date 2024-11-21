@@ -36,7 +36,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   bool getPublishDepthRegisteredImages() const override { return publish_depth_registered_images; }
 
-  std::string getPreferredOdomFrame() const override { return "odom"; }
+  std::string getPreferredOdomFrame() const override { return kDefaultPreferredOdomFrame; }
 
   std::optional<std::string> getFramePrefix() const override { return std::nullopt; }
 

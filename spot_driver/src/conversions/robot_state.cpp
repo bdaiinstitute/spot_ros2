@@ -30,6 +30,23 @@ std::string stripPrefix(const std::string& input, const std::string& prefix) {
   return input.substr(prefix.size());
 }
 
+std::string prependPrefix(const std::string& input, const std::string& prefix) {
+  return input.find(prefix) == 0 ? input : prefix + input;
+}
+
+std::optional<std::string> validatePreferredOdomFrame(const std::string& frame, const std::string& prefix) {
+  // Make sure we already have the frame and prefix combined.
+  const std::string frame_with_prefix = prependPrefix(frame, prefix);
+
+  // Compare the given prefixed frame with all valid prefixed options and set false if no match is found.
+  const bool is_valid = std::find_if(kValidOdomFrameOptions.begin(), kValidOdomFrameOptions.end(),
+                                     [&prefix, &frame_with_prefix](const auto& option) -> bool {
+                                       return frame_with_prefix == (prefix + option);
+                                     }) != kValidOdomFrameOptions.end();
+
+  return is_valid ? std::make_optional(frame_with_prefix) : std::nullopt;
+}
+
 spot_msgs::msg::BatteryStateArray getBatteryStates(const ::bosdyn::api::RobotState& robot_state,
                                                    const google::protobuf::Duration& clock_skew) {
   spot_msgs::msg::BatteryStateArray battery_states;

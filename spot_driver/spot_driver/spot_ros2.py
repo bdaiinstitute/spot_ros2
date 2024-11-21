@@ -250,7 +250,7 @@ class SpotROS(Node):
         self.declare_parameter("initialize_spot_cam", False)
 
         self.declare_parameter("spot_name", "")
-        self.declare_parameter("frame_prefix", "")
+        self.declare_parameter("frame_prefix", Parameter.Type.STRING)
         self.declare_parameter("mock_enable", False)
 
         self.declare_parameter("gripperless", False)
@@ -343,31 +343,28 @@ class SpotROS(Node):
         # The former one is kinematic odometry and the second one is a combined odometry of vision and kinematics
         # These params enables to change which odometry frame is a parent of body frame and to change tf names of each
         # odometry frames.
-        frame_prefix_param: Optional[str] = self.get_parameter("frame_prefix").value
-        frame_prefix = frame_prefix_param if frame_prefix_param is not None else ""
-        if frame_prefix_param is None and self.name is not None:
-            frame_prefix = self.name + "/"
-        self.frame_prefix: str = frame_prefix
+        self.frame_prefix: Optional[str] = self.get_parameter_or("frame_prefix", None).value
+        if self.frame_prefix is None:
+            self.frame_prefix = self.name + "/" if self.name is not None else ""
         self.preferred_odom_frame: Parameter = self.declare_parameter(
             "preferred_odom_frame", self.frame_prefix + "odom"
         )  # 'vision' or 'odom'
-        self.tf_name_kinematic_odom: Parameter = self.declare_parameter(
-            "tf_name_kinematic_odom", self.frame_prefix + "odom"
-        )
-        self.tf_name_raw_kinematic: str = frame_prefix + "odom"
-        self.tf_name_vision_odom: Parameter = self.declare_parameter(
-            "tf_name_vision_odom", self.frame_prefix + "vision"
-        )
+        self.tf_name_raw_kinematic: str = self.frame_prefix + "odom"
         self.tf_name_raw_vision: str = self.frame_prefix + "vision"
 
         preferred_odom_frame_references = [self.tf_name_raw_kinematic, self.tf_name_raw_vision]
+        preferred_odom_frame_all_options = (
+            preferred_odom_frame_references + ["odom", "vision"]
+            if self.frame_prefix
+            else preferred_odom_frame_references
+        )
         preferred_odom_frame_param: str = self.preferred_odom_frame.value
         if preferred_odom_frame_param not in preferred_odom_frame_references:
             if self.frame_prefix + preferred_odom_frame_param in preferred_odom_frame_references:
                 preferred_odom_frame_param = self.frame_prefix + preferred_odom_frame_param
             else:
                 error_msg = (
-                    f'The rosparam "preferred_odom_frame" should be one of {preferred_odom_frame_references}, got'
+                    f'The rosparam "preferred_odom_frame" should be one of {preferred_odom_frame_all_options}, got'
                     f' "{preferred_odom_frame_param}", which could not be composed into any valid option.'
                 )
                 self.get_logger().error(error_msg)

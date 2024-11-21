@@ -462,7 +462,6 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSelectedCamerasUsedGripperless) {
   EXPECT_THAT(cameras_used_arm.error(), StrEq("Cannot add SpotCamera 'hand', the robot is gripperless!"));
 }
 
-
 TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromNamespaceFallback) {
   // GIVEN we create rclcpp nodes with and without a specific namespace
   const auto node = std::make_shared<rclcpp::Node>(kNodeName);

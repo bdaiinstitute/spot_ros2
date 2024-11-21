@@ -32,10 +32,15 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
       timer_interface_{std::move(timer_interface)} {
   frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
 
-  const auto preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
-  is_using_vision_ = stripPrefix(preferred_odom_frame, frame_prefix_) == "vision";
-  full_odom_frame_id_ =
-      preferred_odom_frame.find('/') == std::string::npos ? frame_prefix_ + preferred_odom_frame : preferred_odom_frame;
+  const std::string preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
+  const std::optional<std::string> valid_odom_frame = validatePreferredOdomFrame(preferred_odom_frame, frame_prefix_);
+  is_using_vision_ = stripPrefix(valid_odom_frame.value_or(kValidOdomFrameOptions[0]), frame_prefix_) == "vision";
+  full_odom_frame_id_ = valid_odom_frame.value_or(frame_prefix_ + kValidOdomFrameOptions[0]);
+  if (!valid_odom_frame.has_value()) {
+    logger_interface_->logWarn(std::string{"Given preferred odom frame '"}.append(
+        preferred_odom_frame + "' could not be composed into any valid option, defaulting to: '" + full_odom_frame_id_ +
+        "'."));
+  }
 
   // Create a timer to request and publish robot state at a fixed rate
   timer_interface_->setTimer(kRobotStateCallbackPeriod, [this] {

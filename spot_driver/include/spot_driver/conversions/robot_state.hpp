@@ -41,6 +41,8 @@ inline const std::map<const std::string, const std::string> kFriendlyJointNames 
     {"arm0.wr1", "arm_wr1"},        {"arm0.f1x", "arm_f1x"},
 };
 
+static constexpr std::array<const char* const, 2> kValidOdomFrameOptions{"odom", "vision"};
+
 /**
  * @brief Given an input string and a prefix string which is a substring starting at the beginning of the input string,
  * return a new string which is the difference between the input string and the prefix string.
@@ -49,6 +51,27 @@ inline const std::map<const std::string, const std::string> kFriendlyJointNames 
  * @return A new string which is the difference between the input string and the prefix string.
  */
 std::string stripPrefix(const std::string& input, const std::string& prefix);
+
+/**
+ * @brief Given an input string and a prefix string, return a new string which is the addition of the prefix string and
+ * the input string. If the input string already contains the prefix substring at the beginning, the output will be the
+ * same as input.
+ * @param input
+ * @param prefix
+ * @return A new string which is the addition of the prefix string and the input string. If the input string already
+ * contains the prefix substring at the beginning, the output will be the same as input.
+ */
+std::string prependPrefix(const std::string& input, const std::string& prefix);
+
+/**
+ * @brief Given an input frame string and a prefix string, return a new optional string which is guaranteed to be a
+ * valid odom frame option. If a valid option cannot be created, std::nullopt is returned instead.
+ * @param frame
+ * @param prefix
+ * @return A new optional string which is guaranteed to be a valid odom frame option. If a valid option cannot be
+ * created, std::nullopt is returned instead.
+ */
+std::optional<std::string> validatePreferredOdomFrame(const std::string& frame, const std::string& prefix);
 
 /**
  * @brief Create a BatteryStateArray ROS message by parsing a RobotState message and applying a clock skew to it.

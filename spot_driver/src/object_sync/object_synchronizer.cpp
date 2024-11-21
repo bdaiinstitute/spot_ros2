@@ -309,12 +309,15 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
       clock_interface_{std::move(clock_interface)} {
   frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
 
-  // TODO(param-refactor): this was refactored to match the logic from state_publisher,
-  // find out if the stripping and re-adding wasn't done in the particular way intentionally for something
   const std::string preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
-  preferred_base_frame_ = stripPrefix(preferred_odom_frame, frame_prefix_);
-  preferred_base_frame_with_prefix_ =
-      preferred_odom_frame.find('/') == std::string::npos ? frame_prefix_ + preferred_odom_frame : preferred_odom_frame;
+  const std::optional<std::string> valid_odom_frame = validatePreferredOdomFrame(preferred_odom_frame, frame_prefix_);
+  preferred_base_frame_ = stripPrefix(valid_odom_frame.value_or(kValidOdomFrameOptions[0]), frame_prefix_);
+  preferred_base_frame_with_prefix_ = valid_odom_frame.value_or(frame_prefix_ + kValidOdomFrameOptions[0]);
+  if (!valid_odom_frame.has_value()) {
+    logger_interface_->logWarn(std::string{"Given preferred odom frame '"}.append(
+        preferred_odom_frame + "' could not be composed into any valid option, defaulting to: '" +
+        preferred_base_frame_with_prefix_ + "'."));
+  }
 
   // TODO(khughes): This is temporarily disabled to reduce driver's spew about TF extrapolation.
   // world_object_update_timer_->setTimer(kWorldObjectSyncPeriod, [this]() {

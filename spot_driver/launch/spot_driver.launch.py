@@ -40,18 +40,19 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         "frame_prefix": tf_prefix_arg,
     }
     configured_params = substitute_launch_parameters(config_file_path, substitutions, context)
-    spot_name: Optional[Union[str, LaunchConfiguration]] = (
-        configured_params["spot_name"] if "spot_name" in configured_params else None
+    spot_name: Union[str, LaunchConfiguration] = (
+        configured_params["spot_name"] if "spot_name" in configured_params else ""
     )
     tf_prefix: Optional[Union[str, LaunchConfiguration]] = (
         configured_params["frame_prefix"] if "frame_prefix" in configured_params else None
     )
-    if tf_prefix is None and spot_name is not None:
-        tf_prefix = (spot_name if isinstance(spot_name, str) else spot_name.perform(context)) + "/"
     if tf_prefix is None:
-        tf_prefix = ""
-    if spot_name is None:
-        spot_name = ""
+        if isinstance(spot_name, LaunchConfiguration):
+            tf_prefix = spot_name.perform(context) + "/"
+        elif isinstance(spot_name, str) and spot_name:
+            tf_prefix = spot_name + "/"
+        else:
+            tf_prefix = ""
 
     if mock_enable:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
