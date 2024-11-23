@@ -252,6 +252,7 @@ class SpotROS(Node):
         self.declare_parameter("spot_name", "")
         self.declare_parameter("frame_prefix", Parameter.Type.STRING)
         self.declare_parameter("mock_enable", False)
+        self.declare_parameter("preferred_odom_frame", "")  # 'vision' or 'odom'
 
         self.declare_parameter("gripperless", False)
 
@@ -346,11 +347,11 @@ class SpotROS(Node):
         self.frame_prefix: Optional[str] = self.get_parameter_or("frame_prefix", None).value
         if self.frame_prefix is None:
             self.frame_prefix = self.name + "/" if self.name is not None else ""
-        self.preferred_odom_frame: Parameter = self.declare_parameter(
-            "preferred_odom_frame", self.frame_prefix + "odom"
-        )  # 'vision' or 'odom'
+        self.preferred_odom_frame: str = self.get_parameter("preferred_odom_frame").value
         self.tf_name_raw_kinematic: str = self.frame_prefix + "odom"
         self.tf_name_raw_vision: str = self.frame_prefix + "vision"
+        if not self.preferred_odom_frame:
+            self.preferred_odom_frame = self.tf_name_raw_kinematic
 
         preferred_odom_frame_references = [self.tf_name_raw_kinematic, self.tf_name_raw_vision]
         preferred_odom_frame_all_options = (
@@ -358,14 +359,13 @@ class SpotROS(Node):
             if self.frame_prefix
             else preferred_odom_frame_references
         )
-        preferred_odom_frame_param: str = self.preferred_odom_frame.value
-        if preferred_odom_frame_param not in preferred_odom_frame_references:
-            if self.frame_prefix + preferred_odom_frame_param in preferred_odom_frame_references:
-                preferred_odom_frame_param = self.frame_prefix + preferred_odom_frame_param
+        if self.preferred_odom_frame not in preferred_odom_frame_references:
+            if self.frame_prefix + self.preferred_odom_frame in preferred_odom_frame_references:
+                self.preferred_odom_frame = self.frame_prefix + self.preferred_odom_frame
             else:
                 error_msg = (
                     f'The rosparam "preferred_odom_frame" should be one of {preferred_odom_frame_all_options}, got'
-                    f' "{preferred_odom_frame_param}", which could not be composed into any valid option.'
+                    f' "{self.preferred_odom_frame}", which could not be composed into any valid option.'
                 )
                 self.get_logger().error(error_msg)
                 raise ValueError(error_msg)

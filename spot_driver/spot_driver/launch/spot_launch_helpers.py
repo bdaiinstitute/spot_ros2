@@ -6,9 +6,9 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import yaml
-from launch import LaunchContext
+from launch import LaunchContext, Substitution
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import PathJoinSubstitution
 
 from spot_wrapper.wrapper import SpotWrapper
 
@@ -132,7 +132,7 @@ def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:
 
 
 def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional[int], Optional[str], Optional[str]]:
-    """Obtain the username, password, hostname, port, and certificate of Spot from the environment variables or,
+    """Obtain the username, password, hostname, port, certificate, and name of Spot from the environment variables or,
     if they are not set, the configuration file yaml.
 
     Args:
@@ -142,7 +142,8 @@ def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional
         ValueError: If any of username, password, hostname is not set.
 
     Returns:
-        Tuple[str, str, str, Optional[int], Optional[str]]: username, password, hostname, port, certificate
+        Tuple[str, str, str, Optional[int], Optional[str], Optional[str]]: username, password, hostname, port,
+        certificate, spot_name
     """
     # Get value from environment variables
     username = os.getenv("BOSDYN_CLIENT_USERNAME")
@@ -252,16 +253,16 @@ def spot_has_arm(config_file_path: str) -> bool:
 
 
 def substitute_launch_parameters(
-    config_file_path: Union[str, LaunchConfiguration],
-    substitutions: Dict[str, LaunchConfiguration],
+    config_file_path: Union[str, Substitution],
+    substitutions: Dict[str, Substitution],
     context: LaunchContext,
 ) -> Dict[str, Any]:
     """Pass the given ROS launch parameter substitutions into parameters from the ROS config yaml file.
 
     Args:
-        config_file_path (str | LaunchConfiguration): Path to the config yaml.
-        substitutions (Dict[str, LaunchConfiguration]): Dictionary of parameter_name: parameter_value containing the
-                                                        desired launch parameter substitutions.
+        config_file_path (str | Substitution): Path to the config yaml.
+        substitutions (Dict[str, Substitution]): Dictionary of parameter_name: parameter_value containing the desired
+                                                 launch parameter substitutions.
         context (LaunchContext): Context for acquiring the launch configuration inner values.
 
     Returns:
@@ -277,3 +278,27 @@ def substitute_launch_parameters(
             config_params[key] = value
 
     return config_params
+
+
+def get_name_and_prefix(ros_params: Dict[str, Any]) -> Tuple[Union[str, Substitution], Union[str, Substitution]]:
+    """Get the Spot robot name and ROS TF frame prefix from the provided ROS parameters, which may be taken directly
+    from the yaml config or passed through from launch arguments. This will compose the frame prefix from the Spot name
+    if not given explicitly.
+
+    Args:
+        ros_params (dict[str, Any]): A dictionary of parameter_name: parameter_value.
+
+    Returns:
+        Tuple[str | Substitution, str | Substitution]: spot_name, tf_prefix.
+    """
+    spot_name: Union[str, Substitution] = ros_params["spot_name"] if "spot_name" in ros_params else ""
+    tf_prefix: Optional[Union[str, Substitution]] = ros_params["frame_prefix"] if "frame_prefix" in ros_params else None
+    if tf_prefix is None:
+        if isinstance(spot_name, Substitution):
+            tf_prefix = PathJoinSubstitution([spot_name, ""])
+        elif isinstance(spot_name, str) and spot_name:
+            tf_prefix = spot_name + "/"
+        else:
+            tf_prefix = ""
+
+    return spot_name, tf_prefix

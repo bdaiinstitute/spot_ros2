@@ -5,7 +5,7 @@ from typing import List
 
 import launch
 import launch_ros
-from launch import LaunchContext, LaunchDescription
+from launch import LaunchContext, LaunchDescription, Substitution
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -14,6 +14,7 @@ from spot_driver.launch.spot_launch_helpers import (
     DepthRegisteredMode,
     declare_image_publisher_args,
     get_camera_sources,
+    get_name_and_prefix,
     spot_has_arm,
     substitute_launch_parameters,
 )
@@ -109,15 +110,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         "frame_prefix": tf_prefix_arg,
     }
     configured_params = substitute_launch_parameters(config_file, substitutions, context)
-    spot_name: str = (
-        (
-            configured_params["spot_name"]
-            if isinstance(configured_params["spot_name"], str)
-            else configured_params["spot_name"].perform(context)
-        )
-        if "spot_name" in configured_params
-        else ""
-    )
+    spot_name = get_name_and_prefix(configured_params)
+    if isinstance(spot_name, Substitution):
+        spot_name = spot_name.perform(context)
 
     if mock_enable:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)

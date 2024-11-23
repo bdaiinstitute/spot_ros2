@@ -1,7 +1,6 @@
 # Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 import os
-from typing import Optional, Union
 
 import launch
 import launch_ros
@@ -15,6 +14,7 @@ from launch_ros.substitutions import FindPackageShare
 from spot_driver.launch.spot_launch_helpers import (
     IMAGE_PUBLISHER_ARGS,
     declare_image_publisher_args,
+    get_name_and_prefix,
     spot_has_arm,
     substitute_launch_parameters,
 )
@@ -40,19 +40,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         "frame_prefix": tf_prefix_arg,
     }
     configured_params = substitute_launch_parameters(config_file_path, substitutions, context)
-    spot_name: Union[str, LaunchConfiguration] = (
-        configured_params["spot_name"] if "spot_name" in configured_params else ""
-    )
-    tf_prefix: Optional[Union[str, LaunchConfiguration]] = (
-        configured_params["frame_prefix"] if "frame_prefix" in configured_params else None
-    )
-    if tf_prefix is None:
-        if isinstance(spot_name, LaunchConfiguration):
-            tf_prefix = spot_name.perform(context) + "/"
-        elif isinstance(spot_name, str) and spot_name:
-            tf_prefix = spot_name + "/"
-        else:
-            tf_prefix = ""
+    spot_name, tf_prefix = get_name_and_prefix(configured_params)
 
     if mock_enable:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
