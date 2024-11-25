@@ -118,7 +118,6 @@ def get_ros_param_dict(config_file_path: str) -> Dict[str, Any]:
     with open(config_file_path, "r") as config_yaml:
         try:
             config_dict = yaml.safe_load(config_yaml)
-            # FIXME: this will not generalize if explicit node names are used in the yaml config
             if ("/**" in config_dict) and ("ros__parameters" in config_dict["/**"]):
                 ros_params = config_dict["/**"]["ros__parameters"]
                 return ros_params

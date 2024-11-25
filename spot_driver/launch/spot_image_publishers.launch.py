@@ -110,7 +110,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         "frame_prefix": tf_prefix_arg,
     }
     configured_params = substitute_launch_parameters(config_file, substitutions, context)
-    spot_name = get_name_and_prefix(configured_params)
+    spot_name, _ = get_name_and_prefix(configured_params)
     if isinstance(spot_name, Substitution):
         spot_name = spot_name.perform(context)
 
