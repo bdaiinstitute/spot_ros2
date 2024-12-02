@@ -23,6 +23,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_name = LaunchConfiguration("spot_name").perform(context)
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
+    robot_description_package = LaunchConfiguration("robot_description_package").perform(context)
 
     # if config_file has been set (and is not the default empty string) and is also not a file, do not launch anything.
     config_file_path = config_file.perform(context)
@@ -35,7 +36,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     else:
         has_arm = spot_has_arm(config_file_path=config_file.perform(context), spot_name=spot_name)
 
-    pkg_share = FindPackageShare("spot_description").find("spot_description")
+    robot_description_pkg_share = FindPackageShare(robot_description_package).find(robot_description_package)
 
     # Since spot_image_publisher_node is responsible for retrieving and publishing images, disable all image publishing
     # in spot_driver.
@@ -85,7 +86,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([pkg_share, "urdf", "spot.urdf.xacro"]),
+            PathJoinSubstitution([robot_description_pkg_share, "urdf", "spot.urdf.xacro"]),
             " ",
             "arm:=",
             TextSubstitution(text=str(has_arm).lower()),
@@ -182,6 +183,13 @@ def generate_launch_description() -> launch.LaunchDescription:
             default_value="True",
             choices=["True", "true", "False", "false"],
             description="Choose whether to launch the image publishing nodes from Spot.",
+        )
+    )
+    launch_args.append(
+        DeclareLaunchArgument(
+            "robot_description_package",
+            default_value="spot_description",
+            description="Package from where the robot model description is. Must have path /urdf/spot.urdf.xacro",
         )
     )
     launch_args += declare_image_publisher_args()
