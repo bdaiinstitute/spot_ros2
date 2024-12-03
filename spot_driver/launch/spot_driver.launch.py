@@ -11,7 +11,13 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.substitutions import FindPackageShare
 
-from spot_driver.launch.spot_launch_helpers import IMAGE_PUBLISHER_ARGS, declare_image_publisher_args, spot_has_arm
+from spot_driver.launch.spot_launch_helpers import (
+    IMAGE_PUBLISHER_ARGS,
+    declare_image_publisher_args,
+    get_name_and_prefix,
+    spot_has_arm,
+    substitute_launch_parameters,
+)
 
 THIS_PACKAGE = "spot_driver"
 
@@ -19,9 +25,9 @@ THIS_PACKAGE = "spot_driver"
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     config_file = LaunchConfiguration("config_file")
     launch_rviz = LaunchConfiguration("launch_rviz")
+    spot_name_arg = LaunchConfiguration("spot_name")
+    tf_prefix_arg = LaunchConfiguration("tf_prefix")
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
-    spot_name = LaunchConfiguration("spot_name").perform(context)
-    tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
     robot_description_package = LaunchConfiguration("robot_description_package").perform(context)
 
@@ -30,18 +36,24 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if (config_file_path != "") and (not os.path.isfile(config_file_path)):
         raise FileNotFoundError("Configuration file '{}' does not exist!".format(config_file_path))
 
+    substitutions = {
+        "spot_name": spot_name_arg,
+        "frame_prefix": tf_prefix_arg,
+    }
+    configured_params = substitute_launch_parameters(config_file_path, substitutions, context)
+    spot_name, tf_prefix = get_name_and_prefix(configured_params)
+
     if mock_enable:
         mock_has_arm = IfCondition(LaunchConfiguration("mock_has_arm")).evaluate(context)
         has_arm = mock_has_arm
     else:
-        has_arm = spot_has_arm(config_file_path=config_file.perform(context), spot_name=spot_name)
+        has_arm = spot_has_arm(config_file_path=config_file.perform(context))
 
     robot_description_pkg_share = FindPackageShare(robot_description_package).find(robot_description_package)
 
     # Since spot_image_publisher_node is responsible for retrieving and publishing images, disable all image publishing
     # in spot_driver.
     spot_driver_params = {
-        "spot_name": spot_name,
         "mock_enable": mock_enable,
     }
 
@@ -55,20 +67,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         executable="spot_ros2",
         name="spot_ros2",
         output="screen",
-        parameters=[config_file, spot_driver_params],
+        parameters=[configured_params, spot_driver_params],
         namespace=spot_name,
     )
     ld.add_action(spot_driver_node)
 
-    if not tf_prefix and spot_name:
-        tf_prefix = PathJoinSubstitution([spot_name, ""])
-
-    kinematc_node_params = {"spot_name": spot_name}
     kinematic_node = launch_ros.actions.Node(
         package="spot_driver",
         executable="spot_inverse_kinematics_node",
         output="screen",
-        parameters=[config_file, kinematc_node_params],
+        parameters=[configured_params],
         namespace=spot_name,
     )
     ld.add_action(kinematic_node)
@@ -77,7 +85,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         package="spot_driver",
         executable="object_synchronizer_node",
         output="screen",
-        parameters=[config_file, {"spot_name": spot_name}],
+        parameters=[configured_params],
         namespace=spot_name,
     )
     ld.add_action(object_sync_node)
@@ -106,12 +114,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(robot_state_publisher)
 
-    spot_robot_state_publisher_params = {"spot_name": spot_name, "preferred_odom_frame": "odom"}
     spot_robot_state_publisher = launch_ros.actions.Node(
         package="spot_driver",
         executable="state_publisher_node",
         output="screen",
-        parameters=[config_file, spot_robot_state_publisher_params],
+        parameters=[configured_params],
         namespace=spot_name,
     )
     ld.add_action(spot_robot_state_publisher)
@@ -130,6 +137,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         launch_arguments={
             "spot_name": spot_name,
             "rviz_config_file": rviz_config_file,
+            "tf_prefix": tf_prefix,
         }.items(),
         condition=IfCondition(launch_rviz),
     )
@@ -138,7 +146,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_image_publishers = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/spot_image_publishers.launch.py"]),
         launch_arguments={
-            key: LaunchConfiguration(key) for key in ["config_file", "spot_name"] + IMAGE_PUBLISHER_ARGS
+            key: LaunchConfiguration(key) for key in ["config_file", "tf_prefix", "spot_name"] + IMAGE_PUBLISHER_ARGS
         }.items(),
         condition=IfCondition(LaunchConfiguration("launch_image_publishers")),
     )

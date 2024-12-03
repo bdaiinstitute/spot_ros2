@@ -846,4 +846,59 @@ TEST(RobotStateConversions, TestGetBehaviorFaultStateNoFaults) {
   // THEN the optional which wraps the output ROS message is set to nullopt
   EXPECT_THAT(out.has_value(), IsFalse());
 }
+
+TEST(RobotStateConversions, TestFramePrefixParsing) {
+  // GIVEN we have some frame name and prefix
+  const std::string frame = "some_frame";
+  const std::string prefix = "some_frame_prefix/";
+
+  // WHEN we try to modify an input frame, which does not contain the prefix at the beginning
+  // THEN we don't strip anything and the output is the same as input
+  ASSERT_THAT(stripPrefix(frame, prefix), StrEq(frame));
+  ASSERT_THAT(stripPrefix(frame + prefix, prefix), StrEq(frame + prefix));
+  // THEN we prepend the prefix to the input
+  ASSERT_THAT(prependPrefix(frame, prefix), StrEq(prefix + frame));
+  ASSERT_THAT(prependPrefix(frame + prefix, prefix), StrEq(prefix + frame + prefix));
+
+  // WHEN we try to modify an input frame, which does contain the prefix at the beginning
+  // THEN we strip the prefix from the beginning
+  ASSERT_THAT(stripPrefix(prefix + frame, prefix), StrEq(frame));
+  ASSERT_THAT(stripPrefix(prefix + frame + prefix, prefix), StrEq(frame + prefix));
+  // THEN we don't prepend anything and the output is the same as input
+  ASSERT_THAT(prependPrefix(prefix + frame, prefix), StrEq(prefix + frame));
+  ASSERT_THAT(prependPrefix(prefix + frame + prefix, prefix), StrEq(prefix + frame + prefix));
+
+  // WHEN we try to modify an input frame with an empty prefix
+  // THEN the output is always the same as input
+  ASSERT_THAT(stripPrefix(frame, ""), StrEq(frame));
+  ASSERT_THAT(prependPrefix(frame, ""), StrEq(frame));
+}
+
+TEST(RobotStateConversions, TestPreferredOdomFrameValidation) {
+  // GIVEN we have some frame prefix
+  const std::string prefix = "some_frame_prefix/";
+
+  for (const auto& odom_frame : kValidOdomFrameOptions) {
+    // WHEN we provide valid preferred odom frame options
+    // THEN the optional contains the valid prefixed frame
+    const auto raw_option = validatePreferredOdomFrame(odom_frame, prefix);
+    ASSERT_THAT(raw_option.has_value(), IsTrue());
+    ASSERT_THAT(raw_option.value(), StrEq(prefix + odom_frame));
+    const auto prefixed_option = validatePreferredOdomFrame(prefix + odom_frame, prefix);
+    ASSERT_THAT(prefixed_option.has_value(), IsTrue());
+    ASSERT_THAT(prefixed_option.value(), StrEq(prefix + odom_frame));
+
+    // WHEN we provide an invalid preferred odom frame
+    // THEN the optional is set to nullopt
+    ASSERT_THAT(validatePreferredOdomFrame(odom_frame + prefix, prefix).has_value(), IsFalse());
+    ASSERT_THAT(validatePreferredOdomFrame(prefix + odom_frame + prefix, prefix).has_value(), IsFalse());
+
+    // GIVEN the frame prefix is empty
+    // THEN we only have one valid option
+    const auto option_without_prefix = validatePreferredOdomFrame(odom_frame, "");
+    ASSERT_THAT(option_without_prefix.has_value(), IsTrue());
+    ASSERT_THAT(option_without_prefix.value(), StrEq(odom_frame));
+    ASSERT_THAT(validatePreferredOdomFrame(prefix + odom_frame, "").has_value(), IsFalse());
+  }
+}
 }  // namespace spot_ros2::test
