@@ -405,6 +405,7 @@ class SpotROS(Node):
                 continually_try_stand=self.continually_try_stand.value,
                 rgb_cameras=self.rgb_cameras.value,
                 cert_resource_glob=self.certificate,
+                gripperless=self.gripperless,
             )
             if not self.spot_wrapper.is_valid:
                 return
