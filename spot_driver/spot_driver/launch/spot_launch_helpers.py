@@ -177,6 +177,15 @@ def default_camera_sources(has_arm: bool, gripperless: bool) -> List[str]:
     return camera_sources
 
 
+def get_gripperless(ros_params: Dict[str, Any]) -> bool:
+    """Read the ros parameters to get the value of the gripperless parameter. Defaults to False if not set."""
+    gripperless = False
+    if "gripperless" in ros_params:
+        if isinstance(ros_params["gripperless"], bool):
+            gripperless = ros_params["gripperless"]
+    return gripperless
+
+
 def get_camera_sources_from_ros_params(ros_params: Dict[str, Any], has_arm: bool) -> List[str]:
     """Get the list of cameras to stream from. This will be taken from the parameters in the config yaml if it exists
     and contains valid cameras. If this list contains invalid cameras, fall back to the default of all cameras.
@@ -191,10 +200,7 @@ def get_camera_sources_from_ros_params(ros_params: Dict[str, Any], has_arm: bool
     Returns:
         List[str]: List of cameras the driver will stream from.
     """
-    gripperless = False
-    if "gripperless" in ros_params:
-        if isinstance(ros_params["gripperless"], bool):
-            gripperless = ros_params["gripperless"]
+    gripperless = get_gripperless(ros_params)
     default_sources = default_camera_sources(has_arm, gripperless)
     if "cameras_used" in ros_params:
         camera_sources = ros_params["cameras_used"]
@@ -235,6 +241,7 @@ def spot_has_arm(config_file_path: str, spot_name: str) -> bool:
     """
     logger = logging.getLogger("spot_driver_launch")
     username, password, hostname, port, certificate = get_login_parameters(config_file_path)
+    gripperless = get_gripperless(get_ros_param_dict(config_file_path))
     spot_wrapper = SpotWrapper(
         username=username,
         password=password,
@@ -243,5 +250,6 @@ def spot_has_arm(config_file_path: str, spot_name: str) -> bool:
         cert_resource_glob=certificate,
         robot_name=spot_name,
         logger=logger,
+        gripperless=gripperless,
     )
     return spot_wrapper.has_arm()
