@@ -332,9 +332,9 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
   const auto spot_name = parameter_interface_->getSpotName();
   frame_prefix_ = spot_name.empty() ? "" : spot_name + "/";
 
-  preferred_base_frame_ = stripPrefix(parameter_interface_->getPreferredOdomFrame(), frame_prefix_);
+  preferred_base_frame_ = stripPrefix(parameter_interface_->getTFRoot(), frame_prefix_);
   preferred_base_frame_with_prefix_ = preferred_base_frame_.find('/') == std::string::npos
-                                          ? spot_name + "/" + preferred_base_frame_
+                                          ? frame_prefix_ + preferred_base_frame_
                                           : preferred_base_frame_;
 
   // TODO(khughes): This is temporarily disabled to reduce driver's spew about TF extrapolation.

@@ -151,7 +151,7 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
                                        : transform.parent_frame_name();
     const auto frame_name = frame_id.find('/') == std::string::npos ? prefix + frame_id : frame_id;
 
-    // set target frame(preferred odom frame) as the root node in tf tree
+    // set preferred base frame as the root node in tf tree
     if (preferred_base_frame_id == frame_name) {
       tf_msg.transforms.push_back(
           toTransformStamped(~(transform.parent_tform_child()), frame_name, parent_frame_name, timestamp_local));
