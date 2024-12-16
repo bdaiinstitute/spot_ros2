@@ -38,6 +38,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getPreferredOdomFrame() const override { return "odom"; }
 
+  std::string getTFRoot() const override { return "odom"; }
+
   std::string getSpotName() const override { return spot_name; }
 
   bool getGripperless() const override { return gripperless; }

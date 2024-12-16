@@ -26,6 +26,7 @@ constexpr auto kParameterNamePublishCompressedImages = "publish_compressed_image
 constexpr auto kParameterNamePublishDepthImages = "publish_depth";
 constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
+constexpr auto kParameterTFRoot = "tf_root";
 constexpr auto kParameterNameGripperless = "gripperless";
 
 /**
@@ -185,6 +186,10 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const {
 
 std::string RclcppParameterInterface::getPreferredOdomFrame() const {
   return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
+}
+
+std::string RclcppParameterInterface::getTFRoot() const {
+  return declareAndGetParameter<std::string>(node_, kParameterTFRoot, kDefaultTFRoot);
 }
 
 bool RclcppParameterInterface::getGripperless() const {
