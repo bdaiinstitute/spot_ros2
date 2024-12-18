@@ -357,7 +357,8 @@ TEST(RobotStateConversions, TestGetOdomTwist) {
   clock_skew.set_seconds(1);
 
   // WHEN we create a TwistWithCovarianceStamped ROS message
-  const auto out = getOdomTwist(robot_state, clock_skew);
+  const auto is_using_vision = false;
+  const auto out = getOdomTwist(robot_state, clock_skew, is_using_vision);
 
   // THEN this succeeds
   ASSERT_THAT(out.has_value(), IsTrue());
@@ -377,7 +378,8 @@ TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
   clock_skew.set_seconds(1);
 
   // WHEN we attempt to create a TwistWithCovarianceStamped ROS message
-  const auto out = getOdomTwist(robot_state, clock_skew);
+  const auto is_using_vision = false;
+  const auto out = getOdomTwist(robot_state, clock_skew, is_using_vision);
 
   // THEN no message is output
   ASSERT_THAT(out.has_value(), IsFalse());

@@ -134,8 +134,9 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
  * @return If the robot state message contains the velocity of the Spot's body relative to the odometry frame in its
  * kinematic state, return a TwistWithCovarianceStamped containing this data. Otherwise, return nullopt.
  */
-std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
-    const ::bosdyn::api::RobotState& robot_state, const google::protobuf::Duration& clock_skew);
+std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(const ::bosdyn::api::RobotState& robot_state,
+                                                                           const google::protobuf::Duration& clock_skew,
+                                                                           const bool is_using_vision);
 
 /**
  * @brief Create an Odometry ROS message representing Spot's pose and velocity relative to a fixed world frame by
@@ -152,7 +153,7 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
  */
 std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& robot_state,
                                                const google::protobuf::Duration& clock_skew, const std::string& prefix,
-                                               bool is_using_vision);
+                                               const bool is_using_vision);
 
 /**
  * @brief Create a PowerState ROS message by parsing a RobotState message.
