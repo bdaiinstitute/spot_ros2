@@ -338,34 +338,10 @@ class SpotROS(Node):
             get_from_env_and_fall_back_to_param("SPOT_CERTIFICATE", self, "certificate", "") or None
         )
 
-        # Spot has 2 types of odometries: 'odom' and 'vision'
-        # The former one is kinematic odometry and the second one is a combined odometry of vision and kinematics
-        # These params enables to change which odometry frame is a parent of body frame and to change tf names of each
-        # odometry frames.
         frame_prefix = ""
         if self.name is not None:
             frame_prefix = self.name + "/"
         self.frame_prefix: str = frame_prefix
-        self.preferred_odom_frame: Parameter = self.declare_parameter(
-            "preferred_odom_frame", self.frame_prefix + "odom"
-        )  # 'vision' or 'odom'
-        self.tf_name_kinematic_odom: Parameter = self.declare_parameter(
-            "tf_name_kinematic_odom", self.frame_prefix + "odom"
-        )
-        self.tf_name_raw_kinematic: str = frame_prefix + "odom"
-        self.tf_name_vision_odom: Parameter = self.declare_parameter(
-            "tf_name_vision_odom", self.frame_prefix + "vision"
-        )
-        self.tf_name_raw_vision: str = self.frame_prefix + "vision"
-
-        preferred_odom_frame_references = [self.tf_name_raw_kinematic, self.tf_name_raw_vision]
-        if self.preferred_odom_frame.value not in preferred_odom_frame_references:
-            error_msg = (
-                f'rosparam "preferred_odom_frame" should be one of {preferred_odom_frame_references}, got'
-                f' "{self.preferred_odom_frame.value}"'
-            )
-            self.get_logger().error(error_msg)
-            raise ValueError(error_msg)
 
         self.tf_name_graph_nav_body: str = self.frame_prefix + "body"
 

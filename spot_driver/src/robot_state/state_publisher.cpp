@@ -35,8 +35,9 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
 
   const auto preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
   is_using_vision_ = preferred_odom_frame == "vision";
-  full_odom_frame_id_ =
-      preferred_odom_frame.find('/') == std::string::npos ? frame_prefix_ + preferred_odom_frame : preferred_odom_frame;
+
+  const auto tf_root = parameter_interface_->getTFRoot();
+  full_tf_root_id_ = tf_root.find('/') == std::string::npos ? frame_prefix_ + tf_root : tf_root;
 
   // Create a timer to request and publish robot state at a fixed rate
   timer_interface_->setTimer(kRobotStateCallbackPeriod, [this] {
@@ -67,7 +68,7 @@ void StatePublisher::timerCallback() {
                          getFootState(robot_state),
                          getEstopStates(robot_state, clock_skew),
                          getJointStates(robot_state, clock_skew, frame_prefix_),
-                         getTf(robot_state, clock_skew, frame_prefix_, full_odom_frame_id_),
+                         getTf(robot_state, clock_skew, frame_prefix_, full_tf_root_id_),
                          getOdomTwist(robot_state, clock_skew),
                          getOdom(robot_state, clock_skew, frame_prefix_, is_using_vision_),
                          getPowerState(robot_state, clock_skew),
