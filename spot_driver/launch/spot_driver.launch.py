@@ -181,9 +181,10 @@ def generate_launch_description() -> LaunchDescription:
     )
     launch_args.append(
         DeclareBooleanLaunchArgument(
-            "launch_image_publishers", 
-            default_value=True, 
-            description="Choose whether to launch the image publishing nodes from Spot.")
+            "launch_image_publishers",
+            default_value=True,
+            description="Choose whether to launch the image publishing nodes from Spot.",
+        )
     )
     launch_args.append(
         DeclareLaunchArgument(
