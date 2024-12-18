@@ -343,14 +343,7 @@ TEST(RobotStateConversions, TestGetOdomTwist) {
   timestamp.set_nanos(0);
   addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
 
-  auto* velocity_linear = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_linear();
-  velocity_linear->set_x(1.0);
-  velocity_linear->set_y(2.0);
-  velocity_linear->set_z(3.0);
-  auto* velocity_angular = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_angular();
-  velocity_angular->set_x(1.0);
-  velocity_angular->set_y(2.0);
-  velocity_angular->set_z(3.0);
+  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 1.0, 2.0, 3.0);
 
   // GIVEN some nominal clock skew
   google::protobuf::Duration clock_skew;
