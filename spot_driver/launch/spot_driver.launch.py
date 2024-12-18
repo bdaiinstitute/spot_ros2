@@ -37,8 +37,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     robot_description_pkg_share = FindPackageShare(robot_description_package).find(robot_description_package)
 
-    # Since spot_image_publisher_node is responsible for retrieving and publishing images, disable all image publishing
-    # in spot_driver.
     spot_driver_params = {
         "spot_name": spot_name,
         "mock_enable": mock_enable,
