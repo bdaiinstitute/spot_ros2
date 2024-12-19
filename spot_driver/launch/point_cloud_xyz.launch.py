@@ -36,6 +36,7 @@ import launch_ros.descriptions
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from synchros2.launch.actions import update_sigterm_sigkill_timeout
 
 
 def generate_launch_description() -> LaunchDescription:
@@ -73,4 +74,5 @@ def generate_launch_description() -> LaunchDescription:
             ),
         ]
     )
+    update_sigterm_sigkill_timeout(ld)
     return ld

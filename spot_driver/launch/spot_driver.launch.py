@@ -9,6 +9,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from synchros2.launch.actions import DeclareBooleanLaunchArgument, update_sigterm_sigkill_timeout
 
 from spot_driver.launch.spot_launch_helpers import IMAGE_PUBLISHER_ARGS, declare_image_publisher_args, spot_has_arm
 
@@ -16,6 +17,7 @@ THIS_PACKAGE = "spot_driver"
 
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
+    update_sigterm_sigkill_timeout(ld)
     config_file = LaunchConfiguration("config_file")
     launch_rviz = LaunchConfiguration("launch_rviz")
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
@@ -164,10 +166,9 @@ def generate_launch_description() -> LaunchDescription:
         )
     )
     launch_args.append(
-        DeclareLaunchArgument(
+        DeclareBooleanLaunchArgument(
             "launch_rviz",
-            default_value="False",
-            choices=["True", "true", "False", "false"],
+            default_value=False,
             description="Choose whether to launch RViz",
         )
     )
@@ -179,10 +180,9 @@ def generate_launch_description() -> LaunchDescription:
         )
     )
     launch_args.append(
-        DeclareLaunchArgument(
+        DeclareBooleanLaunchArgument(
             "launch_image_publishers",
-            default_value="True",
-            choices=["True", "true", "False", "false"],
+            default_value=True,
             description="Choose whether to launch the image publishing nodes from Spot.",
         )
     )
