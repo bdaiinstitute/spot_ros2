@@ -5,7 +5,6 @@ import os
 import launch
 import launch_ros
 from launch.substitutions import Command, LaunchConfiguration
-from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 
 def generate_launch_description() -> launch.LaunchDescription:
@@ -14,8 +13,8 @@ def generate_launch_description() -> launch.LaunchDescription:
     default_rviz2_path = os.path.join(pkg_share, "rviz/standalone_arm.rviz")
     return launch.LaunchDescription(
         [
-            DeclareBooleanLaunchArgument(
-                name="gui", default_value=True, description="Flag to enable joint_state_publisher_gui"
+            launch.actions.DeclareLaunchArgument(
+                name="gui", default_value="True", description="Flag to enable joint_state_publisher_gui"
             ),
             launch.actions.DeclareLaunchArgument(
                 name="model", default_value=default_model_path, description="Absolute path to robot urdf file"

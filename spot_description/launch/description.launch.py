@@ -7,7 +7,6 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 
 def generate_launch_description() -> launch.LaunchDescription:
@@ -16,9 +15,10 @@ def generate_launch_description() -> launch.LaunchDescription:
     default_rviz2_path = os.path.join(pkg_share, "rviz/viz_spot.rviz")
     return launch.LaunchDescription(
         [
-            DeclareBooleanLaunchArgument(
+            DeclareLaunchArgument(
                 name="gui",
-                default_value=True,
+                default_value="True",
+                choices=["True", "true", "False", "false"],
                 description="Flag to enable joint_state_publisher_gui",
             ),
             DeclareLaunchArgument(
@@ -27,19 +27,22 @@ def generate_launch_description() -> launch.LaunchDescription:
             DeclareLaunchArgument(
                 name="rvizconfig", default_value=default_rviz2_path, description="Absolute path to rviz config file"
             ),
-            DeclareBooleanLaunchArgument(
+            DeclareLaunchArgument(
                 name="arm",
-                default_value=False,
+                default_value="False",
+                choices=["True", "true", "False", "false"],
                 description="Flag to enable arm",
             ),
-            DeclareBooleanLaunchArgument(
+            DeclareLaunchArgument(
                 name="feet",
-                default_value=False,
+                default_value="False",
+                choices=["True", "true", "False", "false"],
                 description="Flag to enable putting frames at the feet",
             ),
-            DeclareBooleanLaunchArgument(
+            DeclareLaunchArgument(
                 name="gripperless",
-                default_value=False,
+                default_value="False",
+                choices=["True", "true", "False", "false"],
                 description="Flag to remove the gripper from the arm model",
             ),
             DeclareLaunchArgument(
