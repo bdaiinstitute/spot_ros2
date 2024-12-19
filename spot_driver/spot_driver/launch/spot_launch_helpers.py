@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Literal, Optional, Tuple
 
 import yaml
 from launch.actions import DeclareLaunchArgument
+from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 from spot_wrapper.wrapper import SpotWrapper
 
@@ -67,10 +68,9 @@ def declare_image_publisher_args() -> List[DeclareLaunchArgument]:
         )
     )
     launch_args.append(
-        DeclareLaunchArgument(
+        DeclareBooleanLaunchArgument(
             "publish_point_clouds",
-            default_value="False",
-            choices=["True", "true", "False", "false"],
+            default_value=False,
             description=(
                 "If true, create and publish point clouds for each depth registered and RGB camera pair. Requires that"
                 " the depth_register_mode launch argument is set to a value that is not `disable`."
@@ -78,26 +78,23 @@ def declare_image_publisher_args() -> List[DeclareLaunchArgument]:
         )
     )
     launch_args.append(
-        DeclareLaunchArgument(
+        DeclareBooleanLaunchArgument(
             "uncompress_images",
-            default_value="True",
-            choices=["True", "true", "False", "false"],
+            default_value=True,
             description="Choose whether to publish uncompressed images from Spot.",
         )
     )
     launch_args.append(
-        DeclareLaunchArgument(
+        DeclareBooleanLaunchArgument(
             "publish_compressed_images",
-            default_value="False",
-            choices=["True", "true", "False", "false"],
+            default_value=False,
             description="Choose whether to publish compressed images from Spot.",
         )
     )
     launch_args.append(
-        DeclareLaunchArgument(
+        DeclareBooleanLaunchArgument(
             "stitch_front_images",
-            default_value="False",
-            choices=["True", "true", "False", "false"],
+            default_value=False,
             description=(
                 "Choose whether to publish a stitched image constructed from Spot's front left and right cameras."
             ),
