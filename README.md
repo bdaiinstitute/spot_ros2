@@ -22,12 +22,11 @@
 </p>
 
 # Overview
-This repository contains a set of ROS 2 packages for interacting with Boston Dynamics' Spot.
-It is derived from [the ROS 1 equivalent](https://github.com/heuristicus/spot_ros).
+`spot_ros2` is a set of ROS 2 packages for interacting with Boston Dynamics' Spot, based off the [the ROS 1 equivalent](https://github.com/heuristicus/spot_ros).
 Currently, this repository corresponds to version 4.1.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v4.1.0).
 
 ## Requirements
-This repository is supported for Ubuntu 22.04 and [ROS 2 Humble](https://docs.ros.org/en/humble/index.html) on both ARM64 and AMD64 platforms.
+This repository is supported for use  on Ubuntu 22.04 and [ROS 2 Humble](https://docs.ros.org/en/humble/index.html) on both ARM64 and AMD64 platforms.
 
 ## Installation
 Set up your ROS 2 workspace, and clone the repository in the `src` directory:
@@ -60,7 +59,7 @@ source install/setup.bash
 
 Alternatively, a Dockerfile is available that prepares a ready-to-run ROS 2 Humble install with the Spot driver built.
 
-The Docker image can be built and run with the following commands:
+The Docker image can be built and minimally run with the following commands:
 ```bash
 cd <ROS workspace>/src/spot_ros2
 docker build . -t spot_ros2
