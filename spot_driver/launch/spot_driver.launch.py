@@ -168,7 +168,7 @@ def generate_launch_description() -> LaunchDescription:
     launch_args.append(
         DeclareBooleanLaunchArgument(
             "launch_rviz",
-            default_value="False",
+            default_value=False,
             description="Choose whether to launch RViz",
         )
     )
