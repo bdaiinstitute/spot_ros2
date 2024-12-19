@@ -2,13 +2,12 @@
 
 import os
 
-import launch
-import launch_ros
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 from spot_driver.launch.spot_launch_helpers import IMAGE_PUBLISHER_ARGS, declare_image_publisher_args, spot_has_arm
@@ -38,8 +37,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     robot_description_pkg_share = FindPackageShare(robot_description_package).find(robot_description_package)
 
-    # Since spot_image_publisher_node is responsible for retrieving and publishing images, disable all image publishing
-    # in spot_driver.
     spot_driver_params = {
         "spot_name": spot_name,
         "mock_enable": mock_enable,
@@ -50,7 +47,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         # Merge the two dicts
         spot_driver_params = {**spot_driver_params, **mock_spot_driver_params}
 
-    spot_driver_node = launch_ros.actions.Node(
+    spot_driver_node = Node(
         package="spot_driver",
         executable="spot_ros2",
         name="spot_ros2",
@@ -63,21 +60,22 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if not tf_prefix and spot_name:
         tf_prefix = PathJoinSubstitution([spot_name, ""])
 
-    kinematc_node_params = {"spot_name": spot_name}
-    kinematic_node = launch_ros.actions.Node(
+    spot_name_param = {"spot_name": spot_name}
+
+    kinematic_node = Node(
         package="spot_driver",
         executable="spot_inverse_kinematics_node",
         output="screen",
-        parameters=[config_file, kinematc_node_params],
+        parameters=[config_file, spot_name_param],
         namespace=spot_name,
     )
     ld.add_action(kinematic_node)
 
-    object_sync_node = launch_ros.actions.Node(
+    object_sync_node = Node(
         package="spot_driver",
         executable="object_synchronizer_node",
         output="screen",
-        parameters=[config_file, {"spot_name": spot_name}],
+        parameters=[config_file, spot_name_param],
         namespace=spot_name,
     )
     ld.add_action(object_sync_node)
@@ -97,7 +95,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         ]
     )
     robot_description_params = {"robot_description": robot_description}
-    robot_state_publisher = launch_ros.actions.Node(
+    robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
@@ -106,17 +104,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(robot_state_publisher)
 
-    spot_robot_state_publisher_params = {"spot_name": spot_name, "preferred_odom_frame": "odom"}
-    spot_robot_state_publisher = launch_ros.actions.Node(
+    spot_robot_state_publisher = Node(
         package="spot_driver",
         executable="state_publisher_node",
         output="screen",
-        parameters=[config_file, spot_robot_state_publisher_params],
+        parameters=[config_file, spot_name_param],
         namespace=spot_name,
     )
     ld.add_action(spot_robot_state_publisher)
 
-    spot_alert_node = launch_ros.actions.Node(
+    spot_alert_node = Node(
         package="spot_driver",
         executable="spot_alerts",
         name="spot_alerts",
@@ -126,7 +123,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(spot_alert_node)
 
     rviz = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/rviz.launch.py"]),
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "launch", "rviz.launch.py"])
+        ),
         launch_arguments={
             "spot_name": spot_name,
             "rviz_config_file": rviz_config_file,
@@ -136,7 +135,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(rviz)
 
     spot_image_publishers = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([FindPackageShare(THIS_PACKAGE), "/launch", "/spot_image_publishers.launch.py"]),
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "launch", "spot_image_publishers.launch.py"])
+        ),
         launch_arguments={
             key: LaunchConfiguration(key) for key in ["config_file", "spot_name"] + IMAGE_PUBLISHER_ARGS
         }.items(),
@@ -145,7 +146,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     ld.add_action(spot_image_publishers)
 
 
-def generate_launch_description() -> launch.LaunchDescription:
+def generate_launch_description() -> LaunchDescription:
     launch_args = []
 
     launch_args.append(
@@ -195,7 +196,7 @@ def generate_launch_description() -> launch.LaunchDescription:
     launch_args += declare_image_publisher_args()
     launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
 
-    ld = launch.LaunchDescription(launch_args)
+    ld = LaunchDescription(launch_args)
 
     ld.add_action(OpaqueFunction(function=launch_setup, args=[ld]))
 

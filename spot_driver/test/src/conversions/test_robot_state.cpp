@@ -343,21 +343,15 @@ TEST(RobotStateConversions, TestGetOdomTwist) {
   timestamp.set_nanos(0);
   addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
 
-  auto* velocity_linear = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_linear();
-  velocity_linear->set_x(1.0);
-  velocity_linear->set_y(2.0);
-  velocity_linear->set_z(3.0);
-  auto* velocity_angular = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_angular();
-  velocity_angular->set_x(1.0);
-  velocity_angular->set_y(2.0);
-  velocity_angular->set_z(3.0);
+  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 1.0, 2.0, 3.0);
 
   // GIVEN some nominal clock skew
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(1);
 
   // WHEN we create a TwistWithCovarianceStamped ROS message
-  const auto out = getOdomTwist(robot_state, clock_skew);
+  const auto is_using_vision = false;
+  const auto out = getOdomTwist(robot_state, clock_skew, is_using_vision);
 
   // THEN this succeeds
   ASSERT_THAT(out.has_value(), IsTrue());
@@ -377,7 +371,8 @@ TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
   clock_skew.set_seconds(1);
 
   // WHEN we attempt to create a TwistWithCovarianceStamped ROS message
-  const auto out = getOdomTwist(robot_state, clock_skew);
+  const auto is_using_vision = false;
+  const auto out = getOdomTwist(robot_state, clock_skew, is_using_vision);
 
   // THEN no message is output
   ASSERT_THAT(out.has_value(), IsFalse());
@@ -435,7 +430,7 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   timestamp.set_seconds(99);
   timestamp.set_nanos(0);
   addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
-  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+  addBodyVelocityVision(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "vision");
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
                1.0, 0.0, 0.0, 0.0);
