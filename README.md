@@ -23,10 +23,11 @@
 
 # Overview
 `spot_ros2` is a set of ROS 2 packages for interacting with Boston Dynamics' Spot, based off the [the ROS 1 equivalent](https://github.com/heuristicus/spot_ros).
+Its core [`spot_driver`](spot_driver) package exposes topics, services, and actions necessary to control Spot and send state information (such as images) back to the user.
 Currently, this repository corresponds to version 4.1.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v4.1.0).
 
 ## Requirements
-This repository is supported for use  on Ubuntu 22.04 and [ROS 2 Humble](https://docs.ros.org/en/humble/index.html) on both ARM64 and AMD64 platforms.
+This repository is supported for use with Ubuntu 22.04 and [ROS 2 Humble](https://docs.ros.org/en/humble/index.html) on both ARM64 and AMD64 platforms.
 
 ## Installation
 Set up your ROS 2 workspace, and clone the repository in the `src` directory:
@@ -57,8 +58,7 @@ source install/setup.bash
 
 ### Alternative - Docker Image
 
-Alternatively, a Dockerfile is available that prepares a ready-to-run ROS 2 Humble install with the Spot driver built.
-
+A Dockerfile is available that prepares a ready-to-run ROS 2 Humble install with the Spot driver built.
 The Docker image can be built and minimally run with the following commands:
 ```bash
 cd <ROS workspace>/src/spot_ros2
@@ -66,8 +66,7 @@ docker build . -t spot_ros2
 docker run -it spot_ros2:latest
 ```
 
-The following flags may be useful for extra functionality when running the image:
-
+The following flags may be useful for extra functionality when running the image.
 | Flag     | Use             |
 | -------- | --------------- |
 | `--runtime nvidia` + `--gpus all`  | Use the [NVIDIA Container Runtime](https://developer.nvidia.com/container-runtime) to run the container with GPU acceleration |
@@ -79,19 +78,19 @@ The following flags may be useful for extra functionality when running the image
 
 This repo consists of a series of ROS 2 packages for usage with Spot. Further documentation on how each of these packages can be used can be found in their resepective README's.
 
-* `spot_description`: contains the URDF of Spot and some simple launchfiles for visualization.
-* `spot_driver`: Core driver for operating Spot. This contains all of the necessary topics, services, and actions for controlling Spot and receiving state information over ROS 2.
-* `spot_examples`: Examples of how to control Spot via the Spot driver.
-* `spot_msgs`: Custom messages, services, and interfaces relevant for operating Spot.
+* [`spot_description`](spot_description): contains the URDF of Spot and some simple launchfiles for visualization.
+* [`spot_driver`](spot_driver): Core driver for operating Spot. This contains all of the necessary topics, services, and actions for controlling Spot and receiving state information over ROS 2.
+* [`spot_examples`](spot_examples): Examples of how to control Spot via the Spot driver.
+* [`spot_msgs`](spot_msgs): Custom messages, services, and interfaces relevant for operating Spot.
 
 The following packages are used to enable joint level control of Spot via ROS 2 control.
-* `spot_ros2_control`: Contains core launchfiles for bringing up Spot's ROS 2 control stack, and some examples of how to use this.
-* `spot_hardware_interface`: Creates a ROS 2 control hardware interface plugin for operating Spot with the joint level API.
-* `spot_controllers`: Holds some simple forwarding controller plugins useful for sending commands.
+* [`spot_ros2_control`](spot_ros2_control): Contains core launchfiles for bringing up Spot's ROS 2 control stack, and some examples of how to use this.
+* [`spot_hardware_interface`](spot_hardware_interface): Creates a ROS 2 control hardware interface plugin for operating Spot with the joint level API.
+* [`spot_controllers`](spot_controllers): Holds some simple forwarding controller plugins useful for sending commands.
 
 This package also pulls in some relevant packages as submodules, listed below.
-* `ros_utilities`: The AI Institute's convenience wrappers around ROS 2.
-* `spot_wrapper`: A Python wrapper around the Spot SDK, shared as a common entry point with Spot's ROS 1 repo.
+* [`ros_utilities`](https://github.com/bdaiinstitute/ros_utilities): The AI Institute's convenience wrappers around ROS 2.
+* [`spot_wrapper`](https://github.com/bdaiinstitute/spot_wrapper): A Python wrapper around the Spot SDK, shared as a common entry point with Spot's ROS 1 repo.
 
 This repository also depends on the `bosdyn_msgs` ROS package.
 This package contains ROS versions of [Boston Dynamics' protobufs](https://dev.bostondynamics.com/protos/bosdyn/api/proto_reference) that are used with the Spot SDK.
@@ -101,7 +100,7 @@ It can be installed from source as a normal ROS package [here](https://github.co
 
 # Help
 
-If you encounter problems when using this repository, feel free to open an issue or PR.
+If you encounter problems when using this repository, feel free to open an [issue](https://github.com/bdaiinstitute/spot_ros2/issues) or ask a question in the [discussions](https://github.com/bdaiinstitute/spot_ros2/discussions).
 
 ## Verify Package Versions
 If you encounter `ModuleNotFoundErrors` with `bosdyn` packages upon running the driver, it is likely that the necessary Boston Dynamics API packages did not get installed with `install_spot_ros2.sh`. To check this, you can run the following command. Note that all versions should be `4.1.0`. 
@@ -149,8 +148,7 @@ BSD3 license - parts of the code derived from the Clearpath Robotics ROS 1 drive
 To contribute, install `pre-commit` via pip, run `pre-commit install` and then run `pre-commit run --all-files` to 
 verify that your code will pass inspection. 
 ```bash
-git clone https://github.com/bdaiinstitute/spot_ros2.git
-cd spot_ros2
+cd <ROS workspace>/src/spot_ros2
 pip3 install pre-commit
 pre-commit install
 pre-commit run --all-files
@@ -161,7 +159,7 @@ You can also run `git commit --no-verify` if you wish to commit without checking
 
 ## Contributors
 
-This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and the [Boston Dynamics AI Institute](https://theaiinstitute.com/).
+This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and [The AI Institute](https://theaiinstitute.com/).
 
 MASKOR contributors:
 
