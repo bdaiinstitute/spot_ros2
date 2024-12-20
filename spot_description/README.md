@@ -44,42 +44,6 @@ For the arm, we use the following mass values:
 + `arm_link_wr1` = 0.785 Kg
 + `arm_link_fngr` = 0.200 Kg 
 
-To get these inertial properties, use the following method:
-
-```
-BdaiWorld.import_inertia_tensor = False
-
-sh_mass = 2.596
-fa_mass = 1.450
-hip_mass = 1.68
-uleg_mass = 2.34
-lleg_mass = 0.35
-desired_mass = {
-    "body_inertia": 32.86,
-    "fl_hip": hip_mass,
-    "fr_hip": hip_mass,
-    "hl_hip": hip_mass,
-    "hr_hip": hip_mass,
-    "fl_uleg": uleg_mass,
-    "fr_uleg": uleg_mass,
-    "hl_uleg": uleg_mass,
-    "hr_uleg": uleg_mass,
-    "fl_lleg": lleg_mass,
-    "fr_lleg": lleg_mass,
-    "hl_lleg": lleg_mass,
-    "hr_lleg": lleg_mass,
-    "arm_link_sh0": 0.9 * sh_mass,
-    "arm_link_sh1": 0.1 * sh_mass,
-    "arm_link_hr0": 1e-6,
-    "arm_link_el0": 0.5 * fa_mass,
-    "arm_link_el1": 0.5 * fa_mass,
-    "arm_link_wr0": 0.980,
-    "arm_link_wr1": 0.785,
-    "arm_link_fngr": 0.200
-}
-print(world.get_urdf_inertial(use_diagonal_inertia=True, desired_mass=desired_mass))
-```
-
 ## ROS 2 Control
 The Spot URDF also has the option to be constructed with ROS 2 control tags, which uses the hardware interface plugin from the [`spot_hardware_interface`](../spot_hardware_interface) package. To get the plain URDF file containing these tags, run
 
