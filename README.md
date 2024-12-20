@@ -42,7 +42,7 @@ git submodule init
 git submodule update
 ```
 
-Next, run the following script to install the necessary Boston Dynamics and ROS dependencies.
+Next, run the following script to install the necessary Boston Dynamics packages (both Python and C++) and ROS dependencies.
 The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install.
 ```bash
 ./install_spot_ros2.sh
@@ -76,7 +76,8 @@ The following flags may be useful for extra functionality when running the image
 
 # Packages
 
-This repo consists of a series of ROS 2 packages for usage with Spot. Further documentation on how each of these packages can be used can be found in their resepective README's.
+This repository consists of a series of ROS 2 packages for usage with Spot.
+Further documentation on how each of these packages can be used can be found in their resepective README's.
 
 * [`spot_description`](spot_description): contains the URDF of Spot and some simple launchfiles for visualization.
 * [`spot_driver`](spot_driver): Core driver for operating Spot. This contains all of the necessary topics, services, and actions for controlling Spot and receiving state information over ROS 2.
@@ -88,7 +89,7 @@ The following packages are used to enable joint level control of Spot via ROS 2 
 * [`spot_hardware_interface`](spot_hardware_interface): Creates a ROS 2 control hardware interface plugin for operating Spot with the joint level API.
 * [`spot_controllers`](spot_controllers): Holds some simple forwarding controller plugins useful for sending commands.
 
-This package also pulls in some relevant packages as submodules, listed below.
+This package also pulls in the following packages as submodules:
 * [`ros_utilities`](https://github.com/bdaiinstitute/ros_utilities): The AI Institute's convenience wrappers around ROS 2.
 * [`spot_wrapper`](https://github.com/bdaiinstitute/spot_wrapper): A Python wrapper around the Spot SDK, shared as a common entry point with Spot's ROS 1 repo.
 
@@ -100,7 +101,7 @@ It can be installed from source as a normal ROS package [here](https://github.co
 
 # Help
 
-If you encounter problems when using this repository, feel free to open an [issue](https://github.com/bdaiinstitute/spot_ros2/issues) or ask a question in the [discussions](https://github.com/bdaiinstitute/spot_ros2/discussions).
+If you encounter problems when using this repository, feel free to ask a question in the [discussions](https://github.com/bdaiinstitute/spot_ros2/discussions), or open an [issue](https://github.com/bdaiinstitute/spot_ros2/issues) describing the problem in context.
 
 ## Verify Package Versions
 If you encounter `ModuleNotFoundErrors` with `bosdyn` packages upon running the driver, it is likely that the necessary Boston Dynamics API packages did not get installed with `install_spot_ros2.sh`. To check this, you can run the following command. Note that all versions should be `4.1.0`. 
@@ -145,17 +146,17 @@ MIT license - parts of the code developed specifically for ROS 2.
 BSD3 license - parts of the code derived from the Clearpath Robotics ROS 1 driver.
 
 # Contributing
-To contribute, install `pre-commit` via pip, run `pre-commit install` and then run `pre-commit run --all-files` to 
-verify that your code will pass inspection. 
+Code contributions are welcome in this repository!
+
+* Fork this repository, and follow the installation steps
+* Install the pre-commit hooks:
 ```bash
 cd <ROS workspace>/src/spot_ros2
-pip3 install pre-commit
+pip install pre-commit
 pre-commit install
 pre-commit run --all-files
 ```
-
-Now whenever you commit code to this repository, it will be checked against our `pre-commit` hooks. 
-You can also run `git commit --no-verify` if you wish to commit without checking against the hooks. 
+* Make the intended changes, and open a pull request against this repository. You will need to fill out the [pull request template](pull_request_template.md) to specify what change is being made and why, and how it was tested.
 
 ## Contributors
 

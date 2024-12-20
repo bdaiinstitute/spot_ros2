@@ -46,6 +46,9 @@ If your image publishing rate is very slow, you can try
 > export=FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_file>/custom_dds_profile.xml
 > ```
 
+## Calibration
+A calibration procedure for the hand camera is provided by this package. For more information on how to run this, refer to [EyeInHandCalibration.md](EyeInHandCalibration.md)
+
 ## Spot CAM
 Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:
     `initialize_spot_cam: True`
