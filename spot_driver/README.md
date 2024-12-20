@@ -49,7 +49,11 @@ If your image publishing rate is very slow, you can try
 ## Calibration
 A calibration procedure for the hand camera is provided by this package. For more information on how to run this, refer to [EyeInHandCalibration.md](EyeInHandCalibration.md)
 
-## Spot CAM
+
+<details>
+<summary><h2>Spot CAM</h2></summary>
+<br>
+
 Due to known issues with the Spot CAM, it is disabled by default. To enable publishing and usage over the driver, add the following command in your configuration YAML file:
     `initialize_spot_cam: True`
 
@@ -66,6 +70,8 @@ Then you want to log into the Spot CAM over the browser. In your browser, type i
     https://<ip_address_of_spot>:<sdp_port>/h264.sdp.html
 
 The default port for SDP is 31102 for the Spot CAM. Once inside, you will be prompted to log in using your username and password. Do so and the WebRTC frames should begin to properly stream.
+
+</details>
 
 
 ## Examples
