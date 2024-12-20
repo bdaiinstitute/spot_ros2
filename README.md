@@ -23,7 +23,7 @@
 
 # Overview
 `spot_ros2` is a set of ROS 2 packages for interacting with Boston Dynamics' Spot, based off the [the ROS 1 equivalent](https://github.com/heuristicus/spot_ros).
-Its core [`spot_driver`](spot_driver) package exposes topics, services, and actions necessary to control Spot and send state information (such as images) back to the user.
+Its core [`spot_driver`](spot_driver) package exposes topics, services, and actions necessary to control Spot and receive state information (such as images).
 Currently, this repository corresponds to version 4.1.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v4.1.0).
 
 ## Requirements
@@ -156,7 +156,7 @@ pip install pre-commit
 pre-commit install
 pre-commit run --all-files
 ```
-* Make the intended changes, and open a pull request against this repository. You will need to fill out the [pull request template](pull_request_template.md) to specify what change is being made and why, and how it was tested.
+* Make the intended changes, and open a pull request against this repository. In the pull request description, you will need to specify what change is being made and why, and how it was tested.
 
 ## Contributors
 
