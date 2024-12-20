@@ -1,13 +1,26 @@
 # spot_driver
 
-The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run:
+The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run the following command, with the appropriate launch arguments and config file that are discussed below.
 ```
-ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Robot Name>] [publish_point_clouds:=<True|False>] [launch_rviz:=<True|False>] [uncompress_images:=<True|False>] [publish_compressed_images:=<True|False>]
+ros2 launch spot_driver spot_driver.launch.py
 ```
 
 ## Configuration
+The Spot login data hostname, username and password can be specified either as ROS parameters or as environment variables.  If using ROS parameters, see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for an example of what your file could look like, and pass this to the driver as a launch argument with `config_file:=path/to/config.yaml`.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
-The Spot login data hostname, username and password can be specified either as ROS parameters or as environment variables.  If using ROS parameters, see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for an example of what your file could look like.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
+
+## Namespacing
+By default, the driver is launched in the global namespace.
+To avoid this, it is recommended to launch the driver with the launch argument `spot_name:=<Spot Name>`.
+This will place all of the nodes, topics, services, and actions provided by the driver in the `<Spot Name>` namespace.
+Additionally, it will prefix all of the TF frames and joints of the robot with `<Spot Name>`.
+
+## Frames
+Background information about Spot's frames from Boston Dynamics can be found [here](https://dev.bostondynamics.com/docs/concepts/geometry_and_frames). 
+By default, the Spot driver will place the "odom" frame as the root of the TF tree.
+This can be changed by setting the `tf_root` parameter in your config file to either "vision" or "body".
+The Spot driver will also publish odometry topics with respect to the "odom" frame by default.
+If you wish to change this to "vision", update the `preferred_odom_frame` parameter in your config file.
 
 ## Simple Robot Commands
 Many simple robot commands can be called as services from the command line once the driver is running. For example:
@@ -24,7 +37,7 @@ If your Spot has an arm, some additional helpful services are exposed:
 * `ros2 service call /<Robot Name>/open_gripper std_srvs/srv/Trigger`
 * `ros2 service call /<Robot Name>/close_gripper std_srvs/srv/Trigger`
 
-The full list of interfaces provided by the driver can be explored via `ros2 topic list`, `ros2 service list`, and `ros2 action list`. For more information about the custom message types used in this package, run `ros2 interface show <interface_type>`.
+The full list of interfaces provided by the driver can be explored via `ros2 topic list`, `ros2 service list`, and `ros2 action list`. For more information about the custom message types used in this package, run `ros2 interface show <interface_type>`. More details can also be found on the [spot_ros2 wiki](https://github.com/bdaiinstitute/spot_ros2/wiki/Spot-Driver-Available-Interfaces). 
 
 
 ## Images
