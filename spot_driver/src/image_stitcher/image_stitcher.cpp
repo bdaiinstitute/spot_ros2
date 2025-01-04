@@ -362,7 +362,8 @@ Image::SharedPtr MiddleCamera::stitch(const std::shared_ptr<const Image>& left,
 
   // Convert the image back to the BGR color space
   result_.convertTo(result_, CV_8U);
-  // Return the image in a format that can be published
+  // Rotate the result image 90 degrees clockwise and return it in a format that can be published
+  cv::rotate(result_, result_, cv::ROTATE_90_CLOCKWISE);
   return cv_bridge::CvImage(std_msgs::msg::Header{}, "bgr8", result_.getMat(cv::ACCESS_READ)).toImageMsg();
 }
 
