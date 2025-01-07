@@ -1,8 +1,8 @@
 // Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
+#include <chrono>
 #include <spot_driver/api/default_time_sync_api.hpp>
 #include <tl_expected/expected.hpp>
-#include <chrono>
 
 namespace spot_ros2 {
 
