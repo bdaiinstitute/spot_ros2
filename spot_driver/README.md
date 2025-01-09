@@ -1,13 +1,12 @@
 # spot_driver
 
-The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run the following command, with the appropriate launch arguments and config file that are discussed below.
+The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run the following command, with the appropriate launch arguments and/or config file that are discussed below.
 ```
-ros2 launch spot_driver spot_driver.launch.py
+ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Spot Name>] [launch_rviz:=<True|False>] [launch_image_publishers:=<True|False>] [publish_point_clouds:=<True|False>] [uncompress_images:=<True|False>] [publish_compressed_images:=<True|False>] [stitch_front_images:=<True|False>]
 ```
 
 ## Configuration
 The Spot login data hostname, username and password can be specified either as ROS parameters or as environment variables.  If using ROS parameters, see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for an example of what your file could look like, and pass this to the driver as a launch argument with `config_file:=path/to/config.yaml`.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
-
 
 ## Namespacing
 By default, the driver is launched in the global namespace.
@@ -28,7 +27,6 @@ Many simple robot commands can be called as services from the command line once 
 * `ros2 service call /<Robot Name>/sit std_srvs/srv/Trigger`
 * `ros2 service call /<Robot Name>/stand std_srvs/srv/Trigger`
 * `ros2 service call /<Robot Name>/undock std_srvs/srv/Trigger`
-* `ros2 service call /<Robot Name>/power_off std_srvs/srv/Trigger`
 
 If your Spot has an arm, some additional helpful services are exposed:
 * `ros2 service call /<Robot Name>/arm_stow std_srvs/srv/Trigger`
@@ -37,7 +35,10 @@ If your Spot has an arm, some additional helpful services are exposed:
 * `ros2 service call /<Robot Name>/open_gripper std_srvs/srv/Trigger`
 * `ros2 service call /<Robot Name>/close_gripper std_srvs/srv/Trigger`
 
-The full list of interfaces provided by the driver can be explored via `ros2 topic list`, `ros2 service list`, and `ros2 action list`. For more information about the custom message types used in this package, run `ros2 interface show <interface_type>`. More details can also be found on the [spot_ros2 wiki](https://github.com/bdaiinstitute/spot_ros2/wiki/Spot-Driver-Available-Interfaces). 
+## More Complex Robot Commands
+The full list of interfaces provided by the driver can be explored via `ros2 topic list`, `ros2 service list`, and `ros2 action list`. 
+For more information about the custom message types used in this package, run `ros2 interface show <interface_type>`. 
+More details can also be found on the [`spot_ros2` wiki](https://github.com/bdaiinstitute/spot_ros2/wiki/Spot-Driver-Available-Interfaces). 
 
 
 ## Images

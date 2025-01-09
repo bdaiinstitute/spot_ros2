@@ -23,7 +23,7 @@
 
 # Overview
 `spot_ros2` is a set of ROS 2 packages for interacting with Boston Dynamics' Spot, based off the [the ROS 1 equivalent](https://github.com/heuristicus/spot_ros).
-Its [`spot_driver`](spot_driver) package exposes topics, services, and actions necessary to control Spot and receive state information (such as images) and is designed to bridge the core functionality of the Spot SDK to ROS 2. 
+Its [`spot_driver`](spot_driver) package is designed to bridge the core functionality of the Spot SDK to ROS 2, and exposes topics, services, and actions necessary to control Spot and receive state information (such as images). 
 Currently, this repository corresponds to version 4.1.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v4.1.0).
 
 ## Requirements
