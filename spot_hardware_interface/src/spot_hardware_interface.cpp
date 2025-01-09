@@ -428,7 +428,8 @@ void state_stream_loop(std::stop_token stop_token, ::bosdyn::client::RobotStateS
     // Get robot state stream
     auto robot_state_stream = stateStreamClient->GetRobotStateStream();
     if (!robot_state_stream) {
-      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to get robot state");
+      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"),
+                   "Failed to get robot state. Does the robot have a valid joint level control license?");
       continue;
     }
     latest_state_stream_response = std::move(robot_state_stream.response);
