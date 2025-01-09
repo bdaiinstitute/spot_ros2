@@ -63,12 +63,8 @@ from rclpy.timer import Rate
 from sensor_msgs.msg import JointState
 from std_srvs.srv import SetBool, Trigger
 from synchros2.node import Node
-from synchros2.single_goal_action_server import (
-    SingleGoalActionServer,
-)
-from synchros2.single_goal_multiple_action_servers import (
-    SingleGoalMultipleActionServers,
-)
+from synchros2.single_goal_action_server import SingleGoalActionServer
+from synchros2.single_goal_multiple_action_servers import SingleGoalMultipleActionServers
 
 import spot_driver.robot_command_util as robot_command_util
 
