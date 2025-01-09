@@ -23,7 +23,7 @@
 
 # Overview
 `spot_ros2` is a set of ROS 2 packages for interacting with Boston Dynamics' Spot, based off the [the ROS 1 equivalent](https://github.com/heuristicus/spot_ros).
-Its core [`spot_driver`](spot_driver) package exposes topics, services, and actions necessary to control Spot and receive state information (such as images).
+Its [`spot_driver`](spot_driver) package exposes topics, services, and actions necessary to control Spot and receive state information (such as images) and is designed to bridge the core functionality of the Spot SDK to ROS 2. 
 Currently, this repository corresponds to version 4.1.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v4.1.0).
 
 ## Requirements
@@ -35,7 +35,7 @@ Set up your ROS 2 workspace, and clone the repository in the `src` directory:
 mkdir -p <ROS workspace>/src && cd <ROS workspace>/src
 git clone https://github.com/bdaiinstitute/spot_ros2.git
 ```
-Then initialize and install the submodules.
+Then, initialize and install the submodules.
 ```bash
 cd spot_ros2
 git submodule init
@@ -58,7 +58,7 @@ source install/setup.bash
 
 ### Alternative - Docker Image
 
-A Dockerfile is available that prepares a ready-to-run ROS 2 Humble install with the Spot driver built.
+Alternatively, a Dockerfile is available that prepares a ready-to-run ROS2 Humble install with the Spot driver installed.
 The Docker image can be built and minimally run with the following commands:
 ```bash
 cd <ROS workspace>/src/spot_ros2
@@ -77,7 +77,7 @@ The following flags may be useful for extra functionality when running the image
 # Packages
 
 This repository consists of a series of ROS 2 packages for usage with Spot.
-Further documentation on how each of these packages can be used can be found in their resepective README's.
+Further documentation on how each of these packages can be used can be found in their resepective READMEs.
 
 * [`spot_description`](spot_description): contains the URDF of Spot and some simple launchfiles for visualization.
 * [`spot_driver`](spot_driver): Core driver for operating Spot. This contains all of the necessary topics, services, and actions for controlling Spot and receiving state information over ROS 2.
@@ -142,12 +142,13 @@ ii  spot-cpp-sdk   4.1.0        amd64        Boston Dynamics Spot C++ SDK
 
 # License
 
-MIT license - parts of the code developed specifically for ROS 2.
-BSD3 license - parts of the code derived from the Clearpath Robotics ROS 1 driver.
+This repository has the BSD3 license for the parts of the code derived from the Clearpath Robotics ROS 1 driver and the MIT license for the parts of the code developed specifically for ROS 2.
 
 # Contributing
 Code contributions are welcome in this repository!
 
+
+To contribute:
 * Fork this repository, and follow the installation steps
 * Install the pre-commit hooks:
 ```bash
