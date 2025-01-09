@@ -1,6 +1,6 @@
 <p align="center">
   <img src="spot.png" width="350">
-  <h1 align="center">Spot ROS 2 Driver</h1>
+  <h1 align="center">Spot ROS 2</h1>
   <p align="center">
     <img src="https://img.shields.io/badge/python-3.10-blue"/>
     <a href="https://github.com/astral-sh/ruff">
