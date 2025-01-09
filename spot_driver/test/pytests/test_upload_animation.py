@@ -9,9 +9,9 @@ Test for the Upload Animation command.
 # pylint: disable=no-member
 
 import pytest
-from bdai_ros2_wrappers.futures import wait_for_future
-from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, UploadAnimatedMoveResponse
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import UploadAnimation  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
