@@ -4,13 +4,13 @@ import argparse
 import logging
 from typing import Any, Dict, Optional
 
-import bdai_ros2_wrappers.process as ros_process
-import bdai_ros2_wrappers.scope as ros_scope
 import rclpy
-from bdai_ros2_wrappers.utilities import fqn, namespace_with
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
 from rclpy.client import Client
 from rclpy.node import Node
 from std_srvs.srv import Trigger
+from synchros2.utilities import fqn, namespace_with
 
 TRIGGER_SERVICES = [
     "claim",

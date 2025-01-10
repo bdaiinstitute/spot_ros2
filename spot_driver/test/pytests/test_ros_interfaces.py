@@ -3,8 +3,8 @@
 import contextlib
 import unittest
 
-import bdai_ros2_wrappers.scope as ros_scope
 import rclpy
+import synchros2.scope as ros_scope
 from bosdyn_msgs.msg import RobotCommand, RobotCommandFeedback
 from std_srvs.srv import Trigger
 
