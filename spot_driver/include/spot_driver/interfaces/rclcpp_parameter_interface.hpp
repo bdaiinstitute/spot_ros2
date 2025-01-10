@@ -42,6 +42,7 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
                                                                       const bool gripperless) const override;
   [[nodiscard]] tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(
       const bool has_arm, const bool gripperless) const override;
+  [[nodiscard]] int8_t getTimeSyncTimeout() const override;
 
  private:
   std::shared_ptr<rclcpp::Node> node_;

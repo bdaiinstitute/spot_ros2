@@ -28,6 +28,7 @@ constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_regis
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
 constexpr auto kParameterTFRoot = "tf_root";
 constexpr auto kParameterNameGripperless = "gripperless";
+constexpr auto kParameterTimeSyncTimeout = "timeout";
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and
@@ -194,6 +195,10 @@ std::string RclcppParameterInterface::getTFRoot() const {
 
 bool RclcppParameterInterface::getGripperless() const {
   return declareAndGetParameter<bool>(node_, kParameterNameGripperless, kDefaultGripperless);
+}
+
+int8_t RclcppParameterInterface::getTimeSyncTimeout() const {
+  return declareAndGetParameter<int8_t>(node_, kParameterTimeSyncTimeout, kDefaultTimeSyncTimeout);
 }
 
 std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm,

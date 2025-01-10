@@ -58,6 +58,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
     return getDefaultCamerasUsed(has_arm, gripperless);
   }
 
+  int8_t getTimeSyncTimeout() const override { return kDefaultTimeSyncTimeout; }
+
   static constexpr auto kExampleHostname{"192.168.0.10"};
   static constexpr auto kExampleUsername{"spot_user"};
   static constexpr auto kExamplePassword{"hunter2"};
