@@ -9,9 +9,9 @@ Test for the Stair Mode command.
 # pylint: disable=no-member
 
 import pytest
-from bdai_ros2_wrappers.futures import wait_for_future
-from bdai_ros2_wrappers.scope import ROSAwareScope
 from std_srvs.srv import SetBool
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 
 @pytest.mark.usefixtures("spot_node")

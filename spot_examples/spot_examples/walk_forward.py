@@ -2,16 +2,16 @@ import argparse
 import logging
 from typing import Optional
 
-import bdai_ros2_wrappers.process as ros_process
-import bdai_ros2_wrappers.scope as ros_scope
-from bdai_ros2_wrappers.action_client import ActionClientWrapper
-from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
-from bdai_ros2_wrappers.utilities import fqn, namespace_with
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
+from synchros2.action_client import ActionClientWrapper
+from synchros2.tf_listener_wrapper import TFListenerWrapper
+from synchros2.utilities import fqn, namespace_with
 
 from spot_msgs.action import RobotCommand  # type: ignore
 
