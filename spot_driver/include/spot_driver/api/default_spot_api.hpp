@@ -20,7 +20,8 @@ namespace spot_ros2 {
 class DefaultSpotApi : public SpotApi {
  public:
   explicit DefaultSpotApi(const std::string& sdk_client_name,
-                          const std::optional<std::string>& certificate = std::nullopt);
+                          const std::optional<std::string>& certificate = std::nullopt,
+                          const std::optional<int8_t> timesync_timeout = std::nullopt);
 
   [[nodiscard]] tl::expected<void, std::string> createRobot(const std::string& robot_name,
                                                             const std::string& ip_address,
@@ -43,5 +44,6 @@ class DefaultSpotApi : public SpotApi {
   std::shared_ptr<TimeSyncApi> time_sync_api_;
   std::shared_ptr<WorldObjectClientInterface> world_object_client_interface_;
   std::string robot_name_;
+  int8_t timesync_timeout_;
 };
 }  // namespace spot_ros2

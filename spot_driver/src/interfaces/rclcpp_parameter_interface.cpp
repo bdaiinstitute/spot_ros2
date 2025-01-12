@@ -28,7 +28,7 @@ constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_regis
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
 constexpr auto kParameterTFRoot = "tf_root";
 constexpr auto kParameterNameGripperless = "gripperless";
-constexpr auto kParameterTimeSyncTimeout = "timeout";
+constexpr auto kParameterTimeSyncTimeout = "timesync_timeout";
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and

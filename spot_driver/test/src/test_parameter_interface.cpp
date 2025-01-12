@@ -197,6 +197,8 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   node_->declare_parameter("publish_depth_registered", publish_depth_registered_images_parameter);
   constexpr auto tf_root_parameter = "body";
   node_->declare_parameter("tf_root", tf_root_parameter);
+  constexpr auto timesync_timeout_parameter = 42;
+  node_->declare_parameter("timesync_timeout", timesync_timeout_parameter);
 
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
@@ -216,6 +218,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), Eq(publish_depth_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), Eq(publish_depth_registered_images_parameter));
   EXPECT_THAT(parameter_interface.getTFRoot(), Eq(tf_root_parameter));
+  EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(timesync_timeout_parameter));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameters) {
@@ -276,6 +279,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getTFRoot(), StrEq("odom"));
+  EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(5));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithArm) {

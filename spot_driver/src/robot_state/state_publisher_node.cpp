@@ -42,7 +42,9 @@ StatePublisherNode::StatePublisherNode(const rclcpp::NodeOptions& node_options) 
   auto tf_broadcaster_interface = std::make_unique<RclcppTfBroadcasterInterface>(node);
   auto timer_interface = std::make_unique<RclcppWallTimerInterface>(node);
 
-  auto spot_api = std::make_unique<DefaultSpotApi>(kDefaultSDKName, parameter_interface->getCertificate());
+  auto timesync_timeout = parameter_interface->getTimeSyncTimeout();
+  auto spot_api =
+      std::make_unique<DefaultSpotApi>(kDefaultSDKName, parameter_interface->getCertificate(), timesync_timeout);
 
   initialize(std::move(spot_api), std::move(mw_handle), std::move(parameter_interface), std::move(logger_interface),
              std::move(tf_broadcaster_interface), std::move(timer_interface));

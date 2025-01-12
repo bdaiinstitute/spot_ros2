@@ -8,20 +8,14 @@
 #include <spot_driver/api/default_spot_api.hpp>
 #include <spot_driver/api/default_state_client.hpp>
 #include <spot_driver/api/default_time_sync_api.hpp>
-#include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 #include <tl_expected/expected.hpp>
 #include "spot_driver/api/default_world_object_client.hpp"
 #include "spot_driver/api/state_client_interface.hpp"
 
-namespace {
-constexpr auto kNodeNameSpace{"default_spot_api_namespace"};
-constexpr auto kNodeName{"default_spot_api"};
-
-}  // namespace
-
 namespace spot_ros2 {
 
-DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::optional<std::string>& certificate) {
+DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::optional<std::string>& certificate,
+                               const std::optional<int8_t> timesync_timeout) {
   if (certificate.has_value()) {
     client_sdk_ = std::make_unique<::bosdyn::client::ClientSdk>();
     client_sdk_->SetClientName(sdk_client_name);
@@ -31,6 +25,9 @@ DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::op
     client_sdk_->Init();
   } else {
     client_sdk_ = ::bosdyn::client::CreateStandardSDK(sdk_client_name);
+  }
+  if (timesync_timeout.has_value()) {
+    timesync_timeout_ = timesync_timeout.value();
   }
 }
 
@@ -62,10 +59,6 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   }
   // Start time synchronization between the robot and the client system.
   // This must be done only after a successful authentication.
-  // Create a rclcpp node and parameter interface to retrieve ROS2 parameters, such as timesync_timeout.
-  const auto node_ = std::make_shared<rclcpp::Node>(kNodeName, kNodeNameSpace);
-  auto parameter_interface = std::make_unique<RclcppParameterInterface>(node_);
-  const auto timesync_timeout = parameter_interface->getTimeSyncTimeout();
   const auto start_time_sync_response = robot_->StartTimeSync();
   if (!start_time_sync_response) {
     return tl::make_unexpected("Failed to start time synchronization.");
@@ -75,7 +68,7 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   if (!get_time_sync_thread_response) {
     return tl::make_unexpected("Failed to get the time synchronization thread.");
   }
-  time_sync_api_ = std::make_shared<DefaultTimeSyncApi>(get_time_sync_thread_response.response, timesync_timeout);
+  time_sync_api_ = std::make_shared<DefaultTimeSyncApi>(get_time_sync_thread_response.response, timesync_timeout_);
 
   // Image API.
   const auto image_client_result = robot_->EnsureServiceClient<::bosdyn::client::ImageClient>(

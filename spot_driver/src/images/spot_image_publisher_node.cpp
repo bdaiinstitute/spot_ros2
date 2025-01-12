@@ -39,7 +39,8 @@ SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_o
   auto tf_broadcaster = std::make_unique<RclcppTfBroadcasterInterface>(node);
   auto timer = std::make_unique<RclcppWallTimerInterface>(node);
 
-  auto spot_api = std::make_unique<DefaultSpotApi>(kSDKClientName, parameters->getCertificate());
+  auto timesync_timeout = parameters->getTimeSyncTimeout();
+  auto spot_api = std::make_unique<DefaultSpotApi>(kSDKClientName, parameters->getCertificate(), timesync_timeout);
 
   initialize(std::move(spot_api), std::move(mw_handle), std::move(parameters), std::move(logger),
              std::move(tf_broadcaster), std::move(timer));
