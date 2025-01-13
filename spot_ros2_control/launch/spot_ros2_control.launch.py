@@ -16,7 +16,7 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from synchros2.launch.actions import DeclareBooleanLaunchArgument, update_sigterm_sigkill_timeout
+from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 from spot_driver.launch.spot_launch_helpers import (
     IMAGE_PUBLISHER_ARGS,
@@ -301,6 +301,5 @@ def generate_launch_description():
         + declare_image_publisher_args()
     )
     # Add nodes to launch description
-    update_sigterm_sigkill_timeout(ld)
     ld.add_action(OpaqueFunction(function=launch_setup, args=[ld]))
     return ld

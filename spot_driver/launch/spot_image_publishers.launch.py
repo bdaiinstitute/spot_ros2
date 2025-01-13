@@ -9,7 +9,6 @@ from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from synchros2.launch.actions import update_sigterm_sigkill_timeout
 
 from spot_driver.launch.spot_launch_helpers import (
     DepthRegisteredMode,
@@ -92,7 +91,6 @@ def create_point_cloud_nodelets(
 
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
-    update_sigterm_sigkill_timeout(ld)
     config_file = LaunchConfiguration("config_file")
     spot_name = LaunchConfiguration("spot_name").perform(context)
     depth_registered_mode_config = LaunchConfiguration("depth_registered_mode")

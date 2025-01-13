@@ -13,7 +13,6 @@ from launch.substitutions import (
     PathJoinSubstitution,
 )
 from launch_ros.substitutions import FindPackageShare
-from synchros2.launch.actions import update_sigterm_sigkill_timeout
 
 THIS_PACKAGE = "spot_driver"
 
@@ -44,7 +43,6 @@ def create_rviz_config(robot_name: str) -> None:
 
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
-    update_sigterm_sigkill_timeout(ld)
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
 
