@@ -9,7 +9,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from synchros2.launch.actions import DeclareBooleanLaunchArgument, update_sigterm_sigkill_timeout
+from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 from spot_driver.launch.spot_launch_helpers import IMAGE_PUBLISHER_ARGS, declare_image_publisher_args, spot_has_arm
 
@@ -17,7 +17,6 @@ THIS_PACKAGE = "spot_driver"
 
 
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
-    update_sigterm_sigkill_timeout(ld)
     config_file = LaunchConfiguration("config_file")
     launch_rviz = LaunchConfiguration("launch_rviz")
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
