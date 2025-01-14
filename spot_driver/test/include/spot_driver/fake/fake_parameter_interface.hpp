@@ -4,6 +4,7 @@
 
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
+#include <chrono>
 #include <optional>
 #include <set>
 #include <string>
@@ -57,6 +58,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
                                                                             const bool gripperless) const override {
     return getDefaultCamerasUsed(has_arm, gripperless);
   }
+
+  std::chrono::seconds getTimeSyncTimeout() const override { return kDefaultTimeSyncTimeout; }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};
   static constexpr auto kExampleUsername{"spot_user"};

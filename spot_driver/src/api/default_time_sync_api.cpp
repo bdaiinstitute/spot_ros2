@@ -6,14 +6,15 @@
 
 namespace spot_ros2 {
 
-DefaultTimeSyncApi::DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread)
-    : time_sync_thread_{time_sync_thread} {}
+DefaultTimeSyncApi::DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread,
+                                       std::chrono::seconds timesync_timeout)
+    : time_sync_thread_{time_sync_thread}, timesync_timeout_{timesync_timeout} {}
 
 tl::expected<google::protobuf::Duration, std::string> DefaultTimeSyncApi::getClockSkew() {
   if (!time_sync_thread_) {
     return tl::make_unexpected("Time sync thread was not initialized.");
   }
-  if (!time_sync_thread_->WaitForSync(std::chrono::seconds(5))) {
+  if (!time_sync_thread_->WaitForSync(std::chrono::seconds(timesync_timeout_))) {
     return tl::make_unexpected("Failed to establish time sync before timing out.");
   }
   if (!time_sync_thread_->HasEstablishedTimeSync()) {

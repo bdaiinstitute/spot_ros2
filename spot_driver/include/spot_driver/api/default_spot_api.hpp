@@ -11,6 +11,7 @@
 #include <spot_driver/api/time_sync_api.hpp>
 #include <spot_driver/api/world_object_client_interface.hpp>
 
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <string>
@@ -19,7 +20,7 @@ namespace spot_ros2 {
 
 class DefaultSpotApi : public SpotApi {
  public:
-  explicit DefaultSpotApi(const std::string& sdk_client_name,
+  explicit DefaultSpotApi(const std::string& sdk_client_name, const std::chrono::seconds timesync_timeout,
                           const std::optional<std::string>& certificate = std::nullopt);
 
   [[nodiscard]] tl::expected<void, std::string> createRobot(const std::string& robot_name,
@@ -43,5 +44,6 @@ class DefaultSpotApi : public SpotApi {
   std::shared_ptr<TimeSyncApi> time_sync_api_;
   std::shared_ptr<WorldObjectClientInterface> world_object_client_interface_;
   std::string robot_name_;
+  const std::chrono::seconds timesync_timeout_;
 };
 }  // namespace spot_ros2
