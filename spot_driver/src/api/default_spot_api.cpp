@@ -14,7 +14,7 @@
 
 namespace spot_ros2 {
 
-DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::chrono::seconds& timesync_timeout,
+DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::chrono::seconds timesync_timeout,
                                const std::optional<std::string>& certificate)
     : timesync_timeout_(timesync_timeout) {
   if (certificate.has_value()) {
