@@ -2,9 +2,9 @@
 
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 
+#include <chrono>
 #include <cstdlib>
 #include <vector>
-#include <chrono>
 
 namespace {
 constexpr auto kEnvVarNameHostname = "SPOT_IP";

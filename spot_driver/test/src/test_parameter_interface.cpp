@@ -8,8 +8,8 @@
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver/rclcpp_test.hpp>
 
-#include <memory>
 #include <chrono>
+#include <memory>
 
 namespace {
 using ::testing::Eq;

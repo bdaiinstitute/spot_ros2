@@ -4,11 +4,11 @@
 
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
+#include <chrono>
 #include <optional>
 #include <set>
 #include <string>
 #include <vector>
-#include <chrono>
 
 namespace spot_ros2::test {
 class FakeParameterInterface : public ParameterInterfaceBase {
