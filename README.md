@@ -183,6 +183,7 @@ AI Institute contributors:
 * David Surovik
 * Jiuguang Wang
 * David Watkins
+* Andrew Messing
 * Tiffany Cappellari
 * Katie Hughes
 
