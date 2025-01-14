@@ -5,6 +5,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <chrono>
 #include <tl_expected/expected.hpp>
 
 #include <spot_driver/types.hpp>
@@ -46,7 +47,7 @@ class ParameterInterfaceBase {
   virtual std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(bool has_arm, bool gripperless) const = 0;
   virtual tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(bool has_arm,
                                                                                     bool gripperless) const = 0;
-  virtual int8_t getTimeSyncTimeout() const = 0;
+  virtual std::chrono::seconds getTimeSyncTimeout() const = 0;
 
  protected:
   // These are the definitions of the default values for optional parameters.
@@ -65,6 +66,6 @@ class ParameterInterfaceBase {
   static constexpr bool kDefaultGripperless{false};
   static constexpr auto kCamerasWithoutHand = {"frontleft", "frontright", "left", "right", "back"};
   static constexpr auto kCamerasWithHand = {"frontleft", "frontright", "left", "right", "back", "hand"};
-  static constexpr int8_t kDefaultTimeSyncTimeout{5};
+  static constexpr std::chrono::seconds kDefaultTimeSyncTimeout{5};
 };
 }  // namespace spot_ros2

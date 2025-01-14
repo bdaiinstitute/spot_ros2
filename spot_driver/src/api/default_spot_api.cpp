@@ -14,8 +14,10 @@
 
 namespace spot_ros2 {
 
-DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::optional<std::string>& certificate,
-                               const std::optional<int8_t> timesync_timeout) {
+DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, 
+                               const std::chrono::seconds& timesync_timeout,
+                               const std::optional<std::string>& certificate)
+                               : timesync_timeout_(timesync_timeout) {
   if (certificate.has_value()) {
     client_sdk_ = std::make_unique<::bosdyn::client::ClientSdk>();
     client_sdk_->SetClientName(sdk_client_name);
@@ -25,9 +27,6 @@ DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::op
     client_sdk_->Init();
   } else {
     client_sdk_ = ::bosdyn::client::CreateStandardSDK(sdk_client_name);
-  }
-  if (timesync_timeout.has_value()) {
-    timesync_timeout_ = timesync_timeout.value();
   }
 }
 

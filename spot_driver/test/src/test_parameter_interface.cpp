@@ -9,6 +9,7 @@
 #include <spot_driver/rclcpp_test.hpp>
 
 #include <memory>
+#include <chrono>
 
 namespace {
 using ::testing::Eq;
@@ -218,7 +219,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), Eq(publish_depth_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), Eq(publish_depth_registered_images_parameter));
   EXPECT_THAT(parameter_interface.getTFRoot(), Eq(tf_root_parameter));
-  EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(timesync_timeout_parameter));
+  EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(std::chrono::seconds(timesync_timeout_parameter)));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameters) {
@@ -279,7 +280,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getTFRoot(), StrEq("odom"));
-  EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(5));
+  EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(std::chrono::seconds(5)));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithArm) {

@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <chrono>
 
 namespace spot_ros2::test {
 class FakeParameterInterface : public ParameterInterfaceBase {
@@ -58,7 +59,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
     return getDefaultCamerasUsed(has_arm, gripperless);
   }
 
-  int8_t getTimeSyncTimeout() const override { return kDefaultTimeSyncTimeout; }
+  std::chrono::seconds getTimeSyncTimeout() const override { return kDefaultTimeSyncTimeout; }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};
   static constexpr auto kExampleUsername{"spot_user"};

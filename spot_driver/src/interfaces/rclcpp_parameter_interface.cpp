@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <chrono>
 
 namespace {
 constexpr auto kEnvVarNameHostname = "SPOT_IP";
@@ -197,8 +198,9 @@ bool RclcppParameterInterface::getGripperless() const {
   return declareAndGetParameter<bool>(node_, kParameterNameGripperless, kDefaultGripperless);
 }
 
-int8_t RclcppParameterInterface::getTimeSyncTimeout() const {
-  return declareAndGetParameter<int8_t>(node_, kParameterTimeSyncTimeout, kDefaultTimeSyncTimeout);
+std::chrono::seconds RclcppParameterInterface::getTimeSyncTimeout() const {
+  int timeout_seconds = declareAndGetParameter<int>(node_, kParameterTimeSyncTimeout, kDefaultTimeSyncTimeout.count());
+  return std::chrono::seconds(timeout_seconds);
 }
 
 std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm,

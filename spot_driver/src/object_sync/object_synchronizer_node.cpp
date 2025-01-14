@@ -48,9 +48,9 @@ ObjectSynchronizerNode::ObjectSynchronizerNode(const rclcpp::NodeOptions& node_o
   auto tf_broadcaster_timer = std::make_unique<RclcppWallTimerInterface>(node);
   auto clock_interface = std::make_unique<RclcppClockInterface>(node->get_node_clock_interface());
 
-  auto timesync_timeout = parameter_interface->getTimeSyncTimeout();
+  const auto timesync_timeout = parameter_interface->getTimeSyncTimeout();
   auto spot_api =
-      std::make_unique<DefaultSpotApi>(kDefaultSDKName, parameter_interface->getCertificate(), timesync_timeout);
+      std::make_unique<DefaultSpotApi>(kDefaultSDKName, timesync_timeout, parameter_interface->getCertificate());
 
   initialize(std::move(spot_api), std::move(parameter_interface), std::move(logger_interface),
              std::move(tf_broadcaster_interface), std::move(tf_listener_interface),

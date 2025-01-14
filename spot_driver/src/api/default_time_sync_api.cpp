@@ -7,7 +7,7 @@
 namespace spot_ros2 {
 
 DefaultTimeSyncApi::DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread,
-                                       int8_t timesync_timeout)
+                                       std::chrono::seconds timesync_timeout)
     : time_sync_thread_{time_sync_thread}, timesync_timeout_{timesync_timeout} {}
 
 tl::expected<google::protobuf::Duration, std::string> DefaultTimeSyncApi::getClockSkew() {
