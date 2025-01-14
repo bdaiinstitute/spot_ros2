@@ -199,7 +199,7 @@ bool RclcppParameterInterface::getGripperless() const {
 }
 
 std::chrono::seconds RclcppParameterInterface::getTimeSyncTimeout() const {
-  int timeout_seconds = declareAndGetParameter<int>(node_, kParameterTimeSyncTimeout, kDefaultTimeSyncTimeout.count());
+  int timeout_seconds = declareAndGetParameter<int>(node_, kParameterTimeSyncTimeout, std::chrono::duration_cast<std::chrono::seconds>(kDefaultTimeSyncTimeout).count());
   return std::chrono::seconds(timeout_seconds);
 }
 
