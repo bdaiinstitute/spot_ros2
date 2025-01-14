@@ -1,12 +1,15 @@
 # spot_driver
 
-The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2. To launch the driver, run the following command, with the appropriate launch arguments and/or config file that are discussed below.
+The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2.
+To launch the driver, run the following command, with the appropriate launch arguments and/or config file that are discussed below.
 ```
 ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Spot Name>] [launch_rviz:=<True|False>] [launch_image_publishers:=<True|False>] [publish_point_clouds:=<True|False>] [uncompress_images:=<True|False>] [publish_compressed_images:=<True|False>] [stitch_front_images:=<True|False>]
 ```
 
 ## Configuration
-The Spot login data hostname, username and password can be specified either as ROS parameters or as environment variables.  If using ROS parameters, see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for an example of what your file could look like, and pass this to the driver as a launch argument with `config_file:=path/to/config.yaml`.  If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
+The Spot login data hostname, username and password can be specified either as ROS parameters or as environment variables.
+If using ROS parameters, see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for an example of what your file could look like, and pass this to the driver as a launch argument with `config_file:=path/to/config.yaml`.
+If using environment variables, define `BOSDYN_CLIENT_USERNAME`, `BOSDYN_CLIENT_PASSWORD`, and `SPOT_IP`.
 
 ## Namespacing
 By default, the driver is launched in the global namespace.
@@ -42,15 +45,23 @@ More details can also be found on the [`spot_ros2` wiki](https://github.com/bdai
 
 
 ## Images
-Perception data from Spot is handled through the `spot_image_publishers.launch.py` launchfile, which is launched by default from the driver. If you want to only view images from Spot, without bringing up any of the nodes to control the robot, you can also choose to run this launchfile independently.
+Perception data from Spot is handled through the `spot_image_publishers.launch.py` launchfile, which is launched by default from the driver.
+If you want to only view images from Spot, without bringing up any of the nodes to control the robot, you can also choose to run this launchfile independently.
 
-By default, the driver will publish RGB images as well as depth maps from the `frontleft`, `frontright`, `left`, `right`, and `back` cameras on Spot (plus `hand` if your Spot has an arm). You can customize the cameras that are streamed from by adding the `cameras_used` parameter to your config yaml. (For example, to stream from only the front left and front right cameras, you can add `cameras_used: ["frontleft", "frontright"]`). Additionally, if your Spot has greyscale cameras, you will need to set `rgb_cameras: False` in your configuration YAML file, or you will not receive any image data.
+By default, the driver will publish RGB images as well as depth maps from the `frontleft`, `frontright`, `left`, `right`, and `back` cameras on Spot (plus `hand` if your Spot has an arm).
+You can customize the cameras that are streamed from by adding the `cameras_used` parameter to your config yaml. (For example, to stream from only the front left and front right cameras, you can add `cameras_used: ["frontleft", "frontright"]`).
+Additionally, if your Spot has greyscale cameras, you will need to set `rgb_cameras: False` in your configuration YAML file, or you will not receive any image data.
 
-By default, the driver does not publish point clouds. To enable this, launch the driver with `publish_point_clouds:=True`.
+By default, the driver does not publish point clouds.
+To enable this, launch the driver with `publish_point_clouds:=True`.
 
-The driver can publish both compressed images (under `/<Robot Name>/camera/<camera location>/compressed`) and uncompressed images (under `/<Robot Name>/camera/<camera location>/image`). By default, it will only publish the uncompressed images. You can turn (un)compressed images on/off by launching the driver with the flags `uncompress_images:=<True|False>` and `publish_compressed_images:=<True|False>`.
+The driver can publish both compressed images (under `/<Robot Name>/camera/<camera location>/compressed`) and uncompressed images (under `/<Robot Name>/camera/<camera location>/image`).
+By default, it will only publish the uncompressed images.
+You can turn (un)compressed images on/off by launching the driver with the flags `uncompress_images:=<True|False>` and `publish_compressed_images:=<True|False>`.
 
-The driver also has the option to publish a stitched image created from Spot's front left and front right cameras (similar to what is seen on the tablet). If you wish to enable this, launch the driver with `stitch_front_images:=True`, and the image will be published under `/<Robot Name>/camera/frontmiddle_virtual/image`. In order to receive meaningful stitched images, you will have to specify the parameters `virtual_camera_intrinsics`, `virtual_camera_projection_plane`, `virtual_camera_plane_distance`, and `stitched_image_row_padding` (see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for some default values). 
+The driver also has the option to publish a stitched image created from Spot's front left and front right cameras (similar to what is seen on the tablet).
+If you wish to enable this, launch the driver with `stitch_front_images:=True`, and the image will be published under `/<Robot Name>/camera/frontmiddle_virtual/image`.
+In order to receive meaningful stitched images, you will have to specify the parameters `virtual_camera_intrinsics`, `virtual_camera_projection_plane`, `virtual_camera_plane_distance`, and `stitched_image_row_padding` (see [`spot_driver/config/spot_ros_example.yaml`](spot_driver/config/spot_ros_example.yaml) for some default values). 
 
 > **_NOTE:_**  
 If your image publishing rate is very slow, you can try 
