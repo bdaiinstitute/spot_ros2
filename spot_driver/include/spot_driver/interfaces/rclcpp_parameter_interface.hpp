@@ -5,6 +5,7 @@
 #include <rclcpp/node.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <set>
@@ -42,6 +43,7 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
                                                                       const bool gripperless) const override;
   [[nodiscard]] tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(
       const bool has_arm, const bool gripperless) const override;
+  [[nodiscard]] std::chrono::seconds getTimeSyncTimeout() const override;
 
  private:
   std::shared_ptr<rclcpp::Node> node_;

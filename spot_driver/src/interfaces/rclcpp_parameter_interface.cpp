@@ -2,6 +2,7 @@
 
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 
+#include <chrono>
 #include <cstdlib>
 #include <vector>
 
@@ -28,6 +29,7 @@ constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_regis
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
 constexpr auto kParameterTFRoot = "tf_root";
 constexpr auto kParameterNameGripperless = "gripperless";
+constexpr auto kParameterTimeSyncTimeout = "timesync_timeout";
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and
@@ -194,6 +196,13 @@ std::string RclcppParameterInterface::getTFRoot() const {
 
 bool RclcppParameterInterface::getGripperless() const {
   return declareAndGetParameter<bool>(node_, kParameterNameGripperless, kDefaultGripperless);
+}
+
+std::chrono::seconds RclcppParameterInterface::getTimeSyncTimeout() const {
+  int timeout_seconds =
+      declareAndGetParameter<int>(node_, kParameterTimeSyncTimeout,
+                                  std::chrono::duration_cast<std::chrono::seconds>(kDefaultTimeSyncTimeout).count());
+  return std::chrono::seconds(timeout_seconds);
 }
 
 std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm,
