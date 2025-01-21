@@ -79,7 +79,6 @@ The following flags may be useful for extra functionality when running the image
 This repository consists of a series of ROS 2 packages for usage with Spot.
 Further documentation on how each of these packages can be used can be found in their resepective READMEs.
 
-* [`spot_description`](spot_description): contains the URDF of Spot and some simple launchfiles for visualization.
 * [`spot_driver`](spot_driver): Core driver for operating Spot. This contains all of the necessary topics, services, and actions for controlling Spot and receiving state information over ROS 2.
   * The driver can be launched via the following command after building and sourcing your workspace. More details can be found on the [`spot_driver` README](spot_driver/README.md).
     ```
@@ -96,6 +95,7 @@ The following packages are used to enable joint level control of Spot via ROS 2 
 This package also pulls in the following packages as submodules:
 * [`ros_utilities`](https://github.com/bdaiinstitute/ros_utilities): The AI Institute's convenience wrappers around ROS 2.
 * [`spot_wrapper`](https://github.com/bdaiinstitute/spot_wrapper): A Python wrapper around the Spot SDK, shared as a common entry point with Spot's ROS 1 repo.
+* [`spot_description`](https://github.com/bdaiinstitute/spot_description): contains the URDF of Spot and some simple launchfiles for visualization.
 
 This repository also depends on the `bosdyn_msgs` ROS package.
 This package contains ROS versions of [Boston Dynamics' protobufs](https://dev.bostondynamics.com/protos/bosdyn/api/proto_reference) that are used with the Spot SDK.
