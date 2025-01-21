@@ -231,7 +231,7 @@ class SpotROS(Node):
         self.declare_parameter("continually_try_stand", False)
 
         self.declare_parameter("estop_timeout", 9.0)
-        self.declare_parameter("cmd_duration", 0.125)
+        self.declare_parameter("cmd_duration", 0.5)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("rgb_cameras", True)
 
