@@ -1163,7 +1163,7 @@ class SpotROS(Node):
             return response
         response.success, response.message = self.spot_wrapper.stand()
         return response
-    
+
     def handle_crouch(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the crouch service (standing as low as possible)"""
         if self.spot_wrapper is None:
