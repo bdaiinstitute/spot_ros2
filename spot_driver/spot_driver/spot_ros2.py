@@ -470,6 +470,12 @@ class SpotROS(Node):
         )
         self.create_service(
             Trigger,
+            "crouch",
+            lambda request, response: self.service_wrapper("crouch", self.handle_crouch, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
             "rollover",
             lambda request, response: self.service_wrapper("rollover", self.handle_rollover, request, response),
             callback_group=self.group,
@@ -1156,6 +1162,15 @@ class SpotROS(Node):
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message = self.spot_wrapper.stand()
+        return response
+
+    def handle_crouch(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler for the crouch service (standing as low as possible)"""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.stand(body_height=-0.15)
         return response
 
     def handle_rollover(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
