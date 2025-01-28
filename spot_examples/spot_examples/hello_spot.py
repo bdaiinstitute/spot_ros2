@@ -8,6 +8,7 @@ import synchros2.scope as ros_scope
 
 from cv_bridge import CvBridge as br
 import cv2
+from sensor_msgs.msg import Image
 
 
 # either 
@@ -63,7 +64,7 @@ class HelloSpot:
             raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
         self.logger = self.node.get_logger()
 
-        self.image_sub = self.create_subscription(
+        self.image_sub = self.node.create_subscription(
             Image,
             f"/{robot_name}/camera/frontleft/image",
             self.image_callback,
