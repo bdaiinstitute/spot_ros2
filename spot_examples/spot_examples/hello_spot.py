@@ -176,7 +176,7 @@ class HelloSpot:
         # command_client.robot_command(cmd)
         # becomes this
         cmd = RobotCommandBuilder.synchro_stand_command(footprint_R_body=footprint_R_body)
-        action_goal = RobotCommand.goal()
+        action_goal = RobotCommand.Goal()
         convert(cmd, action_goal.command)
         self.logger.info("Twisting robot")
         self.robot_command_client.send_goal_and_wait("twisting_robot", action_goal)
