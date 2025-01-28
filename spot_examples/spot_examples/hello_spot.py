@@ -6,9 +6,8 @@ import os
 import synchros2.process as ros_process
 import synchros2.scope as ros_scope
 
-from cv_bridge import CvBridge as br
-import cv2
 from sensor_msgs.msg import Image
+
 
 
 # either 
@@ -71,7 +70,6 @@ class HelloSpot:
             10)
         self.image_sub # prevent unused variable warning
         self.pause_image_update = False
-
         """ kinematics setup """
 
         ## TODO: verify this chunk is correct
@@ -302,27 +300,43 @@ class HelloSpot:
         self.logger.info('Finished absolute body control while standing.')
 
 
+        self.logger.info('Displaying image.')
+        self._maybe_display_image()
+
+        self._maybe_save_image()
+
+
+        self.logger.info('Goodbye, human!')
+        
+
+
+
+
 
     def image_callback(self, image_raw):
         self.logger.debug("recieved image")
         self.latest_image_raw = image_raw
 
 
-    def _maybe_display_image(self, image, display_time=3.0):
+    def _maybe_display_image(self, display_time=3.0):
         """Try to display image, if client has correct deps."""
 
         self.pause_image_update = True # to ensure we display and save same image
 
         try:
-            import io
+        #    import io
 
-            from PIL import Image
+        #    from PIL import Image
+
+            from cv_bridge import CvBridge
+            import cv2
+            self.br = CvBridge()
         except ImportError:
             self.logger.warning('Missing dependencies. Can\'t display image.')
             return
         try:
-            image = br.imgmsg_to_cv2(latest_image_raw)
-            cv2.imshow("hello!", image)
+            image = self.br.imgmsg_to_cv2(self.latest_image_raw)
+            cv2.imshow("Hello, human!", image)
             cv2.waitKey(0)
             time.sleep(display_time)
         except Exception as exc:
@@ -330,12 +344,16 @@ class HelloSpot:
 
 
 
-    def _maybe_save_image(self, image, path):
+    def _maybe_save_image(self, path=None):
         """Try to save image, if client has correct deps."""
         try:
-            import io
+            # import io
 
-            from PIL import Image
+            # from PIL import Image
+
+            from cv_bridge import CvBridge
+            import cv2
+            self.br = CvBridge()
         except ImportError:
             self.logger.warning('Missing dependencies. Can\'t save image.')
             return
@@ -345,11 +363,11 @@ class HelloSpot:
             name = os.path.join(path, name)
             self.logger.info('Saving image to: %s', name)
         else:
-            self.logger.info('Saving image to working directory as %s', name)
+            self.logger.info(f"Saving image to working directory as {name}")
         try:
             # image = Image.open(io.BytesIO(image.data))
             # image.save(name)
-            image = br.imgmsg_to_cv2(latest_image_raw)
+            image = self.br.imgmsg_to_cv2(self.latest_image_raw)
             cv2.imwrite(name, image)
 
         except Exception as exc:
