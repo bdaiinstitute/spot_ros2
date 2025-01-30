@@ -24,6 +24,7 @@ setup(
             "send_inverse_kinematics_requests = spot_examples.send_inverse_kinematics_requests:main",
             "batch_trajectory = spot_examples.batch_trajectory:main",
             "hello_spot = spot_examples.hello_spot:main",
+            "arm_walk_to_object = spot_examples.arm_walk_to_object:main",
         ],
     },
 )
