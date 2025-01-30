@@ -83,17 +83,17 @@ class ArmWalkToObject:
         time.sleep(3)
         return True
 
-    def take_photo(self) -> None:
-        footprint_R_body = bosdyn.geometry.EulerZXY(yaw=0.4, roll=0.0, pitch=0.0)
-
-        cmd = RobotCommandBuilder.synchro_stand_command(footprint_R_body=footprint_R_body)
-        action_goal = RobotCommand.Goal()
-        convert(cmd, action_goal.command)
-        self.logger.info("Twisting robot")
-        self.robot_command_client.send_goal_and_wait("twisting_robot", action_goal)
-
-        self.logger.info('Robot standing twisted.')
-        time.sleep(3)
+    # def take_photo(self) -> None:
+    #     footprint_R_body = bosdyn.geometry.EulerZXY(yaw=0.4, roll=0.0, pitch=0.0)
+    #
+    #     cmd = RobotCommandBuilder.synchro_stand_command(footprint_R_body=footprint_R_body)
+    #     action_goal = RobotCommand.Goal()
+    #     convert(cmd, action_goal.command)
+    #     self.logger.info("Twisting robot")
+    #     self.robot_command_client.send_goal_and_wait("twisting_robot", action_goal)
+    #
+    #     self.logger.info('Robot standing twisted.')
+    #     time.sleep(3)
 
     def image_callback(self, image_raw):
         self.logger.debug("recieved image")
@@ -117,7 +117,7 @@ class ArmWalkToObject:
         cv2.namedWindow(image_title)
         cv2.setMouseCallback(image_title, cv_mouse_callback)
 
-        image_display = self.br.imgmsg_to_cv2(self.latest_image_raw)
+        self.image_display = self.br.imgmsg_to_cv2(self.latest_image_raw)
         cv2.imshow(image_title, self.image_display)
         while self.image_click is None:
             key = cv2.waitKey(1) & 0xFF
@@ -236,7 +236,7 @@ def main(args: argparse.Namespace) -> None:
     hello_spot = ArmWalkToObject(args.robot)
     hello_spot.initialize_robot()
     hello_spot.stand()
-    hello_spot.take_photo()
+    # hello_spot.take_photo()
     hello_spot.query_user_and_go_to_object()
 
 
