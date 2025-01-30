@@ -9,7 +9,7 @@ from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME
 from bosdyn.client import math_helpers
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn.util import seconds_to_duration
-from bosdyn.api import trajectory_pb2
+from bosdyn.api import trajectory_pb2, geometry_pb2, image_pb2, manipulation_api_pb2
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 import bosdyn.geometry
 from bosdyn_msgs.conversions import convert
@@ -130,10 +130,10 @@ class ArmWalkToObject:
         walk_vec = geometry_pb2.Vec2(x=self.image_click[0], y=self.image_click[1])
 
         # Optionally populate the offset distance parameter.
-        if config.distance is None:
-            offset_distance = None
-        else:
-            offset_distance = wrappers_pb2.FloatValue(value=config.distance)
+        # if config.distance is None:
+        #     offset_distance = None
+        # else:
+        #     offset_distance = wrappers_pb2.FloatValue(value=config.distance)
 
         # Build the proto
         walk_to = manipulation_api_pb2.WalkToObjectInImage(
