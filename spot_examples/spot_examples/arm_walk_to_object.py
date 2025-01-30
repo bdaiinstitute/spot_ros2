@@ -18,6 +18,16 @@ from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import namespace_with
 from bosdyn.client.manipulation_api_client import ManipulationApiClient
+from bosdyn.client.image import ImageClient
+from bosdyn.api.geometry_pb2 import FrameTreeSnapshot
+from bosdyn.client.frame_helpers import (
+    BODY_FRAME_NAME,
+    GRAV_ALIGNED_BODY_FRAME_NAME,
+    GROUND_PLANE_FRAME_NAME,
+    HAND_FRAME_NAME,
+    ODOM_FRAME_NAME,
+    VISION_FRAME_NAME,
+)
 
 from sensor_msgs.msg import Image
 from spot_msgs.action import RobotCommand, Manipulation
@@ -135,11 +145,39 @@ class ArmWalkToObject:
         # else:
         #     offset_distance = wrappers_pb2.FloatValue(value=config.distance)
 
+
+
+
+        # ## TODO: FIX, HACKY
+        # image_responses = image_client.get_image_from_sources([config.image_source])
+        #
+        # if len(image_responses) != 1:
+        #     print(f'Got invalid number of images: {len(image_responses)}')
+        #     print(image_responses)
+        #     assert False
+        #
+        # image = image_responses[0]
+        # if image.shot.image.pixel_format == image_pb2.Image.PIXEL_FORMAT_DEPTH_U16:
+        #     dtype = np.uint16
+        # else:
+        #     dtype = np.uint8
+        # img = np.fromstring(image.shot.image.data, dtype=dtype)
+        # if image.shot.image.format == image_pb2.Image.FORMAT_RAW:
+        #     img = img.reshape(image.shot.image.rows, image.shot.image.cols)
+        # else:
+        #     img = cv2.imdecode(img, -1)
+
+
+        fake_image = image_pb2.ImageResponse()
+
+        ## TODO: not hardcode
+        offset_distance = 0
+
         # Build the proto
         walk_to = manipulation_api_pb2.WalkToObjectInImage(
-            pixel_xy=walk_vec, transforms_snapshot_for_camera=image.shot.transforms_snapshot,
-            frame_name_image_sensor=image.shot.frame_name_image_sensor,
-            camera_model=image.source.pinhole, offset_distance=offset_distance)
+            pixel_xy=walk_vec, transforms_snapshot_for_camera=self.get_basic_tform_tree_snapshot(),
+            frame_name_image_sensor="FRONT_LEFT_CAMERA", ## TODO: make not hardcoded
+            camera_model=fake_image.source.pinhole, offset_distance=offset_distance)
 
         # Ask the robot to pick up the object
         walk_to_request = manipulation_api_pb2.ManipulationApiRequest(
@@ -193,6 +231,129 @@ class ArmWalkToObject:
             cv2.line(clone, (x, 0), (x, height), color, thickness)
             cv2.imshow(image_title, clone)
 
+    def get_basic_tform_tree_snapshot(self, transform_time: Optional[Union[Time, float]] = None) -> FrameTreeSnapshot:
+            """Take a snapshot of all transforms involving common frames.
+
+            Common frames include transformations to: BODY, VISION, ODOM, HAND, GRAV_ALIGNED_BODY, GROUND_PLANE and WRIST.
+            Camera sensor related frames are also included: HEAD, BACK, LEFT, RIGHT, FRONT_LEFT, FRONT_RIGHT, BACK_CAMERA,
+            FRONT_LEFT_CAMERA, FRONT_RIGHT_CAMERA, LEFT_CAMERA, RIGHT_CAMERA and HAND_CAMERA.
+
+            Returns:
+                A tree-based collection of transformation to common frames.
+            """
+            if isinstance(transform_time, float):
+                transform_time = Time(seconds=transform_time)
+
+            child_to_parent_edge_map = {}
+
+            # Add root frame.
+            child_to_parent_edge_map[FrameHint.BODY.value] = FrameTreeSnapshot.ParentEdge(
+                parent_tform_child=se3_to_se3pose_proto(SE3())
+            )
+
+            # Add head frame.
+            child_to_parent_edge_map[FrameHint.HEAD.value] = FrameTreeSnapshot.ParentEdge(
+                parent_frame_name=FrameHint.BODY.value, parent_tform_child=se3_to_se3pose_proto(SE3())
+            )
+
+            # The ground plane is relative to the odom frame.
+            child_to_parent_edge_map[FrameHint.GROUND_PLANE.value] = FrameTreeSnapshot.ParentEdge(
+                parent_frame_name=FrameHint.ODOM.value,
+                parent_tform_child=se3_to_se3pose_proto(
+                    self.lookup_a_tform_b(FrameHint.ODOM, FrameHint.GROUND_PLANE, transform_time)
+                ),
+            )
+
+            # Add frames relative to the body frame.
+            frames_relative_to_body = [
+                FrameHint.VISION,
+                FrameHint.ODOM,
+                FrameHint.GRAV_ALIGNED_BODY,
+                FrameHint.BACK,
+                FrameHint.LEFT,
+                FrameHint.RIGHT,
+            ]
+
+            if self.has_arm():
+                frames_relative_to_body += [FrameHint.WRIST]
+
+            for target_frame in frames_relative_to_body:
+                child_to_parent_edge_map[target_frame.value] = FrameTreeSnapshot.ParentEdge(
+                    parent_frame_name=FrameHint.BODY.value,
+                    parent_tform_child=se3_to_se3pose_proto(
+                        self.lookup_a_tform_b(FrameHint.BODY, target_frame, transform_time)
+                    ),
+                )
+
+            if self.has_arm():
+                # Add hand frame relative to wrist frame.
+                child_to_parent_edge_map[FrameHint.HAND.value] = FrameTreeSnapshot.ParentEdge(
+                    parent_frame_name=FrameHint.WRIST.value,
+                    parent_tform_child=se3_to_se3pose_proto(
+                        self.lookup_a_tform_b(FrameHint.WRIST, FrameHint.HAND, transform_time)
+                    ),
+                )
+
+                # Add hand camera frame.
+                child_to_parent_edge_map[FrameHint.HAND_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
+                    parent_frame_name=FrameHint.WRIST.value,
+                    parent_tform_child=se3_to_se3pose_proto(
+                        self.lookup_a_tform_b(FrameHint.WRIST, FrameHint.HAND_CAMERA, transform_time)
+                    ),
+                )
+
+            # Add frames relative to head frame.
+            child_to_parent_edge_map[FrameHint.FRONT_LEFT.value] = FrameTreeSnapshot.ParentEdge(
+                parent_frame_name=FrameHint.HEAD.value,
+                parent_tform_child=se3_to_se3pose_proto(
+                    self.lookup_a_tform_b(FrameHint.HEAD, FrameHint.FRONT_LEFT, transform_time)
+                ),
+            )
+
+            child_to_parent_edge_map[FrameHint.FRONT_RIGHT.value] = FrameTreeSnapshot.ParentEdge(
+                parent_frame_name=FrameHint.HEAD.value,
+                parent_tform_child=se3_to_se3pose_proto(
+                    self.lookup_a_tform_b(FrameHint.HEAD, FrameHint.FRONT_RIGHT, transform_time)
+                ),
+            )
+
+            # Add camera sensor frames.
+            child_to_parent_edge_map[FrameHint.FRONT_LEFT_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
+                parent_frame_name=FrameHint.FRONT_LEFT.value,
+                parent_tform_child=se3_to_se3pose_proto(
+                    self.lookup_a_tform_b(FrameHint.FRONT_LEFT, FrameHint.FRONT_LEFT_CAMERA, transform_time)
+                ),
+            )
+
+            child_to_parent_edge_map[FrameHint.FRONT_RIGHT_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
+                parent_frame_name=FrameHint.FRONT_RIGHT.value,
+                parent_tform_child=se3_to_se3pose_proto(
+                    self.lookup_a_tform_b(FrameHint.FRONT_RIGHT, FrameHint.FRONT_RIGHT_CAMERA, transform_time)
+                ),
+            )
+
+            child_to_parent_edge_map[FrameHint.LEFT_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
+                parent_frame_name=FrameHint.LEFT.value,
+                parent_tform_child=se3_to_se3pose_proto(
+                    self.lookup_a_tform_b(FrameHint.LEFT, FrameHint.LEFT_CAMERA, transform_time)
+                ),
+            )
+
+            child_to_parent_edge_map[FrameHint.RIGHT_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
+                parent_frame_name=FrameHint.RIGHT.value,
+                parent_tform_child=se3_to_se3pose_proto(
+                    self.lookup_a_tform_b(FrameHint.RIGHT, FrameHint.RIGHT_CAMERA, transform_time)
+                ),
+            )
+
+            child_to_parent_edge_map[FrameHint.BACK_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
+                parent_frame_name=FrameHint.BACK.value,
+                parent_tform_child=se3_to_se3pose_proto(
+                    self.lookup_a_tform_b(FrameHint.BACK, FrameHint.BACK_CAMERA, transform_time)
+                ),
+            )
+
+            return FrameTreeSnapshot(child_to_parent_edge_map=child_to_parent_edge_map)
 
 def arg_float(x):
     try:
