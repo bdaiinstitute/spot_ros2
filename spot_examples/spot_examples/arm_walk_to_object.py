@@ -22,6 +22,9 @@ from bosdyn.client.manipulation_api_client import ManipulationApiClient
 from sensor_msgs.msg import Image
 from spot_msgs.action import RobotCommand, Manipulation
 
+from cv_bridge import CvBridge
+import cv2
+
 from .simple_spot_commander import SimpleSpotCommander
 
 from sensor_msgs.msg import CameraInfo
@@ -40,6 +43,8 @@ class ArmWalkToObject:
             10)
         self.image_sub # prevent unused variable warning
         self.pause_image_update = False
+
+        self.br = CvBridge()
 
         self.image_click = None
         self.image_display = None
@@ -102,13 +107,6 @@ class ArmWalkToObject:
     def query_user_and_go_to_object(self, display_time=3.0):
 
 
-        try:
-            from cv_bridge import CvBridge
-            import cv2
-            self.br = CvBridge()
-        except ImportError:
-            self.logger.warning('Missing dependencies. Can\'t display image.')
-            return
 
 
         # Show the image to the user and wait for them to click on a pixel
