@@ -125,7 +125,7 @@ class ArmWalkToObject:
                 exit(0)
 
 
-        self.logger.info('Walking to object at image location (' + self.image_click[0] + ', ' + self.image_click[1] + ')')
+        self.logger.info(f"Walking to object at image location ({self.image_click[0]}, {self.image_click[1]})")
 
         walk_vec = geometry_pb2.Vec2(x=self.image_click[0], y=self.image_click[1])
 
