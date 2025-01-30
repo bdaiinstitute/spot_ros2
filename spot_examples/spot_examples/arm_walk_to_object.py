@@ -115,7 +115,7 @@ class ArmWalkToObject:
         self.logger.info('Click on an object to walk up to...')
         image_title = 'Click to walk up to something'
         cv2.namedWindow(image_title)
-        cv2.setMouseCallback(image_title, cv_mouse_callback)
+        cv2.setMouseCallback(image_title, self.cv_mouse_callback)
 
         self.image_display = self.br.imgmsg_to_cv2(self.latest_image_raw)
         cv2.imshow(image_title, self.image_display)
