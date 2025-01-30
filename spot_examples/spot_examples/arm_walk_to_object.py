@@ -205,13 +205,29 @@ def arg_float(x):
     return x
 
 
+## example from hello_spot.py
+# def cli() -> argparse.ArgumentParser:
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--robot", type=str, default=None)
+#     return parser
+#
+#
+# @ros_process.main(cli())
+# def main(args: argparse.Namespace) -> None:
+#     hello_spot = HelloSpot(args.robot)
+#     hello_spot.initialize_robot()
+#     hello_spot.stand_default()
+#     hello_spot.stand_twisted()
+#     hello_spot.stand_3_pt_traj()
+#
+
 def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--robot", type=str, default=None)
-    parser.add_argument('-i', '--image-source', help='Get image from source',
-                        default='frontleft_fisheye_image')
-    parser.add_argument('-d', '--distance', help='Distance from object to walk to (meters).',
-                        default=None, type=arg_float)
+    parser.add_argument("--robot", type=str, default=None)
+    # parser.add_argument('-i', '--image-source', help='Get image from source',
+    #                     default='frontleft_fisheye_image')
+    # parser.add_argument('-d', '--distance', help='Distance from object to walk to (meters).',
+    #                     default=None, type=arg_float)
     return parser
 
 
