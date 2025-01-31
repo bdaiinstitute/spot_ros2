@@ -33,6 +33,7 @@ from bdai_ros.utilities.manual_conversions import (
     se3_to_se3pose_proto,
     to_se3,
 )
+from google.protobuf import wrappers_pb2
 from spatialmath import SE3
 from rclpy.time import Time
 from typing import Any, Optional, Protocol, Sequence, TypeAlias, Union
@@ -211,7 +212,7 @@ class ArmWalkToObject:
         fake_image = image_pb2.ImageResponse()
 
         ## TODO: not hardcode
-        offset_distance = 0
+        offset_distance = wrappers_pb2.FloatValue(value=0)
 
         # Build the proto
         walk_to = manipulation_api_pb2.WalkToObjectInImage(
