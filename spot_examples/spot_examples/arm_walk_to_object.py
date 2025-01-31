@@ -2,6 +2,7 @@ import argparse
 from typing import Optional
 import time
 import os
+from enum import Enum
 
 import synchros2.process as ros_process
 import synchros2.scope as ros_scope
@@ -301,8 +302,7 @@ class ArmWalkToObject:
                         self.lookup_a_tform_b(FrameHint.WRIST, FrameHint.HAND_CAMERA, transform_time)
                     ),
                 )
-
-            # Add frames relative to head frame.
+# Add frames relative to head frame.
             child_to_parent_edge_map[FrameHint.FRONT_LEFT.value] = FrameTreeSnapshot.ParentEdge(
                 parent_frame_name=FrameHint.HEAD.value,
                 parent_tform_child=se3_to_se3pose_proto(
@@ -362,6 +362,30 @@ def arg_float(x):
         raise argparse.ArgumentTypeError(f'{repr(x)} not a number')
     return x
 
+## TODO: maybe don't make this a class
+class FrameHint(str, Enum):
+    """Well known Spot frames."""
+
+    BODY = BODY_FRAME_NAME
+    VISION = VISION_FRAME_NAME
+    ODOM = ODOM_FRAME_NAME
+    HAND = HAND_FRAME_NAME
+    GRAV_ALIGNED_BODY = GRAV_ALIGNED_BODY_FRAME_NAME
+    GROUND_PLANE = GROUND_PLANE_FRAME_NAME
+    WRIST = "arm_link_wr1"
+    HEAD = "head"
+    BACK = "back"
+    LEFT = "left"
+    RIGHT = "right"
+    FRONT_LEFT = "frontleft"
+    FRONT_RIGHT = "frontright"
+    BACK_CAMERA = "back_fisheye"
+    FRONT_LEFT_CAMERA = "frontleft_fisheye"
+    FRONT_RIGHT_CAMERA = "frontright_fisheye"
+    LEFT_CAMERA = "left_fisheye"
+    RIGHT_CAMERA = "right_fisheye"
+    HAND_CAMERA = "hand_color_image_sensor"
+    HAND_DEPTH_CAMERA = "hand_depth_sensor"
 
 ## example from hello_spot.py
 # def cli() -> argparse.ArgumentParser:
