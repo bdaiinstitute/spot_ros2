@@ -221,8 +221,8 @@ class ArmWalkToObject:
             camera_model=fake_image.source.pinhole, offset_distance=offset_distance)
 
         # Ask the robot to pick up the object
-        # walk_to_request = manipulation_api_pb2.ManipulationApiRequest(
-        #     walk_to_object_in_image=walk_to)
+        walk_to_request = manipulation_api_pb2.ManipulationApiRequest(
+            walk_to_object_in_image=walk_to)
 
 
 
@@ -239,14 +239,14 @@ class ArmWalkToObject:
         # cmd = RobotCommandBuilder.synchro_stand_command(footprint_R_body=footprint_R_body)
 
         action_goal = Manipulation.Goal()
-        # convert(cmd, action_goal.command)
+        convert(walk_to_request, action_goal.command)
 
 
-        walk_to_request = ManipulationApiRequest()
-        walk_to_request.walk_to_object_in_image = walk_to
-        
-
-        action_goal.command = walk_to_request
+        # walk_to_request = ManipulationApiRequest()
+        # walk_to_request.walk_to_object_in_image = walk_to
+        # 
+        #
+        # action_goal.command = walk_to_request
         # action_goal.command.CopyFrom(walk_to_request)
         # action_goal.command.walk_to_object_ind_image=walk_to_request
         self.logger.info("Walking to object in image")
