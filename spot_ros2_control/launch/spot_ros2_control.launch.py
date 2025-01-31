@@ -305,7 +305,7 @@ def generate_launch_description():
                 default_value=True,
                 description="Choose whether to launch the image publishers.",
             ),
-            DeclareLaunchArgument(
+            DeclareBooleanLaunchArgument(
                 "auto_start",
                 default_value=True,
                 description="Choose whether to start hardware interfaces and controllers immediately or not.",
