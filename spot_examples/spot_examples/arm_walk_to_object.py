@@ -29,7 +29,9 @@ from bosdyn.client.frame_helpers import (
     ODOM_FRAME_NAME,
     VISION_FRAME_NAME,
 )
+from rclpy.time import Time
 from typing import Any, Optional, Protocol, Sequence, TypeAlias, Union
+from bosdyn.api.geometry_pb2 import FrameTreeSnapshot
 
 from sensor_msgs.msg import Image
 from spot_msgs.action import RobotCommand, Manipulation
