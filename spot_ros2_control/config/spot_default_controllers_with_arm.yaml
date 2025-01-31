@@ -14,6 +14,9 @@ controller_manager:
     forward_state_controller:
       type: spot_controllers/ForwardStateController
 
+    hardware_components_initial_state:
+      inactive:
+        - SpotSystem
 
 forward_position_controller:
   ros__parameters:
