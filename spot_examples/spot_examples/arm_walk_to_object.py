@@ -80,6 +80,10 @@ class ArmWalkToObject:
         self.node = ros_scope.node()
         if self.node is None:
             raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
+
+
+        self.robot_name = robot_name
+
         self.logger = self.node.get_logger()
 
         self.image_sub = self.node.create_subscription(
