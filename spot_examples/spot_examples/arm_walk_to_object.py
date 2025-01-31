@@ -29,6 +29,10 @@ from bosdyn.client.frame_helpers import (
     ODOM_FRAME_NAME,
     VISION_FRAME_NAME,
 )
+from bdai_ros.utilities.manual_conversions import (
+    se3_to_se3pose_proto,
+    to_se3,
+)
 from rclpy.time import Time
 from typing import Any, Optional, Protocol, Sequence, TypeAlias, Union
 from bosdyn.api.geometry_pb2 import FrameTreeSnapshot
