@@ -10,6 +10,9 @@ If your parameters for authenticating with your robot are set in the environment
 ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=robot
 ```
 
+> [!IMPORTANT]
+> When taking control of Spot with the tablet, make sure to release control back, or `spot_ros2_control` will not be able to command the robot.
+
 Login information can also be set in a configuration file, the same as in the `spot_driver` launchfile. For example, if you have a config file `spot_ros.yaml` containing the following information:
 ```
 /**:
