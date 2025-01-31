@@ -29,6 +29,7 @@ from bosdyn.client.frame_helpers import (
     ODOM_FRAME_NAME,
     VISION_FRAME_NAME,
 )
+from typing import Any, Optional, Protocol, Sequence, TypeAlias, Union
 
 from sensor_msgs.msg import Image
 from spot_msgs.action import RobotCommand, Manipulation
