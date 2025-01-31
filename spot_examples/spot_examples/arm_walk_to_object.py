@@ -269,7 +269,7 @@ class ArmWalkToObject:
             child_to_parent_edge_map[FrameHint.GROUND_PLANE.value] = FrameTreeSnapshot.ParentEdge(
                 parent_frame_name=FrameHint.ODOM.value,
                 parent_tform_child=se3_to_se3pose_proto(
-                    self.lookup_a_tform_b(FrameHint.ODOM, FrameHint.GROUND_PLANE, transform_time)
+                    self.tf_listener.lookup_a_tform_b(FrameHint.ODOM, FrameHint.GROUND_PLANE, transform_time)
                 ),
             )
 
@@ -290,7 +290,7 @@ class ArmWalkToObject:
                 child_to_parent_edge_map[target_frame.value] = FrameTreeSnapshot.ParentEdge(
                     parent_frame_name=FrameHint.BODY.value,
                     parent_tform_child=se3_to_se3pose_proto(
-                        self.lookup_a_tform_b(FrameHint.BODY, target_frame, transform_time)
+                        self.tf_listener.lookup_a_tform_b(FrameHint.BODY, target_frame, transform_time)
                     ),
                 )
 
@@ -299,7 +299,7 @@ class ArmWalkToObject:
                 child_to_parent_edge_map[FrameHint.HAND.value] = FrameTreeSnapshot.ParentEdge(
                     parent_frame_name=FrameHint.WRIST.value,
                     parent_tform_child=se3_to_se3pose_proto(
-                        self.lookup_a_tform_b(FrameHint.WRIST, FrameHint.HAND, transform_time)
+                        self.tf_listener.lookup_a_tform_b(FrameHint.WRIST, FrameHint.HAND, transform_time)
                     ),
                 )
 
@@ -307,21 +307,21 @@ class ArmWalkToObject:
                 child_to_parent_edge_map[FrameHint.HAND_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
                     parent_frame_name=FrameHint.WRIST.value,
                     parent_tform_child=se3_to_se3pose_proto(
-                        self.lookup_a_tform_b(FrameHint.WRIST, FrameHint.HAND_CAMERA, transform_time)
+                        self.tf_listener.lookup_a_tform_b(FrameHint.WRIST, FrameHint.HAND_CAMERA, transform_time)
                     ),
                 )
 # Add frames relative to head frame.
             child_to_parent_edge_map[FrameHint.FRONT_LEFT.value] = FrameTreeSnapshot.ParentEdge(
                 parent_frame_name=FrameHint.HEAD.value,
                 parent_tform_child=se3_to_se3pose_proto(
-                    self.lookup_a_tform_b(FrameHint.HEAD, FrameHint.FRONT_LEFT, transform_time)
+                    self.tf_listener.lookup_a_tform_b(FrameHint.HEAD, FrameHint.FRONT_LEFT, transform_time)
                 ),
             )
 
             child_to_parent_edge_map[FrameHint.FRONT_RIGHT.value] = FrameTreeSnapshot.ParentEdge(
                 parent_frame_name=FrameHint.HEAD.value,
                 parent_tform_child=se3_to_se3pose_proto(
-                    self.lookup_a_tform_b(FrameHint.HEAD, FrameHint.FRONT_RIGHT, transform_time)
+                    self.tf_listener.lookup_a_tform_b(FrameHint.HEAD, FrameHint.FRONT_RIGHT, transform_time)
                 ),
             )
 
@@ -329,35 +329,35 @@ class ArmWalkToObject:
             child_to_parent_edge_map[FrameHint.FRONT_LEFT_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
                 parent_frame_name=FrameHint.FRONT_LEFT.value,
                 parent_tform_child=se3_to_se3pose_proto(
-                    self.lookup_a_tform_b(FrameHint.FRONT_LEFT, FrameHint.FRONT_LEFT_CAMERA, transform_time)
+                    self.tf_listener.lookup_a_tform_b(FrameHint.FRONT_LEFT, FrameHint.FRONT_LEFT_CAMERA, transform_time)
                 ),
             )
 
             child_to_parent_edge_map[FrameHint.FRONT_RIGHT_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
                 parent_frame_name=FrameHint.FRONT_RIGHT.value,
                 parent_tform_child=se3_to_se3pose_proto(
-                    self.lookup_a_tform_b(FrameHint.FRONT_RIGHT, FrameHint.FRONT_RIGHT_CAMERA, transform_time)
+                    self.tf_listener.lookup_a_tform_b(FrameHint.FRONT_RIGHT, FrameHint.FRONT_RIGHT_CAMERA, transform_time)
                 ),
             )
 
             child_to_parent_edge_map[FrameHint.LEFT_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
                 parent_frame_name=FrameHint.LEFT.value,
                 parent_tform_child=se3_to_se3pose_proto(
-                    self.lookup_a_tform_b(FrameHint.LEFT, FrameHint.LEFT_CAMERA, transform_time)
+                    self.tf_listener.lookup_a_tform_b(FrameHint.LEFT, FrameHint.LEFT_CAMERA, transform_time)
                 ),
             )
 
             child_to_parent_edge_map[FrameHint.RIGHT_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
                 parent_frame_name=FrameHint.RIGHT.value,
                 parent_tform_child=se3_to_se3pose_proto(
-                    self.lookup_a_tform_b(FrameHint.RIGHT, FrameHint.RIGHT_CAMERA, transform_time)
+                    self.tf_listener.lookup_a_tform_b(FrameHint.RIGHT, FrameHint.RIGHT_CAMERA, transform_time)
                 ),
             )
 
             child_to_parent_edge_map[FrameHint.BACK_CAMERA.value] = FrameTreeSnapshot.ParentEdge(
                 parent_frame_name=FrameHint.BACK.value,
                 parent_tform_child=se3_to_se3pose_proto(
-                    self.lookup_a_tform_b(FrameHint.BACK, FrameHint.BACK_CAMERA, transform_time)
+                    self.tf_listener.lookup_a_tform_b(FrameHint.BACK, FrameHint.BACK_CAMERA, transform_time)
                 ),
             )
 
