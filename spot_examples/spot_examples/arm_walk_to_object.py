@@ -225,6 +225,8 @@ class ArmWalkToObject:
             walk_to_object_in_image=walk_to)
 
 
+
+
         ## Manipulation.msg: 
         # bosdyn_api_msgs/ManipulationApiRequest command
         # ---
@@ -238,7 +240,8 @@ class ArmWalkToObject:
 
         action_goal = Manipulation.Goal()
         # convert(cmd, action_goal.command)
-        action_goal.command = walk_to_request
+        # action_goal.command = walk_to_request
+        action_goal.command.CopyFrom(walk_to_request)
         self.logger.info("Walking to object in image")
         self.manipulation_client.send_goal_and_wait("walking to object in image", action_goal)
         self.logger.info("Finished walking to object in image.")
