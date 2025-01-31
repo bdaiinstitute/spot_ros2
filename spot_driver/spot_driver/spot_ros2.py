@@ -226,7 +226,7 @@ class SpotROS(Node):
         self.declare_parameter("auto_power_on", False)
         self.declare_parameter("auto_stand", False)
 
-        self.declare_parameter("use_take_lease", True)
+        self.declare_parameter("use_take_lease", False)
         self.declare_parameter("get_lease_on_action", True)
         self.declare_parameter("continually_try_stand", False)
 
@@ -1000,13 +1000,13 @@ class SpotROS(Node):
             response.message = "spot_ros2 is running in mock mode."
             return response
 
-        have_new_lease, lease = self.spot_wrapper.takeLease()
-        if have_new_lease:
+        try:
+            lease = self.spot_wrapper.getLease() # acquires lease if available, not forcefully take
             response.success = True
             response.message = str(lease.lease_proto)
-        else:
+        except Exception as e:
             response.success = False
-            response.message = ""
+            response.message = str(e)
 
         return response
 
