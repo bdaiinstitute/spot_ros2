@@ -1,26 +1,21 @@
 import argparse
-from typing import Optional
-import time
-import os
 from enum import Enum
+import os
+import time
+from typing import Optional
+from typing import Any, Optional, Protocol, Sequence, TypeAlias, Union
 
-import synchros2.process as ros_process
-import synchros2.scope as ros_scope
-from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME, get_a_tform_b
-from bosdyn.client import math_helpers
-from bosdyn.client.robot_command import RobotCommandBuilder
-from bosdyn.util import seconds_to_duration
-from bosdyn.api import trajectory_pb2, geometry_pb2, image_pb2, manipulation_api_pb2
-from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
-import bosdyn.geometry
-from bosdyn_msgs.conversions import convert
-from rclpy.node import Node
-from synchros2.action_client import ActionClientWrapper
-from synchros2.tf_listener_wrapper import TFListenerWrapper
-from synchros2.utilities import namespace_with
-from bosdyn.client.manipulation_api_client import ManipulationApiClient
-from bosdyn.client.image import ImageClient
+from bosdyn_api_msgs.msg import ManipulationApiRequest
+from bosdyn.api import geometry_pb2, image_pb2, manipulation_api_pb2, trajectory_pb2
 from bosdyn.api.geometry_pb2 import FrameTreeSnapshot
+from bosdyn.api.geometry_pb2 import FrameTreeSnapshot
+from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
+from bosdyn.client import math_helpers
+from bosdyn.client.frame_helpers import (
+    GRAV_ALIGNED_BODY_FRAME_NAME,
+    ODOM_FRAME_NAME,
+    get_a_tform_b,
+)
 from bosdyn.client.frame_helpers import (
     BODY_FRAME_NAME,
     GRAV_ALIGNED_BODY_FRAME_NAME,
@@ -29,25 +24,30 @@ from bosdyn.client.frame_helpers import (
     ODOM_FRAME_NAME,
     VISION_FRAME_NAME,
 )
-from bdai_ros.utilities.manual_conversions import (
-    se3_to_se3pose_proto,
-    to_se3,
-)
+from bosdyn.client.image import ImageClient
+from bosdyn.client.manipulation_api_client import ManipulationApiClient
+from bosdyn.client.robot_command import RobotCommandBuilder
+import bosdyn.geometry
+from bosdyn.util import seconds_to_duration
+import cv2
 from google.protobuf import wrappers_pb2
 from spatialmath import SE3
-from rclpy.time import Time
-from typing import Any, Optional, Protocol, Sequence, TypeAlias, Union
-from bosdyn.api.geometry_pb2 import FrameTreeSnapshot
 
-from sensor_msgs.msg import Image
-from spot_msgs.action import RobotCommand, Manipulation
-
+from bdai_ros.utilities.manual_conversions import se3_to_se3pose_proto, to_se3
+from bosdyn_msgs.conversions import convert
 from cv_bridge import CvBridge
-import cv2
+from rclpy.node import Node
+from rclpy.time import Time
+from sensor_msgs.msg import Image
+from sensor_msgs.msg import CameraInfo
+from spot_msgs.action import Manipulation, RobotCommand
+from synchros2.action_client import ActionClientWrapper
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
+from synchros2.tf_listener_wrapper import TFListenerWrapper
+from synchros2.utilities import namespace_with
 
 from .simple_spot_commander import SimpleSpotCommander
-
-from sensor_msgs.msg import CameraInfo
 
 
 ## TODO: maybe don't make this a class
@@ -221,8 +221,8 @@ class ArmWalkToObject:
             camera_model=fake_image.source.pinhole, offset_distance=offset_distance)
 
         # Ask the robot to pick up the object
-        walk_to_request = manipulation_api_pb2.ManipulationApiRequest(
-            walk_to_object_in_image=walk_to)
+        # walk_to_request = manipulation_api_pb2.ManipulationApiRequest(
+        #     walk_to_object_in_image=walk_to)
 
 
 
@@ -240,8 +240,15 @@ class ArmWalkToObject:
 
         action_goal = Manipulation.Goal()
         # convert(cmd, action_goal.command)
-        # action_goal.command = walk_to_request
-        action_goal.command.CopyFrom(walk_to_request)
+
+
+        walk_to_request = ManipulationApiRequest()
+        walk_to_request.walk_to_object_in_image = walk_to
+        
+
+        action_goal.command = walk_to_request
+        # action_goal.command.CopyFrom(walk_to_request)
+        # action_goal.command.walk_to_object_ind_image=walk_to_request
         self.logger.info("Walking to object in image")
         self.manipulation_client.send_goal_and_wait("walking to object in image", action_goal)
         self.logger.info("Finished walking to object in image.")
