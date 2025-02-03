@@ -226,7 +226,10 @@ class SpotROS(Node):
         self.declare_parameter("auto_power_on", False)
         self.declare_parameter("auto_stand", False)
 
+        # Setting this param to True will allow the driver to forcefully take the lease
+        # Not recommended if using mixed-level API
         self.declare_parameter("use_take_lease", False)
+
         self.declare_parameter("get_lease_on_action", True)
         self.declare_parameter("continually_try_stand", False)
 
