@@ -1001,7 +1001,7 @@ class SpotROS(Node):
             return response
 
         try:
-            lease = self.spot_wrapper.getLease() # acquires lease if available, not forcefully take
+            lease = self.spot_wrapper.getLease()  # acquires lease if available, not forcefully take
             response.success = True
             response.message = str(lease.lease_proto)
         except Exception as e:
