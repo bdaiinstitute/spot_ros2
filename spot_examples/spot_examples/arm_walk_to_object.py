@@ -239,7 +239,11 @@ class ArmWalkToObject:
         # cmd = RobotCommandBuilder.synchro_stand_command(footprint_R_body=footprint_R_body)
 
         action_goal = Manipulation.Goal()
-        convert(walk_to_request, action_goal.command)
+        # convert(walk_to_request, action_goal.command)
+
+
+        action_goal.command.manipulation_cmd.manipulation_cmd_choice = 2
+        action_goal.command.manipulation_cmd.walk_to_object_in_image = walk_to
 
 
         # walk_to_request = ManipulationApiRequest()
