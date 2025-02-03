@@ -105,6 +105,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     mock_arm: bool = IfCondition(LaunchConfiguration("mock_arm")).evaluate(context)
     spot_name: str = LaunchConfiguration("spot_name").perform(context)
     config_file: str = LaunchConfiguration("config_file").perform(context)
+    auto_start: bool = LaunchConfiguration("auto_start").perform(context)
 
     # Default parameters used in the URDF if not connected to a robot
     arm = mock_arm
@@ -174,22 +175,29 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             remappings=[(f"/{tf_prefix}joint_states", f"/{tf_prefix}low_level/joint_states")],
         )
     )
-    ld.add_action(
-        Node(
-            package="controller_manager",
-            executable="spawner",
-            arguments=["joint_state_broadcaster", "-c", "controller_manager"],
-            namespace=spot_name,
+    if auto_start:
+        ld.add_action(
+            Node(
+                package="controller_manager",
+                executable="hardware_spawner",
+                arguments=["-c", "controller_manager", "--activate", "SpotSystem"],
+                namespace=spot_name,
+            )
         )
-    )
-    ld.add_action(
-        Node(
-            package="controller_manager",
-            executable="spawner",
-            arguments=[LaunchConfiguration("robot_controller"), "-c", "controller_manager"],
-            namespace=spot_name,
+
+        ld.add_action(
+            Node(
+                package="controller_manager",
+                executable="spawner",
+                arguments=[
+                    "-c",
+                    "controller_manager",
+                    "joint_state_broadcaster",
+                    LaunchConfiguration("robot_controller"),
+                ],
+                namespace=spot_name,
+            )
         )
-    )
     # Generate rviz configuration file based on the chosen namespace
     ld.add_action(
         Node(
@@ -296,6 +304,11 @@ def generate_launch_description():
                 "launch_image_publishers",
                 default_value=True,
                 description="Choose whether to launch the image publishers.",
+            ),
+            DeclareBooleanLaunchArgument(
+                "auto_start",
+                default_value=True,
+                description="Choose whether to start hardware interfaces and controllers immediately or not.",
             ),
         ]
         + declare_image_publisher_args()
