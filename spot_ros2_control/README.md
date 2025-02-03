@@ -13,6 +13,9 @@ If your parameters for authenticating with your robot are set in the environment
 ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=robot
 ```
 
+> [!IMPORTANT]
+> When taking control of Spot with the tablet, make sure to release control back, or `spot_ros2_control` will not be able to command the robot.
+
 Login information can also be set in a configuration file, the same as in the `spot_driver` launchfile.
 For example, if you have a config file `spot_ros.yaml` containing the following information:
 ```
@@ -107,3 +110,4 @@ This demo will repeatedly open and close the gripper, and after each motion, wil
 * `controllers_config`: If this argument is unset, a general purpose controller configuration will be loaded containing a forward position controller and a joint state publisher, that is filled appropriately based on whether or not the robot used (mock or real) has an arm. The forward state controller and spot joint controller are also specified here. If you wish to load different controllers, this can be set here.
 * `robot_controller`: This is the name of the robot controller that will be started when the launchfile is called. The default is the simple forward position controller. The name must match a controller in the `controllers_config` file.
 * `launch_rviz`: If you do not want rviz to be launched, add the argument `launch_rviz:=False`.
+* `auto_start`: If you do not want hardware interfaces and controllers to be activated on launch, add the argument `auto_start:=False`.
