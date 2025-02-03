@@ -368,7 +368,7 @@ bool SpotHardware::get_lease() {
   }
   lease_client_ = lease_client_resp.response;
   // Then acquire the lease for the body.
-  const auto lease_res = lease_client_->TakeLease("body");
+  const auto lease_res = lease_client_->AcquireLease("body");
   if (!lease_res) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not acquire body lease");
     return false;
