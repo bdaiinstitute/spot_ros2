@@ -1,6 +1,6 @@
 ARCH="amd64"
-SDK_VERSION="4.1.0"
-MSG_VERSION="${SDK_VERSION}-4"
+SDK_VERSION="4.1.1"
+MSG_VERSION="${SDK_VERSION}"
 ROS_DISTRO=humble
 HELP=$'--arm64: Installs ARM64 version'
 REQUIREMENTS_FILE=spot_wrapper/requirements.txt

@@ -29,8 +29,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
 
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash"
 
-ARG SPOT_SDK_VERSION="4.1.0"
-ARG SPOT_MSG_VERSION="${SPOT_SDK_VERSION}-4"
+ARG SPOT_SDK_VERSION="4.1.1"
+ARG SPOT_MSG_VERSION="${SPOT_SDK_VERSION}"
 
 # Install bosdyn_msgs package
 RUN curl -sL https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/${SPOT_MSG_VERSION}/ros-humble-bosdyn_msgs_${SPOT_MSG_VERSION}-jammy_amd64.run --output /tmp/ros-humble-bosdyn_msgs_${SPOT_MSG_VERSION}-jammy_amd64.run --silent \
