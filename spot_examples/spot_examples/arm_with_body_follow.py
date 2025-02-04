@@ -1,24 +1,19 @@
 import argparse
-from typing import Optional
 import time
-import os
+from typing import Optional
 
 import synchros2.process as ros_process
 import synchros2.scope as ros_scope
-from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME, get_a_tform_b
+from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
+from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
 from bosdyn.client.robot_command import RobotCommandBuilder
-from bosdyn.util import seconds_to_duration
-from bosdyn.api import trajectory_pb2, geometry_pb2
-from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
-import bosdyn.geometry
 from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
 from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import namespace_with
 
-from sensor_msgs.msg import Image
 from spot_msgs.action import RobotCommand  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
@@ -55,14 +50,12 @@ class ArmWithBodyFollow:
             return False
         return True
 
-
     def move(self) -> None:
-
         self.logger.info("Standing robot up")
         result = self.robot.command("stand")
         if not result.success:
             self.logger.error("Robot did not stand message was " + result.message)
-            return False
+            return
         self.logger.info("Successfully stood up.")
         time.sleep(3)
 
@@ -79,7 +72,6 @@ class ArmWithBodyFollow:
         qy = 0
         qz = 0
         body_Q_hand = geometry_pb2.Quaternion(w=qw, x=qx, y=qy, z=qz)
-
 
         # Build the SE(3) pose of the desired hand position in the moving body frame.
         body_T_hand = geometry_pb2.SE3Pose(position=hand_pos_rt_body, rotation=body_Q_hand)
@@ -105,9 +97,16 @@ class ArmWithBodyFollow:
 
         # Create the arm command.
         arm_command = RobotCommandBuilder.arm_pose_command(
-            odom_T_hand.x, odom_T_hand.y, odom_T_hand.z, odom_T_hand.rot.w, odom_T_hand.rot.x,
-            odom_T_hand.rot.y, odom_T_hand.rot.z, ODOM_FRAME_NAME, seconds)
-
+            odom_T_hand.x,
+            odom_T_hand.y,
+            odom_T_hand.z,
+            odom_T_hand.rot.w,
+            odom_T_hand.rot.x,
+            odom_T_hand.rot.y,
+            odom_T_hand.rot.z,
+            ODOM_FRAME_NAME,
+            seconds,
+        )
 
         # Tell the robot's body to follow the arm
         follow_arm_command = RobotCommandBuilder.follow_arm_command()
@@ -115,15 +114,13 @@ class ArmWithBodyFollow:
         # Combine the arm and mobility commands into one synchronized command.
         cmd = RobotCommandBuilder.build_synchro_command(follow_arm_command, arm_command)
 
-
-        # Convert to ROS2 action 
+        # Convert to ROS2 action
         action_goal = RobotCommand.Goal()
         convert(cmd, action_goal.command)
         self.logger.info("Performing arm with body follow")
 
         # Send the command
         self.robot_command_client.send_goal_and_wait("arm_with_body_follow", action_goal)
-
 
 
 def cli() -> argparse.ArgumentParser:
@@ -137,7 +134,6 @@ def main(args: argparse.Namespace) -> None:
     hello_spot = ArmWithBodyFollow(args.robot)
     hello_spot.initialize_robot()
     hello_spot.move()
-
 
 
 if __name__ == "__main__":

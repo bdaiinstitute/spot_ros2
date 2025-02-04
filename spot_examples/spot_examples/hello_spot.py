@@ -1,24 +1,26 @@
 import argparse
-from typing import Optional
-import time
 import os
+import time
+from typing import Optional
 
+import bosdyn.geometry
+import cv2
 import synchros2.process as ros_process
 import synchros2.scope as ros_scope
-from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME, get_a_tform_b
-from bosdyn.client import math_helpers
-from bosdyn.client.robot_command import RobotCommandBuilder
-from bosdyn.util import seconds_to_duration
 from bosdyn.api import trajectory_pb2
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
-import bosdyn.geometry
+from bosdyn.client import math_helpers
+from bosdyn.client.frame_helpers import GRAV_ALIGNED_BODY_FRAME_NAME, ODOM_FRAME_NAME
+from bosdyn.client.robot_command import RobotCommandBuilder
+from bosdyn.util import seconds_to_duration
 from bosdyn_msgs.conversions import convert
+from cv_bridge import CvBridge
 from rclpy.node import Node
+from sensor_msgs.msg import Image
 from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import namespace_with
 
-from sensor_msgs.msg import Image
 from spot_msgs.action import RobotCommand  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
@@ -32,12 +34,12 @@ class HelloSpot:
         self.logger = self.node.get_logger()
 
         self.image_sub = self.node.create_subscription(
-            Image,
-            f"/{robot_name}/camera/frontleft/image",
-            self.image_callback,
-            10)
-        self.image_sub # prevent unused variable warning
+            Image, f"/{robot_name}/camera/frontleft/image", self.image_callback, 10
+        )
+        self.image_sub  # prevent unused variable warning
         self.pause_image_update = False
+
+        self.br = CvBridge()
 
         self.odom_frame_name = namespace_with(robot_name, ODOM_FRAME_NAME)
         self.grav_aligned_body_frame_name = namespace_with(robot_name, GRAV_ALIGNED_BODY_FRAME_NAME)
@@ -93,18 +95,16 @@ class HelloSpot:
         self.logger.info("Twisting robot")
         self.robot_command_client.send_goal_and_wait("twisting_robot", action_goal)
 
-        self.logger.info('Robot standing twisted.')
+        self.logger.info("Robot standing twisted.")
         time.sleep(3)
 
     def stand_3_pt_traj(self) -> None:
-
         # Now compute an absolute desired position and orientation of the robot body origin.
         # Use the frame helper class to compute the world to gravity aligned body frame transformation.
         # Note, the robot_state used here was cached from before the above yaw stand command,
         # so it contains the nominal stand pose.
         # odom_T_flat_body = get_a_tform_b(robot_state.kinematic_state.transforms_snapshot,
         #                                  ODOM_FRAME_NAME, GRAV_ALIGNED_BODY_FRAME_NAME)
-
 
         ## spot_ros2 replacement
         odom_T_flat_body = self.tf_listener.lookup_a_tform_b(self.odom_frame_name, self.grav_aligned_body_frame_name)
@@ -129,86 +129,70 @@ class HelloSpot:
 
         # Specify the poses as transformations to the cached flat_body pose.
         flat_body_T_pose1 = math_helpers.SE3Pose(x=0.075, y=0, z=0, rot=math_helpers.Quat())
-        flat_body_T_pose2 = math_helpers.SE3Pose(
-            x=0.0, y=0, z=0, rot=math_helpers.Quat(w=0.9848, x=0, y=0.1736, z=0))
+        flat_body_T_pose2 = math_helpers.SE3Pose(x=0.0, y=0, z=0, rot=math_helpers.Quat(w=0.9848, x=0, y=0.1736, z=0))
         flat_body_T_pose3 = math_helpers.SE3Pose(x=0.0, y=0, z=0, rot=math_helpers.Quat())
 
         # Build the points in the trajectory.
         traj_point1 = trajectory_pb2.SE3TrajectoryPoint(
-            pose=(odom_T_flat_body_se3 * flat_body_T_pose1).to_proto(),
-            time_since_reference=seconds_to_duration(t1))
+            pose=(odom_T_flat_body_se3 * flat_body_T_pose1).to_proto(), time_since_reference=seconds_to_duration(t1)
+        )
         traj_point2 = trajectory_pb2.SE3TrajectoryPoint(
-            pose=(odom_T_flat_body_se3 * flat_body_T_pose2).to_proto(),
-            time_since_reference=seconds_to_duration(t2))
+            pose=(odom_T_flat_body_se3 * flat_body_T_pose2).to_proto(), time_since_reference=seconds_to_duration(t2)
+        )
         traj_point3 = trajectory_pb2.SE3TrajectoryPoint(
-            pose=(odom_T_flat_body_se3 * flat_body_T_pose3).to_proto(),
-            time_since_reference=seconds_to_duration(t3))
+            pose=(odom_T_flat_body_se3 * flat_body_T_pose3).to_proto(), time_since_reference=seconds_to_duration(t3)
+        )
 
         # Build the trajectory proto by combining the points.
         traj = trajectory_pb2.SE3Trajectory(points=[traj_point1, traj_point2, traj_point3])
 
         body_control = spot_command_pb2.BodyControlParams(
-            body_pose=spot_command_pb2.BodyControlParams.BodyPose(root_frame_name=ODOM_FRAME_NAME,
-                                                                  base_offset_rt_root=traj))
-        
+            body_pose=spot_command_pb2.BodyControlParams.BodyPose(
+                root_frame_name=ODOM_FRAME_NAME, base_offset_rt_root=traj
+            )
+        )
+
         mobility_params = spot_command_pb2.MobilityParams(body_control=body_control)
 
         stand_command = RobotCommandBuilder.synchro_stand_command(params=mobility_params)
 
         stand_command_goal = RobotCommand.Goal()
         convert(stand_command, stand_command_goal.command)
-        self.logger.info('Beginning absolute body control while standing.')
-        self.robot_command_client.send_goal_and_wait(
-            action_name="hello_spot", goal=stand_command_goal, timeout_sec=10
-        )
-        self.logger.info('Finished absolute body control while standing.')
+        self.logger.info("Beginning absolute body control while standing.")
+        self.robot_command_client.send_goal_and_wait(action_name="hello_spot", goal=stand_command_goal, timeout_sec=10)
+        self.logger.info("Finished absolute body control while standing.")
 
-        self.logger.info('Displaying image.')
+        self.logger.info("Displaying image.")
         self._maybe_display_image()
         self._maybe_save_image()
 
-        self.logger.info('Goodbye, human!')
-        
-    def image_callback(self, image_raw):
+        self.logger.info("Goodbye, human!")
+
+    def image_callback(self, image_raw: Image) -> None:
         self.logger.debug("recieved image")
         self.latest_image_raw = image_raw
 
-    def _maybe_display_image(self, display_time=3.0):
+    def _maybe_display_image(self, display_time: float = 3.0) -> None:
         """Try to display image, if client has correct deps."""
 
-        self.pause_image_update = True # to ensure we display and save same image
+        self.pause_image_update = True  # to ensure we display and save same image
 
-        try:
-            from cv_bridge import CvBridge
-            import cv2
-            self.br = CvBridge()
-        except ImportError:
-            self.logger.warning('Missing dependencies. Can\'t display image.')
-            return
         try:
             image = self.br.imgmsg_to_cv2(self.latest_image_raw)
             cv2.imshow("Hello, human!", image)
             cv2.waitKey(0)
             time.sleep(display_time)
         except Exception as exc:
-            self.logger.warning('Exception thrown displaying image. %r', exc)
+            self.logger.warning("Exception thrown displaying image. %r", exc)
 
-
-
-    def _maybe_save_image(self, path=None):
+    def _maybe_save_image(self, path: Optional[str] = None) -> None:
         """Try to save image, if client has correct deps."""
-        try:
-            from cv_bridge import CvBridge
-            import cv2
-            self.br = CvBridge()
-        except ImportError:
-            self.logger.warning('Missing dependencies. Can\'t save image.')
-            return
-        name = 'hello-spot-img.jpg'
+
+        name = "hello-spot-img.jpg"
         if path is not None and os.path.exists(path):
             path = os.path.join(os.getcwd(), path)
             name = os.path.join(path, name)
-            self.logger.info('Saving image to: %s', name)
+            self.logger.info("Saving image to: %s", name)
         else:
             self.logger.info(f"Saving image to working directory as {name}")
         try:
@@ -216,9 +200,9 @@ class HelloSpot:
             cv2.imwrite(name, image)
 
         except Exception as exc:
-            self.logger.warning('Exception thrown saving image. %r', exc)
+            self.logger.warning("Exception thrown saving image. %r", exc)
 
-        self.pause_image_update = False # resume image updating
+        self.pause_image_update = False  # resume image updating
 
 
 def cli() -> argparse.ArgumentParser:
@@ -234,7 +218,6 @@ def main(args: argparse.Namespace) -> None:
     hello_spot.stand_default()
     hello_spot.stand_twisted()
     hello_spot.stand_3_pt_traj()
-
 
 
 if __name__ == "__main__":
