@@ -1009,7 +1009,7 @@ class SpotROS(Node):
             response.message = str(lease.lease_proto)
         except Exception as e:
             response.success = False
-            response.message = str(e)
+            response.message = "Failed to acquire lease: " + str(e)
 
         return response
 
