@@ -1,0 +1,19 @@
+services:
+  spot-ros2-driver:
+    image: spot-ros2-driver-build
+    privileged: true
+    network_mode: "host"
+    environment:
+      - RMW_IMPLEMENTATION=rmw_zenoh_cpp
+      - ZENOH_ROUTER_CONFIG_URI=/ros_ws/src/DEFAULT_RMW_ZENOH_ROUTER_CONFIG.json5
+    volumes:
+      - ./timon.yaml:/ros_ws/src/robot.yaml
+      - ./DEFAULT_RMW_ZENOH_ROUTER_CONFIG.json5:/ros_ws/src/DEFAULT_RMW_ZENOH_ROUTER_CONFIG.json5
+    command: >
+      bash -c "
+        source /opt/ros/humble/setup.bash && 
+        source /ros_ws/install/setup.bash && 
+        ros2 launch spot_driver spot_driver.launch.py config_file:=/ros_ws/src/robot.yaml 
+            spot_name:=timon publish_point_clouds:=False launch_rviz:=False 
+            uncompress_images:=True publish_compressed_images:=False 
+            stitch_front_images:=True"
