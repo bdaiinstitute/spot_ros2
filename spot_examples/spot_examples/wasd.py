@@ -18,7 +18,7 @@ from synchros2.action_client import ActionClientWrapper
 from synchros2.utilities import namespace_with
 
 from spot_msgs.action import RobotCommand  # type: ignore
-from spot_msgs.msg import BatteryState, BatteryStateArray, EStopState, EStopStateArray, PowerState  # type: ignore
+from spot_msgs.msg import BatteryState, BatteryStateArray, PowerState  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
 
@@ -101,7 +101,6 @@ class WasdInterface:
 
         self.latest_power_state_status: Optional[PowerState] = None
         self.latest_battery_status: Optional[BatteryStateArray] = None
-        self.latest_estop_status: Optional[EStopStateArray] = None
 
         self.sub_status_power_state = self.node.create_subscription(
             PowerState, namespace_with(robot_name, "status/power_states"), self._status_power_state_callback, 1
@@ -208,8 +207,7 @@ class WasdInterface:
         stdscr.resize(26, 140)
         stdscr.addstr(0, 0, f"robot name: {self.robot_name:20s}")
         stdscr.addstr(2, 0, self._battery_str())
-        stdscr.addstr(3, 0, self._estop_str())
-        stdscr.addstr(4, 0, self._power_state_str())
+        stdscr.addstr(3, 0, self._power_state_str())
         for i in range(3):
             stdscr.addstr(7 + i, 2, self.message(i))
         stdscr.addstr(10, 0, "commands: [tab]: quit, [p]: power                   ")
@@ -334,24 +332,6 @@ class WasdInterface:
         shore_state = shore_power_state_str.get(power_state.shore_power_state, "Invalid State")
 
         return f"motor power state: {motor_state}, shore power state: {shore_state}"
-
-    def _estop_str(self) -> str:
-        estop_status = "??"
-
-        state_str = {
-            EStopState.STATE_UNKNOWN: "Unknown",
-            EStopState.STATE_ESTOPPED: "EStopped",
-            EStopState.STATE_NOT_ESTOPPED: "Not EStopped",
-        }
-
-        all_estop_states = self.latest_estop_status
-        if all_estop_states:
-            for estop_state in all_estop_states.estop_states:
-                if estop_state.type == EStopState.TYPE_HARDWARE:
-                    estop_status = state_str.get(estop_state.state, "Invalid State")
-                    break
-
-        return f"e-stop: {estop_status}"
 
     def _battery_str(self) -> str:
         battery_state_array = self.latest_battery_status
