@@ -23,7 +23,7 @@ class ArmWithBodyFollow:
     def __init__(self, robot_name: Optional[str] = None, node: Optional[Node] = None) -> None:
         self.node = ros_scope.node()
         if self.node is None:
-            raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
+            raise ValueError("no ROS 2 node available (did you use synchros2.process.main?)")
         self.logger = self.node.get_logger()
 
         self.odom_frame_name = namespace_with(robot_name, ODOM_FRAME_NAME)
