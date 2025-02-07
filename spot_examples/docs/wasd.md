@@ -12,6 +12,29 @@ ros2 run spot_examples wasd --robot <spot_name>
 ```
 The robot will stand up, and will execute any commands you send through the curses (text-based) interface in your terminal.
 
+
+*Keybinds*
+
+Following is a list of keyboard keys and the robot functions to which they map.
+
+    esc : make the robot stop executing all running commands
+    tab : sit and quit example
+      p : toggle power
+      f : stand
+      v : sit
+      w : move forward
+      s : move backward
+      a : move left
+      d : move right
+      q : rotate (yaw) left
+      e : rotate (yaw) right
+      u : unstow arm
+      j : stow arm
+      b : battery change pose
+      r : self-right (after battery change)
+
+
+
 ## Understanding the Code
 
 Now let's go through [the code](../spot_examples/arm_with_body_follow.py) and see what's happening.
