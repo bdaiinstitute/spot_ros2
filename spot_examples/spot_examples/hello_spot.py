@@ -34,7 +34,7 @@ class HelloSpot:
         self.logger = self.node.get_logger()
 
         self.image_sub = self.node.create_subscription(
-            Image, f"/{robot_name}/camera/frontleft/image", self.image_callback, 10
+            Image, namespace_with(robot_name, "camera/frontleft/image"), self.image_callback, 10
         )
         self.image_sub  # prevent unused variable warning
         self.pause_image_update = False
