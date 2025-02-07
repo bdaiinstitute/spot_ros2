@@ -170,6 +170,9 @@ class HelloSpot:
 
     def image_callback(self, image_raw: Image) -> None:
         self.logger.debug("recieved image")
+        if self.pause_image_update:
+            self.logger.debug("pausing image update while displaying and saving current image.")
+            return
         self.latest_image_raw = image_raw
 
     def _maybe_display_image(self, display_time: float = 3.0) -> None:
