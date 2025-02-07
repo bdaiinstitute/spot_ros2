@@ -353,7 +353,9 @@ def main(args: argparse.Namespace) -> bool:
     try:
         wasd_interface.start()
     except (ResponseError, RpcError):
-        wasd_interface.logger.error("Failed to initialize robot communication: TODO: print error")
+        wasd_interface.logger.error(
+            "Failed to initialize robot communication: " + str(ResponseError) + " " + str(RpcError)
+        )
         return False
 
     try:
