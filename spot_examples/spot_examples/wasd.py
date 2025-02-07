@@ -246,18 +246,6 @@ class WasdInterface:
         else:
             self.cli_power_off.call_async(Trigger.Request())
 
-    #
-    # def _toggle_power(self) -> None:
-    #     if self.latest_power_state_status is None:
-    #         self.add_message("Could not toggle power because power state is unknown")
-    #         return
-    #
-    #     power_state = self.latest_power_state_status
-    #     if power_state.motor_power_state == PowerState.STATE_OFF:
-    #         self.cli_power_on.call_async(Trigger.Request())
-    #     else:
-    #         self.cli_power_off.call_async(Trigger.Request())
-
     def _self_right(self) -> None:
         self.cli_self_right.call_async(Trigger.Request())
 
