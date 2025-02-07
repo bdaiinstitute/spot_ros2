@@ -73,7 +73,6 @@ class WasdInterface:
         self.logger = self.node.get_logger()
 
         self._lock = threading.Lock()
-        print("Lock initialized")
         self._command_dictionary = {
             27: self._stop,  # ESC key
             ord("\t"): self._quit_program,
