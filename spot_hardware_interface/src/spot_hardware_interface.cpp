@@ -20,6 +20,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -76,6 +77,18 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hostname_ = info_.hardware_parameters["hostname"];
   username_ = info_.hardware_parameters["username"];
   password_ = info_.hardware_parameters["password"];
+
+  if (const int port = std::stoi(info_.hardware_parameters["port"]); port != 0) {
+    port_ = port;
+  } else {
+    port_.reset();
+  }
+
+  if (const auto& certificate = info_.hardware_parameters["certificate"]; !certificate.empty()) {
+    certificate_ = certificate;
+  } else {
+    certificate_.reset();
+  }
 
   hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
@@ -168,7 +181,7 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   joint_states_.load.assign(njoints_, 0);
 
   // Set up the robot using the BD SDK and start command streaming.
-  if (!authenticate_robot(hostname_, username_, password_)) {
+  if (!authenticate_robot(hostname_, username_, password_, port_, certificate_)) {
     return hardware_interface::CallbackReturn::ERROR;
   }
   if (!start_time_sync()) {
@@ -294,36 +307,51 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
 }
 
 hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  // This function will be responsible for sending commands to the robot via the BD SDK -- currently unimplemented.
-  if (!command_stream_started_) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Command streaming was not started");
-    return hardware_interface::return_type::ERROR;
+  if (command_stream_started_) {
+    for (std::size_t i = 0; i < info_.joints.size(); ++i) {
+      command_states_.position.at(i) = hw_commands_[interfaces_per_joint_ * i];
+      command_states_.velocity.at(i) = hw_commands_[interfaces_per_joint_ * i + 1];
+      command_states_.load.at(i) = hw_commands_[interfaces_per_joint_ * i + 2];
+    }
+    send_command(command_states_);
   }
-
-  for (std::size_t i = 0; i < info_.joints.size(); ++i) {
-    command_states_.position.at(i) = hw_commands_[interfaces_per_joint_ * i];
-    command_states_.velocity.at(i) = hw_commands_[interfaces_per_joint_ * i + 1];
-    command_states_.load.at(i) = hw_commands_[interfaces_per_joint_ * i + 2];
-  }
-  send_command(command_states_);
 
   return hardware_interface::return_type::OK;
 }
 
 bool SpotHardware::authenticate_robot(const std::string& hostname, const std::string& username,
-                                      const std::string& password) {
+                                      const std::string& password, const std::optional<int>& port,
+                                      const std::optional<std::string>& certificate) {
   if (robot_authenticated_) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot already authenticated!");
     return true;
   }
   // Create a Client SDK object.
-  const auto client_sdk = ::bosdyn::client::CreateStandardSDK("SpotHardware");
-  auto robot_result = client_sdk->CreateRobot(hostname);
+  const auto client_sdk = [&]() -> std::unique_ptr<bosdyn::client::ClientSdk> {
+    if (!certificate.has_value()) {
+      return ::bosdyn::client::CreateStandardSDK("SpotHardware");
+    }
+    auto client_sdk = std::make_unique<::bosdyn::client::ClientSdk>();
+    client_sdk->SetClientName("SpotHardware");
+    if (const auto status = client_sdk->LoadRobotCertFromFile(certificate.value()); !status) {
+      return nullptr;
+    }
+    client_sdk->Init();
+    return client_sdk;
+  }();
+  if (!client_sdk) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not initialize SDK");
+    return false;
+  }
+  auto robot_result = client_sdk->CreateRobot(hostname, ::bosdyn::client::USE_PROXY);
   if (!robot_result) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not create robot");
     return false;
   }
   robot_ = robot_result.move();
+  if (port.has_value()) {
+    robot_->UpdateSecureChannelPort(port.value());
+  }
   const ::bosdyn::common::Status status = robot_->Authenticate(username, password);
   if (!status) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"),
