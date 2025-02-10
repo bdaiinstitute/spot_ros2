@@ -115,9 +115,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if hardware_interface == "robot":
         arm = spot_has_arm(config_file_path=config_file, spot_name="")
         username, password, hostname, port, certificate = get_login_parameters(config_file)
-        login_params = (
-            f" hostname:={hostname} username:={username} password:={password} port:={port} certificate:={certificate}"
-        )
+        login_params = f" hostname:={hostname} username:={username} password:={password}"
+        if port is not None:
+            login_params += f" port:={port}"
+        if certificate is not None:
+            login_params += f" certificate:={certificate}"
         param_dict = get_ros_param_dict(config_file)
         if "k_q_p" in param_dict:
             # we pass the gains to the xacro as space-separated strings as the hardware interface needs to read in all
