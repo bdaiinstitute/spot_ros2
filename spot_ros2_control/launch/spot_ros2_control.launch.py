@@ -185,23 +185,23 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             executable="hardware_spawner",
             arguments=["-c", "controller_manager", "--activate", "SpotSystem"],
             namespace=spot_name,
-            condition=IfCondition(LaunchConfiguration("auto_start")),
-        )
-    )
-    ld.add_action(
-        Node(
-            package="controller_manager",
-            executable="spawner",
-            arguments=[
-                "-c",
-                "controller_manager",
-                "joint_state_broadcaster",
-                LaunchConfiguration("robot_controller"),
+            on_exit=[
+                Node(
+                    package="controller_manager",
+                    executable="spawner",
+                    arguments=[
+                        "-c",
+                        "controller_manager",
+                        "joint_state_broadcaster",
+                        LaunchConfiguration("robot_controller"),
+                    ],
+                    namespace=spot_name,
+                )
             ],
-            namespace=spot_name,
             condition=IfCondition(LaunchConfiguration("auto_start")),
         )
     )
+
     # Generate rviz configuration file based on the chosen namespace
     ld.add_action(
         Node(
