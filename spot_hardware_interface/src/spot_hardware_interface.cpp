@@ -18,6 +18,8 @@
 
 #include "spot_hardware_interface/spot_hardware_interface.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -78,10 +80,17 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   username_ = info_.hardware_parameters["username"];
   password_ = info_.hardware_parameters["password"];
 
-  if (const int port = std::stoi(info_.hardware_parameters["port"]); port != 0) {
-    port_ = port;
-  } else {
-    port_.reset();
+  {
+    const std::string value = info_.hardware_parameters["port"];
+    if (!std::all_of(value.begin(), value.end(), ::isdigit)) {
+      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Got %s for a port, expected 0 < port < 65536", value.c_str());
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+    if (const int port = std::stoi(value); port != 0) {
+      port_ = port;
+    } else {
+      port_.reset();
+    }
   }
 
   if (const auto& certificate = info_.hardware_parameters["certificate"]; !certificate.empty()) {
