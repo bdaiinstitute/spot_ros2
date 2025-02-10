@@ -1,7 +1,7 @@
 # Use official Ubuntu 22.04 base image
 FROM ubuntu:22.04
 
-#RMW ZENOH experimetal flag
+#RMW ZENOH experimental flag
 ARG EXPERIMENTAL_ZENOH_RMW=FALSE
 
 # Set noninteractive mode for APT
@@ -37,6 +37,9 @@ RUN apt-get update -q && \
 
 # Set up workspace
 WORKDIR /ros_ws/src
+
+# Initialize rosdep
+RUN rosdep init && rosdep update
 
 # Clone driver code
 RUN git clone https://github.com/bdaiinstitute/spot_ros2.git .
