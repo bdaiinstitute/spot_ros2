@@ -46,8 +46,7 @@ RUN git clone https://github.com/bdaiinstitute/spot_ros2.git .
 RUN git submodule update --init --recursive
 
 # Run install script and pass in the architecture
-RUN ARCH=$(dpkg --print-architecture) && echo "Building Driver with Architecture: $ARCH"
-RUN /ros_ws/src/install_spot_ros2.sh --$ARCH
+RUN ARCH=$(dpkg --print-architecture) && echo "Building driver with $ARCH" && /ros_ws/src/install_spot_ros2.sh --$ARCH
 
 # Build packages with Colcon
 WORKDIR /ros_ws/
