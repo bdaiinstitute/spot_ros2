@@ -18,7 +18,7 @@ controller_manager:
       type: spot_controllers/SpotJointController
 
     hardware_components_initial_state:
-      inactive:
+      unconfigured:
         - SpotSystem
 
 forward_position_controller:
