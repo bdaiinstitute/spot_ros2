@@ -1,6 +1,7 @@
 import os
 import time
 from typing import Any, Callable, List, Optional, Tuple, Union
+from dataclasses import dataclass
 
 import builtin_interfaces.msg
 import cv2
@@ -20,6 +21,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image
 from tf2_msgs.msg import TFMessage
+from std_srvs.srv import SetBool, Trigger
 
 from spot_wrapper.wrapper import SpotWrapper
 
@@ -328,3 +330,16 @@ def lookup_a_tform_b(
                 raise e
             time.sleep(0.01)
     return None
+
+@dataclass
+class TriggerServiceDescriptor:
+    service_name: str
+    def __get__(self, obj, type=None):
+        def handler(request: Trigger.Request, response: Trigger.Response):
+            if obj.spot_wrapper is None:
+                response.success = False
+                response.message = "Spot wrapper is undefined"
+                return response
+            response.success, response.message = getattr(obj.spot_wrapper, self.service_name)()
+            return response
+        return handler

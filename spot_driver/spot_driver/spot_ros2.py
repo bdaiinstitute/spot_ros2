@@ -72,6 +72,7 @@ import spot_driver.robot_command_util as robot_command_util
 # Release
 from spot_driver.ros_helpers import (
     get_from_env_and_fall_back_to_param,
+    TriggerServiceDescriptor
 )
 from spot_msgs.action import (  # type: ignore
     ExecuteDance,
@@ -435,7 +436,8 @@ class SpotROS(Node):
         self.create_service(
             Trigger,
             "claim",
-            lambda request, response: self.service_wrapper("claim", self.handle_claim, request, response),
+            self.handle_claim,
+            # lambda request, response: self.service_wrapper("claim", self.handle_claim, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -1110,96 +1112,107 @@ class SpotROS(Node):
             return response
         return handler(request, response)
 
-    def handle_claim(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the claim service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.claim()
-        return response
+    handle_claim = TriggerServiceDescriptor("claim")
+    # def handle_claim(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler for the claim service"""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.claim()
+    #     return response
 
-    def handle_release(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the release service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.release()
-        return response
+    handle_release = TriggerServiceDescriptor("release")
+    # def handle_release(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler for the release service"""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.release()
+    #     return response
 
-    def handle_stop(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the stop service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.stop()
-        return response
+    handle_stop = TriggerServiceDescriptor("stop")
+    # def handle_stop(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler for the stop service"""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.stop()
+    #     return response
 
-    def handle_self_right(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the self-right service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.self_right()
-        return response
+    handle_self_right = TriggerServiceDescriptor("self_right")
+    # def handle_self_right(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler for the self-right service"""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.self_right()
+    #     return response
 
-    def handle_sit(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the sit service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.sit()
-        return response
+    handle_sit = TriggerServiceDescriptor("sit")
+    # def handle_sit(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler for the sit service"""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.sit()
+    #     return response
 
-    def handle_stand(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the stand service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.stand()
-        return response
+    handle_stand = TriggerServiceDescriptor("stand")
+    # def handle_stand(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler for the stand service"""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.stand()
+    #     return response
 
+    handle_crouch = TriggerServiceDescriptor("crouch")
     def handle_crouch(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler for the crouch service (standing as low as possible)"""
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
             return response
-        response.success, response.message = self.spot_wrapper.stand(body_height=-0.15)
+        response.success, response.message = self.spot_wrapper.stand(body_height=-0.15) # TODO
         return response
 
-    def handle_rollover(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the rollover service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.battery_change_pose()
-        return response
+    handle_rollover = TriggerServiceDescriptor("battery_change_pose")
+    # def handle_rollover(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler for the rollover service"""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.battery_change_pose()
+    #     return response
 
-    def handle_power_on(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the power-on service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.power_on()
-        return response
+    handle_power_on = TriggerServiceDescriptor("power_on")
+    # def handle_power_on(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler for the power-on service"""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.power_on()
+    #     return response
 
-    def handle_safe_power_off(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the safe-power-off service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.safe_power_off()
-        return response
+    handle_safe_power_off = TriggerServiceDescriptor("safe_power_off")
+    # def handle_safe_power_off(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler for the safe-power-off service"""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.safe_power_off()
+    #     return response
 
+    handle_estop_hard = TriggerServiceDescriptor("assertEStop")
     def handle_estop_hard(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to hard-eStop the robot.  The robot will immediately cut power to the motors"""
         if self.spot_wrapper is None:
@@ -1209,6 +1222,7 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.assertEStop(True)
         return response
 
+    handle_estop_soft = TriggerServiceDescriptor("assertEStop")
     def handle_estop_soft(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
         """ROS service handler to soft-eStop the robot.  The robot will try to settle on the ground before cutting
         power to the motors"""
@@ -1219,77 +1233,85 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.assertEStop(False)
         return response
 
-    def handle_estop_disengage(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to disengage the eStop on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.disengageEStop()
-        return response
+    handle_estop_disengage = TriggerServiceDescriptor("disengageEStop")
+    # def handle_estop_disengage(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler to disengage the eStop on the robot."""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.disengageEStop()
+    #     return response
 
-    def handle_undock(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to undock the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_docking.undock()
-        return response
+    handle_undock = TriggerServiceDescriptor("undock")
+    # def handle_undock(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler to undock the robot."""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.spot_docking.undock()
+    #     return response
 
-    def handle_spot_check(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to run spot check on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_check.start_check()
-        return response
+    handle_spot_check = TriggerServiceDescriptor("spot_check.start_check")
+    # def handle_spot_check(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler to run spot check on the robot."""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.spot_check.start_check()
+    #     return response
 
-    def handle_arm_stow(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to stow the arm on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.arm_stow()
-        return response
+    handle_arm_stow = TriggerServiceDescriptor("spot_arm.arm_stow")
+    # def handle_arm_stow(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler to stow the arm on the robot."""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.spot_arm.arm_stow()
+    #     return response
 
-    def handle_arm_unstow(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to ready (unstow) the arm on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.arm_unstow()
-        return response
+    handle_arm_unstow = TriggerServiceDescriptor("spot_arm.arm_unstow")
+    # def handle_arm_unstow(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler to ready (unstow) the arm on the robot."""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.spot_arm.arm_unstow()
+    #     return response
 
-    def handle_arm_carry(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to carry an object the robot has already grasped."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.arm_carry()
-        return response
+    handle_arm_carry = TriggerServiceDescriptor("spot_arm.arm_carry")
+    # def handle_arm_carry(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler to carry an object the robot has already grasped."""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.spot_arm.arm_carry()
+    #     return response
 
-    def handle_open_gripper(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to open the gripper."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.gripper_open()
-        return response
+    handle_open_gripper = TriggerServiceDescriptor("spot_arm.gripper_open")
+    # def handle_open_gripper(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler to open the gripper."""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.spot_arm.gripper_open()
+    #     return response
 
-    def handle_close_gripper(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to close the gripper."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.gripper_close()
-        return response
+    handle_close_gripper = TriggerServiceDescriptor("spot_arm.gripper_close")
+    # def handle_close_gripper(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler to close the gripper."""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     response.success, response.message = self.spot_wrapper.spot_arm.gripper_close()
+    #     return response
 
     def handle_gripper_angle(
         self, request: SetGripperAngle.Request, response: SetGripperAngle.Response
@@ -1320,16 +1342,17 @@ class SpotROS(Node):
         response.message = message
         return response
 
-    def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to stop the robot's dancing."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        success, msg = self.spot_wrapper.stop_choreography()
-        response.success = success
-        response.message = msg
-        return response
+    handle_stop_dance = TriggerServiceDescriptor("stop_choreography")
+    # def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+    #     """ROS service handler to stop the robot's dancing."""
+    #     if self.spot_wrapper is None:
+    #         response.success = False
+    #         response.message = "Spot wrapper is undefined"
+    #         return response
+    #     success, msg = self.spot_wrapper.stop_choreography()
+    #     response.success = success
+    #     response.message = msg
+    #     return response
 
     def handle_list_all_dances(
         self, request: ListAllDances.Request, response: ListAllDances.Response
