@@ -20,6 +20,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -143,6 +144,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Login info
   std::string hostname_;
+  std::optional<int> port_;
+  std::optional<std::string> certificate_;
   std::string username_;
   std::string password_;
 
@@ -186,9 +189,13 @@ class SpotHardware : public hardware_interface::SystemInterface {
    * @param hostname IP address of the robot
    * @param username Username for robot login
    * @param password Password for robot login
+   * @param port Optional user-defined port for robot comms
+   * @param certificate Optional user-defined SSL certificate for robot comms
    * @return True if robot object is successfully created and authenticated, false otherwise.
    */
-  bool authenticate_robot(const std::string& hostname, const std::string& username, const std::string& password);
+  bool authenticate_robot(const std::string& hostname, const std::string& username, const std::string& password,
+                          const std::optional<int>& port, const std::optional<std::string>& certificate);
+
   /**
    * @brief Start time sync threads with the ::bosdyn::client::Robot object
    * @return True if time sync successfully initialized and started, false otherwise.
