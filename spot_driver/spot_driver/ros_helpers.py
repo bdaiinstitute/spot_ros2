@@ -1,7 +1,7 @@
 import os
 import time
-from typing import Any, Callable, List, Optional, Tuple, Union
 from dataclasses import dataclass
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import builtin_interfaces.msg
 import cv2
@@ -20,8 +20,8 @@ from geometry_msgs.msg import TransformStamped
 from google.protobuf.timestamp_pb2 import Timestamp
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image
+from std_srvs.srv import Trigger
 from tf2_msgs.msg import TFMessage
-from std_srvs.srv import SetBool, Trigger
 
 from spot_wrapper.wrapper import SpotWrapper
 
@@ -331,15 +331,40 @@ def lookup_a_tform_b(
             time.sleep(0.01)
     return None
 
+
 @dataclass
 class TriggerServiceDescriptor:
-    service_name: str
+    """A descriptor for calling callbacks for trigger services"""
+
+    service_path: str
+    args: tuple = ()
+    kwargs: dict = None
+
+    def __post_init__(self):
+        if self.kwargs is None:
+            self.kwargs = {}
+
     def __get__(self, obj, type=None):
         def handler(request: Trigger.Request, response: Trigger.Response):
             if obj.spot_wrapper is None:
                 response.success = False
                 response.message = "Spot wrapper is undefined"
                 return response
-            response.success, response.message = getattr(obj.spot_wrapper, self.service_name)()
+            func = self.get_nested_attribute(obj.spot_wrapper, self.service_path)
+
+            try:
+                # Call the function with predefined arguments
+                response.success, response.message = func(*self.args, **self.kwargs)
+            except Exception as e:
+                response.success = False
+                response.message = f"Error executing {self.service_path}: {str(e)}"
+
             return response
+
         return handler
+
+    def get_nested_attribute(self, obj, path):
+        """Resolve nested attributes like 'spot_arm.open_gripper'."""
+        for attr in path.split("."):
+            obj = getattr(obj, attr)
+        return obj
