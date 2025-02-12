@@ -1,6 +1,5 @@
 import os
 import time
-from dataclasses import dataclass
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import builtin_interfaces.msg
@@ -18,6 +17,7 @@ from builtin_interfaces.msg import Time
 from cv_bridge import CvBridge
 from geometry_msgs.msg import TransformStamped
 from google.protobuf.timestamp_pb2 import Timestamp
+from rclpy.callback_groups import CallbackGroup
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image
 from std_srvs.srv import Trigger
@@ -332,39 +332,39 @@ def lookup_a_tform_b(
     return None
 
 
-@dataclass
-class TriggerServiceDescriptor:
+class TriggerServiceWrapper:  # TODO: caching of spot_ros might be funky with multiple instances up
     """A descriptor for calling callbacks for trigger services"""
 
-    service_path: str
-    args: tuple = ()
-    kwargs: dict = None
+    service_func: Callable[[SpotWrapper], Trigger.Response]
+    service_name: str
+    args: Optional[tuple] = ()
+    kwargs: Optional[dict | None] = None
 
-    def __post_init__(self):
-        if self.kwargs is None:
-            self.kwargs = {}
+    def __init__(
+        self, service_func: Callable, service_name: str, *args: Optional[Any], **kwargs: Optional[Any | None]
+    ) -> None:
+        self.service_func = service_func
+        self.service_name = service_name
+        self.args = args
+        self.kwargs = kwargs or {}
 
-    def __get__(self, obj, type=None):
-        def handler(request: Trigger.Request, response: Trigger.Response):
-            if obj.spot_wrapper is None:
-                response.success = False
-                response.message = "Spot wrapper is undefined"
-                return response
-            func = self.get_nested_attribute(obj.spot_wrapper, self.service_path)
+    def create_service(self, obj: Any, group: CallbackGroup) -> None:
+        self.spot_ros = obj
+        obj.create_service(Trigger, self.service_name, self.callback, callback_group=group)
 
-            try:
-                # Call the function with predefined arguments
-                response.success, response.message = func(*self.args, **self.kwargs)
-            except Exception as e:
-                response.success = False
-                response.message = f"Error executing {self.service_path}: {str(e)}"
-
+    def callback(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        if self.spot_ros.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
             return response
 
-        return handler
+        try:
+            # Call the function with predefined arguments
+            response.success, response.message = self.service_func(
+                self.spot_ros.spot_wrapper, *self.args, **self.kwargs
+            )  # type: ignore
+        except Exception as e:
+            response.success = False
+            response.message = f"Error executing {self.service_func}: {str(e)}"
 
-    def get_nested_attribute(self, obj, path):
-        """Resolve nested attributes like 'spot_arm.open_gripper'."""
-        for attr in path.split("."):
-            obj = getattr(obj, attr)
-        return obj
+        return response

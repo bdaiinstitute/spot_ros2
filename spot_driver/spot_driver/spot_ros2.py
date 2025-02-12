@@ -70,7 +70,7 @@ import spot_driver.robot_command_util as robot_command_util
 
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
-from spot_driver.ros_helpers import TriggerServiceDescriptor, get_from_env_and_fall_back_to_param
+from spot_driver.ros_helpers import TriggerServiceWrapper, get_from_env_and_fall_back_to_param
 from spot_msgs.action import (  # type: ignore
     ExecuteDance,
     Manipulation,
@@ -403,9 +403,9 @@ class SpotROS(Node):
                 self.get_logger().error(error_msg)
                 raise ValueError(error_msg)
 
-        has_arm = self.mock_has_arm
+        self.has_arm = self.mock_has_arm
         if self.spot_wrapper is not None:
-            has_arm = self.spot_wrapper.has_arm()
+            self.has_arm = self.spot_wrapper.has_arm()
 
         if self.publish_graph_nav_pose.value:
             # graph nav pose will be published both on a topic
@@ -419,7 +419,7 @@ class SpotROS(Node):
                 callback_group=self.graph_nav_callback_group,
             )
 
-        self.declare_parameter("has_arm", has_arm)
+        self.declare_parameter("has_arm", self.has_arm)
 
         # Status Publishers #
         self.dynamic_broadcaster: tf2_ros.TransformBroadcaster = tf2_ros.TransformBroadcaster(self)
@@ -430,117 +430,119 @@ class SpotROS(Node):
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
-        self.create_service(
-            Trigger,
-            "claim",
-            self.handle_claim,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "release",
-            self.handle_release,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "stop",
-            self.handle_stop,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "self_right",
-            self.handle_self_right,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "sit",
-            self.handle_sit,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "stand",
-            self.handle_stand,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "crouch",
-            self.handle_crouch,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "rollover",
-            self.handle_rollover,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "power_on",
-            self.handle_power_on,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "power_off",
-            self.handle_safe_power_off,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "estop/hard",
-            self.handle_estop_hard,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "estop/gentle",
-            self.handle_estop_soft,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "estop/release",
-            self.handle_estop_disengage,
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "undock",
-            self.handle_undock,
-            callback_group=self.group,
-        )
 
-        self.create_service(
-            Trigger,
-            "spot_check",
-            self.handle_spot_check,
-            callback_group=self.group,
-        )
+        self.create_trigger_services()
+        # self.create_service(
+        #     Trigger,
+        #     "claim",
+        #     self.handle_claim,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "release",
+        #     self.handle_release,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "stop",
+        #     self.handle_stop,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "self_right",
+        #     self.handle_self_right,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "sit",
+        #     self.handle_sit,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "stand",
+        #     self.handle_stand,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "crouch",
+        #     self.handle_crouch,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "rollover",
+        #     self.handle_rollover,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "power_on",
+        #     self.handle_power_on,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "power_off",
+        #     self.handle_safe_power_off,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "estop/hard",
+        #     self.handle_estop_hard,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "estop/gentle",
+        #     self.handle_estop_soft,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "estop/release",
+        #     self.handle_estop_disengage,
+        #     callback_group=self.group,
+        # )
+        # self.create_service(
+        #     Trigger,
+        #     "undock",
+        #     self.handle_undock,
+        #     callback_group=self.group,
+        # )
 
-        if has_arm:
-            self.create_service(
-                Trigger,
-                "arm_stow",
-                self.handle_arm_stow,
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "arm_unstow",
-                self.handle_arm_unstow,
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "arm_carry",
-                self.handle_arm_carry,
-                callback_group=self.group,
-            )
+        # self.create_service(
+        #     Trigger,
+        #     "spot_check",
+        #     self.handle_spot_check,
+        #     callback_group=self.group,
+        # )
+
+        if self.has_arm:
+            #     self.create_service(
+            #         Trigger,
+            #         "arm_stow",
+            #         self.handle_arm_stow,
+            #         callback_group=self.group,
+            #     )
+            #     self.create_service(
+            #         Trigger,
+            #         "arm_unstow",
+            #         self.handle_arm_unstow,
+            #         callback_group=self.group,
+            #     )
+            #     self.create_service(
+            #         Trigger,
+            #         "arm_carry",
+            #         self.handle_arm_carry,
+            #         callback_group=self.group,
+            #     )
             self.create_subscription(
                 JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
             )
@@ -549,18 +551,18 @@ class SpotROS(Node):
             )
 
             if not self.gripperless:
-                self.create_service(
-                    Trigger,
-                    "open_gripper",
-                    self.handle_open_gripper,
-                    callback_group=self.group,
-                )
-                self.create_service(
-                    Trigger,
-                    "close_gripper",
-                    self.handle_close_gripper,
-                    callback_group=self.group,
-                )
+                #         self.create_service(
+                #             Trigger,
+                #             "open_gripper",
+                #             self.handle_open_gripper,
+                #             callback_group=self.group,
+                #         )
+                #         self.create_service(
+                #             Trigger,
+                #             "close_gripper",
+                #             self.handle_close_gripper,
+                #             callback_group=self.group,
+                #         )
                 self.create_service(
                     SetGripperAngle,
                     "set_gripper_angle",
@@ -599,13 +601,6 @@ class SpotROS(Node):
                 request,
                 response,
             ),
-            callback_group=self.group,
-        )
-
-        self.create_service(
-            Trigger,
-            "stop_dance",
-            lambda request, response: self.service_wrapper("stop_dance", self.handle_stop_dance, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -850,25 +845,13 @@ class SpotROS(Node):
             self.handle_graph_nav_set_localization,
             callback_group=self.group,
         )
-        if has_arm and not self.gripperless:
+        if self.has_arm and not self.gripperless:
             self.create_service(
                 GetGripperCameraParameters,
                 "get_gripper_camera_parameters",
                 lambda request, response: self.service_wrapper(
                     "get_gripper_camera_parameters",
                     self.handle_get_gripper_camera_parameters,
-                    request,
-                    response,
-                ),
-                callback_group=self.group,
-            )
-
-            self.create_service(
-                SetGripperCameraParameters,
-                "set_gripper_camera_parameters",
-                lambda request, response: self.service_wrapper(
-                    "set_gripper_camera_parameters",
-                    self.handle_set_gripper_camera_parameters,
                     request,
                     response,
                 ),
@@ -922,7 +905,7 @@ class SpotROS(Node):
             callback_group=self.group,
         )
 
-        if has_arm:
+        if self.has_arm:
             # Allows both the "robot command" and the "manipulation" action goal to preempt each other
             self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
                 self,
@@ -1001,6 +984,38 @@ class SpotROS(Node):
             response.message = ""
 
         return response
+
+    def create_trigger_services(self):
+        services = [
+            self.handle_claim,
+            self.handle_release,
+            self.handle_stop,
+            self.handle_self_right,
+            self.handle_sit,
+            self.handle_stand,
+            self.handle_crouch,
+            self.handle_rollover,
+            self.handle_power_on,
+            self.handle_safe_power_off,
+            self.handle_estop_hard,
+            self.handle_estop_soft,
+            self.handle_estop_disengage,
+            self.handle_undock,
+            self.handle_spot_check,
+            self.handle_stop_dance,
+        ]
+        if self.has_arm:
+            services.extend(
+                [
+                    self.handle_arm_stow,
+                    self.handle_arm_carry,
+                    self.handle_arm_unstow,
+                ]
+            )
+            if not self.gripperless:
+                services.extend([self.handle_open_gripper, self.handle_close_gripper])
+        for srv in services:
+            srv.create_service(self, self.group)
 
     def metrics_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new metrics data.
@@ -1102,34 +1117,40 @@ class SpotROS(Node):
             return response
         return handler(request, response)
 
-    handle_claim = TriggerServiceDescriptor("claim")
-    handle_release = TriggerServiceDescriptor("release")
-    handle_stop = TriggerServiceDescriptor("stop")
-    handle_self_right = TriggerServiceDescriptor("self_right")
-    handle_sit = TriggerServiceDescriptor("sit")
-    handle_stand = TriggerServiceDescriptor("stand")
-    handle_crouch = TriggerServiceDescriptor(
-        "stand", kwargs={"body_height": -0.15}
+    handle_claim = TriggerServiceWrapper(SpotWrapper.claim, "claim")
+    handle_release = TriggerServiceWrapper(SpotWrapper.release, "release")
+    handle_stop = TriggerServiceWrapper(SpotWrapper.stop, "stop")
+    handle_self_right = TriggerServiceWrapper(SpotWrapper.self_right, "self_right")
+    handle_sit = TriggerServiceWrapper(SpotWrapper.sit, "sit")
+    handle_stand = TriggerServiceWrapper(SpotWrapper.stand, "stand")
+    handle_crouch = TriggerServiceWrapper(
+        SpotWrapper.stand, "crouch", body_height=-0.15
     )  # "crouch" is just stand with height = -0.15
-    handle_rollover = TriggerServiceDescriptor("battery_change_pose")
-    handle_power_on = TriggerServiceDescriptor("power_on")
-    handle_safe_power_off = TriggerServiceDescriptor("safe_power_off")
+    handle_rollover = TriggerServiceWrapper(SpotWrapper.battery_change_pose, "rollover")
+    handle_power_on = TriggerServiceWrapper(SpotWrapper.power_on, "power_on")
+    handle_safe_power_off = TriggerServiceWrapper(SpotWrapper.safe_power_off, "power_off")
 
     # TODO: Neither estop call appears to be functional atm (functions called in wrapper return a "no attribute" error)
-    handle_estop_hard = TriggerServiceDescriptor("assertEStop", kwargs={"severe": True})
-    handle_estop_soft = TriggerServiceDescriptor("assertEStop", kwargs={"severe": False})
+    handle_estop_hard = TriggerServiceWrapper(SpotWrapper.assertEStop, "estop/hard", severe=True)
+    handle_estop_soft = TriggerServiceWrapper(SpotWrapper.assertEStop, "estop/gentle", severe=False)
 
-    handle_estop_disengage = TriggerServiceDescriptor("disengageEStop")
-    handle_undock = TriggerServiceDescriptor("undock")
+    handle_estop_disengage = TriggerServiceWrapper(SpotWrapper.disengageEStop, "estop/release")
+    handle_undock = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_docking.undock(), "undock")
 
-    handle_spot_check = TriggerServiceDescriptor("spot_check.start_check")
+    handle_spot_check = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_check.start_check(), "spot_check")
 
-    handle_arm_stow = TriggerServiceDescriptor("spot_arm.arm_stow")
-    handle_arm_unstow = TriggerServiceDescriptor("spot_arm.arm_unstow")
-    handle_arm_carry = TriggerServiceDescriptor("spot_arm.arm_carry")
+    handle_arm_stow = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_arm.arm_stow(), "arm_stow")
+    handle_arm_unstow = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_arm.arm_unstow(), "arm_unstow")
+    handle_arm_carry = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_arm.arm_carry(), "arm_carry")
 
-    handle_open_gripper = TriggerServiceDescriptor("spot_arm.gripper_open")
-    handle_close_gripper = TriggerServiceDescriptor("spot_arm.gripper_close")
+    handle_open_gripper = TriggerServiceWrapper(
+        lambda spot_wrapper: spot_wrapper.spot_arm.gripper_open(), "open_gripper"
+    )
+    handle_close_gripper = TriggerServiceWrapper(
+        lambda spot_wrapper: spot_wrapper.spot_arm.gripper_close(), "close_gripper"
+    )
+
+    handle_stop_dance = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.stop_choreography(), "stop_dance")
 
     def handle_gripper_angle(
         self, request: SetGripperAngle.Request, response: SetGripperAngle.Response
@@ -1159,18 +1180,6 @@ class SpotROS(Node):
         response.success = success
         response.message = message
         return response
-
-    handle_stop_dance = TriggerServiceDescriptor("stop_choreography")
-    # def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-    #     """ROS service handler to stop the robot's dancing."""
-    #     if self.spot_wrapper is None:
-    #         response.success = False
-    #         response.message = "Spot wrapper is undefined"
-    #         return response
-    #     success, msg = self.spot_wrapper.stop_choreography()
-    #     response.success = success
-    #     response.message = msg
-    #     return response
 
     def handle_list_all_dances(
         self, request: ListAllDances.Request, response: ListAllDances.Response
