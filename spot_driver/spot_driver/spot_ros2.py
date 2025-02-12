@@ -2449,15 +2449,15 @@ class SpotROS(Node):
         # rate = rclpy.Rate(10)
 
         try:
-            while rclpy.ok() and not self.spot_wrapper.at_goal and goal_handle.is_active:
+            while rclpy.ok() and not self.spot_wrapper.trajectory_complete and goal_handle.is_active:
                 feedback = Trajectory.Feedback()
-                if self.spot_wrapper.near_goal:
-                    if self.spot_wrapper.last_trajectory_command_precise:
-                        feedback.feedback = "Near goal, performing final adjustments"
-                    else:
-                        feedback.feedback = "Near goal"
+                if self.spot_wrapper.stopped:
+                    feedback.feedback = "Stopped, possibly blocked."
                 else:
-                    feedback.feedback = "Moving to goal"
+                    if self.spot_wrapper.is_stopping:
+                        feedback.feedback = "Stopping"
+                    else:
+                        feedback.feedback = "Moving to goal"
 
                 # rate.sleep()
                 goal_handle.publish_feedback(feedback)
@@ -2488,16 +2488,17 @@ class SpotROS(Node):
                 #                result.message = 'preempt'
 
                 feedback = Trajectory.Feedback()
-                if self.spot_wrapper.at_goal:
+
+                if self.spot_wrapper.trajectory_complete and self.spot_wrapper.at_goal:
                     # self.get_logger().error("SUCCESS")
-                    feedback.feedback = "Reached goal"
+                    feedback.feedback = "Trajectory complete: reached goal"
                     goal_handle.publish_feedback(feedback)
                     result.success = True
                     result.message = ""
                     goal_handle.succeed()
-                else:
+                elif self.spot_wrapper.trajectory_complete and not self.spot_wrapper.at_goal:
                     # self.get_logger().error("FAIL")
-                    feedback.feedback = "Failed to reach goal"
+                    feedback.feedback = "Trajectory complete: failed to reach goal"
                     goal_handle.publish_feedback(feedback)
                     result.success = False
                     result.message = "not at goal"
