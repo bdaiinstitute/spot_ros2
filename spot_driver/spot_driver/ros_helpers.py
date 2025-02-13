@@ -353,6 +353,11 @@ class TriggerServiceWrapper:  # TODO: caching of spot_ros might be funky with mu
         obj.create_service(Trigger, self.service_name, self.callback, callback_group=group)
 
     def callback(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        if self.spot_ros.mock:
+            response.success = True
+            response.message = "Mock spot success"
+            return response
+        
         if self.spot_ros.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
