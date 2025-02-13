@@ -7,7 +7,7 @@ REQUIREMENTS_FILE=spot_wrapper/requirements.txt
 
 while true; do
   case "$1" in
-    --arm64 ) ARCH="arm64"; shift ;;
+    --arm64 | --aarch64 ) ARCH="arm64"; shift ;;
     -h | --help ) echo "$HELP"; exit 0;;
     -- ) shift; break ;;
     * ) break ;;
