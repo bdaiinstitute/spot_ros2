@@ -432,117 +432,8 @@ class SpotROS(Node):
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
 
         self.create_trigger_services()
-        # self.create_service(
-        #     Trigger,
-        #     "claim",
-        #     self.handle_claim,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "release",
-        #     self.handle_release,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "stop",
-        #     self.handle_stop,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "self_right",
-        #     self.handle_self_right,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "sit",
-        #     self.handle_sit,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "stand",
-        #     self.handle_stand,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "crouch",
-        #     self.handle_crouch,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "rollover",
-        #     self.handle_rollover,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "power_on",
-        #     self.handle_power_on,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "power_off",
-        #     self.handle_safe_power_off,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "estop/hard",
-        #     self.handle_estop_hard,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "estop/gentle",
-        #     self.handle_estop_soft,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "estop/release",
-        #     self.handle_estop_disengage,
-        #     callback_group=self.group,
-        # )
-        # self.create_service(
-        #     Trigger,
-        #     "undock",
-        #     self.handle_undock,
-        #     callback_group=self.group,
-        # )
-
-        # self.create_service(
-        #     Trigger,
-        #     "spot_check",
-        #     self.handle_spot_check,
-        #     callback_group=self.group,
-        # )
 
         if self.has_arm:
-            #     self.create_service(
-            #         Trigger,
-            #         "arm_stow",
-            #         self.handle_arm_stow,
-            #         callback_group=self.group,
-            #     )
-            #     self.create_service(
-            #         Trigger,
-            #         "arm_unstow",
-            #         self.handle_arm_unstow,
-            #         callback_group=self.group,
-            #     )
-            #     self.create_service(
-            #         Trigger,
-            #         "arm_carry",
-            #         self.handle_arm_carry,
-            #         callback_group=self.group,
-            #     )
             self.create_subscription(
                 JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
             )
@@ -551,18 +442,6 @@ class SpotROS(Node):
             )
 
             if not self.gripperless:
-                #         self.create_service(
-                #             Trigger,
-                #             "open_gripper",
-                #             self.handle_open_gripper,
-                #             callback_group=self.group,
-                #         )
-                #         self.create_service(
-                #             Trigger,
-                #             "close_gripper",
-                #             self.handle_close_gripper,
-                #             callback_group=self.group,
-                #         )
                 self.create_service(
                     SetGripperAngle,
                     "set_gripper_angle",
@@ -985,7 +864,7 @@ class SpotROS(Node):
 
         return response
 
-    def create_trigger_services(self):
+    def create_trigger_services(self) -> None:
         services = [
             self.handle_claim,
             self.handle_release,
