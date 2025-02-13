@@ -357,7 +357,7 @@ class TriggerServiceWrapper:  # TODO: caching of spot_ros might be funky with mu
             response.success = True
             response.message = "Mock spot success"
             return response
-        
+
         if self.spot_ros.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
