@@ -26,7 +26,6 @@ class SpotDriverTest(unittest.TestCase):
                 rclpy.parameter.Parameter("spot_name", value="Mock_spot"),
                 rclpy.parameter.Parameter("mock_enable", value=True),
                 rclpy.parameter.Parameter("mock_has_arm", value=False),
-                rclpy.parameter.Parameter("preferred_odom_frame", value="vision"),
             ],
         )
 
@@ -1022,7 +1021,6 @@ class SpotDriverTest(unittest.TestCase):
 
     def test_frame_prefix_from_spot_name(self) -> None:
         self.assertEqual(self.spot_ros2.frame_prefix, "Mock_spot/", "spot_name not used in frame_prefix")
-        self.assertEqual(self.spot_ros2.preferred_odom_frame, "Mock_spot/vision", "spot_name not used in frame_prefix")
 
 
 if __name__ == "__main__":

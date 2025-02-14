@@ -26,7 +26,7 @@
 
     # These parameters may be overridden by the 'spot_name' and 'tf_prefix' launch arguments.
     spot_name: ""
-    # frame_prefix: "" # Set an explicit prefix for all frames in the tf2 tree (an empty string is a valid prefix option).
+    # frame_prefix: "" # Set an explicit prefix for all frames in your TF tree (an empty string is a valid prefix option).
 
     cmd_duration: 0.25 # The duration of cmd_vel commands. Increase this if spot stutters when publishing cmd_vel.
     rgb_cameras: True  # Set to False if your robot has greyscale cameras -- otherwise you won't receive data.

@@ -32,25 +32,24 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
       timer_interface_{std::move(timer_interface)} {
   frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
 
-  //FIXME(frame-prefix): This no longer being used for the full frame ID so the validation checks with prefix don't have to be performed here.
   const std::string preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
-  const std::optional<std::string> valid_odom_frame = validatePreferredOdomFrame(preferred_odom_frame, frame_prefix_);
-  is_using_vision_ = stripPrefix(valid_odom_frame.value_or(kValidOdomFrameOptions[0]), frame_prefix_) == "vision";
+  const std::optional<std::string> valid_odom_frame =
+      validateFrameWithPrefix(preferred_odom_frame, frame_prefix_, kValidOdomFrameNames);
+  is_using_vision_ = stripPrefix(valid_odom_frame.value_or(kValidOdomFrameNames[0]), frame_prefix_) == "vision";
   if (!valid_odom_frame.has_value()) {
     logger_interface_->logWarn(std::string{"Given preferred odom frame '"}.append(
-        preferred_odom_frame + "' could not be composed into any valid option, defaulting to: '" + full_odom_frame_id_ +
-        "'."));
+        preferred_odom_frame + "' could not be composed into any valid option with prefix '" + frame_prefix_ +
+        "', defaulting to: '" + kValidOdomFrameNames[0] + "'."));
   }
 
-  //FIXME(frame-prefix): This is now using a different parameter, refactor this with the associated
-  // `validatePreferredOdomFrame` and `kValidOdomFrameOptions` to reflect that.
   const std::string tf_root = parameter_interface_->getTFRoot();
-  const std::optional<std::string> valid_tf_root = validatePreferredOdomFrame(tf_root, frame_prefix_);
-  full_tf_root_id_ = valid_tf_root.value_or(frame_prefix_ + kValidOdomFrameOptions[0]);
+  const std::optional<std::string> valid_tf_root =
+      validateFrameWithPrefix(tf_root, frame_prefix_, kValidTFRootFrameNames);
+  full_tf_root_id_ = valid_tf_root.value_or(frame_prefix_ + kValidTFRootFrameNames[0]);
   if (!valid_tf_root.has_value()) {
     logger_interface_->logWarn(std::string{"Given TF root frame '"}.append(
-        tf_root + "' could not be composed into any valid option, defaulting to: '" + full_tf_root_id_ +
-        "'."));
+        tf_root + "' could not be composed into any valid option with prefix '" + frame_prefix_ +
+        "', defaulting to: '" + full_tf_root_id_ + "'."));
   }
 
   // Create a timer to request and publish robot state at a fixed rate

@@ -24,6 +24,7 @@ _CERTIFICATE: Literal["certificate"] = "certificate"
 _PORT: Literal["port"] = "port"
 _CAMERAS_USED: Literal["cameras_used"] = "cameras_used"
 _GRIPPERLESS: Literal["gripperless"] = "gripperless"
+_SPOT_NAME: Literal["spot_name"] = "spot_name"
 
 
 IMAGE_PUBLISHER_ARGS = [
@@ -178,9 +179,8 @@ def get_login_parameters(config_file_path: str) -> Tuple[str, str, str, Optional
             f"[Username: '{username}' Password: '{password}' Hostname: '{hostname}']. Ensure that your environment "
             "variables are set or update your config_file yaml."
         )
-    #FIXME(frame-prefix): Export the `spot_name` param into the new literal constants.
-    if "spot_name" in ros_params and ros_params["spot_name"]:
-        spot_name = ros_params["spot_name"]
+    if _SPOT_NAME in ros_params and ros_params[_SPOT_NAME]:
+        spot_name = ros_params[_SPOT_NAME]
     return username, password, hostname, port, certificate, spot_name
 
 
@@ -253,7 +253,7 @@ def spot_has_arm(config_file_path: str) -> bool:
         bool: True if spot has an arm, False otherwise
     """
     logger = logging.getLogger("spot_driver_launch")
-    username, password, hostname, port, certificate, spot_name = get_login_parameters(config_file_path)
+    username, password, hostname, port, certificate, _ = get_login_parameters(config_file_path)
     gripperless = get_gripperless(get_ros_param_dict(config_file_path))
     spot_wrapper = SpotWrapper(
         username=username,

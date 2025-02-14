@@ -309,16 +309,15 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
       clock_interface_{std::move(clock_interface)} {
   frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
 
-  //FIXME(frame-prefix): This is now using a different parameter, refactor this together with the associated
-  // `kValidOdomFrameOptions` and `validatePreferredOdomFrame` to reflect the change.
-  const std::string preferred_odom_frame = parameter_interface_->getTFRoot();
-  const std::optional<std::string> valid_odom_frame = validatePreferredOdomFrame(preferred_odom_frame, frame_prefix_);
-  preferred_base_frame_ = stripPrefix(valid_odom_frame.value_or(kValidOdomFrameOptions[0]), frame_prefix_);
-  preferred_base_frame_with_prefix_ = valid_odom_frame.value_or(frame_prefix_ + kValidOdomFrameOptions[0]);
-  if (!valid_odom_frame.has_value()) {
-    logger_interface_->logWarn(std::string{"Given preferred odom frame '"}.append(
-        preferred_odom_frame + "' could not be composed into any valid option, defaulting to: '" +
-        preferred_base_frame_with_prefix_ + "'."));
+  const std::string tf_root = parameter_interface_->getTFRoot();
+  const std::optional<std::string> valid_tf_root =
+      validateFrameWithPrefix(tf_root, frame_prefix_, kValidTFRootFrameNames);
+  preferred_base_frame_ = stripPrefix(valid_tf_root.value_or(kValidTFRootFrameNames[0]), frame_prefix_);
+  preferred_base_frame_with_prefix_ = valid_tf_root.value_or(frame_prefix_ + kValidTFRootFrameNames[0]);
+  if (!valid_tf_root.has_value()) {
+    logger_interface_->logWarn(std::string{"Given TF root frame '"}.append(
+        tf_root + "' could not be composed into any valid option with prefix '" + frame_prefix_ +
+        "', defaulting to: '" + preferred_base_frame_with_prefix_ + "'."));
   }
 
   // TODO(khughes): This is temporarily disabled to reduce driver's spew about TF extrapolation.

@@ -3,7 +3,7 @@
 The Spot driver contains all of the necessary topics, services, and actions for controlling Spot over ROS 2.
 To launch the driver, run the following command, with the appropriate launch arguments and/or config file that are discussed below.
 ```
-ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Spot Name>] [tf_prefix:=<prefix>] [launch_rviz:=<True|False>] [launch_image_publishers:=<True|False>] [publish_point_clouds:=<True|False>] [uncompress_images:=<True|False>] [publish_compressed_images:=<True|False>] [stitch_front_images:=<True|False>]
+ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Spot Name>] [tf_prefix:=<TF Frame Prefix>] [launch_rviz:=<True|False>] [launch_image_publishers:=<True|False>] [publish_point_clouds:=<True|False>] [uncompress_images:=<True|False>] [publish_compressed_images:=<True|False>] [stitch_front_images:=<True|False>]
 ```
 
 ## Configuration
@@ -17,7 +17,7 @@ To avoid this, it is recommended to either launch the driver with the launch arg
 This will place all of the nodes, topics, services, and actions provided by the driver in the `<Spot Name>` namespace.
 
 By default, it will also prefix all of the TF frames and joints of the robot with `<Spot Name>`.
-If you want to change this behavior and instead use a custom prefix for all frames in the TF tree, either launch the driver with the launch argument `tf_prefix:=<prefix>` or update the `frame_prefix` parameter in your config file (a specified launch argument will override the config file parameter).
+If you want to change this behavior and instead use a custom prefix `<TF Frame Prefix>` for all frames in the TF tree, either launch the driver with the launch argument `tf_prefix:=<TF Frame Prefix>` or update the `frame_prefix` parameter in your config file (a specified launch argument will override the config file parameter).
 If you use the config file parameter `frame_prefix`, you can disable prefixing altogether by setting it to an empty string.
 
 ## Frames
