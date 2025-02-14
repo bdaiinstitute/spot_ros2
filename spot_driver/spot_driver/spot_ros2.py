@@ -864,38 +864,6 @@ class SpotROS(Node):
 
         return response
 
-    def create_trigger_services(self) -> None:
-        services = [
-            self.handle_claim,
-            self.handle_release,
-            self.handle_stop,
-            self.handle_self_right,
-            self.handle_sit,
-            self.handle_stand,
-            self.handle_crouch,
-            self.handle_rollover,
-            self.handle_power_on,
-            self.handle_safe_power_off,
-            self.handle_estop_hard,
-            self.handle_estop_soft,
-            self.handle_estop_disengage,
-            self.handle_undock,
-            self.handle_spot_check,
-            self.handle_stop_dance,
-        ]
-        if self.has_arm:
-            services.extend(
-                [
-                    self.handle_arm_stow,
-                    self.handle_arm_carry,
-                    self.handle_arm_unstow,
-                ]
-            )
-            if not self.gripperless:
-                services.extend([self.handle_open_gripper, self.handle_close_gripper])
-        for srv in services:
-            srv.create_service(self, self.group)
-
     def metrics_callback(self, results: Any) -> None:
         """Callback for when the Spot Wrapper gets new metrics data.
         Args:
@@ -995,6 +963,38 @@ class SpotROS(Node):
             response.success = True
             return response
         return handler(request, response)
+
+    def create_trigger_services(self) -> None:
+        services = [
+            self.handle_claim,
+            self.handle_release,
+            self.handle_stop,
+            self.handle_self_right,
+            self.handle_sit,
+            self.handle_stand,
+            self.handle_crouch,
+            self.handle_rollover,
+            self.handle_power_on,
+            self.handle_safe_power_off,
+            self.handle_estop_hard,
+            self.handle_estop_soft,
+            self.handle_estop_disengage,
+            self.handle_undock,
+            self.handle_spot_check,
+            self.handle_stop_dance,
+        ]
+        if self.has_arm:
+            services.extend(
+                [
+                    self.handle_arm_stow,
+                    self.handle_arm_carry,
+                    self.handle_arm_unstow,
+                ]
+            )
+            if not self.gripperless:
+                services.extend([self.handle_open_gripper, self.handle_close_gripper])
+        for srv in services:
+            srv.create_service(self, self.group)
 
     handle_claim = TriggerServiceWrapper(SpotWrapper.claim, "claim")
     handle_release = TriggerServiceWrapper(SpotWrapper.release, "release")
