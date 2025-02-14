@@ -17,8 +17,10 @@ from builtin_interfaces.msg import Time
 from cv_bridge import CvBridge
 from geometry_msgs.msg import TransformStamped
 from google.protobuf.timestamp_pb2 import Timestamp
+from rclpy.callback_groups import CallbackGroup
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image
+from std_srvs.srv import Trigger
 from tf2_msgs.msg import TFMessage
 
 from spot_wrapper.wrapper import SpotWrapper
@@ -328,3 +330,46 @@ def lookup_a_tform_b(
                 raise e
             time.sleep(0.01)
     return None
+
+
+class TriggerServiceWrapper:  # TODO: caching of spot_ros might be funky with multiple instances up
+    """A descriptor for calling callbacks for trigger services"""
+
+    service_func: Callable[[SpotWrapper], Trigger.Response]
+    service_name: str
+    args: Optional[tuple] = ()
+    kwargs: Optional[dict | None] = None
+
+    def __init__(
+        self, service_func: Callable, service_name: str, *args: Optional[Any], **kwargs: Optional[Any | None]
+    ) -> None:
+        self.service_func = service_func
+        self.service_name = service_name
+        self.args = args
+        self.kwargs = kwargs or {}
+
+    def create_service(self, obj: Any, group: CallbackGroup) -> None:
+        self.spot_ros = obj
+        obj.create_service(Trigger, self.service_name, self.callback, callback_group=group)
+
+    def callback(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        if self.spot_ros.mock:
+            response.success = True
+            response.message = "Mock spot success"
+            return response
+
+        if self.spot_ros.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+
+        try:
+            # Call the function with predefined arguments
+            response.success, response.message = self.service_func(
+                self.spot_ros.spot_wrapper, *self.args, **self.kwargs
+            )  # type: ignore
+        except Exception as e:
+            response.success = False
+            response.message = f"Error executing {self.service_func}: {str(e)}"
+
+        return response
