@@ -9,6 +9,7 @@
 #include <spot_driver/api/time_sync_api.hpp>
 #include <tl_expected/expected.hpp>
 
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -16,7 +17,8 @@ namespace spot_ros2 {
 
 class DefaultTimeSyncApi : public TimeSyncApi {
  public:
-  explicit DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread);
+  explicit DefaultTimeSyncApi(std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread,
+                              const std::chrono::seconds timesync_timeout);
 
   /**
   * @brief Get the current clock skew from the Spot SDK's time sync endpoint.
@@ -36,5 +38,6 @@ class DefaultTimeSyncApi : public TimeSyncApi {
 
  private:
   std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread_;
+  const std::chrono::seconds timesync_timeout_;
 };
 }  // namespace spot_ros2

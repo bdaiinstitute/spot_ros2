@@ -9,8 +9,6 @@ Test for the Recorded State to Animation command.
 # pylint: disable=no-member
 
 import pytest
-from bdai_ros2_wrappers.futures import wait_for_future
-from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.data_chunk_pb2 import DataChunk
 from bosdyn.api.geometry_pb2 import Quaternion, SE3Pose, Vec3
 from bosdyn.api.header_pb2 import CommonError, ResponseHeader
@@ -25,6 +23,8 @@ from bosdyn.api.spot.choreography_sequence_pb2 import (
 )
 from google.protobuf.timestamp_pb2 import Timestamp
 from google.protobuf.wrappers_pb2 import DoubleValue
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import ChoreographyRecordedStateToAnimation  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture

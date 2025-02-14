@@ -19,13 +19,10 @@ https://dev.bostondynamics.com/python/examples/inverse_kinematics/readme
 import argparse
 from typing import List
 
-import bdai_ros2_wrappers.process as ros_process
-import bdai_ros2_wrappers.scope as ros_scope
 import geometry_msgs.msg
 import numpy as np
-from bdai_ros2_wrappers.action_client import ActionClientWrapper
-from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
-from bdai_ros2_wrappers.utilities import namespace_with
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
 from bosdyn.api.spot import inverse_kinematics_pb2, robot_command_pb2
 from bosdyn.client.frame_helpers import (
     BODY_FRAME_NAME,
@@ -38,6 +35,9 @@ from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
+from synchros2.action_client import ActionClientWrapper
+from synchros2.tf_listener_wrapper import TFListenerWrapper
+from synchros2.utilities import namespace_with
 from tf2_ros import TransformBroadcaster, TransformStamped
 
 from spot_msgs.action import RobotCommand  # type: ignore

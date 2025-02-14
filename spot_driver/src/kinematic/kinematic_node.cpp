@@ -26,7 +26,9 @@ KinematicNode::KinematicNode(const rclcpp::NodeOptions& node_options) {
   auto node = std::make_shared<rclcpp::Node>("kinematic_service", node_options);
   auto parameter_interface = std::make_shared<RclcppParameterInterface>(node);
   auto logger_interface = std::make_shared<RclcppLoggerInterface>(node->get_logger());
-  auto spot_api = std::make_unique<DefaultSpotApi>(kSDKClientName, parameter_interface->getCertificate());
+  const auto timesync_timeout = parameter_interface->getTimeSyncTimeout();
+  auto spot_api =
+      std::make_unique<DefaultSpotApi>(kSDKClientName, timesync_timeout, parameter_interface->getCertificate());
   initialize(node, std::move(spot_api), parameter_interface, logger_interface);
 }
 

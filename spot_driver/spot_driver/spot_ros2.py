@@ -12,19 +12,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import bdai_ros2_wrappers.process as ros_process
 import builtin_interfaces.msg
 import rclpy
 import rclpy.duration
 import rclpy.time
+import synchros2.process as ros_process
 import tf2_ros
-from bdai_ros2_wrappers.node import Node
-from bdai_ros2_wrappers.single_goal_action_server import (
-    SingleGoalActionServer,
-)
-from bdai_ros2_wrappers.single_goal_multiple_action_servers import (
-    SingleGoalMultipleActionServers,
-)
 from bosdyn.api import (
     geometry_pb2,
     gripper_camera_param_pb2,
@@ -69,6 +62,9 @@ from rclpy.publisher import Publisher
 from rclpy.timer import Rate
 from sensor_msgs.msg import JointState
 from std_srvs.srv import SetBool, Trigger
+from synchros2.node import Node
+from synchros2.single_goal_action_server import SingleGoalActionServer
+from synchros2.single_goal_multiple_action_servers import SingleGoalMultipleActionServers
 
 import spot_driver.robot_command_util as robot_command_util
 
@@ -252,7 +248,6 @@ class SpotROS(Node):
         self.declare_parameter("spot_name", "")
         self.declare_parameter("frame_prefix", Parameter.Type.STRING)
         self.declare_parameter("mock_enable", False)
-        self.declare_parameter("preferred_odom_frame", "")  # 'vision' or 'odom'
 
         self.declare_parameter("gripperless", False)
 
@@ -340,35 +335,9 @@ class SpotROS(Node):
             get_from_env_and_fall_back_to_param("SPOT_CERTIFICATE", self, "certificate", "") or None
         )
 
-        # Spot has 2 types of odometries: 'odom' and 'vision'
-        # The former one is kinematic odometry and the second one is a combined odometry of vision and kinematics
-        # These params enables to change which odometry frame is a parent of body frame and to change tf names of each
-        # odometry frames.
         self.frame_prefix: Optional[str] = self.get_parameter_or("frame_prefix", None).value
         if self.frame_prefix is None:
             self.frame_prefix = self.name + "/" if self.name is not None else ""
-        self.preferred_odom_frame: str = self.get_parameter("preferred_odom_frame").value
-        self.tf_name_raw_kinematic: str = self.frame_prefix + "odom"
-        self.tf_name_raw_vision: str = self.frame_prefix + "vision"
-        if not self.preferred_odom_frame:
-            self.preferred_odom_frame = self.tf_name_raw_kinematic
-
-        preferred_odom_frame_references = [self.tf_name_raw_kinematic, self.tf_name_raw_vision]
-        preferred_odom_frame_all_options = (
-            preferred_odom_frame_references + ["odom", "vision"]
-            if self.frame_prefix
-            else preferred_odom_frame_references
-        )
-        if self.preferred_odom_frame not in preferred_odom_frame_references:
-            if self.frame_prefix + self.preferred_odom_frame in preferred_odom_frame_references:
-                self.preferred_odom_frame = self.frame_prefix + self.preferred_odom_frame
-            else:
-                error_msg = (
-                    f'The rosparam "preferred_odom_frame" should be one of {preferred_odom_frame_all_options}, got'
-                    f' "{self.preferred_odom_frame}", which could not be composed into any valid option.'
-                )
-                self.get_logger().error(error_msg)
-                raise ValueError(error_msg)
 
         self.tf_name_graph_nav_body: str = self.frame_prefix + "body"
 
@@ -409,6 +378,7 @@ class SpotROS(Node):
                 continually_try_stand=self.continually_try_stand.value,
                 rgb_cameras=self.rgb_cameras.value,
                 cert_resource_glob=self.certificate,
+                gripperless=self.gripperless,
             )
             if not self.spot_wrapper.is_valid:
                 return
@@ -497,6 +467,12 @@ class SpotROS(Node):
             Trigger,
             "stand",
             lambda request, response: self.service_wrapper("stand", self.handle_stand, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            Trigger,
+            "crouch",
+            lambda request, response: self.service_wrapper("crouch", self.handle_crouch, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -1187,6 +1163,15 @@ class SpotROS(Node):
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message = self.spot_wrapper.stand()
+        return response
+
+    def handle_crouch(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
+        """ROS service handler for the crouch service (standing as low as possible)"""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.stand(body_height=-0.15)
         return response
 
     def handle_rollover(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:

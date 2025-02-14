@@ -4,6 +4,7 @@
 
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
+#include <chrono>
 #include <optional>
 #include <set>
 #include <string>
@@ -38,9 +39,13 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::string getPreferredOdomFrame() const override { return kDefaultPreferredOdomFrame; }
 
+  std::string getTFRoot() const override { return "odom"; }
+
   std::optional<std::string> getFramePrefix() const override { return std::nullopt; }
 
   std::string getSpotNameWithFallbackToNamespace() const override { return spot_name; }
+
+  std::string getFramePrefixWithDefaultFallback() const override { return spot_name + "/"; }
 
   bool getGripperless() const override { return gripperless; }
 
@@ -58,7 +63,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
     return getDefaultCamerasUsed(has_arm, gripperless);
   }
 
-  std::string getFramePrefixWithDefaultFallback() const override { return spot_name + "/"; }
+  std::chrono::seconds getTimeSyncTimeout() const override { return kDefaultTimeSyncTimeout; }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};
   static constexpr auto kExampleUsername{"spot_user"};

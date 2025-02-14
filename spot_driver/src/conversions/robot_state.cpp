@@ -183,7 +183,7 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
                                        : transform.parent_frame_name();
     const auto frame_name = frame_id.find('/') == std::string::npos ? prefix + frame_id : frame_id;
 
-    // set target frame(preferred odom frame) as the root node in tf tree
+    // set preferred base frame as the root node in tf tree
     if (preferred_base_frame_id == frame_name) {
       tf_msg.transforms.push_back(
           toTransformStamped(~(transform.parent_tform_child()), frame_name, parent_frame_name, timestamp_local));
@@ -195,30 +195,41 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
   return tf_msg;
 }
 
-std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
-    const ::bosdyn::api::RobotState& robot_state, const google::protobuf::Duration& clock_skew) {
-  if (!robot_state.has_kinematic_state() || !robot_state.kinematic_state().has_velocity_of_body_in_odom()) {
+std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(const ::bosdyn::api::RobotState& robot_state,
+                                                                           const google::protobuf::Duration& clock_skew,
+                                                                           const bool is_using_vision) {
+  if (!robot_state.has_kinematic_state()) {
+    return std::nullopt;
+  }
+
+  const auto& kinematic_state = robot_state.kinematic_state();
+  if (is_using_vision && !kinematic_state.has_velocity_of_body_in_vision()) {
+    return std::nullopt;
+  } else if (!is_using_vision && !kinematic_state.has_velocity_of_body_in_odom()) {
     return std::nullopt;
   }
 
   geometry_msgs::msg::TwistWithCovarianceStamped odom_twist_msg;
   // TODO(schornakj): need to add the frame ID here?
+
+  const bosdyn::api::SE3Velocity& velocity_of_body_in_world =
+      is_using_vision ? kinematic_state.velocity_of_body_in_vision() : kinematic_state.velocity_of_body_in_odom();
+
   odom_twist_msg.header.stamp =
       spot_ros2::robotTimeToLocalTime(robot_state.kinematic_state().acquisition_timestamp(), clock_skew);
-  convertToRos(robot_state.kinematic_state().velocity_of_body_in_odom(), odom_twist_msg.twist.twist);
+  convertToRos(velocity_of_body_in_world, odom_twist_msg.twist.twist);
   return odom_twist_msg;
 }
 
 std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& robot_state,
                                                const google::protobuf::Duration& clock_skew, const std::string& prefix,
-                                               bool is_using_vision) {
+                                               const bool is_using_vision) {
   if (!robot_state.has_kinematic_state() || !robot_state.kinematic_state().has_acquisition_timestamp() ||
-      !robot_state.kinematic_state().has_transforms_snapshot() ||
-      !robot_state.kinematic_state().has_velocity_of_body_in_odom()) {
+      !robot_state.kinematic_state().has_transforms_snapshot()) {
     return std::nullopt;
   }
 
-  const auto odom_twist = getOdomTwist(robot_state, clock_skew);
+  const auto odom_twist = getOdomTwist(robot_state, clock_skew, is_using_vision);
   if (!odom_twist) {
     return std::nullopt;
   }

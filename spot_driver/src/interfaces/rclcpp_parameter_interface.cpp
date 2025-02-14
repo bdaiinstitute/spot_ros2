@@ -2,6 +2,7 @@
 
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 
+#include <chrono>
 #include <cstdlib>
 #include <vector>
 
@@ -26,9 +27,11 @@ constexpr auto kParameterNamePublishCompressedImages = "publish_compressed_image
 constexpr auto kParameterNamePublishDepthImages = "publish_depth";
 constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
-constexpr auto kParameterNameGripperless = "gripperless";
+constexpr auto kParameterTFRoot = "tf_root";
 constexpr auto kParameterSpotName = "spot_name";
 constexpr auto kParameterFramePrefix = "frame_prefix";
+constexpr auto kParameterNameGripperless = "gripperless";
+constexpr auto kParameterTimeSyncTimeout = "timesync_timeout";
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and
@@ -189,12 +192,23 @@ std::string RclcppParameterInterface::getPreferredOdomFrame() const {
   return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
 }
 
+std::string RclcppParameterInterface::getTFRoot() const {
+  return declareAndGetParameter<std::string>(node_, kParameterTFRoot, kDefaultTFRoot);
+}
+
 std::optional<std::string> RclcppParameterInterface::getFramePrefix() const {
   return declareAndGetParameter<std::string>(node_, kParameterFramePrefix);
 }
 
 bool RclcppParameterInterface::getGripperless() const {
   return declareAndGetParameter<bool>(node_, kParameterNameGripperless, kDefaultGripperless);
+}
+
+std::chrono::seconds RclcppParameterInterface::getTimeSyncTimeout() const {
+  int timeout_seconds =
+      declareAndGetParameter<int>(node_, kParameterTimeSyncTimeout,
+                                  std::chrono::duration_cast<std::chrono::seconds>(kDefaultTimeSyncTimeout).count());
+  return std::chrono::seconds(timeout_seconds);
 }
 
 std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm,

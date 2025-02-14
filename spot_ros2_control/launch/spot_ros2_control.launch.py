@@ -16,6 +16,7 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 from spot_driver.launch.spot_launch_helpers import (
     IMAGE_PUBLISHER_ARGS,
@@ -276,16 +277,14 @@ def generate_launch_description():
                 default_value="forward_position_controller",
                 description="Robot controller to start. Must match an entry in controllers_config.",
             ),
-            DeclareLaunchArgument(
+            DeclareBooleanLaunchArgument(
                 "mock_arm",
-                default_value="false",
-                choices=["True", "true", "False", "false"],
+                default_value=False,
                 description="If in hardware_interface:=mock mode, whether or not the mocked robot has an arm.",
             ),
-            DeclareLaunchArgument(
+            DeclareBooleanLaunchArgument(
                 "launch_rviz",
-                default_value="true",
-                choices=["True", "true", "False", "false"],
+                default_value=True,
                 description="Flag to enable rviz.",
             ),
             DeclareLaunchArgument(
@@ -293,10 +292,9 @@ def generate_launch_description():
                 default_value="",
                 description="Name of the Spot that will be used as a namespace.",
             ),
-            DeclareLaunchArgument(
+            DeclareBooleanLaunchArgument(
                 "launch_image_publishers",
-                default_value="true",
-                choices=["True", "true", "False", "false"],
+                default_value=True,
                 description="Choose whether to launch the image publishers.",
             ),
         ]

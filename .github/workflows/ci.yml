@@ -30,7 +30,7 @@ concurrency:
 jobs:
   lint:
     name: Lint spot_ros2 packages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         config:
@@ -47,7 +47,7 @@ jobs:
         uses: pre-commit/action@v3.0.1
   prepare_container:
     name: Prepare Humble container for tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: lint
     permissions:
       contents: read
@@ -91,7 +91,7 @@ jobs:
           cache-to: type=gha,mode=max
   build_and_test_package_and_docs:
     name: Build and test spot_ros2 packages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: prepare_container
     container:
       image: ${{ needs.prepare_container.outputs.image }}
