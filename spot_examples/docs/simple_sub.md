@@ -52,4 +52,3 @@ Make sure the required environment variable `ROBOT_NAME` is set and the configur
 
 ## Author
 - Kabir Kedia <kabirk@andrew.cmu.edu>
-

@@ -1,24 +1,23 @@
-import argparse
 import logging
 from typing import Optional
 
-import synchros2.process as ros_process
 import synchros2.scope as ros_scope
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
-from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
+from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
+from geometry_msgs.msg import Pose
 from rclpy.node import Node
 from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import fqn, namespace_with
 
 from spot_msgs.action import RobotCommand  # type: ignore
-from geometry_msgs.msg import Pose
 
 from .simple_spot_commander import SimpleSpotCommander
 
 # Where we want the robot to walk to relative to itself
+
 
 class RobotCommander:
     def __init__(self, robot_name: Optional[str] = None, node: Optional[Node] = None) -> None:
@@ -61,11 +60,11 @@ class RobotCommander:
         self._logger.info("Successfully stood up.")
         return True
 
-    def walk_forward_with_world_frame_goal(self, waypoint) -> None:
+    def walk_forward_with_world_frame_goal(self, waypoint: Pose) -> bool:
         """
         Walk forward to a goal in the world frame.
         Arguments:
-            waypoint: The waypoint to walk to with respect to the body frame. 
+            waypoint: The waypoint to walk to with respect to the body frame.
                       Type is geometry_msgs.msg.Pose
         """
         self._logger.info("Walking")
