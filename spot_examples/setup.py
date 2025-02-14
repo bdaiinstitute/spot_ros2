@@ -26,6 +26,7 @@ setup(
             "hello_spot = spot_examples.hello_spot:main",
             "arm_with_body_follow = spot_examples.arm_with_body_follow:main",
             "wasd = spot_examples.wasd:main",
+            "simple_sub = spot_examples.simple_sub:main",
         ],
     },
 )
