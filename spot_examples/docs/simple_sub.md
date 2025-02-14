@@ -14,10 +14,8 @@ It utilizes helper files `robot_commander` and `simple_spot_commander` to handle
 1. The `main()` function is the entry point of the script.
 2. The script retrieves the robot name from the environment variable.
 3. An instance of `RobotCommander` is created with the robot name.
-4. A ROS parameter `config_file_path` is declared and retrieved.
-5. The configuration file specified by `config_file_path` is loaded.
-6. The script logs the robot's name and initializes the robot.
-7. If initialization fails, the script logs an error and exits.
+4. The script logs the robot's name and initializes the robot.
+5. If initialization fails, the script logs an error and exits.
 
 ### Topic Subscription and Action Execution
 1. The `spot_controller_topic` is extracted from the configuration file.

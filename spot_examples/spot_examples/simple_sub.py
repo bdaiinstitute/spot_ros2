@@ -13,17 +13,18 @@ from ament_index_python.packages import get_package_share_directory
 
 @ros_process.main()
 def main() -> None:
-    print("here")
+    # print("here")
     robot_name= os.getenv("ROBOT_NAME")  # Get robot name from environment variable
-    robotcommander = RobotCommander(robot_name=robot_name)
+    robot_commander = RobotCommander(robot_name=robot_name)
     
-    robotcommander._logger.info(f"name:{robotcommander._robot_name}")
-    result = robotcommander.initialize_robot()
+    robot_commander._logger.info(f"name:{robot_commander._robot_name}")
+    result = robot_commander.initialize_robot()
 
     if result is False:
-        robotcommander._logger.info("Failed to initialize robot")
+        robot_commander._logger.info("Failed to initialize robot")
         return 
-    robotcommander._logger.info("Initialized robot")
+    
+    robot_commander._logger.info("Initialized robot")
 
 
     topic_data = Subscription(Pose, "/pose_commands")
@@ -36,17 +37,17 @@ def main() -> None:
             if is_busy:
                 # If the robot is busy, buffer the latest message
                 latest_message = message
-                robotcommander._logger.info("Robot is busy, buffering the latest message")
+                robot_commander._logger.info("Robot is busy, buffering the latest message")
             else:
                 is_busy = True
-                result = robotcommander.walk_forward_with_world_frame_goal(message)
+                result = robot_commander.walk_forward_with_world_frame_goal(message)
                 # robotcommander._logger(result.success)
                 is_busy = False  # Reset the busy flag after the action is completed
 
                 # Check if there is a buffered message and process it
                 if latest_message is not None:
                     is_busy = True
-                    result = robotcommander.walk_forward_with_world_frame_goal(latest_message)
+                    result = robot_commander.walk_forward_with_world_frame_goal(latest_message)
                     # robotcommander._logger(result.success)
                     is_busy = False
                     latest_message = None  # Clear the buffer after processing
