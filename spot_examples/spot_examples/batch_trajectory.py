@@ -679,7 +679,7 @@ def main(args: argparse.Namespace) -> None:
     # Set up basic ROS2 utilities for communicating with the driver.
     node = ros_scope.node()
     if node is None:
-        raise ValueError("No ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
+        raise ValueError("No ROS 2 node available (did you use synchros2.process.main?)")
 
     spot_runner = SpotRunner(node, args)
     spot_runner.test_run()

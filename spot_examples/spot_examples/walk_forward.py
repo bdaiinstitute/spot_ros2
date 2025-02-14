@@ -26,7 +26,7 @@ class WalkForward:
         self._logger = logging.getLogger(fqn(self.__class__))
         node = node or ros_scope.node()
         if node is None:
-            raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
+            raise ValueError("no ROS 2 node available (did you use synchros2.process.main?)")
         self._robot_name = robot_name
 
         self._body_frame_name = namespace_with(self._robot_name, BODY_FRAME_NAME)
