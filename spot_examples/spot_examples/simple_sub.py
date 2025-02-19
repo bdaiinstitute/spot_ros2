@@ -1,54 +1,62 @@
-# This file interfaces with spot to send action. Helper files are robot_commander and simple_spot_commander
 import os
+import argparse
+import logging
+from typing import Any, Dict, Optional
 from contextlib import closing
-
 import synchros2.process as ros_process
 from geometry_msgs.msg import Pose
 from synchros2.subscription import Subscription
-
 from .robot_commander import RobotCommander
 
+class SpotRobotInterface:
+    def __init__(self, robot_name: Optional[str] = None):
+        # self.robot_name = os.getenv("ROBOT_NAME")
+        self.robot_commander = RobotCommander(robot_name)
+        self.latest_message = None  # Buffer to store the latest message
+        self.is_busy = False  # Flag to indicate if the robot is busy
+        self.robot_commander._logger.info(f"Robot Name: {self.robot_commander._robot_name}")
+    
+    def initialize(self):
+        if not self.robot_commander.initialize_robot():
+            self.robot_commander._logger.info("Failed to initialize robot")
+            return False
+        self.robot_commander._logger.info("Initialized robot")
+        return True
 
-@ros_process.main()
-def main() -> None:
-    # print("here")
-    robot_name = os.getenv("ROBOT_NAME")  # Get robot name from environment variable
-    robot_commander = RobotCommander(robot_name=robot_name)
+    def process_message(self, message):
+        if self.is_busy:
+            self.latest_message = message
+            self.robot_commander._logger.info("Robot is busy, buffering the latest message")
+        else:
+            self.execute_command(message)
+            
+            if self.latest_message:
+                self.execute_command(self.latest_message)
+                self.latest_message = None
 
-    robot_commander._logger.info(f"name:{robot_commander._robot_name}")
-    result = robot_commander.initialize_robot()
+    def execute_command(self, message):
+        self.is_busy = True
+        self.robot_commander.walk_forward_with_world_frame_goal(message)
+        self.is_busy = False
+    
+    def listen_to_pose_commands(self):
+        topic_data = Subscription(Pose, "/pose_commands")
+        with closing(topic_data.stream()) as stream:
+            for message in stream:
+                self.process_message(message)
 
-    if result is False:
-        robot_commander._logger.info("Failed to initialize robot")
-        return
+def cli() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--robot", help="Name of the robot if the ROS driver is inside that namespace")
+    return parser
 
-    robot_commander._logger.info("Initialized robot")
-
-    topic_data = Subscription(Pose, "/pose_commands")
-
-    latest_message = None  # Buffer to store the latest message
-    is_busy = False  # Flag to indicate if the robot is busy executing an action
-
-    with closing(topic_data.stream()) as stream:
-        for message in stream:
-            if is_busy:
-                # If the robot is busy, buffer the latest message
-                latest_message = message
-                robot_commander._logger.info("Robot is busy, buffering the latest message")
-            else:
-                is_busy = True
-                result = robot_commander.walk_forward_with_world_frame_goal(message)
-                # robotcommander._logger(result.success)
-                is_busy = False  # Reset the busy flag after the action is completed
-
-                # Check if there is a buffered message and process it
-                if latest_message is not None:
-                    is_busy = True
-                    result = robot_commander.walk_forward_with_world_frame_goal(latest_message)
-                    # robotcommander._logger(result.success)
-                    is_busy = False
-                    latest_message = None  # Clear the buffer after processing
-
+@ros_process.main(cli())
+def main(args: argparse.Namespace) -> None:
+    robot_interface = SpotRobotInterface(args.robot)
+    # robot_interface = SpotRobotInterface()
+    # while rclpy.ok():
+    if robot_interface.initialize():
+        robot_interface.listen_to_pose_commands()
 
 if __name__ == "__main__":
     main()
