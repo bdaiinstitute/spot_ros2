@@ -26,7 +26,7 @@ namespace {
 class BondHolder : public LeaseManager::MiddlewareHandle::Bond {
  public:
   explicit BondHolder(std::shared_ptr<rclcpp::Node> node, const std::string& id, std::function<void()> break_callback)
-      : bond_("lease/bonds", id, std::move(node), std::move(break_callback)) {}
+      : bond_("bonds", id, std::move(node), std::move(break_callback)) {}
 
   ~BondHolder() override {}
 

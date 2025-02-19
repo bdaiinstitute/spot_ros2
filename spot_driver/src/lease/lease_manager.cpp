@@ -12,7 +12,7 @@
 
 namespace {
 constexpr auto kAcquireLeaseServiceName = "acquire_lease";
-constexpr auto kReturnLeaseServiceName = "release_lease";
+constexpr auto kReturnLeaseServiceName = "return_lease";
 }  // namespace
 
 namespace spot_ros2::lease {

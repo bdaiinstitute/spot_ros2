@@ -15,7 +15,7 @@
 
 namespace spot_ros2 {
 /**
- * @brief Implements LeaseClientInterface to use the Spot C++ Lease Client.
+ * @brief Implements LeaseClientInterface.
  */
 class DefaultLeaseClient : public LeaseClientInterface {
  public:
