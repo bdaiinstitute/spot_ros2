@@ -63,4 +63,3 @@ ros2 run spot_examples simple_sub --robot spot1
 
 ## Author
 - Kabir Kedia <kabirk@andrew.cmu.edu>
-
