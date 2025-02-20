@@ -3,9 +3,9 @@
 /**:
   ros__parameters:
     # Spot Login Information
-    username: "airlab"
-    password: "passme243546"
-    hostname: "192.168.80.3"
+    username: "user"
+    password: "password"
+    hostname: "10.0.0.3"
 
     # Status Updates from Spot
     metrics_rate: 0.04

@@ -31,13 +31,9 @@ class SpotRobotInterface:
         else:
             self.execute_command(message)
 
-            # if self.latest_message:
-            # # self.execute_command(self.latest_message)
-            # self.latest_message = None
-
     def execute_command(self, message: Pose) -> None:
         self.is_busy = True
-        self.robot_commander.walk_forward_with_world_frame_goal(message)
+        self.robot_commander.walk_forward_with_vision_frame_goal(message)
         self.is_busy = False
 
     def listen_to_pose_commands(self) -> None:
@@ -56,8 +52,6 @@ def cli() -> argparse.ArgumentParser:
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> None:
     robot_interface = SpotRobotInterface(args.robot)
-    # robot_interface = SpotRobotInterface()
-    # while rclpy.ok():
     if robot_interface.initialize():
         robot_interface.listen_to_pose_commands()
 

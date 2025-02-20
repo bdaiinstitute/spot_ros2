@@ -60,12 +60,13 @@ class RobotCommander:
         self._logger.info("Successfully stood up.")
         return True
 
-    def walk_forward_with_world_frame_goal(self, waypoint: Pose) -> bool:
+    def walk_forward_with_vision_frame_goal(self, waypoint: Pose) -> bool:
         """
         Walk forward to a goal in the world frame.
         Arguments:
             waypoint: The waypoint to walk to with respect to the body frame.
-                      Type is geometry_msgs.msg.Pose
+                      Type is geometry_msgs.msg.Pose.
+                      This is using the vision frame of the spot
         """
         self._logger.info("Walking")
         world_t_robot = self._tf_listener.lookup_a_tform_b(self._vision_frame_name, self._body_frame_name)
