@@ -29,6 +29,11 @@ This implementation uses helper files `robot_commander` and `simple_spot_command
    - If a buffered message exists, it is processed next.
    - The script ensures sequential execution by waiting for each action to complete before sending the next `Pose` command.
 
+## Dependencies
+- ROS2
+- synchros2
+- geometry_msgs
+- Boston Dynamics SDK
 
 ## Error Handling
 - If the robot fails to initialize, a log message is generated, and the script exits.
