@@ -1,0 +1,16 @@
+spot_forward_controller:
+  joints: {
+    type: string_array,
+    default_value: [],
+    description: "Names of the joint to control",
+  }
+  joint_prefix: {
+    type: string,
+    default_value: "",
+    description: "Optional prefix to apply to joint names"
+  }
+  interface_names: {
+    type: string_array,
+    default_value: [],
+    description: "Names of the interfaces to command",
+  }
