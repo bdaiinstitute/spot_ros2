@@ -308,10 +308,8 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
       tf_broadcaster_timer_{std::move(tf_broadcaster_timer)},
       clock_interface_{std::move(clock_interface)} {
   frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
-
-  const auto tf_root = parameter_interface_->getTFRoot();
-  preferred_base_frame_ = tf_root;
-  preferred_base_frame_with_prefix_ = frame_prefix_ + tf_root;
+  preferred_base_frame_ = parameter_interface_->getTFRoot();
+  preferred_base_frame_with_prefix_ = frame_prefix_ + preferred_base_frame_;
 
   // TODO(khughes): This is temporarily disabled to reduce driver's spew about TF extrapolation.
   // world_object_update_timer_->setTimer(kWorldObjectSyncPeriod, [this]() {

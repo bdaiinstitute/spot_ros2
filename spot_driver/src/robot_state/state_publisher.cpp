@@ -31,12 +31,8 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
       tf_broadcaster_interface_{std::move(tf_broadcaster_interface)},
       timer_interface_{std::move(timer_interface)} {
   frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
-
-  const auto preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
-  is_using_vision_ = preferred_odom_frame == "vision";
-
-  const auto tf_root = parameter_interface_->getTFRoot();
-  full_tf_root_id_ = frame_prefix_ + tf_root;
+  is_using_vision_ = parameter_interface_->getPreferredOdomFrame() == "vision";
+  full_tf_root_id_ = frame_prefix_ + parameter_interface_->getTFRoot();
 
   // Create a timer to request and publish robot state at a fixed rate
   timer_interface_->setTimer(kRobotStateCallbackPeriod, [this] {
