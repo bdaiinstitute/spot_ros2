@@ -23,9 +23,9 @@ If you use the config file parameter `frame_prefix`, you can disable prefixing a
 ## Frames
 Background information about Spot's frames from Boston Dynamics can be found [here](https://dev.bostondynamics.com/docs/concepts/geometry_and_frames). 
 By default, the Spot driver will place the "odom" frame as the root of the TF tree.
-This can be changed by setting the `tf_root` parameter in your config file to either "vision" or "body".
+This can be changed by setting the `tf_root` parameter in your config file to either "vision" or "body" (value must be given without a prefix).
 The Spot driver will also publish odometry topics with respect to the "odom" frame by default.
-If you wish to change this to "vision", update the `preferred_odom_frame` parameter in your config file.
+If you wish to change this to "vision", update the `preferred_odom_frame` parameter in your config file (value must be given without a prefix).
 
 ## Simple Robot Commands
 Many simple robot commands can be called as services from the command line once the driver is running. For example:

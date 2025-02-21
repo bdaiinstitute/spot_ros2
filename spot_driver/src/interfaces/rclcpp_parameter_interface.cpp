@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <type_traits>
 #include <vector>
 
 namespace {
@@ -32,6 +33,16 @@ constexpr auto kParameterSpotName = "spot_name";
 constexpr auto kParameterFramePrefix = "frame_prefix";
 constexpr auto kParameterNameGripperless = "gripperless";
 constexpr auto kParameterTimeSyncTimeout = "timesync_timeout";
+
+namespace type_traits {
+template <typename, typename = void>
+static constexpr bool is_iterable{};
+template <class T>
+inline static constexpr bool
+    is_iterable<T, std::void_t<decltype(std::declval<T>().begin()), decltype(std::declval<T>().end())>> =
+        std::is_same_v<decltype(std::declval<T>().begin()), typename T::iterator>&&
+            std::is_same_v<decltype(std::declval<T>().end()), typename T::iterator>;
+}  // namespace type_traits
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and
@@ -133,6 +144,29 @@ std::string getEnvironmentVariableParameterFallback(const std::shared_ptr<rclcpp
   return declareAndGetParameter<std::string>(node, parameter_name, default_value);
 }
 
+/**
+ * @brief Given an input frame string parameter and a set of valid base names, return a new optional string
+ * which is guaranteed to be a valid frame option. If the input parameter is not a valid option, std::nullopt is
+ * returned instead.
+ * @param frame
+ * @param base_names
+ * @return A new optional string which is guaranteed to be a valid frame option w.r.t. base_names. If the input
+ * parameter is not a valid option, std::nullopt is returned instead.
+ */
+template <typename OptionsT>
+static constexpr std::optional<std::string> validateFrameParameter(const std::string& frame,
+                                                                   const OptionsT& base_names) {
+  static_assert(type_traits::is_iterable<OptionsT>,
+                "Trait bound not satisfied for argument 'base_names', type not iterable.");
+  static_assert(std::is_convertible_v<typename OptionsT::value_type, std::string>,
+                "Trait bound not satisfied for argument 'base_names', iterator values not convertible to string.");
+
+  // Compare the given frame with all valid options and set false if no match is found.
+  const bool is_valid = std::find(base_names.begin(), base_names.end(), frame) != base_names.end();
+
+  return is_valid ? std::make_optional(frame) : std::nullopt;
+}
+
 }  // namespace
 
 namespace spot_ros2 {
@@ -189,11 +223,23 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const {
 }
 
 std::string RclcppParameterInterface::getPreferredOdomFrame() const {
-  return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
+  const std::string preferred_odom_frame =
+      declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
+  const std::optional<std::string> valid_preferred_odom_frame =
+      validateFrameParameter(preferred_odom_frame, kValidOdomFrameNames);
+  if (!valid_preferred_odom_frame.has_value())
+    RCLCPP_WARN(node_->get_logger(), "Given preferred odom frame '%s' is not a valid option, defaulting to '%s'.",
+                preferred_odom_frame.c_str(), kDefaultPreferredOdomFrame);
+  return valid_preferred_odom_frame.value_or(kDefaultPreferredOdomFrame);
 }
 
 std::string RclcppParameterInterface::getTFRoot() const {
-  return declareAndGetParameter<std::string>(node_, kParameterTFRoot, kDefaultTFRoot);
+  const std::string tf_root = declareAndGetParameter<std::string>(node_, kParameterTFRoot, kDefaultTFRoot);
+  const std::optional<std::string> valid_tf_root = validateFrameParameter(tf_root, kValidTFRootFrameNames);
+  if (!valid_tf_root.has_value())
+    RCLCPP_WARN(node_->get_logger(), "Given TF root frame '%s' is not a valid option, defaulting to '%s'.",
+                tf_root.c_str(), kDefaultTFRoot);
+  return valid_tf_root.value_or(kDefaultTFRoot);
 }
 
 std::optional<std::string> RclcppParameterInterface::getFramePrefix() const {

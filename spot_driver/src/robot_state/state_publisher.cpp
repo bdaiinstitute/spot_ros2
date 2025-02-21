@@ -32,25 +32,11 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
       timer_interface_{std::move(timer_interface)} {
   frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
 
-  const std::string preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
-  const std::optional<std::string> valid_odom_frame =
-      validateFrameWithPrefix(preferred_odom_frame, frame_prefix_, kValidOdomFrameNames);
-  is_using_vision_ = stripPrefix(valid_odom_frame.value_or(kValidOdomFrameNames[0]), frame_prefix_) == "vision";
-  if (!valid_odom_frame.has_value()) {
-    logger_interface_->logWarn(std::string{"Given preferred odom frame '"}.append(
-        preferred_odom_frame + "' could not be composed into any valid option with prefix '" + frame_prefix_ +
-        "', defaulting to: '" + kValidOdomFrameNames[0] + "'."));
-  }
+  const auto preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
+  is_using_vision_ = preferred_odom_frame == "vision";
 
-  const std::string tf_root = parameter_interface_->getTFRoot();
-  const std::optional<std::string> valid_tf_root =
-      validateFrameWithPrefix(tf_root, frame_prefix_, kValidTFRootFrameNames);
-  full_tf_root_id_ = valid_tf_root.value_or(frame_prefix_ + kValidTFRootFrameNames[0]);
-  if (!valid_tf_root.has_value()) {
-    logger_interface_->logWarn(std::string{"Given TF root frame '"}.append(
-        tf_root + "' could not be composed into any valid option with prefix '" + frame_prefix_ +
-        "', defaulting to: '" + full_tf_root_id_ + "'."));
-  }
+  const auto tf_root = parameter_interface_->getTFRoot();
+  full_tf_root_id_ = frame_prefix_ + tf_root;
 
   // Create a timer to request and publish robot state at a fixed rate
   timer_interface_->setTimer(kRobotStateCallbackPeriod, [this] {

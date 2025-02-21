@@ -23,19 +23,8 @@
 #include <spot_msgs/msg/wi_fi_state.hpp>
 #include <string>
 #include <tf2_msgs/msg/tf_message.hpp>
-#include <type_traits>
 
 namespace spot_ros2 {
-
-namespace type_traits {
-template <typename, typename = void>
-static constexpr bool is_iterable{};
-template <class T>
-inline static constexpr bool
-    is_iterable<T, std::void_t<decltype(std::declval<T>().begin()), decltype(std::declval<T>().end())>> =
-        std::is_same_v<decltype(std::declval<T>().begin()), typename T::iterator>&&
-            std::is_same_v<decltype(std::declval<T>().end()), typename T::iterator>;
-}  // namespace type_traits
 
 /**
  * @brief Mapping from the joint names used within the Spot API to the joint names used in the Spot driver and URDF.
@@ -51,10 +40,6 @@ inline const std::map<const std::string, const std::string> kFriendlyJointNames 
     {"arm0.el0", "arm_el0"},        {"arm0.el1", "arm_el1"},        {"arm0.wr0", "arm_wr0"},
     {"arm0.wr1", "arm_wr1"},        {"arm0.f1x", "arm_f1x"},
 };
-
-static constexpr std::array<const char* const, 2> kValidOdomFrameNames{"odom", "vision"};
-
-static constexpr std::array<const char* const, 3> kValidTFRootFrameNames{"odom", "vision", "body"};
 
 /**
  * @brief Given an input string and a prefix string which is a substring starting at the beginning of the input string,
@@ -75,35 +60,6 @@ std::string stripPrefix(const std::string& input, const std::string& prefix);
  * contains the prefix substring at the beginning, the output will be the same as input.
  */
 std::string prependPrefix(const std::string& input, const std::string& prefix);
-
-/**
- * @brief Given an input frame string, a prefix string, and a set of valid base names, return a new optional string
- * which is guaranteed to be a valid frame option. If a valid option cannot be created, std::nullopt is returned
- * instead.
- * @param frame
- * @param prefix
- * @param base_names
- * @return A new optional string which is guaranteed to be a valid frame option w.r.t. base_names. If a valid option
- * cannot be created, std::nullopt is returned instead.
- */
-template <typename T>
-static constexpr std::optional<std::string> validateFrameWithPrefix(const std::string& frame, const std::string& prefix,
-                                                                    const T& base_names) {
-  static_assert(type_traits::is_iterable<T>, "Trait bound not satisfied for argument 'base_names', type not iterable.");
-  static_assert(std::is_convertible_v<typename T::value_type, std::string>,
-                "Trait bound not satisfied for argument 'base_names', iterator values not convertible to string.");
-
-  // Make sure we already have the frame and prefix combined.
-  const std::string frame_with_prefix = prependPrefix(frame, prefix);
-
-  // Compare the given prefixed frame with all valid prefixed options and set false if no match is found.
-  const bool is_valid =
-      std::find_if(base_names.begin(), base_names.end(), [&prefix, &frame_with_prefix](const auto& option) -> bool {
-        return frame_with_prefix == (prefix + option);
-      }) != base_names.end();
-
-  return is_valid ? std::make_optional(frame_with_prefix) : std::nullopt;
-}
 
 /**
  * @brief Create a BatteryStateArray ROS message by parsing a RobotState message and applying a clock skew to it.

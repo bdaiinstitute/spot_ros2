@@ -309,16 +309,9 @@ ObjectSynchronizer::ObjectSynchronizer(const std::shared_ptr<WorldObjectClientIn
       clock_interface_{std::move(clock_interface)} {
   frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
 
-  const std::string tf_root = parameter_interface_->getTFRoot();
-  const std::optional<std::string> valid_tf_root =
-      validateFrameWithPrefix(tf_root, frame_prefix_, kValidTFRootFrameNames);
-  preferred_base_frame_ = stripPrefix(valid_tf_root.value_or(kValidTFRootFrameNames[0]), frame_prefix_);
-  preferred_base_frame_with_prefix_ = valid_tf_root.value_or(frame_prefix_ + kValidTFRootFrameNames[0]);
-  if (!valid_tf_root.has_value()) {
-    logger_interface_->logWarn(std::string{"Given TF root frame '"}.append(
-        tf_root + "' could not be composed into any valid option with prefix '" + frame_prefix_ +
-        "', defaulting to: '" + preferred_base_frame_with_prefix_ + "'."));
-  }
+  const auto tf_root = parameter_interface_->getTFRoot();
+  preferred_base_frame_ = tf_root;
+  preferred_base_frame_with_prefix_ = frame_prefix_ + tf_root;
 
   // TODO(khughes): This is temporarily disabled to reduce driver's spew about TF extrapolation.
   // world_object_update_timer_->setTimer(kWorldObjectSyncPeriod, [this]() {
