@@ -253,7 +253,7 @@ def spot_has_arm(config_file_path: str) -> bool:
         bool: True if spot has an arm, False otherwise
     """
     logger = logging.getLogger("spot_driver_launch")
-    username, password, hostname, port, certificate, _ = get_login_parameters(config_file_path)
+    username, password, hostname, port, certificate, spot_name = get_login_parameters(config_file_path)
     gripperless = get_gripperless(get_ros_param_dict(config_file_path))
     spot_wrapper = SpotWrapper(
         username=username,
@@ -261,6 +261,7 @@ def spot_has_arm(config_file_path: str) -> bool:
         hostname=hostname,
         port=port,
         cert_resource_glob=certificate,
+        robot_name=spot_name,
         logger=logger,
         gripperless=gripperless,
     )
