@@ -543,29 +543,18 @@ TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromExplicitParameter) {
   verifyExpectedFramePrefix(node, namespaced_node);
 }
 
-TEST_F(RclcppParameterInterfaceTest, GetPreferredOdomFrameWithInvalidOption) {
-  // GIVEN we create an rclcpp node and set the preferred odom frame config parameter to an invalid value
+TEST_F(RclcppParameterInterfaceTest, GetConfigWithInvalidOptions) {
+  // GIVEN we create an rclcpp node and set config parameters to invalid values
   const auto node = std::make_shared<rclcpp::Node>(kNodeName);
   node->declare_parameter("preferred_odom_frame", "visionvision");
-
-  // GIVEN we create a RclcppParameterInterface using this node
-  RclcppParameterInterface parameter_interface{node};
-
-  // WHEN we call getPreferredOdomFrame
-  // THEN the parameter interface returns the default option
-  EXPECT_THAT(parameter_interface.getPreferredOdomFrame(), StrEq("odom"));
-}
-
-TEST_F(RclcppParameterInterfaceTest, GetTFRootWithInvalidOption) {
-  // GIVEN we create an rclcpp node and set the TF root frame config parameter to an invalid value
-  const auto node = std::make_shared<rclcpp::Node>(kNodeName);
   node->declare_parameter("tf_root", "visionvision");
 
   // GIVEN we create a RclcppParameterInterface using this node
   RclcppParameterInterface parameter_interface{node};
 
-  // WHEN we call getTFRoot
-  // THEN the parameter interface returns the default option
+  // WHEN we get the values from the parameter interface
+  // THEN the parameter interface returns the default options
+  EXPECT_THAT(parameter_interface.getPreferredOdomFrame(), StrEq("odom"));
   EXPECT_THAT(parameter_interface.getTFRoot(), StrEq("odom"));
 }
 }  // namespace spot_ros2::test
