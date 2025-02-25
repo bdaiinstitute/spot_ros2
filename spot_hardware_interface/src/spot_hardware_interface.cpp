@@ -51,23 +51,6 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
 
-std::vector<float> SpotHardware::parse_gains_parameter(const std::string gains_string,
-                                                       const std::vector<float>& default_gains,
-                                                       const std::string gain_name) {
-  std::istringstream gains_stream(gains_string);
-  std::vector<float> gains((std::istream_iterator<float>(gains_stream)), (std::istream_iterator<float>()));
-  const auto expected_size = default_gains.size();
-  if (gains.size() != expected_size) {
-    if (!gains.empty()) {
-      RCLCPP_WARN(rclcpp::get_logger("SpotHardware"),
-                  "%s has %ld entries, expected %ld. Check your config file! Falling back to default gains.",
-                  gain_name.c_str(), gains.size(), expected_size);
-    }
-    return default_gains;
-  }
-  return gains;
-}
-
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -77,78 +60,67 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   username_ = info_.hardware_parameters["username"];
   password_ = info_.hardware_parameters["password"];
 
-  hw_states_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
-  hw_commands_.resize(info_.joints.size() * interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
+  hw_states_.resize(info_.joints.size() * state_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
+  hw_commands_.resize(info_.joints.size() * command_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
 
-  njoints_ = hw_states_.size() / interfaces_per_joint_;
-
-  // check that the number of joints matches what we expect, and determine default k_q_p/k_qd_p from this
-  std::vector<float> default_k_q_p, default_k_qd_p;
-  if (njoints_ == kNjointsArm) {
-    default_k_q_p.assign(std::begin(kDefaultKqpArm), std::end(kDefaultKqpArm));
-    default_k_qd_p.assign(std::begin(kDefaultKqdpArm), std::end(kDefaultKqdpArm));
-  } else if (njoints_ == kNjointsNoArm) {
-    default_k_q_p.assign(std::begin(kDefaultKqpNoArm), std::end(kDefaultKqpNoArm));
-    default_k_qd_p.assign(std::begin(kDefaultKqdpNoArm), std::end(kDefaultKqdpNoArm));
-  } else {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"),
-                 "Got %ld joints, expected either %d (Spot with arm) or %d (Spot without arm)!!", njoints_, kNjointsArm,
-                 kNjointsNoArm);
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-
-  // Get the user-passed in k_q_p and k_q_d values.
-  const std::string k_q_p_string = info_.hardware_parameters["k_q_p"];
-  const std::string k_qd_p_string = info_.hardware_parameters["k_qd_p"];
-
-  // Determine the gains that should be used on robot.
-  k_q_p_ = parse_gains_parameter(k_q_p_string, default_k_q_p, "k_q_p");
-  k_qd_p_ = parse_gains_parameter(k_qd_p_string, default_k_qd_p, "k_qd_p");
+  njoints_ = hw_states_.size() / state_interfaces_per_joint_;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    // Assumes three state and three command interfaces for each joint (position, velocity, and effort).
-    if (joint.command_interfaces.size() != interfaces_per_joint_) {
+    // First check command interfaces
+    if (joint.command_interfaces.size() != command_interfaces_per_joint_) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' has %zu command interfaces found. 3 expected.",
                    joint.name.c_str(), joint.command_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
-
+    // 1. check position
     if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
                    joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return hardware_interface::CallbackReturn::ERROR;
     }
-
+    // 2. check velocity
     if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
                    joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return hardware_interface::CallbackReturn::ERROR;
     }
-
+    // 3. check effort
     if (joint.command_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
                    joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_EFFORT);
       return hardware_interface::CallbackReturn::ERROR;
     }
-
-    if (joint.state_interfaces.size() != interfaces_per_joint_) {
+    // 4. check k_q_p
+    if (joint.command_interfaces[3].name != HW_IF_K_Q_P) {
+      RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
+                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), HW_IF_K_Q_P.c_str());
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+    // 5. check k_qd_p
+    if (joint.command_interfaces[4].name != HW_IF_K_QD_P) {
+      RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
+                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), HW_IF_K_QD_P.c_str());
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+    // Second, check state interfaces
+    if (joint.state_interfaces.size() != state_interfaces_per_joint_) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' has %zu state interface. 3 expected.",
                    joint.name.c_str(), joint.state_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
-
+    // 1. check position
     if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s state interface. '%s' expected.",
                    joint.name.c_str(), joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return hardware_interface::CallbackReturn::ERROR;
     }
-
+    // 2. check velocity
     if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
                    joint.name.c_str(), joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return hardware_interface::CallbackReturn::ERROR;
     }
-
+    // 3. check effort
     if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
                    joint.name.c_str(), joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_EFFORT);
@@ -202,9 +174,11 @@ hardware_interface::CallbackReturn SpotHardware::on_activate(const rclcpp_lifecy
   }
 
   // Set up command_states struct, initialized to zeros
-  command_states_.position = std::vector<float>(info_.joints.size(), 0.0);
-  command_states_.velocity = std::vector<float>(info_.joints.size(), 0.0);
-  command_states_.load = std::vector<float>(info_.joints.size(), 0.0);
+  joint_commands_.position = std::vector<float>(info_.joints.size(), 0.0);
+  joint_commands_.velocity = std::vector<float>(info_.joints.size(), 0.0);
+  joint_commands_.load = std::vector<float>(info_.joints.size(), 0.0);
+  joint_commands_.k_q_p = std::vector<float>(info_.joints.size(), 0.0);
+  joint_commands_.k_qd_p = std::vector<float>(info_.joints.size(), 0.0);
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -214,11 +188,11 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
   for (size_t i = 0; i < info_.joints.size(); i++) {
     const auto& joint = info_.joints.at(i);
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_POSITION,
-                                                                     &hw_states_[interfaces_per_joint_ * i]));
+                                                                     &hw_states_[state_interfaces_per_joint_ * i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_VELOCITY,
-                                                                     &hw_states_[interfaces_per_joint_ * i + 1]));
+                                                                     &hw_states_[state_interfaces_per_joint_ * i + 1]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_EFFORT,
-                                                                     &hw_states_[interfaces_per_joint_ * i + 2]));
+                                                                     &hw_states_[state_interfaces_per_joint_ * i + 2]));
   }
   return state_interfaces;
 }
@@ -227,12 +201,16 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++) {
     const auto& joint = info_.joints.at(i);
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_POSITION,
-                                                                         &hw_commands_[interfaces_per_joint_ * i]));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_VELOCITY,
-                                                                         &hw_commands_[interfaces_per_joint_ * i + 1]));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(joint.name, hardware_interface::HW_IF_EFFORT,
-                                                                         &hw_commands_[interfaces_per_joint_ * i + 2]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        joint.name, hardware_interface::HW_IF_POSITION, &hw_commands_[command_interfaces_per_joint_ * i]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        joint.name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[command_interfaces_per_joint_ * i + 1]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        joint.name, hardware_interface::HW_IF_EFFORT, &hw_commands_[command_interfaces_per_joint_ * i + 2]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        joint.name, HW_IF_K_Q_P, &hw_commands_[command_interfaces_per_joint_ * i + 3]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        joint.name, HW_IF_K_QD_P, &hw_commands_[command_interfaces_per_joint_ * i + 4]));
   }
   return command_interfaces;
 }
@@ -269,9 +247,9 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   }
   // Ensure that the states received from the Spot SDK will fit into the hw_states_ vector
   const auto states_size = hw_states_.size();
-  if (interfaces_per_joint_ * joint_pos.size() != states_size ||
-      interfaces_per_joint_ * joint_vel.size() != states_size ||
-      interfaces_per_joint_ * joint_load.size() != states_size) {
+  if (state_interfaces_per_joint_ * joint_pos.size() != states_size ||
+      state_interfaces_per_joint_ * joint_vel.size() != states_size ||
+      state_interfaces_per_joint_ * joint_load.size() != states_size) {
     RCLCPP_FATAL(
         rclcpp::get_logger("SpotHardware"),
         "The number of joints and interfaces does not match with the outputted joint states from the Spot SDK!");
@@ -279,14 +257,23 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   }
   // Read values into joint states
   for (size_t i = 0; i < joint_pos.size(); ++i) {
-    hw_states_.at(i * interfaces_per_joint_) = joint_pos.at(i);
-    hw_states_.at(i * interfaces_per_joint_ + 1) = joint_vel.at(i);
-    hw_states_.at(i * interfaces_per_joint_ + 2) = joint_load.at(i);
+    hw_states_.at(i * state_interfaces_per_joint_) = joint_pos.at(i);
+    hw_states_.at(i * state_interfaces_per_joint_ + 1) = joint_vel.at(i);
+    hw_states_.at(i * state_interfaces_per_joint_ + 2) = joint_load.at(i);
   }
 
-  // Set initial command values to current state
+  // Fill in the initial command values
   if (!init_state_) {
-    hw_commands_ = hw_states_;
+    for (size_t i = 0; i < njoints_; i++) {
+      // copy over current position, velocity, and load from state to current command
+      hw_commands_[command_interfaces_per_joint_ * i] = hw_states_[state_interfaces_per_joint_ * i];
+      hw_commands_[command_interfaces_per_joint_ * i + 1] = hw_states_[state_interfaces_per_joint_ * i + 1];
+      hw_commands_[command_interfaces_per_joint_ * i + 2] = hw_states_[state_interfaces_per_joint_ * i + 2];
+      // Fill in k_q_p and k_qd_p gains from the initial_value field from the URDF
+      const auto& joint = info_.joints.at(i);
+      hw_commands_[command_interfaces_per_joint_ * i + 3] = std::stof(joint.command_interfaces.at(3).initial_value);
+      hw_commands_[command_interfaces_per_joint_ * i + 4] = std::stof(joint.command_interfaces.at(4).initial_value);
+    }
     init_state_ = true;
   }
 
@@ -301,11 +288,13 @@ hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/
   }
 
   for (std::size_t i = 0; i < info_.joints.size(); ++i) {
-    command_states_.position.at(i) = hw_commands_[interfaces_per_joint_ * i];
-    command_states_.velocity.at(i) = hw_commands_[interfaces_per_joint_ * i + 1];
-    command_states_.load.at(i) = hw_commands_[interfaces_per_joint_ * i + 2];
+    joint_commands_.position.at(i) = hw_commands_[command_interfaces_per_joint_ * i];
+    joint_commands_.velocity.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 1];
+    joint_commands_.load.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 2];
+    joint_commands_.k_q_p.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 3];
+    joint_commands_.k_qd_p.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 4];
   }
-  send_command(command_states_);
+  send_command(joint_commands_);
 
   return hardware_interface::return_type::OK;
 }
@@ -535,10 +524,12 @@ void SpotHardware::stop_command_stream() {
   command_stream_started_ = false;
 }
 
-void SpotHardware::send_command(const JointStates& joint_commands) {
+void SpotHardware::send_command(const JointCommands& joint_commands) {
   const std::vector<float>& position = joint_commands.position;
   const std::vector<float>& velocity = joint_commands.velocity;
   const std::vector<float>& load = joint_commands.load;
+  const std::vector<float>& k_q_p = joint_commands.k_q_p;
+  const std::vector<float>& k_qd_p = joint_commands.k_qd_p;
 
   // build protobuf
   auto* joint_cmd = joint_request_.mutable_joint_command();
@@ -549,6 +540,10 @@ void SpotHardware::send_command(const JointStates& joint_commands) {
   joint_cmd->mutable_velocity()->Add(velocity.begin(), velocity.end());
   joint_cmd->mutable_load()->Clear();
   joint_cmd->mutable_load()->Add(load.begin(), load.end());
+  joint_cmd->mutable_gains()->mutable_k_q_p()->Clear();
+  joint_cmd->mutable_gains()->mutable_k_q_p()->Add(k_q_p.begin(), k_q_p.end());
+  joint_cmd->mutable_gains()->mutable_k_qd_p()->Clear();
+  joint_cmd->mutable_gains()->mutable_k_qd_p()->Add(k_qd_p.begin(), k_qd_p.end());
 
   if (endpoint_ == nullptr) {
     auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
