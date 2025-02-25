@@ -21,7 +21,7 @@ def hello_arm(robot_name: Optional[str] = None) -> bool:
     # Set up basic ROS2 utilities for communicating with the driver
     node = ros_scope.node()
     if node is None:
-        raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
+        raise ValueError("no ROS 2 node available (did you use synchros2.process.main?)")
     logger = node.get_logger()
 
     odom_frame_name = namespace_with(robot_name, ODOM_FRAME_NAME)

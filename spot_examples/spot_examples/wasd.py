@@ -68,7 +68,7 @@ class WasdInterface:
 
         self.node = ros_scope.node()
         if self.node is None:
-            raise ValueError("no ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
+            raise ValueError("no ROS 2 node available (did you use synchros2.process.main?)")
 
         self.logger = self.node.get_logger()
 
