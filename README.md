@@ -76,7 +76,7 @@ The following flags may be useful for extra functionality when running the image
 
 ### Experimental - RMW ZENOH Middleware
 
-**Disclaimer:** The RMW ZENOH middleware is now available for installation with the driver. Please note that this feature is currently under experimental testing and may result in issues that we cannot address. To start the zenoh router with the driver, set the `experimental_zenoh_rmw` parameter to `True`. For further configuration and settings, please refer to the [rmw_zenoh documentation](https://github.com/ros2/rmw_zenoh).
+**Disclaimer:** The RMW ZENOH middleware is now available for installation with the driver. Please note that this feature is currently under experimental testing and may result in issues that we cannot address. To use the zenoh implementation, please refer to the [rmw_zenoh documentation](https://github.com/ros2/rmw_zenoh).
 
 
 # Packages
