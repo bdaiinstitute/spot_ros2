@@ -1,4 +1,4 @@
-spot_forward_controller:
+spot_joint_controller:
   joints: {
     type: string_array,
     default_value: [],

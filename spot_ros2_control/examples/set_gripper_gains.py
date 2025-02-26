@@ -26,7 +26,7 @@ class ExampleGripperStreaming:
         self._logger = self._node.get_logger()
         self._robot_name = robot_name
         self._command_pub = self._node.create_publisher(
-            JointCommand, namespace_with(self._robot_name, "spot_forward_controller/joint_commands"), 10
+            JointCommand, namespace_with(self._robot_name, "spot_joint_controller/joint_commands"), 10
         )
         self._joint_command = JointCommand()
         self._joint_command.name = [namespace_with(self._robot_name, GRIPPER_JOINT_NAME)]
