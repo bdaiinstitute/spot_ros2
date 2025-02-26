@@ -3,36 +3,49 @@
 import time
 
 import synchros2.process as ros_process
+from sensor_msgs.msg import JointState
+from synchros2.futures import unwrap_future
 from synchros2.node import Node
+from synchros2.subscription import Subscription
 
 from spot_msgs.msg import JointCommand
 
 # maximum and minimum joint angles in radians.
 GRIPPER_OPEN_ANGLE = -1.57
 GRIPPER_CLOSE_ANGLE = 0.0
+GRIPPER_JOINT_NAME = "arm_f1x"
 
 
 class ExampleGripperStreaming:
-    def __init__(self, node: Node) -> None:
+    def __init__(self, node: Node, robot_name: str) -> None:
         """Initialize the example."""
         self._node = node
         self._logger = self._node.get_logger()
         self._command_pub = self._node.create_publisher(JointCommand, "spot_forward_controller/joint_commands", 10)
         self._joint_command = JointCommand()
-        self._joint_command.name = ["arm_f1x"]
+        self._joint_command.name = [GRIPPER_JOINT_NAME]
         self._joint_command.k_q_p = [16.0]
         self._joint_command.k_qd_p = [0.32]
+        self._joint_angles = Subscription(JointState, "low_level/joint_states")
 
-    def get_k_q_p(self):
+    def get_gripper_joint_angle(self) -> float:
+        """Get the current gripper joint angle from the joint state topic"""
+        joint_state = unwrap_future(self._joint_angles.update, timeout_sec=5.0)
+        gripper_index = joint_state.name.index(GRIPPER_JOINT_NAME)
+        gripper_position = joint_state.position[gripper_index]
+        return gripper_position
+
+    def get_k_q_p(self) -> float:
         """Get the current k_q_p command for the gripper."""
         return self._joint_command.k_q_p[0]
 
-    def get_k_qd_p(self):
+    def get_k_qd_p(self) -> float:
         """Get the current k_qd_p command for the gripper."""
         return self._joint_command.k_qd_p[0]
 
     def set_gains(self, k_q_p: float, k_qd_p: float) -> None:
         """Set the k_q_p and k_qd_p commands for the gripper."""
+        self._logger.info(f"Setting k_q_p={k_q_p} and k_qd_p={k_qd_p}")
         self._joint_command.k_q_p = [k_q_p]
         self._joint_command.k_qd_p = [k_qd_p]
 
@@ -48,31 +61,35 @@ class ExampleGripperStreaming:
             duration_sec (float): Duration of each open and close movement
             npoints (int): number of points to send for each open and close movement.
         """
+        # todo make this start from current joint angle...
+        current_gripper_angle = self.get_gripper_joint_angle()
         dt = duration_sec / npoints
-        step_size_rad = (GRIPPER_OPEN_ANGLE - GRIPPER_CLOSE_ANGLE) / npoints
+        step_size_open = (GRIPPER_OPEN_ANGLE - current_gripper_angle) / npoints
         self._logger.info("Opening...")
         for i in range(npoints):
-            self.move_gripper(goal_joint_angle=(GRIPPER_CLOSE_ANGLE + i * step_size_rad))
+            self.move_gripper(goal_joint_angle=(current_gripper_angle + i * step_size_open))
             time.sleep(dt)
         self._logger.info("Closing...")
+        step_size_close = (GRIPPER_OPEN_ANGLE - GRIPPER_CLOSE_ANGLE) / npoints
         for i in range(npoints):
-            self.move_gripper(goal_joint_angle=(GRIPPER_OPEN_ANGLE - i * step_size_rad))
+            self.move_gripper(goal_joint_angle=(GRIPPER_OPEN_ANGLE - i * step_size_close))
             time.sleep(dt)
 
 
 @ros_process.main()
 def main() -> None:
     """Run the example."""
-    example = ExampleGripperStreaming(node=main.node)
+    example = ExampleGripperStreaming(node=main.node, robot_name="")
     example.open_and_close()
     while True:
         # Get gains to try out from the user.
-        k_q_p_str = input(f"Select k_q_p gain (current value: {example.get_k_q_p()}): ")
-        k_qd_p_str = input(f"Select k_qd_p gain (current value: {example.get_k_qd_p()}): ")
-        print(f"you selected k_q_p={k_q_p_str}, k_qd_p={k_qd_p_str}")
+        k_q_p_str = input(f"Select a k_q_p gain (current value: {example.get_k_q_p()}): ")
+        k_qd_p_str = input(f"Select a k_qd_p gain (current value: {example.get_k_qd_p()}): ")
         try:
-            k_q_p = float(k_q_p_str)
-            k_qd_p = float(k_qd_p_str)
+            # clamp k_q_p from 0->20 (nominally 16.0)
+            k_q_p = max(0.0, min(float(k_q_p_str), 20.0))
+            # clamp k_qd_p from 0->5 (nominally 0.32). Gripper makes weird noises when this is over 5...
+            k_qd_p = max(0.0, min(float(k_qd_p_str), 5.0))
             example.set_gains(k_q_p, k_qd_p)
         except ValueError:
             print("Your inputs could not be converted to floats -- keeping the same gains.")
