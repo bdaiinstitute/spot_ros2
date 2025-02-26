@@ -1,3 +1,7 @@
+// File modified. Modifications Copyright (c) 2025 Boston Dynamics AI Institute LLC.
+// All rights reserved.
+
+// --------------------------------------------------------------
 // Copyright 2021 Stogl Robotics Consulting UG (haftungsbescrhänkt)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,33 +22,36 @@
 #include <string>
 #include <vector>
 
-#include <spot_controllers/spot_forward_controller_parameters.hpp>
+#include <spot_controllers/spot_joint_controller_parameters.hpp>
 #include "controller_interface/controller_interface.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/realtime_buffer.hpp"
-#include "sensor_msgs/msg/joint_state.hpp"
 #include "spot_controllers/visibility_control.h"
 #include "spot_msgs/msg/joint_command.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
 namespace spot_controllers {
 using CmdType = spot_msgs::msg::JointCommand;
-// using CmdType = sensor_msgs::msg::JointState;
 
 /**
- * \brief Forward command controller for a set of joints and interfaces.
+ * \brief Controller for Spot capable of streaming any combination of position, velocity, load, k_q_p, and k_qd_p
+ * to the Spot hardware interface for a given set of joints.
  *
- * This class forwards the command signal down to a set of joints or interfaces.
+ * This controller parses the information provided in the JointCommand message received to determine which command
+ * interfaces to control.
  *
  * Subscribes to:
- * - \b joint_commands (spot_msgs::msg::JointCommand) : The commands to apply.
+ * - \b joint_commands (spot_msgs::msg::JointCommand) : The commands to apply. The `name` field should contain the
+ * names of the joints to command (this can be any number of joints, from one to all of the joints on the robot).
+ * For each joint name entry, choose which interface/s you want to control by filling out the correspoinding index in
+ * the other fields of the JointCommand message (position, velocity, effort, k_q_p, and/or k_q_d)
  */
-class SpotForwardController : public controller_interface::ControllerInterface {
+class SpotJointController : public controller_interface::ControllerInterface {
  public:
-  SpotForwardController();
+  SpotJointController();
 
-  ~SpotForwardController() = default;
+  ~SpotJointController() = default;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
@@ -61,8 +68,8 @@ class SpotForwardController : public controller_interface::ControllerInterface {
   controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
  protected:
-  using Params = spot_forward_controller::Params;
-  using ParamListener = spot_forward_controller::ParamListener;
+  using Params = spot_joint_controller::Params;
+  using ParamListener = spot_joint_controller::ParamListener;
 
   std::shared_ptr<ParamListener> param_listener_;
   Params params_;

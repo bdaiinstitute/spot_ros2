@@ -14,8 +14,8 @@ controller_manager:
     forward_state_controller:
       type: spot_controllers/ForwardStateController
 
-    spot_forward_controller:
-      type: spot_controllers/SpotForwardController
+    spot_joint_controller:
+      type: spot_controllers/SpotJointController
 
 
 forward_position_controller:
@@ -55,7 +55,7 @@ forward_state_controller:
       - velocity
       - effort
 
-spot_forward_controller:
+spot_joint_controller:
   ros__parameters:
     joints:
       - front_left_hip_x

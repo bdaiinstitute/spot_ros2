@@ -70,8 +70,8 @@ ros2 launch spot_ros2_control wiggle_arm.launch.py
 ```
 Add the launch argument `spot_name:=<namespace>` if the ros2 control stack was launched in a namespace.
 
-An alternate example using the `spot_forward_controller` is provided to demonstrate how to stream position and gains at the same time.
-First launch `spot_ros2_control.launch.py` with the launch argument `robot_controller:=spot_forward_controller`.
+An alternate example using the `spot_joint_controller` is provided to demonstrate how to stream position and gains at the same time.
+First launch `spot_ros2_control.launch.py` with the launch argument `robot_controller:=spot_joint_controller`.
 Next, run
 ```bash
 ros2 run spot_ros2_control set_grippper_gains
