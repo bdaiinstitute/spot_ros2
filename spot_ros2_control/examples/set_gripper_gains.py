@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # Copyright (c) 2025 Boston Dynamics AI Institute LLC. All rights reserved.
+import argparse
 import time
+from typing import Optional
 
 import synchros2.process as ros_process
 from sensor_msgs.msg import JointState
 from synchros2.futures import unwrap_future
 from synchros2.node import Node
 from synchros2.subscription import Subscription
+from synchros2.utilities import namespace_with
 
 from spot_msgs.msg import JointCommand
 
@@ -17,21 +20,24 @@ GRIPPER_JOINT_NAME = "arm_f1x"
 
 
 class ExampleGripperStreaming:
-    def __init__(self, node: Node, robot_name: str) -> None:
+    def __init__(self, node: Node, robot_name: Optional[str] = None) -> None:
         """Initialize the example."""
         self._node = node
         self._logger = self._node.get_logger()
-        self._command_pub = self._node.create_publisher(JointCommand, "spot_forward_controller/joint_commands", 10)
+        self._robot_name = robot_name
+        self._command_pub = self._node.create_publisher(
+            JointCommand, namespace_with(self._robot_name, "spot_forward_controller/joint_commands"), 10
+        )
         self._joint_command = JointCommand()
-        self._joint_command.name = [GRIPPER_JOINT_NAME]
+        self._joint_command.name = [namespace_with(self._robot_name, GRIPPER_JOINT_NAME)]
         self._joint_command.k_q_p = [16.0]
         self._joint_command.k_qd_p = [0.32]
-        self._joint_angles = Subscription(JointState, "low_level/joint_states")
+        self._joint_angles = Subscription(JointState, namespace_with(self._robot_name, "low_level/joint_states"))
 
     def get_gripper_joint_angle(self) -> float:
         """Get the current gripper joint angle from the joint state topic"""
         joint_state = unwrap_future(self._joint_angles.update, timeout_sec=5.0)
-        gripper_index = joint_state.name.index(GRIPPER_JOINT_NAME)
+        gripper_index = joint_state.name.index(namespace_with(self._robot_name, GRIPPER_JOINT_NAME))
         gripper_position = joint_state.position[gripper_index]
         return gripper_position
 
@@ -76,10 +82,16 @@ class ExampleGripperStreaming:
             time.sleep(dt)
 
 
-@ros_process.main()
-def main() -> None:
+def cli() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--robot", type=str, help="Namespace the driver is in", default=None)
+    return parser
+
+
+@ros_process.main(cli())
+def main(args: argparse.Namespace) -> None:
     """Run the example."""
-    example = ExampleGripperStreaming(node=main.node, robot_name="")
+    example = ExampleGripperStreaming(node=main.node, robot_name=args.robot)
     example.open_and_close()
     while True:
         # Get gains to try out from the user.
