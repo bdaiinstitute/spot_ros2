@@ -75,6 +75,20 @@ struct JointCommands {
   std::vector<float> k_qd_p;
 };
 
+struct ImuStates {
+  std::string identifier;          // Name for this imu
+  std::string mounting_link_name;  // Name of the link the IMU is mounted on. This name matches a link listed in
+                                   // RobotState.kinematic_state.transforms_snapshot.
+  std::string
+      position_imu;  // Position of the IMU in the mounting link frame expressed in the mounting link's frame (m).
+  std::vector<double> linear_acceleration;  // Linear acceleration of the imu relative to the odom frame expressed in
+                                            // the mounting link's frame (m/s^2).
+  std::vector<double> angular_velocity;     // Angular velocity of the imu relative to the odom frame expressed in the
+                                            // mounting link's frame (rad/s).
+  std::vector<double> odom_rot_quaternion;  // Quarternion representing the rotation from mounting link to odom frame as
+                                            // reported by the IMU.
+};
+
 class StateStreamingHandler {
  public:
   /**
