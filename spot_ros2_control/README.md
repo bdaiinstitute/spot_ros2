@@ -58,7 +58,7 @@ By default, this will load a robot with no arm. If you want your mock robot to h
 
 ## Examples
 
-Examples are provided to replicate [these joint control examples](https://github.com/boston-dynamics/spot-cpp-sdk/tree/master/cpp/examples/joint_control) from Boston Dynamics. They are designed to show how you can send commands to the robot using the built in forward position controller, and can be run in `mock` mode or on the real robot.
+Examples are provided to replicate [these joint control examples](https://github.com/boston-dynamics/spot-cpp-sdk/tree/master/cpp/examples/joint_control) from Boston Dynamics. They are designed to show how you can send commands to the robot using the built in `forward_position_controller`, and can be run in `mock` mode or on the real robot.
 
 Run the following commands to test these examples after launching `spot_ros2_control.launch.py`. If your robot does not have an arm:
 ```bash
@@ -69,6 +69,15 @@ Or, if your robot does have an arm:
 ros2 launch spot_ros2_control wiggle_arm.launch.py
 ```
 Add the launch argument `spot_name:=<namespace>` if the ros2 control stack was launched in a namespace.
+
+An alternate example using the `spot_joint_controller` is provided to demonstrate how to stream position and gains at the same time.
+First launch `spot_ros2_control.launch.py` with the launch argument `robot_controller:=spot_joint_controller`.
+Next, run
+```bash
+ros2 run spot_ros2_control set_grippper_gains
+```
+Include the argument `--robot <namespace>` if the ros2 control stack was launched in a namespace.
+This demo will repeatedly open and close the gripper, and after each motion, will take user input on new k_q_p and k_qd_p values to use next.
 
 ## Additional Arguments
 * `controllers_config`: If this argument is unset, a general purpose controller configuration will be loaded containing a forward position controller and a joint state publisher, that is filled appropriately based on whether or not the robot used (mock or real) has an arm. The forward state controller is also specified here. If you wish to load different controllers, this can be set here.
