@@ -40,9 +40,11 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& position_msg = robot_state.joint_states().position();
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
+  // const auto& foot_state_msg = robot_state.contact_states(0);
   current_position_.assign(position_msg.begin(), position_msg.end());
   current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
   current_load_.assign(load_msg.begin(), load_msg.end());
+  current_foot_state_ = robot_state.contact_states(0);
 
   // Get IMU data from the robot
   imu_identifier_ = robot_state.inertial_state().identifier();
@@ -58,7 +60,7 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   imu_odom_rot_quaternion_ = {rot_msg.x(), rot_msg.y(), rot_msg.z(), rot_msg.w()};
 }
 
-void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states) {
+void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states, ::bosdyn::api::FootState::Contact& foot_states) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
   // Fill in members of the joint states stuct passed in by reference.
@@ -72,6 +74,8 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   imu_states.linear_acceleration.assign(imu_linear_acceleration_.begin(), imu_linear_acceleration_.end());
   imu_states.angular_velocity.assign(imu_angular_velocity_.begin(), imu_angular_velocity_.end());
   imu_states.odom_rot_quaternion.assign(imu_odom_rot_quaternion_.begin(), imu_odom_rot_quaternion_.end());
+
+  foot_states = current_foot_state_;
 }
 
 void StateStreamingHandler::reset() {
@@ -326,7 +330,7 @@ hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecyc
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  state_streaming_handler_.get_states(joint_states_, imu_states_);
+  state_streaming_handler_.get_states(joint_states_, imu_states_, foot_states_);
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;

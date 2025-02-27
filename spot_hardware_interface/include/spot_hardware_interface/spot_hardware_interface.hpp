@@ -120,6 +120,7 @@ class StateStreamingHandler {
   std::vector<double> imu_linear_acceleration_;
   std::vector<double> imu_angular_velocity_;
   std::vector<double> imu_odom_rot_quaternion_;
+  ::bosdyn::api::FootState::Contact current_foot_state_;
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
@@ -169,6 +170,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // The 3 state interfaces are position, velocity, and effort.
   static constexpr size_t state_interfaces_per_joint_ = 3;
   size_t njoints_;
+  size_t nfeet_;
 
   // Login info
   std::string hostname_;
@@ -202,6 +204,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Holds IMU data for the robot received from the BD SDK
   ImuStates imu_states_;
+  // Holds foot states received from the BD SDK
+  ::bosdyn::api::FootState::Contact foot_states_;
 
   // Thread for reading the state of the robot.
   std::jthread state_thread_;
