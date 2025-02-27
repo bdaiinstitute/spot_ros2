@@ -76,6 +76,8 @@ Next, run
 ```bash
 ros2 run spot_ros2_control set_grippper_gains
 ```
+Include the argument `--robot <namespace>` if the ros2 control stack was launched in a namespace.
+This demo will repeatedly open and close the gripper, and after each motion, will take user input on new k_q_p and k_qd_p values to use next.
 
 ## Additional Arguments
 * `controllers_config`: If this argument is unset, a general purpose controller configuration will be loaded containing a forward position controller and a joint state publisher, that is filled appropriately based on whether or not the robot used (mock or real) has an arm. The forward state controller is also specified here. If you wish to load different controllers, this can be set here.
