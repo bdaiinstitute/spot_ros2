@@ -102,6 +102,10 @@ class StateStreamingHandler {
    * @return JointStates struct containing vectors of position, velocity, and load values.
    * ImuStates struct containing info on the IMU's identifier, mounting link, position, linear acceleration,
    * angular velocity, and rotation
+   * Save the current foot states of the robot where:
+   *  CONTACT_UNKNOWN	0	Unknown contact. Do not use.
+      CONTACT_MADE	1	The foot is currently in contact with the ground.
+      CONTACT_LOST	2	The foot is not in contact with the ground.
    */
   void get_states(JointStates& joint_states, ImuStates& imu_states);
   /**
@@ -120,6 +124,7 @@ class StateStreamingHandler {
   std::vector<double> imu_linear_acceleration_;
   std::vector<double> imu_angular_velocity_;
   std::vector<double> imu_odom_rot_quaternion_;
+  // store the current foot contact states
   ::bosdyn::api::FootState::Contact current_foot_state_;
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
@@ -170,7 +175,6 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // The 3 state interfaces are position, velocity, and effort.
   static constexpr size_t state_interfaces_per_joint_ = 3;
   size_t njoints_;
-  size_t nfeet_;
 
   // Login info
   std::string hostname_;
