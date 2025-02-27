@@ -40,11 +40,13 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& position_msg = robot_state.joint_states().position();
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
-  // const auto& foot_state_msg = robot_state.contact_states(0);
   current_position_.assign(position_msg.begin(), position_msg.end());
   current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
   current_load_.assign(load_msg.begin(), load_msg.end());
-  current_foot_state_ = robot_state.contact_states(0);
+  // Save current foot contact states
+  for (size_t i = 0; i < 4; i++) {
+    current_foot_state_.push_back(robot_state.contact_states(i));
+  }
 
   // Get IMU data from the robot
   imu_identifier_ = robot_state.inertial_state().identifier();
@@ -67,23 +69,12 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   joint_states.position.assign(current_position_.begin(), current_position_.end());
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
   joint_states.load.assign(current_load_.begin(), current_load_.end());
-
-  // Fill in members of the imu states struct
-  imu_states.identifier = imu_identifier_;
-  imu_states.position_imu.assign(imu_position_.begin(), imu_position_.end());
-  imu_states.linear_acceleration.assign(imu_linear_acceleration_.begin(), imu_linear_acceleration_.end());
-  imu_states.angular_velocity.assign(imu_angular_velocity_.begin(), imu_angular_velocity_.end());
-  imu_states.odom_rot_quaternion.assign(imu_odom_rot_quaternion_.begin(), imu_odom_rot_quaternion_.end());
-
-  foot_states = current_foot_state_;
 }
 
-void StateStreamingHandler::reset() {
+void StateStreamingHandler::get_foot_states(::bosdyn::api::FootState::Contact& foot_states) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
-  current_position_.clear();
-  current_velocity_.clear();
-  current_load_.clear();
+  foot_states = current_foot_state_;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -204,6 +195,7 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   joint_states_.position.assign(njoints_, 0);
   joint_states_.velocity.assign(njoints_, 0);
   joint_states_.load.assign(njoints_, 0);
+  foot_states_.assign(nfeet, 0);
 
   // Set up the robot using the BD SDK and start command streaming.
   if (!authenticate_robot(hostname_, username_, password_, port_, certificate_)) {
