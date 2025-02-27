@@ -210,7 +210,6 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // Holds IMU data for the robot received from the BD SDK
   ImuStates imu_states_;
   // Holds foot states received from the BD SDK
-  // ::bosdyn::api::FootState::Contact foot_states_;
   std::vector<int> foot_states_;
 
   // Thread for reading the state of the robot.
