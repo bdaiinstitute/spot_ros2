@@ -51,13 +51,12 @@ controller_interface::CallbackReturn SpotJointController::on_configure(
 controller_interface::InterfaceConfiguration SpotJointController::command_interface_configuration() const {
   controller_interface::InterfaceConfiguration command_interfaces_config;
   command_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  const auto interfaces = {"position", "velocity", "effort", "k_q_p", "k_qd_p"};
   for (const auto& joint : params_.joints) {
-    // these are the interfaces that get claimed
-    command_interfaces_config.names.push_back(joint + "/" + "position");
-    command_interfaces_config.names.push_back(joint + "/" + "velocity");
-    command_interfaces_config.names.push_back(joint + "/" + "effort");
-    command_interfaces_config.names.push_back(joint + "/" + "k_q_p");
-    command_interfaces_config.names.push_back(joint + "/" + "k_qd_p");
+    // this sets the interfaces that get claimed.
+    for (const auto& interface : interfaces) {
+      command_interfaces_config.names.push_back(joint + "/" + interface);
+    }
   }
 
   return command_interfaces_config;
@@ -111,32 +110,32 @@ controller_interface::return_type SpotJointController::update(const rclcpp::Time
   const bool using_k_q_p = (*joint_commands)->k_q_p.size() == njoints_to_command;
   const bool using_k_qd_p = (*joint_commands)->k_qd_p.size() == njoints_to_command;
 
-  for (size_t i = 0; i < command_interfaces_.size(); i++) {
-    // for every command interface, we wnat to tell if the received JointCommand contains an update for it.
-    // First get the joint name (i.e. arm_sh0) and the interface name of this command interface (i.e. position)
-    const auto& joint_name = command_interfaces_.at(i).get_prefix_name();
-    const auto& interface_name = command_interfaces_.at(i).get_interface_name();
-    // check if we want to command an interface on this joint by seeing if it's in the JointCommand message.
-    const auto& it = std::find(joint_names.begin(), joint_names.end(), joint_name);
-    if (it == joint_names.end()) {
-      // it wasn't in the JointCommand message, on to the next.
+  // Iterate through the names of the joints that we want to command.
+  for (size_t i = 0; i < njoints_to_command; i++) {
+    const auto joint_name = joint_names.at(i);
+    // find the command index
+    const auto& it = std::find(params_.joints.begin(), params_.joints.end(), joint_name);
+    if (it == params_.joints.end()) {
+      RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *(get_node()->get_clock()), 1000,
+                           "Joint %s was not in the command interface!", joint_name.c_str());
       continue;
     }
     // get the index that the name is at in the command
-    const auto command_index = std::distance(joint_names.begin(), it);
-    // check if interface name is there and update accordingly.
-    // it's possible none of these are true (i.e. we are only using_position, but this specific interface is effort)
-    // then we just keep going onto the next interface to check again.
-    if (interface_name == "position" && using_position) {
-      command_interfaces_.at(i).set_value((*joint_commands)->position.at(command_index));
-    } else if (interface_name == "velocity" && using_velocity) {
-      command_interfaces_.at(i).set_value((*joint_commands)->velocity.at(command_index));
-    } else if (interface_name == "effort" && using_effort) {
-      command_interfaces_.at(i).set_value((*joint_commands)->effort.at(command_index));
-    } else if (interface_name == "k_q_p" && using_k_q_p) {
-      command_interfaces_.at(i).set_value((*joint_commands)->k_q_p.at(command_index));
-    } else if (interface_name == "k_qd_p" && using_k_qd_p) {
-      command_interfaces_.at(i).set_value((*joint_commands)->k_qd_p.at(command_index));
+    const auto command_index = std::distance(params_.joints.begin(), it);
+    if (using_position) {
+      command_interfaces_.at(5 * command_index).set_value((*joint_commands)->position.at(i));
+    }
+    if (using_velocity) {
+      command_interfaces_.at(5 * command_index + 1).set_value((*joint_commands)->velocity.at(i));
+    }
+    if (using_effort) {
+      command_interfaces_.at(5 * command_index + 2).set_value((*joint_commands)->effort.at(i));
+    }
+    if (using_k_q_p) {
+      command_interfaces_.at(5 * command_index + 3).set_value((*joint_commands)->k_q_p.at(i));
+    }
+    if (using_k_qd_p) {
+      command_interfaces_.at(5 * command_index + 4).set_value((*joint_commands)->k_qd_p.at(i));
     }
   }
 
