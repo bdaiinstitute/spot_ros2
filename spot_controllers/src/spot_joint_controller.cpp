@@ -32,6 +32,10 @@ SpotJointController::SpotJointController()
     : controller_interface::ControllerInterface(), rt_command_ptr_(nullptr), joints_command_subscriber_(nullptr) {}
 
 controller_interface::CallbackReturn SpotJointController::on_init() {
+  if (!get_node()) {
+    fprintf(stderr, "Failed to aquire node handle!\n");
+    return controller_interface::CallbackReturn::ERROR;
+  }
   auto param_listener = std::make_shared<ParamListener>(get_node());
   params_ = param_listener->get_params();
   return controller_interface::CallbackReturn::SUCCESS;

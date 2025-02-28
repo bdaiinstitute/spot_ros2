@@ -83,7 +83,7 @@ class SpotJointController : public controller_interface::ControllerInterface {
   rclcpp::Subscription<CmdType>::SharedPtr joints_command_subscriber_;
 
   // Constants useful for interface setup / sending commands.
-  std::vector<std::string> interfaces_ = {"position", "velocity", "effort", "k_q_p", "k_qd_p"};
+  const std::array<std::string, 5> interfaces_{"position", "velocity", "effort", "k_q_p", "k_qd_p"};
   static constexpr size_t n_interfaces_ = 5;
   static constexpr size_t position_offset_ = 0;
   static constexpr size_t velocity_offset_ = 1;
