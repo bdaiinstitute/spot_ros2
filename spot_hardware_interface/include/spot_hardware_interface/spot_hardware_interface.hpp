@@ -79,7 +79,7 @@ struct ImuStates {
   std::string identifier;          // Name for this imu
   std::string mounting_link_name;  // Name of the link the IMU is mounted on. This name matches a link listed in
                                    // RobotState.kinematic_state.transforms_snapshot.
-  std::string
+  std::vector<double>
       position_imu;  // Position of the IMU in the mounting link frame expressed in the mounting link's frame (m).
   std::vector<double> linear_acceleration;  // Linear acceleration of the imu relative to the odom frame expressed in
                                             // the mounting link's frame (m/s^2).
@@ -107,6 +107,13 @@ class StateStreamingHandler {
   std::vector<float> current_position_;
   std::vector<float> current_velocity_;
   std::vector<float> current_load_;
+  // Stores current IMU data
+  std::string imu_identifier_;
+  std::string imu_mounting_link_name_;
+  std::vector<double> imu_position_;
+  std::vector<std::vector<double>> imu_linear_acceleration_;
+  std::vector<std::vector<double>> imu_angular_velocity_;
+  std::vector<std::vector<double>> imu_odom_rot_quaternion_;
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };

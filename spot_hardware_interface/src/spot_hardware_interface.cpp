@@ -40,6 +40,25 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   current_position_.assign(position_msg.begin(), position_msg.end());
   current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
   current_load_.assign(load_msg.begin(), load_msg.end());
+
+  // Get IMU data from the robot
+  imu_identifier_ = robot_state.inertial_state().identifier();
+  imu_mounting_link_name_ = robot_state.inertial_state().mounting_link_name();
+  const auto& imu_position_msg = robot_state.inertial_state().position_imu_rt_link();
+  imu_position_ = {imu_position_msg.x(), imu_position_msg.y(), imu_position_msg.z()};
+  // Loop through IMU packets and extract linear acceleration, angular velocity, and rotation info
+  for (int i = 0; i < robot_state.inertial_state().packets_size(); i++) {
+    auto& acceleration_msg = robot_state.inertial_state().packets(i).acceleration_rt_odom_in_link_frame();
+    auto& angular_vel_msg = robot_state.inertial_state().packets(i).angular_velocity_rt_odom_in_link_frame();
+    auto& rot_msg = robot_state.inertial_state().packets(i).odom_rot_link();
+    std::vector<double> acceleration_vec = {acceleration_msg.x(), acceleration_msg.y(), acceleration_msg.z()};
+    std::vector<double> angular_vel_vec = {angular_vel_msg.x(), angular_vel_msg.y(), angular_vel_msg.z()};
+    std::vector<double> rot_vec = {rot_msg.x(), rot_msg.y(), rot_msg.z(), rot_msg.w()};
+
+    imu_linear_acceleration_.push_back(acceleration_vec);
+    imu_angular_velocity_.push_back(angular_vel_vec);
+    imu_odom_rot_quaternion_.push_back(rot_vec);
+  }
 }
 
 void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
@@ -50,6 +69,13 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
   joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
+
+// void StateStreamingHandler::get_imu_states(ImuStates& imu_states) {
+//   // lock so that read/write doesn't happen at the same time
+//   const std::lock_guard<std::mutex> lock(mutex_);
+//   // Fill in members of the imu states struct
+
+// }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
