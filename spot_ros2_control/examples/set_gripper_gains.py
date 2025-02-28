@@ -60,16 +60,16 @@ class ExampleGripperStreaming:
         self._joint_command.position = [goal_joint_angle]
         self._command_pub.publish(self._joint_command)
 
-    def open_and_close(self, duration_sec: float = 1.0, npoints: int = 50) -> None:
+    def open_and_close(self, duration_sec: float = 1.0, frequency_hz: float = 50.0) -> None:
         """Open and close the gripper by streaming position commands.
 
         Args:
-            duration_sec (float): Duration of each open and close movement
-            npoints (int): number of points to send for each open and close movement.
+            duration_sec (float): Duration in seconds of each open and close movement
+            frequency_hz (int): Frequency in Hz of the command publish rate.
         """
-        # todo make this start from current joint angle...
         current_gripper_angle = self.get_gripper_joint_angle()
-        dt = duration_sec / npoints
+        npoints = int(duration_sec * frequency_hz)
+        dt = 1.0 / frequency_hz
         step_size_open = (GRIPPER_OPEN_ANGLE - current_gripper_angle) / npoints
         self._logger.info("Opening...")
         for i in range(npoints):

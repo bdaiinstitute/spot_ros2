@@ -51,10 +51,9 @@ controller_interface::CallbackReturn SpotJointController::on_configure(
 controller_interface::InterfaceConfiguration SpotJointController::command_interface_configuration() const {
   controller_interface::InterfaceConfiguration command_interfaces_config;
   command_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  const auto interfaces = {"position", "velocity", "effort", "k_q_p", "k_qd_p"};
   for (const auto& joint : params_.joints) {
     // this sets the interfaces that get claimed.
-    for (const auto& interface : interfaces) {
+    for (const auto& interface : interfaces_) {
       command_interfaces_config.names.push_back(joint + "/" + interface);
     }
   }
@@ -123,19 +122,21 @@ controller_interface::return_type SpotJointController::update(const rclcpp::Time
     // get the index that the name is at in the command
     const auto command_index = std::distance(params_.joints.begin(), it);
     if (using_position) {
-      command_interfaces_.at(5 * command_index).set_value((*joint_commands)->position.at(i));
+      command_interfaces_.at(n_interfaces_ * command_index + position_offset_)
+          .set_value((*joint_commands)->position.at(i));
     }
     if (using_velocity) {
-      command_interfaces_.at(5 * command_index + 1).set_value((*joint_commands)->velocity.at(i));
+      command_interfaces_.at(n_interfaces_ * command_index + velocity_offset_)
+          .set_value((*joint_commands)->velocity.at(i));
     }
     if (using_effort) {
-      command_interfaces_.at(5 * command_index + 2).set_value((*joint_commands)->effort.at(i));
+      command_interfaces_.at(n_interfaces_ * command_index + effort_offset_).set_value((*joint_commands)->effort.at(i));
     }
     if (using_k_q_p) {
-      command_interfaces_.at(5 * command_index + 3).set_value((*joint_commands)->k_q_p.at(i));
+      command_interfaces_.at(n_interfaces_ * command_index + k_q_p_offset_).set_value((*joint_commands)->k_q_p.at(i));
     }
     if (using_k_qd_p) {
-      command_interfaces_.at(5 * command_index + 4).set_value((*joint_commands)->k_qd_p.at(i));
+      command_interfaces_.at(n_interfaces_ * command_index + k_qd_p_offset_).set_value((*joint_commands)->k_qd_p.at(i));
     }
   }
 
