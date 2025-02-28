@@ -439,23 +439,25 @@ bool SpotHardware::power_on() {
     case LeasingMode::DIRECT: {
       if (powered_on_) {
         RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is already powered on.");
-        return true;
+        break;
       }
       RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powering on...");
       const auto power_status = robot_->PowerOnMotors(std::chrono::seconds(60), 1.0);
       if (!power_status) {
         RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not power on the robot");
-        return false;
+        break;
       }
       RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered on!");
       powered_on_ = true;
-      return true;
+      break;
     }
     case LeasingMode::PROXIED: {
-      RCLCPP_DEBUG(rclcpp::get_logger("SpotHardware"), "Robot power is managed elsewhere, skipping power on.");
-      return true;
+      RCLCPP_DEBUG(rclcpp::get_logger("SpotHardware"), "Robot power is managed elsewhere, assuming it is powered on.");
+      powered_on_ = true;
+      break;
     }
   }
+  return powered_on_;
 }
 
 bool SpotHardware::power_off() {
@@ -463,23 +465,25 @@ bool SpotHardware::power_off() {
     case LeasingMode::DIRECT: {
       if (!powered_on_) {
         RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is already powered off.");
-        return true;
+        break;
       }
       bosdyn::api::RobotCommand poweroff_command = ::bosdyn::client::SafePowerOffCommand();
       auto poweroff_res = command_client_->RobotCommand(poweroff_command);
       if (!poweroff_res) {
         RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to complete the safe power off command");
-        return false;
+        break;
       }
       RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered off!");
       powered_on_ = false;
-      return true;
+      break;
     }
     case LeasingMode::PROXIED: {
-      RCLCPP_DEBUG(rclcpp::get_logger("SpotHardware"), "Robot power is managed elsewhere, skipping power off.");
-      return true;
+      RCLCPP_DEBUG(rclcpp::get_logger("SpotHardware"), "Robot power is managed elsewhere, assuming power off.");
+      powered_on_ = false;
+      break;
     }
   }
+  return !powered_on_;
 }
 
 void state_stream_loop(std::stop_token stop_token, ::bosdyn::client::RobotStateStreamingClient* stateStreamClient,
