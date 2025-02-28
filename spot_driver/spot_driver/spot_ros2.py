@@ -454,7 +454,7 @@ class SpotROS(Node):
         logging.basicConfig(format="[%(filename)s:%(lineno)d] %(message)s", level=logging.ERROR)
         self.wrapper_logger = logging.getLogger(f"{name_with_dot}spot_wrapper")
 
-        self.leasing_interface: Optional[SpotLeashProtocol] = None
+        self.leash_interface: Optional[SpotLeashProtocol] = None
 
         self.leasing_mode = self.declare_parameter("leasing_mode", "direct").value
         if self.leasing_mode == "proxied":
@@ -467,7 +467,7 @@ class SpotROS(Node):
                     "Should not 'get_lease_on_action' but proxy leasing "
                     "must as it operates with temporary subleases, ignoring"
                 )
-            SpotProxyLeash(self, self.wrapper_logger)
+            self.leash_interface = SpotProxyLeash(self, self.wrapper_logger)
         else:
             if self.leasing_mode != "direct":
                 self.get_logger().warn(f"Unknown '{self.leasing_mode}' leasing mode, falling back to 'direct'")
@@ -498,7 +498,7 @@ class SpotROS(Node):
                 estop_timeout=self.estop_timeout.value,
                 rates=self.rates,
                 callbacks=self.callbacks,
-                leasing_interface=self.leasing_interface,
+                leash_interface=self.leash_interface,
                 use_take_lease=self.use_take_lease.value,
                 get_lease_on_action=self.get_lease_on_action.value,
                 continually_try_stand=self.continually_try_stand.value,
