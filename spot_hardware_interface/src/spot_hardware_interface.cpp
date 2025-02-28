@@ -413,12 +413,17 @@ bool SpotHardware::check_estop() {
 }
 
 bool SpotHardware::get_lease() {
+  if (lease_.IsValid()) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease already taken");
+    return true;
+  }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Taking lease...");
   auto lease = leasing_interface_->AcquireLease("body");
   if (!lease) {
     RCLCPP_ERROR_STREAM(rclcpp::get_logger("SpotHardware"), lease.error());
     return false;
   }
+  lease_ = lease.value();
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease taken!!");
   return true;
 }
@@ -615,12 +620,17 @@ void SpotHardware::send_command(const JointCommands& joint_commands) {
 }
 
 void SpotHardware::release_lease() {
+  if (!lease_.IsValid()) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "No lease to return");
+    return;
+  }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Returning lease...");
   auto lease = leasing_interface_->ReturnLease("body");
   if (!lease) {
     RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), lease.error());
     return;
   }
+  lease_ = ::bosdyn::client::Lease();  // invalidate lease
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease returned!!");
 }
 

@@ -37,6 +37,7 @@
 #include "spot_hardware_interface/spot_leasing_interface.hpp"
 #include "spot_hardware_interface/visibility_control.h"
 
+#include "bosdyn/client/lease/lease.h"
 #include "bosdyn/client/lease/lease_keepalive.h"
 #include "bosdyn/client/robot_command/robot_command_builder.h"
 #include "bosdyn/client/robot_command/robot_command_client.h"
@@ -165,6 +166,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_;
   ::bosdyn::client::RobotCommandClient* command_client_;
 
+  ::bosdyn::client::Lease lease_;
   std::unique_ptr<LeasingInterface> leasing_interface_;
 
   LeasingMode leasing_mode_;
