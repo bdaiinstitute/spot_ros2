@@ -27,7 +27,7 @@ LeaseManagerNode::LeaseManagerNode(const rclcpp::NodeOptions& node_options) {
   auto parameter_interface = std::make_unique<RclcppParameterInterface>(node);
   auto timer_interface = std::make_unique<RclcppWallTimerInterface>(node);
   auto logger_interface = std::make_unique<RclcppLoggerInterface>(node->get_logger());
-  auto middleware_handle = std::make_unique<LeaseMiddlewareHandle>(node_);
+  auto middleware_handle = std::make_unique<LeaseMiddlewareHandle>(node);
   const auto timesync_timeout = parameter_interface->getTimeSyncTimeout();
   auto spot_api =
       std::make_unique<DefaultSpotApi>("lease_manager", timesync_timeout, parameter_interface->getCertificate());
