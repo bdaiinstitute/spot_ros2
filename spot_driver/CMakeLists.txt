@@ -260,6 +260,7 @@ install(
 install(
   TARGETS
     image_stitcher
+    lease_manager_component
     spot_api
     spot_image_publisher_component
     spot_inverse_kinematics_component
@@ -275,6 +276,8 @@ install(
 install(
   TARGETS 
     image_stitcher_node
+    lease_manager_node
+    lease_manager_node_component
     object_synchronizer_node
     spot_image_publisher_node
     spot_image_publisher_node_component
