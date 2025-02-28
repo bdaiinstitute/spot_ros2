@@ -98,10 +98,10 @@ def main(args: argparse.Namespace) -> None:
         k_q_p_str = input(f"Select a k_q_p gain (current value: {example.get_k_q_p()}): ")
         k_qd_p_str = input(f"Select a k_qd_p gain (current value: {example.get_k_qd_p()}): ")
         try:
-            # clamp k_q_p from 0->20 (nominally 16.0)
-            k_q_p = max(0.0, min(float(k_q_p_str), 20.0))
-            # clamp k_qd_p from 0->5 (nominally 0.32). Gripper makes weird noises when this is over 5...
-            k_qd_p = max(0.0, min(float(k_qd_p_str), 5.0))
+            # clamp k_q_p from 0->50 (nominally 16). O will result in no motion and anything over ~20 looks the same.
+            k_q_p = max(0.0, min(float(k_q_p_str), 50.0))
+            # clamp k_qd_p from 0->4 (nominally 0.32). Gripper makes weird noises when this is >= 5...
+            k_qd_p = max(0.0, min(float(k_qd_p_str), 4.0))
             example.set_gains(k_q_p, k_qd_p)
         except ValueError:
             print("Your inputs could not be converted to floats -- keeping the same gains.")
