@@ -81,12 +81,12 @@ struct ImuStates {
                                    // RobotState.kinematic_state.transforms_snapshot.
   std::vector<double>
       position_imu;  // Position of the IMU in the mounting link frame expressed in the mounting link's frame (m).
-  std::vector<double> linear_acceleration;  // Linear acceleration of the imu relative to the odom frame expressed in
-                                            // the mounting link's frame (m/s^2).
-  std::vector<double> angular_velocity;     // Angular velocity of the imu relative to the odom frame expressed in the
-                                            // mounting link's frame (rad/s).
-  std::vector<double> odom_rot_quaternion;  // Quarternion representing the rotation from mounting link to odom frame as
-                                            // reported by the IMU.
+  std::vector<std::vector<double>> linear_acceleration;  // Linear acceleration of the imu relative to the odom frame
+                                                         // expressed in the mounting link's frame (m/s^2).
+  std::vector<std::vector<double>> angular_velocity;     // Angular velocity of the imu relative to the odom frame
+                                                         // expressed in the mounting link's frame (rad/s).
+  std::vector<std::vector<double>> odom_rot_quaternion;  // Quarternion representing the rotation from mounting link to
+                                                         // odom frame as reported by the IMU.
 };
 
 class StateStreamingHandler {
@@ -101,6 +101,12 @@ class StateStreamingHandler {
    * @return JointStates struct containing vectors of position, velocity, and load values.
    */
   void get_joint_states(JointStates& joint_states);
+  /**
+   * @brief Get a struct of the current IMU states of the robot.
+   * @return ImuStates struct containing info on the IMU's identifier, mounting link, position, linear acceleration,
+   * angular velocity, and rotation
+   */
+  void get_imu_states(ImuStates& imu_states);
 
  private:
   // Stores the current position, velocity, and load of the robot's joints.
@@ -185,6 +191,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
   JointStates joint_states_;
   // Holds joint commands for the robot to send to BD SDK
   JointCommands joint_commands_;
+
+  // Holds IMU data for the robot received from the BD SDK
+  ImuStates imu_states_;
 
   // Thread for reading the state of the robot.
   std::jthread state_thread_;

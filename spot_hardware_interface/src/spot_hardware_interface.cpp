@@ -70,12 +70,17 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
 
-// void StateStreamingHandler::get_imu_states(ImuStates& imu_states) {
-//   // lock so that read/write doesn't happen at the same time
-//   const std::lock_guard<std::mutex> lock(mutex_);
-//   // Fill in members of the imu states struct
-
-// }
+void StateStreamingHandler::get_imu_states(ImuStates& imu_states) {
+  // lock so that read/write doesn't happen at the same time
+  const std::lock_guard<std::mutex> lock(mutex_);
+  // Fill in members of the imu states struct
+  imu_states.identifier = imu_identifier_;
+  imu_states.mounting_link_name = imu_mounting_link_name_;
+  imu_states.position_imu.assign(imu_position_.begin(), imu_position_.end());
+  imu_states.linear_acceleration.assign(imu_linear_acceleration_.begin(), imu_linear_acceleration_.end());
+  imu_states.angular_velocity.assign(imu_angular_velocity_.begin(), imu_angular_velocity_.end());
+  imu_states.odom_rot_quaternion.assign(imu_odom_rot_quaternion_.begin(), imu_odom_rot_quaternion_.end());
+}
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
@@ -302,6 +307,7 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     }
     init_state_ = true;
   }
+  state_streaming_handler_.get_imu_states(imu_states_);
 
   return hardware_interface::return_type::OK;
 }
