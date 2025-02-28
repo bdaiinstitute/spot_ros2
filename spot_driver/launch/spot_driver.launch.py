@@ -9,7 +9,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from synchros2.launch.actions import DeclareBooleanLaunchArgument
+from synchros2.launch.actions import DeclareBooleanLaunchArgument, convert_to_bool
 
 from spot_driver.launch.spot_launch_helpers import IMAGE_PUBLISHER_ARGS, declare_image_publisher_args, spot_has_arm
 
@@ -19,12 +19,12 @@ THIS_PACKAGE = "spot_driver"
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     config_file = LaunchConfiguration("config_file")
     launch_rviz = LaunchConfiguration("launch_rviz")
-    controllable = LaunchConfiguration("controllable").perform(context)
     rviz_config_file = LaunchConfiguration("rviz_config_file").perform(context)
     spot_name = LaunchConfiguration("spot_name").perform(context)
     tf_prefix = LaunchConfiguration("tf_prefix").perform(context)
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
     robot_description_package = LaunchConfiguration("robot_description_package").perform(context)
+    controllable = convert_to_bool("controllable", LaunchConfiguration("controllable").perform(context))
 
     # if config_file has been set (and is not the default empty string) and is also not a file, do not launch anything.
     config_file_path = config_file.perform(context)
@@ -53,8 +53,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         spot_driver_params.update(
             {
                 "leasing_mode": "proxied",
-                "use_take_lease": "false",
-                "get_lease_on_action": "true",
+                "use_take_lease": False,
+                "get_lease_on_action": True,
             }
         )
 
@@ -179,14 +179,14 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             "spot_name": LaunchConfiguration("spot_name"),
             "hardware_interface": "mock" if mock_enable else "robot",
             "mock_arm": str(mock_enable and has_arm),
-            "launch_image_publishers": "false",
+            "launch_image_publishers": "False",
             "leasing_mode": "proxied",
-            "control_only": "true",
-            "auto_start": "false",
+            "control_only": "True",
+            "auto_start": "False",
         }.items(),
         condition=IfCondition(LaunchConfiguration("controllable")),
     )
-    ld.action(spot_ros2_control)
+    ld.add_action(spot_ros2_control)
 
 
 def generate_launch_description() -> LaunchDescription:
