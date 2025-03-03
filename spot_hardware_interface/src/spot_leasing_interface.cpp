@@ -83,7 +83,7 @@ tl::expected<::bosdyn::client::Lease, std::string> ProxiedLeasingInterface::Acqu
   request->resource_name = resource_name;
   request->client_name = lease_wallet_->GetClientName();
   auto future = acquire_lease_client_->async_send_request(request);
-  auto outcome = rclcpp::spin_until_future_complete(foreground_node_, future, std::chrono::seconds(5));
+  auto outcome = rclcpp::spin_until_future_complete(foreground_node_, future, std::chrono::seconds(2));
   if (outcome == rclcpp::FutureReturnCode::TIMEOUT) {
     acquire_lease_client_->remove_pending_request(future);
     return tl::make_unexpected("Timed out trying to acquire the lease");
@@ -100,25 +100,25 @@ tl::expected<::bosdyn::client::Lease, std::string> ProxiedLeasingInterface::Acqu
   bosdyn_api_msgs::conversions::Convert(response->lease, &lease_proto);
   auto lease = ::bosdyn::client::Lease(lease_proto);
 
-  lease_wallet_->AddLease(lease);
+  leases_[resource_name] = lease;
   keepalive_bonds_[resource_name] =
       std::make_unique<bond::Bond>("bonds", lease_wallet_->GetClientName(), background_node_),
   keepalive_bonds_[resource_name]->start();
+  lease_wallet_->AddLease(lease);
 
   return lease;
 }
 
 tl::expected<::bosdyn::client::Lease, std::string> ProxiedLeasingInterface::ReturnLease(
-    const std::string& resource_name) {
-  auto result = lease_wallet_->GetOwnedLease(resource_name);
-  if (!result) {
-    return tl::make_unexpected(result.status.Chain("No lease owned for " + resource_name).message());
+  const std::string& resource_name) {
+  if (leases_.count(resource_name) == 0) {
+    return tl::make_unexpected("No lease owned for " + resource_name);
   }
-  ::bosdyn::client::Lease lease = result.move();
+  const ::bosdyn::client::Lease lease = leases_[resource_name];
   auto request = std::make_shared<spot_msgs::srv::ReturnLease::Request>();
   bosdyn_api_msgs::conversions::Convert(lease.GetProto(), &request->lease);
   auto future = return_lease_client_->async_send_request(request);
-  auto outcome = rclcpp::spin_until_future_complete(foreground_node_, future, std::chrono::seconds(5));
+  auto outcome = rclcpp::spin_until_future_complete(foreground_node_, future, std::chrono::seconds(2));
   if (outcome == rclcpp::FutureReturnCode::TIMEOUT) {
     return_lease_client_->remove_pending_request(future);
     return tl::make_unexpected("Timed out trying to return the lease");
@@ -131,8 +131,11 @@ tl::expected<::bosdyn::client::Lease, std::string> ProxiedLeasingInterface::Retu
   if (!response->success) {
     return tl::make_unexpected(response->message);
   }
+
   lease_wallet_->RemoveLease(resource_name);
   keepalive_bonds_.erase(resource_name);
+  leases_.erase(resource_name);
+
   return lease;
 }
 

@@ -80,6 +80,7 @@ class ProxiedLeasingInterface : public LeasingInterface {
   std::shared_ptr<rclcpp::Node> background_node_;
   std::unique_ptr<rclcpp::executors::SingleThreadedExecutor> background_executor_;
 
+  std::unordered_map<std::string, ::bosdyn::client::Lease> leases_;
   std::unordered_map<std::string, std::unique_ptr<bond::Bond>> keepalive_bonds_;
 };
 
