@@ -243,12 +243,12 @@ class SpotProxyLeash(SpotLeashProtocol):
         self._claim_leases()
         return True
 
-    def grab(self, forced: bool = False) -> Tuple[bool, Optional[Lease]]:
+    def grab(self, force: bool = False) -> Tuple[bool, Optional[Lease]]:
         if self._lease_wallet is None:
             raise RuntimeError("leash not tied to wrapper")
         request = AcquireLease.Request()
         request.client_name = self._lease_wallet.client_name
-        request.forced = forced
+        request.force = force
         response = self._acquire_lease(request)
         lease_proto = lease_pb2.Lease()
         convert(response.lease, lease_proto)
