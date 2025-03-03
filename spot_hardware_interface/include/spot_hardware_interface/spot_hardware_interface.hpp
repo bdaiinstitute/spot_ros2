@@ -34,8 +34,10 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "spot_hardware_interface/spot_constants.hpp"
+#include "spot_hardware_interface/spot_leasing_interface.hpp"
 #include "spot_hardware_interface/visibility_control.h"
 
+#include "bosdyn/client/lease/lease.h"
 #include "bosdyn/client/lease/lease_keepalive.h"
 #include "bosdyn/client/robot_command/robot_command_builder.h"
 #include "bosdyn/client/robot_command/robot_command_client.h"
@@ -98,6 +100,8 @@ class StateStreamingHandler {
   std::mutex mutex_;
 };
 
+enum class LeasingMode { DIRECT, PROXIED };
+
 class SpotHardware : public hardware_interface::SystemInterface {
  public:
   RCLCPP_SHARED_PTR_DEFINITIONS(SpotHardware)
@@ -158,10 +162,14 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Shared BD clients.
   std::unique_ptr<::bosdyn::client::Robot> robot_;
-  ::bosdyn::client::LeaseClient* lease_client_;
   ::bosdyn::client::RobotStateStreamingClient* state_client_;
   ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_;
   ::bosdyn::client::RobotCommandClient* command_client_;
+
+  ::bosdyn::client::Lease lease_;
+  std::unique_ptr<LeasingInterface> leasing_interface_;
+
+  LeasingMode leasing_mode_;
 
   // Holds joint states of the robot received from the BD SDK
   JointStates joint_states_;
