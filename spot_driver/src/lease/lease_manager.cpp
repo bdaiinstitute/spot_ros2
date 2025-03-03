@@ -174,7 +174,7 @@ void LeaseManager::acquireLease(const std::shared_ptr<AcquireLease::Request> req
   potential_collisions.insert(leaf_resources.begin(), leaf_resources.end());
 
   bool must_take = false;
-  if (request->force) {
+  if (!request->force) {
     for (const auto& resource_name : potential_collisions) {
       if (subleases_.count(resource_name) > 0) {
         const auto& sublease_proto = subleases_[resource_name].lease.GetProto();
