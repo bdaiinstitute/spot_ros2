@@ -218,7 +218,7 @@ void LeaseManager::acquireLease(const std::shared_ptr<AcquireLease::Request> req
     lease = lease_wallet->GetLease(requested_resource_name);
   }
 
-  auto sublease = lease.move().CreateSublease(requested_resource_name);
+  auto sublease = lease.move().CreateSublease(request->client_name);
   bosdyn_api_msgs::conversions::Convert(sublease.GetProto(), &response->lease);
 
   auto bond = middleware_handle_->createBond(request->client_name, [this, sublease]() {
