@@ -736,6 +736,17 @@ class SpotROS(Node):
                 ),
                 callback_group=self.group,
             )
+            self.create_service(
+                SetGripperCameraParameters,
+                "set_gripper_camera_parameters",
+                lambda request, response: self.service_wrapper(
+                    "set_gripper_camera_parameters",
+                    self.handle_set_gripper_camera_parameters,
+                    request,
+                    response,
+                ),
+                callback_group=self.group,
+            )
 
             self.create_service(
                 OverrideGraspOrCarry,
