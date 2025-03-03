@@ -238,7 +238,7 @@ void LeaseManager::acquireLease(const std::shared_ptr<AcquireLease::Request> req
     }
     logger_interface_->logInfo(resource_name + " sublease revoked");
   });
-  subleases_[request->resource_name] = ManagedSublease{std::move(sublease), std::move(bond)};
+  subleases_[requested_resource_name] = ManagedSublease{std::move(sublease), std::move(bond)};
 
   logger_interface_->logInfo(requested_resource_name + " sublease was acquired");
   response->message = requested_resource_name + " sublease was acquired";
