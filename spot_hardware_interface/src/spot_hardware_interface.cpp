@@ -44,7 +44,7 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
   current_load_.assign(load_msg.begin(), load_msg.end());
   // Save current foot contact states
-  for (size_t i = 0; i < 4; i++) {
+  for (size_t i = 0; i < nfeet_; i++) {
     current_foot_state_.push_back(robot_state.contact_states(i));
   }
 
@@ -71,10 +71,10 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
 
-void StateStreamingHandler::get_foot_states(::bosdyn::api::FootState::Contact& foot_states) {
+void StateStreamingHandler::get_foot_states(std::vector<int>& foot_states) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
-  foot_states = current_foot_state_;
+  foot_states.assign(current_foot_state_.begin(), current_foot_state_.end());
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -195,7 +195,7 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   joint_states_.position.assign(njoints_, 0);
   joint_states_.velocity.assign(njoints_, 0);
   joint_states_.load.assign(njoints_, 0);
-  foot_states_.assign(nfeet, 0);
+  foot_states_.assign(nfeet_, 0);
 
   // Set up the robot using the BD SDK and start command streaming.
   if (!authenticate_robot(hostname_, username_, password_, port_, certificate_)) {
@@ -322,7 +322,7 @@ hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecyc
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  state_streaming_handler_.get_states(joint_states_, imu_states_, foot_states_);
+  state_streaming_handler_.get_joint_states(joint_states_);
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;
@@ -362,20 +362,7 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     init_state_ = true;
   }
 
-  // Read IMU sensor values into sensor states
-  // Load rotation quaternion (x, y, z, w)
-  hw_sensor_states_.at(0) = imu_states_.odom_rot_quaternion.at(0);
-  hw_sensor_states_.at(1) = imu_states_.odom_rot_quaternion.at(1);
-  hw_sensor_states_.at(2) = imu_states_.odom_rot_quaternion.at(2);
-  hw_sensor_states_.at(3) = imu_states_.odom_rot_quaternion.at(3);
-  // Load angular velocity (x, y, z)
-  hw_sensor_states_.at(4) = imu_states_.angular_velocity.at(0);
-  hw_sensor_states_.at(5) = imu_states_.angular_velocity.at(1);
-  hw_sensor_states_.at(6) = imu_states_.angular_velocity.at(2);
-  // Load linear acceleration (x, y, z)
-  hw_sensor_states_.at(7) = imu_states_.linear_acceleration.at(0);
-  hw_sensor_states_.at(8) = imu_states_.linear_acceleration.at(1);
-  hw_sensor_states_.at(9) = imu_states_.linear_acceleration.at(2);
+  state_streaming_handler_.get_foot_states(foot_states_);
 
   return hardware_interface::return_type::OK;
 }

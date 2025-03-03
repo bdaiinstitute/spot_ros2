@@ -107,11 +107,7 @@ class StateStreamingHandler {
       CONTACT_MADE	1	The foot is currently in contact with the ground.
       CONTACT_LOST	2	The foot is not in contact with the ground.
    */
-  void get_states(JointStates& joint_states, ImuStates& imu_states);
-  /**
-   * @brief Reset internal state.
-   */
-  void reset();
+  void get_foot_states(std::vector<int>& foot_states);
 
  private:
   // Stores the current position, velocity, and load of the robot's joints.
@@ -126,6 +122,7 @@ class StateStreamingHandler {
   std::vector<double> imu_odom_rot_quaternion_;
   // store the current foot contact states
   std::vector<int> current_foot_state_;
+  static constexpr size_t nfeet_ = 4;
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
@@ -175,7 +172,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // The 3 state interfaces are position, velocity, and effort.
   static constexpr size_t state_interfaces_per_joint_ = 3;
   size_t njoints_;
-  size_t nfeet = 4;
+  static constexpr size_t nfeet_ = 4;
 
   // Login info
   std::string hostname_;
