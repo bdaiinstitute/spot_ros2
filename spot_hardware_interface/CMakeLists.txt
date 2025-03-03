@@ -16,6 +16,7 @@ find_package(ament_cmake REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   bondcpp
   hardware_interface
+  bosdyn_api_msgs
   bosdyn_cmake_module
   pluginlib
   rclcpp
