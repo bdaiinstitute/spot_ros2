@@ -175,13 +175,15 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   if (!authenticate_robot(hostname_, username_, password_, port_, certificate_)) {
     return hardware_interface::CallbackReturn::ERROR;
   }
-  switch (leasing_mode_) {
-    case LeasingMode::PROXIED:
-      leasing_interface_ = std::make_unique<ProxiedLeasingInterface>(robot_.get());
-      break;
-    case LeasingMode::DIRECT:
-      leasing_interface_ = std::make_unique<DirectLeasingInterface>(robot_.get());
-      break;
+  if (!leasing_interface_) {
+    switch (leasing_mode_) {
+      case LeasingMode::PROXIED:
+        leasing_interface_ = std::make_unique<ProxiedLeasingInterface>(robot_.get());
+        break;
+      case LeasingMode::DIRECT:
+        leasing_interface_ = std::make_unique<DirectLeasingInterface>(robot_.get());
+        break;
+    }
   }
   if (!start_time_sync()) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -504,6 +506,7 @@ void SpotHardware::stop_state_stream() {
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping State Stream");
   state_thread_.request_stop();
   state_thread_.join();
+  state_client_ = nullptr;
   state_stream_started_ = false;
 }
 
@@ -525,8 +528,9 @@ bool SpotHardware::start_command_stream() {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get timesync endpoint");
     return false;
   }
+  endpoint_ = endpoint_result.response;
 
-  command_client_->AddTimeSyncEndpoint(endpoint_result.response);
+  command_client_->AddTimeSyncEndpoint(endpoint_);
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Client successfully created!");
 
@@ -572,6 +576,9 @@ void SpotHardware::stop_command_stream() {
     return;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping Command Stream");
+  endpoint_ = nullptr;
+  command_client_ = nullptr;
+  command_stream_service_ = nullptr;
   command_stream_started_ = false;
 }
 
@@ -595,15 +602,6 @@ void SpotHardware::send_command(const JointCommands& joint_commands) {
   joint_cmd->mutable_gains()->mutable_k_q_p()->Add(k_q_p.begin(), k_q_p.end());
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Clear();
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Add(k_qd_p.begin(), k_qd_p.end());
-
-  if (endpoint_ == nullptr) {
-    auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
-    if (!endpoint_result) {
-      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get timesync endpoint");
-      return;
-    }
-    endpoint_ = endpoint_result.response;
-  }
 
   auto time_point_local = ::bosdyn::common::TimePoint(std::chrono::system_clock::now() + std::chrono::milliseconds(50));
 
