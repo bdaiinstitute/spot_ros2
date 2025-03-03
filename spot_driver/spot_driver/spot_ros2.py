@@ -2860,10 +2860,13 @@ class SpotROS(Node):
     def destroy_node(self) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
         if self.spot_wrapper is not None:
-            if self.spot_wrapper.check_is_powered_on() and self.start_estop.value:
-                self.get_logger().info("Sitting down...")
-                self.spot_wrapper.sit_blocking()
-            self.spot_wrapper.disconnect()
+            try:
+                if self.spot_wrapper.check_is_powered_on() and self.start_estop.value:
+                    self.get_logger().info("Sitting down...")
+                    self.spot_wrapper.sit_blocking()
+                self.spot_wrapper.disconnect()
+            except Exception as e:
+                self.get_logger().warn(f"Got {e} while destroying node")
         super().destroy_node()
 
 
