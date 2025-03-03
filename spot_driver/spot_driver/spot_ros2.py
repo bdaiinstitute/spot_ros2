@@ -258,6 +258,7 @@ class SpotProxyLeash(SpotLeashProtocol):
             self._lease is None or str(lease.lease_proto) != str(self._lease.lease_proto)
         )
         self._keepalive_bond = Bond(self._node, "bonds", self._lease_wallet.client_name)
+        self._keepalive_bond.start()
         self._lease = lease
         return have_new_lease, lease
 
@@ -267,7 +268,7 @@ class SpotProxyLeash(SpotLeashProtocol):
         if self._lease is None:
             raise RuntimeError("no lease to yield")
         request = ReturnLease.Request()
-        convert(self._lease, request.lease)
+        convert(self._lease.lease_proto, request.lease)
         self._return_lease(request)
         self._lease_wallet.remove(self._lease)
         if self._keepalive_bond is not None:
