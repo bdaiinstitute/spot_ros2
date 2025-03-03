@@ -1,3 +1,4 @@
+import functools
 import os
 import time
 from typing import Any, Callable, List, Optional, Tuple, Union
@@ -363,11 +364,15 @@ class TriggerServiceWrapper:  # TODO: caching of spot_ros might be funky with mu
             response.message = "Spot wrapper is undefined"
             return response
 
+        # Prefer the bound and potentially decorated function if available
+        service_callable_name = getattr(self.service_func, "__name__", "")
+        service_callable = getattr(self.spot_ros.spot_wrapper, service_callable_name, None)
+        if not callable(service_callable):
+            service_callable = functools.partial(self.service_func, self.spot_ros.spot_wrapper)
+
         try:
             # Call the function with predefined arguments
-            response.success, response.message = self.service_func(
-                self.spot_ros.spot_wrapper, *self.args, **self.kwargs
-            )  # type: ignore
+            response.success, response.message = service_callable(*self.args, **self.kwargs)  # type: ignore
         except Exception as e:
             response.success = False
             response.message = f"Error executing {self.service_func}: {str(e)}"
