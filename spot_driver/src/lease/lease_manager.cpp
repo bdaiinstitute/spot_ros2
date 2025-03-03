@@ -4,7 +4,7 @@
 
 #include <chrono>
 #include <functional>
-#include <stringstream>
+#include <sstream>
 #include <unordered_set>
 
 #include <spot_driver/interfaces/rclcpp_logger_interface.hpp>
