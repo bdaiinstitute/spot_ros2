@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <functional>
+#include <stringstream>
 #include <unordered_set>
 
 #include <spot_driver/interfaces/rclcpp_logger_interface.hpp>
@@ -260,8 +261,12 @@ void LeaseManager::returnLease(const std::shared_ptr<ReturnLease::Request> reque
     return;
   }
   using CompareResult = bosdyn::client::Lease::CompareResult;
-  if (subleases_[resource_name].lease.Compare(sublease) != CompareResult::SAME) {
-    response->message = resource_name + " sublease does not match the known lease";
+  const CompareResult result = subleases_[resource_name].lease.Compare(sublease);
+  if (result != CompareResult::SAME) {
+    std::stringstream ss;
+    ss << resource_name << " sublease does not match the known lease";
+    ss << " (" << static_cast<int>(result) << ")";
+    response->message = ss.str();
     response->success = false;
     return;
   }
