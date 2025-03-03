@@ -18,7 +18,7 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
-from spot_driver.launch.spot_launch_helpers import (
+from spot_common.launch.spot_launch_helpers import (
     IMAGE_PUBLISHER_ARGS,
     declare_image_publisher_args,
     get_login_parameters,
