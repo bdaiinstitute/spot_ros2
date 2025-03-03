@@ -279,7 +279,6 @@ hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecy
 
 hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/) {
   stop_state_stream();
-  leasing_interface_.reset();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
