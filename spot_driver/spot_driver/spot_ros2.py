@@ -206,16 +206,24 @@ class SpotProxyLeash(SpotLeashProtocol):
         def __init__(self, leash: SpotLeashProtocol, logger: logging.Logger):
             self._leash = leash
             self._logger = logger
+            self._lock = threading.Lock()
+            self._num_entries = 0
 
         def _decorate(self, action: Callable) -> Callable:
             @functools.wraps(action)
             def _wrapper(*args: Any, **kwargs: Any) -> Any:
                 try:
-                    self._leash.grab()
+                    with self._lock:
+                        if self._num_entries == 0:
+                            self._leash.grab()
+                        self._num_entries += 1
                     try:
                         return action(*args, **kwargs)
                     finally:
-                        self._leash.yield_()
+                        with self._lock:
+                            self._num_entries -= 1
+                            if self._num_entries == 0:
+                                self._leash.yield_()
                 except Exception:
                     self._logger.error(traceback.format_exc())
                     raise
@@ -229,6 +237,7 @@ class SpotProxyLeash(SpotLeashProtocol):
     def __init__(self, node: Node, logger: logging.Logger) -> None:
         self._node = node
         self._logger = logger
+        self._lock = threading.Lock()
         self._claim_leases = Serviced(Trigger, "claim_leases", node)
         self._acquire_lease = Serviced(AcquireLease, "acquire_lease", node)
         self._return_lease = Serviced(ReturnLease, "return_lease", node)
@@ -238,54 +247,62 @@ class SpotProxyLeash(SpotLeashProtocol):
         self._lease: Optional[Lease] = None
 
     def claim(self) -> bool:
-        if self._lease_wallet is None:
-            raise RuntimeError("leash not tied to wrapper")
-        self._claim_leases()
-        return True
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            self._claim_leases()
+            return True
 
     def grab(self, force: bool = False) -> Tuple[bool, Optional[Lease]]:
-        if self._lease_wallet is None:
-            raise RuntimeError("leash not tied to wrapper")
-        request = AcquireLease.Request()
-        request.client_name = self._lease_wallet.client_name
-        request.force = force
-        response = self._acquire_lease(request)
-        lease_proto = lease_pb2.Lease()
-        convert(response.lease, lease_proto)
-        lease = Lease(lease_proto)
-        self._lease_wallet.add(lease)
-        have_new_lease = self._lease is not None and (
-            self._lease is None or str(lease.lease_proto) != str(self._lease.lease_proto)
-        )
-        self._keepalive_bond = Bond(self._node, "bonds", self._lease_wallet.client_name)
-        self._keepalive_bond.start()
-        self._lease = lease
-        return have_new_lease, lease
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            if self._lease is not None and not force:
+                return False, self._lease
+            request = AcquireLease.Request()
+            request.client_name = self._lease_wallet.client_name
+            request.force = force
+            response = self._acquire_lease(request)
+            lease_proto = lease_pb2.Lease()
+            convert(response.lease, lease_proto)
+            lease = Lease(lease_proto)
+            self._lease_wallet.add(lease)
+            have_new_lease = self._lease is not None and (
+                self._lease is None or str(lease.lease_proto) != str(self._lease.lease_proto)
+            )
+            if self._keepalive_bond is not None:
+                self._keepalive_bond.shutdown()
+            self._keepalive_bond = Bond(self._node, "bonds", self._lease_wallet.client_name)
+            self._keepalive_bond.start()
+            self._lease = lease
+            return have_new_lease, lease
 
     def yield_(self) -> None:
-        if self._lease_wallet is None:
-            raise RuntimeError("leash not tied to wrapper")
-        if self._lease is None:
-            raise RuntimeError("no lease to yield")
-        request = ReturnLease.Request()
-        convert(self._lease.lease_proto, request.lease)
-        self._return_lease(request)
-        self._lease_wallet.remove(self._lease)
-        if self._keepalive_bond is not None:
-            self._keepalive_bond.shutdown()
-        self._keepalive_bond = None
-        self._lease = None
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            if self._lease is None:
+                raise RuntimeError("no lease to yield")
+            request = ReturnLease.Request()
+            convert(self._lease.lease_proto, request.lease)
+            self._return_lease(request)
+            self._lease_wallet.remove(self._lease)
+            if self._keepalive_bond is not None:
+                self._keepalive_bond.shutdown()
+            self._keepalive_bond = None
+            self._lease = None
 
     def release(self) -> None:
-        if self._lease_wallet is None:
-            raise RuntimeError("leash not tied to wrapper")
-        self._release_leases()
-        if self._keepalive_bond is not None:
-            self._keepalive_bond.shutdown()
-        self._keepalive_bond = None
-        if self._lease is not None:
-            self._lease_wallet.remove(self._lease)
-        self._lease = None
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            self._release_leases()
+            if self._keepalive_bond is not None:
+                self._keepalive_bond.shutdown()
+            self._keepalive_bond = None
+            if self._lease is not None:
+                self._lease_wallet.remove(self._lease)
+            self._lease = None
 
     def tie(self, wrapper: Any) -> SpotLeashContextProtocol:
         self._lease_wallet = wrapper._robot.lease_wallet
