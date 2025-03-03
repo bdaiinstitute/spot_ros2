@@ -108,7 +108,7 @@ void LeaseManager::claimLeases(const std::shared_ptr<Trigger::Request>, std::sha
     return;
   }
 
-  logger_interface_->logInfo("Leases claimed, " + root_resource_name + " lease owned");
+  logger_interface_->logDebug("Leases claimed, " + root_resource_name + " lease owned");
   response->message = "Leases claimed, " + root_resource_name + " lease owned";
   response->success = true;
 }
@@ -126,7 +126,7 @@ void LeaseManager::releaseLeases(const std::shared_ptr<Trigger::Request>, std::s
   }
   subleases_.clear();
 
-  logger_interface_->logInfo("Leases returned, subleases dropped");
+  logger_interface_->logDebug("Leases returned, subleases dropped");
   response->message = "Leases returned, subleases dropped";
   response->success = true;
 }
@@ -205,7 +205,7 @@ void LeaseManager::acquireLease(const std::shared_ptr<AcquireLease::Request> req
         response->success = false;
         return;
       }
-      logger_interface_->logInfo(requested_resource_name + " lease was taken");
+      logger_interface_->logDebug(requested_resource_name + " lease was taken");
     } else {
       auto result = lease_client_->acquireLease(requested_resource_name, std::move(callback));
       if (!result) {
@@ -213,7 +213,7 @@ void LeaseManager::acquireLease(const std::shared_ptr<AcquireLease::Request> req
         response->success = false;
         return;
       }
-      logger_interface_->logInfo(requested_resource_name + " lease was acquired");
+      logger_interface_->logDebug(requested_resource_name + " lease was acquired");
     }
     lease = lease_wallet->GetLease(requested_resource_name);
   }
@@ -240,7 +240,7 @@ void LeaseManager::acquireLease(const std::shared_ptr<AcquireLease::Request> req
   });
   subleases_[requested_resource_name] = ManagedSublease{std::move(sublease), std::move(bond)};
 
-  logger_interface_->logInfo(requested_resource_name + " sublease was acquired");
+  logger_interface_->logDebug(requested_resource_name + " sublease was acquired");
   response->message = requested_resource_name + " sublease was acquired";
   response->success = true;
 }
@@ -267,7 +267,7 @@ void LeaseManager::returnLease(const std::shared_ptr<ReturnLease::Request> reque
   }
   subleases_.erase(resource_name);
 
-  logger_interface_->logInfo(resource_name + " sublease was returned");
+  logger_interface_->logDebug(resource_name + " sublease was returned");
   response->message = resource_name + " sublease was returned";
   response->success = true;
 }

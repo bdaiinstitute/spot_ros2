@@ -108,6 +108,7 @@ TEST(TestLeaseManager, simpleLeasingSucceeds) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
@@ -173,6 +174,7 @@ TEST(TestLeaseManager, sequentialLeasingSucceeds) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
@@ -263,6 +265,7 @@ TEST(TestLeaseManager, doubleLeasingFails) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
@@ -326,6 +329,7 @@ TEST(TestLeaseManager, rootLeaseBlocksLeafLeasing) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
@@ -388,6 +392,7 @@ TEST(TestLeaseManager, leafLeaseBlocksRootLeasing) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
@@ -463,6 +468,7 @@ TEST(TestLeaseManager, revocationOnLeaseRetentionFailure) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
@@ -538,6 +544,7 @@ TEST(TestLeaseManager, revocationOnBondBreakage) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logError(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
@@ -605,6 +612,8 @@ TEST(TestLeaseManager, leasingStatusReport) {
   EXPECT_CALL(*lease_client, listLeases).WillOnce(Return(leased_resources));
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
+  EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
   EXPECT_CALL(*middleware_handle, createAcquireLeaseService(_, _)).Times(1);
@@ -668,6 +677,7 @@ TEST(TestLeaseManager, proactiveClaim) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
@@ -718,6 +728,7 @@ TEST(TestLeaseManager, twiceProactiveClaim) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
@@ -771,6 +782,7 @@ TEST(TestLeaseManager, forcedRelease) {
   auto timer_interface = std::make_unique<spot_ros2::test::MockTimerInterface>();
   EXPECT_CALL(*timer_interface, setTimer(_, _)).Times(1);
   auto logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+  EXPECT_CALL(*logger_interface, logDebug(_)).Times(AnyNumber());
   EXPECT_CALL(*logger_interface, logInfo(_)).Times(AnyNumber());
   auto middleware_handle = std::make_unique<MockMiddlewareHandle>();
   EXPECT_CALL(*middleware_handle, createClaimLeasesService(_, _)).Times(1);
