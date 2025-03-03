@@ -100,9 +100,7 @@ tl::expected<::bosdyn::client::Lease, std::string> ProxiedLeasingInterface::Acqu
   bosdyn_api_msgs::conversions::Convert(response->lease, &lease_proto);
   auto lease = ::bosdyn::client::Lease(lease_proto);
 
-  using SubLease = ::bosdyn::client::LeaseWallet::SubLease;
-  lease_wallet_->AddLease(lease, SubLease::kNoSubLease);
-
+  lease_wallet_->AddLease(lease);
   keepalive_bonds_[resource_name] =
       std::make_unique<bond::Bond>("bonds", lease_wallet_->GetClientName(), background_node_),
   keepalive_bonds_[resource_name]->start();
