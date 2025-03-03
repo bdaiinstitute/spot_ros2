@@ -67,7 +67,6 @@ ProxiedLeasingInterface::ProxiedLeasingInterface(::bosdyn::client::Robot* robot)
   return_lease_client_ = foreground_node_->create_client<spot_msgs::srv::ReturnLease>("return_lease");
   background_node_ = std::make_shared<rclcpp::Node>("_background_" + lease_wallet_->GetClientName() + "_node");
   background_executor_ = std::make_unique<rclcpp::executors::SingleThreadedExecutor>();
-  background_executor_->add_node(foreground_node_);
   background_executor_->add_node(background_node_);
   background_loop_ = std::jthread([this]() {
     background_executor_->spin();
