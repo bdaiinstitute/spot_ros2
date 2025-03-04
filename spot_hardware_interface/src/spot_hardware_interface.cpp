@@ -43,39 +43,28 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
 
   // Get IMU data from the robot
   imu_identifier_ = robot_state.inertial_state().identifier();
-  imu_mounting_link_name_ = robot_state.inertial_state().mounting_link_name();
   const auto& imu_position_msg = robot_state.inertial_state().position_imu_rt_link();
   imu_position_ = {imu_position_msg.x(), imu_position_msg.y(), imu_position_msg.z()};
-  // Loop through IMU packets and extract linear acceleration, angular velocity, and rotation info
-  for (int i = 0; i < robot_state.inertial_state().packets_size(); i++) {
-    auto& acceleration_msg = robot_state.inertial_state().packets(i).acceleration_rt_odom_in_link_frame();
-    auto& angular_vel_msg = robot_state.inertial_state().packets(i).angular_velocity_rt_odom_in_link_frame();
-    auto& rot_msg = robot_state.inertial_state().packets(i).odom_rot_link();
-    std::vector<double> acceleration_vec = {acceleration_msg.x(), acceleration_msg.y(), acceleration_msg.z()};
-    std::vector<double> angular_vel_vec = {angular_vel_msg.x(), angular_vel_msg.y(), angular_vel_msg.z()};
-    std::vector<double> rot_vec = {rot_msg.x(), rot_msg.y(), rot_msg.z(), rot_msg.w()};
-
-    imu_linear_acceleration_.push_back(acceleration_vec);
-    imu_angular_velocity_.push_back(angular_vel_vec);
-    imu_odom_rot_quaternion_.push_back(rot_vec);
-  }
+  // Get latest IMU packet and extract linear acceleration, angular velocity, and rotation info
+  int i = robot_state.inertial_state().packets_size() - 1;
+  auto& acceleration_msg = robot_state.inertial_state().packets(i).acceleration_rt_odom_in_link_frame();
+  auto& angular_vel_msg = robot_state.inertial_state().packets(i).angular_velocity_rt_odom_in_link_frame();
+  auto& rot_msg = robot_state.inertial_state().packets(i).odom_rot_link();
+  imu_linear_acceleration_ = {acceleration_msg.x(), acceleration_msg.y(), acceleration_msg.z()};
+  imu_angular_velocity_ = {angular_vel_msg.x(), angular_vel_msg.y(), angular_vel_msg.z()};
+  imu_odom_rot_quaternion_ = {rot_msg.x(), rot_msg.y(), rot_msg.z(), rot_msg.w()};
 }
 
-void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
+void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
   // Fill in members of the joint states stuct passed in by reference.
   joint_states.position.assign(current_position_.begin(), current_position_.end());
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
   joint_states.load.assign(current_load_.begin(), current_load_.end());
-}
 
-void StateStreamingHandler::get_imu_states(ImuStates& imu_states) {
-  // lock so that read/write doesn't happen at the same time
-  const std::lock_guard<std::mutex> lock(mutex_);
   // Fill in members of the imu states struct
   imu_states.identifier = imu_identifier_;
-  imu_states.mounting_link_name = imu_mounting_link_name_;
   imu_states.position_imu.assign(imu_position_.begin(), imu_position_.end());
   imu_states.linear_acceleration.assign(imu_linear_acceleration_.begin(), imu_linear_acceleration_.end());
   imu_states.angular_velocity.assign(imu_angular_velocity_.begin(), imu_angular_velocity_.end());
@@ -93,6 +82,8 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
 
   hw_states_.resize(info_.joints.size() * state_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * command_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
+
+  hw_sensor_states_.resize(info_.sensors[0].state_interfaces.size(), std::numeric_limits<double>::quiet_NaN());
 
   njoints_ = hw_states_.size() / state_interfaces_per_joint_;
 
@@ -225,6 +216,12 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_EFFORT,
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 2]));
   }
+  // export sensor state interface
+  for (uint i = 0; i < info_.sensors[0].state_interfaces.size(); i++) {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.sensors[0].name, info_.sensors[0].state_interfaces[i].name, &hw_sensor_states_[i]));
+  }
+
   return state_interfaces;
 }
 
@@ -268,7 +265,7 @@ hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecyc
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  state_streaming_handler_.get_joint_states(joint_states_);
+  state_streaming_handler_.get_states(joint_states_, imu_states_);
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;
@@ -307,7 +304,21 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     }
     init_state_ = true;
   }
-  state_streaming_handler_.get_imu_states(imu_states_);
+
+  // Read IMU sensor values into sensor states
+  // Load rotation quaternion (x, y, z, w)
+  hw_sensor_states_.at(0) = imu_states_.odom_rot_quaternion.at(0);
+  hw_sensor_states_.at(1) = imu_states_.odom_rot_quaternion.at(1);
+  hw_sensor_states_.at(2) = imu_states_.odom_rot_quaternion.at(2);
+  hw_sensor_states_.at(3) = imu_states_.odom_rot_quaternion.at(3);
+  // Load angular velocity (x, y, z)
+  hw_sensor_states_.at(4) = imu_states_.angular_velocity.at(0);
+  hw_sensor_states_.at(5) = imu_states_.angular_velocity.at(1);
+  hw_sensor_states_.at(6) = imu_states_.angular_velocity.at(2);
+  // Load linear acceleration (x, y, z)
+  hw_sensor_states_.at(7) = imu_states_.linear_acceleration.at(0);
+  hw_sensor_states_.at(8) = imu_states_.linear_acceleration.at(1);
+  hw_sensor_states_.at(9) = imu_states_.linear_acceleration.at(2);
 
   return hardware_interface::return_type::OK;
 }
