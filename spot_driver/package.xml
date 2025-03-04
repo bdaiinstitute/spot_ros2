@@ -11,6 +11,7 @@
   <buildtool_depend>ament_cmake_python</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
+  <depend>bondcpp</depend>
   <depend>bosdyn</depend>
   <depend>bosdyn_cmake_module</depend>
   <depend>bosdyn_msgs</depend>
@@ -32,12 +33,15 @@
   <depend>tf2_ros</depend>
   <depend>tl_expected</depend>
 
+  <exec_depend>bondpy</exec_depend>
   <exec_depend>synchros2</exec_depend>
   <exec_depend>python3-protobuf</exec_depend>
   <exec_depend>python3-tk</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>rviz2</exec_depend>
+  <exec_depend>spot_common</exec_depend>
   <exec_depend>spot_description</exec_depend>
+  <exec_depend>spot_ros2_control</exec_depend>
   <exec_depend>spot_wrapper</exec_depend>
   <exec_depend>xacro</exec_depend>
 

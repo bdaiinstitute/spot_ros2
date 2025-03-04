@@ -17,6 +17,9 @@ controller_manager:
     spot_joint_controller:
       type: spot_controllers/SpotJointController
 
+    hardware_components_initial_state:
+      unconfigured:
+        - SpotSystem
 
 forward_position_controller:
   ros__parameters:

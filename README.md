@@ -91,6 +91,7 @@ Further documentation on how each of these packages can be used can be found in 
     ```
 * [`spot_examples`](spot_examples): Examples of how to control Spot via the Spot driver.
 * [`spot_msgs`](spot_msgs): Custom messages, services, and interfaces relevant for operating Spot.
+* [`spot_common`](spot_common): Common utilities for several packages in the Spot ROS 2 stack.
 
 The following packages are used to enable joint level control of Spot via ROS 2 control.
 * [`spot_ros2_control`](spot_ros2_control): Contains core launchfiles for bringing up Spot's ROS 2 control stack, and some examples of how to use this.
