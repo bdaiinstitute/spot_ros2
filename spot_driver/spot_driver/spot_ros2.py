@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Debug
 # from ros_helpers import *
+import functools
 import logging
 import os
 import tempfile
@@ -8,9 +9,10 @@ import threading
 import time
 import traceback
 import typing
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import builtin_interfaces.msg
 import rclpy
@@ -18,9 +20,11 @@ import rclpy.duration
 import rclpy.time
 import synchros2.process as ros_process
 import tf2_ros
+from bondpy.bondpy import Bond
 from bosdyn.api import (
     geometry_pb2,
     gripper_camera_param_pb2,
+    lease_pb2,
     manipulation_api_pb2,
     robot_command_pb2,
     trajectory_pb2,
@@ -31,7 +35,9 @@ from bosdyn.api.manipulation_api_pb2 import WalkGazeMode
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence, ChoreographyStatusResponse
 from bosdyn.client import math_helpers
+from bosdyn.client.async_tasks import AsyncPeriodicQuery
 from bosdyn.client.exceptions import InternalServerError
+from bosdyn.client.lease import Lease, LeaseWallet
 from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
@@ -64,6 +70,7 @@ from rclpy.timer import Rate
 from sensor_msgs.msg import JointState
 from std_srvs.srv import SetBool, Trigger
 from synchros2.node import Node
+from synchros2.service import Serviced
 from synchros2.single_goal_action_server import SingleGoalActionServer
 from synchros2.single_goal_multiple_action_servers import SingleGoalMultipleActionServers
 
@@ -88,7 +95,8 @@ from spot_msgs.msg import (  # type: ignore
     Metrics,
     MobilityParams,
 )
-from spot_msgs.srv import (  # type: ignore
+from spot_msgs.srv import (  # type: ignore  # type: ignore
+    AcquireLease,
     ChoreographyRecordedStateToAnimation,
     ChoreographyStartRecordingState,
     ChoreographyStopRecordingState,
@@ -119,6 +127,7 @@ from spot_msgs.srv import (  # type: ignore
     OverrideGraspOrCarry,
     PlaySound,
     RetrieveLogpoint,
+    ReturnLease,
     SetGripperAngle,
     SetGripperCameraParameters,
     SetLEDBrightness,
@@ -131,10 +140,9 @@ from spot_msgs.srv import (  # type: ignore
     UploadAnimation,
     UploadSequence,
 )
-from spot_msgs.srv import (  # type: ignore
-    RobotCommand as RobotCommandService,
-)
+from spot_msgs.srv import RobotCommand as RobotCommandService  # type: ignore
 from spot_wrapper.cam_wrapper import SpotCamCamera, SpotCamWrapper
+from spot_wrapper.spot_leash import SpotLeashContextProtocol, SpotLeashProtocol
 from spot_wrapper.wrapper import SpotWrapper
 
 MAX_DURATION = 1e6
@@ -194,6 +202,126 @@ def set_node_parameter_from_parameter_list(
         node.set_parameters([parameter for parameter in parameter_list if parameter.name == parameter_name])
 
 
+class SpotProxyLeash(SpotLeashProtocol):
+    class Context(SpotLeashContextProtocol):
+        def __init__(self, leash: SpotLeashProtocol, logger: logging.Logger):
+            self._leash = leash
+            self._logger = logger
+            self._lock = threading.Lock()
+            self._num_entries = 0
+
+        def _decorate(self, action: Callable) -> Callable:
+            @functools.wraps(action)
+            def _wrapper(*args: Any, **kwargs: Any) -> Any:
+                try:
+                    with self._lock:
+                        if self._num_entries == 0:
+                            self._leash.grab()
+                        self._num_entries += 1
+                    try:
+                        return action(*args, **kwargs)
+                    finally:
+                        with self._lock:
+                            self._num_entries -= 1
+                            if self._num_entries == 0:
+                                self._leash.yield_()
+                except Exception:
+                    self._logger.error(traceback.format_exc())
+                    raise
+
+            return _wrapper
+
+        def bind(self, target: Any, actions: Sequence[Callable], passive: bool = False) -> None:
+            for action in actions:
+                setattr(target, action.__name__, self._decorate(action))
+
+    def __init__(self, node: Node, logger: logging.Logger) -> None:
+        self._node = node
+        self._logger = logger
+        self._lock = threading.Lock()
+        self._claim_leases = Serviced(Trigger, "claim_leases", node)
+        self._acquire_lease = Serviced(AcquireLease, "acquire_lease", node)
+        self._return_lease = Serviced(ReturnLease, "return_lease", node)
+        self._release_leases = Serviced(Trigger, "release_leases", node)
+        self._lease_wallet: Optional[LeaseWallet] = None
+        self._keepalive_bond: Optional[Bond] = None
+        self._lease: Optional[Lease] = None
+
+    def claim(self) -> bool:
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            self._claim_leases()
+            return True
+
+    def grab(self, force: bool = False) -> Tuple[bool, Optional[Lease]]:
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            if self._lease is not None and not force:
+                return False, self._lease
+            request = AcquireLease.Request()
+            request.client_name = self._lease_wallet.client_name
+            request.force = force
+            response = self._acquire_lease(request)
+            lease_proto = lease_pb2.Lease()
+            convert(response.lease, lease_proto)
+            lease = Lease(lease_proto)
+            self._lease_wallet.add(lease)
+            have_new_lease = self._lease is not None and (
+                self._lease is None or str(lease.lease_proto) != str(self._lease.lease_proto)
+            )
+            if self._keepalive_bond is not None:
+                self._keepalive_bond.shutdown()
+            self._keepalive_bond = Bond(self._node, "bonds", self._lease_wallet.client_name)
+            self._keepalive_bond.start()
+            self._lease = lease
+            return have_new_lease, lease
+
+    def yield_(self) -> None:
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            if self._lease is None:
+                raise RuntimeError("no lease to yield")
+            request = ReturnLease.Request()
+            convert(self._lease.lease_proto, request.lease)
+            self._return_lease(request)
+            self._lease_wallet.remove(self._lease)
+            if self._keepalive_bond is not None:
+                self._keepalive_bond.shutdown()
+            self._keepalive_bond = None
+            self._lease = None
+
+    def release(self) -> None:
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            self._release_leases()
+            if self._keepalive_bond is not None:
+                self._keepalive_bond.shutdown()
+            self._keepalive_bond = None
+            if self._lease is not None:
+                self._lease_wallet.remove(self._lease)
+            self._lease = None
+
+    def tie(self, wrapper: Any) -> SpotLeashContextProtocol:
+        self._lease_wallet = wrapper._robot.lease_wallet
+        return SpotProxyLeash.Context(self, self._logger)
+
+    @property
+    def lease(self) -> Optional[Lease]:
+        return self._lease
+
+    @property
+    def resources(self) -> List[lease_pb2.LeaseResource]:
+        raise NotImplementedError("Not available, only over status/leases topic")
+
+    @property
+    def async_tasks(self) -> List[AsyncPeriodicQuery]:
+        return []
+
+
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
@@ -214,7 +342,6 @@ class SpotROS(Node):
         self.callbacks: Dict[str, Callable] = {}
         """Dictionary listing what callback to use for what data task"""
         self.callbacks["metrics"] = self.metrics_callback
-        self.callbacks["lease"] = self.lease_callback
 
         self.group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.graph_nav_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
@@ -236,7 +363,6 @@ class SpotROS(Node):
 
         # Declare rates for the spot_ros2 publishers, which are combined to a dictionary
         self.declare_parameter("metrics_rate", 0.04)
-        self.declare_parameter("lease_rate", 1.0)
         self.declare_parameter("world_objects_rate", 20.0)
         self.declare_parameter("graph_nav_pose_rate", 10.0)
 
@@ -295,7 +421,6 @@ class SpotROS(Node):
 
         self.rates = {
             "metrics": self.get_parameter("metrics_rate").value,
-            "lease": self.get_parameter("lease_rate").value,
             "world_objects": self.get_parameter("world_objects_rate").value,
             "graph_nav_pose": self.get_parameter("graph_nav_pose_rate").value,
         }
@@ -348,6 +473,27 @@ class SpotROS(Node):
         logging.basicConfig(format="[%(filename)s:%(lineno)d] %(message)s", level=logging.ERROR)
         self.wrapper_logger = logging.getLogger(f"{name_with_dot}spot_wrapper")
 
+        self.leash_interface: Optional[SpotLeashProtocol] = None
+
+        self.leasing_mode = self.declare_parameter("leasing_mode", "direct").value
+        if self.leasing_mode == "proxied":
+            if self.use_take_lease:
+                self.get_logger().error(
+                    "Should 'use_take_lease' but proxy leasing won't under normal operation, ignoring"
+                )
+            if not self.get_lease_on_action:
+                self.get_logger().error(
+                    "Should not 'get_lease_on_action' but proxy leasing "
+                    "must as it operates with temporary subleases, ignoring"
+                )
+            self.leash_interface = SpotProxyLeash(self, self.wrapper_logger)
+        else:
+            if self.leasing_mode != "direct":
+                self.get_logger().warn(f"Unknown '{self.leasing_mode}' leasing mode, falling back to 'direct'")
+            self.lease_pub: Publisher = self.create_publisher(LeaseArray, "status/leases", 1)
+            self.rates["lease"] = self.declare_parameter("lease_rate", 1.0).value
+            self.callbacks["lease"] = self.lease_callback
+
         name_str = ""
         if self.name is not None:
             name_str = " for " + self.name
@@ -371,6 +517,7 @@ class SpotROS(Node):
                 estop_timeout=self.estop_timeout.value,
                 rates=self.rates,
                 callbacks=self.callbacks,
+                leash_interface=self.leash_interface,
                 use_take_lease=self.use_take_lease.value,
                 get_lease_on_action=self.get_lease_on_action.value,
                 continually_try_stand=self.continually_try_stand.value,
@@ -425,7 +572,6 @@ class SpotROS(Node):
         # Status Publishers #
         self.dynamic_broadcaster: tf2_ros.TransformBroadcaster = tf2_ros.TransformBroadcaster(self)
         self.metrics_pub: Publisher = self.create_publisher(Metrics, "status/metrics", 1)
-        self.lease_pub: Publisher = self.create_publisher(LeaseArray, "status/leases", 1)
         self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
         self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
 
@@ -2752,10 +2898,13 @@ class SpotROS(Node):
     def destroy_node(self) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
         if self.spot_wrapper is not None:
-            if self.spot_wrapper.check_is_powered_on() and self.start_estop.value:
-                self.get_logger().info("Sitting down...")
-                self.spot_wrapper.sit_blocking()
-            self.spot_wrapper.disconnect()
+            try:
+                if self.spot_wrapper.check_is_powered_on() and self.start_estop.value:
+                    self.get_logger().info("Sitting down...")
+                    self.spot_wrapper.sit_blocking()
+                self.spot_wrapper.disconnect()
+            except Exception as e:
+                self.get_logger().warn(f"Got {e} while destroying node")
         super().destroy_node()
 
 
