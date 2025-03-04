@@ -94,6 +94,7 @@ class StateStreamingHandler {
    * @brief Reset internal state.
    */
   void reset();
+
  private:
   // Stores the current position, velocity, and load of the robot's joints.
   std::vector<float> current_position_;
