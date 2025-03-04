@@ -166,9 +166,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Shared BD clients.
   std::unique_ptr<::bosdyn::client::Robot> robot_;
-  ::bosdyn::client::RobotStateStreamingClient* state_client_;
-  ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_;
-  ::bosdyn::client::RobotCommandClient* command_client_;
+  ::bosdyn::client::RobotStateStreamingClient* state_client_{nullptr};
+  ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_{nullptr};
+  ::bosdyn::client::RobotCommandClient* command_client_{nullptr};
 
   ::bosdyn::client::Lease lease_;
   std::unique_ptr<LeasingInterface> leasing_interface_;
@@ -189,7 +189,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   bool command_stream_started_ = false;
   bool init_state_ = false;
 
-  ::bosdyn::client::TimeSyncEndpoint* endpoint_ = nullptr;
+  std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread_;
 
   ::bosdyn::api::JointControlStreamRequest joint_request_;
 

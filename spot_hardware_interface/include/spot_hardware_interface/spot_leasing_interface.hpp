@@ -56,7 +56,7 @@ class DirectLeasingInterface : public LeasingInterface {
 
  private:
   ::bosdyn::client::Robot* robot_;
-  ::bosdyn::client::LeaseClient* lease_client_;
+  ::bosdyn::client::LeaseClient* lease_client_{nullptr};
 };
 
 class ProxiedLeasingInterface : public LeasingInterface {

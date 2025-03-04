@@ -36,7 +36,7 @@ tl::expected<::bosdyn::client::Lease, std::string> DirectLeasingInterface::Acqui
   // on process interruption.
   auto result = lease_client_->TakeLease(resource_name);
   if (!result) {
-    return tl::make_unexpected(result.status.Chain("Could not create acquire lease").message());
+    return tl::make_unexpected(result.status.Chain("Could not acquire lease").message());
   }
   return ::bosdyn::client::Lease(result.move().lease());
 }

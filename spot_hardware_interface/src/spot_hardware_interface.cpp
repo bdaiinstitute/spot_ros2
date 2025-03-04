@@ -183,6 +183,9 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   if (!authenticate_robot(hostname_, username_, password_, port_, certificate_)) {
     return hardware_interface::CallbackReturn::ERROR;
   }
+  if (!start_time_sync()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
   if (!leasing_interface_) {
     switch (leasing_mode_) {
       case LeasingMode::PROXIED:
@@ -192,9 +195,6 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
         leasing_interface_ = std::make_unique<DirectLeasingInterface>(robot_.get());
         break;
     }
-  }
-  if (!start_time_sync()) {
-    return hardware_interface::CallbackReturn::ERROR;
   }
   if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler_,
                                     std::placeholders::_1))) {
@@ -282,6 +282,7 @@ hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecy
   release_lease();
   stop_state_stream();
   leasing_interface_.reset();
+  time_sync_thread_.reset();
   robot_.reset();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -290,6 +291,7 @@ hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecyc
   stop_state_stream();
   init_state_ = false;
   leasing_interface_.reset();
+  time_sync_thread_.reset();
   robot_.reset();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -403,8 +405,8 @@ bool SpotHardware::start_time_sync() {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get time sync thread from robot");
     return false;
   }
-  auto time_sync_thread = time_sync_thread_resp.response;
-  if (!time_sync_thread->WaitForSync(std::chrono::seconds(5))) {
+  time_sync_thread_ = time_sync_thread_resp.move();
+  if (!time_sync_thread_->WaitForSync(std::chrono::seconds(5))) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to establish time sync before timing out");
     return false;
   }
@@ -570,20 +572,13 @@ bool SpotHardware::start_command_stream() {
   }
   command_client_ = robot_command_stream_client_resp.response;
 
-  auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
-  if (!endpoint_result) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get timesync endpoint");
-    return false;
-  }
-  endpoint_ = endpoint_result.response;
-
-  command_client_->AddTimeSyncEndpoint(endpoint_);
+  command_client_->AddTimeSyncEndpoint(time_sync_thread_->GetEndpoint());
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Client successfully created!");
 
   bosdyn::api::RobotCommand joint_command = ::bosdyn::client::JointCommand();
   auto joint_res = command_client_->RobotCommand(joint_command);
-  if (!joint_res.status) {
+  if (!joint_res) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to activate joint control mode");
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Message: %s", joint_res.status.DebugString().c_str());
     return false;
@@ -623,7 +618,6 @@ void SpotHardware::stop_command_stream() {
     return;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping command stream");
-  endpoint_ = nullptr;
   command_client_ = nullptr;
   command_stream_service_ = nullptr;
   command_stream_started_ = false;
@@ -654,7 +648,7 @@ void SpotHardware::send_command(const JointCommands& joint_commands) {
 
   auto time_point_local = ::bosdyn::common::TimePoint(std::chrono::system_clock::now() + std::chrono::milliseconds(50));
 
-  ::bosdyn::common::RobotTimeConverter converter = endpoint_->GetRobotTimeConverter();
+  ::bosdyn::common::RobotTimeConverter converter = time_sync_thread_->GetEndpoint()->GetRobotTimeConverter();
   joint_cmd->mutable_end_time()->CopyFrom(converter.RobotTimestampFromLocal(time_point_local));
 
   // Send joint stream command
