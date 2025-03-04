@@ -181,7 +181,6 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // Simple class used in the state streaming thread that stores the current joint states of the robot.
   StateStreamingHandler state_streaming_handler_;
   bool state_stream_started_ = false;
-  bool robot_authenticated_ = false;
 
   bool command_stream_started_ = false;
   bool init_state_ = false;

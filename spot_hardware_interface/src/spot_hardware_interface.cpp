@@ -258,28 +258,30 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
-  stop_command_stream();
   if (!power_off()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
+  stop_command_stream();
   release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
-  stop_command_stream();
   if (!power_off()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
+  stop_command_stream();
   release_lease();
   stop_state_stream();
-
   leasing_interface_.reset();
+  robot_.reset();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/) {
   stop_state_stream();
+  leasing_interface_.reset();
+  robot_.reset();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -344,7 +346,7 @@ hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/
 bool SpotHardware::authenticate_robot(const std::string& hostname, const std::string& username,
                                       const std::string& password, const std::optional<int>& port,
                                       const std::optional<std::string>& certificate) {
-  if (robot_authenticated_) {
+  if (robot_) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot already authenticated!");
     return true;
   }
@@ -382,7 +384,6 @@ bool SpotHardware::authenticate_robot(const std::string& hostname, const std::st
     return false;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot successfully authenticated!");
-  robot_authenticated_ = true;
   return true;
 }
 
@@ -467,11 +468,22 @@ bool SpotHardware::power_off() {
         RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is already powered off.");
         break;
       }
-      bosdyn::api::RobotCommand poweroff_command = ::bosdyn::client::SafePowerOffCommand();
-      auto poweroff_res = command_client_->RobotCommand(poweroff_command);
-      if (!poweroff_res) {
-        RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to complete the safe power off command");
-        break;
+      if (command_client_) {
+        bosdyn::api::RobotCommand poweroff_command = ::bosdyn::client::SafePowerOffCommand();
+        auto poweroff_res = command_client_->RobotCommand(poweroff_command);
+        if (!poweroff_res) {
+          RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to complete the safe power off command");
+          break;
+        }
+      } else {
+        constexpr bool kCutImmediately = true;
+        constexpr auto kTimeout = std::chrono::seconds(60);
+        constexpr double kUpdateFrequency = 1.0;
+        const auto power_status = robot_->PowerOffMotors(!kCutImmediately, kTimeout, kUpdateFrequency);
+        if (!power_status) {
+          RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not power off the robot");
+          break;
+        }
       }
       RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered off!");
       powered_on_ = false;
@@ -527,11 +539,12 @@ void SpotHardware::stop_state_stream() {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "State stream already stopped");
     return;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping State Stream");
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping state stream");
   state_thread_.request_stop();
   state_thread_.join();
   state_client_ = nullptr;
   state_stream_started_ = false;
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "State stream stopped");
 }
 
 bool SpotHardware::start_command_stream() {
@@ -599,11 +612,12 @@ void SpotHardware::stop_command_stream() {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Command stream already stopped");
     return;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping Command Stream");
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping command stream");
   endpoint_ = nullptr;
   command_client_ = nullptr;
   command_stream_service_ = nullptr;
   command_stream_started_ = false;
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Command stream stopped");
 }
 
 void SpotHardware::send_command(const JointCommands& joint_commands) {
@@ -648,12 +662,12 @@ void SpotHardware::release_lease() {
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Returning lease...");
   auto lease = leasing_interface_->ReturnLease("body");
-  if (!lease) {
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("SpotHardware"), lease.error());
-    return;
+  if (lease) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease returned!!");
+  } else {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("SpotHardware"), lease.error());
   }
   lease_ = ::bosdyn::client::Lease();  // invalidate lease
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease returned!!");
 }
 
 }  // namespace spot_hardware_interface

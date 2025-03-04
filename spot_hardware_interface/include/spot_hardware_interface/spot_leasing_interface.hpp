@@ -70,16 +70,15 @@ class ProxiedLeasingInterface : public LeasingInterface {
   tl::expected<::bosdyn::client::Lease, std::string> ReturnLease(const std::string& resource_name) override;
 
  private:
-  std::shared_ptr<::bosdyn::client::LeaseWallet> lease_wallet_;
-
   std::shared_ptr<rclcpp::Node> foreground_node_;
   std::shared_ptr<rclcpp::Client<spot_msgs::srv::AcquireLease>> acquire_lease_client_;
   std::shared_ptr<rclcpp::Client<spot_msgs::srv::ReturnLease>> return_lease_client_;
 
-  std::jthread background_loop_;
   std::shared_ptr<rclcpp::Node> background_node_;
   std::unique_ptr<rclcpp::executors::SingleThreadedExecutor> background_executor_;
+  std::jthread background_loop_;
 
+  std::shared_ptr<::bosdyn::client::LeaseWallet> lease_wallet_;
   std::unordered_map<std::string, ::bosdyn::client::Lease> leases_;
   std::unordered_map<std::string, std::unique_ptr<bond::Bond>> keepalive_bonds_;
 };
