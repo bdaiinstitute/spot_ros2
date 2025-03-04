@@ -110,7 +110,7 @@ tl::expected<::bosdyn::client::Lease, std::string> ProxiedLeasingInterface::Acqu
 }
 
 tl::expected<::bosdyn::client::Lease, std::string> ProxiedLeasingInterface::ReturnLease(
-  const std::string& resource_name) {
+    const std::string& resource_name) {
   if (leases_.count(resource_name) == 0) {
     return tl::make_unexpected("No lease owned for " + resource_name);
   }
