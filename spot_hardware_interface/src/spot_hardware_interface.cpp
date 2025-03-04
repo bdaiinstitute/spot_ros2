@@ -54,6 +54,14 @@ void StateStreamingHandler::get_joint_states(JointStates& joint_states) {
   joint_states.load.assign(current_load_.begin(), current_load_.end());
 }
 
+void StateStreamingHandler::reset() {
+  // lock so that read/write doesn't happen at the same time
+  const std::lock_guard<std::mutex> lock(mutex_);
+  current_position_.clear();
+  current_velocity_.clear();
+  current_load_.clear();
+}
+
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -280,6 +288,7 @@ hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecy
 
 hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/) {
   stop_state_stream();
+  init_state_ = false;
   leasing_interface_.reset();
   robot_.reset();
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -330,7 +339,7 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
 }
 
 hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  if (command_stream_started_) {
+  if (command_stream_started_ && init_state_) {
     for (std::size_t i = 0; i < info_.joints.size(); ++i) {
       joint_commands_.position.at(i) = hw_commands_[command_interfaces_per_joint_ * i];
       joint_commands_.velocity.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 1];
@@ -544,6 +553,7 @@ void SpotHardware::stop_state_stream() {
   state_thread_.join();
   state_client_ = nullptr;
   state_stream_started_ = false;
+  state_streaming_handler_.reset();
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "State stream stopped");
 }
 
@@ -617,6 +627,7 @@ void SpotHardware::stop_command_stream() {
   command_client_ = nullptr;
   command_stream_service_ = nullptr;
   command_stream_started_ = false;
+  joint_request_.Clear();
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Command stream stopped");
 }
 

@@ -90,7 +90,10 @@ class StateStreamingHandler {
    * @return JointStates struct containing vectors of position, velocity, and load values.
    */
   void get_joint_states(JointStates& joint_states);
-
+  /**
+   * @brief Reset internal state.
+   */
+  void reset();
  private:
   // Stores the current position, velocity, and load of the robot's joints.
   std::vector<float> current_position_;
