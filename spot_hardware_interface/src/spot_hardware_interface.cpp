@@ -18,8 +18,11 @@
 
 #include "spot_hardware_interface/spot_hardware_interface.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cmath>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -71,6 +74,14 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   imu_states.odom_rot_quaternion.assign(imu_odom_rot_quaternion_.begin(), imu_odom_rot_quaternion_.end());
 }
 
+void StateStreamingHandler::reset() {
+  // lock so that read/write doesn't happen at the same time
+  const std::lock_guard<std::mutex> lock(mutex_);
+  current_position_.clear();
+  current_velocity_.clear();
+  current_load_.clear();
+}
+
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -79,6 +90,35 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hostname_ = info_.hardware_parameters["hostname"];
   username_ = info_.hardware_parameters["username"];
   password_ = info_.hardware_parameters["password"];
+
+  {
+    const std::string value = info_.hardware_parameters["port"];
+    if (!std::all_of(value.begin(), value.end(), ::isdigit)) {
+      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Got %s for a port, expected 0 < port < 65536", value.c_str());
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+    if (const int port = std::stoi(value); port != 0) {
+      port_ = port;
+    } else {
+      port_.reset();
+    }
+  }
+
+  if (const auto& certificate = info_.hardware_parameters["certificate"]; !certificate.empty()) {
+    certificate_ = certificate;
+  } else {
+    certificate_.reset();
+  }
+
+  if (info_.hardware_parameters["leasing"] == "direct") {
+    leasing_mode_ = LeasingMode::DIRECT;
+  } else if (info_.hardware_parameters["leasing"] == "proxied") {
+    leasing_mode_ = LeasingMode::PROXIED;
+  } else {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Got %s for leasing mode, expected 'direct' or 'proxied'",
+                 info_.hardware_parameters["leasing"].c_str());
+    return hardware_interface::CallbackReturn::ERROR;
+  }
 
   hw_states_.resize(info_.joints.size() * state_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size() * command_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
@@ -162,11 +202,21 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   joint_states_.load.assign(njoints_, 0);
 
   // Set up the robot using the BD SDK and start command streaming.
-  if (!authenticate_robot(hostname_, username_, password_)) {
+  if (!authenticate_robot(hostname_, username_, password_, port_, certificate_)) {
     return hardware_interface::CallbackReturn::ERROR;
   }
   if (!start_time_sync()) {
     return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (!leasing_interface_) {
+    switch (leasing_mode_) {
+      case LeasingMode::PROXIED:
+        leasing_interface_ = std::make_unique<ProxiedLeasingInterface>(robot_.get());
+        break;
+      case LeasingMode::DIRECT:
+        leasing_interface_ = std::make_unique<DirectLeasingInterface>(robot_.get());
+        break;
+    }
   }
   if (!start_state_stream(std::bind(&StateStreamingHandler::handle_state_streaming, &state_streaming_handler_,
                                     std::placeholders::_1))) {
@@ -244,23 +294,33 @@ std::vector<hardware_interface::CommandInterface> SpotHardware::export_command_i
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/) {
+  if (!power_off()) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
   stop_command_stream();
   release_lease();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_shutdown(const rclcpp_lifecycle::State& /*previous_state*/) {
-  stop_state_stream();
-  stop_command_stream();
-  release_lease();
   if (!power_off()) {
     return hardware_interface::CallbackReturn::ERROR;
   }
+  stop_command_stream();
+  release_lease();
+  stop_state_stream();
+  leasing_interface_.reset();
+  time_sync_thread_.reset();
+  robot_.reset();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/) {
   stop_state_stream();
+  init_state_ = false;
+  leasing_interface_.reset();
+  time_sync_thread_.reset();
+  robot_.reset();
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -324,38 +384,52 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
 }
 
 hardware_interface::return_type SpotHardware::write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  // This function will be responsible for sending commands to the robot via the BD SDK -- currently unimplemented.
-  if (!command_stream_started_) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Command streaming was not started");
-    return hardware_interface::return_type::ERROR;
+  if (command_stream_started_ && init_state_) {
+    for (std::size_t i = 0; i < info_.joints.size(); ++i) {
+      joint_commands_.position.at(i) = hw_commands_[command_interfaces_per_joint_ * i];
+      joint_commands_.velocity.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 1];
+      joint_commands_.load.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 2];
+      joint_commands_.k_q_p.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 3];
+      joint_commands_.k_qd_p.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 4];
+    }
+    send_command(joint_commands_);
   }
-
-  for (std::size_t i = 0; i < info_.joints.size(); ++i) {
-    joint_commands_.position.at(i) = hw_commands_[command_interfaces_per_joint_ * i];
-    joint_commands_.velocity.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 1];
-    joint_commands_.load.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 2];
-    joint_commands_.k_q_p.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 3];
-    joint_commands_.k_qd_p.at(i) = hw_commands_[command_interfaces_per_joint_ * i + 4];
-  }
-  send_command(joint_commands_);
-
   return hardware_interface::return_type::OK;
 }
 
 bool SpotHardware::authenticate_robot(const std::string& hostname, const std::string& username,
-                                      const std::string& password) {
-  if (robot_authenticated_) {
+                                      const std::string& password, const std::optional<int>& port,
+                                      const std::optional<std::string>& certificate) {
+  if (robot_) {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot already authenticated!");
     return true;
   }
   // Create a Client SDK object.
-  const auto client_sdk = ::bosdyn::client::CreateStandardSDK("SpotHardware");
-  auto robot_result = client_sdk->CreateRobot(hostname);
+  const auto client_sdk = [&]() -> std::unique_ptr<bosdyn::client::ClientSdk> {
+    if (!certificate.has_value()) {
+      return ::bosdyn::client::CreateStandardSDK("SpotHardware");
+    }
+    auto client_sdk = std::make_unique<::bosdyn::client::ClientSdk>();
+    client_sdk->SetClientName("SpotHardware");
+    if (const auto status = client_sdk->LoadRobotCertFromFile(certificate.value()); !status) {
+      return nullptr;
+    }
+    client_sdk->Init();
+    return client_sdk;
+  }();
+  if (!client_sdk) {
+    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not initialize SDK");
+    return false;
+  }
+  auto robot_result = client_sdk->CreateRobot(hostname, ::bosdyn::client::USE_PROXY);
   if (!robot_result) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not create robot");
     return false;
   }
   robot_ = robot_result.move();
+  if (port.has_value()) {
+    robot_->UpdateSecureChannelPort(port.value());
+  }
   const ::bosdyn::common::Status status = robot_->Authenticate(username, password);
   if (!status) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"),
@@ -364,7 +438,6 @@ bool SpotHardware::authenticate_robot(const std::string& hostname, const std::st
     return false;
   }
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot successfully authenticated!");
-  robot_authenticated_ = true;
   return true;
 }
 
@@ -375,8 +448,8 @@ bool SpotHardware::start_time_sync() {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get time sync thread from robot");
     return false;
   }
-  auto time_sync_thread = time_sync_thread_resp.response;
-  if (!time_sync_thread->WaitForSync(std::chrono::seconds(5))) {
+  time_sync_thread_ = time_sync_thread_resp.move();
+  if (!time_sync_thread_->WaitForSync(std::chrono::seconds(5))) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to establish time sync before timing out");
     return false;
   }
@@ -401,55 +474,82 @@ bool SpotHardware::check_estop() {
 }
 
 bool SpotHardware::get_lease() {
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Getting Lease");
-  // First create a lease client.
-  ::bosdyn::client::Result<::bosdyn::client::LeaseClient*> lease_client_resp =
-      robot_->EnsureServiceClient<::bosdyn::client::LeaseClient>();
-  if (!lease_client_resp) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not create lease client");
+  if (lease_.IsValid()) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease already taken");
+    return true;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Taking lease...");
+  auto lease = leasing_interface_->AcquireLease("body");
+  if (!lease) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("SpotHardware"), lease.error());
     return false;
   }
-  lease_client_ = lease_client_resp.response;
-  // Then acquire the lease for the body.
-  const auto lease_res = lease_client_->TakeLease("body");
-  if (!lease_res) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not acquire body lease");
-    return false;
-  }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease acquired!!");
+  lease_ = lease.value();
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease taken!!");
   return true;
 }
 
 bool SpotHardware::power_on() {
-  if (powered_on_) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is already powered on.");
-    return true;
+  switch (leasing_mode_) {
+    case LeasingMode::DIRECT: {
+      if (powered_on_) {
+        RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is already powered on.");
+        break;
+      }
+      RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powering on...");
+      const auto power_status = robot_->PowerOnMotors(std::chrono::seconds(60), 1.0);
+      if (!power_status) {
+        RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not power on the robot");
+        break;
+      }
+      RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered on!");
+      powered_on_ = true;
+      break;
+    }
+    case LeasingMode::PROXIED: {
+      RCLCPP_DEBUG(rclcpp::get_logger("SpotHardware"), "Robot power is managed elsewhere, assuming it is powered on.");
+      powered_on_ = true;
+      break;
+    }
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powering on...");
-  const auto power_status = robot_->PowerOnMotors(std::chrono::seconds(60), 1.0);
-  if (!power_status) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not power on the robot");
-    return false;
-  }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered on!");
-  powered_on_ = true;
-  return true;
+  return powered_on_;
 }
 
 bool SpotHardware::power_off() {
-  if (!powered_on_) {
-    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is already powered off.");
-    return true;
+  switch (leasing_mode_) {
+    case LeasingMode::DIRECT: {
+      if (!powered_on_) {
+        RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot is already powered off.");
+        break;
+      }
+      if (command_client_) {
+        bosdyn::api::RobotCommand poweroff_command = ::bosdyn::client::SafePowerOffCommand();
+        auto poweroff_res = command_client_->RobotCommand(poweroff_command);
+        if (!poweroff_res) {
+          RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to complete the safe power off command");
+          break;
+        }
+      } else {
+        constexpr bool kCutImmediately = true;
+        constexpr auto kTimeout = std::chrono::seconds(60);
+        constexpr double kUpdateFrequency = 1.0;
+        const auto power_status = robot_->PowerOffMotors(!kCutImmediately, kTimeout, kUpdateFrequency);
+        if (!power_status) {
+          RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not power off the robot");
+          break;
+        }
+      }
+      RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered off!");
+      powered_on_ = false;
+      break;
+    }
+    case LeasingMode::PROXIED: {
+      RCLCPP_DEBUG(rclcpp::get_logger("SpotHardware"), "Robot power is managed elsewhere, assuming power off.");
+      powered_on_ = false;
+      break;
+    }
   }
-  bosdyn::api::RobotCommand poweroff_command = ::bosdyn::client::SafePowerOffCommand();
-  auto poweroff_res = command_client_->RobotCommand(poweroff_command);
-  if (!poweroff_res) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to complete the safe power off command");
-    return false;
-  }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Powered off!");
-  powered_on_ = false;
-  return true;
+  return !powered_on_;
 }
 
 void state_stream_loop(std::stop_token stop_token, ::bosdyn::client::RobotStateStreamingClient* stateStreamClient,
@@ -493,10 +593,13 @@ void SpotHardware::stop_state_stream() {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "State stream already stopped");
     return;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping State Stream");
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping state stream");
   state_thread_.request_stop();
   state_thread_.join();
+  state_client_ = nullptr;
   state_stream_started_ = false;
+  state_streaming_handler_.reset();
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "State stream stopped");
 }
 
 bool SpotHardware::start_command_stream() {
@@ -512,19 +615,13 @@ bool SpotHardware::start_command_stream() {
   }
   command_client_ = robot_command_stream_client_resp.response;
 
-  auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
-  if (!endpoint_result) {
-    RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get timesync endpoint");
-    return false;
-  }
-
-  command_client_->AddTimeSyncEndpoint(endpoint_result.response);
+  command_client_->AddTimeSyncEndpoint(time_sync_thread_->GetEndpoint());
 
   RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Robot Command Client successfully created!");
 
   bosdyn::api::RobotCommand joint_command = ::bosdyn::client::JointCommand();
   auto joint_res = command_client_->RobotCommand(joint_command);
-  if (!joint_res.status) {
+  if (!joint_res) {
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Failed to activate joint control mode");
     RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Message: %s", joint_res.status.DebugString().c_str());
     return false;
@@ -563,8 +660,12 @@ void SpotHardware::stop_command_stream() {
     RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Command stream already stopped");
     return;
   }
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping Command Stream");
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Stopping command stream");
+  command_client_ = nullptr;
+  command_stream_service_ = nullptr;
   command_stream_started_ = false;
+  joint_request_.Clear();
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Command stream stopped");
 }
 
 void SpotHardware::send_command(const JointCommands& joint_commands) {
@@ -588,18 +689,9 @@ void SpotHardware::send_command(const JointCommands& joint_commands) {
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Clear();
   joint_cmd->mutable_gains()->mutable_k_qd_p()->Add(k_qd_p.begin(), k_qd_p.end());
 
-  if (endpoint_ == nullptr) {
-    auto endpoint_result = robot_->StartTimeSyncAndGetEndpoint();
-    if (!endpoint_result) {
-      RCLCPP_ERROR(rclcpp::get_logger("SpotHardware"), "Could not get timesync endpoint");
-      return;
-    }
-    endpoint_ = endpoint_result.response;
-  }
-
   auto time_point_local = ::bosdyn::common::TimePoint(std::chrono::system_clock::now() + std::chrono::milliseconds(50));
 
-  ::bosdyn::common::RobotTimeConverter converter = endpoint_->GetRobotTimeConverter();
+  ::bosdyn::common::RobotTimeConverter converter = time_sync_thread_->GetEndpoint()->GetRobotTimeConverter();
   joint_cmd->mutable_end_time()->CopyFrom(converter.RobotTimestampFromLocal(time_point_local));
 
   // Send joint stream command
@@ -612,12 +704,18 @@ void SpotHardware::send_command(const JointCommands& joint_commands) {
 }
 
 void SpotHardware::release_lease() {
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Releasing Lease");
-  bosdyn::api::ReturnLeaseRequest msg;
-  auto lease_result = robot_->GetWallet()->GetOwnedLeaseProto("body");
-  msg.mutable_lease()->CopyFrom(lease_result.response);
-  auto resp = lease_client_->ReturnLease(msg);
-  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Return lease status: %s", resp.status.DebugString().c_str());
+  if (!lease_.IsValid()) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "No lease to return");
+    return;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Returning lease...");
+  auto lease = leasing_interface_->ReturnLease("body");
+  if (lease) {
+    RCLCPP_INFO(rclcpp::get_logger("SpotHardware"), "Lease returned!!");
+  } else {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("SpotHardware"), lease.error());
+  }
+  lease_ = ::bosdyn::client::Lease();  // invalidate lease
 }
 
 }  // namespace spot_hardware_interface

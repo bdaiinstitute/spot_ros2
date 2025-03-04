@@ -20,6 +20,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -33,8 +34,10 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "spot_hardware_interface/spot_constants.hpp"
+#include "spot_hardware_interface/spot_leasing_interface.hpp"
 #include "spot_hardware_interface/visibility_control.h"
 
+#include "bosdyn/client/lease/lease.h"
 #include "bosdyn/client/lease/lease_keepalive.h"
 #include "bosdyn/client/robot_command/robot_command_builder.h"
 #include "bosdyn/client/robot_command/robot_command_client.h"
@@ -101,6 +104,10 @@ class StateStreamingHandler {
    * angular velocity, and rotation
    */
   void get_states(JointStates& joint_states, ImuStates& imu_states);
+  /**
+   * @brief Reset internal state.
+   */
+  void reset();
 
  private:
   // Stores the current position, velocity, and load of the robot's joints.
@@ -116,6 +123,8 @@ class StateStreamingHandler {
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
+
+enum class LeasingMode { DIRECT, PROXIED };
 
 class SpotHardware : public hardware_interface::SystemInterface {
  public:
@@ -163,6 +172,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Login info
   std::string hostname_;
+  std::optional<int> port_;
+  std::optional<std::string> certificate_;
   std::string username_;
   std::string password_;
 
@@ -175,10 +186,14 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Shared BD clients.
   std::unique_ptr<::bosdyn::client::Robot> robot_;
-  ::bosdyn::client::LeaseClient* lease_client_;
-  ::bosdyn::client::RobotStateStreamingClient* state_client_;
-  ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_;
-  ::bosdyn::client::RobotCommandClient* command_client_;
+  ::bosdyn::client::RobotStateStreamingClient* state_client_{nullptr};
+  ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_{nullptr};
+  ::bosdyn::client::RobotCommandClient* command_client_{nullptr};
+
+  ::bosdyn::client::Lease lease_;
+  std::unique_ptr<LeasingInterface> leasing_interface_;
+
+  LeasingMode leasing_mode_;
 
   // Holds joint states of the robot received from the BD SDK
   JointStates joint_states_;
@@ -193,12 +208,11 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // Simple class used in the state streaming thread that stores the current joint states of the robot.
   StateStreamingHandler state_streaming_handler_;
   bool state_stream_started_ = false;
-  bool robot_authenticated_ = false;
 
   bool command_stream_started_ = false;
   bool init_state_ = false;
 
-  ::bosdyn::client::TimeSyncEndpoint* endpoint_ = nullptr;
+  std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread_;
 
   ::bosdyn::api::JointControlStreamRequest joint_request_;
 
@@ -209,9 +223,13 @@ class SpotHardware : public hardware_interface::SystemInterface {
    * @param hostname IP address of the robot
    * @param username Username for robot login
    * @param password Password for robot login
+   * @param port Optional user-defined port for robot comms
+   * @param certificate Optional user-defined SSL certificate for robot comms
    * @return True if robot object is successfully created and authenticated, false otherwise.
    */
-  bool authenticate_robot(const std::string& hostname, const std::string& username, const std::string& password);
+  bool authenticate_robot(const std::string& hostname, const std::string& username, const std::string& password,
+                          const std::optional<int>& port, const std::optional<std::string>& certificate);
+
   /**
    * @brief Start time sync threads with the ::bosdyn::client::Robot object
    * @return True if time sync successfully initialized and started, false otherwise.
