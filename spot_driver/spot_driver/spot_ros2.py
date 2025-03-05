@@ -27,6 +27,7 @@ from bosdyn.api import (
     world_object_pb2,
 )
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
+from bosdyn.api.manipulation_api_pb2 import WalkGazeMode
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence, ChoreographyStatusResponse
 from bosdyn.client import math_helpers
@@ -2015,7 +2016,11 @@ class SpotROS(Node):
             self.get_logger().info("Returning action result " + str(result))
         return result
 
-    def _manipulation_goal_complete(self, feedback: Optional[ManipulationApiFeedbackResponse]) -> GoalResponse:
+    def _manipulation_goal_complete(
+        self,
+        feedback: Optional[ManipulationApiFeedbackResponse],
+        request: Optional[manipulation_api_pb2.ManipulationApiRequest],
+    ) -> GoalResponse:
         if feedback is None:
             # NOTE: it takes an iteration for the feedback to get set.
             return GoalResponse.IN_PROGRESS
@@ -2037,12 +2042,16 @@ class SpotROS(Node):
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED:
             return GoalResponse.FAILED
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
+            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:
+                return GoalResponse.SUCCESS
             return GoalResponse.IN_PROGRESS
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
             return GoalResponse.FAILED
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
             return GoalResponse.FAILED
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
+            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:
+                return GoalResponse.FAILED
             return GoalResponse.IN_PROGRESS
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_WALKING_TO_OBJECT:
             return GoalResponse.IN_PROGRESS
@@ -2090,7 +2099,7 @@ class SpotROS(Node):
         while (
             rclpy.ok()
             and not goal_handle.is_cancel_requested
-            and self._manipulation_goal_complete(feedback) == GoalResponse.IN_PROGRESS
+            and self._manipulation_goal_complete(feedback, proto_command) == GoalResponse.IN_PROGRESS
             and goal_handle.is_active
         ):
             try:
@@ -2109,7 +2118,7 @@ class SpotROS(Node):
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
-        result.success = self._manipulation_goal_complete(feedback) == GoalResponse.SUCCESS
+        result.success = self._manipulation_goal_complete(feedback, proto_command) == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
