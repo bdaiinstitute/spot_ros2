@@ -2188,7 +2188,7 @@ class SpotROS(Node):
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED:
             return GoalResponse.FAILED
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
-            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY: # type: ignore
+            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:  # type: ignore
                 return GoalResponse.SUCCESS
             return GoalResponse.IN_PROGRESS
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
@@ -2196,7 +2196,7 @@ class SpotROS(Node):
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
             return GoalResponse.FAILED
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
-            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY: # type: ignore
+            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:  # type: ignore
                 return GoalResponse.FAILED
             return GoalResponse.IN_PROGRESS
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_WALKING_TO_OBJECT:
