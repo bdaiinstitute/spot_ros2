@@ -78,6 +78,18 @@ struct JointCommands {
   std::vector<float> k_qd_p;
 };
 
+struct ImuStates {
+  std::string identifier;  // Name for this imu
+  std::vector<double>
+      position_imu;  // Position of the IMU in the mounting link frame expressed in the mounting link's frame (m).
+  std::vector<double> linear_acceleration;  // Linear acceleration of the imu relative to the odom frame
+                                            // expressed in the mounting link's frame (m/s^2).
+  std::vector<double> angular_velocity;     // Angular velocity of the imu relative to the odom frame
+                                            // expressed in the mounting link's frame (rad/s).
+  std::vector<double> odom_rot_quaternion;  // Quarternion representing the rotation from mounting link to
+                                            // odom frame as reported by the IMU. (x, y, z, w)
+};
+
 class StateStreamingHandler {
  public:
   /**
@@ -86,10 +98,12 @@ class StateStreamingHandler {
    */
   void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
   /**
-   * @brief Get a struct of the current joint states of the robot.
+   * @brief Get structs of the current joint states and IMU data from the robot.
    * @return JointStates struct containing vectors of position, velocity, and load values.
+   * ImuStates struct containing info on the IMU's identifier, mounting link, position, linear acceleration,
+   * angular velocity, and rotation
    */
-  void get_joint_states(JointStates& joint_states);
+  void get_states(JointStates& joint_states, ImuStates& imu_states);
   /**
    * @brief Reset internal state.
    */
@@ -100,6 +114,12 @@ class StateStreamingHandler {
   std::vector<float> current_position_;
   std::vector<float> current_velocity_;
   std::vector<float> current_load_;
+  // Stores current IMU data
+  std::string imu_identifier_;
+  std::vector<double> imu_position_;
+  std::vector<double> imu_linear_acceleration_;
+  std::vector<double> imu_angular_velocity_;
+  std::vector<double> imu_odom_rot_quaternion_;
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
@@ -179,6 +199,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
   JointStates joint_states_;
   // Holds joint commands for the robot to send to BD SDK
   JointCommands joint_commands_;
+
+  // Holds IMU data for the robot received from the BD SDK
+  ImuStates imu_states_;
 
   // Thread for reading the state of the robot.
   std::jthread state_thread_;
@@ -263,7 +286,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Vectors for storing the commands and states for the robot.
   std::vector<double> hw_commands_;
-  std::vector<double> hw_states_;
+  std::vector<double> hw_states_;  // joints
+
+  std::vector<double> hw_sensor_states_;
 };
 
 }  // namespace spot_hardware_interface
