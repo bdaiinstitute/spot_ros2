@@ -10,7 +10,7 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
-from spot_driver.launch.spot_launch_helpers import (
+from spot_common.launch.spot_launch_helpers import (
     DepthRegisteredMode,
     declare_image_publisher_args,
     get_camera_sources,
