@@ -98,7 +98,7 @@ class StateStreamingHandler {
    */
   void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
   /**
-   * @brief Get structs of the current joint states and IMU data from the robot.
+   * @brief Get structs of the current joint states, IMU data, and foot contact states from the robot.
    * @return JointStates struct containing vectors of position, velocity, and load values.
    * ImuStates struct containing info on the IMU's identifier, mounting link, position, linear acceleration,
    * angular velocity, and rotation
@@ -107,7 +107,7 @@ class StateStreamingHandler {
       CONTACT_MADE	1	The foot is currently in contact with the ground.
       CONTACT_LOST	2	The foot is not in contact with the ground.
    */
-  void get_foot_states(std::vector<int>& foot_states);
+  void get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states);
 
  private:
   // Stores the current position, velocity, and load of the robot's joints.
