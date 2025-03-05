@@ -50,9 +50,9 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   imu_position_ = {imu_position_msg.x(), imu_position_msg.y(), imu_position_msg.z()};
   // Get latest IMU packet and extract linear acceleration, angular velocity, and rotation info
   int i = robot_state.inertial_state().packets_size() - 1;
-  auto& acceleration_msg = robot_state.inertial_state().packets(i).acceleration_rt_odom_in_link_frame();
-  auto& angular_vel_msg = robot_state.inertial_state().packets(i).angular_velocity_rt_odom_in_link_frame();
-  auto& rot_msg = robot_state.inertial_state().packets(i).odom_rot_link();
+  const auto& acceleration_msg = robot_state.inertial_state().packets(i).acceleration_rt_odom_in_link_frame();
+  const auto& angular_vel_msg = robot_state.inertial_state().packets(i).angular_velocity_rt_odom_in_link_frame();
+  const auto& rot_msg = robot_state.inertial_state().packets(i).odom_rot_link();
   imu_linear_acceleration_ = {acceleration_msg.x(), acceleration_msg.y(), acceleration_msg.z()};
   imu_angular_velocity_ = {angular_vel_msg.x(), angular_vel_msg.y(), angular_vel_msg.z()};
   imu_odom_rot_quaternion_ = {rot_msg.x(), rot_msg.y(), rot_msg.z(), rot_msg.w()};
@@ -267,6 +267,7 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 2]));
   }
   // export sensor state interface
+  // index is currently hardcoded to 0 as there is only one sensor
   for (uint i = 0; i < info_.sensors[0].state_interfaces.size(); i++) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         info_.sensors[0].name, info_.sensors[0].state_interfaces[i].name, &hw_sensor_states_[i]));
