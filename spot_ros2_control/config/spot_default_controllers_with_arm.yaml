@@ -29,10 +29,6 @@ imu_sensor_broadcaster:
     sensor_name: "imu_sensor"
     frame_id: "imu_sensor_frame"
 
-foot_sensor_broadcaster:
-  ros__parameters:
-    sensor_name: "foot_sensor"
-
 forward_position_controller:
   ros__parameters:
     joints:
