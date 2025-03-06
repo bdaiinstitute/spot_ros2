@@ -108,6 +108,10 @@ class StateStreamingHandler {
       CONTACT_LOST	2	The foot is not in contact with the ground.
    */
   void get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states);
+  /**
+   * @brief Reset internal state.
+   */
+  void reset();
 
  private:
   // Stores the current position, velocity, and load of the robot's joints.

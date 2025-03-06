@@ -83,6 +83,14 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   foot_states.assign(current_foot_state_.begin(), current_foot_state_.end());
 }
 
+void StateStreamingHandler::reset() {
+  // lock so that read/write doesn't happen at the same time
+  const std::lock_guard<std::mutex> lock(mutex_);
+  current_position_.clear();
+  current_velocity_.clear();
+  current_load_.clear();
+}
+
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
   if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
@@ -269,10 +277,11 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 2]));
   }
   // export sensor state interface
-  // index is currently hardcoded to 0 as there is only one sensor
-  for (uint i = 0; i < info_.sensors[0].state_interfaces.size(); i++) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.sensors[0].name, info_.sensors[0].state_interfaces[i].name, &hw_sensor_states_[i]));
+  for (uint i = 0; i < info_.sensors.size(); i++) {
+    for (uint j = 0; j < info_.sensors[i].state_interfaces.size(); j++) {
+      state_interfaces.emplace_back(hardware_interface::StateInterface(
+          info_.sensors[i].name, info_.sensors[i].state_interfaces[j].name, &hw_sensor_states_[j]));
+    }
   }
 
   return state_interfaces;
@@ -382,6 +391,12 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   hw_sensor_states_.at(7) = imu_states_.linear_acceleration.at(0);
   hw_sensor_states_.at(8) = imu_states_.linear_acceleration.at(1);
   hw_sensor_states_.at(9) = imu_states_.linear_acceleration.at(2);
+
+  // Load foot contact states
+  hw_sensor_states_.at(10) = foot_states_.at(0);
+  hw_sensor_states_.at(11) = foot_states_.at(1);
+  hw_sensor_states_.at(12) = foot_states_.at(2);
+  hw_sensor_states_.at(13) = foot_states_.at(3);
 
   return hardware_interface::return_type::OK;
 }
