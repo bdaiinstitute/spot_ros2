@@ -11,7 +11,7 @@ import yaml
 from launch import LaunchContext, Substitution
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
-from spot_driver.launch.spot_launch_helpers import get_name_and_prefix, substitute_launch_parameters
+from spot_common.launch.spot_launch_helpers import get_name_and_prefix, substitute_launch_parameters
 
 
 class LaunchHelpersTest(unittest.TestCase):
