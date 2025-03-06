@@ -55,11 +55,18 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
             del config["controller_manager"]
             keys_to_namespace = ["forward_position_controller", "forward_state_controller", "spot_joint_controller"]
 
+            # update controller entries
             for key in keys_to_namespace:
                 key_joints = config[key]["ros__parameters"]["joints"]
                 config[key]["ros__parameters"]["joints"] = [f"{spot_name}/{joint}" for joint in key_joints]
                 config[f"{spot_name}/{key}"] = config[key]
                 del config[key]
+
+            # update IMU sensor entry
+            config[f"{spot_name}/imu_sensor_broadcaster"] = config["imu_sensor_broadcaster"]
+            imu_sensor_name = config["imu_sensor_broadcaster"]["ros__parameters"]["sensor_name"]
+            config["imu_sensor_broadcaster"]["ros__parameters"]["sensor_name"] = f"{spot_name}/{imu_sensor_name}"
+            del config["imu_sensor_broadcaster"]
 
         with NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as out_file:
             yaml.dump(config, out_file)
@@ -197,6 +204,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                         "-c",
                         "controller_manager",
                         "joint_state_broadcaster",
+                        "imu_sensor_broadcaster",
                         LaunchConfiguration("robot_controller"),
                     ],
                     namespace=spot_name,
