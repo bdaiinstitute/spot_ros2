@@ -20,6 +20,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -33,8 +34,10 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "spot_hardware_interface/spot_constants.hpp"
+#include "spot_hardware_interface/spot_leasing_interface.hpp"
 #include "spot_hardware_interface/visibility_control.h"
 
+#include "bosdyn/client/lease/lease.h"
 #include "bosdyn/client/lease/lease_keepalive.h"
 #include "bosdyn/client/robot_command/robot_command_builder.h"
 #include "bosdyn/client/robot_command/robot_command_client.h"
@@ -75,6 +78,18 @@ struct JointCommands {
   std::vector<float> k_qd_p;
 };
 
+struct ImuStates {
+  std::string identifier;  // Name for this imu
+  std::vector<double>
+      position_imu;  // Position of the IMU in the mounting link frame expressed in the mounting link's frame (m).
+  std::vector<double> linear_acceleration;  // Linear acceleration of the imu relative to the odom frame
+                                            // expressed in the mounting link's frame (m/s^2).
+  std::vector<double> angular_velocity;     // Angular velocity of the imu relative to the odom frame
+                                            // expressed in the mounting link's frame (rad/s).
+  std::vector<double> odom_rot_quaternion;  // Quarternion representing the rotation from mounting link to
+                                            // odom frame as reported by the IMU. (x, y, z, w)
+};
+
 class StateStreamingHandler {
  public:
   /**
@@ -83,19 +98,33 @@ class StateStreamingHandler {
    */
   void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
   /**
-   * @brief Get a struct of the current joint states of the robot.
+   * @brief Get structs of the current joint states and IMU data from the robot.
    * @return JointStates struct containing vectors of position, velocity, and load values.
+   * ImuStates struct containing info on the IMU's identifier, mounting link, position, linear acceleration,
+   * angular velocity, and rotation
    */
-  void get_joint_states(JointStates& joint_states);
+  void get_states(JointStates& joint_states, ImuStates& imu_states);
+  /**
+   * @brief Reset internal state.
+   */
+  void reset();
 
  private:
   // Stores the current position, velocity, and load of the robot's joints.
   std::vector<float> current_position_;
   std::vector<float> current_velocity_;
   std::vector<float> current_load_;
+  // Stores current IMU data
+  std::string imu_identifier_;
+  std::vector<double> imu_position_;
+  std::vector<double> imu_linear_acceleration_;
+  std::vector<double> imu_angular_velocity_;
+  std::vector<double> imu_odom_rot_quaternion_;
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
+
+enum class LeasingMode { DIRECT, PROXIED };
 
 class SpotHardware : public hardware_interface::SystemInterface {
  public:
@@ -143,6 +172,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Login info
   std::string hostname_;
+  std::optional<int> port_;
+  std::optional<std::string> certificate_;
   std::string username_;
   std::string password_;
 
@@ -155,27 +186,33 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Shared BD clients.
   std::unique_ptr<::bosdyn::client::Robot> robot_;
-  ::bosdyn::client::LeaseClient* lease_client_;
-  ::bosdyn::client::RobotStateStreamingClient* state_client_;
-  ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_;
-  ::bosdyn::client::RobotCommandClient* command_client_;
+  ::bosdyn::client::RobotStateStreamingClient* state_client_{nullptr};
+  ::bosdyn::client::RobotCommandStreamingClient* command_stream_service_{nullptr};
+  ::bosdyn::client::RobotCommandClient* command_client_{nullptr};
+
+  ::bosdyn::client::Lease lease_;
+  std::unique_ptr<LeasingInterface> leasing_interface_;
+
+  LeasingMode leasing_mode_;
 
   // Holds joint states of the robot received from the BD SDK
   JointStates joint_states_;
   // Holds joint commands for the robot to send to BD SDK
   JointCommands joint_commands_;
 
+  // Holds IMU data for the robot received from the BD SDK
+  ImuStates imu_states_;
+
   // Thread for reading the state of the robot.
   std::jthread state_thread_;
   // Simple class used in the state streaming thread that stores the current joint states of the robot.
   StateStreamingHandler state_streaming_handler_;
   bool state_stream_started_ = false;
-  bool robot_authenticated_ = false;
 
   bool command_stream_started_ = false;
   bool init_state_ = false;
 
-  ::bosdyn::client::TimeSyncEndpoint* endpoint_ = nullptr;
+  std::shared_ptr<::bosdyn::client::TimeSyncThread> time_sync_thread_;
 
   ::bosdyn::api::JointControlStreamRequest joint_request_;
 
@@ -186,9 +223,13 @@ class SpotHardware : public hardware_interface::SystemInterface {
    * @param hostname IP address of the robot
    * @param username Username for robot login
    * @param password Password for robot login
+   * @param port Optional user-defined port for robot comms
+   * @param certificate Optional user-defined SSL certificate for robot comms
    * @return True if robot object is successfully created and authenticated, false otherwise.
    */
-  bool authenticate_robot(const std::string& hostname, const std::string& username, const std::string& password);
+  bool authenticate_robot(const std::string& hostname, const std::string& username, const std::string& password,
+                          const std::optional<int>& port, const std::optional<std::string>& certificate);
+
   /**
    * @brief Start time sync threads with the ::bosdyn::client::Robot object
    * @return True if time sync successfully initialized and started, false otherwise.
@@ -245,7 +286,9 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Vectors for storing the commands and states for the robot.
   std::vector<double> hw_commands_;
-  std::vector<double> hw_states_;
+  std::vector<double> hw_states_;  // joints
+
+  std::vector<double> hw_sensor_states_;
 };
 
 }  // namespace spot_hardware_interface

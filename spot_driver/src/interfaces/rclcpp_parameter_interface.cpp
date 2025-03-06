@@ -33,6 +33,7 @@ constexpr auto kParameterSpotName = "spot_name";
 constexpr auto kParameterFramePrefix = "frame_prefix";
 constexpr auto kParameterNameGripperless = "gripperless";
 constexpr auto kParameterTimeSyncTimeout = "timesync_timeout";
+constexpr auto kParameterNameLeaseRate = "lease_rate";
 
 namespace type_traits {
 template <typename, typename = void>
@@ -312,4 +313,10 @@ std::string RclcppParameterInterface::getFramePrefixWithDefaultFallback() const 
   const std::optional<std::string> frame_prefix = getFramePrefix();
   return frame_prefix.value_or(!robot_name.empty() ? robot_name + "/" : "");
 }
+
+std::optional<double> RclcppParameterInterface::getLeaseRate() const {
+  const double lease_rate = declareAndGetParameter<double>(node_, kParameterNameLeaseRate, kDefaultLeaseRate);
+  return lease_rate > 0.0 ? std::make_optional(lease_rate) : std::nullopt;
+}
+
 }  // namespace spot_ros2

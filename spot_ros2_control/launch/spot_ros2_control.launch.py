@@ -6,7 +6,7 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     Command,
@@ -18,7 +18,7 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
-from spot_driver.launch.spot_launch_helpers import (
+from spot_common.launch.spot_launch_helpers import (
     IMAGE_PUBLISHER_ARGS,
     declare_image_publisher_args,
     get_login_parameters,
@@ -53,7 +53,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
             config = yaml.safe_load(template_file)
             config[f"{spot_name}/controller_manager"] = config["controller_manager"]
             del config["controller_manager"]
-            keys_to_namespace = ["forward_position_controller", "forward_state_controller"]
+            keys_to_namespace = ["forward_position_controller", "forward_state_controller", "spot_joint_controller"]
 
             for key in keys_to_namespace:
                 key_joints = config[key]["ros__parameters"]["joints"]
@@ -114,8 +114,12 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     # If running on robot, query if it has an arm, and parse config for login parameters and gains
     if hardware_interface == "robot":
         arm = spot_has_arm(config_file_path=config_file, spot_name="")
-        username, password, hostname = get_login_parameters(config_file)[:3]
-        login_params = f" hostname:={hostname} username:={username} password:={password} "
+        username, password, hostname, port, certificate = get_login_parameters(config_file)
+        login_params = f" hostname:={hostname} username:={username} password:={password}"
+        if port is not None:
+            login_params += f" port:={port}"
+        if certificate is not None:
+            login_params += f" certificate:={certificate}"
         param_dict = get_ros_param_dict(config_file)
         if "k_q_p" in param_dict:
             # we pass the gains to the xacro as space-separated strings as the hardware interface needs to read in all
@@ -141,6 +145,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             tf_prefix,
             " hardware_interface_type:=",
             LaunchConfiguration("hardware_interface"),
+            " leasing:=",
+            LaunchConfiguration("leasing_mode"),
             login_params,
             gain_params,
         ]
@@ -174,24 +180,32 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             parameters=[robot_description, {"ignore_timestamp": True}],
             namespace=spot_name,
             remappings=[(f"/{tf_prefix}joint_states", f"/{tf_prefix}low_level/joint_states")],
+            condition=UnlessCondition(LaunchConfiguration("control_only")),
         )
     )
     ld.add_action(
         Node(
             package="controller_manager",
-            executable="spawner",
-            arguments=["joint_state_broadcaster", "-c", "controller_manager"],
+            executable="hardware_spawner",
+            arguments=["-c", "controller_manager", "--activate", "SpotSystem"],
             namespace=spot_name,
+            on_exit=[
+                Node(
+                    package="controller_manager",
+                    executable="spawner",
+                    arguments=[
+                        "-c",
+                        "controller_manager",
+                        "joint_state_broadcaster",
+                        LaunchConfiguration("robot_controller"),
+                    ],
+                    namespace=spot_name,
+                )
+            ],
+            condition=IfCondition(LaunchConfiguration("auto_start")),
         )
     )
-    ld.add_action(
-        Node(
-            package="controller_manager",
-            executable="spawner",
-            arguments=[LaunchConfiguration("robot_controller"), "-c", "controller_manager"],
-            namespace=spot_name,
-        )
-    )
+
     # Generate rviz configuration file based on the chosen namespace
     ld.add_action(
         Node(
@@ -230,6 +244,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                 output="screen",
                 parameters=[config_file, {"spot_name": spot_name}],
                 namespace=spot_name,
+                condition=UnlessCondition(LaunchConfiguration("control_only")),
             )
         )
         # launch object sync node (for fiducials)
@@ -240,6 +255,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                 output="screen",
                 parameters=[config_file, {"spot_name": spot_name}],
                 namespace=spot_name,
+                condition=UnlessCondition(LaunchConfiguration("control_only")),
             )
         )
     return
@@ -259,6 +275,12 @@ def generate_launch_description():
                     " commands directly to state. 'robot' uses a custom hardware interface using the Spot C++ SDK to"
                     " connect to the physical robot."
                 ),
+            ),
+            DeclareLaunchArgument(
+                "leasing_mode",
+                default_value="direct",
+                choices=["direct", "proxied"],
+                description="Leasing mode for the robot (need lease manager if proxied).",
             ),
             DeclareLaunchArgument(
                 "config_file",
@@ -298,6 +320,19 @@ def generate_launch_description():
                 "launch_image_publishers",
                 default_value=True,
                 description="Choose whether to launch the image publishers.",
+            ),
+            DeclareBooleanLaunchArgument(
+                "auto_start",
+                default_value=True,
+                description="Choose whether to start hardware interfaces and controllers immediately or not.",
+            ),
+            DeclareBooleanLaunchArgument(
+                "control_only",
+                default_value=False,
+                description=(
+                    "Choose whether to start low-level control functionality only or expose extra data feeds "
+                    "(e.g. known world objects like fiducials)."
+                ),
             ),
         ]
         + declare_image_publisher_args()
