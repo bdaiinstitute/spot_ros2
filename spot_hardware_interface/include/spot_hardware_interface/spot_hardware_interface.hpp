@@ -98,12 +98,16 @@ class StateStreamingHandler {
    */
   void handle_state_streaming(::bosdyn::api::RobotStateStreamResponse& robot_state);
   /**
-   * @brief Get structs of the current joint states and IMU data from the robot.
+   * @brief Get structs of the current joint states, IMU data, and foot contact states from the robot.
    * @return JointStates struct containing vectors of position, velocity, and load values.
    * ImuStates struct containing info on the IMU's identifier, mounting link, position, linear acceleration,
    * angular velocity, and rotation
+   * Save the current foot states of the robot where:
+   *  CONTACT_UNKNOWN	0	Unknown contact. Do not use.
+      CONTACT_MADE	1	The foot is currently in contact with the ground.
+      CONTACT_LOST	2	The foot is not in contact with the ground.
    */
-  void get_states(JointStates& joint_states, ImuStates& imu_states);
+  void get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states);
   /**
    * @brief Reset internal state.
    */
@@ -120,6 +124,9 @@ class StateStreamingHandler {
   std::vector<double> imu_linear_acceleration_;
   std::vector<double> imu_angular_velocity_;
   std::vector<double> imu_odom_rot_quaternion_;
+  // store the current foot contact states
+  std::vector<int> current_foot_state_;
+  static constexpr size_t nfeet_ = 4;
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
@@ -169,6 +176,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // The 3 state interfaces are position, velocity, and effort.
   static constexpr size_t state_interfaces_per_joint_ = 3;
   size_t njoints_;
+  static constexpr size_t nfeet_ = 4;
 
   // Login info
   std::string hostname_;
@@ -202,6 +210,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   // Holds IMU data for the robot received from the BD SDK
   ImuStates imu_states_;
+  // Holds foot states received from the BD SDK
+  std::vector<int> foot_states_;
 
   // Thread for reading the state of the robot.
   std::jthread state_thread_;

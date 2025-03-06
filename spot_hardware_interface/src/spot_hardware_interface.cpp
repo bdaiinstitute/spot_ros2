@@ -44,6 +44,11 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
   current_load_.assign(load_msg.begin(), load_msg.end());
 
+  // Save current foot contact states
+  for (size_t i = 0; i < nfeet_; i++) {
+    current_foot_state_.push_back(robot_state.contact_states(i));
+  }
+
   // Get IMU data from the robot
   imu_identifier_ = robot_state.inertial_state().identifier();
   const auto& imu_position_msg = robot_state.inertial_state().position_imu_rt_link();
@@ -58,7 +63,8 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   imu_odom_rot_quaternion_ = {rot_msg.x(), rot_msg.y(), rot_msg.z(), rot_msg.w()};
 }
 
-void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states) {
+void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states,
+                                       std::vector<int>& foot_states) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
   // Fill in members of the joint states stuct passed in by reference.
@@ -72,6 +78,9 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   imu_states.linear_acceleration.assign(imu_linear_acceleration_.begin(), imu_linear_acceleration_.end());
   imu_states.angular_velocity.assign(imu_angular_velocity_.begin(), imu_angular_velocity_.end());
   imu_states.odom_rot_quaternion.assign(imu_odom_rot_quaternion_.begin(), imu_odom_rot_quaternion_.end());
+
+  // Fill in foot contact states
+  foot_states.assign(current_foot_state_.begin(), current_foot_state_.end());
 }
 
 void StateStreamingHandler::reset() {
@@ -200,6 +209,7 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   joint_states_.position.assign(njoints_, 0);
   joint_states_.velocity.assign(njoints_, 0);
   joint_states_.load.assign(njoints_, 0);
+  foot_states_.assign(nfeet_, 0);
 
   // Set up the robot using the BD SDK and start command streaming.
   if (!authenticate_robot(hostname_, username_, password_, port_, certificate_)) {
@@ -267,10 +277,11 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 2]));
   }
   // export sensor state interface
-  // index is currently hardcoded to 0 as there is only one sensor
-  for (uint i = 0; i < info_.sensors[0].state_interfaces.size(); i++) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.sensors[0].name, info_.sensors[0].state_interfaces[i].name, &hw_sensor_states_[i]));
+  for (uint i = 0; i < info_.sensors.size(); i++) {
+    for (uint j = 0; j < info_.sensors[i].state_interfaces.size(); j++) {
+      state_interfaces.emplace_back(hardware_interface::StateInterface(
+          info_.sensors[i].name, info_.sensors[i].state_interfaces[j].name, &hw_sensor_states_[j]));
+    }
   }
 
   return state_interfaces;
@@ -326,7 +337,7 @@ hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecyc
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  state_streaming_handler_.get_states(joint_states_, imu_states_);
+  state_streaming_handler_.get_states(joint_states_, imu_states_, foot_states_);
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;
@@ -380,6 +391,12 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   hw_sensor_states_.at(7) = imu_states_.linear_acceleration.at(0);
   hw_sensor_states_.at(8) = imu_states_.linear_acceleration.at(1);
   hw_sensor_states_.at(9) = imu_states_.linear_acceleration.at(2);
+
+  // Load foot contact states
+  hw_sensor_states_.at(10) = foot_states_.at(0);
+  hw_sensor_states_.at(11) = foot_states_.at(1);
+  hw_sensor_states_.at(12) = foot_states_.at(2);
+  hw_sensor_states_.at(13) = foot_states_.at(3);
 
   return hardware_interface::return_type::OK;
 }
