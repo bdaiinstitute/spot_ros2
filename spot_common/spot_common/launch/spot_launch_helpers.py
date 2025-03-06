@@ -25,6 +25,7 @@ _PORT: Literal["port"] = "port"
 _CAMERAS_USED: Literal["cameras_used"] = "cameras_used"
 _GRIPPERLESS: Literal["gripperless"] = "gripperless"
 _SPOT_NAME: Literal["spot_name"] = "spot_name"
+_FRAME_PREFIX: Literal["frame_prefix"] = "frame_prefix"
 
 
 IMAGE_PUBLISHER_ARGS = [
@@ -307,8 +308,8 @@ def get_name_and_prefix(ros_params: Dict[str, Any]) -> Tuple[Union[str, Substitu
     Returns:
         Tuple[str | Substitution, str | Substitution]: spot_name, tf_prefix.
     """
-    spot_name: Union[str, Substitution] = ros_params["spot_name"] if "spot_name" in ros_params else ""
-    tf_prefix: Optional[Union[str, Substitution]] = ros_params["frame_prefix"] if "frame_prefix" in ros_params else None
+    spot_name: Union[str, Substitution] = ros_params[_SPOT_NAME] if _SPOT_NAME in ros_params else ""
+    tf_prefix: Optional[Union[str, Substitution]] = ros_params[_FRAME_PREFIX] if _FRAME_PREFIX in ros_params else None
     if tf_prefix is None:
         if isinstance(spot_name, Substitution):
             tf_prefix = PathJoinSubstitution([spot_name, ""])
