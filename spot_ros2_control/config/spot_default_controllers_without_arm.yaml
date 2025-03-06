@@ -8,6 +8,9 @@ controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    imu_sensor_broadcaster:
+      type: imu_sensor_broadcaster/IMUSensorBroadcaster
+
     forward_position_controller:
       type: forward_command_controller/ForwardCommandController
 
@@ -20,6 +23,11 @@ controller_manager:
     hardware_components_initial_state:
       unconfigured:
         - SpotSystem
+
+imu_sensor_broadcaster:
+  ros__parameters:
+    sensor_name: "imu_sensor"
+    frame_id: "imu_sensor_frame"
 
 forward_position_controller:
   ros__parameters:

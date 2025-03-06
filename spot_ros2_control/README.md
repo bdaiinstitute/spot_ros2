@@ -56,6 +56,8 @@ More details on this controller can be found on the [`spot_controllers` README](
 Specifically, for the forward position and state controllers, the ordering of the command must match the ordering of the joints specified in the controller configuration file ([here for robots with an arm](config/spot_default_controllers_with_arm.yaml) or [here for robots without an arm](config/spot_default_controllers_without_arm.yaml)), and the robot can move in unpredictable and dangerous ways if this is not set correctly.
 Make sure to keep a safe distance from the robot when working with these controllers and ensure the e-stop can easily be pressed if needed.
 
+IMU data from the robot state stream is exposed on the topic `/<Robot Name>/imu_sensor_broadcaster/imu`.
+
 Additionally, the state publisher node, object synchronization node, and image publisher nodes from [`spot_driver`](../spot_driver/) will get launched by default when running on the robot to provide extra information such as TF, odometry, and camera feeds.
 To turn off the image publishers (which can cause problems with bandwidth), add the launch argument `launch_image_publishers:=false`.
 
