@@ -268,9 +268,7 @@ class SpotProxyLeash(SpotLeashProtocol):
             convert(response.lease, lease_proto)
             lease = Lease(lease_proto)
             self._lease_wallet.add(lease)
-            have_new_lease = self._lease is not None and (
-                self._lease is None or str(lease.lease_proto) != str(self._lease.lease_proto)
-            )
+            have_new_lease = self._lease is None or str(lease.lease_proto) != str(self._lease.lease_proto)
             if self._keepalive_bond is not None:
                 self._keepalive_bond.shutdown()
             self._keepalive_bond = Bond(self._node, "bonds", self._lease_wallet.client_name)
