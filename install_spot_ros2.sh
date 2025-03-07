@@ -32,7 +32,8 @@ sudo apt install -y ros-$ROS_DISTRO-joint-state-publisher-gui \
                     ros-$ROS_DISTRO-tl-expected \
                     ros-$ROS_DISTRO-ros2-control \
                     ros-$ROS_DISTRO-ros2-controllers \
-                    ros-$ROS_DISTRO-bondcpp
+                    ros-$ROS_DISTRO-bondcpp \
+                    ros-$ROS_DISTRO-bondpy
 # Install the dist-utils
 sudo apt-get install -y python3-distutils
 sudo apt-get install -y python3-apt
