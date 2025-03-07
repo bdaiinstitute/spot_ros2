@@ -129,13 +129,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  hw_states_.resize(info_.joints.size() * state_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
-  hw_commands_.resize(info_.joints.size() * command_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
-
-  hw_sensor_states_.resize(info_.sensors[0].state_interfaces.size(), std::numeric_limits<double>::quiet_NaN());
-
-  njoints_ = hw_states_.size() / state_interfaces_per_joint_;
-
+  // Check that the per-joint configuration matches what we expect.
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // First check command interfaces
     if (joint.command_interfaces.size() != command_interfaces_per_joint_) {
@@ -198,6 +192,33 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
+  // Check that the sensors match what we expect.
+  if (info_.sensors.size() != n_sensors_) {
+    RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "%ld sensors found. '%ld' expected.", info_.sensors.size(),
+                 n_sensors_);
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  // check that sensor interfaces have the right number of elements
+  if (info_.sensors[imu_sensor_index_].state_interfaces.size() != n_imu_sensor_interfaces_) {
+    RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"),
+                 "IMU sensor state interface has %ld command interfaces found. '%ld' expected.",
+                 info_.sensors[0].state_interfaces.size(), n_imu_sensor_interfaces_);
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (info_.sensors[foot_sensor_index_].state_interfaces.size() != n_foot_sensor_interfaces_) {
+    RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"),
+                 "Feet sensor state interface has %ld command interfaces found. '%ld' expected.",
+                 info_.sensors[1].state_interfaces.size(), n_foot_sensor_interfaces_);
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  // resize to fit the expected number of interfaces
+  njoints_ = info_.joints.size();
+  hw_states_.resize(njoints_ * state_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
+  hw_commands_.resize(njoints_ * command_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
+  hw_sensor_states_.resize((n_imu_sensor_interfaces_ + n_foot_sensor_interfaces_),
+                           std::numeric_limits<double>::quiet_NaN());
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 

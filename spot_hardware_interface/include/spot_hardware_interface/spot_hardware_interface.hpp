@@ -177,6 +177,15 @@ class SpotHardware : public hardware_interface::SystemInterface {
   static constexpr size_t state_interfaces_per_joint_ = 3;
   size_t njoints_;
   static constexpr size_t nfeet_ = 4;
+  // Sensor configuration
+  // We have 2 sensors, IMU and feet contact
+  static constexpr size_t n_sensors_ = 2;
+  // index we expect these sensors to be at in info_.sensors
+  static constexpr size_t imu_sensor_index_ = 0;
+  static constexpr size_t foot_sensor_index_ = 1;
+  // number of state interfaces we expect per sensor
+  static constexpr size_t n_imu_sensor_interfaces_ = 10;
+  static constexpr size_t n_foot_sensor_interfaces_ = 4;
 
   // Login info
   std::string hostname_;

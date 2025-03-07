@@ -120,8 +120,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     # If running on robot, query if it has an arm, and parse config for login parameters and gains
     if hardware_interface == "robot":
-        arm = spot_has_arm(config_file_path=config_file, spot_name="")
-        username, password, hostname, port, certificate = get_login_parameters(config_file)
+        arm = spot_has_arm(config_file_path=config_file)
+        username, password, hostname, port, certificate, _ = get_login_parameters(config_file)
         login_params = f" hostname:={hostname} username:={username} password:={password}"
         if port is not None:
             login_params += f" port:={port}"
