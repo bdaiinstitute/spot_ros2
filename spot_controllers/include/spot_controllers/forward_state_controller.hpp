@@ -22,8 +22,8 @@
 #include <string>
 #include <vector>
 
+#include <spot_controllers/forward_state_controller_parameters.hpp>
 #include "forward_command_controller/forward_command_controller/forward_controllers_base.hpp"
-#include "forward_state_controller_parameters.hpp"  // NOLINT(build/include_subdir)
 #include "spot_controllers/visibility_control.h"
 
 namespace spot_controllers {
