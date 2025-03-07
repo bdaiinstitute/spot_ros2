@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+# Copyright (c) 2024-2025 Boston Dynamics AI Institute LLC. All rights reserved.
 import os
 from tempfile import NamedTemporaryFile
 
@@ -29,51 +29,78 @@ from spot_common.launch.spot_launch_helpers import (
 THIS_PACKAGE = "spot_ros2_control"
 
 
+LEG_JOINTS = [
+    "front_left_hip_x",
+    "front_left_hip_y",
+    "front_left_knee",
+    "front_right_hip_x",
+    "front_right_hip_y",
+    "front_right_knee",
+    "rear_left_hip_x",
+    "rear_left_hip_y",
+    "rear_left_knee",
+    "rear_right_hip_x",
+    "rear_right_hip_y",
+    "rear_right_knee",
+]
+ARM_JOINTS = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1", "arm_f1x"]
+
+
 def create_controllers_config(spot_name: str, has_arm: bool) -> str:
     """Writes a configuration file used to put the ros2 control nodes into a namespace.
     This is necessary as if your ros2 control nodes are launched in a namespace, the configuration yaml used
     must also reflect this same namespace when defining parameters of your controllers.
 
     Args:
-        spot_name (str): Name of spot. If it's the empty string, the default controller file with no namespace is used.
+        spot_name (str): Name of spot, treated as a namespace and joint prefix.
         has_arm (bool): Whether or not your robot has an arm. Necessary for defining the joints that the controllers
                         should use.
 
     Returns:
         str: Path to controllers config file to use
     """
+    prefix = spot_name + "/" if spot_name else ""
+    prefixed_joints = [prefix + joint for joint in LEG_JOINTS] + [prefix + joint for joint in ARM_JOINTS]
 
-    arm_text = "with_arm" if has_arm else "without_arm"
-    template_filename = os.path.join(
-        get_package_share_directory(THIS_PACKAGE), "config", f"spot_default_controllers_{arm_text}.yaml"
-    )
-
-    if spot_name:
-        with open(template_filename, "r") as template_file:
-            config = yaml.safe_load(template_file)
-            config[f"{spot_name}/controller_manager"] = config["controller_manager"]
-            del config["controller_manager"]
-            keys_to_namespace = ["forward_position_controller", "forward_state_controller", "spot_joint_controller"]
-
-            # update controller entries
-            for key in keys_to_namespace:
-                key_joints = config[key]["ros__parameters"]["joints"]
-                config[key]["ros__parameters"]["joints"] = [f"{spot_name}/{joint}" for joint in key_joints]
-                config[f"{spot_name}/{key}"] = config[key]
-                del config[key]
-
-            # update IMU sensor entry
-            config[f"{spot_name}/imu_sensor_broadcaster"] = config["imu_sensor_broadcaster"]
-            imu_sensor_name = config["imu_sensor_broadcaster"]["ros__parameters"]["sensor_name"]
-            config["imu_sensor_broadcaster"]["ros__parameters"]["sensor_name"] = f"{spot_name}/{imu_sensor_name}"
-            del config["imu_sensor_broadcaster"]
-
-        with NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as out_file:
-            yaml.dump(config, out_file)
-            return out_file.name
-    else:
-        # We do not need to do anything -- the template filename is the default for no namespace.
-        return template_filename
+    config = {
+        f"{prefix}controller_manager": {
+            "ros__parameters": {
+                "update_rate": 333,  # Hz
+                "joint_state_broadcaster": {"type": "joint_state_broadcaster/JointStateBroadcaster"},
+                "imu_sensor_broadcaster": {"type": "imu_sensor_broadcaster/IMUSensorBroadcaster"},
+                "forward_position_controller": {"type": "forward_command_controller/ForwardCommandController"},
+                "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
+                "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
+                "hardware_components_initial_state": {"unconfigured": ["SpotSystem"]},
+            }
+        },
+        f"{prefix}forward_position_controller": {
+            "ros__parameters": {
+                "joints": prefixed_joints.copy(),
+                "interface_name": "position",
+            }
+        },
+        f"{prefix}forward_state_controller": {
+            "ros__parameters": {
+                "joints": prefixed_joints.copy(),
+                "interface_names": ["position", "velocity", "effort"],
+            }
+        },
+        f"{prefix}spot_joint_controller": {
+            "ros__parameters": {
+                "joints": prefixed_joints.copy(),
+            }
+        },
+        f"{prefix}imu_sensor_broadcaster": {
+            "ros__parameters": {
+                "sensor_name": f"{prefix}imu_sensor",
+                "frame_id": f"{prefix}imu_sensor_frame",
+            }
+        },
+    }
+    with NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as out_file:
+        yaml.dump(config, out_file)
+        return out_file.name
 
 
 def create_rviz_config(spot_name: str) -> str:
