@@ -201,14 +201,14 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   // check that sensor interfaces have the right number of elements
   if (info_.sensors[imu_sensor_index_].state_interfaces.size() != n_imu_sensor_interfaces_) {
     RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"),
-                 "IMU sensor state interface has %ld command interfaces found. '%ld' expected.",
-                 info_.sensors[0].state_interfaces.size(), n_imu_sensor_interfaces_);
+                 "IMU sensor state interface has %ld state interfaces found. '%ld' expected.",
+                 info_.sensors[imu_sensor_index_].state_interfaces.size(), n_imu_sensor_interfaces_);
     return hardware_interface::CallbackReturn::ERROR;
   }
   if (info_.sensors[foot_sensor_index_].state_interfaces.size() != n_foot_sensor_interfaces_) {
     RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"),
-                 "Feet sensor state interface has %ld command interfaces found. '%ld' expected.",
-                 info_.sensors[1].state_interfaces.size(), n_foot_sensor_interfaces_);
+                 "Feet sensor state interface has %ld state interfaces found. '%ld' expected.",
+                 info_.sensors[foot_sensor_index_].state_interfaces.size(), n_foot_sensor_interfaces_);
     return hardware_interface::CallbackReturn::ERROR;
   }
 
