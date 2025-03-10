@@ -28,7 +28,7 @@ from spot_common.launch.spot_launch_helpers import (
 
 THIS_PACKAGE = "spot_ros2_control"
 
-
+# Ordered joint angles that follow the ordering from the URDF
 LEG_JOINTS = [
     "front_left_hip_x",
     "front_left_hip_y",
@@ -44,11 +44,12 @@ LEG_JOINTS = [
     "rear_right_knee",
 ]
 ARM_JOINTS = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1", "arm_f1x"]
-DEFAULT_UPDATE_RATE_HZ = 333
-MIN_UPDATE_RATE_HZ = 50
+# Some constants for the ROS 2 control update rate
+MAX_UPDATE_RATE_HZ = 333  # Recommended rate, you cannot get data from Spot faster than this using the BD SDK.
+MIN_UPDATE_RATE_HZ = 50  # A somewhat arbitrary lower bound to prevent users from running the stack too slowly.
 
 
-def create_controllers_config(spot_name: str, has_arm: bool, update_rate_hz: int = DEFAULT_UPDATE_RATE_HZ) -> str:
+def create_controllers_config(spot_name: str, has_arm: bool, update_rate_hz: int = MAX_UPDATE_RATE_HZ) -> str:
     """Writes a configuration file used to put the ros2 control nodes into a namespace.
     This is necessary as if your ros2 control nodes are launched in a namespace, the configuration yaml used
     must also reflect this same namespace when defining parameters of your controllers.
@@ -57,7 +58,7 @@ def create_controllers_config(spot_name: str, has_arm: bool, update_rate_hz: int
         spot_name (str): Name of spot, treated as a namespace and joint prefix.
         has_arm (bool): Whether or not your robot has an arm. Necessary for defining the joints that the controllers
                         should use.
-        update_rate_hz (int): Update rate of the ROS 2 control stack in Hz. Defaults to 333.
+        update_rate_hz (int): Update rate of the ROS 2 control stack in Hz
 
     Returns:
         str: Path to controllers config file to use
@@ -194,10 +195,10 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     try:
         # convert update rate to an int, and clamp between min and max.
-        update_rate = max(MIN_UPDATE_RATE_HZ, min(int(update_rate), DEFAULT_UPDATE_RATE_HZ))
+        update_rate = max(MIN_UPDATE_RATE_HZ, min(int(update_rate), MAX_UPDATE_RATE_HZ))
     except ValueError:
-        print(f"Update rate '{update_rate}' could not be converted to an int! Defaulting to {DEFAULT_UPDATE_RATE_HZ}")
-        update_rate = DEFAULT_UPDATE_RATE_HZ
+        print(f"Update rate '{update_rate}' could not be converted to an int! Defaulting to '{MAX_UPDATE_RATE_HZ}'.")
+        update_rate = MAX_UPDATE_RATE_HZ
 
     # If no controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
     if controllers_config == "":
@@ -344,8 +345,11 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "update_rate",
-                default_value="333",
-                description="Update rate in Hz to use for the ros2 control stack. Will be clamped between 50 and 333.",
+                default_value=f"{MAX_UPDATE_RATE_HZ}",
+                description=(
+                    "Update rate in Hz to use for the ROS 2 control stack. Will be clamped between"
+                    f" '{MIN_UPDATE_RATE_HZ}' and '{MAX_UPDATE_RATE_HZ}'."
+                ),
             ),
             DeclareLaunchArgument(
                 "robot_controller",
