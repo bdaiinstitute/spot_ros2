@@ -1,7 +1,6 @@
 ARCH="amd64"
 SDK_VERSION="4.1.1"
 MSG_VERSION="${SDK_VERSION}"
-ROS_DISTRO=humble
 HELP=$'--arm64: Installs ARM64 version'
 REQUIREMENTS_FILE=spot_wrapper/requirements.txt
 
@@ -24,16 +23,13 @@ fi
 sudo apt-get update
 
 # Install ROS dependencies
-# TODO(jschornak-bdai): use rosdep to install these packages by parsing dependencies listed in package.xml
-sudo apt install -y ros-$ROS_DISTRO-joint-state-publisher-gui \
-                    ros-$ROS_DISTRO-tf-transformations \
-                    ros-$ROS_DISTRO-xacro \
-                    ros-$ROS_DISTRO-depth-image-proc \
-                    ros-$ROS_DISTRO-tl-expected \
-                    ros-$ROS_DISTRO-ros2-control \
-                    ros-$ROS_DISTRO-ros2-controllers \
-                    ros-$ROS_DISTRO-bondcpp \
-                    ros-$ROS_DISTRO-bondpy
+sudo apt-get install -y python3-rosdep
+#NOTE: Initialize only if a sources list definition doesn't exist yet - avoids the rosdep error message
+if ! [[ $(ls /etc/ros/rosdep/sources.list.d/*default.list 2> /dev/null) ]]; then
+  sudo rosdep init
+fi
+rosdep update && rosdep install --from-paths ./ --ignore-src -y -r
+
 # Install the dist-utils
 sudo apt-get install -y python3-distutils
 sudo apt-get install -y python3-apt

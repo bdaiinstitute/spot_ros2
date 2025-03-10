@@ -18,6 +18,8 @@ Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
   <depend>rclcpp_lifecycle</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>ros2_control</depend>
+  <depend>ros2_controllers</depend>
   <depend>spot_hardware_interface</depend>
 
   <exec_depend>controller_manager</exec_depend>
