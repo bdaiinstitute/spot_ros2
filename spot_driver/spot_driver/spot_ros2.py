@@ -2164,51 +2164,52 @@ class SpotROS(Node):
         self,
         feedback: Optional[ManipulationApiFeedbackResponse],
         request: Optional[manipulation_api_pb2.ManipulationApiRequest],
-    ) -> GoalResponse:
+    ) -> tuple[GoalResponse, str]:
         if feedback is None:
             # NOTE: it takes an iteration for the feedback to get set.
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
 
         if feedback.current_state.value == feedback.current_state.MANIP_STATE_UNKNOWN:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_DONE:
-            return GoalResponse.SUCCESS
+            return GoalResponse.SUCCESS, "Successfully completed manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_SEARCHING_FOR_GRASP:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_GRASP:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASPING_OBJECT:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACING_OBJECT:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_SUCCEEDED:
-            return GoalResponse.SUCCESS
+            return GoalResponse.SUCCESS, "Successfully completed manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
             if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:  # type: ignore
-                return GoalResponse.SUCCESS
-            return GoalResponse.IN_PROGRESS
+                return GoalResponse.SUCCESS, "Successfully planned a grasp"
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Grasp planning failed"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
             if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:  # type: ignore
-                return GoalResponse.FAILED
-            return GoalResponse.IN_PROGRESS
+                print('DATA AT EDDDDDDDDDDGE')
+                return GoalResponse.FAILED, "Unable to see object well enough to plan grasp"
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_WALKING_TO_OBJECT:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_ATTEMPTING_RAYCASTING:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_PLACE:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_SUCCEEDED:
-            return GoalResponse.SUCCESS
+            return GoalResponse.SUCCESS, "Successfully completed manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         else:
             raise Exception("Unknown manipulation state type")
 
@@ -2243,7 +2244,7 @@ class SpotROS(Node):
         while (
             rclpy.ok()
             and not goal_handle.is_cancel_requested
-            and self._manipulation_goal_complete(feedback, proto_command) == GoalResponse.IN_PROGRESS
+            and self._manipulation_goal_complete(feedback, proto_command)[0] == GoalResponse.IN_PROGRESS
             and goal_handle.is_active
         ):
             try:
@@ -2262,7 +2263,8 @@ class SpotROS(Node):
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
-        result.success = self._manipulation_goal_complete(feedback, proto_command) == GoalResponse.SUCCESS
+        status, result.message = self._manipulation_goal_complete(feedback, proto_command)
+        result.success = status == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
@@ -2276,10 +2278,8 @@ class SpotROS(Node):
             result.message = "Cancelled"
             # Don't abort because that's already happened
         elif result.success:
-            result.message = "Successfully completed manipulation"
             goal_handle.succeed()
         else:
-            result.message = "Failed to complete manipulation"
             goal_handle.abort()
         self._wait_for_goal = None
         if not self.spot_wrapper:
