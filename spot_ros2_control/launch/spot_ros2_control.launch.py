@@ -338,9 +338,8 @@ def generate_launch_description():
                 "controllers_config",
                 default_value="",
                 description=(
-                    "Configuration file for the controllers loaded. If not set, a default config file containing a"
-                    " forward position controller and a joint state publisher will be loaded, with the appropriate"
-                    " configuration based on whether or not the robot has an arm."
+                    "Configuration file for the controller manager. If not set, a default config file will be loaded,"
+                    " with the appropriate configuration based on the namespace and whether the robot has an arm."
                 ),
             ),
             DeclareLaunchArgument(
@@ -354,7 +353,11 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "robot_controller",
                 default_value="forward_position_controller",
-                description="Robot controller to start. Must match an entry in controllers_config.",
+                description=(
+                    "Robot controller to start. Must match an entry in controllers_config. For the default"
+                    " configuration file, options are forward_position_controller, forward_state_controller, or"
+                    " spot_joint_controller."
+                ),
             ),
             DeclareBooleanLaunchArgument(
                 "mock_arm",
@@ -369,7 +372,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "spot_name",
                 default_value="",
-                description="Name of the Spot that will be used as a namespace.",
+                description="Name of the Spot that will be used as a namespace and joint prefix.",
             ),
             DeclareBooleanLaunchArgument(
                 "launch_image_publishers",
