@@ -1,0 +1,73 @@
+module(
+    name = "spot_ros2",
+    version = "0.0.0", # TODO(astout) is there a version somewhere we can reference?
+    compatibility_level = 1,
+)
+
+# TODO(astout) distroless example adds aspect rules here; I just want to confirm why they're needed before I add them
+
+# TODO(astout) ditto for PKG rules
+
+############### C++ RULES ################
+bazel_dep(name = "rules_cc", version = "0.1.1")
+
+############### PYTHON RULES ################
+# Add rules_python dependency to this project
+bazel_dep(name = "rules_python", version = "0.40.0")
+
+# TODO(astout) this works well, but is slightly inelegant. 
+# At some point we should put/apply the patch someplace centralized
+single_version_override(
+    module_name = "rules_python",
+    patches = ["//:rules_python.patch"],
+    patch_strip = 1,
+)
+
+# Configure the project-wide python toolchain
+project_python_version = "3.10"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    configure_coverage_tool = True,
+    is_default = True,
+    python_version = project_python_version,
+)
+use_repo(python, "python_3_10")
+
+# Configure project-wide pip requirements
+project_pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+project_pip.parse(
+    hub_name = "pip",
+    python_version = project_python_version,
+    requirements_lock = "//:requirements.lock",
+)
+use_repo(project_pip, "pip")
+
+############ DISTROLESS RULES ################
+# Add rules_distroless, which is used for adding apt packages to docker images
+# https://github.com/GoogleContainerTools/rules_distroless
+bazel_dep(name = "rules_distroless", version = "0.5.1")
+
+apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
+apt.install(
+    name = "jammy",
+    lock = "//:jammy.lock.json",
+    manifest = "//:jammy.yaml",
+)
+use_repo(apt, "jammy")
+
+# TODO(astout) Do we actually need rules OCI?
+
+# TODO(astout) This extension should be moved somewhere sensible
+# I also don't love the name of the extension, but that's bikeshedding for later
+ros = use_extension("@spot_ros2//rules_bat:extensions.bzl", "ros")
+ros.parse(
+    name = "humble",
+    lock = "//:jammy.lock.json",
+    non_ros_deps = [
+        "libspdlog1",
+        "libfmt8",
+        "libtinyxml2-9",
+    ],
+)
+use_repo(ros, "humble")
