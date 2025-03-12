@@ -9,3 +9,6 @@ docs/source/*.rst
 build/*
 install/*
 log/*
+
+# Bazel build output
+/bazel-*
