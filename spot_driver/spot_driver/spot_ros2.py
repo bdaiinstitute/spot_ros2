@@ -2195,7 +2195,6 @@ class SpotROS(Node):
             return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
             if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:  # type: ignore
-                print('DATA AT EDDDDDDDDDDGE')
                 return GoalResponse.FAILED, "Unable to see object well enough to plan grasp"
             return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_WALKING_TO_OBJECT:
