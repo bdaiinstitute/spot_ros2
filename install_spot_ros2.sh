@@ -28,7 +28,7 @@ sudo apt-get install -y python3-rosdep
 if ! [[ $(ls /etc/ros/rosdep/sources.list.d/*default.list 2> /dev/null) ]]; then
   sudo rosdep init
 fi
-rosdep update && rosdep install --from-paths ./ --ignore-src -y -r
+source /opt/ros/humble/setup.bash && rosdep update && rosdep install --from-paths ./ --ignore-src -y -r --rosdistro=humble
 
 # Install the dist-utils
 sudo apt-get install -y python3-distutils
