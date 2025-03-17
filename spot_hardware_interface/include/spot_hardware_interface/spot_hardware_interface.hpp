@@ -107,7 +107,7 @@ class StateStreamingHandler {
       CONTACT_MADE	1	The foot is currently in contact with the ground.
       CONTACT_LOST	2	The foot is not in contact with the ground.
    */
-  void get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states);
+  void get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states, std::vector<float>& odom_pose, std::vector<float>& vision_pose);
   /**
    * @brief Reset internal state.
    */
@@ -127,6 +127,11 @@ class StateStreamingHandler {
   // store the current foot contact states
   std::vector<int> current_foot_state_;
   static constexpr size_t nfeet_ = 4;
+  // store current body pose
+  std::vector<float> odom_tform_body_pos_; // (x, y, z) in m
+  std::vector<float> odom_tform_body_rot_; // (x, y, z, w) quaternion
+  std::vector<float> vision_tform_body_pos_; // (x, y, z) in m
+  std::vector<float> vision_tform_body_rot_; // (x, y, z, w) quaternion
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
@@ -221,6 +226,11 @@ class SpotHardware : public hardware_interface::SystemInterface {
   ImuStates imu_states_;
   // Holds foot states received from the BD SDK
   std::vector<int> foot_states_;
+  // Holds body poses received from the BD SDK
+  std::vector<float> odom_tform_body_pos_;
+  std::vector<float> vision_tform_body_rot_;
+  std::vector<float> odom_tform_body_pos_;
+  std::vector<float> vision_tform_body_rot_;
 
   // Thread for reading the state of the robot.
   std::jthread state_thread_;
