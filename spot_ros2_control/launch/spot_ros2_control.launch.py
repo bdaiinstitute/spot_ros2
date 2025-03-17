@@ -44,12 +44,10 @@ LEG_JOINTS = [
     "rear_right_knee",
 ]
 ARM_JOINTS = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1", "arm_f1x"]
-# Some constants for the ROS 2 control update rate
-MAX_UPDATE_RATE_HZ = 333  # Recommended rate, you cannot get data from Spot faster than this using the BD SDK.
-MIN_UPDATE_RATE_HZ = 50  # A somewhat arbitrary lower bound to prevent users from running the stack too slowly.
+UPDATE_RATE_HZ = 333  # Update rate to use in the ROS 2 control config file
 
 
-def create_controllers_config(spot_name: str, has_arm: bool, update_rate_hz: int = MAX_UPDATE_RATE_HZ) -> str:
+def create_controllers_config(spot_name: str, has_arm: bool) -> str:
     """Writes a configuration file used to put the ros2 control nodes into a namespace.
     This is necessary as if your ros2 control nodes are launched in a namespace, the configuration yaml used
     must also reflect this same namespace when defining parameters of your controllers.
@@ -58,7 +56,6 @@ def create_controllers_config(spot_name: str, has_arm: bool, update_rate_hz: int
         spot_name (str): Name of spot, treated as a namespace and joint prefix.
         has_arm (bool): Whether or not your robot has an arm. Necessary for defining the joints that the controllers
                         should use.
-        update_rate_hz (int): Update rate of the ROS 2 control stack in Hz
 
     Returns:
         str: Path to controllers config file to use
@@ -70,7 +67,7 @@ def create_controllers_config(spot_name: str, has_arm: bool, update_rate_hz: int
     config = {
         f"{prefix}controller_manager": {
             "ros__parameters": {
-                "update_rate": update_rate_hz,
+                "update_rate": UPDATE_RATE_HZ,
                 "joint_state_broadcaster": {"type": "joint_state_broadcaster/JointStateBroadcaster"},
                 "imu_sensor_broadcaster": {"type": "imu_sensor_broadcaster/IMUSensorBroadcaster"},
                 "forward_position_controller": {"type": "forward_command_controller/ForwardCommandController"},
@@ -144,7 +141,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     mock_arm: bool = IfCondition(LaunchConfiguration("mock_arm")).evaluate(context)
     spot_name: str = LaunchConfiguration("spot_name").perform(context)
     config_file: str = LaunchConfiguration("config_file").perform(context)
-    update_rate = LaunchConfiguration("update_rate").perform(context)
 
     # Default parameters used in the URDF if not connected to a robot
     arm = mock_arm
@@ -193,17 +189,10 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     robot_description = {"robot_description": robot_urdf}
 
-    try:
-        # convert update rate to an int, and clamp between min and max.
-        update_rate = max(MIN_UPDATE_RATE_HZ, min(int(update_rate), MAX_UPDATE_RATE_HZ))
-    except ValueError:
-        print(f"Update rate '{update_rate}' could not be converted to an int! Defaulting to '{MAX_UPDATE_RATE_HZ}'.")
-        update_rate = MAX_UPDATE_RATE_HZ
-
     # If no controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
     if controllers_config == "":
         # Generate spot_default_controllers.yaml depending on namespace and whether the robot has an arm.
-        controllers_config = create_controllers_config(spot_name, arm, update_rate)
+        controllers_config = create_controllers_config(spot_name, arm)
     # Add nodes
     ld.add_action(
         Node(
@@ -340,14 +329,6 @@ def generate_launch_description():
                 description=(
                     "Configuration file for the controller manager. If not set, a default config file will be loaded,"
                     " with the appropriate configuration based on the namespace and whether the robot has an arm."
-                ),
-            ),
-            DeclareLaunchArgument(
-                "update_rate",
-                default_value=f"{MAX_UPDATE_RATE_HZ}",
-                description=(
-                    "Update rate in Hz to use for the ROS 2 control stack. Will be clamped between"
-                    f" '{MIN_UPDATE_RATE_HZ}' and '{MAX_UPDATE_RATE_HZ}'."
                 ),
             ),
             DeclareLaunchArgument(
