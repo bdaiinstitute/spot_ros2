@@ -69,15 +69,17 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& vision_tform_body_rot_msg = robot_state.kinematic_state().vision_tform_body().rotation();
   // Save poses
   odom_tform_body_pos_ = {odom_tform_body_pos_msg.x(), odom_tform_body_pos_msg.y(), odom_tform_body_pos_msg.z()};
-  odom_tform_body_rot_ = {odom_tform_body_rot_msg.x(), odom_tform_body_rot_msg.y(), odom_tform_body_rot_msg.z(), odom_tform_body_rot_msg.w()};
-  vision_tform_body_pos_ = {vision_tform_body_pos_msg.x(), vision_tform_body_pos_msg.y(), vision_tform_body_pos_msg.z()};
-  vision_tform_body_rot_ = {vision_tform_body_rot_msg.x(), vision_tform_body_rot_msg.y(), vision_tform_body_rot_msg.z(), vision_tform_body_rot_msg.w()};
+  odom_tform_body_rot_ = {odom_tform_body_rot_msg.x(), odom_tform_body_rot_msg.y(), odom_tform_body_rot_msg.z(),
+                          odom_tform_body_rot_msg.w()};
+  vision_tform_body_pos_ = {vision_tform_body_pos_msg.x(), vision_tform_body_pos_msg.y(),
+                            vision_tform_body_pos_msg.z()};
+  vision_tform_body_rot_ = {vision_tform_body_rot_msg.x(), vision_tform_body_rot_msg.y(), vision_tform_body_rot_msg.z(),
+                            vision_tform_body_rot_msg.w()};
 }
 
-void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states,
-                                       std::vector<int>& foot_states, std::vector<float>& odom_pos, 
-                                       std::vector<float>& odom_rot, std::vector<float>& vision_pos,
-                                       std::vector<float>& vision_rot) {
+void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states,
+                                       std::vector<float>& odom_pos, std::vector<float>& odom_rot,
+                                       std::vector<float>& vision_pos, std::vector<float>& vision_rot) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
   // Fill in members of the joint states stuct passed in by reference.
@@ -385,7 +387,8 @@ hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecyc
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  state_streaming_handler_.get_states(joint_states_, imu_states_, foot_states_, odom_pos_, odom_rot_, vision_pos_, vision_rot_);
+  state_streaming_handler_.get_states(joint_states_, imu_states_, foot_states_, odom_pos_, odom_rot_, vision_pos_,
+                                      vision_rot_);
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;
