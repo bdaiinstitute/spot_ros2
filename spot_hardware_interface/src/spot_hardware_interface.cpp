@@ -232,6 +232,18 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
                  info_.sensors[foot_sensor_index_].state_interfaces.size(), n_foot_sensor_interfaces_);
     return hardware_interface::CallbackReturn::ERROR;
   }
+  if (info_.sensors[odom_to_body_sensor_index_].state_interfaces.size() != n_odom_body_sensor_interfaces_) {
+    RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"),
+                 "Odom to body frame sensor state interface has %ld state interfaces found. '%ld' expected.",
+                 info_.sensors[odom_to_body_sensor_index_].state_interfaces.size(), n_odom_body_sensor_interfaces_);
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+  if (info_.sensors[vision_to_body_sensor_index_].state_interfaces.size() != n_vision_body_sensor_interfaces_ {
+    RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"),
+                 "Vision to body frame state interface has %ld state interfaces found. '%ld' expected.",
+                 info_.sensors[vision_to_body_sensor_index_].state_interfaces.size(), n_vision_body_sensor_interfaces_;
+    return hardware_interface::CallbackReturn::ERROR;
+  }
 
   // resize to fit the expected number of interfaces
   njoints_ = info_.joints.size();

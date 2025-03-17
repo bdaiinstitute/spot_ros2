@@ -106,6 +106,7 @@ class StateStreamingHandler {
    *  CONTACT_UNKNOWN	0	Unknown contact. Do not use.
       CONTACT_MADE	1	The foot is currently in contact with the ground.
       CONTACT_LOST	2	The foot is not in contact with the ground.
+   * Save the current transforms from odom to body and vision to body frames
    */
   void get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states,
                   std::vector<float>& odom_pose, std::vector<float>& vision_pose);
@@ -185,14 +186,17 @@ class SpotHardware : public hardware_interface::SystemInterface {
   static constexpr size_t nfeet_ = 4;
   // Sensor configuration
   // We have 2 sensors, IMU and feet contact
-  static constexpr size_t n_sensors_ = 2;
+  static constexpr size_t n_sensors_ = 4;
   // index we expect these sensors to be at in info_.sensors
   static constexpr size_t imu_sensor_index_ = 0;
   static constexpr size_t foot_sensor_index_ = 1;
+  static constexpr size_t odom_to_body_sensor_index_ = 2;
+  static constexpr size_t vision_to_body_sensor_index_ = 3;
   // number of state interfaces we expect per sensor
   static constexpr size_t n_imu_sensor_interfaces_ = 10;
   static constexpr size_t n_foot_sensor_interfaces_ = 4;
-  static constexpr size_t n_body_sensor_interfaces_ = 14;
+  static constexpr size_t n_odom_body_sensor_interfaces_ = 7;
+  static constexpr size_t n_vision_body_sensor_interfaces_ = 7;
 
   // Login info
   std::string hostname_;
