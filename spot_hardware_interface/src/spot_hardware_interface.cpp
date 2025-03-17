@@ -78,8 +78,8 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
 }
 
 void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states,
-                                       std::vector<float>& odom_pos, std::vector<float>& odom_rot,
-                                       std::vector<float>& vision_pos, std::vector<float>& vision_rot) {
+                                       std::vector<double>& odom_pos, std::vector<double>& odom_rot,
+                                       std::vector<double>& vision_pos, std::vector<double>& vision_rot) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
   // Fill in members of the joint states stuct passed in by reference.
@@ -238,10 +238,10 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
                  info_.sensors[odom_to_body_sensor_index_].state_interfaces.size(), n_odom_body_sensor_interfaces_);
     return hardware_interface::CallbackReturn::ERROR;
   }
-  if (info_.sensors[vision_to_body_sensor_index_].state_interfaces.size() != n_vision_body_sensor_interfaces_ {
+  if (info_.sensors[vision_to_body_sensor_index_].state_interfaces.size() != n_vision_body_sensor_interfaces_) {
     RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"),
                  "Vision to body frame state interface has %ld state interfaces found. '%ld' expected.",
-                 info_.sensors[vision_to_body_sensor_index_].state_interfaces.size(), n_vision_body_sensor_interfaces_;
+                 info_.sensors[vision_to_body_sensor_index_].state_interfaces.size(), n_vision_body_sensor_interfaces_);
     return hardware_interface::CallbackReturn::ERROR;
   }
 
@@ -250,7 +250,8 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hw_states_.resize(njoints_ * state_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(njoints_ * command_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_imu_sensor_states_.resize((n_imu_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
-  hw_foot_sensor_states_.resize((n_foot_sensor_interfaces_ + n_body_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
+  hw_foot_sensor_states_.resize((n_foot_sensor_interfaces_ + n_odom_body_sensor_interfaces_ +
+                            n_odom_body_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
