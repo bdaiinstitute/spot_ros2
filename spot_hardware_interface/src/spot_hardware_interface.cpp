@@ -456,8 +456,6 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     init_state_ = true;
   }
 
-  // Fill in body pose hw state
-
   // Read IMU sensor values into sensor states
   // Load rotation quaternion (x, y, z, w)
   hw_imu_sensor_states_.at(0) = imu_states_.odom_rot_quaternion.at(0);
