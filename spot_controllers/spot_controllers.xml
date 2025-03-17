@@ -9,4 +9,9 @@
     Forwarding controller useful for forwarding sets of joint commands (including gains) to Spot's hardware interface.
   </description>
   </class>
+  <class name="spot_controllers/FootStateBroadcaster" type="spot_controllers::FootStateBroadcaster" base_class_type="controller_interface::ControllerInterface">
+  <description>
+    Broadcaster for exposing Spot's feet contact states.
+  </description>
+  </class>
 </library>

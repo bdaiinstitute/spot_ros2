@@ -43,12 +43,18 @@ generate_parameter_library(
   include/spot_controllers/spot_joint_controller_parameters.yaml
 )
 
+generate_parameter_library(
+  foot_state_broadcaster_parameters
+  include/spot_controllers/foot_state_broadcaster_parameters.yaml
+)
+
 # Add the hardware interface
 add_library(
   spot_controllers
   SHARED
   src/forward_state_controller.cpp
   src/spot_joint_controller.cpp
+  src/foot_state_broadcaster.cpp
 )
 target_compile_features(spot_controllers PUBLIC cxx_std_20)
 target_include_directories(spot_controllers PUBLIC
@@ -59,6 +65,7 @@ target_link_libraries(
   spot_controllers PUBLIC 
   forward_state_controller_parameters
   spot_joint_controller_parameters
+  foot_state_broadcaster_parameters
   forward_command_controller::forward_command_controller
 )
 ament_target_dependencies(
@@ -78,7 +85,7 @@ install(
   DESTINATION include/${PROJECT_NAME}
 )
 
-install(TARGETS spot_controllers forward_state_controller_parameters spot_joint_controller_parameters
+install(TARGETS spot_controllers forward_state_controller_parameters spot_joint_controller_parameters foot_state_broadcaster_parameters
   EXPORT export_spot_controllers
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
