@@ -75,7 +75,9 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
 }
 
 void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states,
-                                       std::vector<int>& foot_states, std::vector<float>& odom_pose, std::vector<float>& vision_pose) {
+                                       std::vector<int>& foot_states, std::vector<float>& odom_pos, 
+                                       std::vector<float>& odom_rot, std::vector<float>& vision_pos,
+                                       std::vector<float>& vision_rot) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
   // Fill in members of the joint states stuct passed in by reference.
@@ -92,6 +94,12 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
 
   // Fill in foot contact states
   foot_states.assign(current_foot_state_.begin(), current_foot_state_.end());
+
+  // Fill in body transforms
+  odom_pos.assign(odom_tform_body_pos_.begin(), odom_tform_body_pos_.end());
+  odom_rot.assign(odom_tform_body_rot_.begin(), odom_tform_body_rot_.end());
+  vision_pos.assign(vision_tform_body_pos_.begin(), vision_tform_body_pos_.end());
+  vision_rot.assign(vision_tform_body_rot_.begin(), vision_tform_body_rot_.end());
 }
 
 void StateStreamingHandler::reset() {
@@ -228,7 +236,7 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hw_states_.resize(njoints_ * state_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(njoints_ * command_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_imu_sensor_states_.resize((n_imu_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
-  hw_foot_sensor_states_.resize((n_foot_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
+  hw_foot_sensor_states_.resize((n_foot_sensor_interfaces_ + n_body_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -377,7 +385,7 @@ hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecyc
 }
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
-  state_streaming_handler_.get_states(joint_states_, imu_states_, foot_states_);
+  state_streaming_handler_.get_states(joint_states_, imu_states_, foot_states_, odom_pos_, odom_rot_, vision_pos_, vision_rot_);
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;
@@ -417,8 +425,6 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     init_state_ = true;
   }
 
-  // Fill in body pose hw state
-
   // Read IMU sensor values into sensor states
   // Load rotation quaternion (x, y, z, w)
   hw_imu_sensor_states_.at(0) = imu_states_.odom_rot_quaternion.at(0);
@@ -439,6 +445,24 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   hw_foot_sensor_states_.at(1) = foot_states_.at(1);
   hw_foot_sensor_states_.at(2) = foot_states_.at(2);
   hw_foot_sensor_states_.at(3) = foot_states_.at(3);
+
+  // Load odom to body transform
+  hw_sensor_states_.at(14) = odom_pos_.at(0);
+  hw_sensor_states_.at(15) = odom_pos_.at(1);
+  hw_sensor_states_.at(16) = odom_pos_.at(2);
+  hw_sensor_states_.at(17) = odom_rot_.at(0);
+  hw_sensor_states_.at(18) = odom_rot_.at(1);
+  hw_sensor_states_.at(19) = odom_rot_.at(2);
+  hw_sensor_states_.at(20) = odom_rot_.at(3);
+
+  // Load vision to body transform
+  hw_sensor_states_.at(21) = vision_pos_.at(0);
+  hw_sensor_states_.at(22) = vision_pos_.at(1);
+  hw_sensor_states_.at(23) = vision_pos_.at(2);
+  hw_sensor_states_.at(24) = vision_rot_.at(0);
+  hw_sensor_states_.at(25) = vision_rot_.at(1);
+  hw_sensor_states_.at(26) = vision_rot_.at(2);
+  hw_sensor_states_.at(27) = vision_rot_.at(3);
 
   return hardware_interface::return_type::OK;
 }

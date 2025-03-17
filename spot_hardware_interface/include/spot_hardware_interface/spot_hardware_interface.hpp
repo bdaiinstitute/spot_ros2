@@ -191,6 +191,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // number of state interfaces we expect per sensor
   static constexpr size_t n_imu_sensor_interfaces_ = 10;
   static constexpr size_t n_foot_sensor_interfaces_ = 4;
+  static constexpr size_t n_body_sensor_interfaces_ = 14;
 
   // Login info
   std::string hostname_;
@@ -227,10 +228,10 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // Holds foot states received from the BD SDK
   std::vector<int> foot_states_;
   // Holds body poses received from the BD SDK
-  std::vector<float> odom_tform_body_pos_;
-  std::vector<float> vision_tform_body_rot_;
-  std::vector<float> odom_tform_body_pos_;
-  std::vector<float> vision_tform_body_rot_;
+  std::vector<float> odom_pos_; // (x, y, z) in m
+  std::vector<float> odom_rot_; // (x, y, z, w)
+  std::vector<float> vision_pos_;
+  std::vector<float> vision_rot_;
 
   // Thread for reading the state of the robot.
   std::jthread state_thread_;
