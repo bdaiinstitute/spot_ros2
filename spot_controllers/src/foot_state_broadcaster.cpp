@@ -94,11 +94,12 @@ controller_interface::CallbackReturn FootStateBroadcaster::on_activate(
   const size_t num_feet = 4;
   // default initialization for foot state message
   auto& feet_state_msg = realtime_foot_state_publisher_->msg_;
+  feet_state_msg.states.clear();
   // update joint state message and dynamic joint state message
   for (size_t i = 0; i < num_feet; ++i) {
     spot_msgs::msg::FootState foot_state;
     foot_state.contact = spot_msgs::msg::FootState::CONTACT_UNKNOWN;
-    feet_state_msg.states[i] = foot_state;
+    feet_state_msg.states.push_back(foot_state);
   }
 
   return CallbackReturn::SUCCESS;
@@ -126,9 +127,7 @@ controller_interface::return_type FootStateBroadcaster::update(const rclcpp::Tim
 
     // update joint state message and dynamic joint state message
     for (size_t i = 0; i < 4; ++i) {
-      spot_msgs::msg::FootState foot_state;
-      foot_state.contact = spot_msgs::msg::FootState::CONTACT_MADE;
-      feet_state_msg.states[i] = foot_state;
+      feet_state_msg.states[i].contact = spot_msgs::msg::FootState::CONTACT_MADE;
     }
     realtime_foot_state_publisher_->unlockAndPublish();
   }
