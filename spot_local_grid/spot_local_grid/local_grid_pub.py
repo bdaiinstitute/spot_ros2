@@ -50,7 +50,7 @@ class LocalGridPublisher(Node):
 
         # Create ROS2 publisher
         self.get_logger().info("Creating OccupancyGrid publisher...")
-        self.occupancy_grid_pub = self.create_publisher(OccupancyGrid, '/autogrammetry/object/local_grid', 10)
+        self.occupancy_grid_pub = self.create_publisher(OccupancyGrid, f'/spot/local_grid/{LOCAL_GRID_NAME}', 10)
         self.get_logger().info("📢 OccupancyGrid publisher created successfully!")
 
         # Indicate successful initialization
