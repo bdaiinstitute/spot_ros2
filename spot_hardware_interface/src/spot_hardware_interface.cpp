@@ -45,9 +45,9 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   current_load_.assign(load_msg.begin(), load_msg.end());
 
   // Save current foot contact states
-  for (size_t i = 0; i < nfeet_; i++) {
-    current_foot_state_.push_back(robot_state.contact_states(i));
-  }
+  const auto& contact_states = robot_state.contact_states();
+  // can't do assign here bc of protobuf issues
+  current_foot_state_ = {contact_states.at(0), contact_states.at(1), contact_states.at(2), contact_states.at(3)};
 
   // Get IMU data from the robot
   imu_identifier_ = robot_state.inertial_state().identifier();
@@ -216,8 +216,8 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   njoints_ = info_.joints.size();
   hw_states_.resize(njoints_ * state_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(njoints_ * command_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
-  hw_sensor_states_.resize((n_imu_sensor_interfaces_ + n_foot_sensor_interfaces_),
-                           std::numeric_limits<double>::quiet_NaN());
+  hw_imu_sensor_states_.resize((n_imu_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
+  hw_foot_sensor_states_.resize((n_foot_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -298,11 +298,19 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 2]));
   }
   // export sensor state interface
-  for (uint i = 0; i < info_.sensors.size(); i++) {
-    for (uint j = 0; j < info_.sensors[i].state_interfaces.size(); j++) {
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-          info_.sensors[i].name, info_.sensors[i].state_interfaces[j].name, &hw_sensor_states_[j]));
-    }
+
+  // export IMU sensor states
+  const auto& imu_sensor = info_.sensors[imu_sensor_index_];
+  for (size_t i = 0; i < n_imu_sensor_interfaces_; i++) {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        imu_sensor.name, imu_sensor.state_interfaces[i].name, &hw_imu_sensor_states_[i]));
+  }
+
+  // export foot sensor states
+  const auto& foot_sensor = info_.sensors[foot_sensor_index_];
+  for (size_t i = 0; i < n_foot_sensor_interfaces_; i++) {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        foot_sensor.name, foot_sensor.state_interfaces[i].name, &hw_foot_sensor_states_[i]));
   }
 
   return state_interfaces;
@@ -400,24 +408,24 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
 
   // Read IMU sensor values into sensor states
   // Load rotation quaternion (x, y, z, w)
-  hw_sensor_states_.at(0) = imu_states_.odom_rot_quaternion.at(0);
-  hw_sensor_states_.at(1) = imu_states_.odom_rot_quaternion.at(1);
-  hw_sensor_states_.at(2) = imu_states_.odom_rot_quaternion.at(2);
-  hw_sensor_states_.at(3) = imu_states_.odom_rot_quaternion.at(3);
+  hw_imu_sensor_states_.at(0) = imu_states_.odom_rot_quaternion.at(0);
+  hw_imu_sensor_states_.at(1) = imu_states_.odom_rot_quaternion.at(1);
+  hw_imu_sensor_states_.at(2) = imu_states_.odom_rot_quaternion.at(2);
+  hw_imu_sensor_states_.at(3) = imu_states_.odom_rot_quaternion.at(3);
   // Load angular velocity (x, y, z)
-  hw_sensor_states_.at(4) = imu_states_.angular_velocity.at(0);
-  hw_sensor_states_.at(5) = imu_states_.angular_velocity.at(1);
-  hw_sensor_states_.at(6) = imu_states_.angular_velocity.at(2);
+  hw_imu_sensor_states_.at(4) = imu_states_.angular_velocity.at(0);
+  hw_imu_sensor_states_.at(5) = imu_states_.angular_velocity.at(1);
+  hw_imu_sensor_states_.at(6) = imu_states_.angular_velocity.at(2);
   // Load linear acceleration (x, y, z)
-  hw_sensor_states_.at(7) = imu_states_.linear_acceleration.at(0);
-  hw_sensor_states_.at(8) = imu_states_.linear_acceleration.at(1);
-  hw_sensor_states_.at(9) = imu_states_.linear_acceleration.at(2);
+  hw_imu_sensor_states_.at(7) = imu_states_.linear_acceleration.at(0);
+  hw_imu_sensor_states_.at(8) = imu_states_.linear_acceleration.at(1);
+  hw_imu_sensor_states_.at(9) = imu_states_.linear_acceleration.at(2);
 
   // Load foot contact states
-  hw_sensor_states_.at(10) = foot_states_.at(0);
-  hw_sensor_states_.at(11) = foot_states_.at(1);
-  hw_sensor_states_.at(12) = foot_states_.at(2);
-  hw_sensor_states_.at(13) = foot_states_.at(3);
+  hw_foot_sensor_states_.at(0) = foot_states_.at(0);
+  hw_foot_sensor_states_.at(1) = foot_states_.at(1);
+  hw_foot_sensor_states_.at(2) = foot_states_.at(2);
+  hw_foot_sensor_states_.at(3) = foot_states_.at(3);
 
   return hardware_interface::return_type::OK;
 }

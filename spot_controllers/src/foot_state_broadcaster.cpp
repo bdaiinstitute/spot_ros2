@@ -117,7 +117,6 @@ controller_interface::return_type FootStateBroadcaster::update(const rclcpp::Tim
                                                                const rclcpp::Duration& /*period*/) {
   if (realtime_foot_state_publisher_ && realtime_foot_state_publisher_->trylock()) {
     auto& feet_state_msg = realtime_foot_state_publisher_->msg_;
-    RCLCPP_WARN(get_node()->get_logger(), "UPDATE");
     // update foot state message
     for (size_t i = 0; i < 4; ++i) {
       // this follows the same order as in state_interface_configuration: FL, FR, BL, BL
@@ -125,7 +124,6 @@ controller_interface::return_type FootStateBroadcaster::update(const rclcpp::Tim
       const std::string interface_name = state_interface.get_interface_name();
       const auto interface_value = state_interface.get_value();
       uint8_t contact = std::isnan(interface_value) ? spot_msgs::msg::FootState::CONTACT_UNKNOWN : interface_value;
-      RCLCPP_WARN(get_node()->get_logger(), "%s: %f %d\n", interface_name.c_str(), interface_value, contact);
       feet_state_msg.states[i].contact = contact;
     }
     realtime_foot_state_publisher_->unlockAndPublish();
