@@ -1,3 +1,7 @@
+// File modified. Modifications Copyright (c) 2025 Boston Dynamics AI Institute LLC.
+// All rights reserved.
+
+// --------------------------------------------------------------
 // Copyright 2021 ros2_control development team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,13 +59,18 @@ controller_interface::InterfaceConfiguration FootStateBroadcaster::state_interfa
 
   state_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
-  // Get the namespace from the node to use as the sensor prefix
-  const std::string node_namespace = get_node()->get_namespace();
-  // namespace is "/" if there is none, else it's "/<namespace>". Erase the first char ("/") for easier parsing.
-  const std::string trimmed_namespace = node_namespace.substr(1);
-  // Now trimmed_namespace is either the empty string or "<namespace>"
-  const std::string sensor_prefix = trimmed_namespace.empty() ? "" : trimmed_namespace + "/";
-  // Append this prefix to the sensor name
+  const bool use_namespace_as_prefix = params_.use_namespace_as_prefix;
+  std::string sensor_prefix = "";
+  if (use_namespace_as_prefix) {
+    // Grab the namespace from the node.
+    const std::string node_namespace = get_node()->get_namespace();
+    // namespace is "/" if there is none, else it's "/<namespace>". Erase the first char ("/") for easier parsing.
+    const std::string trimmed_namespace = node_namespace.substr(1);
+    // Now trimmed_namespace is either the empty string or "<namespace>"
+    sensor_prefix = trimmed_namespace.empty() ? "" : trimmed_namespace + "/";
+    // And now sensor prefix is either "" or "<namespace>/"
+  }
+  // Append the chosen prefix to the sensor name
   const std::string sensor_name = sensor_prefix + "foot_sensor";
   RCLCPP_DEBUG(get_node()->get_logger(), "sensor name: %s", sensor_name.c_str());
   // export sensor interfaces. These are hardcoded, assuming the format from spot ros2 control tags
@@ -78,7 +87,7 @@ controller_interface::CallbackReturn FootStateBroadcaster::on_configure(
 
   try {
     foot_state_publisher_ =
-        get_node()->create_publisher<spot_msgs::msg::FootStateArray>("~/feet_states", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<spot_msgs::msg::FootStateArray>("~/feet", rclcpp::SystemDefaultsQoS());
 
     realtime_foot_state_publisher_ =
         std::make_shared<realtime_tools::RealtimePublisher<spot_msgs::msg::FootStateArray>>(foot_state_publisher_);
@@ -94,12 +103,10 @@ controller_interface::CallbackReturn FootStateBroadcaster::on_configure(
 controller_interface::CallbackReturn FootStateBroadcaster::on_activate(
     const rclcpp_lifecycle::State& /*previous_state*/) {
   // initialize foot state message
-  const size_t num_feet = 4;
-  // default initialization for foot state message
   auto& feet_state_msg = realtime_foot_state_publisher_->msg_;
   feet_state_msg.states.clear();
-  // update joint state message and dynamic joint state message
-  for (size_t i = 0; i < num_feet; ++i) {
+  // update foot state message
+  for (size_t i = 0; i < 4; ++i) {
     spot_msgs::msg::FootState foot_state;
     foot_state.contact = spot_msgs::msg::FootState::CONTACT_UNKNOWN;
     feet_state_msg.states.push_back(foot_state);

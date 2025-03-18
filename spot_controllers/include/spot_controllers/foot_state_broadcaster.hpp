@@ -1,3 +1,7 @@
+// File modified. Modifications Copyright (c) 2025 Boston Dynamics AI Institute LLC.
+// All rights reserved.
+
+// --------------------------------------------------------------
 // Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,11 +37,24 @@ namespace spot_controllers {
  * \brief Foot State Broadcaster for Spot's feet contacts.
  *
  * FootStateBroadcaster publishes state interfaces from ros2_control as ROS messages.
+ * This broadcaster will broadcast the following state interfaces:
+ * `foot_sensor/foot_state.front.left`
+ * `foot_sensor/foot_state.front.right`
+ * `foot_sensor/foot_state.back.left`
+ * `foot_sensor/foot_state.back.right`
+ * The interface name by default will be prefixed with the namespace of the controller.
+ * For example, a controller launched in in the namespace "spot" will claim the interfaces
+ * `spot/foot_sensor/foot_state.front.left`
+ * `spot/foot_sensor/foot_state.front.right`
+ * `spot/foot_sensor/foot_state.back.left`
+ * `spot/foot_sensor/foot_state.back.right`
+ * To avoid this prefixing, you can set the `use_namespace_as_prefix` parameter to `false`.
  *
- * \param interfaces Names of interfaces to publish.
+ * \param use_namespace_as_prefix Boolean flag to indicate whether to prefix the sensor name
+ * with the namespace of the node. Defaults to `true`.
  *
  * Publishes to:
- * - \b foot_states (spot_msgs::msg::FootState): Feet states
+ * - \b feet (spot_msgs::msg::FootState): Array of feet states in the order FL, FR, BL, BR
  */
 class FootStateBroadcaster : public controller_interface::ControllerInterface {
  public:

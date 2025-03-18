@@ -1,9 +1,7 @@
 foot_state_broadcaster:
-  interfaces: {
-    type: string_array,
-    default_value: [],
-    description: "Parameter to support broadcasting of only specific joints and interfaces.
-    It has to be used in combination with the ``joints`` parameter.
-    If either ``joints`` or ``interfaces`` is left empty, all available state interfaces will be
-    published."
+  use_namespace_as_prefix: {
+    type: bool,
+    default_value: True,
+    description: "Flag to determine if the prefix of the sensor name should be picked up
+                  from the namespace of the controller."
   }
