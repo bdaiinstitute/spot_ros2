@@ -88,4 +88,8 @@ install(TARGETS spot_ros2_control
 
 ament_export_targets(export_spot_ros2_control HAS_LIBRARY_TARGET)
 
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
+
 ament_package()
