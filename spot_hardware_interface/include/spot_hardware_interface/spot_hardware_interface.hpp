@@ -307,7 +307,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
   std::vector<double> hw_commands_;
   std::vector<double> hw_states_;  // joints
 
-  std::vector<double> hw_sensor_states_;
+  std::vector<double> hw_imu_sensor_states_;
+  std::vector<double> hw_foot_sensor_states_;
 };
 
 }  // namespace spot_hardware_interface

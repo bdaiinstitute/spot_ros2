@@ -58,6 +58,8 @@ Make sure to keep a safe distance from the robot when working with these control
 
 IMU data from the robot state stream is exposed on the topic `/<Robot Name>/imu_sensor_broadcaster/imu`.
 
+Feet contact data from the robot state stream is exposed on the topic `/<Robot Name>/foot_state_broadcaster/feet`.
+
 Additionally, the state publisher node, object synchronization node, and image publisher nodes from [`spot_driver`](../spot_driver/) will get launched by default when running on the robot to provide extra information such as TF, odometry, and camera feeds.
 To turn off the image publishers (which can cause problems with bandwidth), add the launch argument `launch_image_publishers:=false`.
 
