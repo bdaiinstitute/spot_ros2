@@ -39,6 +39,10 @@ namespace spot_controllers {
 FootStateBroadcaster::FootStateBroadcaster() {}
 
 controller_interface::CallbackReturn FootStateBroadcaster::on_init() {
+  if (!get_node()) {
+    fprintf(stderr, "Failed to aquire node handle!\n");
+    return controller_interface::CallbackReturn::ERROR;
+  }
   try {
     param_listener_ = std::make_shared<ParamListener>(get_node());
     params_ = param_listener_->get_params();
@@ -93,7 +97,7 @@ controller_interface::CallbackReturn FootStateBroadcaster::on_configure(
         std::make_shared<realtime_tools::RealtimePublisher<spot_msgs::msg::FootStateArray>>(foot_state_publisher_);
   } catch (const std::exception& e) {
     // get_node() may throw, logging raw here
-    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
+    fprintf(stderr, "Exception thrown during configure stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
   }
 
@@ -131,7 +135,7 @@ controller_interface::return_type FootStateBroadcaster::update(const rclcpp::Tim
       const std::string interface_name = state_interface.get_interface_name();
       const auto interface_value = state_interface.get_value();
       uint8_t contact = std::isnan(interface_value) ? spot_msgs::msg::FootState::CONTACT_UNKNOWN : interface_value;
-      feet_state_msg.states[i].contact = contact;
+      feet_state_msg.states.at(i).contact = contact;
     }
     realtime_foot_state_publisher_->unlockAndPublish();
   }
