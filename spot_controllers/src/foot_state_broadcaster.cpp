@@ -124,7 +124,8 @@ controller_interface::return_type FootStateBroadcaster::update(const rclcpp::Tim
     auto& feet_state_msg = realtime_foot_state_publisher_->msg_;
     // update foot state message
     for (size_t i = 0; i < 4; ++i) {
-      // this follows the same order as in state_interface_configuration: FL, FR, BL, BL
+      // this follows the same order as the state_interface_configuration
+      // 0 = Front Left, 1 = Front Right, 2 = Back Left, 3 = Back Right
       const auto& state_interface = state_interfaces_.at(i);
       const std::string interface_name = state_interface.get_interface_name();
       const auto interface_value = state_interface.get_value();
