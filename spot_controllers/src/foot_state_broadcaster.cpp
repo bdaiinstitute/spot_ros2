@@ -18,17 +18,11 @@
 
 #include "spot_controllers/foot_state_broadcaster.hpp"
 
-#include <cstddef>
-#include <limits>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/time.hpp"
-#include "std_msgs/msg/header.hpp"
 
 namespace rclcpp_lifecycle {
 class State;
