@@ -168,4 +168,5 @@ for i, joint in enumerate(joints):
 self._joint_position_command_publisher.publish(Float64MultiArray(data=data))
 ```
 
-Before running your script, be sure to start the driver with the additional `controllable` argument to start the driver in full controllable mode. 
+> [!IMPORTANT]
+> Before running your script, be sure to launch the driver with an additional `controllable` argument to start the driver in full controllable mode. 
