@@ -74,6 +74,8 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
                 "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
                 "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
                 "foot_state_broadcaster": {"type": "spot_controllers/FootStateBroadcaster"},
+                "vision_pose_broadcaster": {"type": "pose_broadcaster/PoseBroadcaster"},
+                "odom_pose_broadcaster": {"type": "pose_broadcaster/PoseBroadcaster"},
                 "hardware_components_initial_state": {"unconfigured": ["SpotSystem"]},
             }
         },
@@ -98,6 +100,18 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
             "ros__parameters": {
                 "sensor_name": f"{prefix}imu_sensor",
                 "frame_id": f"{prefix}imu_sensor_frame",
+            }
+        },
+        f"{prefix}vision_pose_broadcaster": {
+            "ros__parameters": {
+                "pose_name": f"{prefix}low_level/vision",
+                "frame_id": f"{prefix}body",
+            }
+        },
+        f"{prefix}odom_pose_broadcaster": {
+            "ros__parameters": {
+                "pose_name": f"{prefix}low_level/odom",
+                "frame_id": f"{prefix}body",
             }
         },
     }
@@ -143,13 +157,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     spot_name: str = LaunchConfiguration("spot_name").perform(context)
     config_file: str = LaunchConfiguration("config_file").perform(context)
 
+    # useful boolean
+    on_robot = hardware_interface == "robot"
+
     # Default parameters used in the URDF if not connected to a robot
     arm = mock_arm
     login_params = ""
     gain_params = ""
 
     # If running on robot, query if it has an arm, and parse config for login parameters and gains
-    if hardware_interface == "robot":
+    if on_robot:
         arm = spot_has_arm(config_file_path=config_file)
         username, password, hostname, port, certificate, _ = get_login_parameters(config_file)
         login_params = f" hostname:={hostname} username:={username} password:={password}"
@@ -219,6 +236,19 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             condition=UnlessCondition(LaunchConfiguration("control_only")),
         )
     )
+
+    # always spawn these controllers
+    controllers_to_spawn = ["joint_state_broadcaster", LaunchConfiguration("robot_controller")]
+    # only spawn these broadcasters if on robot, since we don't have a way to mock them.
+    hardware_only_controllers = [
+        "imu_sensor_broadcaster",
+        "foot_state_broadcaster",
+        "odom_pose_broadcaster",
+        "vision_pose_broadcaster",
+    ]
+    if on_robot:
+        controllers_to_spawn += hardware_only_controllers
+
     ld.add_action(
         Node(
             package="controller_manager",
@@ -229,14 +259,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                 Node(
                     package="controller_manager",
                     executable="spawner",
-                    arguments=[
-                        "-c",
-                        "controller_manager",
-                        "joint_state_broadcaster",
-                        "imu_sensor_broadcaster",
-                        "foot_state_broadcaster",
-                        LaunchConfiguration("robot_controller"),
-                    ],
+                    arguments=["-c", "controller_manager"] + controllers_to_spawn,
                     namespace=spot_name,
                 )
             ],
