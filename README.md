@@ -99,7 +99,7 @@ The following packages are used to enable joint level control of Spot via ROS 2 
 * [`spot_controllers`](spot_controllers): Holds some simple forwarding controller plugins useful for sending commands.
 
 This package also pulls in the following packages as submodules:
-* [`ros_utilities`](https://github.com/bdaiinstitute/ros_utilities): The AI Institute's convenience wrappers around ROS 2.
+* [`ros_utilities`](https://github.com/bdaiinstitute/ros_utilities): The RAI Institute's convenience wrappers around ROS 2.
 * [`spot_wrapper`](https://github.com/bdaiinstitute/spot_wrapper): A Python wrapper around the Spot SDK, shared as a common entry point with Spot's ROS 1 repo.
 * [`spot_description`](https://github.com/bdaiinstitute/spot_description): contains the URDF of Spot and some simple launchfiles for visualization.
 
@@ -171,7 +171,7 @@ pre-commit run --all-files
 
 ## Contributors
 
-This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and [The AI Institute](https://theaiinstitute.com/).
+This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and the [RAI Institute](https://rai-inst.com/).
 
 MASKOR contributors:
 
@@ -181,7 +181,7 @@ MASKOR contributors:
 * Stefan Schiffer
 * Alexander Ferrein
 
-AI Institute contributors:
+RAI Institute contributors:
 
 * Jenny Barry
 * Daniel Gonzalez
