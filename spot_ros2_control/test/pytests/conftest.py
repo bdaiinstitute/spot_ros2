@@ -20,11 +20,13 @@ from spot_wrapper.testing.fixtures import SpotFixture
 from spot_wrapper.testing.mocks import MockSpot
 
 
-# there is probably a better way to do this
+# this mocks a spot with an arm
 @spot_wrapper.testing.fixture
 class simple_spot(MockSpot):
     def __init__(self):
         super().__init__()
+        manipulator_state = self.robot_state.manipulator_state
+        manipulator_state.is_gripper_holding_item = False
 
 
 @pytest.fixture
