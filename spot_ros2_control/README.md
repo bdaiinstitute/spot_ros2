@@ -115,3 +115,58 @@ This demo will repeatedly open and close the gripper, and after each motion, wil
 * `robot_controller`: This is the name of the robot controller that will be started when the launchfile is called. The default is the simple forward position controller. The name must match a controller in the `controllers_config` file.
 * `launch_rviz`: If you do not want rviz to be launched, add the argument `launch_rviz:=False`.
 * `auto_start`: If you do not want hardware interfaces and controllers to be activated on launch, add the argument `auto_start:=False`.
+
+## Mixed Level API
+
+It is possible to use both the joint level control and traditional high level control (as used by `spot_driver`). To do this in your script, you can still use the `spot_driver` services as usual such as the `claim`, `power_on`, `stand`, etc. services. To activate the joint level control activate the hardware interface, load and configure the controller(s), and activate the controller(s) using the corresponding services from `controller_manager_msgs`. We have provided forward joint and forward state controllers as examples in [`spot_controllers`](https://github.com/bdaiinstitute/spot_ros2/tree/main/spot_controllers) but other controllers can also be used. For safe and clean shutdown, remember to also deactivate and unload the controller(s) and deactivate the hardware interface at the end.
+
+```python
+from controller_manager_msgs.srv import (
+    ConfigureController,
+    LoadController,
+    SetHardwareComponentState,
+    SwitchController,
+    UnloadController,
+    ListParameters,
+    GetParameters,
+)
+```
+
+More documentation can be found about these services [here](https://docs.ros.org/en/ros2_packages/humble/api/controller_manager_msgs/__service_definitions.html).
+
+A subscriber can fetch the joint states and any other sensor/state broadcasted information, and you can use a publisher to update the commanded setpoints to send to the robot.
+
+```python
+from sensor_msgs.msg import JointState
+
+self._joint_states_subscription = self.node.create_subscription(JointState, self.robot_name + "/low_level/joint_states", 1)
+self._joint_position_command_publisher = self.node.create_publisher(Float64MultiArray, self.robot_name + "/forward_position_controller/commands", 1)
+self._joint_configuration = [ """Ordered list of joints"""] # Can be accessed through controller_manager_msgs services ListParameters and GetParameters
+
+tf_prefix = self.robot_name 
+# Get initial joint positions
+current_joint_states = unwrap_future(self._joint_states_subscription.latest_update, timeout_sec=5.0)
+initial_joint_positions = dict(
+    zip(
+        map(lambda name: name.removeprefix(tf_prefix), current_joint_states.name),
+        current_joint_states.position,
+        strict=True,
+    )
+)
+
+# Update joint setpoints
+joint_setpoints = {
+    name: ( """values""" )
+    for name in initial_joint_positions
+}
+# Convert into a Float64MultiArray compatible message
+data = list(joint_setpoints)
+for i, joint in enumerate(joints):
+  if joint in joint_setpoints:
+      data[i] = joint_setpoints[joint]
+# Send joint commands to command stream publisher
+self._joint_position_command_publisher.publish(Float64MultiArray(data=data))
+```
+
+> [!IMPORTANT]
+> Before running your script, be sure to launch the driver with an additional `controllable` argument to start the driver in full controllable mode. 
