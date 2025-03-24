@@ -25,6 +25,7 @@ from spot_wrapper.testing.mocks import MockSpot
 class simple_spot(MockSpot):
     def __init__(self):
         super().__init__()
+        # force an entry in manipulator state to indicate robot has arm
         manipulator_state = self.robot_state.manipulator_state
         manipulator_state.is_gripper_holding_item = False
 
@@ -108,7 +109,7 @@ def robot_spot_ros2_control(simple_spot: SpotFixture, domain_id: int) -> Iterato
                 ReadyToTest(),
             ],
         )
-        update_sigterm_sigkill_timeout(ld, sigterm_timeout_s=0.0, sigkill_timeout_s=0.0)
+        update_sigterm_sigkill_timeout(ld, sigterm_timeout_s=10.0, sigkill_timeout_s=10.0)
 
         yield ld
 

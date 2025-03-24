@@ -95,3 +95,8 @@ def test_spot_ros2_control(simple_spot: SpotFixture, ros: ROSAwareScope) -> None
     assert wait_for_future(joint_states.update, timeout_sec=20.0)
     message = joint_states.latest
     print(message)
+
+    # Here for the SafePowerOff command when the hardware interface deactivates
+    response = RobotCommandResponse()
+    response.status = RobotCommandResponse.Status.STATUS_OK
+    simple_spot.api.RobotCommand.future.returns(response)
