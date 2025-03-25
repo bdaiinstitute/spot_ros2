@@ -13,6 +13,7 @@ from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptors, ReadOnlyStatus
 from sensor_msgs.msg import Image, CompressedImage
 from spot_driver.manual_conversions import se3_pose_to_ros_pose
+from spot_driver.ros_helpers import get_from_env_and_fall_back_to_param
 
 
 class LocalGridPublisher(Node):
@@ -28,9 +29,9 @@ class LocalGridPublisher(Node):
 
         # Get robot Credentials
 
-        self.SPOT_IP = os.environ.get('SPOT_IP')
-        self.BOSDYN_CLIENT_USERNAME = os.environ.get('BOSDYN_CLIENT_USERNAME')
-        self.BOSDYN_CLIENT_PASSWORD = os.environ.get('BOSDYN_CLIENT_PASSWORD')
+        self.username: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", self, "username", "user")
+        self.password: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", self, "password", "password")
+        self.ip: str = get_from_env_and_fall_back_to_param("SPOT_IP", self, "hostname", "10.0.0.3")
 
         if not self.ip or not self.username or not self.password:
             self.get_logger().error("Robot credentials not found")
