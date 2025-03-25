@@ -10,50 +10,69 @@ from bosdyn.client.math_helpers import SE3Pose
 from geometry_msgs.msg import Pose, Point, Quaternion
 from nav_msgs.msg import OccupancyGrid
 from rclpy.node import Node
+from rcl_interfaces.msg import ParameterDescriptors, ReadOnlyStatus
 from sensor_msgs.msg import Image, CompressedImage
 from spot_driver.manual_conversions import se3_pose_to_ros_pose
-
-DEFAULT_LOCAL_GRID_NAME = 'obstacle_distance'
 
 
 class LocalGridPublisher(Node):
 
     def __init__(self):
         super().__init__('local_grid_publisher')
-        self.get_logger().info("Initializing LocalGridPublisher Node...")
+        self.get_logger().debug("Initializing LocalGridPublisher Node...")
 
-        # Check for robot credentials in environemnt
+        read_only = ParameterDescriptor(read_only=ReadOnlyStatus(reason="This value can only be set at launch"))
+        self.declare_parameter('local_grid_name', 'obstacle_distance', read_only)
+        self.grid_name = self.get_parameter('local_grid_name').value
+        
+
+        # Get robot Credentials
+
         self.SPOT_IP = os.environ.get('SPOT_IP')
         self.BOSDYN_CLIENT_USERNAME = os.environ.get('BOSDYN_CLIENT_USERNAME')
         self.BOSDYN_CLIENT_PASSWORD = os.environ.get('BOSDYN_CLIENT_PASSWORD')
 
-        if not self.SPOT_IP or not self.BOSDYN_CLIENT_USERNAME or not self.BOSDYN_CLIENT_PASSWORD:
-            self.get_logger().error("Robot credentials not found. Ensure that the following environment variables are set: SPOT_IP, BOSDYN_CLIENT_USERNAME, BOSDYN_CLIENT_PASSWORD")
+        if not self.ip or not self.username or not self.password:
+            self.get_logger().error("Robot credentials not found")
             raise ValueError("Robot credentials not found")
         
-        # Verify the credentials are correct
+
+        # Verify the credentials work
+
+        self.get_logger().debug("🧰 Creating SDK objects...")
         self.sdk = create_standard_sdk('local_grid_publisher')
-        self.robot = self.sdk.create_robot(self.SPOT_IP)
-        self.robot.authenticate(self.BOSDYN_CLIENT_USERNAME, self.BOSDYN_CLIENT_PASSWORD)   # an exception will be raised if authentication fails
-        self.get_logger().info("🔐 Robot authenticated successfully")
-        self.get_logger().info("Waiting for time sync...")
+        self.robot = self.sdk.create_robot(self.ip)
+        self.get_logger().debug("🧰 Created SDK objects successfully!")
+
+        self.get_logger().debug("🔐 Attempting authentication...")
+        self.robot.authenticate(self.username, self.password)   # an exception will be raised if authentication fails
+        self.get_logger().debug("🔐 Robot authenticated successfully!")
+        
+        self.get_logger().debug("🕰 Waiting for time sync...")
         self.robot.time_sync.wait_for_sync()
-        self.get_logger().info("🕰 Time sync successful!")
+        self.get_logger().debug("🕰 Time sync successful!")
+
 
         # Create LocalGridClient
-        self.get_logger().info("Creating LocalGridClient...")
-        
-        self.local_grid_client = self.robot.ensure_client(LocalGridClient.default_service_name)
 
-        self.get_logger().info("💠 LocalGridClient created successfully!")
+        self.get_logger().debug("Creating LocalGridClient...")
+        self.local_grid_client = self.robot.ensure_client(LocalGridClient.default_service_name)
+        self.get_logger().debug("LocalGridClient created successfully!")
+
 
         # Create ROS2 publisher
-        self.get_logger().info("Creating OccupancyGrid publisher...")
-        self.occupancy_grid_pub = self.create_publisher(OccupancyGrid, '/autogrammetry/local_grid', 10)
-        self.get_logger().info("📢 OccupancyGrid publisher created successfully!")
+
+        self.get_logger().debug("📡 Creating OccupancyGrid publisher...")
+        self.occupancy_grid_pub = self.create_publisher(OccupancyGrid, 'grid_topic_REMAP_ME', 10)
+        self.get_logger().debug("📡 OccupancyGrid publisher created successfully!")
+
 
         # Indicate successful initialization
-        self.get_logger().info('[✓] Spot Local Grid Publisher Node initialized')
+
+        self.get_logger().debug('[✓] Spot Local Grid Publisher Node initialized')
+
+
+        # Set runtime variables
 
         self.first_draw_done = False
         self.im = None
@@ -64,7 +83,8 @@ class LocalGridPublisher(Node):
 
     
     def fetch_next_grid_data(self):
-        future = self.local_grid_client.get_local_grids_async([LOCAL_GRID_NAME])
+
+        future = self.local_grid_client.get_local_grids_async([self.grid_name])
         future.add_done_callback(self.publish_grid)
 
 
@@ -76,7 +96,7 @@ class LocalGridPublisher(Node):
         """
         proto = future.result()
         for local_grid_found in proto:
-            if local_grid_found.local_grid_type_name == LOCAL_GRID_NAME:
+            if local_grid_found.local_grid_type_name == self.grid_name:
                 local_grid_proto = local_grid_found
                 cell_size = local_grid_found.local_grid.extent.cell_size
 

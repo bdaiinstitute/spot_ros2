@@ -31,6 +31,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     mock_enable = IfCondition(LaunchConfiguration("mock_enable", default="False")).evaluate(context)
     robot_description_package = LaunchConfiguration("robot_description_package").perform(context)
     controllable = convert_to_bool("controllable", LaunchConfiguration("controllable").perform(context))
+    publish_local_grid = LaunchConfiguration("publish_local_grid")
 
     # if config_file has been set (and is not the default empty string) and is also not a file, do not launch anything.
     config_file_path = config_file.perform(context)
@@ -196,6 +197,17 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(spot_ros2_control)
 
+    spot_local_grid = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "launch", "local_grid.launch.py"])
+        ]),
+        launch_arguments={
+            "local_grid_name": LaunchConfiguration("local_grid_name"),
+            "spot_name": LaunchConfiguration("spot_name")
+        }.items()
+    )
+    ld.add_action(spot_local_grid)
+
 
 def generate_launch_description() -> LaunchDescription:
     launch_args = []
@@ -257,6 +269,20 @@ def generate_launch_description() -> LaunchDescription:
             "robot_description_package",
             default_value="spot_description",
             description="Package from where the robot model description is. Must have path /urdf/spot.urdf.xacro",
+        )
+    )
+    launch_args.append(
+        DeclareBooleanLaunchArgument(
+            "publish_local_grid",
+            default_value=False,
+            description="Choose whether to publish OccupancyGrid messages for one of Spot's local_grids"
+        )
+    )
+    launch_args.append(
+        DeclareLaunchArgument(
+            "local_grid_name",
+            default_value="obstacle_distance",
+            description="Name of the local_grid you want published (i.e. obstacle_distance, no_step, etc.)"
         )
     )
     launch_args += declare_image_publisher_args()
