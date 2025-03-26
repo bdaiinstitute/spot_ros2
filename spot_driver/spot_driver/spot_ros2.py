@@ -123,6 +123,7 @@ from spot_msgs.srv import (  # type: ignore
     LoadSound,
     OverrideGraspOrCarry,
     PlaySound,
+    PosedStand,
     RetrieveLogpoint,
     SetGripperAngle,
     SetGripperCameraParameters,
@@ -846,6 +847,12 @@ class SpotROS(Node):
             Dock,
             "dock",
             lambda request, response: self.service_wrapper("dock", self.handle_dock, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            PosedStand,
+            "posed_stand",
+            lambda request, response: self.service_wrapper("dock", self.handle_posed_stand, request, response),
             callback_group=self.group,
         )
 
@@ -1869,6 +1876,20 @@ class SpotROS(Node):
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message = self.spot_wrapper.spot_docking.dock(request.dock_id)
+        return response
+
+    def handle_posed_stand(self, request: PosedStand.Request, response: PosedStand.Response) -> PosedStand.Response:
+        """ROS service handler to stand the robot with a user-defined body pose."""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.stand(
+            body_height=request.body_height,
+            body_roll=request.body_roll,
+            body_pitch=request.body_pitch,
+            body_yaw=request.body_yaw,
+        )
         return response
 
     def handle_max_vel(self, request: SetVelocity.Request, response: SetVelocity.Response) -> SetVelocity.Response:
