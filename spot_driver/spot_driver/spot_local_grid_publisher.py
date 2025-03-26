@@ -64,7 +64,7 @@ class LocalGridPublisher(Node):
 
         # Create RobotStateClient
         self.get_logger().debug("Creating RobotStateClient...")
-        self.robot_State_client = self.robot.ensure_client(RobotStateClient.default_service_name)
+        self.robot_state_client = self.robot.ensure_client(RobotStateClient.default_service_name)
         self.get_logger().debug("RobotStateClient created successfully!")
 
         # Create ROS2 publisher
@@ -107,15 +107,14 @@ class LocalGridPublisher(Node):
         raw_cells = self.unpack_grid(local_grid_proto)
 
         # "terrain_valid" and "intensity" grid protos are uint8
+
         if raw_cells.dtype == np.uint8:
             converted_cells = (raw_cells.astype(np.int16) - 128).astype(
                 np.int8
             )  # Subtract a bias value so values remain correctly relative to each other
 
         # "terrain", "no_step", and "obstacle_distance" grid protos are int16
-        elif raw_cells.dtype == np.int16:
-            # Not much we can do to avoid losing some information - the "no_step" grid is booleans so it
-            # shouldn't be an issue, but "terrain" and "obstacle_distance" values might be clipped
+        else:
             converted_cells = raw_cells.astype(np.int8)
 
         grid = converted_cells.reshape(
