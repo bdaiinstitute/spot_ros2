@@ -5,8 +5,10 @@ import numpy as np
 import ros2_numpy as rnp
 from bosdyn.api import local_grid_pb2
 from bosdyn.client import create_standard_sdk
+from bosdyn.client.frame_helpers import *
 from bosdyn.client.local_grid import LocalGridClient
 from bosdyn.client.math_helpers import SE3Pose
+from bosdyn.client.robot_state import RobotStateClient
 from geometry_msgs.msg import Pose, Point, Quaternion
 from nav_msgs.msg import OccupancyGrid
 from rclpy.node import Node
@@ -72,6 +74,12 @@ class LocalGridPublisher(Node):
         self.get_logger().debug("Creating LocalGridClient...")
         self.local_grid_client = self.robot.ensure_client(LocalGridClient.default_service_name)
         self.get_logger().debug("LocalGridClient created successfully!")
+
+        # Create RobotStateClient
+
+        self.get_logger().debug("Creating RobotStateClient...")
+        self.robot_State_client = self.robot.ensure_client(RobotStateClient.default_service_name)
+        self.get_logger().debug("RobotStateClient created successfully!")
 
 
         # Create ROS2 publisher
@@ -147,6 +155,10 @@ class LocalGridPublisher(Node):
         grid_msg.info.resolution = local_grid_proto.local_grid.extent.cell_size
         transform = self.get_a_tform_b(local_grid_proto.local_grid.transforms_snapshot, VISION_FRAME_NAME,
                            local_grid_proto.local_grid.frame_name_local_grid_data)
+
+        # Set grid Z-position to ground plane's Z-position
+        vision_frame_ground_z = compute_ground_height_in_vision_frame(self.robot_state_client)
+        transform.z = vision_frame_ground_z
         
         grid_msg.info.origin = se3_pose_to_ros_pose(transform)
 
@@ -210,6 +222,13 @@ class LocalGridPublisher(Node):
                 cells_pz_full.append(cells_pz[i])
         return np.array(cells_pz_full)
 
+
+    def compute_ground_height_in_vision_frame(robot_state_client):
+        """Get the z-height of the ground plane in vision frame from the current robot state."""
+        robot_state = robot_state_client.get_robot_state()
+        vision_tform_ground_plane = get_a_tform_b(robot_state.kinematic_state.transforms_snapshot,
+                                                VISION_FRAME_NAME, GROUND_PLANE_FRAME_NAME)
+        return vision_tform_ground_plane.position.z
 
     def get_a_tform_b(self, frame_tree_snapshot, frame_a, frame_b):
         """Get the SE(3) pose representing the transform between frame_a and frame_b.
