@@ -10,7 +10,7 @@ from bosdyn.client.math_helpers import SE3Pose
 from geometry_msgs.msg import Pose, Point, Quaternion
 from nav_msgs.msg import OccupancyGrid
 from rclpy.node import Node
-from rcl_interfaces.msg import ParameterDescriptors, ReadOnlyStatus
+from rcl_interfaces.msg import ParameterDescriptor
 from spot_driver.manual_conversions import se3_pose_to_ros_pose
 from spot_driver.ros_helpers import get_from_env_and_fall_back_to_param
 
@@ -21,7 +21,7 @@ class LocalGridPublisher(Node):
         super().__init__('local_grid_publisher')
         self.get_logger().debug("Initializing LocalGridPublisher Node...")
 
-        read_only = ParameterDescriptor(read_only=ReadOnlyStatus(reason="This value can only be set at launch"))
+        read_only = ParameterDescriptor(read_only=True)
         self.declare_parameter('local_grid_name', 'obstacle_distance', read_only)
         self.grid_name = self.get_parameter('local_grid_name').value
         
