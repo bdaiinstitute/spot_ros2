@@ -14,6 +14,13 @@ from rcl_interfaces.msg import ParameterDescriptor
 from spot_driver.manual_conversions import se3_pose_to_ros_pose
 from spot_driver.ros_helpers import get_from_env_and_fall_back_to_param
 
+VALID_GRIDS = [
+    "terrain",
+    "terrain_valid",
+    "intensity",
+    "no_step",
+    "obstacle_distance"
+]
 
 class LocalGridPublisher(Node):
 
@@ -25,6 +32,13 @@ class LocalGridPublisher(Node):
         self.declare_parameter('local_grid_name', 'obstacle_distance', read_only)
         self.grid_name = self.get_parameter('local_grid_name').value
         
+
+        # Verify the requested grid name is a real one
+
+        if self.grid_name not in VALID_GRIDS:
+            self.get_logger().error(f'Requested grid "{self.grid_name}" is not a valid local_grid type!')
+            raise ValueError("Invalid local_grid name")
+
 
         # Get robot Credentials
 
@@ -105,6 +119,9 @@ class LocalGridPublisher(Node):
         
         # Construct an OccupancyGrid message using the local grid data
         grid = np.zeros([local_grid_proto.local_grid.extent.num_cells_y * local_grid_proto.local_grid.extent.num_cells_x], dtype=np.int8)
+
+        # TODO: Publish grid data
+
         grid[(cells_obstacle_dist <= 0.0)] = 99
         grid[np.logical_and(0.0 < cells_obstacle_dist, cells_obstacle_dist < 0.33)] = -1
         grid = grid.reshape(local_grid_proto.local_grid.extent.num_cells_y, local_grid_proto.local_grid.extent.num_cells_x)
