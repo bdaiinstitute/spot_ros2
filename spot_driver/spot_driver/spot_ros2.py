@@ -254,6 +254,10 @@ class SpotROS(Node):
 
         self.declare_parameter("gripperless", False)
 
+        self.declare_parameter("max_linear_x", 1.0)
+        self.declare_parameter("max_linear_y", 1.0)
+        self.declare_parameter("max_angular_z", 1.0)
+
         # When we send very long trajectories to Spot, we create batches of
         # given size. If we do not batch a long trajectory, Spot will reject it.
         self.declare_parameter(self.TRAJECTORY_BATCH_SIZE_PARAM, 100)
@@ -447,6 +451,13 @@ class SpotROS(Node):
                 self.publish_graph_nav_pose_callback,
                 callback_group=self.graph_nav_callback_group,
             )
+
+        # Allow initial velocity to be specified in config file
+        velocity = SetVelocity.Request()
+        velocity.velocity_limit.linear.x = self.get_parameter("max_linear_x").value
+        velocity.velocity_limit.linear.y = self.get_parameter("max_linear_y").value
+        velocity.velocity_limit.angular.z = self.get_parameter("max_angular_z").value
+        self.handle_max_vel(velocity, SetVelocity.Response())
 
         self.declare_parameter("has_arm", has_arm)
 

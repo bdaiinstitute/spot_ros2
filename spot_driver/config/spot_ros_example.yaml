@@ -21,6 +21,11 @@
     estop_timeout: 9.0
     start_estop: False
 
+    # Default maximum velocity
+    max_linear_x: 1 # m/s
+    max_linear_y: 1 # m/s
+    max_angular_z: 1 # rad/s
+
     preferred_odom_frame: "odom" # pass either odom/vision. This frame will become the parent of body in tf2 tree and will be used in odometry topic. https://dev.bostondynamics.com/docs/concepts/geometry_and_frames.html?highlight=frame#frames-in-the-spot-robot-world for more info.
 
     cmd_duration: 0.25 # The duration of cmd_vel commands. Increase this if spot stutters when publishing cmd_vel.
@@ -36,7 +41,7 @@
     # Virtual camera intrinsic matrix [fx, 0, cx, 0, fy, cy, 0, 0, 1]
     # fx stretches the image left-right, fy zooms in, cx moves the image left-right, cy moves the image up-down.
     virtual_camera_intrinsics: [385.0, 0.0, 315.0, 0.0, 385.0, 844.0, 0.0, 0.0, 1.0]
-    # Plane that the stitched image is projected on with respect to the virtual camera frame. 
+    # Plane that the stitched image is projected on with respect to the virtual camera frame.
     virtual_camera_projection_plane: [-0.15916, 0.0, 0.987253]
     # The distance from the virtual camera frame to the projection plane
     virtual_camera_plane_distance: 0.5
