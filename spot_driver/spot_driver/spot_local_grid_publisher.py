@@ -106,6 +106,8 @@ class LocalGridPublisher(Node):
         """
         Converts the local grid protobuf into a ROS occupancy grid message
 
+        Depending on the requested grid, some conversions may be done, as ROS OccupancyGrid data must be in int8 format
+
         Code in this function is adapted from the Boston Dynamics Spot SDK basic_streaming_visualizer example
         """
         proto = future.result()
@@ -114,20 +116,26 @@ class LocalGridPublisher(Node):
                 local_grid_proto = local_grid_found
                 cell_size = local_grid_found.local_grid.extent.cell_size
 
-        cells_obstacle_dist = self.unpack_grid(local_grid_proto).astype(np.float32)
         cell_count = local_grid_proto.local_grid.extent.num_cells_x * local_grid_proto.local_grid.extent.num_cells_y
         
-        # Construct an OccupancyGrid message using the local grid data
-        grid = np.zeros([local_grid_proto.local_grid.extent.num_cells_y * local_grid_proto.local_grid.extent.num_cells_x], dtype=np.int8)
 
-        # TODO: Publish grid data
+        # Populate Grid data and convert datatype if necessary
 
-        grid[(cells_obstacle_dist <= 0.0)] = 99
-        grid[np.logical_and(0.0 < cells_obstacle_dist, cells_obstacle_dist < 0.33)] = -1
-        grid = grid.reshape(local_grid_proto.local_grid.extent.num_cells_y, local_grid_proto.local_grid.extent.num_cells_x)
+        raw_cells = self.unpack_grid(local_grid_proto)
+
+        # "terrain_valid" and "intensity" grid protos are uint8
+        if raw_cells.dtype == np.uint8:
+            converted_cells = (raw_cells.astype(np.int16) - 128).astype(np.int8)    # Subtract a bias value so values remain correctly relative to each other
+
+        # "terrain", "no_step", and "obstacle_distance" grid protos are int16
+        elif raw_cells.dtype == np.int16:
+            # Not much we can do to avoid losing some information - the "no_step" grid is booleans so it shouldn't be an issue, but "terrain" and "obstacle_distance" values might be clipped 
+            converted_cells = raw_ells.astype(np.int8)
+
+        grid = converted_cells.reshape(local_grid_proto.local_grid.extent.num_cells_y, local_grid_proto.local_grid.extent.num_cells_x)
 
         grid_msg = rnp.msgify(OccupancyGrid, grid)  # Grid data converted using ros2_numpy
-        grid_msg.header.frame_id = "vision"
+        grid_msg.header.frame_id = VISION_FRAME_NAME
 
         # Timestamp data from protobuf
         grid_msg.header.stamp.sec = local_grid_proto.local_grid.acquisition_time.seconds
@@ -137,7 +145,7 @@ class LocalGridPublisher(Node):
 
         # Spatial information
         grid_msg.info.resolution = local_grid_proto.local_grid.extent.cell_size
-        transform = self.get_a_tform_b(local_grid_proto.local_grid.transforms_snapshot, "vision",
+        transform = self.get_a_tform_b(local_grid_proto.local_grid.transforms_snapshot, VISION_FRAME_NAME,
                            local_grid_proto.local_grid.frame_name_local_grid_data)
         
         grid_msg.info.origin = se3_pose_to_ros_pose(transform)
