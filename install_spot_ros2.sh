@@ -20,6 +20,9 @@ else
     exit 1
 fi
 
+# Install python modules that don't have rosdep mappings
+sudo pip3 install ros2_numpy
+
 sudo apt-get update
 
 # Install ROS dependencies
