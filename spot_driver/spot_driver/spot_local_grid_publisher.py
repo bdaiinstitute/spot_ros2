@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 import os
-import cv2
 import rclpy
 import numpy as np
 import ros2_numpy as rnp
@@ -11,7 +11,6 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 from nav_msgs.msg import OccupancyGrid
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptors, ReadOnlyStatus
-from sensor_msgs.msg import Image, CompressedImage
 from spot_driver.manual_conversions import se3_pose_to_ros_pose
 from spot_driver.ros_helpers import get_from_env_and_fall_back_to_param
 

@@ -256,6 +256,12 @@ install(
   DESTINATION lib/${PROJECT_NAME}
   RENAME spot_alerts
   )
+install(
+  PROGRAMS
+  spot_driver/spot_local_grid_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME spot_local_grid_publisher_node
+)
 # Install Libraries
 install(
   TARGETS
