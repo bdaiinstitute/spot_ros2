@@ -56,7 +56,7 @@ jobs:
       # with sigstore/fulcio when running outside of PRs.
       id-token: write
     outputs:
-      image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+      image: spot_ros2:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -85,7 +85,7 @@ jobs:
           context: .
           file: .devcontainer/Dockerfile
           push: false
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: spot_ros2:latest
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
