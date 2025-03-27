@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: prepare_container
     container:
-      image: ${{ needs.prepare_container.outputs.image }}
+      image: spot_ros2:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
