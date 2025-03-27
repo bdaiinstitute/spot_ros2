@@ -84,7 +84,7 @@ jobs:
         with:
           context: .
           file: .devcontainer/Dockerfile
-          push: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
