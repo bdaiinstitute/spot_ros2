@@ -89,13 +89,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-  build_and_test_package_and_docs:
-    name: Build and test spot_ros2 packages
-    runs-on: ubuntu-22.04
-    needs: prepare_container
-    container:
-      image: spot_ros2:latest
-    steps:
+      - name: Start docker
+        run: |
+          docker run --rm spot_ros2:latest
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
