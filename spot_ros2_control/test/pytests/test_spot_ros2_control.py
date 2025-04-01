@@ -1,7 +1,7 @@
 import itertools
 
 import pytest
-from bosdyn.api.robot_command_pb2 import JointControlStreamResponse, RobotCommandResponse
+from bosdyn.api.robot_command_pb2 import RobotCommandResponse
 from bosdyn.api.robot_state_pb2 import RobotStateStreamResponse
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
@@ -100,8 +100,3 @@ def test_spot_ros2_control(simple_spot: SpotFixture, ros: ROSAwareScope) -> None
     response = RobotCommandResponse()
     response.status = RobotCommandResponse.Status.STATUS_OK
     simple_spot.api.RobotCommand.future.returns(response)
-
-    # explicitly close the joint control stream
-    response = JointControlStreamResponse()
-    response.status = JointControlStreamResponse.Status.STATUS_OK
-    call.returns(response)
