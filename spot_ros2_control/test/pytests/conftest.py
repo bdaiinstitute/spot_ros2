@@ -47,30 +47,6 @@ def ros(simple_spot: SpotFixture, domain_id: int) -> Iterator[ROSAwareScope]:
 
 
 @launch_pytest.fixture
-def mock_spot_ros2_control(domain_id: int, spot_name: str = "", mock_arm: bool = True) -> Iterator[LaunchDescription]:
-    ld = LaunchDescription(
-        [
-            SetEnvironmentVariable("ROS_DOMAIN_ID", str(domain_id)),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    PathJoinSubstitution(
-                        [
-                            FindPackageShare("spot_ros2_control"),
-                            "launch",
-                            "spot_ros2_control.launch.py",
-                        ]
-                    )
-                ),
-                launch_arguments=[("spot_name", spot_name), ("mock_arm", str(mock_arm)), ("launch_rviz", "False")],
-            ),
-            ReadyToTest(),
-        ],
-    )
-    update_sigterm_sigkill_timeout(ld, sigterm_timeout_s=0.0, sigkill_timeout_s=0.0)
-    yield ld
-
-
-@launch_pytest.fixture
 def robot_spot_ros2_control(simple_spot: SpotFixture, domain_id: int) -> Iterator[LaunchDescription]:
     with tempfile.NamedTemporaryFile(mode="w", suffix="config.yaml") as temp:
         data = {
@@ -115,5 +91,4 @@ def robot_spot_ros2_control(simple_spot: SpotFixture, domain_id: int) -> Iterato
 
 
 def pytest_configure() -> None:
-    pytest.mock_spot_ros2_control = mock_spot_ros2_control
     pytest.robot_spot_ros2_control = robot_spot_ros2_control
