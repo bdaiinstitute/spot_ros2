@@ -10,7 +10,7 @@ ARG INSTALL_PACKAGE=base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
-    apt-get update -q && \
+    apt-get dist-upgrade -y --no-install-recommends && \
     apt-get install -yq --no-install-recommends \
     lcov \
     curl \
