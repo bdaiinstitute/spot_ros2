@@ -128,6 +128,12 @@ jobs:
           colcon test --event-handlers console_direct+ --packages-select spot_driver
         working-directory: ${{ github.workspace }}/../../
 
+      - name: Test spot_ros2_control
+        run: |
+          source install/setup.bash
+          colcon test --event-handlers console_direct+ --packages-select spot_ros2_control
+        working-directory: ${{ github.workspace }}/../../
+
       - name: Generate coverage report
         run: lcov -c -d build/spot_driver/ -o coverage_spot_driver.info --include "*/spot_driver/*" --exclude "*/test/*"
         working-directory: ${{ github.workspace }}/../../
