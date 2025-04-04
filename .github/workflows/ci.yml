@@ -128,11 +128,10 @@ jobs:
           colcon test --event-handlers console_direct+ --packages-select spot_driver
         working-directory: ${{ github.workspace }}/../../
 
-      # Per https://github.com/colcon/colcon-ros/issues/151, `pytest-args` cannot be used in an ament_cmake package, so in order to pass arguments to pytest we have to run pytest directly
       - name: Test spot_ros2_control
         run: |
           source install/setup.bash
-          pytest -n auto $GITHUB_WORKSPACE/spot_ros2_control/test/pytests/
+          colcon test --event-handlers console_direct+ --packages-select spot_ros2_control
         working-directory: ${{ github.workspace }}/../../
 
       - name: Generate coverage report
