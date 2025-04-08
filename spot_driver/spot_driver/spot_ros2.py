@@ -133,6 +133,7 @@ from spot_msgs.srv import (  # type: ignore  # type: ignore
     SetLEDBrightness,
     SetLocomotion,
     SetPtzPosition,
+    SetStandHeight,
     SetVelocity,
     SetVolume,
     StoreLogpoint,
@@ -596,6 +597,15 @@ class SpotROS(Node):
                     ),
                     callback_group=self.group,
                 )
+        
+        self.create_service(
+            SetStandHeight, 
+            "set_stand_height", 
+            lambda request, response: self.service_wrapper(
+                "set_stand_height", self.handle_stand_height, request, response
+            ),
+            callback_group=self.group,
+        )
 
         self.create_service(
             SetBool,
@@ -1129,7 +1139,6 @@ class SpotROS(Node):
             self.handle_self_right,
             self.handle_sit,
             self.handle_stand,
-            self.handle_crouch,
             self.handle_rollover,
             self.handle_power_on,
             self.handle_safe_power_off,
@@ -1159,9 +1168,6 @@ class SpotROS(Node):
     handle_self_right = TriggerServiceWrapper(SpotWrapper.self_right, "self_right")
     handle_sit = TriggerServiceWrapper(SpotWrapper.sit, "sit")
     handle_stand = TriggerServiceWrapper(SpotWrapper.stand, "stand")
-    handle_crouch = TriggerServiceWrapper(
-        SpotWrapper.stand, "crouch", body_height=-0.15
-    )  # "crouch" is just stand with height = -0.15
     handle_rollover = TriggerServiceWrapper(SpotWrapper.battery_change_pose, "rollover")
     handle_power_on = TriggerServiceWrapper(SpotWrapper.power_on, "power_on")
     handle_safe_power_off = TriggerServiceWrapper(SpotWrapper.safe_power_off, "power_off")
@@ -1199,6 +1205,17 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.spot_arm.gripper_angle_open(
             gripper_ang=request.gripper_angle, ensure_power_on_and_stand=False
         )
+        return response
+    
+    def handle_stand_height(self, request: SetStandHeight.Request, response: SetStandHeight.Response
+    ) -> SetStandHeight.Response:
+        """ROS service to stand the robot at a specific height (relative to default height)"""
+        """Crouching is about -0.15m and tiptoes is about 0.15m"""
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.stand(body_height=request.height)
         return response
 
     def handle_clear_behavior_fault(
