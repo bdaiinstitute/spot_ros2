@@ -2344,6 +2344,7 @@ class SpotROS(Node):
             ).to_yaw(),
             cmd_duration=cmd_duration_secs,
             precise_position=goal_handle.request.precise_positioning,
+            disable_vision_body_obstacle_avoidance=goal_handle.request.disable_obstacle_avoidance,
         )
 
         command_start_time = self.get_clock().now()
