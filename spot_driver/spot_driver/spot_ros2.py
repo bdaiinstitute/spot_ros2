@@ -597,10 +597,10 @@ class SpotROS(Node):
                     ),
                     callback_group=self.group,
                 )
-        
+
         self.create_service(
-            SetStandHeight, 
-            "set_stand_height", 
+            SetStandHeight,
+            "set_stand_height",
             lambda request, response: self.service_wrapper(
                 "set_stand_height", self.handle_stand_height, request, response
             ),
@@ -1206,11 +1206,14 @@ class SpotROS(Node):
             gripper_ang=request.gripper_angle, ensure_power_on_and_stand=False
         )
         return response
-    
-    def handle_stand_height(self, request: SetStandHeight.Request, response: SetStandHeight.Response
+
+    def handle_stand_height(
+        self, request: SetStandHeight.Request, response: SetStandHeight.Response
     ) -> SetStandHeight.Response:
-        """ROS service to stand the robot at a specific height (relative to default height)"""
-        """Crouching is about -0.15m and tiptoes is about 0.15m"""
+        """
+        ROS service to stand the robot at a specific height (relative to default height)
+        Crouching is about -0.15m and tiptoes is about 0.15m
+        """
         if self.spot_wrapper is None:
             response.success = False
             response.message = "Spot wrapper is undefined"
