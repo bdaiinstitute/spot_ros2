@@ -95,7 +95,7 @@ from spot_msgs.msg import (  # type: ignore
     Metrics,
     MobilityParams,
 )
-from spot_msgs.srv import (  # type: ignore  # type: ignore
+from spot_msgs.srv import (  # type: ignore
     AcquireLease,
     ChoreographyRecordedStateToAnimation,
     ChoreographyStartRecordingState,
