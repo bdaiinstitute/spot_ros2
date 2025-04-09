@@ -8,7 +8,7 @@ builtin_interfaces/Duration duration
 # https://dev.bostondynamics.com/protos/bosdyn/api/proto_reference.html?highlight=status_near_goal#se2trajectorycommand-feedback-status
 bool precise_positioning
 # If true, turns off the vision body obstacle avoidance in mobility params
-bool disable_obstacle_avoidance
+bool disable_obstacle_avoidance false
 ---
 bool success
 string message
