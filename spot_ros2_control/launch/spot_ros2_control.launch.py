@@ -74,6 +74,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
                 "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
                 "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
                 "foot_state_broadcaster": {"type": "spot_controllers/FootStateBroadcaster"},
+                "spot_pose_broadcaster": {"type": "spot_controllers/SpotPoseBroadcaster"},
                 "hardware_components_initial_state": {"unconfigured": ["SpotSystem"]},
             }
         },
@@ -98,6 +99,13 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
             "ros__parameters": {
                 "sensor_name": f"{prefix}imu_sensor",
                 "frame_id": f"{prefix}imu_sensor_frame",
+            }
+        },
+        f"{prefix}spot_pose_broadcaster": {
+            "ros__parameters": {
+                "pose_name": f"{prefix}vision_tform_body",
+                "frame_id": f"{prefix}body",
+                "child_frame_id": f"{prefix}/low_level/vision",
             }
         },
     }
