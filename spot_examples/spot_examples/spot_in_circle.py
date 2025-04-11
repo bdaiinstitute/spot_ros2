@@ -110,6 +110,8 @@ class SpotInCircle:
         gaze_robot_cmd = RobotCommandBuilder.build_synchro_command(gripper_cmd, gaze_cmd)
 
         action_goal = RobotCommand.Goal()
+
+        # Convert from ROS 2 to protobuf
         convert(gaze_robot_cmd, action_goal.command)
         self._robot_command_client.send_goal_and_wait("gaze", action_goal)
 
@@ -147,6 +149,8 @@ class SpotInCircle:
             frame_name=ODOM_FRAME_NAME,
         )
         action_goal = RobotCommand.Goal()
+
+        # Convert from ROS 2 to protobuf
         convert(proto_goal, action_goal.command)
         self._robot_command_client.send_goal_and_wait("walk_forward", action_goal)
         self._logger.info("Successfully walked forward")
