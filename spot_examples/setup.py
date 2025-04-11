@@ -21,12 +21,15 @@ setup(
         "console_scripts": [
             "walk_forward = spot_examples.walk_forward:main",
             "arm_simple = spot_examples.arm_simple:main",
+            "arm_gaze = spot_examples.arm_gaze:main",
+            "arm_long_cartesian_trajectory = spot_examples.arm_long_cartesian_trajectory:main",
             "send_inverse_kinematics_requests = spot_examples.send_inverse_kinematics_requests:main",
             "batch_trajectory = spot_examples.batch_trajectory:main",
             "hello_spot = spot_examples.hello_spot:main",
             "arm_with_body_follow = spot_examples.arm_with_body_follow:main",
             "wasd = spot_examples.wasd:main",
             "simple_sub = spot_examples.simple_sub:main",
+            "spot_in_circle = spot_examples.spot_in_circle:main",
         ],
     },
 )
