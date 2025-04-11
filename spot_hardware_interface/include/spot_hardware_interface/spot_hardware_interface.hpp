@@ -106,8 +106,11 @@ class StateStreamingHandler {
    *  CONTACT_UNKNOWN	0	Unknown contact. Do not use.
       CONTACT_MADE	1	The foot is currently in contact with the ground.
       CONTACT_LOST	2	The foot is not in contact with the ground.
+   * Save the current transforms from odom to body and vision to body frames
    */
-  void get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states);
+  void get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states,
+                  std::vector<double>& odom_pos, std::vector<double>& odom_rot, std::vector<double>& vision_pos,
+                  std::vector<double>& vision_rot);
   /**
    * @brief Reset internal state.
    */
@@ -127,6 +130,11 @@ class StateStreamingHandler {
   // store the current foot contact states
   std::vector<int> current_foot_state_;
   static constexpr size_t nfeet_ = 4;
+  // store current body pose
+  std::vector<double> odom_tform_body_pos_;    // (x, y, z) in m
+  std::vector<double> odom_tform_body_rot_;    // (x, y, z, w) quaternion
+  std::vector<double> vision_tform_body_pos_;  // (x, y, z) in m
+  std::vector<double> vision_tform_body_rot_;  // (x, y, z, w) quaternion
   // responsible for ensuring read/writes of joint states do not happen at the same time.
   std::mutex mutex_;
 };
@@ -179,13 +187,17 @@ class SpotHardware : public hardware_interface::SystemInterface {
   static constexpr size_t nfeet_ = 4;
   // Sensor configuration
   // We have 2 sensors, IMU and feet contact
-  static constexpr size_t n_sensors_ = 2;
+  static constexpr size_t n_sensors_ = 4;
   // index we expect these sensors to be at in info_.sensors
   static constexpr size_t imu_sensor_index_ = 0;
   static constexpr size_t foot_sensor_index_ = 1;
+  static constexpr size_t odom_to_body_sensor_index_ = 2;
+  static constexpr size_t vision_to_body_sensor_index_ = 3;
   // number of state interfaces we expect per sensor
   static constexpr size_t n_imu_sensor_interfaces_ = 10;
   static constexpr size_t n_foot_sensor_interfaces_ = 4;
+  static constexpr size_t n_odom_body_sensor_interfaces_ = 7;
+  static constexpr size_t n_vision_body_sensor_interfaces_ = 7;
 
   // Login info
   std::string hostname_;
@@ -221,6 +233,11 @@ class SpotHardware : public hardware_interface::SystemInterface {
   ImuStates imu_states_;
   // Holds foot states received from the BD SDK
   std::vector<int> foot_states_;
+  // Holds body poses received from the BD SDK
+  std::vector<double> odom_pos_;  // (x, y, z) in m
+  std::vector<double> odom_rot_;  // (x, y, z, w)
+  std::vector<double> vision_pos_;
+  std::vector<double> vision_rot_;
 
   // Thread for reading the state of the robot.
   std::jthread state_thread_;
@@ -307,7 +324,10 @@ class SpotHardware : public hardware_interface::SystemInterface {
   std::vector<double> hw_commands_;
   std::vector<double> hw_states_;  // joints
 
-  std::vector<double> hw_sensor_states_;
+  std::vector<double> hw_imu_sensor_states_;
+  std::vector<double> hw_foot_sensor_states_;
+  std::vector<double> hw_odom_body_sensor_states_;    // Holds the odom to body transforms
+  std::vector<double> hw_vision_body_sensor_states_;  // Holds the vision to body transforms
 };
 
 }  // namespace spot_hardware_interface

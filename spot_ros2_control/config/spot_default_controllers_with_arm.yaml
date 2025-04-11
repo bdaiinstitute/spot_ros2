@@ -1,5 +1,10 @@
-# Some built in controllers, taken from
-# https://github.com/ros-controls/roscon2022_workshop/blob/master/controlko_bringup/config/rrbot_controllers.yaml
+# Copyright (c) 2024-2025 Boston Dynamics AI Institute LLC. All rights reserved.
+
+# This is an example that demonstrates configuration of the available controllers for a robot
+# with an arm and without a namespace.
+# It is not used!
+# By default, a configuration matching this format that IS namespaced appropriately will be
+# generated and used at launch time.
 
 controller_manager:
   ros__parameters:

@@ -31,6 +31,7 @@ from bosdyn.api import (
     world_object_pb2,
 )
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
+from bosdyn.api.manipulation_api_pb2 import WalkGazeMode
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence, ChoreographyStatusResponse
 from bosdyn.client import math_helpers
@@ -94,7 +95,7 @@ from spot_msgs.msg import (  # type: ignore
     Metrics,
     MobilityParams,
 )
-from spot_msgs.srv import (  # type: ignore  # type: ignore
+from spot_msgs.srv import (  # type: ignore
     AcquireLease,
     ChoreographyRecordedStateToAnimation,
     ChoreographyStartRecordingState,
@@ -132,6 +133,7 @@ from spot_msgs.srv import (  # type: ignore  # type: ignore
     SetLEDBrightness,
     SetLocomotion,
     SetPtzPosition,
+    SetStandHeight,
     SetVelocity,
     SetVolume,
     StoreLogpoint,
@@ -595,6 +597,15 @@ class SpotROS(Node):
                     ),
                     callback_group=self.group,
                 )
+
+        self.create_service(
+            SetStandHeight,
+            "set_stand_height",
+            lambda request, response: self.service_wrapper(
+                "set_stand_height", self.handle_stand_height, request, response
+            ),
+            callback_group=self.group,
+        )
 
         self.create_service(
             SetBool,
@@ -1128,7 +1139,6 @@ class SpotROS(Node):
             self.handle_self_right,
             self.handle_sit,
             self.handle_stand,
-            self.handle_crouch,
             self.handle_rollover,
             self.handle_power_on,
             self.handle_safe_power_off,
@@ -1158,9 +1168,6 @@ class SpotROS(Node):
     handle_self_right = TriggerServiceWrapper(SpotWrapper.self_right, "self_right")
     handle_sit = TriggerServiceWrapper(SpotWrapper.sit, "sit")
     handle_stand = TriggerServiceWrapper(SpotWrapper.stand, "stand")
-    handle_crouch = TriggerServiceWrapper(
-        SpotWrapper.stand, "crouch", body_height=-0.15
-    )  # "crouch" is just stand with height = -0.15
     handle_rollover = TriggerServiceWrapper(SpotWrapper.battery_change_pose, "rollover")
     handle_power_on = TriggerServiceWrapper(SpotWrapper.power_on, "power_on")
     handle_safe_power_off = TriggerServiceWrapper(SpotWrapper.safe_power_off, "power_off")
@@ -1198,6 +1205,20 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.spot_arm.gripper_angle_open(
             gripper_ang=request.gripper_angle, ensure_power_on_and_stand=False
         )
+        return response
+
+    def handle_stand_height(
+        self, request: SetStandHeight.Request, response: SetStandHeight.Response
+    ) -> SetStandHeight.Response:
+        """
+        ROS service to stand the robot at a specific height (relative to default height)
+        Crouching is about -0.15m and tiptoes is about 0.15m
+        """
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.stand(body_height=request.height)
         return response
 
     def handle_clear_behavior_fault(
@@ -2160,47 +2181,55 @@ class SpotROS(Node):
             self.get_logger().info("Returning action result " + str(result))
         return result
 
-    def _manipulation_goal_complete(self, feedback: Optional[ManipulationApiFeedbackResponse]) -> GoalResponse:
+    def _manipulation_goal_complete(
+        self,
+        feedback: Optional[ManipulationApiFeedbackResponse],
+        request: Optional[manipulation_api_pb2.ManipulationApiRequest],
+    ) -> tuple[GoalResponse, str]:
         if feedback is None:
             # NOTE: it takes an iteration for the feedback to get set.
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
 
         if feedback.current_state.value == feedback.current_state.MANIP_STATE_UNKNOWN:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_DONE:
-            return GoalResponse.SUCCESS
+            return GoalResponse.SUCCESS, "Successfully completed manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_SEARCHING_FOR_GRASP:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_GRASP:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASPING_OBJECT:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACING_OBJECT:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_SUCCEEDED:
-            return GoalResponse.SUCCESS
+            return GoalResponse.SUCCESS, "Successfully completed manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
-            return GoalResponse.IN_PROGRESS
+            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:  # type: ignore
+                return GoalResponse.SUCCESS, "Successfully planned a grasp"
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Grasp planning failed"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
-            return GoalResponse.IN_PROGRESS
+            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:  # type: ignore
+                return GoalResponse.FAILED, "Unable to see object well enough to plan grasp"
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_WALKING_TO_OBJECT:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_ATTEMPTING_RAYCASTING:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_PLACE:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_SUCCEEDED:
-            return GoalResponse.SUCCESS
+            return GoalResponse.SUCCESS, "Successfully completed manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         else:
             raise Exception("Unknown manipulation state type")
 
@@ -2235,7 +2264,7 @@ class SpotROS(Node):
         while (
             rclpy.ok()
             and not goal_handle.is_cancel_requested
-            and self._manipulation_goal_complete(feedback) == GoalResponse.IN_PROGRESS
+            and self._manipulation_goal_complete(feedback, proto_command)[0] == GoalResponse.IN_PROGRESS
             and goal_handle.is_active
         ):
             try:
@@ -2254,7 +2283,8 @@ class SpotROS(Node):
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
-        result.success = self._manipulation_goal_complete(feedback) == GoalResponse.SUCCESS
+        status, result.message = self._manipulation_goal_complete(feedback, proto_command)
+        result.success = status == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
@@ -2268,10 +2298,8 @@ class SpotROS(Node):
             result.message = "Cancelled"
             # Don't abort because that's already happened
         elif result.success:
-            result.message = "Successfully completed manipulation"
             goal_handle.succeed()
         else:
-            result.message = "Failed to complete manipulation"
             goal_handle.abort()
         self._wait_for_goal = None
         if not self.spot_wrapper:
@@ -2316,6 +2344,7 @@ class SpotROS(Node):
             ).to_yaw(),
             cmd_duration=cmd_duration_secs,
             precise_position=goal_handle.request.precise_positioning,
+            disable_vision_body_obstacle_avoidance=goal_handle.request.disable_obstacle_avoidance,
         )
 
         command_start_time = self.get_clock().now()

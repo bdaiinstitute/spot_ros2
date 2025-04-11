@@ -2,7 +2,7 @@
 
 This is a ROS 2 package that provides custom ROS 2 controllers that can be used with [spot_ros2_control](../spot_ros2_control/).
 
-This package contains two controllers: `spot_controllers/ForwardStateController` and `spot_controllers/SpotJointController`.
+This package contains two controllers: `spot_controllers/ForwardStateController` and `spot_controllers/SpotJointController` and one broadcaster: `spot_controllers/FootStateBroadcaster`.
 Example configurations for setting up this controllers can be found in [`spot_ros2_control/config`](../spot_ros2_control/config/).
 
 ## `ForwardStateController`
@@ -38,3 +38,10 @@ effort: [4.0, 5.0, 6.0]
 k_q_p: []
 k_qd_p: [7.0, 8.0, 9.0]
 ```
+
+## `FootStateBroadcaster`
+This is a broadcaster that will publish the feet contact states of Spot onto a topic `spot_msgs/msg/FootStateArray`.
+Each message contains four `FootState` messages filled in with the appropriate `contact` field, that correspond in order to the contacts for the front left, front right, rear left, and rear right feet.
+0 corresponds to an unknown contact, 1 corresponds to the foot being in contact in the floor, and 2 corresponds to the foot not being in contact with the floor.
+Note that in contrast to the `FootState` published by the high level driver, Spot's streaming interface for foot contacts does NOT contain an estimate for the foot's position with respect to the body.
+Therefore, the `foot_position_rt_body` field of the `FootState` message is not filled in and should be disregarded.
