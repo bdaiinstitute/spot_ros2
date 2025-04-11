@@ -1,10 +1,13 @@
 import argparse
 import logging
-from typing import Optional
+import math
+from typing import List, Optional
 
 import synchros2.process as ros_process
 import synchros2.scope as ros_scope
-from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME, ODOM_FRAME_NAME
+from bosdyn.api import geometry_pb2
+from bosdyn.client import math_helpers
+from bosdyn.client.frame_helpers import BODY_FRAME_NAME, ODOM_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
@@ -12,19 +15,13 @@ from rclpy.node import Node
 from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import fqn, namespace_with
-import math
-from bosdyn.client import math_helpers
-#from std_srvs.srv import Trigger
 
 from spot_msgs.action import RobotCommand  # type: ignore
-from bosdyn.api import geometry_pb2
+
 from .simple_spot_commander import SimpleSpotCommander
 
-# Where we want the robot to walk to relative to itself
 
-
-
-class WalkForward:
+class SpotInCircle:
     def __init__(self, robot_name: Optional[str] = None, node: Optional[Node] = None) -> None:
         self._logger = logging.getLogger(fqn(self.__class__))
         node = node or ros_scope.node()
@@ -41,73 +38,73 @@ class WalkForward:
         self._robot_command_client = ActionClientWrapper(
             RobotCommand, namespace_with(self._robot_name, "robot_command"), node
         )
-        #self.cli_unstow = self.node.create_client(Trigger, namespace_with(robot_name, "arm_unstow"))
 
     def initialize_robot(self) -> bool:
+        """Claim and power on the robot, then make it stand."""
         self._logger.info(f"Robot name: {self._robot_name}")
         self._logger.info("Claiming robot")
         result = self._robot.command("claim")
         if not result.success:
-            self._logger.error("Unable to claim robot message was " + result.message)
+            self._logger.error("Unable to claim robot: " + result.message)
             return False
-        self._logger.info("Claimed robot")
 
-
-        # Stand the robot up.
         self._logger.info("Powering robot on")
         result = self._robot.command("power_on")
         if not result.success:
-            self._logger.error("Unable to power on robot message was " + result.message)
+            self._logger.error("Unable to power on robot: " + result.message)
             return False
+
         self._logger.info("Standing robot up")
         result = self._robot.command("stand")
         if not result.success:
-            self._logger.error("Robot did not stand message was " + result.message)
+            self._logger.error("Robot did not stand: " + result.message)
             return False
+
         self._logger.info("Successfully stood up.")
         self.use_arm = True
-
         if self.use_arm:
-            print("[INFORMATION] You are using the arm")
-            #self.cli_unstow.call_async(Trigger.Request())
-            #result = self._robot.command("arm_unstow")
-            #if not result.success:
-            #    self._logger.error("Robot did not stand message was " + result.message)
-            #    return False
-            #self._logger.info("Successfully unstowed up.")
+            self._logger.info("[INFORMATION] You are using the arm")
         return True
 
-    def get_me_a_circle(self, radius = 1.0, steps = 4):
+    def get_me_a_circle(self, radius: float = 1.0, steps: int = 4) -> List[List[float]]:
+        """
+        Compute relative movement steps (dx, dy, dyaw) to form a circular trajectory.
+
+        Args:
+            radius (float): Radius of the circle in meters.
+            steps (int): Number of discrete movements to complete the circle.
+
+        Returns:
+            List[List[float]]: Three lists representing dx, dy, dyaw for each step in the robot's body frame.
+        """
         dx_all = []
-        dy_all =[]
+        dy_all = []
         dyaw_all = []
 
-        angle_subtended = 2 * math.pi / steps #(360 / n)
-        chord_length = 2 * radius * math.sin(angle_subtended / 2)
+        angle_subtended = 2 * math.pi / steps
 
-        for i in range(steps):
-            dx = chord_length
-            dy = 0.0
-            #dyaw = -math.degrees(angle_subtended)  # rotate counter-clockwise
-            dyaw = -angle_subtended
+        # Negative radius indicates clockwise movement, thus the angle is negative.
+        rotation_angle = -angle_subtended if radius < 0 else angle_subtended
 
-            dx_all.append(dx)
-            dy_all.append(dy)
-            dyaw_all.append(dyaw)
-        return dx_all, dy_all, dyaw_all
-    def gaze_at_center(self, robot_command_client, gaze_target_in_odom):
-        """Command the arm to gaze at a fixed point in odom frame (0, -1.2, 0)."""
-        from bosdyn.client.robot_command import block_until_arm_arrives
+        chord_length = 2 * abs(radius) * math.sin(angle_subtended / 2)
 
-        # x, y, z = radius, 0.0, 0.05
-        x, y, z = gaze_target_in_odom.x, gaze_target_in_odom.y, gaze_target_in_odom.z  # Gaze target in odom frame (right side of robot at origin)
-        # x = 0.0
-        # y = -1.2
-        # z = 0.0
-        print("x", x)
-        print("y", y)
-        print("z", z)
-        #import pdb; pdb.set_trace()
+        for _ in range(steps):
+            dx_all.append(chord_length)
+            dy_all.append(0.0)
+            dyaw_all.append(rotation_angle)
+
+        return [dx_all, dy_all, dyaw_all]
+
+    def gaze_at_center(self, gaze_target_in_odom: SE3Pose) -> None:
+        """
+        Command the robot's arm to point at a target position in odom frame.
+
+        Args:
+            gaze_target_in_odom (SE3Pose): The 3D pose in odom frame to gaze at.
+        """
+        x, y, z = gaze_target_in_odom.x, gaze_target_in_odom.y, gaze_target_in_odom.z
+        self._logger.info(f"Gazing at point: x={x:.2f}, y={y:.2f}, z={z:.2f}")
+
         gaze_cmd = RobotCommandBuilder.arm_gaze_command(x, y, z, ODOM_FRAME_NAME)
         gripper_cmd = RobotCommandBuilder.claw_gripper_open_command()
         gaze_robot_cmd = RobotCommandBuilder.build_synchro_command(gripper_cmd, gaze_cmd)
@@ -115,18 +112,21 @@ class WalkForward:
         action_goal = RobotCommand.Goal()
         convert(gaze_robot_cmd, action_goal.command)
         self._robot_command_client.send_goal_and_wait("gaze", action_goal)
-        #cmd_id = self._robot_command_client.robot_command(gaze_robot_cmd)
-        print(f"Gazing at fixed point in odom: ({x:.2f}, {y:.2f}, {z:.2f})")
-        #block_until_arm_arrives(robot_command_client, cmd_id, timeout_sec=3.0)
 
-    def base_movement(self, dx, dy, dyaw) -> None:
+    def base_movement(self, dx: float, dy: float, dyaw: float) -> None:
+        """
+        Move the robot's base by dx, dy, and dyaw relative to current pose (body frame).
+
+        Args:
+            dx (float): Forward movement in meters.
+            dy (float): Lateral movement in meters.
+            dyaw (float): Rotation in radians.
+        """
         self._logger.info("Moving the base")
 
-        body_tform_goal = SE2Pose(x=dx, y=dy, angle=dyaw) #the angle here needs to be in radian
-        
-        #world_t_robot = self._tf_listener.lookup_a_tform_b(self._vision_frame_name, self._body_frame_name)
+        body_tform_goal = SE2Pose(x=dx, y=dy, angle=dyaw)
         odom_t_robot = self._tf_listener.lookup_a_tform_b(self._odom_frame_name, self._body_frame_name)
-        world_t_robot_se2 = SE3Pose(
+        odom_t_robot_se2 = SE3Pose(
             odom_t_robot.transform.translation.x,
             odom_t_robot.transform.translation.y,
             odom_t_robot.transform.translation.z,
@@ -137,89 +137,80 @@ class WalkForward:
                 odom_t_robot.transform.rotation.z,
             ),
         ).get_closest_se2_transform()
-        #ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
-        odom_t_goal = world_t_robot_se2 * body_tform_goal
-        
+
+        odom_t_goal = odom_t_robot_se2 * body_tform_goal
+
         proto_goal = RobotCommandBuilder.synchro_se2_trajectory_point_command(
             goal_x=odom_t_goal.x,
             goal_y=odom_t_goal.y,
             goal_heading=odom_t_goal.angle,
-            frame_name=ODOM_FRAME_NAME,  # use Boston Dynamics' frame conventions
+            frame_name=ODOM_FRAME_NAME,
         )
         action_goal = RobotCommand.Goal()
         convert(proto_goal, action_goal.command)
         self._robot_command_client.send_goal_and_wait("walk_forward", action_goal)
         self._logger.info("Successfully walked forward")
 
-
-
     def spot_in_a_circle(self) -> None:
-        self._logger.info("Moving in a circle")
+        """
+        Moves Spot in a circle while gazing at a fixed point in the center.
+        In this example, the robot moves clockwise in a circle with a radius of 1.2 meters, in 12 steps.
+        """
+        self._logger.info("Starting circular motion")
 
-        radius = 1.2
+        # the radius is the distance from the robot to the center of the circle (body frame) in meters.
+        # negative sign indicates the robot is moving in a clockwise direction.
+        # positive sign indicates the robot is moving in a counter-clockwise direction.
+        radius = -1.2
+
+        # the number of steps to complete a full circle
+        # the more steps, the smoother the circle but the longer it takes
+        # The angle subtended at the center by each step is (2.math(pi) / steps) radians.
         steps = 12
-        dx_all, dy_all, dyaw_all = self.get_me_a_circle(radius=radius, steps=steps)
+
+        dx_all, dy_all, dyaw_all = self.get_me_a_circle(radius, steps)
 
         if self.use_arm:
-            #x,y,z is where you want to gaze in robot body frame
-            x, y, z = 0.0, -radius, 0.1 #these are in body frame, we will convert later
-            hand_pos_rt_body = geometry_pb2.Vec3(x=x, y=y, z=z)
+            # Convert target from body frame to odom frame
+            hand_pos_rt_body = geometry_pb2.Vec3(x=0.0, y=radius, z=0.1)
             body_Q_hand = geometry_pb2.Quaternion(w=1, x=0, y=0, z=0)
             body_t_hand = geometry_pb2.SE3Pose(position=hand_pos_rt_body, rotation=body_Q_hand)
 
-            hand_pos_rt_odom = self._tf_listener.lookup_a_tform_b(self._odom_frame_name, self._body_frame_name)
+            body_to_odom = self._tf_listener.lookup_a_tform_b(self._odom_frame_name, self._body_frame_name)
             odom_T_body_se3 = math_helpers.SE3Pose(
-                hand_pos_rt_odom.transform.translation.x,
-                hand_pos_rt_odom.transform.translation.y,
-                hand_pos_rt_odom.transform.translation.z,
+                body_to_odom.transform.translation.x,
+                body_to_odom.transform.translation.y,
+                body_to_odom.transform.translation.z,
                 math_helpers.Quat(
-                    hand_pos_rt_odom.transform.rotation.w,
-                    hand_pos_rt_odom.transform.rotation.x,
-                    hand_pos_rt_odom.transform.rotation.y,
-                    hand_pos_rt_odom.transform.rotation.z,
+                    body_to_odom.transform.rotation.w,
+                    body_to_odom.transform.rotation.x,
+                    body_to_odom.transform.rotation.y,
+                    body_to_odom.transform.rotation.z,
                 ),
             )
-
             gaze_target_in_odom = odom_T_body_se3 * math_helpers.SE3Pose.from_proto(body_t_hand)
-            
-            #import pdb; pdb.set_trace()
-            
-            #self._logger.info("Successfully gazed at center")
 
         for i in range(len(dx_all)):
             try:
-                
                 if self.use_arm:
-                    self.gaze_at_center(self._robot_command_client, gaze_target_in_odom)
-                    #gaze_at_center(robot_command_client, gaze_target_in_odom)
-                # return relative_move(options.dx, options.dy, math.radians(options.dyaw), options.frame,
-                #                      robot_command_client, robot_state_client, stairs=options.stairs)
+                    self.gaze_at_center(gaze_target_in_odom)
                 self.base_movement(dx_all[i], dy_all[i], dyaw_all[i])
-                                
-
-                
-                
             finally:
-                # Send a Stop at the end, regardless of what happened.
                 result = self._robot.command("stop")
                 if not result.success:
-                    self._logger.error("Unable to make the robot stop, message was " + result.message)
-
-
-
+                    self._logger.error("Unable to make the robot stop: " + result.message)
 
 
 def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--robot", type=str, default=None)
+    parser.add_argument("--robot", type=str, default=None, help="Name/namespace of the Spot robot")
     return parser
 
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> int:
-    goto = WalkForward(args.robot, main.node)
+    goto = SpotInCircle(args.robot, main.node)
     goto.initialize_robot()
-    #goto.walk_forward_with_world_frame_goal()
     goto.spot_in_a_circle()
     return 0
 
