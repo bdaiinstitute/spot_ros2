@@ -326,8 +326,6 @@ class SpotHardware : public hardware_interface::SystemInterface {
 
   std::vector<double> hw_imu_sensor_states_;
   std::vector<double> hw_foot_sensor_states_;
-  std::vector<double> hw_odom_body_sensor_states_;    // Holds the odom to body transforms
-  std::vector<double> hw_vision_body_sensor_states_;  // Holds the vision to body transforms
 };
 
 }  // namespace spot_hardware_interface

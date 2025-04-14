@@ -251,8 +251,6 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hw_commands_.resize(njoints_ * command_interfaces_per_joint_, std::numeric_limits<double>::quiet_NaN());
   hw_imu_sensor_states_.resize((n_imu_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
   hw_foot_sensor_states_.resize((n_foot_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
-  hw_odom_body_sensor_states_.resize((n_odom_body_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
-  hw_vision_body_sensor_states_.resize((n_vision_body_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -346,20 +344,6 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
   for (size_t i = 0; i < n_foot_sensor_interfaces_; i++) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         foot_sensor.name, foot_sensor.state_interfaces[i].name, &hw_foot_sensor_states_[i]));
-  }
-
-  // export odom to body transform sensor states
-  const auto& odom_to_body_sensor = info_.sensors[odom_to_body_sensor_index_];
-  for (size_t i = 0; i < n_odom_body_sensor_interfaces_; i++) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        odom_to_body_sensor.name, odom_to_body_sensor.state_interfaces[i].name, &hw_odom_body_sensor_states_[i]));
-  }
-
-  // export vision to body transform sensor states
-  const auto& vision_to_body_sensor = info_.sensors[vision_to_body_sensor_index_];
-  for (size_t i = 0; i < n_vision_body_sensor_interfaces_; i++) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        vision_to_body_sensor.name, vision_to_body_sensor.state_interfaces[i].name, &hw_vision_body_sensor_states_[i]));
   }
 
   return state_interfaces;
@@ -472,25 +456,10 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   hw_imu_sensor_states_.at(9) = imu_states_.linear_acceleration.at(2);
 
   // Load foot contact states
-  hw_foot_sensor_states_.assign(foot_states_.begin(), foot_states_.end());
-
-  // Load odom to body transform
-  hw_odom_body_sensor_states_.at(0) = odom_pos_.at(0);
-  hw_odom_body_sensor_states_.at(1) = odom_pos_.at(1);
-  hw_odom_body_sensor_states_.at(2) = odom_pos_.at(2);
-  hw_odom_body_sensor_states_.at(3) = odom_rot_.at(0);
-  hw_odom_body_sensor_states_.at(4) = odom_rot_.at(1);
-  hw_odom_body_sensor_states_.at(5) = odom_rot_.at(2);
-  hw_odom_body_sensor_states_.at(6) = odom_rot_.at(3);
-
-  // Load vision to body transform
-  hw_vision_body_sensor_states_.at(0) = vision_pos_.at(0);
-  hw_vision_body_sensor_states_.at(1) = vision_pos_.at(1);
-  hw_vision_body_sensor_states_.at(2) = vision_pos_.at(2);
-  hw_vision_body_sensor_states_.at(3) = vision_rot_.at(0);
-  hw_vision_body_sensor_states_.at(4) = vision_rot_.at(1);
-  hw_vision_body_sensor_states_.at(5) = vision_rot_.at(2);
-  hw_vision_body_sensor_states_.at(6) = vision_rot_.at(3);
+  hw_foot_sensor_states_.at(0) = foot_states_.at(0);
+  hw_foot_sensor_states_.at(1) = foot_states_.at(1);
+  hw_foot_sensor_states_.at(2) = foot_states_.at(2);
+  hw_foot_sensor_states_.at(3) = foot_states_.at(3);
 
   return hardware_interface::return_type::OK;
 }
