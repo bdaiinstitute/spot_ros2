@@ -92,6 +92,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
                 "forward_position_controller": {"type": "forward_command_controller/ForwardCommandController"},
                 "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
                 "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
+                "foot_state_broadcaster": {"type": "spot_controllers/FootStateBroadcaster"},
                 "hardware_components_initial_state": {"unconfigured": ["SpotSystem"]},
             }
         },
