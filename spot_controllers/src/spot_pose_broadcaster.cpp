@@ -43,9 +43,11 @@ controller_interface::InterfaceConfiguration SpotPoseBroadcaster::state_interfac
   controller_interface::InterfaceConfiguration state_interfaces_config;
   state_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
   for (const auto& interface : vision_pose_sensor_->get_state_interface_names()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "vision interface %s", interface.c_str());
     state_interfaces_config.names.emplace_back(interface);
   }
   for (const auto& interface : odom_pose_sensor_->get_state_interface_names()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "odom interface %s", interface.c_str());
     state_interfaces_config.names.emplace_back(interface);
   }
 
@@ -87,9 +89,6 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
   vision_pose_sensor_ =
       std::make_unique<semantic_components::PoseSensor>(frame_prefix + params_.vision_t_body.sensor_name);
   odom_pose_sensor_ = std::make_unique<semantic_components::PoseSensor>(frame_prefix + params_.odom_t_body.sensor_name);
-  tf_publish_period_ = params_.tf.publish_rate == 0.0
-                           ? std::nullopt
-                           : std::optional{rclcpp::Duration::from_seconds(1.0 / params_.tf.publish_rate)};
 
   try {
     pose_publisher_ =
@@ -97,7 +96,7 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
     realtime_publisher_ =
         std::make_unique<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>>(pose_publisher_);
 
-    if (params_.tf.enable) {
+    if (params_.tf_enable) {
       tf_publisher_ =
           get_node()->create_publisher<tf2_msgs::msg::TFMessage>(DEFAULT_TF_TOPIC, rclcpp::SystemDefaultsQoS());
       realtime_tf_publisher_ =
@@ -110,7 +109,7 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
 
   // Initialize pose message
   realtime_publisher_->lock();
-  realtime_publisher_->msg_.header.frame_id = params_.frame_id;
+  realtime_publisher_->msg_.header.frame_id = params_.vision_t_body.parent_frame_name;
   realtime_publisher_->unlock();
 
   // Initialize tf message if tf publishing is enabled
@@ -135,7 +134,7 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
 controller_interface::CallbackReturn SpotPoseBroadcaster::on_activate(
     const rclcpp_lifecycle::State& /*previous_state*/) {
   vision_pose_sensor_->assign_loaned_state_interfaces(state_interfaces_);
-  // FIXME this seems wrong, each sensor has a different set of state interfaces
+  // FIXME this seems wrong, each sensor has a different set of state interfaces, but seems to work
   odom_pose_sensor_->assign_loaned_state_interfaces(state_interfaces_);
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -149,8 +148,9 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_deactivate(
 
 controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time& time,
                                                               const rclcpp::Duration& /*period*/) {
-  geometry_msgs::msg::Pose vision_t_body;
+  geometry_msgs::msg::Pose vision_t_body, odom_t_body;
   vision_pose_sensor_->get_values_as_message(vision_t_body);
+  odom_pose_sensor_->get_values_as_message(odom_t_body);
 
   if (realtime_publisher_ && realtime_publisher_->trylock()) {
     realtime_publisher_->msg_.header.stamp = time;
@@ -163,45 +163,31 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
                           vision_t_body.position.y, vision_t_body.position.z, vision_t_body.orientation.x,
                           vision_t_body.orientation.y, vision_t_body.orientation.z, vision_t_body.orientation.w);
   } else if (realtime_tf_publisher_ && realtime_tf_publisher_->trylock()) {
-    bool do_publish = false;
-    // rlcpp::Time comparisons throw if clock types are not the same
-    if (tf_last_publish_time_.get_clock_type() != time.get_clock_type()) {
-      do_publish = true;
-    } else if (!tf_publish_period_ || (tf_last_publish_time_ + *tf_publish_period_ <= time)) {
-      do_publish = true;
+    // FIXME consolidate logic
+    const std::vector<geometry_msgs::msg::Pose> poses = {vision_t_body, odom_t_body};
+
+    for (size_t i = 0; i < poses.size(); i++) {
+      const auto& current_pose = poses.at(i);
+
+      auto& tf_transform = realtime_tf_publisher_->msg_.transforms.at(i);
+      tf_transform.header.stamp = time;
+
+      tf_transform.transform.translation.x = current_pose.position.x;
+      tf_transform.transform.translation.y = current_pose.position.y;
+      tf_transform.transform.translation.z = current_pose.position.z;
+
+      tf_transform.transform.rotation.x = current_pose.orientation.x;
+      tf_transform.transform.rotation.y = current_pose.orientation.y;
+      tf_transform.transform.rotation.z = current_pose.orientation.z;
+      tf_transform.transform.rotation.w = current_pose.orientation.w;
+
+      RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000,
+                            "Transform %ld, [%f, %f, %f], [%f, %f, %f, %f]", i, tf_transform.transform.translation.x,
+                            tf_transform.transform.translation.y, tf_transform.transform.translation.z,
+                            tf_transform.transform.rotation.x, tf_transform.transform.rotation.y,
+                            tf_transform.transform.rotation.z, tf_transform.transform.rotation.w);
     }
-
-    if (do_publish) {
-      auto& vision_tf_transform = realtime_tf_publisher_->msg_.transforms[0];
-      vision_tf_transform.header.stamp = time;
-
-      vision_tf_transform.transform.translation.x = vision_t_body.position.x;
-      vision_tf_transform.transform.translation.y = vision_t_body.position.y;
-      vision_tf_transform.transform.translation.z = vision_t_body.position.z;
-
-      vision_tf_transform.transform.rotation.x = vision_t_body.orientation.x;
-      vision_tf_transform.transform.rotation.y = vision_t_body.orientation.y;
-      vision_tf_transform.transform.rotation.z = vision_t_body.orientation.z;
-      vision_tf_transform.transform.rotation.w = vision_t_body.orientation.w;
-
-      auto& odom_tf_transform = realtime_tf_publisher_->msg_.transforms[1];
-      odom_tf_transform.header.stamp = time;
-
-      odom_tf_transform.transform.translation.x = vision_t_body.position.x;
-      odom_tf_transform.transform.translation.y = vision_t_body.position.y;
-      odom_tf_transform.transform.translation.z = vision_t_body.position.z;
-
-      odom_tf_transform.transform.rotation.x = vision_t_body.orientation.x;
-      odom_tf_transform.transform.rotation.y = vision_t_body.orientation.y;
-      odom_tf_transform.transform.rotation.z = vision_t_body.orientation.z;
-      odom_tf_transform.transform.rotation.w = vision_t_body.orientation.w;
-
-      realtime_tf_publisher_->unlockAndPublish();
-
-      tf_last_publish_time_ = time;
-    } else {
-      realtime_tf_publisher_->unlock();
-    }
+    realtime_tf_publisher_->unlockAndPublish();
   }
 
   return controller_interface::return_type::OK;
