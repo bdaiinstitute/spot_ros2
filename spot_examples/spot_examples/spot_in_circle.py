@@ -13,7 +13,6 @@ from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from rcl_interfaces.srv import GetParameters
 from rclpy.node import Node
-from std_srvs.srv import Trigger
 from synchros2.action_client import ActionClientWrapper
 from synchros2.service import Serviced
 from synchros2.tf_listener_wrapper import TFListenerWrapper
@@ -50,8 +49,6 @@ class SpotInCircle:
             RobotCommand, namespace_with(self._robot_name, "robot_command"), node
         )
 
-        self._arm_stow = Serviced(Trigger, namespace_with(self._robot_name, "arm_stow"), node=self.node)
-        self._arm_stow.wait_for_service(timeout_sec=5.0)
 
     def initialize_robot(self) -> bool:
         """Claim and power on the robot, then make it stand."""
@@ -224,7 +221,7 @@ class SpotInCircle:
                     self._logger.error("Unable to make the robot stop: " + result.message)
 
         if self.use_arm:
-            result = self._arm_stow(Trigger.Request(), timeout_sec=5.0)
+            result = self._robot.command("arm_stow")
             if not result.success:
                 self._logger.error("Unable to stow the arm: " + result.message)
         result = self._robot.command("sit")
