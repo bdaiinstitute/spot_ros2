@@ -18,6 +18,7 @@
 #include <optional>
 #include <string>
 
+#include <tf2/LinearMath/Transform.hpp>
 #include "controller_interface/controller_interface.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "rclcpp/publisher.hpp"
