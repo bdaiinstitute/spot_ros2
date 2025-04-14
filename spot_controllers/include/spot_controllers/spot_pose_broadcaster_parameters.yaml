@@ -1,4 +1,9 @@
 spot_pose_broadcaster:
+  use_namespace_as_prefix:
+    type: bool
+    default_value: true
+    description: "Flag to determine if the prefix of the sensor name should be picked up
+                  from the namespace of the controller."
   frame_id:
     type: string
     default_value: ""
@@ -11,6 +16,49 @@ spot_pose_broadcaster:
     description: "Base name used as prefix for controller interfaces. The state interface names are: ``<pose_name>/position.x, ..., <pose_name>/position.z, <pose_name>/orientation.x, ..., <pose_name>/orientation.w``"
     validation:
       not_empty<>: null
+
+  tf_enable:
+    type: bool
+    default_value: true
+    description: "Publish poses as TF transforms"
+
+
+  vision_t_body:
+    sensor_name:
+      type: string
+      default_value: "vision_t_body"
+      description: "The state interface names are: ``<pose_name>/position.x, ..., <pose_name>/position.z, <pose_name>/orientation.x, ..., <pose_name>/orientation.w``"
+    frame_name:
+      type: string
+      default_value: "low_level/vision"
+      description: "Name for the pose"
+    parent_frame_name:
+      type: string
+      default_value: "body"
+      description: "Name of the parent frame"
+    invert_tf:
+      type: bool
+      default_value: true
+      description: "whether to invert the transform, and publish body_t_vision (needed for a valid TF tree)"
+
+  odom_t_body:
+    sensor_name:
+      type: string
+      default_value: "odom_t_body"
+      description: "The state interface names are: ``<pose_name>/position.x, ..., <pose_name>/position.z, <pose_name>/orientation.x, ..., <pose_name>/orientation.w``"
+    frame_name:
+      type: string
+      default_value: "low_level/odom"
+      description: "Name for the pose"
+    parent_frame_name:
+      type: string
+      default_value: "body"
+      description: "Name of the parent frame"
+    invert:
+      type: bool
+      default_value: true
+      description: "whether to invert the transform, and publish body_t_odom (needed for a valid TF tree)"
+
   tf:
     enable:
       type: bool

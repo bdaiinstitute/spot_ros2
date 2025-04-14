@@ -103,7 +103,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
         },
         f"{prefix}spot_pose_broadcaster": {
             "ros__parameters": {
-                "pose_name": f"{prefix}vision_tform_body",
+                "pose_name": f"{prefix}low_level/vision",
                 "frame_id": f"{prefix}body",
                 "child_frame_id": f"{prefix}/low_level/vision",
             }
@@ -243,6 +243,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                         "joint_state_broadcaster",
                         "imu_sensor_broadcaster",
                         "foot_state_broadcaster",
+                        "spot_pose_broadcaster",
                         LaunchConfiguration("robot_controller"),
                     ],
                     namespace=spot_name,
