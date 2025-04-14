@@ -52,7 +52,8 @@ class SpotPoseBroadcaster : public controller_interface::ControllerInterface {
   std::shared_ptr<ParamListener> param_listener_;
   Params params_;
 
-  std::unique_ptr<semantic_components::PoseSensor> pose_sensor_;
+  std::unique_ptr<semantic_components::PoseSensor> vision_pose_sensor_;
+  std::unique_ptr<semantic_components::PoseSensor> odom_pose_sensor_;
 
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
   std::unique_ptr<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>> realtime_publisher_;
