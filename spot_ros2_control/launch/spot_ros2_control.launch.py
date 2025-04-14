@@ -46,6 +46,24 @@ LEG_JOINTS = [
 ARM_JOINTS = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1", "arm_f1x"]
 UPDATE_RATE_HZ = 333  # Update rate to use in the ROS 2 control config file
 
+# Ordered joint angles that follow the ordering from the URDF
+LEG_JOINTS = [
+    "front_left_hip_x",
+    "front_left_hip_y",
+    "front_left_knee",
+    "front_right_hip_x",
+    "front_right_hip_y",
+    "front_right_knee",
+    "rear_left_hip_x",
+    "rear_left_hip_y",
+    "rear_left_knee",
+    "rear_right_hip_x",
+    "rear_right_hip_y",
+    "rear_right_knee",
+]
+ARM_JOINTS = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1", "arm_f1x"]
+UPDATE_RATE_HZ = 333  # Update rate to use in the ROS 2 control config file
+
 
 def create_controllers_config(spot_name: str, has_arm: bool) -> str:
     """Writes a configuration file used to put the ros2 control nodes into a namespace.
@@ -53,6 +71,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
     must also reflect this same namespace when defining parameters of your controllers.
 
     Args:
+        spot_name (str): Name of spot, treated as a namespace and joint prefix.
         spot_name (str): Name of spot, treated as a namespace and joint prefix.
         has_arm (bool): Whether or not your robot has an arm. Necessary for defining the joints that the controllers
                         should use.
@@ -73,7 +92,6 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
                 "forward_position_controller": {"type": "forward_command_controller/ForwardCommandController"},
                 "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
                 "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
-                "foot_state_broadcaster": {"type": "spot_controllers/FootStateBroadcaster"},
                 "hardware_components_initial_state": {"unconfigured": ["SpotSystem"]},
             }
         },
