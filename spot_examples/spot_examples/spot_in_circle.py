@@ -15,20 +15,26 @@ from rclpy.node import Node
 from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import fqn, namespace_with
+from synchros2.service import Serviced
+from rcl_interfaces.srv import GetParameters
+
 
 from spot_msgs.action import RobotCommand  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
+from .simple_spot_commander import TRIGGER_SERVICES
 
 
 class SpotInCircle:
-    def __init__(self, robot_name: Optional[str] = None, node: Optional[Node] = None) -> None:
+    def __init__(self, robot_name: Optional[str] = None, radius: Optional[float] = None, steps: Optional[int] = None, node: Optional[Node] = None) -> None:
         self._logger = logging.getLogger(fqn(self.__class__))
         node = node or ros_scope.node()
+        self.node = node
         if node is None:
             raise ValueError("no ROS 2 node available (did you use synchros2.process.main?)")
         self._robot_name = robot_name
-
+        self._radius = radius
+        self._steps = steps
         self._body_frame_name = namespace_with(self._robot_name, BODY_FRAME_NAME)
         self._vision_frame_name = namespace_with(self._robot_name, VISION_FRAME_NAME)
         self._odom_frame_name = namespace_with(self._robot_name, ODOM_FRAME_NAME)
@@ -61,10 +67,29 @@ class SpotInCircle:
             return False
 
         self._logger.info("Successfully stood up.")
-        self.use_arm = True
-        if self.use_arm:
-            self._logger.info("[INFORMATION] You are using the arm")
+
+        self._get_spot_parameters: Serviced[GetParameters.Request, GetParameters.Response] = Serviced(
+                    GetParameters, namespace_with(self._robot_name, "spot_ros2/get_parameters"), node=self.node
+        )
+       
+        if not self._get_spot_parameters.wait_for_service(timeout_sec=5.0):
+            self._logger.error(f"No {self.robot_name} driver found, assuming there is no arm")
+            self.use_arm = False
+            
+        else:
+            response = self._get_spot_parameters(GetParameters.Request(names=["has_arm"]), timeout_sec=5.0)
+            param = response.values[0]
+            self.use_arm = param.bool_value
+            if self.use_arm:
+                self._logger.info("Arm is available, the arm will be used to gaze at the center of the circle")
+            else:
+                self._logger.info("Arm is not available")
+            if "arm_stow" not in TRIGGER_SERVICES:
+                TRIGGER_SERVICES.append("arm_stow")
+
         return True
+    
+
 
     def get_me_a_circle(self, radius: float = 1.0, steps: int = 4) -> List[List[float]]:
         """
@@ -155,28 +180,19 @@ class SpotInCircle:
         self._robot_command_client.send_goal_and_wait("walk_forward", action_goal)
         self._logger.info("Successfully walked forward")
 
-    def spot_in_a_circle(self) -> None:
+    def circle(self) -> None:
         """
         Moves Spot in a circle while gazing at a fixed point in the center.
         In this example, the robot moves clockwise in a circle with a radius of 1.2 meters, in 12 steps.
         """
         self._logger.info("Starting circular motion")
+        
 
-        # the radius is the distance from the robot to the center of the circle (body frame) in meters.
-        # negative sign indicates the robot is moving in a clockwise direction.
-        # positive sign indicates the robot is moving in a counter-clockwise direction.
-        radius = -1.2
-
-        # the number of steps to complete a full circle
-        # the more steps, the smoother the circle but the longer it takes
-        # The angle subtended at the center by each step is (2.math(pi) / steps) radians.
-        steps = 12
-
-        dx_all, dy_all, dyaw_all = self.get_me_a_circle(radius, steps)
+        dx_all, dy_all, dyaw_all = self.get_me_a_circle(self._radius, self._steps)
 
         if self.use_arm:
             # Convert target from body frame to odom frame
-            hand_pos_rt_body = geometry_pb2.Vec3(x=0.0, y=radius, z=0.1)
+            hand_pos_rt_body = geometry_pb2.Vec3(x=0.0, y=self._radius, z=0.1)
             body_Q_hand = geometry_pb2.Quaternion(w=1, x=0, y=0, z=0)
             body_t_hand = geometry_pb2.SE3Pose(position=hand_pos_rt_body, rotation=body_Q_hand)
 
@@ -200,22 +216,34 @@ class SpotInCircle:
                     self.gaze_at_center(gaze_target_in_odom)
                 self.base_movement(dx_all[i], dy_all[i], dyaw_all[i])
             finally:
+
                 result = self._robot.command("stop")
                 if not result.success:
                     self._logger.error("Unable to make the robot stop: " + result.message)
+
+        if self.use_arm:
+            result = self._robot.command("arm_stow")
+            if not result.success:
+                self._logger.error("Unable to stow the arm: " + result.message)
+        result = self._robot.command("sit")
+        if not result.success:
+            self._logger.error("Unable to sit the robot: " + result.message)
 
 
 def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--robot", type=str, default=None, help="Name/namespace of the Spot robot")
+    parser.add_argument("--radius", type=float, default=-1.0, help="Radius of the circle  in meters (negative radius value means clockwise circle, and vice versa)")
+    parser.add_argument("--steps", type=int, default=12, help="Number of steps to complete a circle")
     return parser
 
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> int:
-    goto = SpotInCircle(args.robot, main.node)
-    goto.initialize_robot()
-    goto.spot_in_a_circle()
+    goto = SpotInCircle(args.robot, args.radius, args.steps, main.node)
+    result = goto.initialize_robot()
+    if result:
+        goto.circle()
     return 0
 
 

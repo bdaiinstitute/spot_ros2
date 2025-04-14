@@ -24,7 +24,7 @@ It is built using the `synchros2` ROS 2 interface and uses `SimpleSpotCommander`
    - `claim` → claims control of the robot.
    - `power_on` → turns the robot on.
    - `stand` → commands the robot to stand up.
-4. If `use_arm = True`, the robot's arm is assumed to be active and used to point at a target (in this case, the center of the circular trajectory spot is moving in).
+4. If an arm is detected, the robot's arm is assumed to be active and used to point at a target (in this case, the center of the circular trajectory spot is moving in).
 
 ---
 
@@ -70,8 +70,13 @@ It is built using the `synchros2` ROS 2 interface and uses `SimpleSpotCommander`
 To run the script:
 
 ```bash
-ros2 run spot_examples spot_in_circle --robot <robot_name>
+ros2 run spot_examples spot_in_circle --robot <robot_name> --radius <radius> --steps <steps>
 ```
+
+- The radius is the distance from the robot to the center of the circle (body frame) in meters. Negative sign indicates the robot is moving in a clockwise direction. Positive sign indicates the robot is moving in a counter-clockwise direction.
+        
+
+ - Steps is the number of steps to complete a full circle. More steps make the circle smoother, but the motion takes longer to complete. The angle subtended at the center by each step is (2.math(pi) / steps) radians.
 
 ## Author(s)
 
