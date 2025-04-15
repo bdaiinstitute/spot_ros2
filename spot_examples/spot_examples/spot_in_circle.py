@@ -49,7 +49,6 @@ class SpotInCircle:
             RobotCommand, namespace_with(self._robot_name, "robot_command"), node
         )
 
-
     def initialize_robot(self) -> bool:
         """Claim and power on the robot, then make it stand."""
         self._logger.info(f"Robot name: {self._robot_name}")
