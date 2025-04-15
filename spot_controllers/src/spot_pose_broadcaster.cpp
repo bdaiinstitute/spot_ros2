@@ -169,17 +169,30 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
     for (size_t i = 0; i < poses.size(); i++) {
       const auto& current_pose = poses.at(i);
 
+      tf2::Transform tf;
+
+      tf2::fromMsg(current_pose, tf);
+
+      // invert the tf
+      const auto inverse_tf = tf.inverse();
+
+      // convert this to a tf2 transform?
+      geometry_msgs::msg::Transform tf_msg;
+      tf2::toMsg(inverse_tf, tf_msg);
+
       auto& tf_transform = realtime_tf_publisher_->msg_.transforms.at(i);
       tf_transform.header.stamp = time;
 
-      tf_transform.transform.translation.x = current_pose.position.x;
-      tf_transform.transform.translation.y = current_pose.position.y;
-      tf_transform.transform.translation.z = current_pose.position.z;
+      tf_transform.transform = tf_msg;
 
-      tf_transform.transform.rotation.x = current_pose.orientation.x;
-      tf_transform.transform.rotation.y = current_pose.orientation.y;
-      tf_transform.transform.rotation.z = current_pose.orientation.z;
-      tf_transform.transform.rotation.w = current_pose.orientation.w;
+      // tf_transform.transform.translation.x = current_pose.position.x;
+      // tf_transform.transform.translation.y = current_pose.position.y;
+      // tf_transform.transform.translation.z = current_pose.position.z;
+
+      // tf_transform.transform.rotation.x = current_pose.orientation.x;
+      // tf_transform.transform.rotation.y = current_pose.orientation.y;
+      // tf_transform.transform.rotation.z = current_pose.orientation.z;
+      // tf_transform.transform.rotation.w = current_pose.orientation.w;
 
       RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000,
                             "Transform %ld, [%f, %f, %f], [%f, %f, %f, %f]", i, tf_transform.transform.translation.x,
