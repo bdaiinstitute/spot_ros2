@@ -18,13 +18,14 @@
 #include <optional>
 #include <string>
 
-#include <tf2/LinearMath/Transform.hpp>
 #include "controller_interface/controller_interface.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/transform.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/realtime_publisher.hpp"
 #include "semantic_components/pose_sensor.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2_msgs/msg/tf_message.hpp"
 
 #include "spot_controllers/spot_pose_broadcaster_parameters.hpp"

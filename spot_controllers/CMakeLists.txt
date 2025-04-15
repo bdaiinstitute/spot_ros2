@@ -20,8 +20,10 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   rclcpp_lifecycle
   spot_msgs
+  tf2_geometry_msgs
   tf2_msgs
   tf2
+  geometry_msgs
 )
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
