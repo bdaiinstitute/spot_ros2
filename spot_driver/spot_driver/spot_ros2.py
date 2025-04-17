@@ -15,6 +15,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import builtin_interfaces.msg
+import numpy as np
 import rclpy
 import rclpy.duration
 import rclpy.time
@@ -26,6 +27,7 @@ from bosdyn.api import (
     gripper_camera_param_pb2,
     lease_pb2,
     manipulation_api_pb2,
+    point_cloud_pb2,
     robot_command_pb2,
     trajectory_pb2,
     world_object_pb2,
@@ -67,7 +69,7 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, PointCloud2, PointField
 from std_srvs.srv import SetBool, Trigger
 from synchros2.node import Node
 from synchros2.service import Serviced
@@ -375,6 +377,9 @@ class SpotROS(Node):
 
         self.declare_parameter("gripperless", False)
 
+        self.declare_parameter("velodyne", False)
+        self.velodyne = self.get_parameter("velodyne").value
+
         # When we send very long trajectories to Spot, we create batches of
         # given size. If we do not batch a long trajectory, Spot will reject it.
         self.declare_parameter(self.TRAJECTORY_BATCH_SIZE_PARAM, 100)
@@ -492,6 +497,10 @@ class SpotROS(Node):
             self.lease_pub: Publisher = self.create_publisher(LeaseArray, "status/leases", 1)
             self.rates["lease"] = self.declare_parameter("lease_rate", 1.0).value
             self.callbacks["lease"] = self.lease_callback
+
+        if self.velodyne:
+            self.callbacks["lidar_points"] = self.velodyne_cb
+            self.velodyne_pub: Publisher = self.create_publisher(PointCloud2, "velodyne/points", 10)
 
         name_str = ""
         if self.name is not None:
@@ -1090,6 +1099,59 @@ class SpotROS(Node):
                 lease_array_msg.resources.append(new_resource)
 
             self.lease_pub.publish(lease_array_msg)
+
+    def _get_point_cloud_msg(self, data: point_cloud_pb2.PointCloudResponse) -> PointCloud2:
+        """Takes the point cloud data and populates the necessary ROS messages
+
+        Args:
+            data: PointCloud proto (PointCloudResponse)
+            spot_wrapper: A SpotWrapper object
+        Returns:
+            PointCloud: ROS message of the point cloud (PointCloud2)
+        """
+        if self.spot_wrapper is None:
+            return
+        point_cloud_msg = PointCloud2()
+        local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
+        point_cloud_msg.header.stamp.sec = local_time.seconds
+        point_cloud_msg.header.stamp.nanosec = local_time.nanos
+        point_cloud_msg.header.frame_id = data.point_cloud.source.frame_name_sensor
+        if data.point_cloud.encoding == point_cloud_pb2.PointCloud.ENCODING_XYZ_32F:
+            point_cloud_msg.height = 1
+            point_cloud_msg.width = data.point_cloud.num_points
+            point_cloud_msg.fields = []
+            for i, ax in enumerate(("x", "y", "z")):
+                field = PointField()
+                field.name = ax
+                field.offset = i * 4
+                field.datatype = PointField.FLOAT32
+                field.count = 1
+                point_cloud_msg.fields.append(field)
+            point_cloud_msg.is_bigendian = False
+            point_cloud_np = np.frombuffer(data.point_cloud.data, dtype=np.uint8)
+            point_cloud_msg.point_step = 12  # float32 XYZ
+            point_cloud_msg.row_step = point_cloud_msg.width * point_cloud_msg.point_step
+            point_cloud_msg.data = point_cloud_np.tobytes()
+            point_cloud_msg.is_dense = True
+        else:
+            self.get_logger().warn("Not supported point cloud data type.")
+        return point_cloud_msg
+
+    def velodyne_callback(self, results: Any) -> None:
+        """Callback for when Spot Wrapper gets new velodyne point cloud data
+
+        Args:
+            results (Any): FutureWrapper object of AsyncPeriodicQuery callback
+        """
+        if self.spot_wrapper is None:
+            return
+
+        data = self.spot_wrapper.point_clouds
+        if data:
+            point_cloud_proto = data[0]
+            point_cloud_msg = self._get_point_cloud_msg(point_cloud_proto)
+            # convert this into point cloud 2
+            self.velodyne_pub.publish(point_cloud_msg)
 
     def publish_graph_nav_pose_callback(self) -> None:
         if self.spot_wrapper is None:
