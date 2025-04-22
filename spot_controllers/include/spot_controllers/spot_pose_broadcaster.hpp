@@ -54,6 +54,8 @@ class SpotPoseBroadcaster : public controller_interface::ControllerInterface {
   std::shared_ptr<ParamListener> param_listener_;
   Params params_;
 
+  std::string frame_prefix_;
+
   std::unique_ptr<semantic_components::PoseSensor> vision_pose_sensor_;
   std::unique_ptr<semantic_components::PoseSensor> odom_pose_sensor_;
 

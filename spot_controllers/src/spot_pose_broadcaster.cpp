@@ -74,21 +74,22 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
   RCLCPP_ERROR(get_node()->get_logger(), "odom tform body %s", params_.odom_t_body.sensor_name.c_str());
 
   const bool use_namespace_as_prefix = params_.use_namespace_as_prefix;
-  std::string frame_prefix = "";
+  frame_prefix_ = "";
   if (use_namespace_as_prefix) {
     // Grab the namespace from the node.
     const std::string node_namespace = get_node()->get_namespace();
     // namespace is "/" if there is none, else it's "/<namespace>". Erase the first char ("/") for easier parsing.
     const std::string trimmed_namespace = node_namespace.substr(1);
     // Now trimmed_namespace is either the empty string or "<namespace>"
-    frame_prefix = trimmed_namespace.empty() ? "" : trimmed_namespace + "/";
+    frame_prefix_ = trimmed_namespace.empty() ? "" : trimmed_namespace + "/";
     // And now sensor prefix is either "" or "<namespace>/"
   }
-  RCLCPP_ERROR(get_node()->get_logger(), "frame prefix %s", frame_prefix.c_str());
+  RCLCPP_ERROR(get_node()->get_logger(), "frame prefix %s", frame_prefix_.c_str());
 
   vision_pose_sensor_ =
-      std::make_unique<semantic_components::PoseSensor>(frame_prefix + params_.vision_t_body.sensor_name);
-  odom_pose_sensor_ = std::make_unique<semantic_components::PoseSensor>(frame_prefix + params_.odom_t_body.sensor_name);
+      std::make_unique<semantic_components::PoseSensor>(frame_prefix_ + params_.vision_t_body.sensor_name);
+  odom_pose_sensor_ =
+      std::make_unique<semantic_components::PoseSensor>(frame_prefix_ + params_.odom_t_body.sensor_name);
 
   try {
     vision_pose_publisher_ = get_node()->create_publisher<geometry_msgs::msg::PoseStamped>(
@@ -101,12 +102,10 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
     odom_realtime_publisher_ =
         std::make_unique<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>>(odom_pose_publisher_);
 
-    if (params_.tf_enable) {
-      tf_publisher_ =
-          get_node()->create_publisher<tf2_msgs::msg::TFMessage>(DEFAULT_TF_TOPIC, rclcpp::SystemDefaultsQoS());
-      realtime_tf_publisher_ =
-          std::make_unique<realtime_tools::RealtimePublisher<tf2_msgs::msg::TFMessage>>(tf_publisher_);
-    }
+    tf_publisher_ =
+        get_node()->create_publisher<tf2_msgs::msg::TFMessage>(DEFAULT_TF_TOPIC, rclcpp::SystemDefaultsQoS());
+    realtime_tf_publisher_ =
+        std::make_unique<realtime_tools::RealtimePublisher<tf2_msgs::msg::TFMessage>>(tf_publisher_);
   } catch (const std::exception& ex) {
     fprintf(stderr, "Exception thrown during publisher creation at configure stage with message: %s\n", ex.what());
     return controller_interface::CallbackReturn::ERROR;
@@ -114,24 +113,26 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
 
   // Initialize pose messages
   vision_realtime_publisher_->lock();
-  vision_realtime_publisher_->msg_.header.frame_id = params_.vision_t_body.parent_frame_name;
+  vision_realtime_publisher_->msg_.header.frame_id = frame_prefix_ + params_.vision_t_body.vision_frame_name;
   vision_realtime_publisher_->unlock();
   odom_realtime_publisher_->lock();
-  odom_realtime_publisher_->msg_.header.frame_id = params_.odom_t_body.parent_frame_name;
+  odom_realtime_publisher_->msg_.header.frame_id = frame_prefix_ + params_.odom_t_body.odom_frame_name;
   odom_realtime_publisher_->unlock();
 
   // Initialize tf message if tf publishing is enabled
   if (realtime_tf_publisher_) {
     realtime_tf_publisher_->lock();
-
     realtime_tf_publisher_->msg_.transforms.resize(2);
+    // vision transform
     auto& vision_tf_transform = realtime_tf_publisher_->msg_.transforms.at(0);
-    vision_tf_transform.header.frame_id = frame_prefix + params_.vision_t_body.parent_frame_name;
-    vision_tf_transform.child_frame_id = frame_prefix + params_.vision_t_body.frame_name;
-
+    // TF will be from body to vision to account for a valid TF tree
+    vision_tf_transform.header.frame_id = frame_prefix_ + params_.vision_t_body.body_frame_name;
+    vision_tf_transform.child_frame_id = frame_prefix_ + params_.vision_t_body.vision_frame_name;
+    // odom transform
     auto& odom_tf_transform = realtime_tf_publisher_->msg_.transforms.at(1);
-    odom_tf_transform.header.frame_id = frame_prefix + params_.odom_t_body.parent_frame_name;
-    odom_tf_transform.child_frame_id = frame_prefix + params_.odom_t_body.frame_name;
+    // TF will be from body to odom to account for a valid TF tree
+    odom_tf_transform.header.frame_id = frame_prefix_ + params_.odom_t_body.body_frame_name;
+    odom_tf_transform.child_frame_id = frame_prefix_ + params_.odom_t_body.odom_frame_name;
 
     realtime_tf_publisher_->unlock();
   }
@@ -171,28 +172,26 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
     odom_realtime_publisher_->unlockAndPublish();
   }
   if (!is_pose_valid(vision_t_body)) {
+    // invalid poses should not get published to TF
     RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000,
                           "Invalid pose [%f, %f, %f], [%f, %f, %f, %f]", vision_t_body.position.x,
                           vision_t_body.position.y, vision_t_body.position.z, vision_t_body.orientation.x,
                           vision_t_body.orientation.y, vision_t_body.orientation.z, vision_t_body.orientation.w);
   } else if (realtime_tf_publisher_ && realtime_tf_publisher_->trylock()) {
-    // FIXME consolidate logic
+    // Pose is valid, publish it to TF
     const std::vector<geometry_msgs::msg::Pose> poses = {vision_t_body, odom_t_body};
-
     for (size_t i = 0; i < poses.size(); i++) {
       const auto& current_pose = poses.at(i);
-
       tf2::Transform tf;
       tf2::fromMsg(current_pose, tf);
-      // invert the tf. (TODO: Should only do this if the param is set)
-      const auto inverse_tf = tf.inverse();
+      // invert the tf
+      tf = tf.inverse();
       // convert this to a tf2 transform
       geometry_msgs::msg::Transform tf_msg;
-      tf2::toMsg(inverse_tf, tf_msg);
+      tf2::toMsg(tf, tf_msg);
 
       auto& tf_transform = realtime_tf_publisher_->msg_.transforms.at(i);
       tf_transform.header.stamp = time;
-
       tf_transform.transform = tf_msg;
 
       RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000,
