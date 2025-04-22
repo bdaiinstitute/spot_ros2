@@ -57,8 +57,11 @@ class SpotPoseBroadcaster : public controller_interface::ControllerInterface {
   std::unique_ptr<semantic_components::PoseSensor> vision_pose_sensor_;
   std::unique_ptr<semantic_components::PoseSensor> odom_pose_sensor_;
 
-  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
-  std::unique_ptr<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>> realtime_publisher_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr vision_pose_publisher_;
+  std::unique_ptr<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>> vision_realtime_publisher_;
+
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr odom_pose_publisher_;
+  std::unique_ptr<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>> odom_realtime_publisher_;
 
   std::optional<rclcpp::Duration> tf_publish_period_;
   rclcpp::Time tf_last_publish_time_{0, 0, RCL_CLOCK_UNINITIALIZED};

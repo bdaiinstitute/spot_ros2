@@ -91,10 +91,15 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
   odom_pose_sensor_ = std::make_unique<semantic_components::PoseSensor>(frame_prefix + params_.odom_t_body.sensor_name);
 
   try {
-    pose_publisher_ =
-        get_node()->create_publisher<geometry_msgs::msg::PoseStamped>(DEFAULT_POSE_TOPIC, rclcpp::SystemDefaultsQoS());
-    realtime_publisher_ =
-        std::make_unique<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>>(pose_publisher_);
+    vision_pose_publisher_ = get_node()->create_publisher<geometry_msgs::msg::PoseStamped>(
+        "~/" + params_.vision_t_body.sensor_name, rclcpp::SystemDefaultsQoS());
+    vision_realtime_publisher_ =
+        std::make_unique<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>>(vision_pose_publisher_);
+
+    odom_pose_publisher_ = get_node()->create_publisher<geometry_msgs::msg::PoseStamped>(
+        "~/" + params_.odom_t_body.sensor_name, rclcpp::SystemDefaultsQoS());
+    odom_realtime_publisher_ =
+        std::make_unique<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>>(odom_pose_publisher_);
 
     if (params_.tf_enable) {
       tf_publisher_ =
@@ -107,10 +112,13 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
     return controller_interface::CallbackReturn::ERROR;
   }
 
-  // Initialize pose message
-  realtime_publisher_->lock();
-  realtime_publisher_->msg_.header.frame_id = params_.vision_t_body.parent_frame_name;
-  realtime_publisher_->unlock();
+  // Initialize pose messages
+  vision_realtime_publisher_->lock();
+  vision_realtime_publisher_->msg_.header.frame_id = params_.vision_t_body.parent_frame_name;
+  vision_realtime_publisher_->unlock();
+  odom_realtime_publisher_->lock();
+  odom_realtime_publisher_->msg_.header.frame_id = params_.odom_t_body.parent_frame_name;
+  odom_realtime_publisher_->unlock();
 
   // Initialize tf message if tf publishing is enabled
   if (realtime_tf_publisher_) {
@@ -152,10 +160,15 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
   vision_pose_sensor_->get_values_as_message(vision_t_body);
   odom_pose_sensor_->get_values_as_message(odom_t_body);
 
-  if (realtime_publisher_ && realtime_publisher_->trylock()) {
-    realtime_publisher_->msg_.header.stamp = time;
-    realtime_publisher_->msg_.pose = vision_t_body;
-    realtime_publisher_->unlockAndPublish();
+  if (vision_realtime_publisher_ && vision_realtime_publisher_->trylock()) {
+    vision_realtime_publisher_->msg_.header.stamp = time;
+    vision_realtime_publisher_->msg_.pose = vision_t_body;
+    vision_realtime_publisher_->unlockAndPublish();
+  }
+  if (odom_realtime_publisher_ && odom_realtime_publisher_->trylock()) {
+    odom_realtime_publisher_->msg_.header.stamp = time;
+    odom_realtime_publisher_->msg_.pose = odom_t_body;
+    odom_realtime_publisher_->unlockAndPublish();
   }
   if (!is_pose_valid(vision_t_body)) {
     RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000,
@@ -170,13 +183,10 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
       const auto& current_pose = poses.at(i);
 
       tf2::Transform tf;
-
       tf2::fromMsg(current_pose, tf);
-
-      // invert the tf
+      // invert the tf. (TODO: Should only do this if the param is set)
       const auto inverse_tf = tf.inverse();
-
-      // convert this to a tf2 transform?
+      // convert this to a tf2 transform
       geometry_msgs::msg::Transform tf_msg;
       tf2::toMsg(inverse_tf, tf_msg);
 
@@ -184,15 +194,6 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
       tf_transform.header.stamp = time;
 
       tf_transform.transform = tf_msg;
-
-      // tf_transform.transform.translation.x = current_pose.position.x;
-      // tf_transform.transform.translation.y = current_pose.position.y;
-      // tf_transform.transform.translation.z = current_pose.position.z;
-
-      // tf_transform.transform.rotation.x = current_pose.orientation.x;
-      // tf_transform.transform.rotation.y = current_pose.orientation.y;
-      // tf_transform.transform.rotation.z = current_pose.orientation.z;
-      // tf_transform.transform.rotation.w = current_pose.orientation.w;
 
       RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000,
                             "Transform %ld, [%f, %f, %f], [%f, %f, %f, %f]", i, tf_transform.transform.translation.x,

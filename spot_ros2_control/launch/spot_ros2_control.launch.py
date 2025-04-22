@@ -101,13 +101,6 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
                 "frame_id": f"{prefix}imu_sensor_frame",
             }
         },
-        f"{prefix}spot_pose_broadcaster": {
-            "ros__parameters": {
-                "pose_name": f"{prefix}low_level/vision",
-                "frame_id": f"{prefix}body",
-                "child_frame_id": f"{prefix}/low_level/vision",
-            }
-        },
     }
     with NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as out_file:
         yaml.dump(config, out_file)
