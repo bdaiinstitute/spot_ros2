@@ -155,6 +155,12 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_deactivate(
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
+void SpotPoseBroadcaster::log_pose(const geometry_msgs::msg::Pose& pose) {
+  RCLCPP_INFO_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000, "Pose: [%f, %f, %f], [%f, %f, %f, %f]",
+                       pose.position.x, pose.position.y, pose.position.z, pose.orientation.x, pose.orientation.y,
+                       pose.orientation.z, pose.orientation.w);
+}
+
 controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time& time,
                                                               const rclcpp::Duration& /*period*/) {
   geometry_msgs::msg::Pose vision_t_body, odom_t_body;
@@ -173,10 +179,8 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
   }
   if (!is_pose_valid(vision_t_body)) {
     // invalid poses should not get published to TF
-    RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000,
-                          "Invalid pose [%f, %f, %f], [%f, %f, %f, %f]", vision_t_body.position.x,
-                          vision_t_body.position.y, vision_t_body.position.z, vision_t_body.orientation.x,
-                          vision_t_body.orientation.y, vision_t_body.orientation.z, vision_t_body.orientation.w);
+    RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000, "Invalid vision_t_body");
+    log_pose(vision_t_body);
   } else if (realtime_tf_publisher_ && realtime_tf_publisher_->trylock()) {
     // Pose is valid, publish it to TF
     const std::vector<geometry_msgs::msg::Pose> poses = {vision_t_body, odom_t_body};

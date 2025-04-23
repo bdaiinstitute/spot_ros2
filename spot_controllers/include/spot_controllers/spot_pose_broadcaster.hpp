@@ -49,6 +49,9 @@ class SpotPoseBroadcaster : public controller_interface::ControllerInterface {
   controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
  private:
+  // Logs a ROS pose message to console
+  void log_pose(const geometry_msgs::msg::Pose& pose);
+
   using Params = spot_pose_broadcaster::Params;
   using ParamListener = spot_pose_broadcaster::ParamListener;
   std::shared_ptr<ParamListener> param_listener_;
