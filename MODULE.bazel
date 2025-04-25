@@ -4,14 +4,20 @@ module(
     compatibility_level = 1,
 )
 
-# set up to use our ros precompiled approach 
-# (currently sourced from ros-distroless, in the future from rules_bat)
-
-# first, we need distroless, to produce our lock file
-# Add rules_distroless, which is used for adding apt packages to docker images
-# https://github.com/GoogleContainerTools/rules_distroless
+############### BAZEL DEPS ########################
+bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(name = "rules_distroless", version = "0.5.1")
 
+# use rules_rai_ros
+# Until we have our own Bazel registry, this will need to be an override
+bazel_dep(name = "rules_rai_ros")
+git_override(
+    module_name = "rules_rai_ros",
+    commit = "5df35ca8bf39131a11d339a59ccf6f3439b9737a",
+    remote = "https://github.com/bdaiinstitute/rules_rai_ros.git",
+)
+
+############### DISTROLESS SETUP ##################
 apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
 apt.install(
     name = "jammy",
@@ -20,16 +26,9 @@ apt.install(
 )
 use_repo(apt, "jammy")
 
-# now we import the actual extension
-bazel_dep(name = "ros-distroless", version = "0.0.0")
-git_override(
-    module_name = "ros-distroless", 
-    remote = "https://github.com/bdaiinstitute/ros-distroless",
-    branch = "main"
-)
-# TODO(astout) This extension should be moved somewhere sensible
-# I also don't love the name of the extension, but that's bikeshedding for later
-ros = use_extension("@ros-distroless//:extensions.bzl", "ros")
+
+############### ROS SETUP #########################
+ros = use_extension("@rules_rai_ros//ros:extensions.bzl", "ros")
 ros.parse(
     name = "humble",
     lock = "//:jammy.lock.json",
@@ -41,38 +40,5 @@ ros.parse(
 )
 use_repo(ros, "humble")
 
-# the ros precompiled approach needs to patch rules_python, so this is required as well:
-############### PYTHON RULES ################
-# Add rules_python dependency to this project
-bazel_dep(name = "rules_python", version = "0.40.0")
 
-# TODO(astout) this works well, but is slightly inelegant. 
-# At some point we should put/apply the patch someplace centralized
-single_version_override(
-    module_name = "rules_python",
-    patches = ["//:rules_python.patch"],
-    patch_strip = 1,
-)
-# Configure the project-wide python toolchain
-project_python_version = "3.10"
-
-python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(
-    configure_coverage_tool = True,
-    is_default = True,
-    python_version = project_python_version,
-)
-use_repo(python, "python_3_10")
-
-# Configure project-wide pip requirements
-project_pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-project_pip.parse(
-    hub_name = "pip",
-    python_version = project_python_version,
-    requirements_lock = "//:requirements.lock",
-)
-use_repo(project_pip, "pip")
-
-############### C++ RULES ################
-bazel_dep(name = "rules_cc", version = "0.1.1")
 
