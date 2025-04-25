@@ -4,13 +4,44 @@ module(
     compatibility_level = 1,
 )
 
-# TODO(astout) distroless example adds aspect rules here; I just want to confirm why they're needed before I add them
+# set up to use our ros precompiled approach 
+# (currently sourced from ros-distroless, in the future from rules_bat)
 
-# TODO(astout) ditto for PKG rules
+# first, we need distroless, to produce our lock file
+# Add rules_distroless, which is used for adding apt packages to docker images
+# https://github.com/GoogleContainerTools/rules_distroless
+bazel_dep(name = "rules_distroless", version = "0.5.1")
 
-############### C++ RULES ################
-bazel_dep(name = "rules_cc", version = "0.1.1")
+apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
+apt.install(
+    name = "jammy",
+    lock = "//:jammy.lock.json",
+    manifest = "//:jammy.yaml",
+)
+use_repo(apt, "jammy")
 
+# now we import the actual extension
+bazel_dep(name = "ros-distroless", version = "0.0.0")
+git_override(
+    module_name = "ros-distroless", 
+    remote = "https://github.com/bdaiinstitute/ros-distroless",
+    branch = "main"
+)
+# TODO(astout) This extension should be moved somewhere sensible
+# I also don't love the name of the extension, but that's bikeshedding for later
+ros = use_extension("@ros-distroless//:extensions.bzl", "ros")
+ros.parse(
+    name = "humble",
+    lock = "//:jammy.lock.json",
+    non_ros_deps = [
+        "libspdlog1",
+        "libfmt8",
+        "libtinyxml2-9",
+    ],
+)
+use_repo(ros, "humble")
+
+# the ros precompiled approach needs to patch rules_python, so this is required as well:
 ############### PYTHON RULES ################
 # Add rules_python dependency to this project
 bazel_dep(name = "rules_python", version = "0.40.0")
@@ -22,7 +53,6 @@ single_version_override(
     patches = ["//:rules_python.patch"],
     patch_strip = 1,
 )
-
 # Configure the project-wide python toolchain
 project_python_version = "3.10"
 
@@ -43,31 +73,6 @@ project_pip.parse(
 )
 use_repo(project_pip, "pip")
 
-############ DISTROLESS RULES ################
-# Add rules_distroless, which is used for adding apt packages to docker images
-# https://github.com/GoogleContainerTools/rules_distroless
-bazel_dep(name = "rules_distroless", version = "0.5.1")
+############### C++ RULES ################
+bazel_dep(name = "rules_cc", version = "0.1.1")
 
-apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
-apt.install(
-    name = "jammy",
-    lock = "//:jammy.lock.json",
-    manifest = "//:jammy.yaml",
-)
-use_repo(apt, "jammy")
-
-# TODO(astout) Do we actually need rules OCI?
-
-# TODO(astout) This extension should be moved somewhere sensible
-# I also don't love the name of the extension, but that's bikeshedding for later
-ros = use_extension("@spot_ros2//rules_bat:extensions.bzl", "ros")
-ros.parse(
-    name = "humble",
-    lock = "//:jammy.lock.json",
-    non_ros_deps = [
-        "libspdlog1",
-        "libfmt8",
-        "libtinyxml2-9",
-    ],
-)
-use_repo(ros, "humble")
