@@ -40,7 +40,7 @@ from bosdyn.client import math_helpers
 from bosdyn.client.async_tasks import AsyncPeriodicQuery
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn.client.lease import Lease, LeaseWallet
-from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
+from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg, bosdyn_pose_to_tf
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
@@ -56,11 +56,7 @@ from bosdyn_msgs.msg import (
     RobotCommandFeedback,
     RobotCommandFeedbackStatusStatus,
 )
-from geometry_msgs.msg import (
-    Pose,
-    PoseStamped,
-    Twist,
-)
+from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -434,6 +430,7 @@ class SpotROS(Node):
         if self.use_velodyne:
             self.callbacks["lidar_points"] = self.velodyne_callback
             self.velodyne_pub: Publisher = self.create_publisher(PointCloud2, "velodyne/points", 10)
+            self.velodyne_static_tf_broadcaster = tf2_ros.StaticTransformBroadcaster(self)
             self.rates["point_cloud"] = self.get_parameter("velodyne_rate").value
 
         max_task_rate = float(max(self.rates.values()))
@@ -1118,7 +1115,7 @@ class SpotROS(Node):
         local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
         point_cloud_msg.header.stamp.sec = local_time.seconds
         point_cloud_msg.header.stamp.nanosec = local_time.nanos
-        point_cloud_msg.header.frame_id = data.point_cloud.source.frame_name_sensor
+        point_cloud_msg.header.frame_id = self.frame_prefix + data.point_cloud.source.frame_name_sensor
         if data.point_cloud.encoding == point_cloud_pb2.PointCloud.ENCODING_XYZ_32F:
             point_cloud_msg.height = 1
             point_cloud_msg.width = data.point_cloud.num_points
@@ -1140,6 +1137,26 @@ class SpotROS(Node):
             self.get_logger().warn("Not supported point cloud data type.")
         return point_cloud_msg
 
+    def _get_velodyne_tf(self, data: point_cloud_pb2.PointCloudResponse) -> TransformStamped:
+        if self.spot_wrapper is None:
+            return
+        snapshot = data.point_cloud.source.transforms_snapshot.child_to_parent_edge_map
+        # The goal here is to only publish the TF of the sensor frame name, otherwise we will have duplicate static TFs
+        # from the C++ state publishers
+        sensor_frame = data.point_cloud.source.frame_name_sensor
+        transform = snapshot.get(sensor_frame)
+        parent_frame = transform.parent_frame_name
+        parent_t_sensor: geometry_pb2.SE3Pose = transform.parent_tform_child
+        tf = bosdyn_pose_to_tf(
+            frame_t_pose=parent_t_sensor,
+            frame=self.frame_prefix + parent_frame,
+            child_frame=self.frame_prefix + sensor_frame,
+        )
+        local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
+        tf.header.stamp.sec = local_time.seconds
+        tf.header.stamp.nanosec = local_time.nanos
+        return tf
+
     def velodyne_callback(self, results: Any) -> None:
         """Callback for when Spot Wrapper gets new velodyne point cloud data
 
@@ -1152,9 +1169,12 @@ class SpotROS(Node):
         data = self.spot_wrapper.point_clouds
         if data:
             point_cloud_proto = data[0]
+            # convert proto into PointCloud2
             point_cloud_msg = self._get_point_cloud_msg(point_cloud_proto)
-            # convert this into point cloud 2
             self.velodyne_pub.publish(point_cloud_msg)
+            # get the static transform
+            tf = self._get_velodyne_tf(data[0])
+            self.velodyne_static_tf_broadcaster.sendTransform(tf)
 
     def publish_graph_nav_pose_callback(self) -> None:
         if self.spot_wrapper is None:
