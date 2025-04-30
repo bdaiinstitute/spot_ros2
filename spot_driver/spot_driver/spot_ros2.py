@@ -377,7 +377,7 @@ class SpotROS(Node):
 
         self.declare_parameter("gripperless", False)
 
-        self.declare_parameter("velodyne", False)
+        self.declare_parameter("use_velodyne", False)
         self.declare_parameter("velodyne_rate", 10.0)
 
         # When we send very long trajectories to Spot, we create batches of
@@ -430,12 +430,11 @@ class SpotROS(Node):
             "graph_nav_pose": self.get_parameter("graph_nav_pose_rate").value,
         }
 
-        self.velodyne = self.get_parameter("velodyne").value
-        self.velodyne_rate = self.get_parameter("velodyne_rate").value
-        if self.velodyne:
+        self.use_velodyne = self.get_parameter("use_velodyne").value
+        if self.use_velodyne:
             self.callbacks["lidar_points"] = self.velodyne_callback
             self.velodyne_pub: Publisher = self.create_publisher(PointCloud2, "velodyne/points", 10)
-            self.rates["point_cloud"] = self.velodyne_rate
+            self.rates["point_cloud"] = self.get_parameter("velodyne_rate").value
 
         max_task_rate = float(max(self.rates.values()))
 
