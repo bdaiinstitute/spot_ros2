@@ -1146,15 +1146,15 @@ class SpotROS(Node):
         sensor_frame = data.point_cloud.source.frame_name_sensor
         transform = snapshot.get(sensor_frame)
         parent_frame = transform.parent_frame_name
-        parent_t_sensor: geometry_pb2.SE3Pose = transform.parent_tform_child
+        parent_t_sensor = transform.parent_tform_child
+        local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
+        local_time_msg = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
         tf = bosdyn_pose_to_tf(
             frame_t_pose=parent_t_sensor,
             frame=self.frame_prefix + parent_frame,
             child_frame=self.frame_prefix + sensor_frame,
+            local_stamp=local_time_msg,
         )
-        local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
-        tf.header.stamp.sec = local_time.seconds
-        tf.header.stamp.nanosec = local_time.nanos
         return tf
 
     def velodyne_callback(self, results: Any) -> None:
