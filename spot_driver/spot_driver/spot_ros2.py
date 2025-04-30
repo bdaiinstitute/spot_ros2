@@ -378,7 +378,7 @@ class SpotROS(Node):
         self.declare_parameter("gripperless", False)
 
         self.declare_parameter("velodyne", False)
-        self.velodyne = self.get_parameter("velodyne").value
+        self.declare_parameter("velodyne_rate", 10.0)
 
         # When we send very long trajectories to Spot, we create batches of
         # given size. If we do not batch a long trajectory, Spot will reject it.
@@ -429,6 +429,14 @@ class SpotROS(Node):
             "world_objects": self.get_parameter("world_objects_rate").value,
             "graph_nav_pose": self.get_parameter("graph_nav_pose_rate").value,
         }
+
+        self.velodyne = self.get_parameter("velodyne").value
+        self.velodyne_rate = self.get_parameter("velodyne_rate").value
+        if self.velodyne:
+            self.callbacks["lidar_points"] = self.velodyne_callback
+            self.velodyne_pub: Publisher = self.create_publisher(PointCloud2, "velodyne/points", 10)
+            self.rates["point_cloud"] = self.velodyne_rate
+
         max_task_rate = float(max(self.rates.values()))
 
         self.declare_parameter("async_tasks_rate", max_task_rate)
@@ -497,10 +505,6 @@ class SpotROS(Node):
             self.lease_pub: Publisher = self.create_publisher(LeaseArray, "status/leases", 1)
             self.rates["lease"] = self.declare_parameter("lease_rate", 1.0).value
             self.callbacks["lease"] = self.lease_callback
-
-        if self.velodyne:
-            self.callbacks["lidar_points"] = self.velodyne_cb
-            self.velodyne_pub: Publisher = self.create_publisher(PointCloud2, "velodyne/points", 10)
 
         name_str = ""
         if self.name is not None:
