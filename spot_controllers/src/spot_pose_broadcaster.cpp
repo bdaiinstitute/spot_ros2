@@ -1,3 +1,7 @@
+// File modified. Modifications Copyright (c) 2025 Boston Dynamics AI Institute LLC.
+// All rights reserved.
+
+// --------------------------------------------------------------
 // Copyright 2024 FZI Forschungszentrum Informatik
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
