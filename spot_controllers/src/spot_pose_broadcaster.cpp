@@ -43,11 +43,9 @@ controller_interface::InterfaceConfiguration SpotPoseBroadcaster::state_interfac
   controller_interface::InterfaceConfiguration state_interfaces_config;
   state_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
   for (const auto& interface : vision_pose_sensor_->get_state_interface_names()) {
-    RCLCPP_ERROR(get_node()->get_logger(), "vision interface %s", interface.c_str());
     state_interfaces_config.names.emplace_back(interface);
   }
   for (const auto& interface : odom_pose_sensor_->get_state_interface_names()) {
-    RCLCPP_ERROR(get_node()->get_logger(), "odom interface %s", interface.c_str());
     state_interfaces_config.names.emplace_back(interface);
   }
 
@@ -73,8 +71,8 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
   const std::string vision_t_body_sensor_name = params_.vision_t_body_sensor;
   const std::string odom_t_body_sensor_name = params_.odom_t_body_sensor;
 
-  RCLCPP_ERROR(get_node()->get_logger(), "vision_t_body sensor name: %s", vision_t_body_sensor_name.c_str());
-  RCLCPP_ERROR(get_node()->get_logger(), "odom_t_body sensor name: %s", odom_t_body_sensor_name.c_str());
+  RCLCPP_INFO(get_node()->get_logger(), "vision_t_body sensor name: '%s'", vision_t_body_sensor_name.c_str());
+  RCLCPP_INFO(get_node()->get_logger(), "odom_t_body sensor name: '%s'", odom_t_body_sensor_name.c_str());
 
   const bool use_namespace_as_prefix = params_.use_namespace_as_prefix;
   frame_prefix_ = "";
@@ -87,7 +85,7 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
     frame_prefix_ = trimmed_namespace.empty() ? "" : trimmed_namespace + "/";
     // And now sensor prefix is either "" or "<namespace>/"
   }
-  RCLCPP_ERROR(get_node()->get_logger(), "frame prefix %s", frame_prefix_.c_str());
+  RCLCPP_INFO(get_node()->get_logger(), "Using frame prefix: '%s'", frame_prefix_.c_str());
 
   vision_pose_sensor_ = std::make_unique<semantic_components::PoseSensor>(frame_prefix_ + vision_t_body_sensor_name);
   odom_pose_sensor_ = std::make_unique<semantic_components::PoseSensor>(frame_prefix_ + odom_t_body_sensor_name);
@@ -178,10 +176,13 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
     odom_realtime_publisher_->msg_.pose = odom_t_body;
     odom_realtime_publisher_->unlockAndPublish();
   }
+  // invalid poses should not get published to TF
   if (!is_pose_valid(vision_t_body)) {
-    // invalid poses should not get published to TF
-    RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000, "Invalid vision_t_body");
+    RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000, "Invalid vision_t_body!");
     log_pose(vision_t_body);
+  } else if (!is_pose_valid(odom_t_body)) {
+    RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000, "Invalid odom_t_body!");
+    log_pose(odom_t_body);
   } else if (realtime_tf_publisher_ && realtime_tf_publisher_->trylock()) {
     // Pose is valid, publish it to TF
     const std::vector<geometry_msgs::msg::Pose> poses = {vision_t_body, odom_t_body};
@@ -189,21 +190,14 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
       const auto& current_pose = poses.at(i);
       tf2::Transform tf;
       tf2::fromMsg(current_pose, tf);
-      // invert the tf
+      // invert the tf in order to ensure a valid TF tree
       tf = tf.inverse();
       // convert this to a tf2 transform
       geometry_msgs::msg::Transform tf_msg;
       tf2::toMsg(tf, tf_msg);
-
       auto& tf_transform = realtime_tf_publisher_->msg_.transforms.at(i);
       tf_transform.header.stamp = time;
       tf_transform.transform = tf_msg;
-
-      RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000,
-                            "Transform %ld, [%f, %f, %f], [%f, %f, %f, %f]", i, tf_transform.transform.translation.x,
-                            tf_transform.transform.translation.y, tf_transform.transform.translation.z,
-                            tf_transform.transform.rotation.x, tf_transform.transform.rotation.y,
-                            tf_transform.transform.rotation.z, tf_transform.transform.rotation.w);
     }
     realtime_tf_publisher_->unlockAndPublish();
   }
