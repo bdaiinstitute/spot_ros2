@@ -70,8 +70,11 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
     const rclcpp_lifecycle::State& /*previous_state*/) {
   params_ = param_listener_->get_params();
 
-  RCLCPP_ERROR(get_node()->get_logger(), "vision tform body %s", params_.vision_t_body.sensor_name.c_str());
-  RCLCPP_ERROR(get_node()->get_logger(), "odom tform body %s", params_.odom_t_body.sensor_name.c_str());
+  const std::string vision_t_body_sensor_name = params_.vision_t_body_sensor;
+  const std::string odom_t_body_sensor_name = params_.odom_t_body_sensor;
+
+  RCLCPP_ERROR(get_node()->get_logger(), "vision_t_body sensor name: %s", vision_t_body_sensor_name.c_str());
+  RCLCPP_ERROR(get_node()->get_logger(), "odom_t_body sensor name: %s", odom_t_body_sensor_name.c_str());
 
   const bool use_namespace_as_prefix = params_.use_namespace_as_prefix;
   frame_prefix_ = "";
@@ -86,19 +89,17 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
   }
   RCLCPP_ERROR(get_node()->get_logger(), "frame prefix %s", frame_prefix_.c_str());
 
-  vision_pose_sensor_ =
-      std::make_unique<semantic_components::PoseSensor>(frame_prefix_ + params_.vision_t_body.sensor_name);
-  odom_pose_sensor_ =
-      std::make_unique<semantic_components::PoseSensor>(frame_prefix_ + params_.odom_t_body.sensor_name);
+  vision_pose_sensor_ = std::make_unique<semantic_components::PoseSensor>(frame_prefix_ + vision_t_body_sensor_name);
+  odom_pose_sensor_ = std::make_unique<semantic_components::PoseSensor>(frame_prefix_ + odom_t_body_sensor_name);
 
   try {
     vision_pose_publisher_ = get_node()->create_publisher<geometry_msgs::msg::PoseStamped>(
-        "~/" + params_.vision_t_body.sensor_name, rclcpp::SystemDefaultsQoS());
+        "~/" + vision_t_body_sensor_name, rclcpp::SystemDefaultsQoS());
     vision_realtime_publisher_ =
         std::make_unique<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>>(vision_pose_publisher_);
 
-    odom_pose_publisher_ = get_node()->create_publisher<geometry_msgs::msg::PoseStamped>(
-        "~/" + params_.odom_t_body.sensor_name, rclcpp::SystemDefaultsQoS());
+    odom_pose_publisher_ = get_node()->create_publisher<geometry_msgs::msg::PoseStamped>("~/" + odom_t_body_sensor_name,
+                                                                                         rclcpp::SystemDefaultsQoS());
     odom_realtime_publisher_ =
         std::make_unique<realtime_tools::RealtimePublisher<geometry_msgs::msg::PoseStamped>>(odom_pose_publisher_);
 
@@ -113,10 +114,10 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
 
   // Initialize pose messages
   vision_realtime_publisher_->lock();
-  vision_realtime_publisher_->msg_.header.frame_id = frame_prefix_ + params_.vision_t_body.vision_frame_name;
+  vision_realtime_publisher_->msg_.header.frame_id = frame_prefix_ + params_.vision_frame_name;
   vision_realtime_publisher_->unlock();
   odom_realtime_publisher_->lock();
-  odom_realtime_publisher_->msg_.header.frame_id = frame_prefix_ + params_.odom_t_body.odom_frame_name;
+  odom_realtime_publisher_->msg_.header.frame_id = frame_prefix_ + params_.odom_frame_name;
   odom_realtime_publisher_->unlock();
 
   // Initialize tf message if tf publishing is enabled
@@ -126,13 +127,13 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
     // vision transform
     auto& vision_tf_transform = realtime_tf_publisher_->msg_.transforms.at(0);
     // TF will be from body to vision to account for a valid TF tree
-    vision_tf_transform.header.frame_id = frame_prefix_ + params_.vision_t_body.body_frame_name;
-    vision_tf_transform.child_frame_id = frame_prefix_ + params_.vision_t_body.vision_frame_name;
+    vision_tf_transform.header.frame_id = frame_prefix_ + params_.body_frame_name;
+    vision_tf_transform.child_frame_id = frame_prefix_ + params_.vision_frame_name;
     // odom transform
     auto& odom_tf_transform = realtime_tf_publisher_->msg_.transforms.at(1);
     // TF will be from body to odom to account for a valid TF tree
-    odom_tf_transform.header.frame_id = frame_prefix_ + params_.odom_t_body.body_frame_name;
-    odom_tf_transform.child_frame_id = frame_prefix_ + params_.odom_t_body.odom_frame_name;
+    odom_tf_transform.header.frame_id = frame_prefix_ + params_.body_frame_name;
+    odom_tf_transform.child_frame_id = frame_prefix_ + params_.odom_frame_name;
 
     realtime_tf_publisher_->unlock();
   }
