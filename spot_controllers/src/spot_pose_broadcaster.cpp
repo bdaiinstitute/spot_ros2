@@ -21,7 +21,6 @@
 
 namespace {
 
-constexpr auto DEFAULT_POSE_TOPIC = "~/pose";
 constexpr auto DEFAULT_TF_TOPIC = "/tf";
 
 }  // namespace
@@ -32,7 +31,6 @@ bool is_pose_valid(const geometry_msgs::msg::Pose& pose) {
   return std::isfinite(pose.position.x) && std::isfinite(pose.position.y) && std::isfinite(pose.position.z) &&
          std::isfinite(pose.orientation.x) && std::isfinite(pose.orientation.y) && std::isfinite(pose.orientation.z) &&
          std::isfinite(pose.orientation.w) &&
-
          std::abs(pose.orientation.x * pose.orientation.x + pose.orientation.y * pose.orientation.y +
                   pose.orientation.z * pose.orientation.z + pose.orientation.w * pose.orientation.w - 1.0) <= 10e-3;
 }
@@ -59,7 +57,6 @@ controller_interface::InterfaceConfiguration SpotPoseBroadcaster::state_interfac
 controller_interface::CallbackReturn SpotPoseBroadcaster::on_init() {
   try {
     param_listener_ = std::make_shared<ParamListener>(get_node());
-    params_ = param_listener_->get_params();
   } catch (const std::exception& ex) {
     fprintf(stderr, "Exception thrown during init stage with message: %s\n", ex.what());
     return controller_interface::CallbackReturn::ERROR;
@@ -70,7 +67,12 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_init() {
 
 controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
     const rclcpp_lifecycle::State& /*previous_state*/) {
-  params_ = param_listener_->get_params();
+  try {
+    params_ = param_listener_->get_params();
+  } catch (const std::exception& ex) {
+    RCLCPP_FATAL(get_node()->get_logger(), "failed to validate parameters: '%s'", ex.what());
+    return controller_interface::CallbackReturn::ERROR;
+  }
 
   const std::string vision_t_body_sensor_name = params_.vision_t_body_sensor;
   const std::string odom_t_body_sensor_name = params_.odom_t_body_sensor;
@@ -78,9 +80,8 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
   RCLCPP_INFO(get_node()->get_logger(), "vision_t_body sensor name: '%s'", vision_t_body_sensor_name.c_str());
   RCLCPP_INFO(get_node()->get_logger(), "odom_t_body sensor name: '%s'", odom_t_body_sensor_name.c_str());
 
-  const bool use_namespace_as_prefix = params_.use_namespace_as_prefix;
   frame_prefix_ = "";
-  if (use_namespace_as_prefix) {
+  if (params_.use_namespace_as_prefix) {
     // Grab the namespace from the node.
     const std::string node_namespace = get_node()->get_namespace();
     // namespace is "/" if there is none, else it's "/<namespace>". Erase the first char ("/") for easier parsing.
@@ -122,23 +123,20 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
   odom_realtime_publisher_->msg_.header.frame_id = frame_prefix_ + params_.odom_frame_name;
   odom_realtime_publisher_->unlock();
 
-  // Initialize tf message if tf publishing is enabled
-  if (realtime_tf_publisher_) {
-    realtime_tf_publisher_->lock();
-    realtime_tf_publisher_->msg_.transforms.resize(2);
-    // vision transform
-    auto& vision_tf_transform = realtime_tf_publisher_->msg_.transforms.at(0);
-    // TF will be from body to vision to account for a valid TF tree
-    vision_tf_transform.header.frame_id = frame_prefix_ + params_.body_frame_name;
-    vision_tf_transform.child_frame_id = frame_prefix_ + params_.vision_frame_name;
-    // odom transform
-    auto& odom_tf_transform = realtime_tf_publisher_->msg_.transforms.at(1);
-    // TF will be from body to odom to account for a valid TF tree
-    odom_tf_transform.header.frame_id = frame_prefix_ + params_.body_frame_name;
-    odom_tf_transform.child_frame_id = frame_prefix_ + params_.odom_frame_name;
-
-    realtime_tf_publisher_->unlock();
-  }
+  // Initialize tf messages
+  realtime_tf_publisher_->lock();
+  realtime_tf_publisher_->msg_.transforms.resize(2);
+  // vision transform
+  auto& vision_tf_transform = realtime_tf_publisher_->msg_.transforms.at(0);
+  // TF will be from body to vision to account for a valid TF tree
+  vision_tf_transform.header.frame_id = frame_prefix_ + params_.body_frame_name;
+  vision_tf_transform.child_frame_id = frame_prefix_ + params_.vision_frame_name;
+  // odom transform
+  auto& odom_tf_transform = realtime_tf_publisher_->msg_.transforms.at(1);
+  // TF will be from body to odom to account for a valid TF tree
+  odom_tf_transform.header.frame_id = frame_prefix_ + params_.body_frame_name;
+  odom_tf_transform.child_frame_id = frame_prefix_ + params_.odom_frame_name;
+  realtime_tf_publisher_->unlock();
 
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -146,7 +144,6 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
 controller_interface::CallbackReturn SpotPoseBroadcaster::on_activate(
     const rclcpp_lifecycle::State& /*previous_state*/) {
   vision_pose_sensor_->assign_loaned_state_interfaces(state_interfaces_);
-  // FIXME this seems wrong, each sensor has a different set of state interfaces, but seems to work
   odom_pose_sensor_->assign_loaned_state_interfaces(state_interfaces_);
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -170,12 +167,12 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
   vision_pose_sensor_->get_values_as_message(vision_t_body);
   odom_pose_sensor_->get_values_as_message(odom_t_body);
 
-  if (vision_realtime_publisher_ && vision_realtime_publisher_->trylock()) {
+  if (vision_realtime_publisher_->trylock()) {
     vision_realtime_publisher_->msg_.header.stamp = time;
     vision_realtime_publisher_->msg_.pose = vision_t_body;
     vision_realtime_publisher_->unlockAndPublish();
   }
-  if (odom_realtime_publisher_ && odom_realtime_publisher_->trylock()) {
+  if (odom_realtime_publisher_->trylock()) {
     odom_realtime_publisher_->msg_.header.stamp = time;
     odom_realtime_publisher_->msg_.pose = odom_t_body;
     odom_realtime_publisher_->unlockAndPublish();
@@ -187,7 +184,7 @@ controller_interface::return_type SpotPoseBroadcaster::update(const rclcpp::Time
   } else if (!is_pose_valid(odom_t_body)) {
     RCLCPP_ERROR_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000, "Invalid odom_t_body!");
     log_pose(odom_t_body);
-  } else if (realtime_tf_publisher_ && realtime_tf_publisher_->trylock()) {
+  } else if (realtime_tf_publisher_->trylock()) {
     // Pose is valid, publish it to TF
     const std::vector<geometry_msgs::msg::Pose> poses = {vision_t_body, odom_t_body};
     for (size_t i = 0; i < poses.size(); i++) {
