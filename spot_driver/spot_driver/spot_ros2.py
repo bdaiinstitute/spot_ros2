@@ -1100,21 +1100,19 @@ class SpotROS(Node):
 
             self.lease_pub.publish(lease_array_msg)
 
-    def _get_point_cloud_msg(self, data: point_cloud_pb2.PointCloudResponse) -> PointCloud2:
-        """Takes the point cloud data and populates the necessary ROS messages
+    def _get_point_cloud_msg(
+        self, data: point_cloud_pb2.PointCloudResponse, local_time_msg: builtin_interfaces.msg.Time
+    ) -> PointCloud2:
+        """Takes the point cloud data and populates the point cloud ROS message
 
         Args:
             data: PointCloud proto (PointCloudResponse)
-            spot_wrapper: A SpotWrapper object
+            local_time_msg: Timestamp of the point cloud data as a ROS message
         Returns:
-            PointCloud: ROS message of the point cloud (PointCloud2)
+            PointCloud: ROS PointCloud2 message of the data
         """
-        if self.spot_wrapper is None:
-            return
         point_cloud_msg = PointCloud2()
-        local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
-        point_cloud_msg.header.stamp.sec = local_time.seconds
-        point_cloud_msg.header.stamp.nanosec = local_time.nanos
+        point_cloud_msg.header.stamp = local_time_msg
         point_cloud_msg.header.frame_id = self.frame_prefix + data.point_cloud.source.frame_name_sensor
         if data.point_cloud.encoding == point_cloud_pb2.PointCloud.ENCODING_XYZ_32F:
             point_cloud_msg.height = 1
@@ -1137,9 +1135,17 @@ class SpotROS(Node):
             self.get_logger().warn("Not supported point cloud data type.")
         return point_cloud_msg
 
-    def _get_velodyne_tf(self, data: point_cloud_pb2.PointCloudResponse) -> TransformStamped:
-        if self.spot_wrapper is None:
-            return
+    def _get_velodyne_tf(
+        self, data: point_cloud_pb2.PointCloudResponse, local_time_msg: builtin_interfaces.msg.Time
+    ) -> TransformStamped:
+        """Takes the point cloud data and populates the point cloud sensor frame transform
+
+        Args:
+            data: PointCloud proto (PointCloudResponse)
+            local_time_msg: Timestamp of the point cloud data as a ROS message
+        Returns:
+            PointCloud: ROS TransformStamped message containing only the transform of the point cloud sensor frame
+        """
         snapshot = data.point_cloud.source.transforms_snapshot.child_to_parent_edge_map
         # The goal here is to only publish the TF of the sensor frame name, otherwise we will have duplicate static TFs
         # from the C++ state publishers
@@ -1147,8 +1153,6 @@ class SpotROS(Node):
         transform = snapshot.get(sensor_frame)
         parent_frame = transform.parent_frame_name
         parent_t_sensor = transform.parent_tform_child
-        local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
-        local_time_msg = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
         tf = bosdyn_pose_to_tf(
             frame_t_pose=parent_t_sensor,
             frame=self.frame_prefix + parent_frame,
@@ -1169,11 +1173,13 @@ class SpotROS(Node):
         data = self.spot_wrapper.point_clouds
         if data:
             point_cloud_proto = data[0]
+            local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
+            local_time_msg = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
             # convert proto into PointCloud2
-            point_cloud_msg = self._get_point_cloud_msg(point_cloud_proto)
+            point_cloud_msg = self._get_point_cloud_msg(point_cloud_proto, local_time_msg)
             self.velodyne_pub.publish(point_cloud_msg)
             # get the static transform
-            tf = self._get_velodyne_tf(data[0])
+            tf = self._get_velodyne_tf(point_cloud_proto, local_time_msg)
             self.velodyne_static_tf_broadcaster.sendTransform(tf)
 
     def publish_graph_nav_pose_callback(self) -> None:
