@@ -74,6 +74,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
                 "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
                 "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
                 "foot_state_broadcaster": {"type": "spot_controllers/FootStateBroadcaster"},
+                "spot_pose_broadcaster": {"type": "spot_controllers/SpotPoseBroadcaster"},
                 "hardware_components_initial_state": {"unconfigured": ["SpotSystem"]},
             }
         },
@@ -235,6 +236,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                         "joint_state_broadcaster",
                         "imu_sensor_broadcaster",
                         "foot_state_broadcaster",
+                        "spot_pose_broadcaster",
                         LaunchConfiguration("robot_controller"),
                     ],
                     namespace=spot_name,

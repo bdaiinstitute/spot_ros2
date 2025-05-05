@@ -60,7 +60,9 @@ IMU data from the robot state stream is exposed on the topic `/<Robot Name>/imu_
 
 Feet contact data from the robot state stream is exposed on the topic `/<Robot Name>/foot_state_broadcaster/feet`.
 
-Additionally, the state publisher node, object synchronization node, and image publisher nodes from [`spot_driver`](../spot_driver/) will get launched by default when running on the robot to provide extra information such as TF, odometry, and camera feeds.
+Estimates of the robot's `body` pose with respect to `vision` and `odom` frames can be found via the TF frames `<Robot Name>/low_level/vision` and `<Robot Name>/low_level/odom`, or alternatively on the topics `/<Robot Name>/spot_pose_broadcaster/vision_t_body` and `/<Robot Name>/spot_pose_broadcaster/odom_t_body`.
+
+Additionally, the state publisher node, object synchronization node, and image publisher nodes from [`spot_driver`](../spot_driver/) will get launched by default when running on the robot to provide extra information such as additional TF frames, odometry, and camera feeds.
 To turn off the image publishers (which can cause problems with bandwidth), add the launch argument `launch_image_publishers:=false`.
 
 ### Setting Gains
