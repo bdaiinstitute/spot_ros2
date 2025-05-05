@@ -11,6 +11,8 @@ spot_pose_broadcaster:
     description: "Sensor name containing the transform from the low level vision estimate to body.
                   The state interface names are: ``<vision_t_body_sensor>/position.x, ..., <vision_t_body_sensor>/position.z,
                   <vision_t_body_sensor>/orientation.x, ..., <vision_t_body_sensor>/orientation.w``"
+    validation:
+      not_empty<>: null
 
   odom_t_body_sensor:
     type: string
@@ -18,18 +20,26 @@ spot_pose_broadcaster:
     description: "Sensor name containing the transform from the low level odom estimate to body.
                   The state interface names are: ``<odom_t_body_sensor>/position.x, ..., <odom_t_body_sensor>/position.z,
                   <odom_t_body_sensor>/orientation.x, ..., <odom_t_body_sensor>/orientation.w``"
+    validation:
+        not_empty<>: null
 
   body_frame_name:
     type: string
     default_value: "body"
     description: "TF frame name for the body"
+    validation:
+      not_empty<>: null
 
   vision_frame_name:
     type: string
     default_value: "low_level/vision"
     description: "TF frame name for the low level estimate of the vision frame"
+    validation:
+      not_empty<>: null
 
   odom_frame_name:
     type: string
     default_value: "low_level/odom"
     description: "TF frame name for the low level estimate of the odom frame"
+    validation:
+      not_empty<>: null
