@@ -45,3 +45,11 @@ Each message contains four `FootState` messages filled in with the appropriate `
 0 corresponds to an unknown contact, 1 corresponds to the foot being in contact in the floor, and 2 corresponds to the foot not being in contact with the floor.
 Note that in contrast to the `FootState` published by the high level driver, Spot's streaming interface for foot contacts does NOT contain an estimate for the foot's position with respect to the body.
 Therefore, the `foot_position_rt_body` field of the `FootState` message is not filled in and should be disregarded.
+
+## `SpotPoseBroadcaster`
+This is a broadcaster that will publish the estimates of the `odom` and `vision` frame transforms to `body` as both a TF frame and a ROS pose message.
+This broadcaster reads from the state interfaces `vision_t_body` and `odom_t_body`.
+It broadcasts these to TF frames `low_level/vision_t_body` and `low_level/odom_t_body` (named this way as to not conflict with the existing `odom` and `vision` frames published from the high level driver estimates).
+Note that these frames are broadcasted to the TF tree as the children of the `body` frame to ensure that `body` does not contain more than one parent.
+The same data as a `Pose` message is also available on the topics `vision_t_body` and `odom_t_body`. 
+These directly publish the transform of the body frame with respect to `vision`/`odom`.
