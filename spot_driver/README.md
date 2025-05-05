@@ -78,6 +78,13 @@ If your image publishing rate is very slow, you can try
 A calibration procedure for the hand camera is provided by this package. For more information on how to run this, refer to [EyeInHandCalibration.md](EyeInHandCalibration.md)
 
 
+## Spot Payload
+For robots equipped with the Spot EAP module, point clouds from the Velodyne module can be published under `<Robot Name>/velodyne/points` if the parameter `use_velodyne` is set to `True`.
+The default publish rate is 10 Hz, but this can also be parameterized by the `velodyne_rate` parameter.
+Note that the parent frame of the Velodyne sensor (`sensor_origin_velodyne-point-cloud`) is identical to the `odom` frame as per Spot's `FrameTreeSnapshot`.
+This is in contrast to Spot's onboard cameras, which have origins that are static offsets from the `body` frame.
+
+
 <details>
 <summary><h2>Spot CAM</h2></summary>
 <br>
