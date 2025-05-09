@@ -195,7 +195,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
   static constexpr size_t imu_sensor_index_ = 0;
   static constexpr size_t foot_sensor_index_ = 1;
   static constexpr size_t odom_to_body_sensor_index_ = 2;
-  static constexpr size_t vision_to_body_sensor_index_ = 3;
+  static constexpr size_t odom_to_body_twist_sensor_index_ = 3;
+  static constexpr size_t vision_to_body_sensor_index_ = 4;
   // number of state interfaces we expect per sensor
   static constexpr size_t n_imu_sensor_interfaces_ = 10;
   static constexpr size_t n_foot_sensor_interfaces_ = 4;

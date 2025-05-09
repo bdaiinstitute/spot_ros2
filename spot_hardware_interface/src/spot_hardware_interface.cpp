@@ -82,7 +82,7 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
                             vision_tform_body_rot_msg.w()};
 
   lin_vel_body_odom_ = {lin_vel_body_odom_msg.x(), lin_vel_body_odom_msg.y(), lin_vel_body_odom_msg.z()};
-  ang_vel_body_odom_ = {lin_vel_body_odom_msg.x(), lin_vel_body_odom_msg.y(), lin_vel_body_odom_msg.z()};
+  ang_vel_body_odom_ = {ang_vel_body_odom_msg.x(), ang_vel_body_odom_msg.y(), ang_vel_body_odom_msg.z()};
 }
 
 void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states,
