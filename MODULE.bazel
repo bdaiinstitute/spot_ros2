@@ -7,15 +7,35 @@ module(
 ############### BAZEL DEPS ########################
 bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(name = "rules_distroless", version = "0.5.1")
+bazel_dep(name = "rules_python", version = "0.40.0") # transitive dep of r_r_r, not sure why I need to include here
+# bazel_dep(name = "platforms", version = "0.0.11") # transitive dep of r_r_r, not sure why I need to include here
 
 # use rules_rai_ros
 # Until we have our own Bazel registry, this will need to be an override
 bazel_dep(name = "rules_rai_ros")
 git_override(
     module_name = "rules_rai_ros",
-    commit = "5df35ca8bf39131a11d339a59ccf6f3439b9737a",
+    commit = "df183829f0b36f61847f87b9e606d2cd4319ccef",
     remote = "https://github.com/bdaiinstitute/rules_rai_ros.git",
 )
+
+# only used for testing
+bazel_dep(name = "googletest", version = "1.16.0.bcr.1", dev_dependency = True)
+
+
+############### PYTHON SETUP ######################
+# I'm a little hazy on why I need to declare this directly.
+
+python_version = "3.10"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    configure_coverage_tool = True,
+    is_default = True,
+    python_version = python_version,
+)
+use_repo(python, "python_3_10")
+
 
 ############### DISTROLESS SETUP ##################
 apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
@@ -32,12 +52,135 @@ ros = use_extension("@rules_rai_ros//ros:extensions.bzl", "ros")
 ros.parse(
     name = "humble",
     lock = "//:jammy.lock.json",
-    non_ros_deps = [
-        "libspdlog1",
-        "libfmt8",
-        "libtinyxml2-9",
-    ],
 )
+ros.additional_deb(
+    hub_name = "humble",
+    name = "spot-cpp-sdk",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v4.1.1/spot-cpp-sdk_4.1.1_amd64.deb"]},
+    sha256_by_arch = {"amd64": "471b9983b17cb13f9e4a74b2b32bbe41ccbd72fb9a5b82609f03e7f2cd2799f3"},
+    dependencies = ["libgrpc++1"],
+    cc_includes = ["opt/spot-cpp-sdk/include"],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "e8b3a165766047c8b0ab9669020dd89ff15336d780f2500be7e891caa984f839"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-auto-return-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-auto-return-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "e86e48cfb34569f6f0231d29ad8dbdfc009465189feb3612b26e9099bce0de69"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-autowalk-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-autowalk-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "d4a45e476d313a76965cfc3ecc3ce40a25e07608b155807fd46b4d0feae5336a"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-cmake-module",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-cmake-module_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "1f42a9e838a50434a5868774a037d94ac95aa7dbf280aa313c58b148406e4d9c"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-graph-nav-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-graph-nav-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "f7f253ead8e6442db63f4d6d086e1919210e31304c7c8ab041600d7ffa1d11f2"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-keepalive-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-keepalive-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "557d4ef078740451e8f29465ddf18c49fc3a9b817ca08f5e465dfbd2882092a6"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-log-status-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-log-status-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "11ef2681b1f71d484106bff079f695a05afbf9a97660b3dac22411cf8ff2c694"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-metrics-logging-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-metrics-logging-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "eaa04308a5b3b85b88d2906ad5320325edeb14c743a1a6d2e043f207a76992c3"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-mission-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-mission-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "6e903c901be4592498ad3512392b49672beac0f80777bde399d9c4320dc6eb80"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "ba9deb485448a064fcea523f0afdb39369134dba7c5659b98caaf23e81c9e33c"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-spot-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-spot-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "161f232edc4d91de14a5f291f918826d60340ec50c3e0f0821483467e460a29b"},
+    dependencies = [],
+    cc_includes = [],
+)
+ros.additional_deb(
+    hub_name = "humble",
+    name = "bosdyn-spot-cam-api-msgs",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-bosdyn-spot-cam-api-msgs_4.1.1-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "8a953ba65884a0ee26845a5fffd7cf3407cf58f1d18cfe3951a29738a49deeff"},
+    dependencies = [],
+    cc_includes = [],
+)
+# do I need this one?
+ros.additional_deb(
+    hub_name = "humble",
+    name = "proto2ros",
+    # TODO(astout) add arm64
+    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/4.1.1-1/ros-humble-proto2ros_1.0.0-0jammy_amd64.deb"]},
+    sha256_by_arch = {"amd64": "86c6c273d4d63f991bf5a08c1163d2e040d52a381054a8e0dea617c87afd4d5d"},
+    dependencies = [],
+    cc_includes = [],
+)
+
 use_repo(ros, "humble")
 
 

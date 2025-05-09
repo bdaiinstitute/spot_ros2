@@ -1,0 +1,68 @@
+# I'm going to over-document as I go about writing this rules_rai_ros-enabled build file,
+# as preparation for contributing to rules_rai_ros documentation.
+# I'm aiming for a sort of annotated build file, walking myself and future users through
+# what needs to be done and why. I'm also learning for myself as I go.
+# Once this documentation gets fleshed out and finds a more permanent home it might not be
+# needed here.
+
+# load the ruleset from r^3. The ruleset is instantiated into the hub repository created by r^3
+# (from a template), which is why the load is from "@humble" (the name given to the hub repo
+# in MODULE.bazel), rather than something like "@rules_rai_ros", which might be expected.)
+load("@humble//ros:defs.bzl", "ros")
+
+# I'm just following an example to make this public so I don't have to think about it.
+# that's very likely the right thing to do in this case, but not in every case.
+# anyway, this is just a bazel thing, not an r^3 thing
+package(default_visibility = ["//visibility:public"])
+
+# r^3 requires(?) this declaration of a package manifest. 
+# This helps build the ros workspace in the bazel sandbox, and in particular helps
+# ROS packages find each other at runtime.
+ros.package_manifest(
+    name = "spot_msgs",
+)
+
+# an "interface library" is r^3's rule for building ROS messages
+# we list all the .msg, .srv, and .action files, and r^3 runs
+ros.interface_library(
+    name = "spot_msgs_lib",
+    package = ":spot_msgs", # this line indicates which package manifest it is a part of
+    srcs = glob([
+        "action/*.action",
+        "msg/*.msg",
+        "srv/*.srv",
+    ]),
+    # here we need to list all the packages the interfaces we're building depend on.
+    # In this case, that's a standard ROS geometry messages package and the ones we always need
+    # for actions (those are all brought in precompiled through r^3's primary mechanism, see
+    # jammy.yaml), and a few Boston Dynamics Spot specific packages that we build in another
+    # repository, distribute as .debs, and pull in via r^3's additional_debs mechanism 
+    # (see MODULE.bazel).
+    deps = [
+        "@humble//:ros-humble-geometry-msgs",
+        # Action messages always require these dependencies.
+        "@humble//:ros-humble-action-msgs",
+        "@humble//:ros-humble-builtin-interfaces",
+        "@humble//:ros-humble-unique-identifier-msgs",
+        # bosdyn specific
+        "@humble//:bosdyn-api-msgs",
+        "@humble//:proto2ros",
+        "@humble//:bosdyn-spot-cam-api-msgs",
+        "@humble//:bosdyn-spot-api-msgs", 
+        "@humble//:spot-cpp-sdk",
+    ],
+)
+
+# this is just a quick test (following an example in r^3) to confirm we can use a message definition
+# from the above.
+ros.cc_test(
+    name = "spot_msgs_test",
+    package = ":spot_msgs",
+    srcs = ["test_spot_msgs_include.cpp"],
+    deps = [
+        ":spot_msgs_lib_cc",
+        "@googletest//:gtest_main",
+        "@humble//:ros-humble-ament-index-cpp_cc",
+        "@humble//:ros-humble-rclcpp_cc",
+    ],
+)
