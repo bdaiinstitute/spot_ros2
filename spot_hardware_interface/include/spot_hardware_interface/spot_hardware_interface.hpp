@@ -190,7 +190,7 @@ class SpotHardware : public hardware_interface::SystemInterface {
   static constexpr size_t nfeet_ = 4;
   // Sensor configuration
   // We have 2 sensors, IMU and feet contact
-  static constexpr size_t n_sensors_ = 4;
+  static constexpr size_t n_sensors_ = 5;
   // index we expect these sensors to be at in info_.sensors
   static constexpr size_t imu_sensor_index_ = 0;
   static constexpr size_t foot_sensor_index_ = 1;
