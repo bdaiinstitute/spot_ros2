@@ -1,5 +1,5 @@
 ARCH="amd64"
-SDK_VERSION="4.1.1"
+SDK_VERSION="5.0.0"
 MSG_VERSION="${SDK_VERSION}"
 HELP=$'--arm64: Installs ARM64 version'
 REQUIREMENTS_FILE=spot_wrapper/requirements.txt
