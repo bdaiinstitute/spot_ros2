@@ -277,7 +277,7 @@ std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosd
                              .sec(fault.duration().seconds())
                              .nanosec(fault.duration().nanos());
     fault_msg.code = fault.code();
-    fault_msg.uid = fault.uid();
+    fault_msg.uuid = fault.uuid();
     fault_msg.error_message = fault.error_message();
     for (const auto& attr : fault.attributes()) {
       fault_msg.attributes.push_back(attr);
