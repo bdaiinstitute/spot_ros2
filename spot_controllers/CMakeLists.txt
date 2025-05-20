@@ -20,6 +20,10 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   rclcpp_lifecycle
   spot_msgs
+  tf2_geometry_msgs
+  tf2_msgs
+  tf2
+  geometry_msgs
 )
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -40,6 +44,11 @@ generate_parameter_library(
   include/spot_controllers/foot_state_broadcaster_parameters.yaml
 )
 
+generate_parameter_library(
+  spot_pose_broadcaster_parameters
+  include/spot_controllers/spot_pose_broadcaster_parameters.yaml
+)
+
 # Add the hardware interface
 add_library(
   spot_controllers
@@ -47,6 +56,7 @@ add_library(
   src/forward_state_controller.cpp
   src/spot_joint_controller.cpp
   src/foot_state_broadcaster.cpp
+  src/spot_pose_broadcaster.cpp
 )
 target_compile_features(spot_controllers PUBLIC cxx_std_20)
 target_include_directories(spot_controllers PUBLIC
@@ -58,6 +68,7 @@ target_link_libraries(
   forward_state_controller_parameters
   spot_joint_controller_parameters
   foot_state_broadcaster_parameters
+  spot_pose_broadcaster_parameters
   forward_command_controller::forward_command_controller
 )
 ament_target_dependencies(
@@ -77,7 +88,7 @@ install(
   DESTINATION include/${PROJECT_NAME}
 )
 
-install(TARGETS spot_controllers forward_state_controller_parameters spot_joint_controller_parameters foot_state_broadcaster_parameters
+install(TARGETS spot_controllers forward_state_controller_parameters spot_joint_controller_parameters foot_state_broadcaster_parameters spot_pose_broadcaster_parameters
   EXPORT export_spot_controllers
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
