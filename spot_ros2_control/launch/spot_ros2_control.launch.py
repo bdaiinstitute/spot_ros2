@@ -44,7 +44,7 @@ LEG_JOINTS = [
     "rear_right_knee",
 ]
 ARM_JOINTS = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1", "arm_f1x"]
-UPDATE_RATE_HZ = 333  # Update rate to use in the ROS 2 control config file
+UPDATE_RATE_HZ = 50  # Update rate to use in the ROS 2 control config file
 
 
 def create_controllers_config(spot_name: str, has_arm: bool) -> str:
