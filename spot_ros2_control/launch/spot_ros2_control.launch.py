@@ -86,7 +86,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
         },
         f"{prefix}forward_state_controller": {
             "ros__parameters": {
-                "joints": prefixed_joints.copy(),
+                "joints": joints.copy(),
                 "interface_names": ["position", "velocity", "effort"],
             }
         },
