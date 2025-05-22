@@ -24,6 +24,7 @@
 
 #include <spot_controllers/forward_state_controller_parameters.hpp>
 #include "forward_command_controller/forward_command_controller/forward_controllers_base.hpp"
+#include "spot_controllers/spot_controller_utils.hpp"
 #include "spot_controllers/visibility_control.h"
 
 namespace spot_controllers {
