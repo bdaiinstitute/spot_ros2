@@ -70,7 +70,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
                 "update_rate": UPDATE_RATE_HZ,
                 "joint_state_broadcaster": {"type": "joint_state_broadcaster/JointStateBroadcaster"},
                 "imu_sensor_broadcaster": {"type": "imu_sensor_broadcaster/IMUSensorBroadcaster"},
-                "forward_position_controller": {"type": "forward_command_controller/ForwardCommandController"},
+                "forward_position_controller": {"type": "spot_controllers/ForwardStateController"},
                 "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
                 "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
                 "foot_state_broadcaster": {"type": "spot_controllers/FootStateBroadcaster"},
@@ -80,8 +80,8 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
         },
         f"{prefix}forward_position_controller": {
             "ros__parameters": {
-                "joints": prefixed_joints.copy(),
-                "interface_name": "position",
+                "joints": joints.copy(),
+                "interface_names": ["position"],
             }
         },
         f"{prefix}forward_state_controller": {
