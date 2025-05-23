@@ -62,7 +62,6 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
     """
     prefix = spot_name + "/" if spot_name else ""
     joints = LEG_JOINTS + ARM_JOINTS if has_arm else LEG_JOINTS
-    prefixed_joints = [prefix + joint for joint in joints]
 
     config = {
         "/**": {
@@ -93,7 +92,7 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
             },
             "spot_joint_controller": {
                 "ros__parameters": {
-                    "joints": prefixed_joints.copy(),
+                    "joints": joints.copy(),
                 }
             },
             "imu_sensor_broadcaster": {

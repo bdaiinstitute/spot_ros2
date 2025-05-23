@@ -43,11 +43,18 @@ controller_interface::CallbackReturn SpotJointController::on_init() {
 
 controller_interface::CallbackReturn SpotJointController::on_configure(
     const rclcpp_lifecycle::State& /*previous_state*/) {
+  prefix_ = "";
+  if (params_.use_namespace_as_prefix) {
+    prefix_ = get_prefix_from_namespace(get_node()->get_namespace());
+  }
+  joint_names_.clear();
+  for (const auto& joint : params_.joints) {
+    joint_names_.push_back(prefix_ + joint);
+  }
   joints_command_subscriber_ = get_node()->create_subscription<CmdType>("~/joint_commands", rclcpp::SystemDefaultsQoS(),
                                                                         [this](const CmdType::SharedPtr msg) {
                                                                           rt_command_ptr_.writeFromNonRT(msg);
                                                                         });
-
   RCLCPP_INFO(get_node()->get_logger(), "configure successful");
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -55,7 +62,7 @@ controller_interface::CallbackReturn SpotJointController::on_configure(
 controller_interface::InterfaceConfiguration SpotJointController::command_interface_configuration() const {
   controller_interface::InterfaceConfiguration command_interfaces_config;
   command_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  for (const auto& joint : params_.joints) {
+  for (const auto& joint : joint_names_) {
     // this sets the interfaces that get claimed.
     for (const auto& interface : interfaces_) {
       command_interfaces_config.names.push_back(joint + "/" + interface);
@@ -104,8 +111,8 @@ controller_interface::return_type SpotJointController::update(const rclcpp::Time
     return controller_interface::return_type::OK;
   }
 
-  const auto& joint_names = (*joint_commands)->name;
-  const auto& njoints_to_command = joint_names.size();
+  const auto& names = (*joint_commands)->name;
+  const auto& njoints_to_command = names.size();
 
   const bool using_position = (*joint_commands)->position.size() == njoints_to_command;
   const bool using_velocity = (*joint_commands)->velocity.size() == njoints_to_command;
@@ -115,16 +122,21 @@ controller_interface::return_type SpotJointController::update(const rclcpp::Time
 
   // Iterate through the names of the joints that we want to command.
   for (size_t i = 0; i < njoints_to_command; i++) {
-    const auto joint_name = joint_names.at(i);
+    std::string name = names.at(i);
+    // first determine if the joint name is namespaced (does it have a / in it?)
+    // if it's not namespaced, add the appropriate prefix so we can find it in the command interface.
+    if (std::find(name.begin(), name.end(), '/') == name.end()) {
+      name = prefix_ + name;
+    }
     // find the command index
-    const auto& it = std::find(params_.joints.begin(), params_.joints.end(), joint_name);
-    if (it == params_.joints.end()) {
+    const auto& it = std::find(joint_names_.begin(), joint_names_.end(), name);
+    if (it == joint_names_.end()) {
       RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *(get_node()->get_clock()), 1000,
-                           "Joint %s was not in the command interface!", joint_name.c_str());
+                           "Joint %s was not in the command interface!", name.c_str());
       continue;
     }
     // get the index that the name is at in the command
-    const auto command_index = std::distance(params_.joints.begin(), it);
+    const auto command_index = std::distance(joint_names_.begin(), it);
     if (using_position) {
       command_interfaces_.at(n_interfaces_ * command_index + position_offset_)
           .set_value((*joint_commands)->position.at(i));
