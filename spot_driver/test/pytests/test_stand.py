@@ -17,6 +17,7 @@ from synchros2.scope import ROSAwareScope
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_stand(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
@@ -48,6 +49,7 @@ def test_stand(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     assert response.success
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_stand_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
