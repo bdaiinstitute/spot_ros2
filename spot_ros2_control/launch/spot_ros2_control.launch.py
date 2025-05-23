@@ -65,41 +65,43 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
     prefixed_joints = [prefix + joint for joint in joints]
 
     config = {
-        f"{prefix}controller_manager": {
-            "ros__parameters": {
-                "update_rate": UPDATE_RATE_HZ,
-                "joint_state_broadcaster": {"type": "joint_state_broadcaster/JointStateBroadcaster"},
-                "imu_sensor_broadcaster": {"type": "imu_sensor_broadcaster/IMUSensorBroadcaster"},
-                "forward_position_controller": {"type": "spot_controllers/ForwardStateController"},
-                "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
-                "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
-                "foot_state_broadcaster": {"type": "spot_controllers/FootStateBroadcaster"},
-                "spot_pose_broadcaster": {"type": "spot_controllers/SpotPoseBroadcaster"},
-                "hardware_components_initial_state": {"unconfigured": ["SpotSystem"]},
-            }
-        },
-        f"{prefix}forward_position_controller": {
-            "ros__parameters": {
-                "joints": joints.copy(),
-                "interface_names": ["position"],
-            }
-        },
-        f"{prefix}forward_state_controller": {
-            "ros__parameters": {
-                "joints": joints.copy(),
-                "interface_names": ["position", "velocity", "effort"],
-            }
-        },
-        f"{prefix}spot_joint_controller": {
-            "ros__parameters": {
-                "joints": prefixed_joints.copy(),
-            }
-        },
-        f"{prefix}imu_sensor_broadcaster": {
-            "ros__parameters": {
-                "sensor_name": f"{prefix}imu_sensor",
-                "frame_id": f"{prefix}imu_sensor_frame",
-            }
+        "/**": {
+            "controller_manager": {
+                "ros__parameters": {
+                    "update_rate": UPDATE_RATE_HZ,
+                    "joint_state_broadcaster": {"type": "joint_state_broadcaster/JointStateBroadcaster"},
+                    "imu_sensor_broadcaster": {"type": "imu_sensor_broadcaster/IMUSensorBroadcaster"},
+                    "forward_position_controller": {"type": "spot_controllers/ForwardStateController"},
+                    "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
+                    "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
+                    "foot_state_broadcaster": {"type": "spot_controllers/FootStateBroadcaster"},
+                    "spot_pose_broadcaster": {"type": "spot_controllers/SpotPoseBroadcaster"},
+                    "hardware_components_initial_state": {"unconfigured": ["SpotSystem"]},
+                }
+            },
+            "forward_position_controller": {
+                "ros__parameters": {
+                    "joints": joints.copy(),
+                    "interface_names": ["position"],
+                }
+            },
+            "forward_state_controller": {
+                "ros__parameters": {
+                    "joints": joints.copy(),
+                    "interface_names": ["position", "velocity", "effort"],
+                }
+            },
+            "spot_joint_controller": {
+                "ros__parameters": {
+                    "joints": prefixed_joints.copy(),
+                }
+            },
+            "imu_sensor_broadcaster": {
+                "ros__parameters": {
+                    "sensor_name": f"{prefix}imu_sensor",
+                    "frame_id": f"{prefix}imu_sensor_frame",
+                }
+            },
         },
     }
     with NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as out_file:
