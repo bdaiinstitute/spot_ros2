@@ -27,6 +27,7 @@
 #include "rclcpp/subscription.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/realtime_buffer.hpp"
+#include "spot_controllers/spot_controller_utils.hpp"
 #include "spot_controllers/visibility_control.h"
 #include "spot_msgs/msg/joint_command.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
@@ -75,7 +76,7 @@ class SpotJointController : public controller_interface::ControllerInterface {
   Params params_;
 
   std::vector<std::string> joint_names_;
-  std::string interface_name_;
+  std::string prefix_;
 
   std::vector<std::string> command_interface_types_;
 

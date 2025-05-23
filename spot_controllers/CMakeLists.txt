@@ -31,28 +31,29 @@ endforeach()
 
 generate_parameter_library(
   forward_state_controller_parameters
-  include/spot_controllers/forward_state_controller_parameters.yaml
+  include/spot_controllers/parameters/forward_state_controller_parameters.yaml
 )
 
 generate_parameter_library(
   spot_joint_controller_parameters
-  include/spot_controllers/spot_joint_controller_parameters.yaml
+  include/spot_controllers/parameters/spot_joint_controller_parameters.yaml
 )
 
 generate_parameter_library(
   foot_state_broadcaster_parameters
-  include/spot_controllers/foot_state_broadcaster_parameters.yaml
+  include/spot_controllers/parameters/foot_state_broadcaster_parameters.yaml
 )
 
 generate_parameter_library(
   spot_pose_broadcaster_parameters
-  include/spot_controllers/spot_pose_broadcaster_parameters.yaml
+  include/spot_controllers/parameters/spot_pose_broadcaster_parameters.yaml
 )
 
 # Add the hardware interface
 add_library(
   spot_controllers
   SHARED
+  src/spot_controller_utils.cpp
   src/forward_state_controller.cpp
   src/spot_joint_controller.cpp
   src/foot_state_broadcaster.cpp
