@@ -31,21 +31,18 @@ namespace spot_controllers {
 SpotIMUBroadcaster::SpotIMUBroadcaster() : imu_sensor_broadcaster::IMUSensorBroadcaster() {}
 
 controller_interface::CallbackReturn SpotIMUBroadcaster::on_init() {
-  try {
-    param_listener_ = std::make_shared<ParamListener>(get_node());
-    params_ = param_listener_->get_params();
-  } catch (const std::exception& e) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Exception thrown during init stage with message: %s \n", e.what());
+  if (!get_node()) {
+    fprintf(stderr, "Failed to aquire node handle!\n");
     return CallbackReturn::ERROR;
   }
+  auto param_listener = std::make_shared<ParamListener>(get_node());
+  params_ = param_listener->get_params();
 
   return CallbackReturn::SUCCESS;
 }
 
 controller_interface::CallbackReturn SpotIMUBroadcaster::on_configure(
     const rclcpp_lifecycle::State& /*previous_state*/) {
-  params_ = param_listener_->get_params();
-
   std::string prefix = "";
   if (params_.use_namespace_as_prefix) {
     prefix = get_prefix_from_namespace(get_node()->get_namespace());
