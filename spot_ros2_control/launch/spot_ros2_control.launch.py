@@ -115,7 +115,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     # If no controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
     if controllers_config == "":
-        # Grab spot_default_controllers.yaml depending on namespace and whether the robot has an arm.
+        # Grab the default config file depending on whether the robot has an arm or not.
         arm_text = "with_arm" if arm else "without_arm"
         controllers_config = os.path.join(
             get_package_share_directory(THIS_PACKAGE), "config", f"spot_default_controllers_{arm_text}.yaml"
