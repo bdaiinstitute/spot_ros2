@@ -1,8 +1,8 @@
-// File modified. Modifications Copyright (c) 2024 Boston Dynamics AI Institute LLC.
+// File modified. Modifications Copyright (c) 2025 Boston Dynamics AI Institute LLC.
 // All rights reserved.
 
 // --------------------------------------------------------------
-// Copyright 2020 PAL Robotics S.L.
+// Copyright 2021 PAL Robotics SL.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,15 @@ controller_interface::CallbackReturn SpotIMUBroadcaster::on_configure(
     const rclcpp_lifecycle::State& /*previous_state*/) {
   params_ = param_listener_->get_params();
 
-  imu_sensor_ = std::make_unique<semantic_components::IMUSensor>(semantic_components::IMUSensor(params_.sensor_name));
+  std::string prefix = "";
+  if (params_.use_namespace_as_prefix) {
+    prefix = get_prefix_from_namespace(get_node()->get_namespace());
+  }
+
+  RCLCPP_ERROR(get_node()->get_logger(), "Prefix: %s \n", prefix.c_str());
+
+  imu_sensor_ =
+      std::make_unique<semantic_components::IMUSensor>(semantic_components::IMUSensor(prefix + params_.sensor_name));
   try {
     // register ft sensor data publisher
     sensor_state_publisher_ = get_node()->create_publisher<sensor_msgs::msg::Imu>("~/imu", rclcpp::SystemDefaultsQoS());
@@ -57,7 +65,7 @@ controller_interface::CallbackReturn SpotIMUBroadcaster::on_configure(
   }
 
   realtime_publisher_->lock();
-  realtime_publisher_->msg_.header.frame_id = params_.frame_id;
+  realtime_publisher_->msg_.header.frame_id = prefix + params_.frame_id;
   // convert double vector to fixed-size array in the message
   for (size_t i = 0; i < 9; ++i) {
     realtime_publisher_->msg_.orientation_covariance[i] = params_.static_covariance_orientation[i];

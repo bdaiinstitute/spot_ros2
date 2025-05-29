@@ -1,8 +1,8 @@
-// File modified. Modifications Copyright (c) 2024 Boston Dynamics AI Institute LLC.
+// File modified. Modifications Copyright (c) 2025 Boston Dynamics AI Institute LLC.
 // All rights reserved.
 
 // --------------------------------------------------------------
-// Copyright 2020 PAL Robotics S.L.
+// Copyright 2021 PAL Robotics SL.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,15 +29,22 @@
 
 namespace spot_controllers {
 /**
- * \brief Forward command controller for a set of interfaces.
+ * \brief Broadcasts IMU data from Spot.
+ * This controller is largely taken from the IMU sensor broadcasters from the ros2_controllers repo:
+ * https://github.com/ros-controls/ros2_controllers/tree/humble/imu_sensor_broadcaster
  *
- * This class forwards the command signal for a set of interfaces over a set of joints.
+ * \param use_namespace_as_prefix Flag to determine if the prefix for the IMU sensor name should be picked up
+ * from the namespace that the controller is launched in.
+ * \param sensor_name Sensor name used as prefix for its interfaces. Interface names are
+ * Interface names are: ``<sensor_name>/orientation.x, ..., <sensor_name>/angular_velocity.x, ...,
+ * <sensor_name>/linear_acceleration.x.``",
+ * \param frame_id Frame ID used in the imu message
+ * \param static_covariance_orientation Static orientation covariance. Row major about x, y, z axes
+ * \param static_covariance_angular_velocity Static angular velocity covariance. Row major about x, y, z axes
+ * \param static_covariance_linear_acceleration Static linear acceleration covariance. Row major about x, y, z axes
  *
- * \param joints Names of the joint to control.
- * \param interface_names Names of the interfaces to command.
- *
- * Subscribes to:
- * - \b commands (std_msgs::msg::Float64MultiArray) : The commands to apply.
+ * Publishes to:
+ * - \b imu (sensor_msgs::msg::Imu) : IMU sensor data from Spot
  */
 class SpotIMUBroadcaster : public imu_sensor_broadcaster::IMUSensorBroadcaster {
  public:

@@ -1,7 +1,13 @@
 spot_imu_broadcaster:
+  use_namespace_as_prefix: {
+    type: bool,
+    default_value: true,
+    description: "Flag to determine if the prefix for the IMU sensor should be picked up
+                  from the namespace of the controller.",
+  }
   sensor_name: {
     type: string,
-    default_value: "",
+    default_value: "imu_sensor",
     description: "Defines sensor name used as prefix for its interfaces.
     Interface names are: ``<sensor_name>/orientation.x, ..., <sensor_name>/angular_velocity.x, ...,
     <sensor_name>/linear_acceleration.x.``",
@@ -11,7 +17,7 @@ spot_imu_broadcaster:
   }
   frame_id: {
     type: string,
-    default_value: "",
+    default_value: "imu_sensor_frame",
     description: "Sensor's frame_id in which values are published.",
     validation: {
       not_empty<>: null

@@ -60,7 +60,6 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
     Returns:
         str: Path to controllers config file to use
     """
-    prefix = spot_name + "/" if spot_name else ""
     joints = LEG_JOINTS + ARM_JOINTS if has_arm else LEG_JOINTS
 
     config = {
@@ -93,12 +92,6 @@ def create_controllers_config(spot_name: str, has_arm: bool) -> str:
             "spot_joint_controller": {
                 "ros__parameters": {
                     "joints": joints.copy(),
-                }
-            },
-            "imu_sensor_broadcaster": {
-                "ros__parameters": {
-                    "sensor_name": f"{prefix}imu_sensor",
-                    "frame_id": f"{prefix}imu_sensor_frame",
                 }
             },
         },
