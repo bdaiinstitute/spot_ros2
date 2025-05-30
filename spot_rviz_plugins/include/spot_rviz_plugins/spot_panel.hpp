@@ -1,6 +1,7 @@
 #ifndef SPOT_RVIZ_PLUGINS__SPOT_PANEL_HPP_
 #define SPOT_RVIZ_PLUGINS__SPOT_PANEL_HPP_
 
+#include <QBasicTimer>
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QLabel>
@@ -206,6 +207,11 @@ class SpotPanel : public rviz_common::Panel {
   QDoubleSpinBox* yawSpin;
   QDoubleSpinBox* frictionSpin;
   QDoubleSpinBox* obstaclePaddingSpin;
+
+  // Qt timer we use to ensure that the node in this panel is spun regularly
+  QBasicTimer spin_timer;
+  // Once the timer starts this function is called every time its duration elapses
+  void timerEvent(QTimerEvent* event) override;
 
   // Spot cam
   /*     ros::Publisher camLEDPub_;

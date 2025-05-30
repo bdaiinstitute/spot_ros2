@@ -77,20 +77,20 @@ SpotPanel::SpotPanel(QWidget* parent) {
   powerOffButton = this->findChild<QPushButton*>("powerOffButton");
   standButton = this->findChild<QPushButton*>("standButton");
   sitButton = this->findChild<QPushButton*>("sitButton");
-  setBodyPoseButton = this->findChild<QPushButton*>("setBodyPoseButton");
-  setBodyNeutralButton = this->findChild<QPushButton*>("setBodyNeutralButton");
-  setMaxVelButton = this->findChild<QPushButton*>("setMaxVelButton");
-  setGaitButton = this->findChild<QPushButton*>("setGaitButton");
-  setSwingHeightButton = this->findChild<QPushButton*>("setSwingHeightButton");
-  setObstaclePaddingButton = this->findChild<QPushButton*>("setObstaclePaddingButton");
-  setGratedSurfacesButton = this->findChild<QPushButton*>("setGratedSurfacesButton");
-  setFrictionButton = this->findChild<QPushButton*>("setFrictionButton");
-  allowMotionButton = this->findChild<QPushButton*>("allowMotionButton");
+  // setBodyPoseButton = this->findChild<QPushButton*>("setBodyPoseButton");
+  // setBodyNeutralButton = this->findChild<QPushButton*>("setBodyNeutralButton");
+  // setMaxVelButton = this->findChild<QPushButton*>("setMaxVelButton");
+  // setGaitButton = this->findChild<QPushButton*>("setGaitButton");
+  // setSwingHeightButton = this->findChild<QPushButton*>("setSwingHeightButton");
+  // setObstaclePaddingButton = this->findChild<QPushButton*>("setObstaclePaddingButton");
+  // setGratedSurfacesButton = this->findChild<QPushButton*>("setGratedSurfacesButton");
+  // setFrictionButton = this->findChild<QPushButton*>("setFrictionButton");
+  // allowMotionButton = this->findChild<QPushButton*>("allowMotionButton");
   dockButton = this->findChild<QPushButton*>("dockButton");
   undockButton = this->findChild<QPushButton*>("undockButton");
   selfRightButton = this->findChild<QPushButton*>("selfRightButton");
-  rollOverLeftButton = this->findChild<QPushButton*>("rollOverLeftButton");
-  rollOverRightButton = this->findChild<QPushButton*>("rollOverRightButton");
+  // rollOverLeftButton = this->findChild<QPushButton*>("rollOverLeftButton");
+  // rollOverRightButton = this->findChild<QPushButton*>("rollOverRightButton");
 
   statusLabel = this->findChild<QLabel*>("statusLabel");
   estimatedRuntimeLabel = this->findChild<QLabel*>("estimatedRuntimeLabel");
@@ -154,29 +154,38 @@ SpotPanel::SpotPanel(QWidget* parent) {
   connect(powerOffButton, SIGNAL(clicked()), this, SLOT(powerOff()));
   connect(sitButton, SIGNAL(clicked()), this, SLOT(sit()));
   connect(standButton, SIGNAL(clicked()), this, SLOT(stand()));
-  connect(setBodyPoseButton, SIGNAL(clicked()), this, SLOT(sendBodyPose()));
-  connect(setBodyNeutralButton, SIGNAL(clicked()), this, SLOT(sendNeutralBodyPose()));
-  connect(setMaxVelButton, SIGNAL(clicked()), this, SLOT(setMaxVel()));
+  // connect(setBodyPoseButton, SIGNAL(clicked()), this, SLOT(sendBodyPose()));
+  // connect(setBodyNeutralButton, SIGNAL(clicked()), this, SLOT(sendNeutralBodyPose()));
+  // connect(setMaxVelButton, SIGNAL(clicked()), this, SLOT(setMaxVel()));
   connect(releaseStopButton, SIGNAL(clicked()), this, SLOT(releaseStop()));
   connect(hardStopButton, SIGNAL(clicked()), this, SLOT(hardStop()));
   connect(gentleStopButton, SIGNAL(clicked()), this, SLOT(gentleStop()));
   connect(stopButton, SIGNAL(clicked()), this, SLOT(stop()));
-  connect(setGaitButton, SIGNAL(clicked()), this, SLOT(setGait()));
-  connect(setSwingHeightButton, SIGNAL(clicked()), this, SLOT(setSwingHeight()));
-  connect(setObstaclePaddingButton, SIGNAL(clicked()), this, SLOT(setObstacleParams()));
-  connect(setGratedSurfacesButton, SIGNAL(clicked()), this, SLOT(setTerrainParams()));
-  connect(setFrictionButton, SIGNAL(clicked()), this, SLOT(setTerrainParams()));
-  connect(allowMotionButton, SIGNAL(clicked()), this, SLOT(allowMotion()));
+  // connect(setGaitButton, SIGNAL(clicked()), this, SLOT(setGait()));
+  // connect(setSwingHeightButton, SIGNAL(clicked()), this, SLOT(setSwingHeight()));
+  // connect(setObstaclePaddingButton, SIGNAL(clicked()), this, SLOT(setObstacleParams()));
+  // connect(setGratedSurfacesButton, SIGNAL(clicked()), this, SLOT(setTerrainParams()));
+  // connect(setFrictionButton, SIGNAL(clicked()), this, SLOT(setTerrainParams()));
+  // connect(allowMotionButton, SIGNAL(clicked()), this, SLOT(allowMotion()));
   connect(dockButton, SIGNAL(clicked()), this, SLOT(dock()));
   connect(undockButton, SIGNAL(clicked()), this, SLOT(undock()));
   connect(selfRightButton, SIGNAL(clicked()), this, SLOT(selfRight()));
-  connect(rollOverLeftButton, SIGNAL(clicked()), this, SLOT(rollOverLeft()));
-  connect(rollOverRightButton, SIGNAL(clicked()), this, SLOT(rollOverRight()));
+  // connect(rollOverLeftButton, SIGNAL(clicked()), this, SLOT(rollOverLeft()));
+  // connect(rollOverRightButton, SIGNAL(clicked()), this, SLOT(rollOverRight()));
   /*         connect(setPTZButton, SIGNAL(clicked()), this, SLOT(setCamPTZ()));
           connect(setScreenButton, SIGNAL(clicked()), this, SLOT(setCamScreen()));
           connect(LEDSpinBox, SIGNAL(valueChanged(double)), this, SLOT(setCamLED(double)));
           connect(trackPointButton, SIGNAL(clicked()), this, SLOT(camTrackPoint()));
           connect(lookAtPointButton, SIGNAL(clicked()), this, SLOT(camLookAtPoint())); */
+
+  spin_timer.start(200, this);
+}
+
+/* This timer event is triggered by the spin_timer and is needed to ensure that the node spins */
+void SpotPanel::timerEvent(QTimerEvent* event) {
+  if (client_node_ != nullptr) {
+    rclcpp::spin_some(client_node_);
+  }
 }
 
 void SpotPanel::setupStopButtons() {
@@ -304,24 +313,24 @@ void SpotPanel::setControlButtons() {
   powerOffButton->setEnabled(haveLease);
   sitButton->setEnabled(haveLease);
   standButton->setEnabled(haveLease);
-  setBodyPoseButton->setEnabled(haveLease);
-  setBodyNeutralButton->setEnabled(haveLease);
-  setMaxVelButton->setEnabled(haveLease);
+  // setBodyPoseButton->setEnabled(haveLease);
+  // setBodyNeutralButton->setEnabled(haveLease);
+  // setMaxVelButton->setEnabled(haveLease);
   releaseStopButton->setEnabled(haveLease && isEStopped);
   hardStopButton->setEnabled(haveLease);
   gentleStopButton->setEnabled(haveLease);
   stopButton->setEnabled(haveLease);
-  setGaitButton->setEnabled(haveLease);
-  setSwingHeightButton->setEnabled(haveLease);
-  setObstaclePaddingButton->setEnabled(haveLease);
-  setFrictionButton->setEnabled(haveLease);
-  setGratedSurfacesButton->setEnabled(haveLease);
-  allowMotionButton->setEnabled(haveLease);
+  // setGaitButton->setEnabled(haveLease);
+  // setSwingHeightButton->setEnabled(haveLease);
+  // setObstaclePaddingButton->setEnabled(haveLease);
+  // setFrictionButton->setEnabled(haveLease);
+  // setGratedSurfacesButton->setEnabled(haveLease);
+  // allowMotionButton->setEnabled(haveLease);
   dockButton->setEnabled(haveLease);
   undockButton->setEnabled(haveLease);
   selfRightButton->setEnabled(haveLease);
-  rollOverLeftButton->setEnabled(haveLease);
-  rollOverRightButton->setEnabled(haveLease);
+  // rollOverLeftButton->setEnabled(haveLease);
+  // rollOverRightButton->setEnabled(haveLease);
 }
 
 /**
@@ -579,20 +588,20 @@ void SpotPanel::powerCallback(const spot_msgs::msg::PowerState::ConstSharedPtr& 
   motorStateLabel->setText(QString(motorState.c_str()));
 }
 
-void SpotPanel::motionAllowedCallback(const std_msgs::msg::Bool& motion_allowed) {
-  motionAllowed = motion_allowed.data;
-  if (!motion_allowed.data) {
-    stopButton->setText("Motion is disallowed");
-    stopButton->setEnabled(false);
-    allowMotionButton->setText("Allow motion");
-  } else {
-    stopButton->setText("Stop");
-    if (haveLease) {
-      stopButton->setEnabled(true);
-    }
-    allowMotionButton->setText("Disallow motion");
-  }
-}
+// void SpotPanel::motionAllowedCallback(const std_msgs::msg::Bool& motion_allowed) {
+//   motionAllowed = motion_allowed.data;
+//   if (!motion_allowed.data) {
+//     stopButton->setText("Motion is disallowed");
+//     stopButton->setEnabled(false);
+//     allowMotionButton->setText("Allow motion");
+//   } else {
+//     stopButton->setText("Stop");
+//     if (haveLease) {
+//       stopButton->setEnabled(true);
+//     }
+//     allowMotionButton->setText("Disallow motion");
+//   }
+// }
 
 void SpotPanel::sit() {
   callTriggerService(sitService_);
