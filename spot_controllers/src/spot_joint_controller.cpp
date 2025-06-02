@@ -29,13 +29,13 @@
 
 namespace {
 // Constants useful for interface setup / sending commands.
-const std::array<std::string, 5> kInterfaces{"position", "velocity", "effort", "k_q_p", "k_qd_p"};
-static constexpr size_t kNumInterfaces = 5;
-static constexpr size_t kPositionOffset = 0;
-static constexpr size_t kVelocityOffset = 1;
-static constexpr size_t kEffortOffset = 2;
-static constexpr size_t kKqpOffset = 3;
-static constexpr size_t kKqdpOffset = 4;
+constexpr size_t kNumInterfaces = 5;
+const std::array<std::string, kNumInterfaces> kInterfaces{"position", "velocity", "effort", "k_q_p", "k_qd_p"};
+constexpr size_t kPositionOffset = 0;
+constexpr size_t kVelocityOffset = 1;
+constexpr size_t kEffortOffset = 2;
+constexpr size_t kKqpOffset = 3;
+constexpr size_t kKqdpOffset = 4;
 }  // namespace
 
 namespace spot_controllers {
