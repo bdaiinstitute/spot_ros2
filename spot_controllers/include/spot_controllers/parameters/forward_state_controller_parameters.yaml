@@ -12,6 +12,5 @@ forward_state_controller:
   use_namespace_as_prefix: {
     type: bool,
     default_value: true,
-    description: "Flag to determine if the prefix of the joint names should be picked up
-                  from the namespace of the controller.",
-    }
+    description: "Flag to determine if the prefix of the joint names should be picked up from the namespace of the controller.",
+  }
