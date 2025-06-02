@@ -2,8 +2,7 @@ spot_imu_broadcaster:
   use_namespace_as_prefix: {
     type: bool,
     default_value: true,
-    description: "Flag to determine if the prefix for the IMU sensor should be picked up
-                  from the namespace of the controller.",
+    description: "Flag to determine if the prefix for the IMU sensor should be picked up from the namespace of the controller.",
   }
   sensor_name: {
     type: string,

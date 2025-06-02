@@ -2,8 +2,7 @@ spot_pose_broadcaster:
   use_namespace_as_prefix:
     type: bool
     default_value: true
-    description: "Flag to determine if the prefix of the sensor name and TF frames should be picked up
-                  from the namespace of the controller."
+    description: "Flag to determine if the prefix of the sensor name and TF frames should be picked up from the namespace of the controller."
 
   vision_t_body_sensor:
     type: string
