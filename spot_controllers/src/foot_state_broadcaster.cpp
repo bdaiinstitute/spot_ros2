@@ -60,13 +60,7 @@ controller_interface::InterfaceConfiguration FootStateBroadcaster::state_interfa
   const bool use_namespace_as_prefix = params_.use_namespace_as_prefix;
   std::string sensor_prefix = "";
   if (use_namespace_as_prefix) {
-    // Grab the namespace from the node.
-    const std::string node_namespace = get_node()->get_namespace();
-    // namespace is "/" if there is none, else it's "/<namespace>". Erase the first char ("/") for easier parsing.
-    const std::string trimmed_namespace = node_namespace.substr(1);
-    // Now trimmed_namespace is either the empty string or "<namespace>"
-    sensor_prefix = trimmed_namespace.empty() ? "" : trimmed_namespace + "/";
-    // And now sensor prefix is either "" or "<namespace>/"
+    sensor_prefix = get_prefix_from_namespace(get_node()->get_namespace());
   }
   // Append the chosen prefix to the sensor name
   const std::string sensor_name = sensor_prefix + "foot_sensor";

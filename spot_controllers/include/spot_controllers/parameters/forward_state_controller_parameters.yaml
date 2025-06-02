@@ -9,3 +9,8 @@ forward_state_controller:
     default_value: [],
     description: "Names of the interfaces to command",
   }
+  use_namespace_as_prefix: {
+    type: bool,
+    default_value: true,
+    description: "Flag to determine if the prefix of the joint names should be picked up from the namespace of the controller.",
+  }

@@ -16,6 +16,7 @@ find_package(ament_cmake REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_interface
   forward_command_controller
+  imu_sensor_broadcaster
   pluginlib
   rclcpp
   rclcpp_lifecycle
@@ -31,32 +32,39 @@ endforeach()
 
 generate_parameter_library(
   forward_state_controller_parameters
-  include/spot_controllers/forward_state_controller_parameters.yaml
+  include/spot_controllers/parameters/forward_state_controller_parameters.yaml
 )
 
 generate_parameter_library(
   spot_joint_controller_parameters
-  include/spot_controllers/spot_joint_controller_parameters.yaml
+  include/spot_controllers/parameters/spot_joint_controller_parameters.yaml
 )
 
 generate_parameter_library(
   foot_state_broadcaster_parameters
-  include/spot_controllers/foot_state_broadcaster_parameters.yaml
+  include/spot_controllers/parameters/foot_state_broadcaster_parameters.yaml
 )
 
 generate_parameter_library(
   spot_pose_broadcaster_parameters
-  include/spot_controllers/spot_pose_broadcaster_parameters.yaml
+  include/spot_controllers/parameters/spot_pose_broadcaster_parameters.yaml
+)
+
+generate_parameter_library(
+  spot_imu_broadcaster_parameters
+  include/spot_controllers/parameters/spot_imu_broadcaster_parameters.yaml
 )
 
 # Add the hardware interface
 add_library(
   spot_controllers
   SHARED
+  src/spot_controller_utils.cpp
   src/forward_state_controller.cpp
   src/spot_joint_controller.cpp
   src/foot_state_broadcaster.cpp
   src/spot_pose_broadcaster.cpp
+  src/spot_imu_broadcaster.cpp
 )
 target_compile_features(spot_controllers PUBLIC cxx_std_20)
 target_include_directories(spot_controllers PUBLIC
@@ -70,6 +78,7 @@ target_link_libraries(
   foot_state_broadcaster_parameters
   spot_pose_broadcaster_parameters
   forward_command_controller::forward_command_controller
+  imu_sensor_broadcaster::imu_sensor_broadcaster
 )
 ament_target_dependencies(
   spot_controllers PUBLIC

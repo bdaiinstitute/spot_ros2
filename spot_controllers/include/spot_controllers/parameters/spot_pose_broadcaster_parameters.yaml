@@ -2,24 +2,19 @@ spot_pose_broadcaster:
   use_namespace_as_prefix:
     type: bool
     default_value: true
-    description: "Flag to determine if the prefix of the sensor name and TF frames should be picked up
-                  from the namespace of the controller."
+    description: "Flag to determine if the prefix of the sensor name and TF frames should be picked up from the namespace of the controller."
 
   vision_t_body_sensor:
     type: string
     default_value: "vision_t_body"
-    description: "Sensor name containing the transform from the low level vision estimate to body.
-                  The state interface names are: ``<vision_t_body_sensor>/position.x, ..., <vision_t_body_sensor>/position.z,
-                  <vision_t_body_sensor>/orientation.x, ..., <vision_t_body_sensor>/orientation.w``"
+    description: "Sensor name containing the transform from the low level vision estimate to body. The state interface names are: ``<vision_t_body_sensor>/position.x, ..., <vision_t_body_sensor>/position.z, <vision_t_body_sensor>/orientation.x, ..., <vision_t_body_sensor>/orientation.w``"
     validation:
       not_empty<>: null
 
   odom_t_body_sensor:
     type: string
     default_value: "odom_t_body"
-    description: "Sensor name containing the transform from the low level odom estimate to body.
-                  The state interface names are: ``<odom_t_body_sensor>/position.x, ..., <odom_t_body_sensor>/position.z,
-                  <odom_t_body_sensor>/orientation.x, ..., <odom_t_body_sensor>/orientation.w``"
+    description: "Sensor name containing the transform from the low level odom estimate to body. The state interface names are: ``<odom_t_body_sensor>/position.x, ..., <odom_t_body_sensor>/position.z, <odom_t_body_sensor>/orientation.x, ..., <odom_t_body_sensor>/orientation.w``"
     validation:
         not_empty<>: null
 

@@ -82,13 +82,7 @@ controller_interface::CallbackReturn SpotPoseBroadcaster::on_configure(
 
   frame_prefix_ = "";
   if (params_.use_namespace_as_prefix) {
-    // Grab the namespace from the node.
-    const std::string node_namespace = get_node()->get_namespace();
-    // namespace is "/" if there is none, else it's "/<namespace>". Erase the first char ("/") for easier parsing.
-    const std::string trimmed_namespace = node_namespace.substr(1);
-    // Now trimmed_namespace is either the empty string or "<namespace>"
-    frame_prefix_ = trimmed_namespace.empty() ? "" : trimmed_namespace + "/";
-    // And now sensor prefix is either "" or "<namespace>/"
+    frame_prefix_ = get_prefix_from_namespace(get_node()->get_namespace());
   }
   RCLCPP_INFO(get_node()->get_logger(), "Using frame prefix: '%s'", frame_prefix_.c_str());
 
