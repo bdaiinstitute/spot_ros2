@@ -15,6 +15,7 @@ from synchros2.scope import ROSAwareScope
 from spot_msgs.srv import SetVelocity  # type: ignore
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_max_velocity(ros: ROSAwareScope) -> None:
     """

@@ -19,6 +19,7 @@ from spot_msgs.srv import Dock  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_dock(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
     """
@@ -81,6 +82,7 @@ def test_dock(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
     assert response.success
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_dock_with_stand_command_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
@@ -117,6 +119,7 @@ def test_dock_with_stand_command_failed(ros: ROSAwareScope, simple_spot: SpotFix
     assert not response.success
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_dock_with_dock_command_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
