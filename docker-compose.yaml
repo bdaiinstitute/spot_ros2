@@ -1,0 +1,14 @@
+services:
+  spot-ros2-driver:
+    image: spot_ros2:latest
+    volumes:
+      - ./spot_driver/config/spot_ros_example.yaml:/ros_ws/src/robot.yaml
+    environment:
+      - SPOT_NAME=${SPOT_NAME:-spot}
+      # Default value, can be set via CLI with >>SPOT_NAME=spot docker compose up<<
+    command: >
+      bash -c "
+        source /opt/ros/humble/setup.bash && 
+        source /ros_ws/install/setup.bash && 
+        ros2 launch spot_driver spot_driver.launch.py config_file:=/ros_ws/src/robot.yaml spot_name:=$${SPOT_NAME} launch_rviz:=False
+      "

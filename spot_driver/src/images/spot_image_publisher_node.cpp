@@ -39,7 +39,8 @@ SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_o
   auto tf_broadcaster = std::make_unique<RclcppTfBroadcasterInterface>(node);
   auto timer = std::make_unique<RclcppWallTimerInterface>(node);
 
-  auto spot_api = std::make_unique<DefaultSpotApi>(kSDKClientName, parameters->getCertificate());
+  const auto timesync_timeout = parameters->getTimeSyncTimeout();
+  auto spot_api = std::make_unique<DefaultSpotApi>(kSDKClientName, timesync_timeout, parameters->getCertificate());
 
   initialize(std::move(spot_api), std::move(mw_handle), std::move(parameters), std::move(logger),
              std::move(tf_broadcaster), std::move(timer));
@@ -55,12 +56,12 @@ void SpotImagePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
 
   const auto hostname = parameters->getHostname();
   const auto port = parameters->getPort();
-  const auto robot_name = parameters->getSpotName();
   const auto username = parameters->getUsername();
   const auto password = parameters->getPassword();
+  const std::string frame_prefix = parameters->getFramePrefixWithDefaultFallback();
 
   // create and authenticate robot
-  if (const auto create_robot_result = spot_api_->createRobot(robot_name, hostname, port); !create_robot_result) {
+  if (const auto create_robot_result = spot_api_->createRobot(hostname, port, frame_prefix); !create_robot_result) {
     const auto error_msg{std::string{"Failed to create interface to robot: "}.append(create_robot_result.error())};
     logger->logError(error_msg);
     throw std::runtime_error(error_msg);

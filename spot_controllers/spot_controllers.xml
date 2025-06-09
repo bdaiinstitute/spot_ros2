@@ -4,4 +4,24 @@
     General passthrough controller that can forward commands for a set of joints over a set of interfaces.
   </description>
   </class>
+  <class name="spot_controllers/SpotJointController" type="spot_controllers::SpotJointController" base_class_type="controller_interface::ControllerInterface">
+  <description>
+    Forwarding controller useful for forwarding sets of joint commands (including gains) to Spot's hardware interface.
+  </description>
+  </class>
+  <class name="spot_controllers/FootStateBroadcaster" type="spot_controllers::FootStateBroadcaster" base_class_type="controller_interface::ControllerInterface">
+  <description>
+    Broadcaster for exposing Spot's feet contact states.
+  </description>
+  </class>
+  <class name="spot_controllers/SpotPoseBroadcaster" type="spot_controllers::SpotPoseBroadcaster" base_class_type="controller_interface::ControllerInterface">
+  <description>
+    Broadcaster for publishing poses and/or TF from joint state stream.
+  </description>
+  </class>
+    <class name="spot_controllers/SpotIMUBroadcaster" type="spot_controllers::SpotIMUBroadcaster" base_class_type="controller_interface::ControllerInterface">
+  <description>
+    Broadcaster for publishing IMU data from Spot.
+  </description>
+  </class>
 </library>

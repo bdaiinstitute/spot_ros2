@@ -112,13 +112,13 @@ MATCHER_P(DurationEq, duration, "") {
       arg, result_listener);
 }
 
-MATCHER_P8(SystemFaultEq, timestamp, clock_skew, duration, name, uid, code, error_msg, attributes, "") {
+MATCHER_P8(SystemFaultEq, timestamp, clock_skew, duration, name, uuid, code, error_msg, attributes, "") {
   using SystemFault = spot_msgs::msg::SystemFault;
   return testing::ExplainMatchResult(
       testing::AllOf(testing::Field("header", &SystemFault::header, ClockSkewIsAppliedToHeader(timestamp, clock_skew)),
                      testing::Field("duration", &SystemFault::duration, DurationEq(duration)),
                      testing::Field("name", &SystemFault::name, testing::StrEq(name)),
-                     testing::Field("code", &SystemFault::code, code), testing::Field("uid", &SystemFault::uid, uid),
+                     testing::Field("code", &SystemFault::code, code), testing::Field("uuid", &SystemFault::uuid, uuid),
                      testing::Field("error_message", &SystemFault::error_message, testing::StrEq(error_msg)),
                      testing::Field("attributes", &SystemFault::attributes, testing::ContainerEq(attributes))),
       arg, result_listener);

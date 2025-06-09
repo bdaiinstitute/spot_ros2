@@ -21,11 +21,19 @@
     estop_timeout: 9.0
     start_estop: False
 
-    preferred_odom_frame: "odom" # pass either odom/vision. This frame will become the parent of body in tf2 tree and will be used in odometry topic. https://dev.bostondynamics.com/docs/concepts/geometry_and_frames.html?highlight=frame#frames-in-the-spot-robot-world for more info.
+    preferred_odom_frame: "odom" # Allowed values are: [odom, vision], without a prefix. This will be used in the odometry topic. https://dev.bostondynamics.com/docs/concepts/geometry_and_frames.html?highlight=frame#frames-in-the-spot-robot-world for more info.
+    tf_root: "odom" # Allowed values are: [odom, vision, body], without a prefix. This will set the root frame in your TF tree.
+
+    # These parameters may be overridden by the 'spot_name' and 'tf_prefix' launch arguments.
+    spot_name: ""
+    # frame_prefix: "" # Set an explicit prefix for all frames in your TF tree (an empty string is a valid prefix option).
 
     cmd_duration: 0.25 # The duration of cmd_vel commands. Increase this if spot stutters when publishing cmd_vel.
     rgb_cameras: True  # Set to False if your robot has greyscale cameras -- otherwise you won't receive data.
     initialize_spot_cam: False # Set to True if you are connecting to a SpotCam payload module.
+
+    use_velodyne: False # Set to True to stream point clouds from the velodyne on Spot EAP
+    velodyne_rate: 10.0 # The rate in Hz that the velodyne will stream at
 
     # You can uncomment and edit the list below if you only want to publish data from a certain set of cameras.
     # cameras_used: ["frontleft", "frontright", "left", "right", "back", "hand"]
