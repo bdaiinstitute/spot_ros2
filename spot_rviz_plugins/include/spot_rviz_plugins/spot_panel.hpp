@@ -19,6 +19,7 @@
 #include <std_msgs/msg/float32_multi_array.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
+#include <string>
 // #include <spot_msgs/TerrainParams.h>
 // #include <spot_msgs/SetSwingHeight.h>
 #include <spot_msgs/msg/battery_state_array.hpp>
@@ -104,9 +105,9 @@ class SpotPanel : public rviz_common::Panel {
   void setupSpinBoxes();
   void setControlButtons();
   void toggleBodyPoseButtons();
-  bool callTriggerService(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr service);
+  void callTriggerService(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr service);
   template <typename C, typename T>
-  bool callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr service, T serviceRequest);
+  void callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr service, T serviceRequest);
   void updateLabelTextWithLimit(QLabel* label, double limit_lower, double limit_upper);
   void leaseCallback(const spot_msgs::msg::LeaseArray::ConstSharedPtr& leases);
   void estopCallback(const spot_msgs::msg::EStopStateArray::ConstSharedPtr& estops);
@@ -115,10 +116,10 @@ class SpotPanel : public rviz_common::Panel {
   void powerCallback(const spot_msgs::msg::PowerState::ConstSharedPtr& power);
   void motionAllowedCallback(const std_msgs::msg::Bool& motion_allowed);
   template <typename C>
-  void service_response_callback(typename rclcpp::Client<C>::SharedFuture);
-  /*     void ptzCallback(const spot_cam::PTZDescriptionArray &ptz_descriptions);
-      void screensCallback(const spot_cam::StringMultiArray &screens);
-      void lookAtPoint(const bool track); */
+  void serviceResponseCallback(std::string serviceName, typename rclcpp::Client<C>::SharedFuture future);
+  //   void ptzCallback(const spot_cam::PTZDescriptionArray &ptz_descriptions);
+  //   void screensCallback(const spot_cam::StringMultiArray &screens);
+  //   void lookAtPoint(const bool track);
 
   rclcpp::Node::SharedPtr client_node_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr sitService_;

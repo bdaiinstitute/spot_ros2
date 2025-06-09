@@ -1,4 +1,4 @@
-#include "spot_rviz_plugins/spot_panel.hpp"
+#include <spot_rviz_plugins/spot_panel.hpp>
 
 #include <QDoubleValidator>
 #include <QFile>
@@ -340,12 +340,23 @@ void SpotPanel::setControlButtons() {
  *
  * @param service Service to call
  * @param serviceName Name of the service to use in labels
- * @return true if successfully called
- * @return false otherwise
  */
-bool SpotPanel::callTriggerService(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr service) {
+void SpotPanel::callTriggerService(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr service) {
   std_srvs::srv::Trigger::Request req;
   return callCustomTriggerService<std_srvs::srv::Trigger, std_srvs::srv::Trigger::Request>(service, req);
+}
+
+template <typename C>
+void SpotPanel::serviceResponseCallback(std::string serviceName, typename rclcpp::Client<C>::SharedFuture future) {
+  std::string labelText;
+  auto result = future.get();
+  if (result->success) {
+    labelText = serviceName + " service call was successful";
+  } else {
+    labelText = serviceName + " call failed";
+  }
+
+  statusLabel->setText(QString(labelText.c_str()));
 }
 
 template <typename C, typename T>
@@ -357,37 +368,22 @@ template <typename C, typename T>
  * @param service Service to call
  * @param serviceName Name of the service to use in labels
  * @param serviceRequest Request to make to the service
- * @return true if successfully called
- * @return false otherwise
  */
-bool SpotPanel::callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr service, T serviceRequest) {
-  std::string serviceName = std::string(service->get_service_name());
+void SpotPanel::callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr service, T serviceRequest) {
+  std::string serviceName = service->get_service_name();
   std::string labelText = "Calling " + serviceName + " service";
-  statusLabel->setText(QString(labelText.c_str()));
-  auto future = service->async_send_request(std::make_shared<T>(serviceRequest));
-  auto future_result = rclcpp::spin_until_future_complete(client_node_, future, std::chrono::seconds(10));
-
-  if (future_result == rclcpp::FutureReturnCode::SUCCESS) {
-    auto result = future.get();
-    if (result->success) {
-      labelText = "Successfully called " + serviceName + " service";
-      statusLabel->setText(QString(labelText.c_str()));
-      return true;
-    } else {
-      labelText = serviceName + " service failed";
-      statusLabel->setText(QString(labelText.c_str()));
-      return false;
-    }
-  } else if (future_result == rclcpp::FutureReturnCode::TIMEOUT) {
-    labelText = "Call to " + serviceName + " timed out";
-    statusLabel->setText(QString(labelText.c_str()));
-    service->remove_pending_request(future);
-    return false;
-  } else {
-    labelText = "Failed to call " + serviceName + " service";
-    statusLabel->setText(QString(labelText.c_str()));
-    return false;
+  if (!service->wait_for_service(std::chrono::seconds(1))) {
+    statusLabel->setText((serviceName + " service didn't exist.").c_str());
+    return;
   }
+
+  statusLabel->setText(QString(labelText.c_str()));
+
+  // Have to make this a shared pointer in order to correctly cancel the pending request in the timer callback
+  auto future_and_id = service->async_send_request(
+      std::make_shared<T>(serviceRequest), [this, serviceName](typename rclcpp::Client<C>::SharedFuture future) {
+        this->serviceResponseCallback<C>(serviceName, future);
+      });
 }
 
 /**
@@ -620,11 +616,11 @@ void SpotPanel::powerOff() {
 }
 
 void SpotPanel::claimLease() {
-  if (callTriggerService(claimLeaseService_)) claimLeaseButton->setEnabled(false);
+  callTriggerService(claimLeaseService_);
 }
 
 void SpotPanel::releaseLease() {
-  if (callTriggerService(releaseLeaseService_)) releaseLeaseButton->setEnabled(false);
+  callTriggerService(releaseLeaseService_);
 }
 
 void SpotPanel::stop() {
