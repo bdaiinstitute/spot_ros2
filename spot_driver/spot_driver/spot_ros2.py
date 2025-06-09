@@ -862,7 +862,7 @@ class SpotROS(Node):
         self.create_service(
             PosedStand,
             "posed_stand",
-            lambda request, response: self.service_wrapper("dock", self.handle_posed_stand, request, response),
+            lambda request, response: self.service_wrapper("posed_stand", self.handle_posed_stand, request, response),
             callback_group=self.group,
         )
 
