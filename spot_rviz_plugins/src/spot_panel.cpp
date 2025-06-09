@@ -49,7 +49,7 @@ SpotPanel::SpotPanel(QWidget* parent) {
   claimLeaseService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/claim");
   releaseLeaseService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/release");
   powerOnService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/power_on");
-  powerOffService_ = client_node_->create_client<std_srvs::srv::Trigger>("spot/power_off");
+  powerOffService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/power_off");
   maxVelocityService_ = client_node_->create_client<spot_msgs::srv::SetVelocity>("/spot/velocity_limit");
   hardStopService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/estop/hard");
   gentleStopService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/estop/gentle");
@@ -141,7 +141,7 @@ SpotPanel::SpotPanel(QWidget* parent) {
   batterySub_ = client_node_->create_subscription<spot_msgs::msg::BatteryStateArray>(
       "/spot/status/battery_states", 1, std::bind(&SpotPanel::batteryCallback, this, std::placeholders::_1));
   powerSub_ = client_node_->create_subscription<spot_msgs::msg::PowerState>(
-      "/spot/status/power_state", 1, std::bind(&SpotPanel::powerCallback, this, std::placeholders::_1));
+      "/spot/status/power_states", 1, std::bind(&SpotPanel::powerCallback, this, std::placeholders::_1));
   // motionAllowedSub_ = nh_.subscribe("/spot/status/motion_allowed", 1, std::bind(&SpotPanel::motionAllowedCallback,
   // this, std::placeholders::_1)); camScreensSub_ = nh_.subscribe("/spot/cam/screens", 1, &SpotPanel::screensCallback,
   // this); camPTZSub_ = nh_.subscribe("/spot/cam/ptz/list", 1, &SpotPanel::ptzCallback, this);
@@ -725,17 +725,18 @@ void SpotPanel::dock() {
   callCustomTriggerService<spot_msgs::srv::Dock, spot_msgs::srv::Dock::Request>(dockService_, req);
 }
 
-/*     void SpotPanel::selfRight() {
-        callTriggerService(selfRightService_);
-    }
+void SpotPanel::selfRight() {
+  callTriggerService(selfRightService_);
+}
 
-    void SpotPanel::rollOverLeft() {
-        callTriggerService(rollOverLeftService_);
-    }
+/*
+void SpotPanel::rollOverLeft() {
+    callTriggerService(rollOverLeftService_);
+}
 
-    void SpotPanel::rollOverRight() {
-        callTriggerService(rollOverRightService_);
-    } */
+void SpotPanel::rollOverRight() {
+    callTriggerService(rollOverRightService_);
+} */
 
 /*     void SpotPanel::ptzCallback(const spot_cam::PTZDescriptionArray &ptz_descriptions) {
         // Combobox items should only be populated a single time. The ptzs do not change unless the camera changes
