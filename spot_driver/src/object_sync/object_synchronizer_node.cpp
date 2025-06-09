@@ -48,7 +48,9 @@ ObjectSynchronizerNode::ObjectSynchronizerNode(const rclcpp::NodeOptions& node_o
   auto tf_broadcaster_timer = std::make_unique<RclcppWallTimerInterface>(node);
   auto clock_interface = std::make_unique<RclcppClockInterface>(node->get_node_clock_interface());
 
-  auto spot_api = std::make_unique<DefaultSpotApi>(kDefaultSDKName, parameter_interface->getCertificate());
+  const auto timesync_timeout = parameter_interface->getTimeSyncTimeout();
+  auto spot_api =
+      std::make_unique<DefaultSpotApi>(kDefaultSDKName, timesync_timeout, parameter_interface->getCertificate());
 
   initialize(std::move(spot_api), std::move(parameter_interface), std::move(logger_interface),
              std::move(tf_broadcaster_interface), std::move(tf_listener_interface),
@@ -67,12 +69,12 @@ void ObjectSynchronizerNode::initialize(std::unique_ptr<SpotApi> spot_api,
 
   const auto address = parameter_interface->getHostname();
   const auto port = parameter_interface->getPort();
-  const auto robot_name = parameter_interface->getSpotName();
   const auto username = parameter_interface->getUsername();
   const auto password = parameter_interface->getPassword();
+  const std::string frame_prefix = parameter_interface->getFramePrefixWithDefaultFallback();
 
   // create and authenticate robot
-  if (const auto create_robot_result = spot_api_->createRobot(robot_name, address, port); !create_robot_result) {
+  if (const auto create_robot_result = spot_api_->createRobot(address, port, frame_prefix); !create_robot_result) {
     const auto error_msg{std::string{"Failed to create interface to robot: "}.append(create_robot_result.error())};
     logger_interface->logError(error_msg);
     throw std::runtime_error(error_msg);

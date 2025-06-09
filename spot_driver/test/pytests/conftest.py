@@ -19,7 +19,6 @@ import pathlib
 import tempfile
 import typing
 
-import bdai_ros2_wrappers.scope as ros_scope
 import domain_coordinator
 import grpc
 import launch
@@ -31,11 +30,12 @@ import launch_ros
 import launch_ros.substitutions
 import pytest
 import rclpy
+import synchros2.scope as ros_scope
 import yaml
-from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.power_pb2 import PowerCommandRequest, PowerCommandResponse, PowerCommandStatus
 from bosdyn.api.robot_command_pb2 import RobotCommandResponse
 from bosdyn.api.robot_state_pb2 import PowerState
+from synchros2.scope import ROSAwareScope
 
 import spot_wrapper.testing
 from spot_driver.spot_ros2 import SpotROS

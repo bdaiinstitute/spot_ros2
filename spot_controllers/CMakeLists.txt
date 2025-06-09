@@ -16,32 +16,55 @@ find_package(ament_cmake REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_interface
   forward_command_controller
+  imu_sensor_broadcaster
   pluginlib
   rclcpp
   rclcpp_lifecycle
+  spot_msgs
+  tf2_geometry_msgs
+  tf2_msgs
+  tf2
+  geometry_msgs
 )
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
-
 generate_parameter_library(
   forward_state_controller_parameters
-  include/spot_controllers/forward_state_controller_parameters.yaml
+  include/spot_controllers/parameters/forward_state_controller_parameters.yaml
+)
+
+generate_parameter_library(
+  spot_joint_controller_parameters
+  include/spot_controllers/parameters/spot_joint_controller_parameters.yaml
+)
+
+generate_parameter_library(
+  foot_state_broadcaster_parameters
+  include/spot_controllers/parameters/foot_state_broadcaster_parameters.yaml
+)
+
+generate_parameter_library(
+  spot_pose_broadcaster_parameters
+  include/spot_controllers/parameters/spot_pose_broadcaster_parameters.yaml
+)
+
+generate_parameter_library(
+  spot_imu_broadcaster_parameters
+  include/spot_controllers/parameters/spot_imu_broadcaster_parameters.yaml
 )
 
 # Add the hardware interface
 add_library(
   spot_controllers
   SHARED
+  src/spot_controller_utils.cpp
   src/forward_state_controller.cpp
+  src/spot_joint_controller.cpp
+  src/foot_state_broadcaster.cpp
+  src/spot_pose_broadcaster.cpp
+  src/spot_imu_broadcaster.cpp
 )
 target_compile_features(spot_controllers PUBLIC cxx_std_20)
 target_include_directories(spot_controllers PUBLIC
@@ -50,7 +73,12 @@ target_include_directories(spot_controllers PUBLIC
 )
 target_link_libraries(
   spot_controllers PUBLIC 
-  forward_state_controller_parameters forward_command_controller::forward_command_controller
+  forward_state_controller_parameters
+  spot_joint_controller_parameters
+  foot_state_broadcaster_parameters
+  spot_pose_broadcaster_parameters
+  forward_command_controller::forward_command_controller
+  imu_sensor_broadcaster::imu_sensor_broadcaster
 )
 ament_target_dependencies(
   spot_controllers PUBLIC
@@ -69,7 +97,7 @@ install(
   DESTINATION include/${PROJECT_NAME}
 )
 
-install(TARGETS spot_controllers forward_state_controller_parameters
+install(TARGETS spot_controllers forward_state_controller_parameters spot_joint_controller_parameters foot_state_broadcaster_parameters spot_pose_broadcaster_parameters
   EXPORT export_spot_controllers
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

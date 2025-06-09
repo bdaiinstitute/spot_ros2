@@ -60,7 +60,7 @@ class StatePublisher {
    */
   void timerCallback();
 
-  std::string full_odom_frame_id_;
+  std::string full_tf_root_id_;
 
   std::string frame_prefix_;
 

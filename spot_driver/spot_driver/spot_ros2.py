@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Debug
 # from ros_helpers import *
+import functools
 import logging
 import os
 import tempfile
@@ -8,37 +9,38 @@ import threading
 import time
 import traceback
 import typing
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-import bdai_ros2_wrappers.process as ros_process
 import builtin_interfaces.msg
+import numpy as np
 import rclpy
 import rclpy.duration
 import rclpy.time
+import synchros2.process as ros_process
 import tf2_ros
-from bdai_ros2_wrappers.node import Node
-from bdai_ros2_wrappers.single_goal_action_server import (
-    SingleGoalActionServer,
-)
-from bdai_ros2_wrappers.single_goal_multiple_action_servers import (
-    SingleGoalMultipleActionServers,
-)
+from bondpy.bondpy import Bond
 from bosdyn.api import (
     geometry_pb2,
     gripper_camera_param_pb2,
+    lease_pb2,
     manipulation_api_pb2,
+    point_cloud_pb2,
     robot_command_pb2,
     trajectory_pb2,
     world_object_pb2,
 )
 from bosdyn.api.geometry_pb2 import Quaternion, SE2VelocityLimit
+from bosdyn.api.manipulation_api_pb2 import WalkGazeMode
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 from bosdyn.api.spot.choreography_sequence_pb2 import Animation, ChoreographySequence, ChoreographyStatusResponse
 from bosdyn.client import math_helpers
+from bosdyn.client.async_tasks import AsyncPeriodicQuery
 from bosdyn.client.exceptions import InternalServerError
-from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
+from bosdyn.client.lease import Lease, LeaseWallet
+from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg, bosdyn_pose_to_tf
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
@@ -54,11 +56,7 @@ from bosdyn_msgs.msg import (
     RobotCommandFeedback,
     RobotCommandFeedbackStatusStatus,
 )
-from geometry_msgs.msg import (
-    Pose,
-    PoseStamped,
-    Twist,
-)
+from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -67,16 +65,18 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, PointCloud2, PointField
 from std_srvs.srv import SetBool, Trigger
+from synchros2.node import Node
+from synchros2.service import Serviced
+from synchros2.single_goal_action_server import SingleGoalActionServer
+from synchros2.single_goal_multiple_action_servers import SingleGoalMultipleActionServers
 
 import spot_driver.robot_command_util as robot_command_util
 
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
-from spot_driver.ros_helpers import (
-    get_from_env_and_fall_back_to_param,
-)
+from spot_driver.ros_helpers import TriggerServiceWrapper, get_from_env_and_fall_back_to_param
 from spot_msgs.action import (  # type: ignore
     ExecuteDance,
     Manipulation,
@@ -94,6 +94,7 @@ from spot_msgs.msg import (  # type: ignore
     MobilityParams,
 )
 from spot_msgs.srv import (  # type: ignore
+    AcquireLease,
     ChoreographyRecordedStateToAnimation,
     ChoreographyStartRecordingState,
     ChoreographyStopRecordingState,
@@ -124,11 +125,13 @@ from spot_msgs.srv import (  # type: ignore
     OverrideGraspOrCarry,
     PlaySound,
     RetrieveLogpoint,
+    ReturnLease,
     SetGripperAngle,
     SetGripperCameraParameters,
     SetLEDBrightness,
     SetLocomotion,
     SetPtzPosition,
+    SetStandHeight,
     SetVelocity,
     SetVolume,
     StoreLogpoint,
@@ -136,10 +139,9 @@ from spot_msgs.srv import (  # type: ignore
     UploadAnimation,
     UploadSequence,
 )
-from spot_msgs.srv import (  # type: ignore
-    RobotCommand as RobotCommandService,
-)
+from spot_msgs.srv import RobotCommand as RobotCommandService  # type: ignore
 from spot_wrapper.cam_wrapper import SpotCamCamera, SpotCamWrapper
+from spot_wrapper.spot_leash import SpotLeashContextProtocol, SpotLeashProtocol
 from spot_wrapper.wrapper import SpotWrapper
 
 MAX_DURATION = 1e6
@@ -199,6 +201,124 @@ def set_node_parameter_from_parameter_list(
         node.set_parameters([parameter for parameter in parameter_list if parameter.name == parameter_name])
 
 
+class SpotProxyLeash(SpotLeashProtocol):
+    class Context(SpotLeashContextProtocol):
+        def __init__(self, leash: SpotLeashProtocol, logger: logging.Logger):
+            self._leash = leash
+            self._logger = logger
+            self._lock = threading.Lock()
+            self._num_entries = 0
+
+        def _decorate(self, action: Callable) -> Callable:
+            @functools.wraps(action)
+            def _wrapper(*args: Any, **kwargs: Any) -> Any:
+                try:
+                    with self._lock:
+                        if self._num_entries == 0:
+                            self._leash.grab()
+                        self._num_entries += 1
+                    try:
+                        return action(*args, **kwargs)
+                    finally:
+                        with self._lock:
+                            self._num_entries -= 1
+                            if self._num_entries == 0:
+                                self._leash.yield_()
+                except Exception:
+                    self._logger.error(traceback.format_exc())
+                    raise
+
+            return _wrapper
+
+        def bind(self, target: Any, actions: Sequence[Callable], passive: bool = False) -> None:
+            for action in actions:
+                setattr(target, action.__name__, self._decorate(action))
+
+    def __init__(self, node: Node, logger: logging.Logger) -> None:
+        self._node = node
+        self._logger = logger
+        self._lock = threading.Lock()
+        self._claim_leases = Serviced(Trigger, "claim_leases", node)
+        self._acquire_lease = Serviced(AcquireLease, "acquire_lease", node)
+        self._return_lease = Serviced(ReturnLease, "return_lease", node)
+        self._release_leases = Serviced(Trigger, "release_leases", node)
+        self._lease_wallet: Optional[LeaseWallet] = None
+        self._keepalive_bond: Optional[Bond] = None
+        self._lease: Optional[Lease] = None
+
+    def claim(self) -> bool:
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            self._claim_leases()
+            return True
+
+    def grab(self, force: bool = False) -> Tuple[bool, Optional[Lease]]:
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            if self._lease is not None and not force:
+                return False, self._lease
+            request = AcquireLease.Request()
+            request.client_name = self._lease_wallet.client_name
+            request.force = force
+            response = self._acquire_lease(request)
+            lease_proto = lease_pb2.Lease()
+            convert(response.lease, lease_proto)
+            lease = Lease(lease_proto)
+            self._lease_wallet.add(lease)
+            have_new_lease = self._lease is None or str(lease.lease_proto) != str(self._lease.lease_proto)
+            if self._keepalive_bond is not None:
+                self._keepalive_bond.shutdown()
+            self._keepalive_bond = Bond(self._node, "bonds", self._lease_wallet.client_name)
+            self._keepalive_bond.start()
+            self._lease = lease
+            return have_new_lease, lease
+
+    def yield_(self) -> None:
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            if self._lease is None:
+                raise RuntimeError("no lease to yield")
+            request = ReturnLease.Request()
+            convert(self._lease.lease_proto, request.lease)
+            self._return_lease(request)
+            self._lease_wallet.remove(self._lease)
+            if self._keepalive_bond is not None:
+                self._keepalive_bond.shutdown()
+            self._keepalive_bond = None
+            self._lease = None
+
+    def release(self) -> None:
+        with self._lock:
+            if self._lease_wallet is None:
+                raise RuntimeError("leash not tied to wrapper")
+            self._release_leases()
+            if self._keepalive_bond is not None:
+                self._keepalive_bond.shutdown()
+            self._keepalive_bond = None
+            if self._lease is not None:
+                self._lease_wallet.remove(self._lease)
+            self._lease = None
+
+    def tie(self, wrapper: Any) -> SpotLeashContextProtocol:
+        self._lease_wallet = wrapper._robot.lease_wallet
+        return SpotProxyLeash.Context(self, self._logger)
+
+    @property
+    def lease(self) -> Optional[Lease]:
+        return self._lease
+
+    @property
+    def resources(self) -> List[lease_pb2.LeaseResource]:
+        raise NotImplementedError("Not available, only over status/leases topic")
+
+    @property
+    def async_tasks(self) -> List[AsyncPeriodicQuery]:
+        return []
+
+
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
@@ -219,7 +339,6 @@ class SpotROS(Node):
         self.callbacks: Dict[str, Callable] = {}
         """Dictionary listing what callback to use for what data task"""
         self.callbacks["metrics"] = self.metrics_callback
-        self.callbacks["lease"] = self.lease_callback
 
         self.group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.graph_nav_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
@@ -241,7 +360,6 @@ class SpotROS(Node):
 
         # Declare rates for the spot_ros2 publishers, which are combined to a dictionary
         self.declare_parameter("metrics_rate", 0.04)
-        self.declare_parameter("lease_rate", 1.0)
         self.declare_parameter("world_objects_rate", 20.0)
         self.declare_parameter("graph_nav_pose_rate", 10.0)
 
@@ -250,6 +368,7 @@ class SpotROS(Node):
         self.declare_parameter("initialize_spot_cam", False)
 
         self.declare_parameter("spot_name", "")
+        self.declare_parameter("frame_prefix", Parameter.Type.STRING)
         self.declare_parameter("mock_enable", False)
 
         self.declare_parameter("gripperless", False)
@@ -257,6 +376,10 @@ class SpotROS(Node):
         self.declare_parameter("max_linear_x", 1.0)
         self.declare_parameter("max_linear_y", 1.0)
         self.declare_parameter("max_angular_z", 1.0)
+
+        self.declare_parameter("use_velodyne", False)
+        self.declare_parameter("velodyne_rate", 10.0)
+
 
         # When we send very long trajectories to Spot, we create batches of
         # given size. If we do not batch a long trajectory, Spot will reject it.
@@ -304,10 +427,17 @@ class SpotROS(Node):
 
         self.rates = {
             "metrics": self.get_parameter("metrics_rate").value,
-            "lease": self.get_parameter("lease_rate").value,
             "world_objects": self.get_parameter("world_objects_rate").value,
             "graph_nav_pose": self.get_parameter("graph_nav_pose_rate").value,
         }
+
+        self.use_velodyne = self.get_parameter("use_velodyne").value
+        if self.use_velodyne:
+            self.callbacks["lidar_points"] = self.velodyne_callback
+            self.velodyne_pub: Publisher = self.create_publisher(PointCloud2, "velodyne/points", 10)
+            self.velodyne_static_tf_broadcaster = tf2_ros.StaticTransformBroadcaster(self)
+            self.rates["point_cloud"] = self.get_parameter("velodyne_rate").value
+
         max_task_rate = float(max(self.rates.values()))
 
         self.declare_parameter("async_tasks_rate", max_task_rate)
@@ -342,34 +472,9 @@ class SpotROS(Node):
             get_from_env_and_fall_back_to_param("SPOT_CERTIFICATE", self, "certificate", "") or None
         )
 
-        # Spot has 2 types of odometries: 'odom' and 'vision'
-        # The former one is kinematic odometry and the second one is a combined odometry of vision and kinematics
-        # These params enables to change which odometry frame is a parent of body frame and to change tf names of each
-        # odometry frames.
-        frame_prefix = ""
-        if self.name is not None:
-            frame_prefix = self.name + "/"
-        self.frame_prefix: str = frame_prefix
-        self.preferred_odom_frame: Parameter = self.declare_parameter(
-            "preferred_odom_frame", self.frame_prefix + "odom"
-        )  # 'vision' or 'odom'
-        self.tf_name_kinematic_odom: Parameter = self.declare_parameter(
-            "tf_name_kinematic_odom", self.frame_prefix + "odom"
-        )
-        self.tf_name_raw_kinematic: str = frame_prefix + "odom"
-        self.tf_name_vision_odom: Parameter = self.declare_parameter(
-            "tf_name_vision_odom", self.frame_prefix + "vision"
-        )
-        self.tf_name_raw_vision: str = self.frame_prefix + "vision"
-
-        preferred_odom_frame_references = [self.tf_name_raw_kinematic, self.tf_name_raw_vision]
-        if self.preferred_odom_frame.value not in preferred_odom_frame_references:
-            error_msg = (
-                f'rosparam "preferred_odom_frame" should be one of {preferred_odom_frame_references}, got'
-                f' "{self.preferred_odom_frame.value}"'
-            )
-            self.get_logger().error(error_msg)
-            raise ValueError(error_msg)
+        self.frame_prefix: Optional[str] = self.get_parameter_or("frame_prefix", None).value
+        if self.frame_prefix is None:
+            self.frame_prefix = self.name + "/" if self.name is not None else ""
 
         self.tf_name_graph_nav_body: str = self.frame_prefix + "body"
 
@@ -380,6 +485,27 @@ class SpotROS(Node):
 
         logging.basicConfig(format="[%(filename)s:%(lineno)d] %(message)s", level=logging.ERROR)
         self.wrapper_logger = logging.getLogger(f"{name_with_dot}spot_wrapper")
+
+        self.leash_interface: Optional[SpotLeashProtocol] = None
+
+        self.leasing_mode = self.declare_parameter("leasing_mode", "direct").value
+        if self.leasing_mode == "proxied":
+            if self.use_take_lease:
+                self.get_logger().error(
+                    "Should 'use_take_lease' but proxy leasing won't under normal operation, ignoring"
+                )
+            if not self.get_lease_on_action:
+                self.get_logger().error(
+                    "Should not 'get_lease_on_action' but proxy leasing "
+                    "must as it operates with temporary subleases, ignoring"
+                )
+            self.leash_interface = SpotProxyLeash(self, self.wrapper_logger)
+        else:
+            if self.leasing_mode != "direct":
+                self.get_logger().warn(f"Unknown '{self.leasing_mode}' leasing mode, falling back to 'direct'")
+            self.lease_pub: Publisher = self.create_publisher(LeaseArray, "status/leases", 1)
+            self.rates["lease"] = self.declare_parameter("lease_rate", 1.0).value
+            self.callbacks["lease"] = self.lease_callback
 
         name_str = ""
         if self.name is not None:
@@ -399,16 +525,19 @@ class SpotROS(Node):
                 hostname=self.ip,
                 port=self.port,
                 robot_name=self.name,
+                frame_prefix=self.frame_prefix,
                 logger=self.wrapper_logger,
                 start_estop=self.start_estop.value,
                 estop_timeout=self.estop_timeout.value,
                 rates=self.rates,
                 callbacks=self.callbacks,
+                leash_interface=self.leash_interface,
                 use_take_lease=self.use_take_lease.value,
                 get_lease_on_action=self.get_lease_on_action.value,
                 continually_try_stand=self.continually_try_stand.value,
                 rgb_cameras=self.rgb_cameras.value,
                 cert_resource_glob=self.certificate,
+                gripperless=self.gripperless,
             )
             if not self.spot_wrapper.is_valid:
                 return
@@ -436,9 +565,9 @@ class SpotROS(Node):
                 self.get_logger().error(error_msg)
                 raise ValueError(error_msg)
 
-        has_arm = self.mock_has_arm
+        self.has_arm = self.mock_has_arm
         if self.spot_wrapper is not None:
-            has_arm = self.spot_wrapper.has_arm()
+            self.has_arm = self.spot_wrapper.has_arm()
 
         if self.publish_graph_nav_pose.value:
             # graph nav pose will be published both on a topic
@@ -459,124 +588,20 @@ class SpotROS(Node):
         velocity.velocity_limit.angular.z = self.get_parameter("max_angular_z").value
         self.handle_max_vel(velocity, SetVelocity.Response())
 
-        self.declare_parameter("has_arm", has_arm)
+        self.declare_parameter("has_arm", self.has_arm)
 
         # Status Publishers #
         self.dynamic_broadcaster: tf2_ros.TransformBroadcaster = tf2_ros.TransformBroadcaster(self)
         self.metrics_pub: Publisher = self.create_publisher(Metrics, "status/metrics", 1)
-        self.lease_pub: Publisher = self.create_publisher(LeaseArray, "status/leases", 1)
         self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
         self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
 
         self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
-        self.create_service(
-            Trigger,
-            "claim",
-            lambda request, response: self.service_wrapper("claim", self.handle_claim, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "release",
-            lambda request, response: self.service_wrapper("release", self.handle_release, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "stop",
-            lambda request, response: self.service_wrapper("stop", self.handle_stop, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "self_right",
-            lambda request, response: self.service_wrapper("self_right", self.handle_self_right, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "sit",
-            lambda request, response: self.service_wrapper("sit", self.handle_sit, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "stand",
-            lambda request, response: self.service_wrapper("stand", self.handle_stand, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "rollover",
-            lambda request, response: self.service_wrapper("rollover", self.handle_rollover, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "power_on",
-            lambda request, response: self.service_wrapper("power_on", self.handle_power_on, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "power_off",
-            lambda request, response: self.service_wrapper("power_off", self.handle_safe_power_off, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "estop/hard",
-            lambda request, response: self.service_wrapper("estop/hard", self.handle_estop_hard, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "estop/gentle",
-            lambda request, response: self.service_wrapper("estop/gentle", self.handle_estop_soft, request, response),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "estop/release",
-            lambda request, response: self.service_wrapper(
-                "estop/release", self.handle_estop_disengage, request, response
-            ),
-            callback_group=self.group,
-        )
-        self.create_service(
-            Trigger,
-            "undock",
-            lambda request, response: self.service_wrapper("undock", self.handle_undock, request, response),
-            callback_group=self.group,
-        )
 
-        self.create_service(
-            Trigger,
-            "spot_check",
-            lambda request, response: self.service_wrapper("spot_check", self.handle_spot_check, request, response),
-            callback_group=self.group,
-        )
+        self.create_trigger_services()
 
-        if has_arm:
-            self.create_service(
-                Trigger,
-                "arm_stow",
-                lambda request, response: self.service_wrapper("arm_stow", self.handle_arm_stow, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "arm_unstow",
-                lambda request, response: self.service_wrapper("arm_unstow", self.handle_arm_unstow, request, response),
-                callback_group=self.group,
-            )
-            self.create_service(
-                Trigger,
-                "arm_carry",
-                lambda request, response: self.service_wrapper("arm_carry", self.handle_arm_carry, request, response),
-                callback_group=self.group,
-            )
+        if self.has_arm:
             self.create_subscription(
                 JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
             )
@@ -586,22 +611,6 @@ class SpotROS(Node):
 
             if not self.gripperless:
                 self.create_service(
-                    Trigger,
-                    "open_gripper",
-                    lambda request, response: self.service_wrapper(
-                        "open_gripper", self.handle_open_gripper, request, response
-                    ),
-                    callback_group=self.group,
-                )
-                self.create_service(
-                    Trigger,
-                    "close_gripper",
-                    lambda request, response: self.service_wrapper(
-                        "close_gripper", self.handle_close_gripper, request, response
-                    ),
-                    callback_group=self.group,
-                )
-                self.create_service(
                     SetGripperAngle,
                     "set_gripper_angle",
                     lambda request, response: self.service_wrapper(
@@ -609,6 +618,15 @@ class SpotROS(Node):
                     ),
                     callback_group=self.group,
                 )
+
+        self.create_service(
+            SetStandHeight,
+            "set_stand_height",
+            lambda request, response: self.service_wrapper(
+                "set_stand_height", self.handle_stand_height, request, response
+            ),
+            callback_group=self.group,
+        )
 
         self.create_service(
             SetBool,
@@ -639,13 +657,6 @@ class SpotROS(Node):
                 request,
                 response,
             ),
-            callback_group=self.group,
-        )
-
-        self.create_service(
-            Trigger,
-            "stop_dance",
-            lambda request, response: self.service_wrapper("stop_dance", self.handle_stop_dance, request, response),
             callback_group=self.group,
         )
         self.create_service(
@@ -890,7 +901,7 @@ class SpotROS(Node):
             self.handle_graph_nav_set_localization,
             callback_group=self.group,
         )
-        if has_arm and not self.gripperless:
+        if self.has_arm and not self.gripperless:
             self.create_service(
                 GetGripperCameraParameters,
                 "get_gripper_camera_parameters",
@@ -902,7 +913,6 @@ class SpotROS(Node):
                 ),
                 callback_group=self.group,
             )
-
             self.create_service(
                 SetGripperCameraParameters,
                 "set_gripper_camera_parameters",
@@ -962,7 +972,7 @@ class SpotROS(Node):
             callback_group=self.group,
         )
 
-        if has_arm:
+        if self.has_arm:
             # Allows both the "robot command" and the "manipulation" action goal to preempt each other
             self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
                 self,
@@ -1102,6 +1112,88 @@ class SpotROS(Node):
 
             self.lease_pub.publish(lease_array_msg)
 
+    def _get_point_cloud_msg(
+        self, data: point_cloud_pb2.PointCloudResponse, local_time_msg: builtin_interfaces.msg.Time
+    ) -> PointCloud2:
+        """Takes the point cloud data and populates the point cloud ROS message
+
+        Args:
+            data: PointCloud proto (PointCloudResponse)
+            local_time_msg: Timestamp of the point cloud data as a ROS message
+        Returns:
+            PointCloud: ROS PointCloud2 message of the data
+        """
+        point_cloud_msg = PointCloud2()
+        point_cloud_msg.header.stamp = local_time_msg
+        point_cloud_msg.header.frame_id = self.frame_prefix + data.point_cloud.source.frame_name_sensor
+        if data.point_cloud.encoding == point_cloud_pb2.PointCloud.ENCODING_XYZ_32F:
+            point_cloud_msg.height = 1
+            point_cloud_msg.width = data.point_cloud.num_points
+            point_cloud_msg.fields = []
+            for i, ax in enumerate(("x", "y", "z")):
+                field = PointField()
+                field.name = ax
+                field.offset = i * 4
+                field.datatype = PointField.FLOAT32
+                field.count = 1
+                point_cloud_msg.fields.append(field)
+            point_cloud_msg.is_bigendian = False
+            point_cloud_np = np.frombuffer(data.point_cloud.data, dtype=np.uint8)
+            point_cloud_msg.point_step = 12  # float32 XYZ
+            point_cloud_msg.row_step = point_cloud_msg.width * point_cloud_msg.point_step
+            point_cloud_msg.data = point_cloud_np.tobytes()
+            point_cloud_msg.is_dense = True
+        else:
+            self.get_logger().warn("Not supported point cloud data type.")
+        return point_cloud_msg
+
+    def _get_velodyne_tf(
+        self, data: point_cloud_pb2.PointCloudResponse, local_time_msg: builtin_interfaces.msg.Time
+    ) -> TransformStamped:
+        """Takes the point cloud data and populates the point cloud sensor frame transform
+
+        Args:
+            data: PointCloud proto (PointCloudResponse)
+            local_time_msg: Timestamp of the point cloud data as a ROS message
+        Returns:
+            PointCloud: ROS TransformStamped message containing only the transform of the point cloud sensor frame
+        """
+        snapshot = data.point_cloud.source.transforms_snapshot.child_to_parent_edge_map
+        # The goal here is to only publish the TF of the sensor frame name, otherwise we will have duplicate static TFs
+        # from the C++ state publishers
+        sensor_frame = data.point_cloud.source.frame_name_sensor
+        transform = snapshot.get(sensor_frame)
+        parent_frame = transform.parent_frame_name
+        parent_t_sensor = transform.parent_tform_child
+        tf = bosdyn_pose_to_tf(
+            frame_t_pose=parent_t_sensor,
+            frame=self.frame_prefix + parent_frame,
+            child_frame=self.frame_prefix + sensor_frame,
+            local_stamp=local_time_msg,
+        )
+        return tf
+
+    def velodyne_callback(self, results: Any) -> None:
+        """Callback for when Spot Wrapper gets new velodyne point cloud data
+
+        Args:
+            results (Any): FutureWrapper object of AsyncPeriodicQuery callback
+        """
+        if self.spot_wrapper is None:
+            return
+
+        data = self.spot_wrapper.point_clouds
+        if data:
+            point_cloud_proto = data[0]
+            local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
+            local_time_msg = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
+            # convert proto into PointCloud2
+            point_cloud_msg = self._get_point_cloud_msg(point_cloud_proto, local_time_msg)
+            self.velodyne_pub.publish(point_cloud_msg)
+            # get the static transform
+            tf = self._get_velodyne_tf(point_cloud_proto, local_time_msg)
+            self.velodyne_static_tf_broadcaster.sendTransform(tf)
+
     def publish_graph_nav_pose_callback(self) -> None:
         if self.spot_wrapper is None:
             return
@@ -1142,177 +1234,68 @@ class SpotROS(Node):
             return response
         return handler(request, response)
 
-    def handle_claim(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the claim service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.claim()
-        return response
+    def create_trigger_services(self) -> None:
+        services = [
+            self.handle_claim,
+            self.handle_release,
+            self.handle_stop,
+            self.handle_self_right,
+            self.handle_sit,
+            self.handle_stand,
+            self.handle_rollover,
+            self.handle_power_on,
+            self.handle_safe_power_off,
+            self.handle_estop_hard,
+            self.handle_estop_soft,
+            self.handle_estop_disengage,
+            self.handle_undock,
+            self.handle_spot_check,
+            self.handle_stop_dance,
+        ]
+        if self.has_arm:
+            services.extend(
+                [
+                    self.handle_arm_stow,
+                    self.handle_arm_carry,
+                    self.handle_arm_unstow,
+                ]
+            )
+            if not self.gripperless:
+                services.extend([self.handle_open_gripper, self.handle_close_gripper])
+        for srv in services:
+            srv.create_service(self, self.group)
 
-    def handle_release(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the release service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.release()
-        return response
+    handle_claim = TriggerServiceWrapper(SpotWrapper.claim, "claim")
+    handle_release = TriggerServiceWrapper(SpotWrapper.release, "release")
+    handle_stop = TriggerServiceWrapper(SpotWrapper.stop, "stop")
+    handle_self_right = TriggerServiceWrapper(SpotWrapper.self_right, "self_right")
+    handle_sit = TriggerServiceWrapper(SpotWrapper.sit, "sit")
+    handle_stand = TriggerServiceWrapper(SpotWrapper.stand, "stand")
+    handle_rollover = TriggerServiceWrapper(SpotWrapper.battery_change_pose, "rollover")
+    handle_power_on = TriggerServiceWrapper(SpotWrapper.power_on, "power_on")
+    handle_safe_power_off = TriggerServiceWrapper(SpotWrapper.safe_power_off, "power_off")
 
-    def handle_stop(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the stop service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.stop()
-        return response
+    # TODO: Neither estop call appears to be functional atm (functions called in wrapper return a "no attribute" error)
+    handle_estop_hard = TriggerServiceWrapper(SpotWrapper.assertEStop, "estop/hard", severe=True)
+    handle_estop_soft = TriggerServiceWrapper(SpotWrapper.assertEStop, "estop/gentle", severe=False)
 
-    def handle_self_right(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the self-right service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.self_right()
-        return response
+    handle_estop_disengage = TriggerServiceWrapper(SpotWrapper.disengageEStop, "estop/release")
+    handle_undock = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_docking.undock(), "undock")
 
-    def handle_sit(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the sit service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.sit()
-        return response
+    handle_spot_check = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_check.start_check(), "spot_check")
 
-    def handle_stand(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the stand service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.stand()
-        return response
+    handle_arm_stow = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_arm.arm_stow(), "arm_stow")
+    handle_arm_unstow = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_arm.arm_unstow(), "arm_unstow")
+    handle_arm_carry = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.spot_arm.arm_carry(), "arm_carry")
 
-    def handle_rollover(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the rollover service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.battery_change_pose()
-        return response
+    handle_open_gripper = TriggerServiceWrapper(
+        lambda spot_wrapper: spot_wrapper.spot_arm.gripper_open(), "open_gripper"
+    )
+    handle_close_gripper = TriggerServiceWrapper(
+        lambda spot_wrapper: spot_wrapper.spot_arm.gripper_close(), "close_gripper"
+    )
 
-    def handle_power_on(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the power-on service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.power_on()
-        return response
-
-    def handle_safe_power_off(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler for the safe-power-off service"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.safe_power_off()
-        return response
-
-    def handle_estop_hard(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to hard-eStop the robot.  The robot will immediately cut power to the motors"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.assertEStop(True)
-        return response
-
-    def handle_estop_soft(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to soft-eStop the robot.  The robot will try to settle on the ground before cutting
-        power to the motors"""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.assertEStop(False)
-        return response
-
-    def handle_estop_disengage(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to disengage the eStop on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.disengageEStop()
-        return response
-
-    def handle_undock(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to undock the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_docking.undock()
-        return response
-
-    def handle_spot_check(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to run spot check on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_check.start_check()
-        return response
-
-    def handle_arm_stow(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to stow the arm on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.arm_stow()
-        return response
-
-    def handle_arm_unstow(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to ready (unstow) the arm on the robot."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.arm_unstow()
-        return response
-
-    def handle_arm_carry(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to carry an object the robot has already grasped."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.arm_carry()
-        return response
-
-    def handle_open_gripper(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to open the gripper."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.gripper_open()
-        return response
-
-    def handle_close_gripper(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to close the gripper."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        response.success, response.message = self.spot_wrapper.spot_arm.gripper_close()
-        return response
+    handle_stop_dance = TriggerServiceWrapper(lambda spot_wrapper: spot_wrapper.stop_choreography(), "stop_dance")
 
     def handle_gripper_angle(
         self, request: SetGripperAngle.Request, response: SetGripperAngle.Response
@@ -1325,6 +1308,20 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.spot_arm.gripper_angle_open(
             gripper_ang=request.gripper_angle, ensure_power_on_and_stand=False
         )
+        return response
+
+    def handle_stand_height(
+        self, request: SetStandHeight.Request, response: SetStandHeight.Response
+    ) -> SetStandHeight.Response:
+        """
+        ROS service to stand the robot at a specific height (relative to default height)
+        Crouching is about -0.15m and tiptoes is about 0.15m
+        """
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.stand(body_height=request.height)
         return response
 
     def handle_clear_behavior_fault(
@@ -1341,17 +1338,6 @@ class SpotROS(Node):
             message = "No behavior fault cleared"
         response.success = success
         response.message = message
-        return response
-
-    def handle_stop_dance(self, request: Trigger.Request, response: Trigger.Response) -> Trigger.Response:
-        """ROS service handler to stop the robot's dancing."""
-        if self.spot_wrapper is None:
-            response.success = False
-            response.message = "Spot wrapper is undefined"
-            return response
-        success, msg = self.spot_wrapper.stop_choreography()
-        response.success = success
-        response.message = msg
         return response
 
     def handle_list_all_dances(
@@ -2298,47 +2284,55 @@ class SpotROS(Node):
             self.get_logger().info("Returning action result " + str(result))
         return result
 
-    def _manipulation_goal_complete(self, feedback: Optional[ManipulationApiFeedbackResponse]) -> GoalResponse:
+    def _manipulation_goal_complete(
+        self,
+        feedback: Optional[ManipulationApiFeedbackResponse],
+        request: Optional[manipulation_api_pb2.ManipulationApiRequest],
+    ) -> tuple[GoalResponse, str]:
         if feedback is None:
             # NOTE: it takes an iteration for the feedback to get set.
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
 
         if feedback.current_state.value == feedback.current_state.MANIP_STATE_UNKNOWN:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_DONE:
-            return GoalResponse.SUCCESS
+            return GoalResponse.SUCCESS, "Successfully completed manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_SEARCHING_FOR_GRASP:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_GRASP:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASPING_OBJECT:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACING_OBJECT:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_SUCCEEDED:
-            return GoalResponse.SUCCESS
+            return GoalResponse.SUCCESS, "Successfully completed manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_SUCCEEDED:
-            return GoalResponse.IN_PROGRESS
+            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:  # type: ignore
+                return GoalResponse.SUCCESS, "Successfully planned a grasp"
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_NO_SOLUTION:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Grasp planning failed"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_FAILED_TO_RAYCAST_INTO_MAP:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_GRASP_PLANNING_WAITING_DATA_AT_EDGE:
-            return GoalResponse.IN_PROGRESS
+            if request.pick_object_ray_in_world.walk_gaze_mode == WalkGazeMode.PICK_PLAN_ONLY:  # type: ignore
+                return GoalResponse.FAILED, "Unable to see object well enough to plan grasp"
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_WALKING_TO_OBJECT:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_ATTEMPTING_RAYCASTING:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_MOVING_TO_PLACE:
-            return GoalResponse.IN_PROGRESS
+            return GoalResponse.IN_PROGRESS, "In progress"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED_TO_RAYCAST_INTO_MAP:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_SUCCEEDED:
-            return GoalResponse.SUCCESS
+            return GoalResponse.SUCCESS, "Successfully completed manipulation"
         elif feedback.current_state.value == feedback.current_state.MANIP_STATE_PLACE_FAILED:
-            return GoalResponse.FAILED
+            return GoalResponse.FAILED, "Failed to complete manipulation"
         else:
             raise Exception("Unknown manipulation state type")
 
@@ -2373,7 +2367,7 @@ class SpotROS(Node):
         while (
             rclpy.ok()
             and not goal_handle.is_cancel_requested
-            and self._manipulation_goal_complete(feedback) == GoalResponse.IN_PROGRESS
+            and self._manipulation_goal_complete(feedback, proto_command)[0] == GoalResponse.IN_PROGRESS
             and goal_handle.is_active
         ):
             try:
@@ -2392,7 +2386,8 @@ class SpotROS(Node):
         if feedback is not None:
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
-        result.success = self._manipulation_goal_complete(feedback) == GoalResponse.SUCCESS
+        status, result.message = self._manipulation_goal_complete(feedback, proto_command)
+        result.success = status == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
@@ -2406,10 +2401,8 @@ class SpotROS(Node):
             result.message = "Cancelled"
             # Don't abort because that's already happened
         elif result.success:
-            result.message = "Successfully completed manipulation"
             goal_handle.succeed()
         else:
-            result.message = "Failed to complete manipulation"
             goal_handle.abort()
         self._wait_for_goal = None
         if not self.spot_wrapper:
@@ -2454,6 +2447,7 @@ class SpotROS(Node):
             ).to_yaw(),
             cmd_duration=cmd_duration_secs,
             precise_position=goal_handle.request.precise_positioning,
+            disable_vision_body_obstacle_avoidance=goal_handle.request.disable_obstacle_avoidance,
         )
 
         command_start_time = self.get_clock().now()
@@ -2472,15 +2466,15 @@ class SpotROS(Node):
         # rate = rclpy.Rate(10)
 
         try:
-            while rclpy.ok() and not self.spot_wrapper.at_goal and goal_handle.is_active:
+            while rclpy.ok() and not self.spot_wrapper.trajectory_complete and goal_handle.is_active:
                 feedback = Trajectory.Feedback()
-                if self.spot_wrapper.near_goal:
-                    if self.spot_wrapper.last_trajectory_command_precise:
-                        feedback.feedback = "Near goal, performing final adjustments"
-                    else:
-                        feedback.feedback = "Near goal"
+                if self.spot_wrapper.stopped:
+                    feedback.feedback = "Stopped, possibly blocked."
                 else:
-                    feedback.feedback = "Moving to goal"
+                    if self.spot_wrapper.is_stopping:
+                        feedback.feedback = "Stopping"
+                    else:
+                        feedback.feedback = "Moving to goal"
 
                 # rate.sleep()
                 goal_handle.publish_feedback(feedback)
@@ -2511,16 +2505,17 @@ class SpotROS(Node):
                 #                result.message = 'preempt'
 
                 feedback = Trajectory.Feedback()
-                if self.spot_wrapper.at_goal:
+
+                if self.spot_wrapper.trajectory_complete and self.spot_wrapper.at_goal:
                     # self.get_logger().error("SUCCESS")
-                    feedback.feedback = "Reached goal"
+                    feedback.feedback = "Trajectory complete: reached goal"
                     goal_handle.publish_feedback(feedback)
                     result.success = True
                     result.message = ""
                     goal_handle.succeed()
-                else:
+                elif self.spot_wrapper.trajectory_complete and not self.spot_wrapper.at_goal:
                     # self.get_logger().error("FAIL")
-                    feedback.feedback = "Failed to reach goal"
+                    feedback.feedback = "Trajectory complete: failed to reach goal"
                     goal_handle.publish_feedback(feedback)
                     result.success = False
                     result.message = "not at goal"
@@ -3025,10 +3020,13 @@ class SpotROS(Node):
     def destroy_node(self) -> None:
         self.get_logger().info("Shutting down ROS driver for Spot")
         if self.spot_wrapper is not None:
-            if self.spot_wrapper.check_is_powered_on() and self.start_estop.value:
-                self.get_logger().info("Sitting down...")
-                self.spot_wrapper.sit_blocking()
-            self.spot_wrapper.disconnect()
+            try:
+                if self.spot_wrapper.check_is_powered_on() and self.start_estop.value:
+                    self.get_logger().info("Sitting down...")
+                    self.spot_wrapper.sit_blocking()
+                self.spot_wrapper.disconnect()
+            except Exception as e:
+                self.get_logger().warn(f"Got {e} while destroying node")
         super().destroy_node()
 
 

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<!--
+Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+-->
+<package format="3">
+  <name>spot_hardware_interface</name>
+  <version>0.0.0</version>
+  <description>Package containing a ROS 2 control hardware interface for Spot using its joint control API</description>
+  <maintainer email="engineering@theaiinstitute.com">AI Institute</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>bondcpp</depend>
+  <depend>bosdyn</depend>
+  <depend>bosdyn_api_msgs</depend>
+  <depend>bosdyn_cmake_module</depend>
+  <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>spot_msgs</depend>
+  <depend>tl_expected</depend>
+
+  <exec_depend>spot_description</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

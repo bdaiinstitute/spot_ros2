@@ -4,3 +4,7 @@
 [submodule "ros_utilities"]
 	path = ros_utilities
 	url = https://github.com/bdaiinstitute/ros_utilities.git
+[submodule "spot_description"]
+	path = spot_description
+	url = https://github.com/bdaiinstitute/spot_description.git
+	branch = main

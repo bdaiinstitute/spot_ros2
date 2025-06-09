@@ -1,0 +1,7 @@
+# Allows user to request a specific height for Spot to stand relative to default (in m)
+# -0.15m is crouching and 0.15m is tiptoes
+# Values outside this range are allowed but Spot will simply go to its min/max
+float32 height # In range [-0.15, 0.15]
+---
+bool success
+string message

@@ -12,7 +12,7 @@ env:
 jobs:
   clean-ghcr:
     name: Prune old images from Github Container Registry
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Delete old pull request images
         uses: snok/container-retention-policy@v2

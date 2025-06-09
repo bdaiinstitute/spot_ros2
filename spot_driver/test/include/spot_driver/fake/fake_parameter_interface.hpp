@@ -4,6 +4,7 @@
 
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
+#include <chrono>
 #include <optional>
 #include <set>
 #include <string>
@@ -36,12 +37,22 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   bool getPublishDepthRegisteredImages() const override { return publish_depth_registered_images; }
 
-  std::string getPreferredOdomFrame() const override { return "odom"; }
+  std::string getPreferredOdomFrame() const override { return kDefaultPreferredOdomFrame; }
 
-  std::string getSpotName() const override { return spot_name; }
+  std::string getTFRoot() const override { return "odom"; }
 
-  std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm) const override {
-    const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+  std::optional<std::string> getFramePrefix() const override { return std::nullopt; }
+
+  std::string getSpotNameWithFallbackToNamespace() const override { return spot_name; }
+
+  std::string getFramePrefixWithDefaultFallback() const override { return spot_name + "/"; }
+
+  bool getGripperless() const override { return gripperless; }
+
+  std::optional<double> getLeaseRate() const override { return 1.0; }
+
+  std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm, const bool gripperless) const override {
+    const auto kDefaultCamerasUsed = (has_arm && !gripperless) ? kCamerasWithHand : kCamerasWithoutHand;
     std::set<spot_ros2::SpotCamera> spot_cameras_used;
     for (const auto& camera : kDefaultCamerasUsed) {
       spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
@@ -49,9 +60,12 @@ class FakeParameterInterface : public ParameterInterfaceBase {
     return spot_cameras_used;
   }
 
-  tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(const bool has_arm) const override {
-    return getDefaultCamerasUsed(has_arm);
+  tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(const bool has_arm,
+                                                                            const bool gripperless) const override {
+    return getDefaultCamerasUsed(has_arm, gripperless);
   }
+
+  std::chrono::seconds getTimeSyncTimeout() const override { return kDefaultTimeSyncTimeout; }
 
   static constexpr auto kExampleHostname{"192.168.0.10"};
   static constexpr auto kExampleUsername{"spot_user"};
@@ -64,6 +78,7 @@ class FakeParameterInterface : public ParameterInterfaceBase {
   bool publish_rgb_images = ParameterInterfaceBase::kDefaultPublishRGBImages;
   bool publish_depth_images = ParameterInterfaceBase::kDefaultPublishDepthImages;
   bool publish_depth_registered_images = ParameterInterfaceBase::kDefaultPublishDepthRegisteredImages;
+  bool gripperless = ParameterInterfaceBase::kDefaultGripperless;
   std::string spot_name;
 };
 }  // namespace spot_ros2::test

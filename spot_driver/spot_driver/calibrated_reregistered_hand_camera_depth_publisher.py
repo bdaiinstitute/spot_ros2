@@ -18,15 +18,15 @@ This script assumes you have a calibration generated with /spot_wrapper/spot_wra
 import argparse
 from typing import Optional
 
-import bdai_ros2_wrappers.process as ros_process
-import bdai_ros2_wrappers.scope as ros_scope
 import cv2
 import numpy as np
 import open3d as o3d
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
 import yaml
-from bdai_ros2_wrappers.context import wait_for_shutdown
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
+from synchros2.context import wait_for_shutdown
 
 
 class CalibratedReRegisteredHandCameraDepthPublisher:

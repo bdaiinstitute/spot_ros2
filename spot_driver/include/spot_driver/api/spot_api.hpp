@@ -3,6 +3,7 @@
 #pragma once
 
 #include <spot_driver/api/kinematic_api.hpp>
+#include <spot_driver/api/lease_client_interface.hpp>
 #include <spot_driver/api/state_client_interface.hpp>
 #include <spot_driver/api/time_sync_api.hpp>
 #include <spot_driver/api/world_object_client_interface.hpp>
@@ -26,8 +27,9 @@ class SpotApi {
 
   virtual ~SpotApi() = default;
 
-  virtual tl::expected<void, std::string> createRobot(const std::string& robot_name, const std::string& ip_address,
-                                                      const std::optional<int>& port = std::nullopt) = 0;
+  virtual tl::expected<void, std::string> createRobot(const std::string& ip_address,
+                                                      const std::optional<int>& port = std::nullopt,
+                                                      const std::string& frame_prefix = "") = 0;
   virtual tl::expected<void, std::string> authenticate(const std::string& username, const std::string& password) = 0;
   virtual tl::expected<bool, std::string> hasArm() const = 0;
   /**
@@ -44,6 +46,7 @@ class SpotApi {
    * @return A shared_ptr to an instance of StateClientInterface which is owned by this object.
    */
   virtual std::shared_ptr<StateClientInterface> stateClientInterface() const = 0;
+  [[nodiscard]] virtual std::shared_ptr<LeaseClientInterface> leaseClientInterface() const = 0;
   virtual std::shared_ptr<TimeSyncApi> timeSyncInterface() const = 0;
   [[nodiscard]] virtual std::shared_ptr<WorldObjectClientInterface> worldObjectClientInterface() const = 0;
 };

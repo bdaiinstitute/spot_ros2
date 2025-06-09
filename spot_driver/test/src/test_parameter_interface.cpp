@@ -8,6 +8,7 @@
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 #include <spot_driver/rclcpp_test.hpp>
 
+#include <chrono>
 #include <memory>
 
 namespace {
@@ -21,6 +22,10 @@ using ::testing::UnorderedElementsAre;
 
 constexpr auto kNodeName = "my_node_name";
 constexpr auto kNamespace = "my_namespace";
+
+static constexpr auto kSpotName = "my_spot_name";
+static constexpr auto kFramePrefix = "some_random_prefix_/_";
+static constexpr auto kFramePrefixSeparator = "/";
 
 constexpr auto kEnvVarNameHostname = "SPOT_IP";
 constexpr auto kEnvVarNamePort = "SPOT_PORT";
@@ -117,9 +122,9 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithNamespace) {
   // GIVEN we create a RclcppParameterInterface using this node
   RclcppParameterInterface parameter_interface{node};
 
-  // WHEN we call getSpotName
+  // WHEN we call getSpotNameWithFallbackToNamespace
   // THEN the parameter interface returns the namespace of the node
-  EXPECT_THAT(parameter_interface.getSpotName(), StrEq(kNamespace));
+  EXPECT_THAT(parameter_interface.getSpotNameWithFallbackToNamespace(), StrEq(kNamespace));
 }
 
 TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithEmptyNamespace) {
@@ -128,9 +133,9 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithEmptyNamespace) {
   // GIVEN we create a RclcppParameterInterface using this node
   RclcppParameterInterface parameter_interface{node};
 
-  // WHEN we call getSpotName
+  // WHEN we call getSpotNameWithFallbackToNamespace
   // THEN the parameter interface returns an empty string
-  EXPECT_THAT(parameter_interface.getSpotName(), IsEmpty());
+  EXPECT_THAT(parameter_interface.getSpotNameWithFallbackToNamespace(), IsEmpty());
 }
 
 TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithDefaultNamespace) {
@@ -139,9 +144,27 @@ TEST_F(RclcppParameterInterfaceTest, GetSpotNameWithDefaultNamespace) {
   // GIVEN we create a RclcppParameterInterface using this node
   RclcppParameterInterface parameter_interface{node};
 
-  // WHEN we call getSpotName
+  // WHEN we call getSpotNameWithFallbackToNamespace
   // THEN the parameter interface returns an empty string
-  EXPECT_THAT(parameter_interface.getSpotName(), IsEmpty());
+  EXPECT_THAT(parameter_interface.getSpotNameWithFallbackToNamespace(), IsEmpty());
+}
+
+TEST_F(RclcppParameterInterfaceTest, GetSpotNameFromExplicitParameter) {
+  // GIVEN we create rclcpp nodes with and without a specific namespace
+  const auto node = std::make_shared<rclcpp::Node>(kNodeName);
+  const auto namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we set the spot name config parameter to an explicit value
+  node->declare_parameter("spot_name", kSpotName);
+  namespaced_node->declare_parameter("spot_name", kSpotName);
+
+  // GIVEN we create a RclcppParameterInterface using these nodes
+  RclcppParameterInterface parameter_interface_a{node};
+  RclcppParameterInterface parameter_interface_b{namespaced_node};
+
+  // WHEN we call getSpotNameWithFallbackToNamespace
+  // THEN the parameter interface returns the explicit spot name in both cases
+  EXPECT_THAT(parameter_interface_a.getSpotNameWithFallbackToNamespace(), StrEq(kSpotName));
+  EXPECT_THAT(parameter_interface_b.getSpotNameWithFallbackToNamespace(), StrEq(kSpotName));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromEnvVars) {
@@ -195,6 +218,13 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   node_->declare_parameter("publish_depth", publish_depth_images_parameter);
   constexpr auto publish_depth_registered_images_parameter = false;
   node_->declare_parameter("publish_depth_registered", publish_depth_registered_images_parameter);
+  constexpr auto tf_root_parameter = "body";
+  node_->declare_parameter("tf_root", tf_root_parameter);
+  constexpr auto preferred_odom_frame_parameter = "vision";
+  node_->declare_parameter("preferred_odom_frame", preferred_odom_frame_parameter);
+  node_->declare_parameter("frame_prefix", kFramePrefix);
+  constexpr auto timesync_timeout_parameter = 42;
+  node_->declare_parameter("timesync_timeout", timesync_timeout_parameter);
 
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
@@ -213,6 +243,10 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   EXPECT_THAT(parameter_interface.getPublishRGBImages(), Eq(publish_rgb_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), Eq(publish_depth_images_parameter));
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), Eq(publish_depth_registered_images_parameter));
+  EXPECT_THAT(parameter_interface.getTFRoot(), Eq(tf_root_parameter));
+  EXPECT_THAT(parameter_interface.getPreferredOdomFrame(), StrEq(preferred_odom_frame_parameter));
+  EXPECT_THAT(parameter_interface.getFramePrefix(), Optional(kFramePrefix));
+  EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(std::chrono::seconds(timesync_timeout_parameter)));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameters) {
@@ -272,6 +306,10 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   EXPECT_THAT(parameter_interface.getPublishRGBImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthImages(), IsTrue());
   EXPECT_THAT(parameter_interface.getPublishDepthRegisteredImages(), IsTrue());
+  EXPECT_THAT(parameter_interface.getTFRoot(), StrEq("odom"));
+  EXPECT_THAT(parameter_interface.getPreferredOdomFrame(), StrEq("odom"));
+  EXPECT_THAT(parameter_interface.getFramePrefix(), Eq(std::nullopt));
+  EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(std::chrono::seconds(5)));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithArm) {
@@ -279,9 +317,13 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithArm) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot with an arm, and without custom gripperless firmware
+  bool arm = true;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN we get the default of all available cameras.
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_arm.value(),
               UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::LEFT, SpotCamera::RIGHT,
@@ -296,9 +338,13 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithoutArm) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot without an arm, and without custom gripperless firmware
+  bool arm = false;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN we get the default of all available cameras.
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_no_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT,
                                                                 SpotCamera::LEFT, SpotCamera::RIGHT, SpotCamera::BACK));
@@ -312,13 +358,22 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedSubset) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot with an arm, and without custom gripperless firmware
+  bool arm = true;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface
-  // THEN the returned values match the values we used when declaring the parameters, regardless of if there is an arm
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true);
+  // THEN the returned values match the values we used when declaring the parameters
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT));
 
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
+  // GIVEN we are operating on a robot without an arm
+  arm = false;
+
+  // WHEN we call the functions to get the config values from the parameter interface
+  // THEN the returned values match the values we used when declaring the parameters
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_no_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT));
 }
@@ -331,16 +386,21 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedSubsetWithHand) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot with an arm, and without custom gripperless firmware
+  bool arm = true;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface if the robot has an arm
   // THEN the returned values match the values we used when declaring the parameters
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
   EXPECT_THAT(cameras_used_arm.value(),
               UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT, SpotCamera::HAND));
 
   // WHEN we call the functions to get the config values from the parameter interface if the robot does not have an arm
   // THEN this is an invalid choice of parameters.
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
+  arm = false;
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsFalse());
   EXPECT_THAT(cameras_used_no_arm.error(), StrEq("Cannot add SpotCamera 'hand', the robot does not have an arm!"));
 }
@@ -353,13 +413,148 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedWithInvalidCamera) {
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
 
+  // GIVEN we are operating on a robot with an arm, and without custom gripperless firmware
+  bool arm = true;
+  bool gripperless = false;
+
   // WHEN we call the functions to get the config values from the parameter interface
   // THEN the result is invalid for robots with and without arms, as the camera "not_a_camera" does not exist on Spot.
-  const auto cameras_used_arm = parameter_interface.getCamerasUsed(true);
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_arm.has_value(), IsFalse());
   EXPECT_THAT(cameras_used_arm.error(), StrEq("Cannot convert camera 'not_a_camera' to a SpotCamera."));
-  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(false);
+  arm = false;
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
   EXPECT_THAT(cameras_used_no_arm.has_value(), IsFalse());
   EXPECT_THAT(cameras_used_no_arm.error(), StrEq("Cannot convert camera 'not_a_camera' to a SpotCamera."));
+}
+
+TEST_F(RclcppParameterInterfaceEnvVarTest, GetDefaultCamerasUsedGripperless) {
+  // GIVEN we create a RclcppParameterInterface using the node
+  RclcppParameterInterface parameter_interface{node_};
+
+  // GIVEN we are operating on a robot with an arm, and WITH custom gripperless firmware
+  bool arm = true;
+  bool gripperless = true;
+
+  // WHEN we call the functions to get the config values from the parameter interface
+  // THEN we get the default of all available cameras, excluding the hand!
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
+  EXPECT_THAT(cameras_used_arm.has_value(), IsTrue());
+  EXPECT_THAT(cameras_used_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT,
+                                                             SpotCamera::LEFT, SpotCamera::RIGHT, SpotCamera::BACK));
+
+  // WHEN gripperless is set to true on a robot without an arm
+  // THEN we still get the default of all available cameras, excluding the hand
+  arm = false;
+  const auto cameras_used_no_arm = parameter_interface.getCamerasUsed(arm, gripperless);
+  EXPECT_THAT(cameras_used_no_arm.has_value(), IsTrue());
+  EXPECT_THAT(cameras_used_no_arm.value(), UnorderedElementsAre(SpotCamera::FRONTLEFT, SpotCamera::FRONTRIGHT,
+                                                                SpotCamera::LEFT, SpotCamera::RIGHT, SpotCamera::BACK));
+}
+
+TEST_F(RclcppParameterInterfaceEnvVarTest, GetSelectedCamerasUsedGripperless) {
+  // GIVEN we set cameras used to a subset of the available cameras including the hand camera
+  const std::vector<std::string> cameras_used_parameter = {"frontleft", "frontright", "hand"};
+  node_->declare_parameter("cameras_used", cameras_used_parameter);
+
+  // GIVEN we create a RclcppParameterInterface using the node
+  RclcppParameterInterface parameter_interface{node_};
+
+  // GIVEN we are operating on a robot with an arm, and WITH custom gripperless firmware
+  bool arm = true;
+  bool gripperless = true;
+
+  // WHEN we call the functions to get the config values from the parameter interface
+  // THEN this is an invalid choice of parameters, as the hand camera is not available on gripperless robots.
+  const auto cameras_used_arm = parameter_interface.getCamerasUsed(arm, gripperless);
+  EXPECT_THAT(cameras_used_arm.has_value(), IsFalse());
+  EXPECT_THAT(cameras_used_arm.error(), StrEq("Cannot add SpotCamera 'hand', the robot is gripperless!"));
+}
+
+TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromNamespaceFallback) {
+  // GIVEN we create rclcpp nodes with and without a specific namespace
+  const auto node = std::make_shared<rclcpp::Node>(kNodeName);
+  const auto namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we create a RclcppParameterInterface using these nodes
+  RclcppParameterInterface parameter_interface_a{node};
+  RclcppParameterInterface parameter_interface_b{namespaced_node};
+
+  // WHEN we call getFramePrefixWithDefaultFallback
+  // THEN the parameter interface returns a frame prefix based on the nodes' namespaces
+  const std::string expected_prefix = std::string(kNamespace) + kFramePrefixSeparator;
+  EXPECT_THAT(parameter_interface_a.getFramePrefixWithDefaultFallback(), StrEq(""));
+  EXPECT_THAT(parameter_interface_b.getFramePrefixWithDefaultFallback(), StrEq(expected_prefix));
+}
+
+TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromSpotNameFallback) {
+  // GIVEN we create rclcpp nodes with and without a specific namespace
+  const auto node = std::make_shared<rclcpp::Node>(kNodeName);
+  const auto namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we set the spot name config parameter to an explicit value
+  node->declare_parameter("spot_name", kSpotName);
+  namespaced_node->declare_parameter("spot_name", kSpotName);
+
+  // GIVEN we create a RclcppParameterInterface using these nodes
+  RclcppParameterInterface parameter_interface_a{node};
+  RclcppParameterInterface parameter_interface_b{namespaced_node};
+
+  // WHEN we call getFramePrefixWithDefaultFallback
+  // THEN the parameter interface returns a frame prefix based on the spot name in both cases
+  const std::string expected_prefix = std::string(kSpotName) + kFramePrefixSeparator;
+  EXPECT_THAT(parameter_interface_a.getFramePrefixWithDefaultFallback(), StrEq(expected_prefix));
+  EXPECT_THAT(parameter_interface_b.getFramePrefixWithDefaultFallback(), StrEq(expected_prefix));
+}
+
+TEST_F(RclcppParameterInterfaceTest, GetFramePrefixFromExplicitParameter) {
+  static constexpr auto verifyExpectedFramePrefix = [](std::shared_ptr<rclcpp::Node> node,
+                                                       std::shared_ptr<rclcpp::Node> namespaced_node) -> void {
+    // GIVEN we create a RclcppParameterInterface using these nodes
+    RclcppParameterInterface parameter_interface_a{node};
+    RclcppParameterInterface parameter_interface_b{namespaced_node};
+
+    // WHEN we call getFramePrefixWithDefaultFallback
+    // THEN the parameter interface returns the explicit frame prefix in both cases
+    EXPECT_THAT(parameter_interface_a.getFramePrefixWithDefaultFallback(), StrEq(kFramePrefix));
+    EXPECT_THAT(parameter_interface_b.getFramePrefixWithDefaultFallback(), StrEq(kFramePrefix));
+  };
+
+  // Set up first test scenario.
+  // GIVEN we create rclcpp nodes with and without a specific namespace
+  auto node = std::make_shared<rclcpp::Node>(kNodeName);
+  auto namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we only set the frame prefix config parameter to an explicit value, without any spot name
+  node->declare_parameter("frame_prefix", kFramePrefix);
+  namespaced_node->declare_parameter("frame_prefix", kFramePrefix);
+  // Finish first test scenario.
+  verifyExpectedFramePrefix(node, namespaced_node);
+
+  // Set up second test scenario.
+  // NOTE: We're creating new nodes for the second test scenario, since we can't undeclare statically typed parameters.
+  node.reset();
+  namespaced_node.reset();
+  node = std::make_shared<rclcpp::Node>(kNodeName);
+  namespaced_node = std::make_shared<rclcpp::Node>(kNodeName, kNamespace);
+  // GIVEN we set both, the spot name and frame prefix, config parameters to explicit values
+  node->declare_parameter("spot_name", kSpotName);
+  namespaced_node->declare_parameter("spot_name", kSpotName);
+  node->declare_parameter("frame_prefix", kFramePrefix);
+  namespaced_node->declare_parameter("frame_prefix", kFramePrefix);
+  // Finish second test scenario.
+  verifyExpectedFramePrefix(node, namespaced_node);
+}
+
+TEST_F(RclcppParameterInterfaceTest, GetConfigWithInvalidOptions) {
+  // GIVEN we create an rclcpp node and set config parameters to invalid values
+  const auto node = std::make_shared<rclcpp::Node>(kNodeName);
+  node->declare_parameter("preferred_odom_frame", "visionvision");
+  node->declare_parameter("tf_root", "visionvision");
+
+  // GIVEN we create a RclcppParameterInterface using this node
+  RclcppParameterInterface parameter_interface{node};
+
+  // WHEN we get the values from the parameter interface
+  // THEN the parameter interface returns the default options
+  EXPECT_THAT(parameter_interface.getPreferredOdomFrame(), StrEq("odom"));
+  EXPECT_THAT(parameter_interface.getTFRoot(), StrEq("odom"));
 }
 }  // namespace spot_ros2::test
