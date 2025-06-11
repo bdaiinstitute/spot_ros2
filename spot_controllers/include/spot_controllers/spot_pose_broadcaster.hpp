@@ -32,6 +32,7 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2_msgs/msg/tf_message.hpp"
 
+#include "spot_controllers/spot_controller_utils.hpp"
 #include "spot_controllers/spot_pose_broadcaster_parameters.hpp"
 
 namespace spot_controllers {

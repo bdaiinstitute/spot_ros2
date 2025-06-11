@@ -28,84 +28,6 @@ from spot_common.launch.spot_launch_helpers import (
 
 THIS_PACKAGE = "spot_ros2_control"
 
-# Ordered joint angles that follow the ordering from the URDF
-LEG_JOINTS = [
-    "front_left_hip_x",
-    "front_left_hip_y",
-    "front_left_knee",
-    "front_right_hip_x",
-    "front_right_hip_y",
-    "front_right_knee",
-    "rear_left_hip_x",
-    "rear_left_hip_y",
-    "rear_left_knee",
-    "rear_right_hip_x",
-    "rear_right_hip_y",
-    "rear_right_knee",
-]
-ARM_JOINTS = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1", "arm_f1x"]
-UPDATE_RATE_HZ = 333  # Update rate to use in the ROS 2 control config file
-
-
-def create_controllers_config(spot_name: str, has_arm: bool) -> str:
-    """Writes a configuration file used to put the ros2 control nodes into a namespace.
-    This is necessary as if your ros2 control nodes are launched in a namespace, the configuration yaml used
-    must also reflect this same namespace when defining parameters of your controllers.
-
-    Args:
-        spot_name (str): Name of spot, treated as a namespace and joint prefix.
-        has_arm (bool): Whether or not your robot has an arm. Necessary for defining the joints that the controllers
-                        should use.
-
-    Returns:
-        str: Path to controllers config file to use
-    """
-    prefix = spot_name + "/" if spot_name else ""
-    joints = LEG_JOINTS + ARM_JOINTS if has_arm else LEG_JOINTS
-    prefixed_joints = [prefix + joint for joint in joints]
-
-    config = {
-        f"{prefix}controller_manager": {
-            "ros__parameters": {
-                "update_rate": UPDATE_RATE_HZ,
-                "joint_state_broadcaster": {"type": "joint_state_broadcaster/JointStateBroadcaster"},
-                "imu_sensor_broadcaster": {"type": "imu_sensor_broadcaster/IMUSensorBroadcaster"},
-                "forward_position_controller": {"type": "forward_command_controller/ForwardCommandController"},
-                "forward_state_controller": {"type": "spot_controllers/ForwardStateController"},
-                "spot_joint_controller": {"type": "spot_controllers/SpotJointController"},
-                "foot_state_broadcaster": {"type": "spot_controllers/FootStateBroadcaster"},
-                "spot_pose_broadcaster": {"type": "spot_controllers/SpotPoseBroadcaster"},
-                "hardware_components_initial_state": {"unconfigured": ["SpotSystem"]},
-            }
-        },
-        f"{prefix}forward_position_controller": {
-            "ros__parameters": {
-                "joints": prefixed_joints.copy(),
-                "interface_name": "position",
-            }
-        },
-        f"{prefix}forward_state_controller": {
-            "ros__parameters": {
-                "joints": prefixed_joints.copy(),
-                "interface_names": ["position", "velocity", "effort"],
-            }
-        },
-        f"{prefix}spot_joint_controller": {
-            "ros__parameters": {
-                "joints": prefixed_joints.copy(),
-            }
-        },
-        f"{prefix}imu_sensor_broadcaster": {
-            "ros__parameters": {
-                "sensor_name": f"{prefix}imu_sensor",
-                "frame_id": f"{prefix}imu_sensor_frame",
-            }
-        },
-    }
-    with NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as out_file:
-        yaml.dump(config, out_file)
-        return out_file.name
-
 
 def create_rviz_config(spot_name: str) -> str:
     """Writes a configuration file for rviz to visualize a robot launched in a namespace. This is necessary as you need
@@ -193,8 +115,11 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
 
     # If no controller config file is selected, use the appropriate default. Else, just use the yaml that is passed in.
     if controllers_config == "":
-        # Generate spot_default_controllers.yaml depending on namespace and whether the robot has an arm.
-        controllers_config = create_controllers_config(spot_name, arm)
+        # Grab the default config file depending on whether the robot has an arm or not.
+        arm_text = "with_arm" if arm else "without_arm"
+        controllers_config = os.path.join(
+            get_package_share_directory(THIS_PACKAGE), "config", f"spot_default_controllers_{arm_text}.yaml"
+        )
     # Add nodes
     ld.add_action(
         Node(

@@ -27,6 +27,7 @@
 #include "rclcpp/subscription.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/realtime_buffer.hpp"
+#include "spot_controllers/spot_controller_utils.hpp"
 #include "spot_controllers/visibility_control.h"
 #include "spot_msgs/msg/joint_command.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
@@ -75,21 +76,12 @@ class SpotJointController : public controller_interface::ControllerInterface {
   Params params_;
 
   std::vector<std::string> joint_names_;
-  std::string interface_name_;
+  std::string prefix_;
 
   std::vector<std::string> command_interface_types_;
 
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;
   rclcpp::Subscription<CmdType>::SharedPtr joints_command_subscriber_;
-
-  // Constants useful for interface setup / sending commands.
-  const std::array<std::string, 5> interfaces_{"position", "velocity", "effort", "k_q_p", "k_qd_p"};
-  static constexpr size_t n_interfaces_ = 5;
-  static constexpr size_t position_offset_ = 0;
-  static constexpr size_t velocity_offset_ = 1;
-  static constexpr size_t effort_offset_ = 2;
-  static constexpr size_t k_q_p_offset_ = 3;
-  static constexpr size_t k_qd_p_offset_ = 4;
 };
 
 }  // namespace spot_controllers

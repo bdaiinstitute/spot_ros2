@@ -608,15 +608,16 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
   google::protobuf::Duration duration1;
   duration1.set_seconds(15);
   duration1.set_nanos(0);
-  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp1, duration1, "fault1", 19, 3, "battery is low",
-                    {"robot", "battery"}, ::bosdyn::api::SystemFault_Severity::SystemFault_Severity_SEVERITY_WARN);
+  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp1, duration1, "fault1", 19, "3",
+                    "battery is low", {"robot", "battery"},
+                    ::bosdyn::api::SystemFault_Severity::SystemFault_Severity_SEVERITY_WARN);
 
   google::protobuf::Timestamp timestamp2;
   timestamp2.set_seconds(75);
   google::protobuf::Duration duration2;
   duration2.set_seconds(0);
   duration2.set_nanos(0);
-  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp2, duration2, "fault2", 55, 9,
+  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp2, duration2, "fault2", 55, "9",
                     "robot has departed from this plane of reality", {"robot"},
                     ::bosdyn::api::SystemFault_Severity::SystemFault_Severity_SEVERITY_CRITICAL);
 
@@ -631,9 +632,9 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
   // THEN the clock skew is correctly applied
   EXPECT_THAT(out->faults,
               UnorderedElementsAre(
-                  SystemFaultEq(timestamp1, clock_skew, duration1, "fault1", 3UL, 19, "battery is low",
+                  SystemFaultEq(timestamp1, clock_skew, duration1, "fault1", "3", 19, "battery is low",
                                 std::vector<std::string>{"robot", "battery"}),
-                  SystemFaultEq(timestamp2, clock_skew, duration2, "fault2", 9UL, 55,
+                  SystemFaultEq(timestamp2, clock_skew, duration2, "fault2", "9", 55,
                                 "robot has departed from this plane of reality", std::vector<std::string>{"robot"})));
 }
 

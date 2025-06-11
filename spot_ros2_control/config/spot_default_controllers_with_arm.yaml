@@ -1,110 +1,95 @@
 # Copyright (c) 2024-2025 Boston Dynamics AI Institute LLC. All rights reserved.
 
-# This is an example that demonstrates configuration of the available controllers for a robot
-# with an arm and without a namespace.
-# It is not used!
-# By default, a configuration matching this format that IS namespaced appropriately will be
-# generated and used at launch time.
-
-controller_manager:
-  ros__parameters:
-    update_rate: 333  # Hz
-
-    joint_state_broadcaster:
-      type: joint_state_broadcaster/JointStateBroadcaster
-
-    imu_sensor_broadcaster:
-      type: imu_sensor_broadcaster/IMUSensorBroadcaster
-
-    forward_position_controller:
-      type: forward_command_controller/ForwardCommandController
-
-    forward_state_controller:
-      type: spot_controllers/ForwardStateController
-
-    spot_joint_controller:
-      type: spot_controllers/SpotJointController
-
-    hardware_components_initial_state:
-      unconfigured:
+/**:
+  controller_manager:
+    ros__parameters:
+      update_rate: 333
+      foot_state_broadcaster:
+        type: spot_controllers/FootStateBroadcaster
+      forward_position_controller:
+        type: spot_controllers/ForwardStateController
+      forward_state_controller:
+        type: spot_controllers/ForwardStateController
+      imu_sensor_broadcaster:
+        type: spot_controllers/SpotIMUBroadcaster
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+      spot_joint_controller:
+        type: spot_controllers/SpotJointController
+      spot_pose_broadcaster:
+        type: spot_controllers/SpotPoseBroadcaster
+      hardware_components_initial_state:
+        unconfigured:
         - SpotSystem
-
-imu_sensor_broadcaster:
-  ros__parameters:
-    sensor_name: "imu_sensor"
-    frame_id: "imu_sensor_frame"
-
-forward_position_controller:
-  ros__parameters:
-    joints:
-      - front_left_hip_x
-      - front_left_hip_y
-      - front_left_knee
-      - front_right_hip_x
-      - front_right_hip_y
-      - front_right_knee
-      - rear_left_hip_x
-      - rear_left_hip_y
-      - rear_left_knee
-      - rear_right_hip_x
-      - rear_right_hip_y
-      - rear_right_knee
-      - arm_sh0
-      - arm_sh1
-      - arm_el0
-      - arm_el1
-      - arm_wr0
-      - arm_wr1
-      - arm_f1x
-    interface_name: position
-
-forward_state_controller:
-  ros__parameters:
-    joints:
-      - front_left_hip_x
-      - front_left_hip_y
-      - front_left_knee
-      - front_right_hip_x
-      - front_right_hip_y
-      - front_right_knee
-      - rear_left_hip_x
-      - rear_left_hip_y
-      - rear_left_knee
-      - rear_right_hip_x
-      - rear_right_hip_y
-      - rear_right_knee
-      - arm_sh0
-      - arm_sh1
-      - arm_el0
-      - arm_el1
-      - arm_wr0
-      - arm_wr1
-      - arm_f1x
-    interface_names: 
-      - position
-      - velocity
-      - effort
-
-
-spot_joint_controller:
-  ros__parameters:
-    joints:
-      - front_left_hip_x
-      - front_left_hip_y
-      - front_left_knee
-      - front_right_hip_x
-      - front_right_hip_y
-      - front_right_knee
-      - rear_left_hip_x
-      - rear_left_hip_y
-      - rear_left_knee
-      - rear_right_hip_x
-      - rear_right_hip_y
-      - rear_right_knee
-      - arm_sh0
-      - arm_sh1
-      - arm_el0
-      - arm_el1
-      - arm_wr0
-      - arm_wr1
-      - arm_f1x
+  forward_position_controller:
+    ros__parameters:
+      joints:
+        - front_left_hip_x
+        - front_left_hip_y
+        - front_left_knee
+        - front_right_hip_x
+        - front_right_hip_y
+        - front_right_knee
+        - rear_left_hip_x
+        - rear_left_hip_y
+        - rear_left_knee
+        - rear_right_hip_x
+        - rear_right_hip_y
+        - rear_right_knee
+        - arm_sh0
+        - arm_sh1
+        - arm_el0
+        - arm_el1
+        - arm_wr0
+        - arm_wr1
+        - arm_f1x
+      interface_names:
+        - position
+  forward_state_controller:
+    ros__parameters:
+      joints:
+        - front_left_hip_x
+        - front_left_hip_y
+        - front_left_knee
+        - front_right_hip_x
+        - front_right_hip_y
+        - front_right_knee
+        - rear_left_hip_x
+        - rear_left_hip_y
+        - rear_left_knee
+        - rear_right_hip_x
+        - rear_right_hip_y
+        - rear_right_knee
+        - arm_sh0
+        - arm_sh1
+        - arm_el0
+        - arm_el1
+        - arm_wr0
+        - arm_wr1
+        - arm_f1x
+      interface_names:
+        - position
+        - velocity
+        - effort
+  spot_joint_controller:
+    ros__parameters:
+      joints:
+        - front_left_hip_x
+        - front_left_hip_y
+        - front_left_knee
+        - front_right_hip_x
+        - front_right_hip_y
+        - front_right_knee
+        - rear_left_hip_x
+        - rear_left_hip_y
+        - rear_left_knee
+        - rear_right_hip_x
+        - rear_right_hip_y
+        - rear_right_knee
+        - arm_sh0
+        - arm_sh1
+        - arm_el0
+        - arm_el1
+        - arm_wr0
+        - arm_wr1
+        - arm_f1x

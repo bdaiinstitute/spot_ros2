@@ -19,4 +19,9 @@
     Broadcaster for publishing poses and/or TF from joint state stream.
   </description>
   </class>
+    <class name="spot_controllers/SpotIMUBroadcaster" type="spot_controllers::SpotIMUBroadcaster" base_class_type="controller_interface::ControllerInterface">
+  <description>
+    Broadcaster for publishing IMU data from Spot.
+  </description>
+  </class>
 </library>
