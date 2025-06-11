@@ -2230,7 +2230,11 @@ class SpotROS(Node):
             if time_since_start >= time_to_send_command:
                 success, err_msg, goal_id = self.spot_wrapper.robot_command(commands[index])
                 if not success:
-                    raise Exception(err_msg)
+                    result = RobotCommandAction.Result()
+                    result.success = False
+                    result.message = err_msg
+                    return err_msg
+                    # raise Exception(err_msg)
                 index += 1
                 if index < num_of_commands:
                     time_to_send_command = robot_command_util.min_time_since_reference(commands[index])
