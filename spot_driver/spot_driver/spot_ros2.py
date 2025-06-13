@@ -1173,7 +1173,7 @@ class SpotROS(Node):
         data = self.spot_wrapper.point_clouds
         if data:
             point_cloud_proto = data[0]
-            local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
+            local_time = self.spot_wrapper.robotToLocalTime(point_cloud_proto.point_cloud.source.acquisition_time)
             local_time_msg = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
             # convert proto into PointCloud2
             point_cloud_msg = self._get_point_cloud_msg(point_cloud_proto, local_time_msg)
