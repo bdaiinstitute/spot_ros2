@@ -15,7 +15,7 @@ bazel_dep(name = "rules_python", version = "0.40.0") # transitive dep of r_r_r, 
 bazel_dep(name = "rules_rai_ros")
 git_override(
     module_name = "rules_rai_ros",
-    commit = "df183829f0b36f61847f87b9e606d2cd4319ccef",
+    commit = "15aebd5bb72f6b59d24eac1c5e69f398f73d1ca1",
     remote = "https://github.com/bdaiinstitute/rules_rai_ros.git",
 )
 

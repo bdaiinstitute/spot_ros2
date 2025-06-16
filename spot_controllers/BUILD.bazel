@@ -1,0 +1,126 @@
+# I'm going to continue over-documenting these build files, as I did with the spot_msgs one,
+# for documentation purposes.
+
+# load the ruleset from r^3. The ruleset is instantiated into the hub repository created by r^3
+# (from a template), which is why the load is from "@humble" (the name given to the hub repo
+# in MODULE.bazel), rather than something like "@rules_rai_ros", which might be expected.)
+load("@humble//ros:defs.bzl", "ros")
+
+# I'm just following an example to make this public so I don't have to think about it.
+# that's very likely the right thing to do in this case, but not in every case.
+# anyway, this is just a bazel thing, not an r^3 thing
+package(default_visibility = ["//visibility:public"])
+
+# r^3 requires this declaration of a package manifest. 
+# This helps build the ros workspace in the bazel sandbox, and in particular helps
+# ROS packages find each other at runtime.
+ros.package_manifest(
+    name = "pkg",
+    package_name = "spot_controllers",
+)
+
+# spot_controllers uses the generate_parameter_library tool, a code generation tool for (surprise!)
+# generating parameter classes. r^3 supports that tool through a special macro:
+ros.parameter_library(
+    name = "forward_state_controller_parameters",
+    src = "include/spot_controllers/forward_state_controller_parameters.yaml",
+    output_hpp = "include/spot_controllers/forward_state_controller_parameters.hpp",
+    output_py = "scripts/forward_state_controller_parameters.py",
+    package = ":pkg",
+    # these are available, but not used for spot_controllers
+    # validation_hpp = ,
+    # validation_py = ,
+)
+
+# spot_controllers defines three separate parameter libraries
+ros.parameter_library(
+    name = "spot_joint_controller_parameters",
+    src = "include/spot_controllers/spot_joint_controller_parameters.yaml",
+    output_hpp = "include/spot_controllers/spot_joint_controller_parameters.hpp",
+    output_py = "scripts/spot_joint_controller_parameters.py",
+    package = ":pkg",
+    # these are available, but not used for spot_controllers
+    # validation_hpp = ,
+    # validation_py = ,
+)
+
+ros.parameter_library(
+    name = "foot_state_broadcaster_parameters",
+    src = "include/spot_controllers/foot_state_broadcaster_parameters.yaml",
+    output_hpp = "include/spot_controllers/foot_state_broadcaster_parameters.hpp",
+    output_py = "scripts/foot_state_broadcaster_parameters.py",
+    package = ":pkg",
+    # these are available, but not used for spot_controllers
+    # validation_hpp = ,
+    # validation_py = ,
+)
+
+
+# the controllers we're building here are plugins, so we need to use r^3's plugin rules
+ros.plugin(
+    name = "spot_controllers_plugin",
+    # label - pointing to a cc_library that contains the header of the base class
+    # note: don't include the base dependency in deps below, you'll get an error about it being a duplicate
+    base = "@humble//:ros-humble-controller-interface",
+    # name to base class type
+    class_names = {
+        "spot_controllers/ForwardStateController": "controller_interface::ControllerInterface",
+        "spot_controllers/SpotJointController": "controller_interface::ControllerInterface",
+        "spot_controllers/FootStateBroadcaster": "controller_interface::ControllerInterface",
+    },
+    # name to implementation class type
+    class_types = {
+        "spot_controllers/ForwardStateController": "spot_controllers::ForwardStateController",
+        "spot_controllers/SpotJointController": "spot_controllers::SpotJointController",
+        "spot_controllers/FootStateBroadcaster": "spot_controllers::FootStateBroadcaster",
+    },
+    srcs = [
+        "src/forward_state_controller.cpp",
+        "src/spot_joint_controller.cpp",
+        "src/foot_state_broadcaster.cpp",
+    ],
+    hdrs = [
+        "include/spot_controllers/forward_state_controller.hpp",
+        "include/spot_controllers/foot_state_broadcaster.hpp",
+        "include/spot_controllers/spot_joint_controller.hpp",
+        "include/spot_controllers/visibility_control.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":forward_state_controller_parameters",
+        ":spot_joint_controller_parameters",
+        ":foot_state_broadcaster_parameters",
+        "@humble//:ros-humble-forward-command-controller",
+        "@humble//:ros-humble-rclcpp",
+        "@humble//:ros-humble-rclcpp-lifecycle",
+        "//spot_msgs",
+    ]
+)
+
+ros.plugin_library(
+    name = "spot_controllers",
+    package = ":pkg",
+    plugins = [
+        ":spot_controllers_plugin"
+    ],
+)
+
+# ros.plugin(
+#     name = "sytem_position_only_hardware_plugin",
+#     # label - pointing to a cc_library that contains the header of the base class
+#     base = "@humble//:ros-humble-hardware-interface",
+#     # name to base class type
+#     class_names = {
+#         "ros2_control_demo_example_1/RRBotSystemPositionOnlyHardware": "hardware_interface::SystemInterface"
+#     },
+#     # name to implementation class type
+#     class_types = {
+#         "ros2_control_demo_example_1/RRBotSystemPositionOnlyHardware": "ros2_control_demo_example_1::RRBotSystemPositionOnlyHardware"
+#     },
+#     # implementation files
+#     srcs = ["hardware/rrbot.cpp"],
+#     hdrs = glob([
+#         "hardware/include/**/*.hpp"
+#     ]),
+#     includes = ["hardware/include/"],
+# )
