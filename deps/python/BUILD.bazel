@@ -1,0 +1,95 @@
+# Copyright (c) 2025 Boston Dynamics AI Institute LLC. All rights reserved.
+
+# Copied from core
+
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@rules_multirun//:defs.bzl", "multirun")
+load("@rules_uv//uv:pip.bzl", "pip_compile")
+
+# This dictionary specifies which Python dependency "contexts" exist and what
+# platform specific lock files should be created.
+#
+# Available platform architectures: "x86_64", "aarch64"
+#
+# The context names should match the standardized names of the `.in` files in
+# this directory. Specifically: `requirements_<CONTEXT>.in`.  Lock files will
+# be generated in the `locks` subdirectory with names following this convention:
+# `requirements_<CONTEXT>_<ARCH>.lock`.
+#
+# This dictionary must match the one in MODULE.bazel!
+LOCKFILE_PLATFORMS = {
+    # CONTEXT : ( ARCHITECTURES )
+    "main": ("x86_64", "aarch64")
+}
+
+copy_file(
+    name = "spot_wrapper_requirements",
+    src = "@spot_wrapper//:requirements.txt",
+    out = "spot_wrapper_requirements.in",
+    allow_symlink = True,
+)
+
+[
+    pip_compile(
+        name = "generate_locks_{}_{}".format(context, arch),
+        size = "medium",
+        data = [
+            ":spot_wrapper_requirements",
+        ],
+        extra_args = [
+            "--index-url https://pypi.org/simple/",
+            "--extra-index-url https://pypi.fury.io/team-dmm/",
+            "--allow-unsafe",
+            "--index-strategy unsafe-best-match",
+            "--quiet",
+        ],
+        python_platform = "{}-manylinux_2_40".format(arch),
+        requirements_in = "requirements_{}.in".format(context),
+        requirements_overrides = "overrides_{}.in".format(context),
+        requirements_txt = "//deps/python/locks:requirements_{}_{}.lock".format(context, arch),
+    )
+    for context, arch_list in LOCKFILE_PLATFORMS.items()
+    for arch in arch_list
+]
+
+# Generate lock files for all contexts and architectures
+multirun(
+    name = "generate_locks_all",
+    commands = [
+        ":generate_locks_{}_{}".format(context, arch)
+        for context, arch_list in LOCKFILE_PLATFORMS.items()
+        for arch in arch_list
+    ],
+)
+
+# Generate lock files for a given context. e.g.
+# > bazel run //deps/python:generate_locks_main
+#     --> requirements_main_aarch64.lock
+#     --> requirements_main_x86_64.lock
+[
+    multirun(
+        name = "generate_locks_{}".format(context),
+        commands = [
+            ":generate_locks_{}_{}".format(context, arch)
+            for arch in arch_list
+        ],
+    )
+    for context, arch_list in LOCKFILE_PLATFORMS.items()
+]
+
+# Generate lock files for a given architecture. e.g.
+# > bazel run //deps/python:generate_locks_x86_64
+#     --> requirements_foo_x86_64.lock
+#     --> requirements_bar_x86_64.lock
+#     --> requirements_baz_x86_64.lock
+[
+    multirun(
+        name = "generate_locks_{}".format(arch),
+        commands = [
+            ":generate_locks_{}_{}".format(context, arch)
+            for context in LOCKFILE_PLATFORMS
+            if arch in LOCKFILE_PLATFORMS[context]
+        ],
+    )
+    for arch in set([arch for archs in LOCKFILE_PLATFORMS.values() for arch in archs])
+]

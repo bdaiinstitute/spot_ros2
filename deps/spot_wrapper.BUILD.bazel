@@ -1,0 +1,12 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_binary")
+
+exports_files(["requirements.txt"])
+
+py_library(
+    name = "spot_wrapper",
+    imports = ["spot_wrapper"],
+    srcs = glob(
+        ["spot_wrapper/**/*.py"]
+    ),
+)
+

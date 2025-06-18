@@ -1,0 +1,3 @@
+load("@humble//ros:defs.bzl", "ros")
+
+package(default_visibility = ["//visibility:public"])
