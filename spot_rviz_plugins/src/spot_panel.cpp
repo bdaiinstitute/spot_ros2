@@ -200,7 +200,7 @@ void SpotPanel::setControlButtons() {
  */
 void SpotPanel::callTriggerService(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr service) {
   std_srvs::srv::Trigger::Request req;
-  return callCustomTriggerService<std_srvs::srv::Trigger, std_srvs::srv::Trigger::Request>(service, req);
+  return callCustomTriggerService<std_srvs::srv::Trigger>(service, req);
 }
 
 template <typename C>
@@ -216,7 +216,7 @@ void SpotPanel::serviceResponseCallback(std::string serviceName, typename rclcpp
   statusLabel->setText(QString(labelText.c_str()));
 }
 
-template <typename C, typename T>
+template <typename C>
 /**
  * @brief Call an arbitrary service which has a response type of bool, str
  *
@@ -226,7 +226,8 @@ template <typename C, typename T>
  * @param serviceName Name of the service to use in labels
  * @param serviceRequest Request to make to the service
  */
-void SpotPanel::callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr service, T serviceRequest) {
+void SpotPanel::callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr service,
+                                         const typename C::Request& serviceRequest) {
   std::string serviceName = service->get_service_name();
   std::string labelText = "Calling " + serviceName + " service";
   if (!service->wait_for_service(std::chrono::seconds(1))) {
@@ -237,10 +238,11 @@ void SpotPanel::callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr s
   statusLabel->setText(QString(labelText.c_str()));
 
   // Have to make this a shared pointer in order to correctly cancel the pending request in the timer callback
-  auto future_and_id = service->async_send_request(
-      std::make_shared<T>(serviceRequest), [this, serviceName](typename rclcpp::Client<C>::SharedFuture future) {
-        this->serviceResponseCallback<C>(serviceName, future);
-      });
+  auto future_and_id =
+      service->async_send_request(std::make_shared<typename C::Request>(serviceRequest),
+                                  [this, serviceName](typename rclcpp::Client<C>::SharedFuture future) {
+                                    this->serviceResponseCallback<C>(serviceName, future);
+                                  });
 }
 
 /**
@@ -368,7 +370,6 @@ void SpotPanel::batteryCallback(const spot_msgs::msg::BatteryStateArray::ConstSh
     stream.clear();
     stream << std::fixed << std::setprecision(1) << battState.voltage;
     std::string volt = stream.str() + "V";
-    stream.str("");
     stream.clear();
     stream << battState.current;
     std::string amp = stream.str() + "A";
@@ -464,7 +465,7 @@ void SpotPanel::setMaxVel() {
   req.velocity_limit.angular.z = angularZSpin->value();
   req.velocity_limit.linear.x = linearXSpin->value();
   req.velocity_limit.linear.y = linearYSpin->value();
-  callCustomTriggerService<spot_msgs::srv::SetVelocity, spot_msgs::srv::SetVelocity::Request>(maxVelocityService_, req);
+  callCustomTriggerService<spot_msgs::srv::SetVelocity>(maxVelocityService_, req);
 }
 
 /**
@@ -491,7 +492,7 @@ void SpotPanel::undock() {
 void SpotPanel::dock() {
   spot_msgs::srv::Dock::Request req;
   req.dock_id = dockFiducialSpin->value();
-  callCustomTriggerService<spot_msgs::srv::Dock, spot_msgs::srv::Dock::Request>(dockService_, req);
+  callCustomTriggerService<spot_msgs::srv::Dock>(dockService_, req);
 }
 
 void SpotPanel::selfRight() {

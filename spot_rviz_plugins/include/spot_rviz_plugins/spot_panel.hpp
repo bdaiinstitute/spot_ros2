@@ -56,8 +56,9 @@ class SpotPanel : public rviz_common::Panel {
   void setupSpinBoxes();
   void setControlButtons();
   void callTriggerService(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr service);
-  template <typename C, typename T>
-  void callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr service, T serviceRequest);
+  template <typename C>
+  void callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr service,
+                                const typename C::Request& serviceRequest);
   void updateLabelTextWithLimit(QLabel* label, double limit_lower, double limit_upper);
   void leaseCallback(const spot_msgs::msg::LeaseArray::ConstSharedPtr& leases);
   void estopCallback(const spot_msgs::msg::EStopStateArray::ConstSharedPtr& estops);
