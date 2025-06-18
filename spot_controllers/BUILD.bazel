@@ -104,23 +104,3 @@ ros.plugin_library(
         ":spot_controllers_plugin"
     ],
 )
-
-# ros.plugin(
-#     name = "sytem_position_only_hardware_plugin",
-#     # label - pointing to a cc_library that contains the header of the base class
-#     base = "@humble//:ros-humble-hardware-interface",
-#     # name to base class type
-#     class_names = {
-#         "ros2_control_demo_example_1/RRBotSystemPositionOnlyHardware": "hardware_interface::SystemInterface"
-#     },
-#     # name to implementation class type
-#     class_types = {
-#         "ros2_control_demo_example_1/RRBotSystemPositionOnlyHardware": "ros2_control_demo_example_1::RRBotSystemPositionOnlyHardware"
-#     },
-#     # implementation files
-#     srcs = ["hardware/rrbot.cpp"],
-#     hdrs = glob([
-#         "hardware/include/**/*.hpp"
-#     ]),
-#     includes = ["hardware/include/"],
-# )
