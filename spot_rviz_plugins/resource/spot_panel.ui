@@ -127,20 +127,35 @@
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="allowMotionButton">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="toolTip">
-      <string>Allow or disallow motion of the robot</string>
-     </property>
-     <property name="text">
-      <string>Disallow motion</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QLabel" name="robotNameLabel">
+         <property name="text">
+          <string>Robot name:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="robotNameLineEdit">
+         <property name="text">
+          <string>spot</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="setRobotNameButton">
+         <property name="toolTip">
+          <string>Set the name of the robot. This ensures topics and services connect to the correct robot.</string>
+         </property>
+         <property name="text">
+          <string>Set</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
      <item>
       <layout class="QHBoxLayout" name="claimLayout">
        <item>
@@ -480,7 +495,6 @@
  </widget>
  <tabstops>
   <tabstop>stopButton</tabstop>
-  <tabstop>allowMotionButton</tabstop>
   <tabstop>claimLeaseButton</tabstop>
   <tabstop>releaseLeaseButton</tabstop>
   <tabstop>powerOnButton</tabstop>

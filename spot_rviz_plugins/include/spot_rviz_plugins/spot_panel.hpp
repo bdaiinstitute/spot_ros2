@@ -50,11 +50,14 @@ class SpotPanel : public rviz_common::Panel {
   void selfRight();
   void dock();
   void undock();
+  void setRobotName();
 
  private:
   void setupStopButtons();
   void setupSpinBoxes();
   void setControlButtons();
+  void initialiseRosComponents();
+  void destroyRosComponents();
   void callTriggerService(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr service);
   template <typename C>
   void callCustomTriggerService(typename rclcpp::Client<C>::SharedPtr service,
@@ -104,6 +107,7 @@ class SpotPanel : public rviz_common::Panel {
   QPushButton* dockButton;
   QPushButton* undockButton;
   QPushButton* selfRightButton;
+  QPushButton* setRobotNameButton;
 
   QLabel* linearXLabel;
   QLabel* linearYLabel;
@@ -115,7 +119,7 @@ class SpotPanel : public rviz_common::Panel {
   QLabel* batteryTempLabel;
   QLabel* estopLabel;
 
-  QComboBox* gaitComboBox;
+  QLineEdit* robotNameLineEdit;
 
   QSpinBox* dockFiducialSpin;
 

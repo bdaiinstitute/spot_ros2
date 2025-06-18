@@ -37,21 +37,6 @@ SpotPanel::SpotPanel(QWidget* parent) {
   haveLease = false;
   motionAllowed = false;
 
-  sitService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/sit");
-  standService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/stand");
-  claimLeaseService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/claim");
-  releaseLeaseService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/release");
-  powerOnService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/power_on");
-  powerOffService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/power_off");
-  maxVelocityService_ = client_node_->create_client<spot_msgs::srv::SetVelocity>("/spot/velocity_limit");
-  hardStopService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/estop/hard");
-  gentleStopService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/estop/gentle");
-  releaseStopService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/estop/release");
-  stopService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/stop");
-  dockService_ = client_node_->create_client<spot_msgs::srv::Dock>("/spot/dock");
-  undockService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/undock");
-  selfRightService_ = client_node_->create_client<std_srvs::srv::Trigger>("/spot/self_right");
-
   claimLeaseButton = this->findChild<QPushButton*>("claimLeaseButton");
   releaseLeaseButton = this->findChild<QPushButton*>("releaseLeaseButton");
   powerOnButton = this->findChild<QPushButton*>("powerOnButton");
@@ -61,6 +46,7 @@ SpotPanel::SpotPanel(QWidget* parent) {
   dockButton = this->findChild<QPushButton*>("dockButton");
   undockButton = this->findChild<QPushButton*>("undockButton");
   selfRightButton = this->findChild<QPushButton*>("selfRightButton");
+  setRobotNameButton = this->findChild<QPushButton*>("setRobotNameButton");
 
   statusLabel = this->findChild<QLabel*>("statusLabel");
   estimatedRuntimeLabel = this->findChild<QLabel*>("estimatedRuntimeLabel");
@@ -68,23 +54,13 @@ SpotPanel::SpotPanel(QWidget* parent) {
   motorStateLabel = this->findChild<QLabel*>("motorStateLabel");
   batteryTempLabel = this->findChild<QLabel*>("batteryTempLabel");
   estopLabel = this->findChild<QLabel*>("estopLabel");
+  robotNameLineEdit = this->findChild<QLineEdit*>("robotNameLineEdit");
 
   dockFiducialSpin = this->findChild<QSpinBox*>("dockFiducialSpin");
 
   setupStopButtons();
   setupSpinBoxes();
-
-  // Subscribe to things after everything is set up to avoid crashes when things aren't initialised
-  leaseSub_ = client_node_->create_subscription<spot_msgs::msg::LeaseArray>(
-      "/spot/status/leases", 1, std::bind(&SpotPanel::leaseCallback, this, std::placeholders::_1));
-  estopSub_ = client_node_->create_subscription<spot_msgs::msg::EStopStateArray>(
-      "/spot/status/estop", 1, std::bind(&SpotPanel::estopCallback, this, std::placeholders::_1));
-  mobilityParamsSub_ = client_node_->create_subscription<spot_msgs::msg::MobilityParams>(
-      "/spot/status/mobility_params", 1, std::bind(&SpotPanel::mobilityParamsCallback, this, std::placeholders::_1));
-  batterySub_ = client_node_->create_subscription<spot_msgs::msg::BatteryStateArray>(
-      "/spot/status/battery_states", 1, std::bind(&SpotPanel::batteryCallback, this, std::placeholders::_1));
-  powerSub_ = client_node_->create_subscription<spot_msgs::msg::PowerState>(
-      "/spot/status/power_states", 1, std::bind(&SpotPanel::powerCallback, this, std::placeholders::_1));
+  initialiseRosComponents();
 
   connect(claimLeaseButton, SIGNAL(clicked()), this, SLOT(claimLease()));
   connect(releaseLeaseButton, SIGNAL(clicked()), this, SLOT(releaseLease()));
@@ -99,8 +75,69 @@ SpotPanel::SpotPanel(QWidget* parent) {
   connect(dockButton, SIGNAL(clicked()), this, SLOT(dock()));
   connect(undockButton, SIGNAL(clicked()), this, SLOT(undock()));
   connect(selfRightButton, SIGNAL(clicked()), this, SLOT(selfRight()));
+  connect(setRobotNameButton, SIGNAL(clicked()), this, SLOT(setRobotName()));
 
   spin_timer.start(200, this);
+}
+
+void SpotPanel::initialiseRosComponents() {
+  std::string robot_name = robotNameLineEdit->text().toStdString();
+
+  // If there's no robot name, then everything is in the root namespace
+  std::string prefix = "";
+  if (robot_name != "") {
+    // Otherwise, the services and topics will be in the robot name namespace
+    prefix = "/" + robot_name;
+  }
+
+  sitService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/sit");
+  standService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/stand");
+  claimLeaseService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/claim");
+  releaseLeaseService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/release");
+  powerOnService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/power_on");
+  powerOffService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/power_off");
+  maxVelocityService_ = client_node_->create_client<spot_msgs::srv::SetVelocity>(prefix + "/velocity_limit");
+  hardStopService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/estop/hard");
+  gentleStopService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/estop/gentle");
+  releaseStopService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/estop/release");
+  stopService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/stop");
+  dockService_ = client_node_->create_client<spot_msgs::srv::Dock>(prefix + "/dock");
+  undockService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/undock");
+  selfRightService_ = client_node_->create_client<std_srvs::srv::Trigger>(prefix + "/self_right");
+  leaseSub_ = client_node_->create_subscription<spot_msgs::msg::LeaseArray>(
+      prefix + "/status/leases", 1, std::bind(&SpotPanel::leaseCallback, this, std::placeholders::_1));
+  estopSub_ = client_node_->create_subscription<spot_msgs::msg::EStopStateArray>(
+      prefix + "/status/estop", 1, std::bind(&SpotPanel::estopCallback, this, std::placeholders::_1));
+  mobilityParamsSub_ = client_node_->create_subscription<spot_msgs::msg::MobilityParams>(
+      prefix + "/status/mobility_params", 1,
+      std::bind(&SpotPanel::mobilityParamsCallback, this, std::placeholders::_1));
+  batterySub_ = client_node_->create_subscription<spot_msgs::msg::BatteryStateArray>(
+      prefix + "/status/battery_states", 1, std::bind(&SpotPanel::batteryCallback, this, std::placeholders::_1));
+  powerSub_ = client_node_->create_subscription<spot_msgs::msg::PowerState>(
+      prefix + "/status/power_states", 1, std::bind(&SpotPanel::powerCallback, this, std::placeholders::_1));
+}
+
+void SpotPanel::destroyRosComponents() {
+  // Resetting the shared pointer should destroy all the services and subscribers since we only hold one reference.
+  sitService_.reset();
+  standService_.reset();
+  claimLeaseService_.reset();
+  releaseLeaseService_.reset();
+  powerOnService_.reset();
+  powerOffService_.reset();
+  maxVelocityService_.reset();
+  hardStopService_.reset();
+  gentleStopService_.reset();
+  releaseStopService_.reset();
+  stopService_.reset();
+  dockService_.reset();
+  undockService_.reset();
+  selfRightService_.reset();
+  leaseSub_.reset();
+  estopSub_.reset();
+  mobilityParamsSub_.reset();
+  batterySub_.reset();
+  powerSub_.reset();
 }
 
 /* This timer event is triggered by the spin_timer and is needed to ensure that the node spins */
@@ -468,23 +505,6 @@ void SpotPanel::setMaxVel() {
   callCustomTriggerService<spot_msgs::srv::SetVelocity>(maxVelocityService_, req);
 }
 
-/**
- * @brief Get the message constant integer that corresponds to the currently selected combobox item
- *
- * @param comboBox Combobox whose selection should be checked
- * @param comboBoxMap Mapping from message constants to text in the combobox
- * @return int > 0 indicating the map constant, or -1 if it couldn't be found
- */
-int comboBoxSelectionToMessageConstantInt(QComboBox* comboBox, const std::map<uint, std::string>& comboBoxMap) {
-  std::string selectionText = comboBox->currentText().toStdString();
-  for (const auto& item : comboBoxMap) {
-    if (selectionText == item.second) {
-      return item.first;
-    }
-  }
-  return -1;
-}
-
 void SpotPanel::undock() {
   callTriggerService(undockService_);
 }
@@ -497,6 +517,12 @@ void SpotPanel::dock() {
 
 void SpotPanel::selfRight() {
   callTriggerService(selfRightService_);
+}
+
+void SpotPanel::setRobotName() {
+  // When setting the robot name, destroy the ros components properly then reinitialise them.
+  destroyRosComponents();
+  initialiseRosComponents();
 }
 
 void SpotPanel::save(rviz_common::Config config) const {
