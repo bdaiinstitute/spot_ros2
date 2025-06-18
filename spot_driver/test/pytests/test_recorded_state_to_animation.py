@@ -30,6 +30,7 @@ from spot_msgs.srv import ChoreographyRecordedStateToAnimation  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_recorded_state_to_animation(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
