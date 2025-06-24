@@ -123,14 +123,14 @@ packages:
   - "libprotobuf23"
   - "libgrpc++1"
 ##############################################################################################
-# transitive for ros_utilities
+# transitive for ros_utilities (all duplicates, as it turns out)
 ##############################################################################################
   # - "python3-pytest"                # synchros2[test]
   # - "python3-typing-extensions"     # synchros2[test]
   # - "ros-humble-action-msgs"        # synchros2[exec]
   # - "ros-humble-example-interfaces" # synchros2[test]
   # - "ros-humble-geometry-msgs"      # synchros2[exec]
-  - "ros-humble-launch"             # synchros2[exec]
+  # - "ros-humble-launch"             # synchros2[exec]
   # - "ros-humble-message-filters"    # synchros2[exec]
   # - "ros-humble-rclpy"              # synchros2[exec]
   # - "ros-humble-std-srvs"           # synchros2[test]

@@ -1,0 +1,2 @@
+lark>=1.1.1 # seems to be an implicit dependency of ros-humble-launch
+pyyaml>=6.0

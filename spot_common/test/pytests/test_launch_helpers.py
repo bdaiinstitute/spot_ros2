@@ -154,7 +154,13 @@ class LaunchHelpersTest(unittest.TestCase):
         )
         self.assertTrue(
             name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.name_value + "/",
-            "Substitution: prefix from name.",
+            # "Substitution: prefix from name.",
+            "Substitution: prefix from name. " + 
+            f"\nname.perform(self.context): {name.perform(self.context)}" +
+            f"\nself.name_value: {self.name_value}" +
+            f"\nprefix.perform(self.context): {prefix.perform(self.context)}" +
+            f"\nname_path_join_substitution: {name_path_join_substitution}" +
+            f"\nprefix_path_join_substitution: {prefix_path_join_substitution}"
         )
 
         name, prefix = get_name_and_prefix(

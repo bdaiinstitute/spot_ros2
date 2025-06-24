@@ -246,7 +246,6 @@ git_repository(
     name = "ros_utilities",
     commit = "146b0652421c73cfa513a3f3f9a2f09c3d5be99a",
     remote = "https://github.com/bdaiinstitute/ros_utilities.git",
-    patches = [],
 )
 
 git_repository(
@@ -254,4 +253,6 @@ git_repository(
     build_file = "//:deps/spot_wrapper.BUILD.bazel",
     commit = "041e5a33913367aaf2c6aaca1888dd58ee655560",
     remote = "https://github.com/bdaiinstitute/spot_wrapper.git",
+    patches = ["deps/spot_wrapper_requirements.patch"],
+    patch_args = ["-p1"],
 )
