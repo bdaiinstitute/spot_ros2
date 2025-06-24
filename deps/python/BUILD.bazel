@@ -29,12 +29,28 @@ copy_file(
     allow_symlink = True,
 )
 
+copy_file(
+    name = "spot_common_requirements",
+    src = "@spot_ros2//spot_common:requirements.in",
+    out = "spot_common_requirements.in",
+    allow_symlink = True,
+)
+
+copy_file(
+    name = "ros_utilities_requirements",
+    src = "@ros_utilities//deps/python:requirements.in",
+    out = "ros_utilities_requirements.in",
+    allow_symlink = True,
+)
+
 [
     pip_compile(
         name = "generate_locks_{}_{}".format(context, arch),
         size = "medium",
         data = [
+            ":spot_common_requirements",
             ":spot_wrapper_requirements",
+            ":ros_utilities_requirements",
         ],
         extra_args = [
             "--index-url https://pypi.org/simple/",

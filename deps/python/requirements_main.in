@@ -1,1 +1,3 @@
 -r spot_wrapper_requirements.in
+-r spot_common_requirements.in
+-r ros_utilities_requirements.in
