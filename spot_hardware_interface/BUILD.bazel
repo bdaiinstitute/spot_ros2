@@ -5,19 +5,6 @@ ros.package_manifest(
     package_name = "spot_hardware_interface",
 )
 
-# cc_library(
-#     name = "common",
-#     deps = [
-#         "@humble//:bosdyn-spot-api-msgs",
-#         "@humble//:bosdyn-api-msgs",
-#         "@humble//:ros-humble-bondcpp",
-#         "@humble//:ros-humble-tl-expected",
-#         "@humble//:ros-humble-hardware-interface",
-#         "@humble//:proto2ros",
-#         "//spot_msgs:spot_msgs"
-#     ]
-# )
-
 ros.plugin(
     name = "spot_hardware_interface_plugin",
     base = "@humble//:ros-humble-hardware-interface",
