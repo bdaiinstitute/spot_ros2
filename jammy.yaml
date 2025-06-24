@@ -79,10 +79,13 @@ packages:
   - "ros-humble-unique-identifier-msgs"
   - "ros-humble-xacro"
 ####### Module-specific inclusions begin here.
+  - "ros-humble-sensor-msgs"
+  - "ros-humble-std-msgs"
+  - "ros-humble-imu-sensor-broadcaster"
+  - "ros-humble-tf2-geometry-msgs"
 # No duplicates allowed!
 #   - "software-properties-common"
 #   - "ros-humble-rclpy"
-#   - "ros-humble-std-msgs"
 #   - "ros-humble-rmw-fastrtps-cpp"
 #   - "ros-humble-ros2cli"
 #   - "ros-humble-ros2topic"

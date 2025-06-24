@@ -28,7 +28,6 @@ ARM_JOINTS = ["arm_sh0", "arm_sh1", "arm_el0", "arm_el1", "arm_wr0", "arm_wr1", 
 
 NUM_JOINTS_ARM = 19
 
-
 def state_stream_response(position: list[float], velocity: list[float], load: list[float]) -> RobotStateStreamResponse:
     response = RobotStateStreamResponse()
     response.joint_states.position.extend(position)
