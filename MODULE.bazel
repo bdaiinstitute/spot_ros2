@@ -102,7 +102,7 @@ ros.additional_deb(
     # TODO(astout) add arm64
     urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v4.1.1/spot-cpp-sdk_4.1.1_amd64.deb"]},
     sha256_by_arch = {"amd64": "471b9983b17cb13f9e4a74b2b32bbe41ccbd72fb9a5b82609f03e7f2cd2799f3"},
-    dependencies = ["libgrpc++1"],
+    dependencies = ["libgrpc++1", "libgrpc++-dev", "libgrpc-dev", "libcli11-dev"],
     cc_includes = ["opt/spot-cpp-sdk/include"],
 )
 ros.additional_deb(
