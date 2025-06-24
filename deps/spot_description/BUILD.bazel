@@ -1,0 +1,3 @@
+load("@humble//ros:defs.bzl", "ros")
+
+exports_files(["requirements.in"])

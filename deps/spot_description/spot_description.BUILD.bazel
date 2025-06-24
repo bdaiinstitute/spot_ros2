@@ -1,0 +1,60 @@
+load("@humble//ros:defs.bzl", "ros")
+
+package(default_visibility = ["//visibility:public"])
+
+ros.package_manifest(
+    name = "pkg",
+    package_name = "spot_description"
+)
+
+ros.filegroup(
+    name = "share",
+    srcs = glob([
+        "spot_description/launch/**/*",
+        "spot_description/meshes/**/*",
+        "spot_description/rviz/**/*",
+        "spot_description/urdf/**/*",
+    ]),
+    ignore_parent_directories = False,
+    prefix = "share/spot_description",
+    strip_prefix = "spot_description",
+    env_paths = {
+        "AMENT_PREFIX_PATH": [
+            "share/spot_description/launch/",
+            "share/spot_description/meshes/",
+            "share/spot_description/rviz/",
+            "share/spot_description/urdf/"
+        ],
+    },
+)
+
+[
+    ros.launch(
+        name = name,
+        package_name = "spot_description",
+        launch_file_name = launch_file,
+        data = [
+            ":share",
+            ":pkg",
+            "@humble//rviz2:lib",
+            "@humble//xacro:lib",
+            "@humble//:ros-humble-controller-manager",
+            "@humble//:ros-humble-robot-state-publisher",
+            "@humble//:ros-humble-joint-state-broadcaster",
+            "@humble//:ros-humble-forward-command-controller",
+            "@humble//:ros-humble-joint-state-publisher-gui",
+        ],
+        args = args,
+        deps = [
+            "@humble//:ros-humble-joint-state-publisher-gui",
+            "@pip//pyqt5",
+            "@pip//pyside2"
+        ],
+        visibility = ["//visibility:public"]
+    )
+    for name, launch_file, args in [
+        ("launch_spot_without_arm", "description.launch.py", []),
+        ("launch_spot_with_arm", "description.launch.py", ["arm:=True"]),
+        ("launch_spot_just_arm", "standalone_arm.launch.py", [])
+    ]
+]

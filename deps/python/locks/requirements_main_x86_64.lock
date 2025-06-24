@@ -1052,9 +1052,52 @@ pyparsing==3.2.3 \
     --hash=sha256:a749938e02d6fd0b59b356ca504a24982314bb090c383e3cf201c95ef7e2bfcf \
     --hash=sha256:b9c13f1ab8b3b542f72e28f634bad4de758ab3ce4546e4301970ad6fa77c38be
     # via matplotlib
+pyqt5==5.15.6 \
+    --hash=sha256:33ced1c876f6a26e7899615a5a4efef2167c263488837c7beed023a64cebd051 \
+    --hash=sha256:80343bcab95ffba619f2ed2467fd828ffeb0a251ad7225be5fc06dcc333af452 \
+    --hash=sha256:9d2dcdaf82263ae56023410a7af15d1fd746c8e361733a7d0d1bd1f004ec2793 \
+    --hash=sha256:9d6efad0377aa78bf081a20ac752ce86096ded18f04c592d98f5b92dc879ad0a \
+    --hash=sha256:f411ecda52e488e1d3c5cce7563e1b2ca9cf0b7531e3c25b03d9a7e56e07e7fc
+    # via -r deps/python/spot_description_requirements.in
+pyqt5-qt5==5.15.17 \
+    --hash=sha256:b018f75d1cc61146396fa5af14da1db77c5d6318030e5e366f09ffdf7bd358d8 \
+    --hash=sha256:b68628f9b8261156f91d2f72ebc8dfb28697c4b83549245d9a68195bd2d74f0c \
+    --hash=sha256:d8b8094108e748b4bbd315737cfed81291d2d228de43278f0b8bd7d2b808d2b9
+    # via pyqt5
+pyqt5-sip==12.17.0 \
+    --hash=sha256:023466ae96f72fbb8419b44c3f97475de6642fa5632520d0f50fc1a52a3e8200 \
+    --hash=sha256:0c75d28b8282be3c1d7dbc76950d6e6eba1e334783224e9b9835ce1a9c64f482 \
+    --hash=sha256:2c912807dd638644168ea8c7a447bfd9d85a19471b98c2c588c4d2e911c09b0a \
+    --hash=sha256:2f2a8dcc7626fe0da73a0918e05ce2460c7a14ddc946049310e6e35052105434 \
+    --hash=sha256:32b03e7e77ecd7b4119eba486b0706fa59b490bcceb585f9b6ddec8a582082db \
+    --hash=sha256:351beab964a19f5671b2a3e816ecf4d3543a99a7e0650f88a947fea251a7589f \
+    --hash=sha256:419b9027e92b0b707632c370cfc6dc1f3b43c6313242fc4db57a537029bd179c \
+    --hash=sha256:4a92478d6808040fbe614bb61500fbb3f19f72714b99369ec28d26a7e3494115 \
+    --hash=sha256:54c31de7706d8a9a8c0fc3ea2c70468aba54b027d4974803f8eace9c22aad41c \
+    --hash=sha256:5b6c734f4ad28f3defac4890ed747d391d246af279200935d49953bc7d915b8c \
+    --hash=sha256:672c209d05661fab8e17607c193bf43991d268a1eefbc2c4551fbf30fd8bb2ca \
+    --hash=sha256:682dadcdbd2239af9fdc0c0628e2776b820e128bec88b49b8d692fe682f90b4f \
+    --hash=sha256:71514a7d43b44faa1d65a74ad2c5da92c03a251bdc749f009c313f06cceacc9a \
+    --hash=sha256:855e8f5787d57e26a48d8c3de1220a8e92ab83be8d73966deac62fdae03ea2f9 \
+    --hash=sha256:8c4bc535bae0dfa764e8534e893619fe843ce5a2e25f901c439bcb960114f686 \
+    --hash=sha256:b0ff280b28813e9bfd3a4de99490739fc29b776dc48f1c849caca7239a10fc8b \
+    --hash=sha256:c7a7ff355e369616b6bcb41d45b742327c104b2bf1674ec79b8d67f8f2fa9543 \
+    --hash=sha256:d65a9c1b4cbbd8e856254609f56e897d2cb5c903f77b75fb720cb3a32c76b92b \
+    --hash=sha256:ea08341c8a5da00c81df0d689ecd4ee47a95e1ecad9e362581c92513f2068005 \
+    --hash=sha256:ec47914cc751608e587c1c2fdabeaf4af7fdc28b9f62796c583bea01c1a1aa3e \
+    --hash=sha256:fb565469d08dcb0a427def0c45e722323beb62db79454260482b6948bfd52d47
+    # via pyqt5
 pyquaternion==0.9.9 \
     --hash=sha256:e65f6e3f7b1fdf1a9e23f82434334a1ae84f14223eee835190cd2e841f8172ec
     # via open3d
+pyside2==5.15.2.1 \
+    --hash=sha256:235240b6ec8206d9fdf0232472c6ef3241783d480425e5b54796f06e39ed23da \
+    --hash=sha256:23886c6391ebd916e835fa1b5ae66938048504fd3a2934ae3189a96cd5ac0b46 \
+    --hash=sha256:439509e53cfe05abbf9a99422a2cbad086408b0f9bf5e6f642ff1b13b1f8b055 \
+    --hash=sha256:a9e2e6bbcb5d2ebb421e46e72244a0f4fe0943b2288115f80a863aacc1de1f06 \
+    --hash=sha256:af6b263fe63ba6dea7eaebae80aa7b291491fe66f4f0057c0aafe780cc83da9d \
+    --hash=sha256:b5e1d92f26b0bbaefff67727ccbb2e1b577f2c0164b349b3d6e80febb4c5bde2
+    # via -r deps/python/spot_description_requirements.in
 pytest==7.3.1 \
     --hash=sha256:3799fa815351fea3a5e96ac7e503a96fa51cc9942c3753cda7651b93c1cfa362 \
     --hash=sha256:434afafd78b1d78ed0addf160ad2b77a30d35d4bdf8af234fe621919d9ed15e3
@@ -1282,6 +1325,14 @@ setuptools==59.6.0 \
     # via
     #   -r deps/python/spot_wrapper_requirements.in
     #   dash
+shiboken2==5.15.2.1 \
+    --hash=sha256:63debfcc531b6a2b4985aa9b71433d2ad3bac542acffc729cc0ecaa3854390c0 \
+    --hash=sha256:87079c07587859a525b9800d60b1be971338ce9b371d6ead81f15ee5a46d448b \
+    --hash=sha256:a0d0fdeb12b72c8af349b9642ccc67afd783dca449309f45e78cda50272fd6b7 \
+    --hash=sha256:eb0da44b6fa60c6bd317b8f219e500595e94e0322b33ec5b4e9f406bedaee555 \
+    --hash=sha256:f890f5611ab8f48b88cfecb716da2ac55aef99e2923198cefcf781842888ea65 \
+    --hash=sha256:ffd3d0ec3d508e592d7ee3885d27fee1f279a49989f734eb130f46d9501273a9
+    # via pyside2
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274
     # via
