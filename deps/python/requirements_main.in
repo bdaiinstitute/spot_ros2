@@ -1,1 +1,2 @@
 -r spot_wrapper_requirements.in
+-r spot_description_requirements.in
