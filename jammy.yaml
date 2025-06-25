@@ -122,6 +122,21 @@ packages:
   # these two are needed for spot-cpp-sdk
   - "libprotobuf23"
   - "libgrpc++1"
+  - "libgrpc++-dev"
+  - "libgrpc-dev"
+  - "libcli11-dev"
+##############################################################################################
+# CycloneDDS
+##############################################################################################
+  - "ros-humble-rmw-cyclonedds-cpp"
+##############################################################################################
+# ros2_control
+##############################################################################################
+  - "ros-humble-controller-manager"
+  - "ros-humble-hardware-interface"
+  - "ros-humble-joint-state-broadcaster"
+  - "ros-humble-joint-trajectory-controller"
+  - "ros-humble-robot-state-publisher"
 ##############################################################################################
 # transitive for ros_utilities (all duplicates, as it turns out)
 ##############################################################################################

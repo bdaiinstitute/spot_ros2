@@ -43,6 +43,13 @@ copy_file(
     allow_symlink = True,
 )
 
+copy_file(
+    name = "spot_description_requirements",
+    src = "//deps/spot_description:requirements.in",
+    out = "spot_description_requirements.in",
+    allow_symlink = True,
+)
+
 [
     pip_compile(
         name = "generate_locks_{}_{}".format(context, arch),
@@ -51,6 +58,7 @@ copy_file(
             ":spot_common_requirements",
             ":spot_wrapper_requirements",
             ":ros_utilities_requirements",
+            ":spot_description_requirements"
         ],
         extra_args = [
             "--index-url https://pypi.org/simple/",
