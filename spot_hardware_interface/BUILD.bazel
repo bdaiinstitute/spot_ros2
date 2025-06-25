@@ -1,0 +1,40 @@
+load("@humble//ros:defs.bzl", "ros")
+
+ros.package_manifest(
+    name = "pkg",
+    package_name = "spot_hardware_interface",
+)
+
+ros.plugin(
+    name = "spot_hardware_interface_plugin",
+    base = "@humble//:ros-humble-hardware-interface",
+    class_names = {
+        "spot_hardware_interface/SpotHardware": "hardware_interface::SystemInterface"
+    },
+    class_types = {
+        "spot_hardware_interface/SpotHardware": "spot_hardware_interface::SpotHardware"
+    },
+    hdrs = glob(["include/**/*.h*"]),
+    srcs = glob(["src/*.cpp"]),
+    includes = ["include/"],
+    copts = [
+        "-std=c++20"
+    ],
+    deps = [
+        "@humble//:bosdyn-spot-api-msgs",
+        "@humble//:bosdyn-api-msgs",
+        "@humble//:ros-humble-bondcpp",
+        "@humble//:ros-humble-tl-expected",
+        "@humble//:proto2ros",
+        "//spot_msgs:spot_msgs"
+    ]
+)
+
+ros.plugin_library(
+    name = "spot_hardware_interface",
+    package = ":pkg",
+    visibility = ["//visibility:public"],
+    plugins = [
+        ":spot_hardware_interface_plugin",
+    ]
+)
