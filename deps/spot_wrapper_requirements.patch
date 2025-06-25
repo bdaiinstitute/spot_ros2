@@ -1,0 +1,13 @@
+diff --git a/requirements.txt b/requirements.txt
+index f419580..fb8c317 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -10,7 +10,7 @@ inflection==0.5.1
+ opencv-python>=4.5.4
+ open3d==0.18.0 
+ protobuf==4.22.1
+-pytest==7.3.1
++pytest>=6.2
+ pytest-cov==4.1.0
+ pytest-xdist==3.5.0
+ pyyaml>=6.0

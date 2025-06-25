@@ -137,3 +137,16 @@ packages:
   - "ros-humble-joint-state-broadcaster"
   - "ros-humble-joint-trajectory-controller"
   - "ros-humble-robot-state-publisher"
+##############################################################################################
+# transitive for ros_utilities (all duplicates, as it turns out)
+##############################################################################################
+  # - "python3-pytest"                # synchros2[test]
+  # - "python3-typing-extensions"     # synchros2[test]
+  # - "ros-humble-action-msgs"        # synchros2[exec]
+  # - "ros-humble-example-interfaces" # synchros2[test]
+  # - "ros-humble-geometry-msgs"      # synchros2[exec]
+  # - "ros-humble-launch"             # synchros2[exec]
+  # - "ros-humble-message-filters"    # synchros2[exec]
+  # - "ros-humble-rclpy"              # synchros2[exec]
+  # - "ros-humble-std-srvs"           # synchros2[test]
+  # - "ros-humble-tf2-ros-py"         # synchros2[exec]
