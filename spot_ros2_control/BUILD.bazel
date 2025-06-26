@@ -1,0 +1,161 @@
+load("@humble//ros:defs.bzl", "ros")
+load("@pip//:requirements.bzl", "all_whl_requirements_by_package", "requirement")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "resolutions")
+
+package(default_visibility = ["//visibility:public"])
+
+ros.package_manifest(
+    name = "pkg",
+    package_name = "spot_ros2_control"
+)
+
+ros.filegroup(
+    name = "share",
+    srcs = glob([
+        "launch/**/*",
+        "config/**/*",
+        "rviz/**/*",
+    ]),
+    ignore_parent_directories = False,
+    prefix = "share/spot_ros2_control",
+    strip_prefix = "spot_ros2_control",
+    env_paths = {
+        "AMENT_PREFIX_PATH": [
+            "share/spot_ros2_control/launch/",
+            "share/spot_ros2_control/config/",
+            "share/spot_ros2_control/rviz/",
+        ],
+    },
+)
+
+cc_library(
+    name = "spot_joint_map",
+    includes = ["include"],
+    hdrs = [
+        "include/spot_ros2_control/spot_joint_map.hpp"
+    ],
+    srcs = [
+        "src/spot_joint_map.cpp"
+    ],
+    deps = [
+        "@humble//:ros-humble-sensor-msgs",
+        "@humble//:ros-humble-std-msgs",
+        "//spot_hardware_interface:spot_hardware_interface"
+    ]
+)
+
+
+[
+    ros.cc_binary(
+        name = cppfile.replace(".cpp", "").replace("examples/", ""),
+        package = "pkg",
+        srcs = [
+            cppfile
+        ],
+        copts = [
+            "-std=c++20"
+        ],
+        deps = [
+            ":spot_joint_map"
+        ]
+    )
+    for cppfile in glob(["examples/*.cpp"])    
+]
+
+py_library(
+    name = "resolutions_lib",
+    deps = [
+        "@ros_utilities//synchros2",
+        "@pip//pytest",
+        "@pip//pyyaml",
+        "@pip//lark",
+    ],
+    resolutions = resolutions.from_requirements(
+        all_whl_requirements_by_package,
+        requirement
+    ).to_label_keyed_dict(),
+)
+
+
+[
+    ros.launch(
+        name = name,
+        package_name = "spot_ros2_control",
+        launch_file_name = launch_file,
+        data = [
+            ":joint_command_passthrough",
+            ":noarm_squat",
+            ":wiggle_arm",
+            ":share",
+            ":pkg",
+            "@spot_description//:share",
+            "@spot_description//:pkg",
+            "//spot_controllers:spot_controllers",
+            "@ros_utilities//synchros2",
+            "@humble//rviz2:lib",
+            "@humble//xacro:lib",
+            "@humble//:ros-humble-controller-manager",
+            "@humble//:ros-humble-robot-state-publisher",
+            "@humble//:ros-humble-joint-state-broadcaster",
+            "@humble//:ros-humble-forward-command-controller",
+            "@humble//:ros-humble-joint-state-publisher-gui",
+        ],
+        deps = [
+            "resolutions_lib",
+            "//spot_common:spot_common"
+        ],
+        package_collisions = "ignore",
+        visibility = ["//visibility:public"]
+    )
+    for name, launch_file in [
+        ("noarm_squat_launch", "noarm_squat.launch.py"),
+        ("spot_ros2_control_launch", "spot_ros2_control.launch.py"),
+        ("wiggle_arm_launch", "wiggle_arm.launch.py"),
+    ]
+]
+
+
+ros.py_binary(
+    name = "set_gripper_gains",
+    srcs = ["examples/set_gripper_gains.py"],
+    main = "set_gripper_gains.py",
+    package = ":pkg",
+    resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
+    package_collisions = "ignore",
+    deps = [
+        "@humble//:ros-humble-rclpy",
+        "@humble//:ros-humble-std-msgs",
+        "@humble//:ros-humble-sensor-msgs",
+        "@ros_utilities//synchros2",
+        "//spot_msgs",
+    ],
+)
+
+ros.py_test(
+    name = "test_spot_ros2_control",
+    pytest_main = True,
+    srcs = [
+        "test/pytests/test_spot_ros2_control.py",
+        "test/pytests/conftest.py"
+    ],
+    data = [
+        ":joint_command_passthrough",
+        ":noarm_squat",
+        ":wiggle_arm",
+        ":share",
+        ":pkg",
+    ],
+    deps = [
+        ":resolutions_lib",
+        "@humble//ros2:lib",
+        "@humble//:ros-humble-launch-pytest",
+        "@humble//:ros-humble-launch-ros",
+        "@spot_wrapper//:spot_wrapper",
+        "//spot_msgs:spot_msgs"
+    ],
+    env = {
+        "ROS_LOG_DIR": ".",
+    },
+    package_collisions = "ignore",
+    timeout = "long",
+)

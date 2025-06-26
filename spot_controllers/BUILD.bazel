@@ -23,7 +23,7 @@ ros.package_manifest(
 # generating parameter classes. r^3 supports that tool through a special macro:
 ros.parameter_library(
     name = "forward_state_controller_parameters",
-    src = "include/spot_controllers/forward_state_controller_parameters.yaml",
+    src = "include/spot_controllers/parameters/forward_state_controller_parameters.yaml",
     output_hpp = "include/spot_controllers/forward_state_controller_parameters.hpp",
     output_py = "scripts/forward_state_controller_parameters.py",
     package = ":pkg",
@@ -35,7 +35,7 @@ ros.parameter_library(
 # spot_controllers defines three separate parameter libraries
 ros.parameter_library(
     name = "spot_joint_controller_parameters",
-    src = "include/spot_controllers/spot_joint_controller_parameters.yaml",
+    src = "include/spot_controllers/parameters/spot_joint_controller_parameters.yaml",
     output_hpp = "include/spot_controllers/spot_joint_controller_parameters.hpp",
     output_py = "scripts/spot_joint_controller_parameters.py",
     package = ":pkg",
@@ -46,7 +46,7 @@ ros.parameter_library(
 
 ros.parameter_library(
     name = "foot_state_broadcaster_parameters",
-    src = "include/spot_controllers/foot_state_broadcaster_parameters.yaml",
+    src = "include/spot_controllers/parameters/foot_state_broadcaster_parameters.yaml",
     output_hpp = "include/spot_controllers/foot_state_broadcaster_parameters.hpp",
     output_py = "scripts/foot_state_broadcaster_parameters.py",
     package = ":pkg",
@@ -55,10 +55,35 @@ ros.parameter_library(
     # validation_py = ,
 )
 
+ros.parameter_library(
+    name = "spot_pose_broadcaster_parameters",
+    src = "include/spot_controllers/parameters/spot_pose_broadcaster_parameters.yaml",
+    output_hpp = "include/spot_controllers/spot_pose_broadcaster_parameters.hpp",
+    output_py = "scripts/spot_pose_broadcaster_parameters.py",
+    package = ":pkg",
+    # these are available, but not used for spot_controllers
+    # validation_hpp = ,
+    # validation_py = ,
+)
+
+ros.parameter_library(
+    name = "spot_imu_broadcaster_parameters",
+    src = "include/spot_controllers/parameters/spot_imu_broadcaster_parameters.yaml",
+    output_hpp = "include/spot_controllers/spot_imu_broadcaster_parameters.hpp",
+    output_py = "scripts/spot_imu_broadcaster_parameters.py",
+    package = ":pkg",
+    # these are available, but not used for spot_controllers
+    # validation_hpp = ,
+    # validation_py = ,
+)
 
 # the controllers we're building here are plugins, so we need to use r^3's plugin rules
 ros.plugin(
     name = "spot_controllers_plugin",
+    copts = [
+        "-std=c++20",
+        "-DSPOT_CONTROLLERS_BUILDING_DLL"
+    ],
     # label - pointing to a cc_library that contains the header of the base class
     # note: don't include the base dependency in deps below, you'll get an error about it being a duplicate
     base = "@humble//:ros-humble-controller-interface",
@@ -67,21 +92,31 @@ ros.plugin(
         "spot_controllers/ForwardStateController": "controller_interface::ControllerInterface",
         "spot_controllers/SpotJointController": "controller_interface::ControllerInterface",
         "spot_controllers/FootStateBroadcaster": "controller_interface::ControllerInterface",
+        "spot_controllers/SpotIMUBroadcaster": "controller_interface::ControllerInterface",
+        "spot_controllers/SpotPoseBroadcaster": "controller_interface::ControllerInterface",
     },
     # name to implementation class type
     class_types = {
         "spot_controllers/ForwardStateController": "spot_controllers::ForwardStateController",
         "spot_controllers/SpotJointController": "spot_controllers::SpotJointController",
         "spot_controllers/FootStateBroadcaster": "spot_controllers::FootStateBroadcaster",
+        "spot_controllers/SpotIMUBroadcaster": "spot_controllers::SpotIMUBroadcaster",
+        "spot_controllers/SpotPoseBroadcaster": "spot_controllers::SpotPoseBroadcaster",
     },
     srcs = [
+        "src/spot_imu_broadcaster.cpp",
+        "src/spot_pose_broadcaster.cpp",
         "src/forward_state_controller.cpp",
         "src/spot_joint_controller.cpp",
         "src/foot_state_broadcaster.cpp",
+        "src/spot_controller_utils.cpp",
     ],
     hdrs = [
+        "include/spot_controllers/spot_imu_broadcaster.hpp",
+        "include/spot_controllers/spot_pose_broadcaster.hpp",
         "include/spot_controllers/forward_state_controller.hpp",
         "include/spot_controllers/foot_state_broadcaster.hpp",
+        "include/spot_controllers/spot_controller_utils.hpp",
         "include/spot_controllers/spot_joint_controller.hpp",
         "include/spot_controllers/visibility_control.h",
     ],
@@ -90,17 +125,22 @@ ros.plugin(
         ":forward_state_controller_parameters",
         ":spot_joint_controller_parameters",
         ":foot_state_broadcaster_parameters",
+        ":spot_imu_broadcaster_parameters",
+        ":spot_pose_broadcaster_parameters",
         "@humble//:ros-humble-forward-command-controller",
         "@humble//:ros-humble-rclcpp",
         "@humble//:ros-humble-rclcpp-lifecycle",
+        "@humble//:ros-humble-imu-sensor-broadcaster",
+        "@humble//:ros-humble-tf2-geometry-msgs",
         "//spot_msgs",
-    ]
+    ],
 )
+
 
 ros.plugin_library(
     name = "spot_controllers",
     package = ":pkg",
     plugins = [
-        ":spot_controllers_plugin"
+        ":spot_controllers_plugin",
     ],
 )

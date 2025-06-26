@@ -11,6 +11,7 @@ py_library(
         include = ["spot_wrapper/**/*.py"],
         exclude = ["spot_wrapper/tests/*.py"]
     ),
+    data = glob(["spot_wrapper/testing/credentials/*"]),
     deps = [
         "@pip//aiortc",
         "@pip//bosdyn_api",

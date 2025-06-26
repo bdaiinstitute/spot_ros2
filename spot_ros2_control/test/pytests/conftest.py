@@ -48,6 +48,7 @@ def ros(simple_spot: SpotFixture, domain_id: int) -> Iterator[ROSAwareScope]:
 
 @launch_pytest.fixture
 def robot_spot_ros2_control(simple_spot: SpotFixture, domain_id: int) -> Iterator[LaunchDescription]:
+
     with tempfile.NamedTemporaryFile(mode="w", suffix="config.yaml") as temp:
         data = {
             "username": "user",
