@@ -1,7 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test", "py_binary")
 
-package(default_visibility = ["//visibility:public"])
-
 exports_files(["requirements.txt"])
 
 py_library(
@@ -47,3 +45,27 @@ py_library(
     )
     for test_py in glob(["spot_wrapper/tests/test_*.py"])
 ]
+
+cc_library(
+    name = "pkg_cc",
+    data = [
+        ":spot_wrapper"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+py_library(
+    name = "pkg_py",
+    deps = [
+        ":spot_wrapper"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+filegroup(
+    name = "pkg_data",
+    srcs = [
+        ":spot_wrapper"
+    ],
+    visibility = ["//visibility:public"]
+)

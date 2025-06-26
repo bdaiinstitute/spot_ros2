@@ -40,7 +40,7 @@ cc_library(
     deps = [
         "@humble//:ros-humble-sensor-msgs",
         "@humble//:ros-humble-std-msgs",
-        "//spot_hardware_interface:spot_hardware_interface"
+        "//spot_hardware_interface:pkg_cc"
     ]
 )
 
@@ -88,9 +88,11 @@ py_library(
             ":wiggle_arm",
             ":share",
             ":pkg",
-            "@spot_description//:share",
-            "@spot_description//:pkg",
-            "//spot_controllers:spot_controllers",
+            "@spot_description//:pkg_data",
+            "//spot_controllers:pkg_data",
+            "//spot_driver:state_publisher_node",
+            "//spot_driver:pkg", 
+            "//spot_driver:share", 
             "@ros_utilities//synchros2",
             "@humble//rviz2:lib",
             "@humble//xacro:lib",
@@ -102,7 +104,7 @@ py_library(
         ],
         deps = [
             "resolutions_lib",
-            "//spot_common:spot_common"
+            "//spot_common:pkg_py"
         ],
         package_collisions = "ignore",
         visibility = ["//visibility:public"]
@@ -127,7 +129,7 @@ ros.py_binary(
         "@humble//:ros-humble-std-msgs",
         "@humble//:ros-humble-sensor-msgs",
         "@ros_utilities//synchros2",
-        "//spot_msgs",
+        "//spot_msgs:pkg_py",
     ],
 )
 
@@ -150,12 +152,46 @@ ros.py_test(
         "@humble//ros2:lib",
         "@humble//:ros-humble-launch-pytest",
         "@humble//:ros-humble-launch-ros",
-        "@spot_wrapper//:spot_wrapper",
-        "//spot_msgs:spot_msgs"
+        "@spot_wrapper//:pkg_py",
+        "//spot_msgs:pkg_py"
     ],
     env = {
         "ROS_LOG_DIR": ".",
     },
     package_collisions = "ignore",
     timeout = "long",
+)
+
+cc_library(
+    name = "pkg_cc",
+    deps = [
+        ":spot_joint_map"
+    ],
+    data = [
+        ":share",
+        ":pkg",
+    ],
+    visibility = ["//visibility:public"]
+)
+
+py_library(
+    name = "pkg_py",
+    data = [
+        ":share",
+        ":pkg",
+    ],
+    visibility = ["//visibility:public"]
+)
+
+filegroup(
+    name = "pkg_data",
+    srcs = [
+        ":share",
+        ":pkg",
+        ":set_gripper_gains",
+        ":noarm_squat_launch",
+        ":spot_ros2_control_launch",
+        ":wiggle_arm_launch"
+    ],
+    visibility = ["//visibility:public"]
 )

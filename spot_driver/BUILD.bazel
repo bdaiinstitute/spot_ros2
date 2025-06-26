@@ -1,0 +1,508 @@
+load("@humble//ros:defs.bzl", "ros")
+load("@pip//:requirements.bzl", "all_whl_requirements_by_package", "requirement")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "resolutions")
+
+exports_files(["requirements.in"])
+
+ros.package_manifest(
+    name = "pkg",
+    package_name = "spot_driver",
+)
+
+ros.filegroup(
+    name = "share",
+    srcs = glob([
+        "launch/**/*",
+        "config/**/*",
+        "rviz/**/*",
+    ]),
+    ignore_parent_directories = False,
+    prefix = "share/spot_driver",
+    strip_prefix = "spot_driver",
+    env_paths = {
+        "AMENT_PREFIX_PATH": [
+            "share/spot_driver/launch/",
+            "share/spot_driver/config/",
+            "share/spot_driver/rviz/",
+        ],
+    },
+)
+
+py_library(
+    name = "resolutions_lib",
+    deps = [
+        "@ros_utilities//synchros2",
+        "@pip//pytest",
+        "@pip//pyyaml",
+        "@pip//lark",
+    ],
+    resolutions = resolutions.from_requirements(
+        all_whl_requirements_by_package,
+        requirement
+    ).to_label_keyed_dict(),
+)
+
+cc_library(
+    name = "spot_api",
+    srcs = [
+        "src/api/default_kinematic_api.cpp",
+        "src/api/default_image_client.cpp",
+        "src/api/default_lease_client.cpp",
+        "src/api/default_spot_api.cpp",
+        "src/api/default_state_client.cpp",
+        "src/api/default_time_sync_api.cpp",
+        "src/api/default_world_object_client.cpp",
+        "src/api/spot_image_sources.cpp",
+        "src/conversions/common_conversions.cpp",
+        "src/conversions/decompress_images.cpp",
+        "src/conversions/geometry.cpp",
+        "src/conversions/kinematic_conversions.cpp",
+        "src/conversions/robot_state.cpp",
+        "src/conversions/time.cpp",
+        "src/images/spot_image_publisher.cpp",
+        "src/images/images_middleware_handle.cpp",
+        "src/images/spot_image_publisher_node.cpp",
+        "src/interfaces/rclcpp_clock_interface.cpp",
+        "src/interfaces/rclcpp_logger_interface.cpp",
+        "src/interfaces/rclcpp_node_interface.cpp",
+        "src/interfaces/rclcpp_parameter_interface.cpp",
+        "src/interfaces/rclcpp_tf_broadcaster_interface.cpp",
+        "src/interfaces/rclcpp_tf_listener_interface.cpp",
+        "src/interfaces/rclcpp_wall_timer_interface.cpp",
+        "src/lease/lease_manager.cpp",
+        "src/lease/lease_manager_node.cpp",
+        "src/lease/lease_middleware_handle.cpp",
+        "src/kinematic/kinematic_node.cpp",
+        "src/kinematic/kinematic_service.cpp",
+        "src/kinematic/kinematic_middleware_handle.cpp",
+        "src/object_sync/object_synchronizer.cpp",
+        "src/object_sync/object_synchronizer_node.cpp",
+        "src/robot_state/state_middleware_handle.cpp",
+        "src/robot_state/state_publisher.cpp",
+        "src/robot_state/state_publisher_node.cpp",
+    ],
+    hdrs = glob([
+        "include/spot_driver/**/*.hpp",
+    ]),
+    includes = ["include"],
+    deps = [
+        "@humble//:ros-humble-bondcpp",
+        "@humble//:bosdyn-api-msgs",
+        "@humble//:bosdyn-spot-api-msgs",
+        "@humble//:ros-humble-cv-bridge",
+        "@humble//:ros-humble-geometry-msgs",
+        "@humble//:ros-humble-image-transport",
+        "@humble//:ros-humble-message-filters",
+        "@humble//:ros-humble-nav-msgs",
+        "@humble//:ros-humble-rclcpp",
+        "@humble//:ros-humble-rclcpp-components",
+        "@humble//:ros-humble-sensor-msgs",
+        "@humble//:ros-humble-std-srvs",
+        "@humble//:ros-humble-tf2-eigen",
+        "@humble//:ros-humble-tf2-ros",
+        "@humble//:ros-humble-tl-expected",
+        "@humble//:spot-cpp-sdk",
+        "//spot_msgs:pkg_cc",
+    ],
+    copts = [
+        "-std=c++20",
+    ],
+)
+
+
+py_library(
+    name = "spot_driver_py",
+    srcs = glob([
+        "spot_driver/**/*.py",
+    ]),
+    data = [
+        "spot_driver/spot_ros2.py",
+        "spot_driver/calibrated_reregistered_hand_camera_depth_publisher.py",
+        "spot_driver/spot_alerts.py",
+    ],
+    imports = ["."],
+    deps = [
+        ":resolutions_lib",
+        "//spot_msgs:pkg_py",
+        "@spot_wrapper//:pkg_py",
+        "@pip//bosdyn_api",
+        "@pip//multipledispatch",
+        "@humble//:bosdyn-msgs",
+        "@humble//:bosdyn-api-msgs",
+        "@humble//:bosdyn-spot-api-msgs",
+        "@humble//:bosdyn-spot-cam-api-msgs",
+        "@humble//:bosdyn-auto-return-api-msgs",
+        "@humble//:bosdyn-autowalk-api-msgs",
+        "@humble//:bosdyn-graph-nav-api-msgs",
+        "@humble//:bosdyn-mission-api-msgs",
+        "@humble//:bosdyn-keepalive-api-msgs",
+        "@humble//:bosdyn-log-status-api-msgs",
+        "@humble//:bosdyn-metrics-logging-api-msgs",
+        "@humble//:proto2ros",
+        "@humble//:ros-humble-launch-pytest",
+        "@humble//:ros-humble-bondpy",
+        "@humble//:ros-humble-launch-ros",
+        "@humble//:ros-humble-rclpy",
+        "@humble//:ros-humble-sensor-msgs",
+        "@humble//:ros-humble-std-msgs",
+        "@humble//:ros-humble-nav-msgs",
+        "@humble//:ros-humble-std-srvs",
+        "@humble//:ros-humble-geometry-msgs",
+        "@humble//:ros-humble-tf2-ros",
+        "@humble//:ros-humble-cv-bridge",
+        "@humble//:ros-humble-image-transport",
+        "@humble//:ros-humble-message-filters",
+        "@humble//:ros-humble-tf2-eigen",
+    ],
+)
+
+
+ros.cc_binary(
+    name = "spot_image_publisher_node",
+    package = ":pkg",
+    srcs = ["src/images/spot_image_publisher_node_main.cpp"],
+    includes = ["include"],
+    deps = [":spot_api"],
+    copts = [
+        "-std=c++20",
+    ],
+)
+
+ros.cc_binary(
+    name = "state_publisher_node",
+    package = ":pkg",
+    srcs = ["src/robot_state/state_publisher_node_main.cpp"],
+    includes = ["include"],
+    deps = [":spot_api"],
+    copts = [
+        "-std=c++20",
+    ],
+)
+
+ros.cc_binary(
+    name = "lease_manager_node",
+    package = ":pkg",
+    srcs = ["src/lease/lease_manager_node_main.cpp"],
+    includes = ["include"],
+    deps = [":spot_api"],
+    copts = [
+        "-std=c++20",
+    ],
+)
+
+ros.cc_binary(
+    name = "spot_inverse_kinematics_node",
+    package = ":pkg",
+    srcs = ["src/kinematic/kinematic_node_main.cpp"],
+    includes = ["include"],
+    deps = [":spot_api"],
+    copts = [
+        "-std=c++20",
+    ],
+)
+
+ros.cc_binary(
+    name = "object_synchronizer_node",
+    package = ":pkg",
+    srcs = ["src/object_sync/object_synchronizer_node_main.cpp"],
+    includes = ["include"],
+    deps = [":spot_api"],
+    copts = [
+        "-std=c++20",
+    ],
+)
+
+ros.cc_library(
+    name = "image_stitcher_node",
+    package = ":pkg",
+    srcs = [
+        "src/image_stitcher/image_stitcher.cpp",
+        "src/image_stitcher/image_stitcher_node.cpp",
+    ],
+    includes = ["include"],
+    deps = [
+        ":spot_api",
+        "//spot_msgs:pkg_cc",
+    ],
+    copts = [
+        "-std=c++20",
+    ],
+)
+
+[
+    ros.component(
+        name = name,
+        srcs = [component_src],
+        hdrs = glob([
+            "include/spot_driver/**/*.hpp",
+        ]),
+        class_name = class_name,
+        includes = ["include"],
+        package = ":pkg",
+        deps = [
+            ":spot_api",
+        ],
+        copts = [
+            "-std=c++20",
+        ],
+    )
+    for name, component_src, class_name in [
+        ("spot_image_publisher_component", "src/images/spot_image_publisher_component.cpp", "spot_ros2::images::SpotImagePublisherNode"),
+        ("state_publisher_component", "src/robot_state/state_publisher_component.cpp", "spot_ros2::StatePublisherNode"),
+        ("lease_manager_component", "src/lease/lease_manager_component.cpp", "spot_ros2::LeaseManagerNode"),
+        ("spot_inverse_kinematics_component", "src/kinematic/kinematic_component.cpp", "spot_ros2::kinematic::KinematicNode"),
+    ]
+]
+
+
+ros.component_library(
+    name = "spot_driver_components",
+    components = [
+        ":spot_image_publisher_component",
+        ":state_publisher_component",
+        ":lease_manager_component",
+        ":spot_inverse_kinematics_component",
+    ],
+    package = ":pkg",
+)
+
+ros.py_binary(
+    name = "spot_ros2",
+    package = ":pkg",
+    srcs = ["spot_driver/spot_ros2.py"],
+    main = "spot_ros2.py",
+    deps = [
+        ":spot_driver_py",
+    ],
+    package_collisions = "ignore",
+)
+
+ros.py_binary(
+    name = "calibrated_reregistered_hand_camera_depth_publisher",
+    package = ":pkg",
+    srcs = ["spot_driver/calibrated_reregistered_hand_camera_depth_publisher.py"],
+    main = "calibrated_reregistered_hand_camera_depth_publisher.py",
+    deps = [":spot_driver_py"],
+    package_collisions = "ignore",
+)
+
+ros.py_binary(
+    name = "spot_alerts",
+    package = ":pkg",
+    srcs = ["spot_driver/spot_alerts.py"],
+    main = "spot_alerts.py",
+    deps = [":spot_driver_py"],
+    package_collisions = "ignore",
+)
+
+filegroup(
+    name = "spot_driver_bins",
+    srcs = [
+        ":spot_ros2",
+        ":lease_manager_node",
+        ":spot_inverse_kinematics_node",
+        ":object_synchronizer_node",
+        ":state_publisher_node",
+        ":spot_alerts",
+        ":calibrated_reregistered_hand_camera_depth_publisher",
+        ":spot_image_publisher_node"
+    ]
+)
+
+[
+    ros.launch(
+        name = name,
+        package_name = "spot_driver",
+        launch_file_name = launch_file,
+        data = [
+            "test/profile.xml",
+            ":share",
+            ":pkg",
+            ":spot_driver_bins",
+            ":spot_driver_components",
+            "//spot_ros2_control:pkg_data",
+            "@spot_description//:pkg_data",
+            "@spot_wrapper//:pkg_data",
+            "@humble//rviz2:lib",
+            "@humble//:ros-humble-robot-state-publisher",
+            "@humble//:ros-humble-depth-image-proc",
+        ],
+        deps = [
+            ":resolutions_lib",
+            "//spot_common:pkg_py",
+        ],
+        package_collisions = "ignore",
+        visibility = ["//visibility:public"]
+    )
+    for name, launch_file in [
+        ("spot_driver_launch", "spot_driver.launch.py"),
+        ("spot_image_publisher_launch", "spot_image_publisher.launch.py"),
+        ("spot_state_publisher_launch", "spot_state_publisher.launch.py"),
+        ("spot_lease_manager_launch", "spot_lease_manager.launch.py"),
+        ("spot_inverse_kinematics_launch", "spot_inverse_kinematics.launch.py"),
+        ("spot_object_synchronizer_launch", "spot_object_synchronizer.launch.py"),
+        ("spot_image_stitcher_launch", "spot_image_stitcher.launch.py"),
+    ]
+]
+
+cc_library(
+    name = "rclcpp_test",
+    hdrs = [
+        "test/include/spot_driver/rclcpp_test.hpp"
+    ],
+    includes = ["test/include"],
+    srcs = [
+        "test/src/rclcpp_test.cpp"
+    ],
+    deps = [
+        "@googletest//:gtest",
+        "@humble//:ros-humble-rclcpp",
+    ]
+)
+
+
+[
+    ros.cc_test(
+        name = test_file.replace(".cpp", "").replace("test/src/", "").replace("/", "_"),
+        srcs = glob(
+            include = ["test/include/spot_driver/**/*.hpp"],
+        ) + [test_file],
+        includes = ["test/include"],
+        data = [
+            "test/profile.xml",
+        ],
+        deps = [
+            ":spot_api",
+            ":rclcpp_test",
+            "@googletest//:gtest_main",
+            "@humble//:ros-humble-rclcpp",
+        ],
+        copts = [
+            "-std=c++20",
+        ],
+        env = {
+            "ROS_LOG_DIR": ".",
+            "RMW_IMPLEMENTATION": "rmw_fastrtps_cpp",
+            "FASTRTPS_DEFAULT_PROFILES_FILE": "spot_driver/test/profile.xml"
+        },
+    )
+    for test_file in glob(
+        include=["test/src/**/*.cpp"],
+        exclude=[
+            "test/src/rclcpp_test.cpp",
+            # Known flaky test
+            "test/src/test_object_synchronization.cpp"
+        ]
+    )
+]
+
+[
+    ros.py_test(
+        name = test_file.replace(".py", "").replace("test/pytests/", ""),
+        srcs = [test_file, "test/pytests/conftest.py"],
+        pytest_main = True,
+        deps = [
+            "//spot_common:pkg_py",
+            ":spot_driver_py",
+            ":resolutions_lib",
+            "@humble//:ros-humble-ament-copyright",
+            "@humble//:ros-humble-ament-pep257",
+            "@humble//xacro:lib",
+            "@spot_wrapper//:pkg_py",
+            "@pip//pydocstyle"
+        ],
+        data = [
+            ":spot_driver_launch",
+            ":spot_image_publisher_launch",
+            ":spot_state_publisher_launch",
+            ":spot_lease_manager_launch",
+            ":spot_inverse_kinematics_launch",
+            ":spot_object_synchronizer_launch",
+            ":spot_image_stitcher_launch",
+            "test/profile.xml"
+        ],
+        args = [
+            "-s"
+        ],
+        env = {
+            "ROS_LOG_DIR": ".",
+            "RMW_IMPLEMENTATION": "rmw_fastrtps_cpp",
+            "FASTRTPS_DEFAULT_PROFILES_FILE": "spot_driver/test/profile.xml"
+        },
+        package_collisions = "ignore"
+    )
+    for test_file in glob(
+        include=["test/pytests/**/*.py"],
+        exclude=[
+            # Known flaky test
+            "test/pytests/test_robot_state.py",
+            "test/pytests/conftest.py",
+            "test/pytests/__init__.py"
+        ]
+    )
+]
+
+ros.cmd(
+    name = "launch_spot_driver",
+    cmd = "ros2 launch spot_driver spot_driver.launch.py -d",
+    data = [
+        ":spot_driver_launch",
+        ":spot_image_publisher_launch",
+        ":spot_state_publisher_launch",
+        ":spot_lease_manager_launch",
+        ":spot_inverse_kinematics_launch",
+        ":spot_object_synchronizer_launch",
+        ":spot_image_stitcher_launch",
+        "test/profile.xml"
+    ],
+    deps = [
+        "//spot_common:pkg_py",
+        "@humble//ros2:lib",
+        ":resolutions_lib",
+    ],
+    package_collisions = "ignore"
+)
+
+ros.cc_library(
+    name = "pkg_components",
+    package = "pkg",
+    data = [
+        ":pkg",
+        ":share"
+    ],
+    deps = [
+        ":spot_driver_components"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+ros.cc_library(
+    name = "pkg_cc",
+    package = "pkg",
+    data = [
+        ":pkg",
+        ":share"
+    ],
+    deps = [
+        ":spot_api"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+filegroup(
+    name = "pkg_data",
+    srcs = [
+        ":pkg",
+        ":share",
+        ":spot_driver_bins",
+        ":spot_driver_components",
+        ":spot_driver_launch",
+        ":spot_image_publisher_launch",
+        ":spot_state_publisher_launch",
+        ":spot_lease_manager_launch",
+        ":spot_inverse_kinematics_launch",
+        ":spot_object_synchronizer_launch",
+        ":spot_image_stitcher_launch"
+    ],
+    visibility = ["//visibility:public"]
+)

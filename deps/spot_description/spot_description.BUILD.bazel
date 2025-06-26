@@ -58,3 +58,39 @@ ros.filegroup(
         ("launch_spot_just_arm", "standalone_arm.launch.py", [])
     ]
 ]
+
+cc_library(
+    name = "pkg_cc",
+    data = [
+        ":pkg",
+        ":share",
+        ":launch_spot_without_arm",
+        ":launch_spot_with_arm",
+        ":launch_spot_just_arm"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+py_library(
+    name = "pkg_py",
+    data = [
+        ":pkg",
+        ":share",
+        ":launch_spot_without_arm",
+        ":launch_spot_with_arm",
+        ":launch_spot_just_arm"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+filegroup(
+    name = "pkg_data",
+    srcs = [
+        ":pkg",
+        ":share",
+        ":launch_spot_without_arm",
+        ":launch_spot_with_arm",
+        ":launch_spot_just_arm"
+    ],
+    visibility = ["//visibility:public"]
+)

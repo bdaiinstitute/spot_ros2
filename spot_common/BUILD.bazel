@@ -1,12 +1,26 @@
 load("@humble//ros:defs.bzl", "ros")
-
-package(default_visibility = ["//visibility:public"])
+load("@pip//:requirements.bzl", "all_whl_requirements_by_package", "requirement")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "resolutions")
 
 exports_files(["requirements.in"])
 
 ros.package_manifest(
     name = "pkg",
     package_name = "spot_common",
+)
+
+py_library(
+    name = "resolutions_lib",
+    deps = [
+        "@ros_utilities//synchros2",
+        "@pip//pytest",
+        "@pip//pyyaml",
+        "@pip//lark",
+    ],
+    resolutions = resolutions.from_requirements(
+        all_whl_requirements_by_package,
+        requirement
+    ).to_label_keyed_dict(),
 )
 
 ros.py_library(
@@ -21,7 +35,7 @@ ros.py_library(
         "@pip//lark",
         "@pip//pyyaml",
         "@humble//:ros-humble-launch",
-        "@spot_wrapper//:spot_wrapper",
+        "@spot_wrapper//:pkg_py",
     ]
 )
 
@@ -30,7 +44,41 @@ ros.py_test(
     srcs = ["test/pytests/test_launch_helpers.py"],
     pytest_main = False,
     deps = [
+        ":resolutions_lib",
         ":spot_common",
     ],
-    package_collisions = "warning", # TODO: I think we need to understand why this is happening...
+    package_collisions = "ignore", # TODO: I think we need to understand why this is happening...
+    env = {
+        "ROS_LOG_DIR": ".",
+    }
+)
+
+ros.py_library(
+    name = "pkg_py",
+    package = "pkg",
+    data = [
+        ":pkg"
+    ],
+    deps = [
+        ":spot_common"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+ros.cc_library(
+    name = "pkg_cc",
+    package = "pkg",
+    data = [
+        ":pkg",
+    ],
+    deps = [],
+    visibility = ["//visibility:public"]
+)
+
+filegroup(
+    name = "pkg_data",
+    srcs = [
+        ":pkg"
+    ],
+    visibility = ["//visibility:public"]
 )

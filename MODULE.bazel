@@ -17,7 +17,7 @@ bazel_dep(name = "rules_uv", version = "0.71.0")
 bazel_dep(name = "rules_rai_ros")
 git_override(
     module_name = "rules_rai_ros",
-    commit = "f9a20555eee326716bc6edad41cc13aafd73d451",
+    commit = "42333d314bd7f2842e7bca969f76e6692fa848c2",
     remote = "https://github.com/bdaiinstitute/rules_rai_ros.git",
 )
 
