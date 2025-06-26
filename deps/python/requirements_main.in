@@ -3,3 +3,10 @@
 -r ros_utilities_requirements.in
 -r spot_description_requirements.in
 lark
+
+bosdyn_api==5.0.0
+bosdyn-choreography-protos==5.0.0
+bosdyn_client==5.0.0
+multipledispatch==1.0.0
+# ensure protoc 3.12.4 compatibility
+protobuf<=4.22.4

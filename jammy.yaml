@@ -106,6 +106,7 @@ packages:
   - "ros-humble-launch-testing"
   - "ros-humble-message-filters"
   - "ros-humble-nav-msgs"
+  - "ros-humble-rcl-interfaces"
   - "ros-humble-ros2-control"
   - "ros-humble-ros2-controllers"
   - "ros-humble-rosidl-default-generators"
@@ -116,13 +117,7 @@ packages:
   - "ros-humble-tf2-ros"
   - "ros-humble-tf2-ros-py"
   - "ros-humble-tl-expected"
-  # - "bosdyn"
-  # - "bosdyn-msgs"
-  # - "bosdyn-api-msgs"
-  # - "bosdyn-spot-api-msgs"
-  # - "bosdyn-spot-cam-api-msgs"
-  # - "synchros2"
-  # these two are needed for spot-cpp-sdk
+  # these are needed for spot-cpp-sdk
   - "libprotobuf23"
   - "libgrpc++1"
   - "libgrpc++-dev"
