@@ -22,7 +22,7 @@
     start_estop: False
 
     preferred_odom_frame: "odom" # Allowed values are: [odom, vision], without a prefix. This will be used in the odometry topic. https://dev.bostondynamics.com/docs/concepts/geometry_and_frames.html?highlight=frame#frames-in-the-spot-robot-world for more info.
-    tf_root: "odom" # Allowed values are: [odom, vision, body], without a prefix. This will set the root frame in your TF tree.
+    tf_root: "body" # Allowed values are: [odom, vision, body], without a prefix. This will set the root frame in your TF tree.
 
     # These parameters may be overridden by the 'spot_name' and 'tf_prefix' launch arguments.
     spot_name: ""

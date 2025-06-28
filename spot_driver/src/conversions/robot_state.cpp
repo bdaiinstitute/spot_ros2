@@ -34,6 +34,11 @@ std::string prependPrefix(const std::string& input, const std::string& prefix) {
   return input.find(prefix) == 0 ? input : prefix + input;
 }
 
+const std::string replace_vision_frame_id(const std::string& input){
+  if(input == "vision") return "vision2";
+  else return input;
+}
+  
 spot_msgs::msg::BatteryStateArray getBatteryStates(const ::bosdyn::api::RobotState& robot_state,
                                                    const google::protobuf::Duration& clock_skew) {
   spot_msgs::msg::BatteryStateArray battery_states;
@@ -166,9 +171,11 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
     }
 
     const auto parent_frame_name = transform.parent_frame_name().find('/') == std::string::npos
-                                       ? prefix + transform.parent_frame_name()
-                                       : transform.parent_frame_name();
-    const auto frame_name = frame_id.find('/') == std::string::npos ? prefix + frame_id : frame_id;
+                                       ? prefix + replace_vision_frame_id(transform.parent_frame_name())
+                                       : replace_vision_frame_id(transform.parent_frame_name());
+    const auto frame_name = frame_id.find('/') == std::string::npos ? prefix + replace_vision_frame_id(frame_id) : 
+      replace_vision_frame_id(frame_id);
+    
 
     // set preferred base frame as the root node in tf tree
     if (preferred_base_frame_id == frame_name) {
@@ -277,7 +284,7 @@ std::optional<spot_msgs::msg::SystemFaultState> getSystemFaultState(const ::bosd
                              .sec(fault.duration().seconds())
                              .nanosec(fault.duration().nanos());
     fault_msg.code = fault.code();
-    fault_msg.uuid = fault.uuid();
+    fault_msg.uid = fault.uid();
     fault_msg.error_message = fault.error_message();
     for (const auto& attr : fault.attributes()) {
       fault_msg.attributes.push_back(attr);
