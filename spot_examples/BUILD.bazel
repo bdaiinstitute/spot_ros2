@@ -12,7 +12,7 @@ ros.package_manifest(
 py_library(
     name = "simple_spot_commander_lib",
     srcs = ["spot_examples/simple_spot_commander.py"],
-    imports = ["spot_examples"],
+    imports = ["."],
     deps = [
         "@humble//:ros-humble-rclpy",
         "@ros_utilities//synchros2",
@@ -24,7 +24,7 @@ py_library(
 ros.py_binary(
     name = "simple_spot_commander",
     srcs = ["spot_examples/simple_spot_commander.py"],
-    imports = ["spot_examples"],
+    imports = ["."],
     deps = [
         "@humble//:ros-humble-rclpy",
         "@ros_utilities//synchros2",
@@ -41,26 +41,63 @@ ros.py_binary(
     package_collisions = "warning",
 )
 
+# group all the bosdyn_msgs dependencies together
+# TODO(astout): is there some better way to do this?
+bosdyn_msgs = [
+    "@humble//:bosdyn-msgs",
+    "@humble//:bosdyn-api-msgs",
+    "@humble//:proto2ros",
+    "@humble//:bosdyn-auto-return-api-msgs",
+    "@humble//:bosdyn-autowalk-api-msgs",
+    "@humble//:bosdyn-spot-api-msgs",
+    "@humble//:bosdyn-graph-nav-api-msgs",
+    "@humble//:bosdyn-mission-api-msgs",
+    "@humble//:bosdyn-spot-cam-api-msgs",
+    "@humble//:bosdyn-keepalive-api-msgs",
+    "@humble//:bosdyn-log-status-api-msgs",
+]
+
+common = bosdyn_msgs + [
+    "@ros_utilities//synchros2",
+    "@pip//bosdyn_api",
+    "@pip//bosdyn_client",
+    "@humble//:ros-humble-rclpy",
+    "@spot_ros2//spot_msgs",
+    ":simple_spot_commander_lib",
+]
+
+[
+    ros.py_binary(
+        name = example,
+        package = ":pkg",
+        srcs = ["spot_examples/{}.py".format(example)],
+        imports = ["."],
+        deps = common,
+        # this serves to provide concrete labels to virtual deps indicated by dependencies
+        # (I think ros_utilities in this case)
+        # to be honest, I'm just following an example for this and I don't really know how it works
+        resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
+        # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
+        # bottom of it
+        package_collisions = "warning",
+    )
+    for example in [
+        "arm_simple",
+        "arm_with_body_follow",
+        "spot_in_circle",
+        "walk_forward",
+        "wasd",
+    ]
+]
+
 ros.py_binary(
-    name = "arm_simple",
+    name = "batch_trajectory",
     package = ":pkg",
-    srcs = ["spot_examples/arm_simple.py"],
-    deps = [
-        "@ros_utilities//synchros2",
-        "@pip//bosdyn_api",
-        "@pip//bosdyn_client",
-        "@humble//:bosdyn-msgs",
-        "@humble//:ros-humble-rclpy",
-        "@humble//:spot-msgs",
-        ":simple_spot_commander_lib",
-        "@humble//:bosdyn-api-msgs",
-        "@humble//:proto2ros",
-        "@humble//:bosdyn-auto-return-api-msgs",
-        "@humble//:bosdyn-autowalk-api-msgs",
-        "@humble//:bosdyn-spot-api-msgs",
-        "@humble//:bosdyn-graph-nav-api-msgs",
-        "@humble//:bosdyn-mission-api-msgs",
-        "@humble//:bosdyn-spot-cam-api-msgs",
+    srcs = ["spot_examples/batch_trajectory.py"],
+    imports = ["."],
+    deps = common + [
+        "@pip//protobuf",
+        "@humble//:ros-humble-tf2-ros"
     ],
     # this serves to provide concrete labels to virtual deps indicated by dependencies
     # (I think ros_utilities in this case)
@@ -72,16 +109,65 @@ ros.py_binary(
 )
 
 ros.py_binary(
-    name = "arm_with_body_follow",
+    name = "hello_spot",
     package = ":pkg",
-    srcs = ["spot_examples/arm_with_body_follow.py"],
+    srcs = ["spot_examples/hello_spot.py"],
+    imports = ["."],
+    deps = common + [
+        "@humble//:ros-humble-vision-opencv",
+        # I expected to need to add something providing cv2 here...
+    ],
+    # this serves to provide concrete labels to virtual deps indicated by dependencies
+    # (I think ros_utilities in this case)
+    # to be honest, I'm just following an example for this and I don't really know how it works
+    resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
+    # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
+    # bottom of it
+    package_collisions = "warning",
+)
+
+ros.py_library(
+    name = "robot_commander",
+    package = ":pkg",
+    srcs = ["spot_examples/robot_commander.py"],
+    imports = ["."],
+    deps = common + [
+        # TODO(astout): I expect to need to add some things here
+    ],
+)
+
+ros.py_binary(
+    name = "send_inverse_kinematics_requests",
+    package = ":pkg",
+    srcs = ["spot_examples/send_inverse_kinematics_requests.py"],
+    imports = ["."],
+    deps = common + [
+        "@humble//:ros-humble-tf2-ros"
+    ],
+    # this serves to provide concrete labels to virtual deps indicated by dependencies
+    # (I think ros_utilities in this case)
+    # to be honest, I'm just following an example for this and I don't really know how it works
+    resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
+    # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
+    # bottom of it
+    package_collisions = "warning",
+)
+
+ros.py_binary(
+    name = "simple_sub",
+    srcs = ["spot_examples/simple_sub.py"],
+    imports = ["."],
     deps = [
         "@ros_utilities//synchros2",
-        "@pip//bosdyn-api",
-        "@pip//bosdyn-client",
-        "@humble//:ros-humble-bosdyn-msgs",
-        "@humble//:ros-humble-rclpy",
-        "@humble//:ros-humble-spot-msgs", # TODO(astout): does not exist yet
-        ":simple_spot_commander_lib",
-    ]
+        ":robot_commander",
+    ],
+    package = ":pkg",
+    # this serves to provide concrete labels to virtual deps indicated by dependencies
+    # (I think ros_utilities in this case)
+    # to be honest, I'm just following an example for this and I don't really know how it works
+    resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
+    # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
+    # bottom of it
+    package_collisions = "warning",
 )
+

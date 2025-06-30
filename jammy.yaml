@@ -117,6 +117,7 @@ packages:
   - "ros-humble-tf2-ros"
   - "ros-humble-tf2-ros-py"
   - "ros-humble-tl-expected"
+  - "ros-humble-vision-opencv"
   # these are needed for spot-cpp-sdk
   - "libprotobuf23"
   - "libgrpc++1"

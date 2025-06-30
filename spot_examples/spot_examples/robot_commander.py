@@ -14,7 +14,7 @@ from synchros2.utilities import fqn, namespace_with
 
 from spot_msgs.action import RobotCommand  # type: ignore
 
-from .simple_spot_commander import SimpleSpotCommander
+from spot_examples.simple_spot_commander import SimpleSpotCommander
 
 # Where we want the robot to walk to relative to itself
 

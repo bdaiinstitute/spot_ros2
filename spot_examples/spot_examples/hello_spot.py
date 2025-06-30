@@ -23,7 +23,7 @@ from synchros2.utilities import namespace_with
 
 from spot_msgs.action import RobotCommand  # type: ignore
 
-from .simple_spot_commander import SimpleSpotCommander
+from spot_examples.simple_spot_commander import SimpleSpotCommander
 
 
 class HelloSpot:
@@ -210,7 +210,7 @@ class HelloSpot:
 
 def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--robot", type=str, default=None)
+    parser.add_argument("--robot", required=True, type=str, default=None)
     return parser
 
 

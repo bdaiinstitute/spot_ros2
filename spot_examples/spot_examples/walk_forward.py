@@ -15,7 +15,7 @@ from synchros2.utilities import fqn, namespace_with
 
 from spot_msgs.action import RobotCommand  # type: ignore
 
-from .simple_spot_commander import SimpleSpotCommander
+from spot_examples.simple_spot_commander import SimpleSpotCommander
 
 # Where we want the robot to walk to relative to itself
 ROBOT_T_GOAL = SE2Pose(1.0, 0.0, 0.0)
@@ -96,6 +96,7 @@ def cli() -> argparse.ArgumentParser:
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> int:
+    print(f"starting with argument: {args.robot}")
     goto = WalkForward(args.robot, main.node)
     goto.initialize_robot()
     goto.walk_forward_with_world_frame_goal()

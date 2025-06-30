@@ -213,7 +213,6 @@ ros.additional_deb(
     dependencies = [],
     cc_includes = [],
 )
-# do I need this one?
 ros.additional_deb(
     hub_name = "humble",
     name = "proto2ros",
@@ -223,14 +222,7 @@ ros.additional_deb(
     dependencies = [],
     cc_includes = [],
 )
-ros.additional_deb(
-    hub_name = "humble",
-    name = "spot-msgs",
-    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/spot_msgs/releases/download/spot_msgs-v0.0.0-0/ros-humble-spot-msgs_0.0.0-0jammy_amd64.deb"]},
-    sha256_by_arch = {"amd64": "e2b292c0b0b4690d6daabc8d30ca9252fb39ee36607ea0c4100b99fbd9d20b77"},
-    dependencies = [],
-    cc_includes = [],
-)
+
 
 use_repo(ros, "humble")
 

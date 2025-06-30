@@ -6,7 +6,7 @@ import synchros2.process as ros_process
 from geometry_msgs.msg import Pose
 from synchros2.subscription import Subscription
 
-from .robot_commander import RobotCommander
+from spot_examples.robot_commander import RobotCommander
 
 
 class SpotRobotInterface:
@@ -51,6 +51,7 @@ def cli() -> argparse.ArgumentParser:
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> None:
+    print(f"starting with robot: {args.robot}")
     robot_interface = SpotRobotInterface(args.robot)
     if robot_interface.initialize():
         robot_interface.listen_to_pose_commands()
