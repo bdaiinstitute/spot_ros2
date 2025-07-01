@@ -63,7 +63,7 @@ common = bosdyn_msgs + [
     "@pip//bosdyn_api",
     "@pip//bosdyn_client",
     "@humble//:ros-humble-rclpy",
-    "@spot_ros2//spot_msgs",
+    "//spot_msgs:pkg_py",
     ":simple_spot_commander_lib",
 ]
 
