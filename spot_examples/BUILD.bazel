@@ -9,6 +9,7 @@ ros.package_manifest(
     package_name = "spot_examples",
 )
 
+# simple_spot_commander is used as both a library and an executable, so targets for both.
 py_library(
     name = "simple_spot_commander_lib",
     srcs = ["spot_examples/simple_spot_commander.py"],
@@ -131,9 +132,7 @@ ros.py_library(
     package = ":pkg",
     srcs = ["spot_examples/robot_commander.py"],
     imports = ["."],
-    deps = common + [
-        # TODO(astout): I expect to need to add some things here
-    ],
+    deps = common,
 )
 
 ros.py_binary(
