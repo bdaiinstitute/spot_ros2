@@ -30,7 +30,6 @@ ros.py_test(
     srcs = ["test/pytests/test_launch_helpers.py"],
     pytest_main = False,
     deps = [
-        ":resolutions_lib",
         "@ros_utilities//synchros2",
         "@pip//pytest",
         "@pip//pyyaml",

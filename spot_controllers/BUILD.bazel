@@ -128,7 +128,7 @@ ros.plugin(
         "@humble//:ros-humble-imu-sensor-broadcaster",
         "@humble//:ros-humble-tf2-geometry-msgs",
         "//spot_msgs:pkg_cc",
-    ],
+    ]
 )
 
 
@@ -138,6 +138,7 @@ ros.plugin_library(
     plugins = [
         ":spot_controllers_plugin",
     ],
+    visibility = ["//visibility:public"]
 )
 
 ros.cc_library(
@@ -156,7 +157,7 @@ filegroup(
     name = "pkg_data",
     srcs = [
         ":pkg",
-        ":spot_controllers_plugin"
+        ":spot_controllers"
     ],
     visibility = ["//visibility:public"]
 )

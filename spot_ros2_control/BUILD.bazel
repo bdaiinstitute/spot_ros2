@@ -102,7 +102,7 @@ py_library(
         ],
         deps = [
             "resolutions_lib",
-            "//spot_common:pkg_py"
+            "//spot_common:pkg_py",
         ],
         package_collisions = "ignore",
         visibility = ["//visibility:public"]
@@ -138,6 +138,8 @@ ros.py_test(
         "test/pytests/conftest.py"
     ],
     data = [
+        "//spot_driver:pkg_data",
+        ":spot_ros2_control_launch",
         ":joint_command_passthrough",
         ":noarm_squat",
         ":wiggle_arm",
@@ -152,12 +154,18 @@ ros.py_test(
         "@humble//ros2:lib",
         "@humble//:ros-humble-launch-pytest",
         "@humble//:ros-humble-launch-ros",
+        "@humble//rviz2:lib",
+        "@humble//xacro:lib",
         "@spot_wrapper//:pkg_py",
-        "//spot_msgs:pkg_py"
+        "//spot_msgs:pkg_py",
+        "//spot_common:pkg_py",
     ],
     env = {
         "ROS_LOG_DIR": ".",
     },
+    args = [
+        "-s"
+    ],
     resolutions = resolutions.from_requirements(
         all_whl_requirements_by_package,
         requirement

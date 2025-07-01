@@ -413,12 +413,6 @@ cc_library(
         ],
         data = [
             ":spot_driver_launch",
-            ":spot_image_publisher_launch",
-            ":spot_state_publisher_launch",
-            ":spot_lease_manager_launch",
-            ":spot_inverse_kinematics_launch",
-            ":spot_object_synchronizer_launch",
-            ":spot_image_stitcher_launch",
             "test/profile.xml"
         ],
         args = [
@@ -451,12 +445,6 @@ ros.cmd(
     cmd = "ros2 launch spot_driver spot_driver.launch.py -d",
     data = [
         ":spot_driver_launch",
-        ":spot_image_publisher_launch",
-        ":spot_state_publisher_launch",
-        ":spot_lease_manager_launch",
-        ":spot_inverse_kinematics_launch",
-        ":spot_object_synchronizer_launch",
-        ":spot_image_stitcher_launch",
         "test/profile.xml"
     ],
     deps = [
@@ -500,13 +488,6 @@ filegroup(
         ":share",
         ":spot_driver_bins",
         ":spot_driver_components",
-        ":spot_driver_launch",
-        ":spot_image_publisher_launch",
-        ":spot_state_publisher_launch",
-        ":spot_lease_manager_launch",
-        ":spot_inverse_kinematics_launch",
-        ":spot_object_synchronizer_launch",
-        ":spot_image_stitcher_launch"
     ],
     visibility = ["//visibility:public"]
 )
