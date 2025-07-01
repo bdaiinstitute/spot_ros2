@@ -43,7 +43,7 @@ from tf2_ros import TransformBroadcaster, TransformStamped
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
 
-from .simple_spot_commander import SimpleSpotCommander
+from spot_examples.simple_spot_commander import SimpleSpotCommander
 
 
 def to_se3(ros_transform: TransformStamped) -> SE3Pose:

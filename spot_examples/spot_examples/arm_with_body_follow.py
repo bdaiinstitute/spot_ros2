@@ -16,7 +16,7 @@ from synchros2.utilities import namespace_with
 
 from spot_msgs.action import RobotCommand  # type: ignore
 
-from .simple_spot_commander import SimpleSpotCommander
+from spot_examples.simple_spot_commander import SimpleSpotCommander
 
 
 class ArmWithBodyFollow:
@@ -131,6 +131,7 @@ def cli() -> argparse.ArgumentParser:
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> None:
+    print(f"starting with robot: {args.robot}")
     hello_spot = ArmWithBodyFollow(args.robot)
     hello_spot.initialize_robot()
     hello_spot.move()

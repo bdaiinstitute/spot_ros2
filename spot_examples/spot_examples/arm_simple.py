@@ -14,7 +14,7 @@ from synchros2.utilities import namespace_with
 
 from spot_msgs.action import RobotCommand  # type: ignore
 
-from .simple_spot_commander import SimpleSpotCommander
+from spot_examples.simple_spot_commander import SimpleSpotCommander
 
 
 def hello_arm(robot_name: Optional[str] = None) -> bool:
@@ -161,6 +161,7 @@ def cli() -> argparse.ArgumentParser:
 
 @ros_process.main(cli())
 def main(args: argparse.Namespace) -> None:
+    print(f"starting hello_arm with argument: {args.robot}")
     hello_arm(args.robot)
 
 

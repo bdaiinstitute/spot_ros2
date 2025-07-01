@@ -213,7 +213,6 @@ ros.additional_deb(
     dependencies = [],
     cc_includes = [],
 )
-# do I need this one?
 ros.additional_deb(
     hub_name = "humble",
     name = "proto2ros",
@@ -223,6 +222,7 @@ ros.additional_deb(
     dependencies = [],
     cc_includes = [],
 )
+
 
 use_repo(ros, "humble")
 

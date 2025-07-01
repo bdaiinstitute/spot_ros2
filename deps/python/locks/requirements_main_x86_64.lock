@@ -128,6 +128,7 @@ blinker==1.9.0 \
 bosdyn-api==5.0.0 \
     --hash=sha256:ac86de5aaa8f8c4d2a2a36b80fd033e8b6eb4f64fed258e510373601a594a6dd
     # via
+    #   -r deps/python/requirements_main.in
     #   -r deps/python/spot_wrapper_requirements.in
     #   bosdyn-choreography-client
     #   bosdyn-client
@@ -136,9 +137,13 @@ bosdyn-api==5.0.0 \
 bosdyn-choreography-client==5.0.0 \
     --hash=sha256:6c7e18541a4de23cebc3a79505a23793da68dffa8be7649ae962e52adbd95373
     # via -r deps/python/spot_wrapper_requirements.in
+bosdyn-choreography-protos==5.0.0 \
+    --hash=sha256:535b43ada3d4dde29bec69e35cb961127bb134dbee38f9c35d62f95bfe3fc87c
+    # via -r deps/python/requirements_main.in
 bosdyn-client==5.0.0 \
     --hash=sha256:cc67e6a4d0a8ef465754a586b2f583088cfa633d5948fd1a673570f860d0a00d
     # via
+    #   -r deps/python/requirements_main.in
     #   -r deps/python/spot_wrapper_requirements.in
     #   bosdyn-choreography-client
     #   bosdyn-mission
@@ -790,6 +795,9 @@ matplotlib==3.8.4 \
 matplotlib-inline==0.1.7 \
     --hash=sha256:df192d39a4ff8f21b1895d72e6a13f5fcc5099f00fa84384e0ea28c2cc0653ca
     # via ipython
+multipledispatch==1.0.0 \
+    --hash=sha256:0c53cd8b077546da4e48869f49b13164bebafd0c2a5afceb6bb6a316e7fb46e4
+    # via -r deps/python/requirements_main.in
 narwhals==1.42.1 \
     --hash=sha256:50a5635b11aeda98cf9c37e839fd34b0a24159f59a4dfae930290ad698320494 \
     --hash=sha256:7a270d44b94ccdb277a799ae890c42e8504c537c1849f195eb14717c6184977a
@@ -1014,8 +1022,10 @@ protobuf==4.22.1 \
     --hash=sha256:dce7a55d501c31ecf688adb2f6c3f763cf11bc0be815d1946a84d74772ab07a7 \
     --hash=sha256:e3fb58076bdb550e75db06ace2a8b3879d4c4f7ec9dd86e4254656118f4a78d7
     # via
+    #   -r deps/python/requirements_main.in
     #   -r deps/python/spot_wrapper_requirements.in
     #   bosdyn-api
+    #   bosdyn-choreography-protos
 ptyprocess==0.7.0 \
     --hash=sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35
     # via pexpect
