@@ -28,6 +28,8 @@ ros.filegroup(
     },
 )
 
+# This is required to resolve virtual_deps for rules that cannot be passed
+#  the resolutions attribute.
 py_library(
     name = "resolutions_lib",
     deps = [
@@ -122,7 +124,6 @@ py_library(
     ],
     imports = ["."],
     deps = [
-        ":resolutions_lib",
         "//spot_msgs:pkg_py",
         "@spot_wrapper//:pkg_py",
         "@pip//bosdyn_api",
@@ -335,13 +336,9 @@ filegroup(
         visibility = ["//visibility:public"]
     )
     for name, launch_file in [
+        ("rviz_launch", "rviz.launch.py"),
         ("spot_driver_launch", "spot_driver.launch.py"),
-        ("spot_image_publisher_launch", "spot_image_publisher.launch.py"),
-        ("spot_state_publisher_launch", "spot_state_publisher.launch.py"),
-        ("spot_lease_manager_launch", "spot_lease_manager.launch.py"),
-        ("spot_inverse_kinematics_launch", "spot_inverse_kinematics.launch.py"),
-        ("spot_object_synchronizer_launch", "spot_object_synchronizer.launch.py"),
-        ("spot_image_stitcher_launch", "spot_image_stitcher.launch.py"),
+        ("spot_image_publisher_launch", "spot_image_publishers.launch.py"),
     ]
 ]
 
@@ -404,7 +401,10 @@ cc_library(
         deps = [
             "//spot_common:pkg_py",
             ":spot_driver_py",
-            ":resolutions_lib",
+            "@ros_utilities//synchros2",
+            "@pip//pytest",
+            "@pip//pyyaml",
+            "@pip//lark",
             "@humble//:ros-humble-ament-copyright",
             "@humble//:ros-humble-ament-pep257",
             "@humble//xacro:lib",
@@ -429,6 +429,10 @@ cc_library(
             "RMW_IMPLEMENTATION": "rmw_fastrtps_cpp",
             "FASTRTPS_DEFAULT_PROFILES_FILE": "spot_driver/test/profile.xml"
         },
+        resolutions = resolutions.from_requirements(
+            all_whl_requirements_by_package,
+            requirement
+        ),
         package_collisions = "ignore"
     )
     for test_file in glob(

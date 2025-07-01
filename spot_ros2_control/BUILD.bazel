@@ -90,9 +90,7 @@ py_library(
             ":pkg",
             "@spot_description//:pkg_data",
             "//spot_controllers:pkg_data",
-            "//spot_driver:state_publisher_node",
-            "//spot_driver:pkg", 
-            "//spot_driver:share", 
+            "//spot_driver:pkg_data",
             "@ros_utilities//synchros2",
             "@humble//rviz2:lib",
             "@humble//xacro:lib",
@@ -115,7 +113,6 @@ py_library(
         ("wiggle_arm_launch", "wiggle_arm.launch.py"),
     ]
 ]
-
 
 ros.py_binary(
     name = "set_gripper_gains",
@@ -148,7 +145,10 @@ ros.py_test(
         ":pkg",
     ],
     deps = [
-        ":resolutions_lib",
+        "@ros_utilities//synchros2",
+        "@pip//pytest",
+        "@pip//pyyaml",
+        "@pip//lark",
         "@humble//ros2:lib",
         "@humble//:ros-humble-launch-pytest",
         "@humble//:ros-humble-launch-ros",
@@ -158,6 +158,10 @@ ros.py_test(
     env = {
         "ROS_LOG_DIR": ".",
     },
+    resolutions = resolutions.from_requirements(
+        all_whl_requirements_by_package,
+        requirement
+    ),
     package_collisions = "ignore",
     timeout = "long",
 )

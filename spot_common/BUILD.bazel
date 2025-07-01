@@ -9,20 +9,6 @@ ros.package_manifest(
     package_name = "spot_common",
 )
 
-py_library(
-    name = "resolutions_lib",
-    deps = [
-        "@ros_utilities//synchros2",
-        "@pip//pytest",
-        "@pip//pyyaml",
-        "@pip//lark",
-    ],
-    resolutions = resolutions.from_requirements(
-        all_whl_requirements_by_package,
-        requirement
-    ).to_label_keyed_dict(),
-)
-
 ros.py_library(
     name = "spot_common",
     srcs = [
@@ -45,8 +31,16 @@ ros.py_test(
     pytest_main = False,
     deps = [
         ":resolutions_lib",
+        "@ros_utilities//synchros2",
+        "@pip//pytest",
+        "@pip//pyyaml",
+        "@pip//lark",
         ":spot_common",
     ],
+    resolutions = resolutions.from_requirements(
+        all_whl_requirements_by_package,
+        requirement
+    ),
     package_collisions = "ignore", # TODO: I think we need to understand why this is happening...
     env = {
         "ROS_LOG_DIR": ".",
