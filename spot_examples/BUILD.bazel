@@ -1,5 +1,5 @@
 load("@humble//ros:defs.bzl", "ros")
-load("@aspect_rules_py//py:defs.bzl", "resolutions")
+load("@aspect_rules_py//py:defs.bzl", "resolutions", "py_library")
 load("@pip//:requirements.bzl", "all_whl_requirements_by_package", "requirement")
 
 package(default_visibility = ["//visibility:public"])
@@ -39,7 +39,7 @@ ros.py_binary(
     resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
     # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
     # bottom of it
-    package_collisions = "warning",
+    package_collisions = "ignore",
 )
 
 # group all the bosdyn_msgs dependencies together
@@ -80,7 +80,7 @@ common = bosdyn_msgs + [
         resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
         # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
         # bottom of it
-        package_collisions = "warning",
+        package_collisions = "ignore",
     )
     for example in [
         "arm_simple",
@@ -106,7 +106,7 @@ ros.py_binary(
     resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
     # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
     # bottom of it
-    package_collisions = "warning",
+    package_collisions = "ignore",
 )
 
 ros.py_binary(
@@ -124,7 +124,7 @@ ros.py_binary(
     resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
     # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
     # bottom of it
-    package_collisions = "warning",
+    package_collisions = "ignore",
 )
 
 ros.py_library(
@@ -149,7 +149,7 @@ ros.py_binary(
     resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
     # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
     # bottom of it
-    package_collisions = "warning",
+    package_collisions = "ignore",
 )
 
 ros.py_binary(
@@ -167,6 +167,6 @@ ros.py_binary(
     resolutions = resolutions.from_requirements(all_whl_requirements_by_package, requirement),
     # I'm concerned that we have to do this everywhere, and I think we should try to get to the 
     # bottom of it
-    package_collisions = "warning",
+    package_collisions = "ignore",
 )
 

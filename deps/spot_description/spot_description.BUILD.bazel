@@ -1,4 +1,5 @@
 load("@humble//ros:defs.bzl", "ros")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 

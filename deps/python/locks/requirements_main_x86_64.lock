@@ -156,6 +156,10 @@ bosdyn-core==5.0.0 \
 bosdyn-mission==5.0.0 \
     --hash=sha256:8452be5d10c18a1b66f06a2007cb803689db77e4afde96ef9e070953b6e2b368
     # via -r deps/python/spot_wrapper_requirements.in
+catkin-pkg==1.0.0 \
+    --hash=sha256:10a6589e9edf3cd5bd18e35e094d20b516e6351bcf0da891c28a0ff526fdb7cc \
+    --hash=sha256:476e9f52917282f464739241b4bcaf5ebbfba9a7a68d9af8f875225feac0e1b5
+    # via -r deps/python/requirements_main.in
 certifi==2025.6.15 \
     --hash=sha256:2e0c7ce7cb5d8f8634ca55d2ba7e6ec2689a2fd6537d8dec1296a477a4910057 \
     --hash=sha256:d747aa5a8b9bbbb1bb8c22bb13e22bd1f18e9796defa16bab421f7f7a317323b
@@ -452,6 +456,10 @@ django==5.2.3 \
 dnspython==2.7.0 \
     --hash=sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86
     # via aioice
+docutils==0.21.2 \
+    --hash=sha256:3a6b18732edf182daa3cd12775bbb338cf5691468f91eeeb109deff6ebfa986f \
+    --hash=sha256:dafca5b9e384f0e419294eb4d2ff9fa826435bf15f15b7bd45723e8ad76811b2
+    # via catkin-pkg
 exceptiongroup==1.3.0 \
     --hash=sha256:4d111e6e0c13d0644cad6ddaa7ed0261a0b36971f6d23e7ec9b4b9097da78a10 \
     --hash=sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88
@@ -1042,6 +1050,10 @@ pycparser==2.22 \
 pydocstyle==6.3.0 \
     --hash=sha256:118762d452a49d6b05e194ef344a55822987a462831ade91ec5c06fd2169d019
     # via -r deps/python/spot_driver_requirements.in
+pydot==4.0.1 \
+    --hash=sha256:869c0efadd2708c0be1f916eb669f3d664ca684bc57ffb7ecc08e70d5e93fee6 \
+    --hash=sha256:c2148f681c4a33e08bf0e26a9e5f8e4099a82e0e2a068098f32ce86577364ad5
+    # via -r deps/python/requirements_main.in
 pyee==13.0.0 \
     --hash=sha256:48195a3cddb3b1515ce0695ed76036b5ccc2ef3a9f963ff9f77aec0139845498 \
     --hash=sha256:b391e3c5a434d1f5118a25615001dbc8f669cf410ab67d04c4d4e07c55481c37
@@ -1077,8 +1089,10 @@ pyparsing==3.2.3 \
     --hash=sha256:a749938e02d6fd0b59b356ca504a24982314bb090c383e3cf201c95ef7e2bfcf \
     --hash=sha256:b9c13f1ab8b3b542f72e28f634bad4de758ab3ce4546e4301970ad6fa77c38be
     # via
+    #   catkin-pkg
     #   matplotlib
     #   packaging
+    #   pydot
 pyqt5==5.15.6 \
     --hash=sha256:33ced1c876f6a26e7899615a5a4efef2167c263488837c7beed023a64cebd051 \
     --hash=sha256:80343bcab95ffba619f2ed2467fd828ffeb0a251ad7225be5fc06dcc333af452 \
@@ -1117,13 +1131,13 @@ pyqt5-sip==12.17.0 \
 pyquaternion==0.9.9 \
     --hash=sha256:e65f6e3f7b1fdf1a9e23f82434334a1ae84f14223eee835190cd2e841f8172ec
     # via open3d
-pyside2==5.15.2.1 \
-    --hash=sha256:235240b6ec8206d9fdf0232472c6ef3241783d480425e5b54796f06e39ed23da \
-    --hash=sha256:23886c6391ebd916e835fa1b5ae66938048504fd3a2934ae3189a96cd5ac0b46 \
-    --hash=sha256:439509e53cfe05abbf9a99422a2cbad086408b0f9bf5e6f642ff1b13b1f8b055 \
-    --hash=sha256:a9e2e6bbcb5d2ebb421e46e72244a0f4fe0943b2288115f80a863aacc1de1f06 \
-    --hash=sha256:af6b263fe63ba6dea7eaebae80aa7b291491fe66f4f0057c0aafe780cc83da9d \
-    --hash=sha256:b5e1d92f26b0bbaefff67727ccbb2e1b577f2c0164b349b3d6e80febb4c5bde2
+pyside2==5.13.2 \
+    --hash=sha256:589b90944c24046d31bf76694590a600d59d20130015086491b793a81753629a \
+    --hash=sha256:63cc845434388b398b79b65f7b5312b9b5348fbc772d84092c9245efbf341197 \
+    --hash=sha256:7c57fe60ed57a3a8b95d9163abca9caa803a1470f29b40bff8ef4103b97a96c8 \
+    --hash=sha256:7c61a6883f3474939097b9dabc80f028887046be003ce416da1b3565a08d1f92 \
+    --hash=sha256:ed6d22c7a3a99f480d4c9348bcced97ef7bc0c9d353ad3665ae705e8eb61feb5 \
+    --hash=sha256:ede8ed6e7021232184829d16614eb153f188ea250862304eac35e04b2bd0120c
     # via -r deps/python/spot_description_requirements.in
 pytest==6.2.5 \
     --hash=sha256:131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89 \
@@ -1144,6 +1158,7 @@ pytest-xdist==3.5.0 \
 python-dateutil==2.9.0.post0 \
     --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
     # via
+    #   catkin-pkg
     #   matplotlib
     #   pandas
 pytz==2025.2 \
@@ -1353,14 +1368,15 @@ setuptools==59.6.0 \
     --hash=sha256:4ce92f1e1f8f01233ee9952c04f6b81d1e02939d6e1b488428154974a4d0783e
     # via
     #   -r deps/python/spot_wrapper_requirements.in
+    #   catkin-pkg
     #   dash
-shiboken2==5.15.2.1 \
-    --hash=sha256:63debfcc531b6a2b4985aa9b71433d2ad3bac542acffc729cc0ecaa3854390c0 \
-    --hash=sha256:87079c07587859a525b9800d60b1be971338ce9b371d6ead81f15ee5a46d448b \
-    --hash=sha256:a0d0fdeb12b72c8af349b9642ccc67afd783dca449309f45e78cda50272fd6b7 \
-    --hash=sha256:eb0da44b6fa60c6bd317b8f219e500595e94e0322b33ec5b4e9f406bedaee555 \
-    --hash=sha256:f890f5611ab8f48b88cfecb716da2ac55aef99e2923198cefcf781842888ea65 \
-    --hash=sha256:ffd3d0ec3d508e592d7ee3885d27fee1f279a49989f734eb130f46d9501273a9
+shiboken2==5.13.2 \
+    --hash=sha256:5e84a4b4e7ab08bb5db0a8168e5d0316fbf3c25b788012701a82079faadfb19b \
+    --hash=sha256:7c766c4160636a238e0e4430e2f40b504b13bcc4951902eb78cd5c971f26c898 \
+    --hash=sha256:81fa9b288c6c4b4c91220fcca2002eadb48fc5c3238e8bd88e982e00ffa77c53 \
+    --hash=sha256:ca08a3c95b1b20ac2b243b7b06379609bd73929dbc27b28c01415feffe3bcea1 \
+    --hash=sha256:e2f72b5cfdb8b48bdb55bda4b42ec7d36d1bce0be73d6d7d4a358225d6fb5f25 \
+    --hash=sha256:e6543506cb353d417961b9ec3c6fc726ec2f72eeab609dc88943c2e5cb6d6408
     # via pyside2
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274

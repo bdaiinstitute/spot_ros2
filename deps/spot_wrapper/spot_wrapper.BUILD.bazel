@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test", "py_binary")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test")
 
 exports_files(["requirements.txt"])
 

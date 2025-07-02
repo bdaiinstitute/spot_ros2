@@ -21,7 +21,6 @@ from spot_common.launch.spot_launch_helpers import (
 
 THIS_PACKAGE = "spot_driver"
 
-
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     config_file = LaunchConfiguration("config_file")
     launch_rviz = LaunchConfiguration("launch_rviz")

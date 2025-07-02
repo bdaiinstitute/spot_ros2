@@ -150,3 +150,7 @@ packages:
   # - "ros-humble-rclpy"              # synchros2[exec]
   # - "ros-humble-std-srvs"           # synchros2[test]
   # - "ros-humble-tf2-ros-py"         # synchros2[exec]
+  - "libgc-dev"
+  - "protobuf-compiler"
+  - "libprotobuf-dev"
+  - "libeigen3-dev"

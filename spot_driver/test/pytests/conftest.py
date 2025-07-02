@@ -54,7 +54,6 @@ class simple_spot(MockSpot):
     """
 
     def PowerCommand(self, request: PowerCommandRequest, context: grpc.ServicerContext) -> PowerCommandResponse:
-        print("PowerCommand: entry")
         """
         Dummy implementation of the PowerCommand command.  This is necessary because many calls in
         SpotWrapper (including _robot_command) are decorated with a call to power on first.  Without

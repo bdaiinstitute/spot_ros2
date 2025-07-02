@@ -92,6 +92,7 @@ cc_library(
         "@humble//:bosdyn-api-msgs",
         "@humble//:bosdyn-spot-api-msgs",
         "@humble//:ros-humble-cv-bridge",
+        "@humble//:libgc-dev",
         "@humble//:ros-humble-geometry-msgs",
         "@humble//:ros-humble-image-transport",
         "@humble//:ros-humble-message-filters",
@@ -117,11 +118,6 @@ py_library(
     srcs = glob([
         "spot_driver/**/*.py",
     ]),
-    data = [
-        "spot_driver/spot_ros2.py",
-        "spot_driver/calibrated_reregistered_hand_camera_depth_publisher.py",
-        "spot_driver/spot_alerts.py",
-    ],
     imports = ["."],
     deps = [
         "//spot_msgs:pkg_py",
@@ -224,6 +220,7 @@ ros.cc_library(
     deps = [
         ":spot_api",
         "//spot_msgs:pkg_cc",
+        "@humble//:libeigen3-dev"
     ],
     copts = [
         "-std=c++20",
@@ -274,6 +271,7 @@ ros.py_binary(
     main = "spot_ros2.py",
     deps = [
         ":spot_driver_py",
+        ":resolutions_lib",
     ],
     package_collisions = "ignore",
 )
@@ -292,7 +290,10 @@ ros.py_binary(
     package = ":pkg",
     srcs = ["spot_driver/spot_alerts.py"],
     main = "spot_alerts.py",
-    deps = [":spot_driver_py"],
+    deps = [
+        ":spot_driver_py",
+        ":resolutions_lib",
+    ],
     package_collisions = "ignore",
 )
 
@@ -305,7 +306,6 @@ filegroup(
         ":object_synchronizer_node",
         ":state_publisher_node",
         ":spot_alerts",
-        ":calibrated_reregistered_hand_camera_depth_publisher",
         ":spot_image_publisher_node"
     ]
 )
@@ -442,7 +442,7 @@ cc_library(
 
 ros.cmd(
     name = "launch_spot_driver",
-    cmd = "ros2 launch spot_driver spot_driver.launch.py -d",
+    cmd = "ros2 launch spot_driver spot_driver.launch.py",
     data = [
         ":spot_driver_launch",
         "test/profile.xml"
@@ -450,6 +450,7 @@ ros.cmd(
     deps = [
         "//spot_common:pkg_py",
         "@humble//ros2:lib",
+        "@humble//xacro:lib",
         ":resolutions_lib",
     ],
     package_collisions = "ignore"
@@ -490,4 +491,13 @@ filegroup(
         ":spot_driver_components",
     ],
     visibility = ["//visibility:public"]
+)
+
+ros.cmd(
+    name = "cli",
+    cmd = "ros2 topic echo /tf",
+    deps = [
+        "@humble//ros2:lib",
+        "@humble//rviz2:lib"
+    ]
 )

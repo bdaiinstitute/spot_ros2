@@ -11,4 +11,5 @@ multipledispatch==1.0.0
 # ensure protoc 3.12.4 compatibility
 protobuf<=4.22.4
 lark
-
+catkin_pkg
+pydot
