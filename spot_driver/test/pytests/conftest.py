@@ -42,15 +42,6 @@ from spot_driver.spot_ros2 import SpotROS
 from spot_wrapper.testing.fixtures import SpotFixture
 from spot_wrapper.testing.mocks import MockSpot
 
-TEST_PATH = pathlib.Path(__file__).parent
-os.environ.update(
-    {
-        "RMW_IMPLEMENTATION": "rmw_fastrtps_cpp",
-        "FASTRTPS_DEFAULT_PROFILES_FILE": str(TEST_PATH.parent / "profile.xml"),
-    }
-)
-
-
 # pylint: disable=invalid-name,unused-argument
 @spot_wrapper.testing.fixture
 class simple_spot(MockSpot):

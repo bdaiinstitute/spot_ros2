@@ -6,11 +6,6 @@
 # in MODULE.bazel), rather than something like "@rules_rai_ros", which might be expected.)
 load("@humble//ros:defs.bzl", "ros")
 
-# I'm just following an example to make this public so I don't have to think about it.
-# that's very likely the right thing to do in this case, but not in every case.
-# anyway, this is just a bazel thing, not an r^3 thing
-package(default_visibility = ["//visibility:public"])
-
 # r^3 requires this declaration of a package manifest. 
 # This helps build the ros workspace in the bazel sandbox, and in particular helps
 # ROS packages find each other at runtime.
@@ -132,8 +127,8 @@ ros.plugin(
         "@humble//:ros-humble-rclcpp-lifecycle",
         "@humble//:ros-humble-imu-sensor-broadcaster",
         "@humble//:ros-humble-tf2-geometry-msgs",
-        "//spot_msgs",
-    ],
+        "//spot_msgs:pkg_cc",
+    ]
 )
 
 
@@ -143,4 +138,26 @@ ros.plugin_library(
     plugins = [
         ":spot_controllers_plugin",
     ],
+    visibility = ["//visibility:public"]
+)
+
+ros.cc_library(
+    name = "pkg_cc",
+    package = "pkg",
+    data = [
+        ":pkg",
+    ],
+    deps = [
+        ":spot_controllers"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+filegroup(
+    name = "pkg_data",
+    srcs = [
+        ":pkg",
+        ":spot_controllers"
+    ],
+    visibility = ["//visibility:public"]
 )

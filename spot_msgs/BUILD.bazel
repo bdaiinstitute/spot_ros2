@@ -9,11 +9,7 @@
 # (from a template), which is why the load is from "@humble" (the name given to the hub repo
 # in MODULE.bazel), rather than something like "@rules_rai_ros", which might be expected.)
 load("@humble//ros:defs.bzl", "ros")
-
-# I'm just following an example to make this public so I don't have to think about it.
-# that's very likely the right thing to do in this case, but not in every case.
-# anyway, this is just a bazel thing, not an r^3 thing
-package(default_visibility = ["//visibility:public"])
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 # r^3 requires this declaration of a package manifest. 
 # This helps build the ros workspace in the bazel sandbox, and in particular helps
@@ -61,9 +57,37 @@ ros.cc_test(
     # package = ":pkg",
     srcs = ["test_spot_msgs_include.cpp"],
     deps = [
-        ":spot_msgs_cc",
+        ":spot_msgs",
         "@googletest//:gtest_main",
-        "@humble//:ros-humble-ament-index-cpp_cc",
-        "@humble//:ros-humble-rclcpp_cc",
+        "@humble//:ros-humble-ament-index-cpp",
+        "@humble//:ros-humble-rclcpp",
     ],
+    env = {
+        "ROS_LOG_DIR": ".",
+    },
 )
+
+ros.cc_library(
+    name = "pkg_cc",
+    package = "pkg",
+    data = [
+        ":pkg"
+    ],
+    deps = [
+        ":spot_msgs"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+ros.py_library(
+    name = "pkg_py",
+    package = "pkg",
+    data = [
+        ":pkg"
+    ],
+    deps = [
+        ":spot_msgs"
+    ],
+    visibility = ["//visibility:public"]
+)
+

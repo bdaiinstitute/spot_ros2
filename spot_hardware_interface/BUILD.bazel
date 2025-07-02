@@ -26,15 +26,27 @@ ros.plugin(
         "@humble//:ros-humble-bondcpp",
         "@humble//:ros-humble-tl-expected",
         "@humble//:proto2ros",
-        "//spot_msgs:spot_msgs"
+        "//spot_msgs:pkg_cc"
     ]
 )
 
 ros.plugin_library(
     name = "spot_hardware_interface",
     package = ":pkg",
-    visibility = ["//visibility:public"],
     plugins = [
         ":spot_hardware_interface_plugin",
     ]
+)
+
+
+ros.cc_library(
+    name = "pkg_cc",
+    package = "pkg",
+    data = [
+        ":pkg",
+    ],
+    deps = [
+        ":spot_hardware_interface"
+    ],
+    visibility = ["//visibility:public"]
 )

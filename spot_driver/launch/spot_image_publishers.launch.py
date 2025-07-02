@@ -158,6 +158,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         if depth_registered_mode is DepthRegisteredMode.FROM_NODELETS
         else []
     ) + (create_point_cloud_nodelets(context, spot_name, camera_sources) if publish_point_clouds else [])
+    
     container = launch_ros.actions.ComposableNodeContainer(
         name="container",
         namespace=spot_name,

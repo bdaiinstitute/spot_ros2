@@ -50,6 +50,14 @@ copy_file(
     allow_symlink = True,
 )
 
+copy_file(
+    name = "spot_driver_requirements",
+    src = "//spot_driver:requirements.in",
+    out = "spot_driver_requirements.in",
+    allow_symlink = True,
+)
+
+
 [
     pip_compile(
         name = "generate_locks_{}_{}".format(context, arch),
@@ -58,7 +66,8 @@ copy_file(
             ":spot_common_requirements",
             ":spot_wrapper_requirements",
             ":ros_utilities_requirements",
-            ":spot_description_requirements"
+            ":spot_description_requirements",
+            ":spot_driver_requirements"
         ],
         extra_args = [
             "--index-url https://pypi.org/simple/",
