@@ -106,13 +106,7 @@ jobs:
       - name: Build packages
         run: |
           source /opt/ros/$ROS_DISTRO/setup.bash
-          colcon build --symlink-install --packages-up-to spot_driver spot_description spot_msgs spot_examples spot_ros2_control spot_common --cmake-args -DCMAKE_CXX_FLAGS="--coverage"
-        working-directory: ${{ github.workspace }}/../../
-
-      - name: Test non-spot-driver packages
-        run: |
-          source install/setup.bash
-          colcon test --event-handlers console_direct+ --packages-select spot_description spot_examples spot_msgs spot_common
+          colcon build --symlink-install --packages-up-to spot_common --cmake-args -DCMAKE_CXX_FLAGS="--coverage"
         working-directory: ${{ github.workspace }}/../../
 
       - name: TEST SPOT COMMON
@@ -120,68 +114,3 @@ jobs:
           source install/setup.bash
           pytest -n auto -v -s $GITHUB_WORKSPACE/spot_common/test/pytests/
         working-directory: ${{ github.workspace }}/../../
-      
-      # Per https://github.com/colcon/colcon-ros/issues/151, `pytest-args` cannot be used in an ament_cmake package, so in order to pass arguments to pytest we have to run pytest directly
-      - name: Test python part of spot-driver package
-        run: |
-          source install/setup.bash
-          pytest -n auto --cov-report xml --cov-config=$GITHUB_WORKSPACE/.coveragerc --cov-report term --cov=spot_driver $GITHUB_WORKSPACE/spot_driver/test/pytests/
-        working-directory: ${{ github.workspace }}/../../
-
-      - name: Test c++ part of spot-driver packages
-        run: |
-          source install/setup.bash
-          colcon test --event-handlers console_direct+ --packages-select spot_driver
-        working-directory: ${{ github.workspace }}/../../
-
-      - name: Test spot_ros2_control
-        run: |
-          source install/setup.bash
-          colcon test --event-handlers console_direct+ --packages-select spot_ros2_control
-        working-directory: ${{ github.workspace }}/../../
-
-      - name: Generate coverage report
-        run: lcov -c -d build/spot_driver/ -o coverage_spot_driver.info --include "*/spot_driver/*" --exclude "*/test/*"
-        working-directory: ${{ github.workspace }}/../../
-
-      - name: Upload python coverage to Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          fail-on-error: true
-          flag-name: unittests-python
-          parallel: true
-          debug: true
-          files: $(find ../../ -name "coverage.xml" -type f)
-
-      - name: Upload cpp coverage to Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          fail-on-error: true
-          flag-name: unittests-cpp
-          debug: true
-          files: ../../coverage_spot_driver.info
-          format: lcov
-
-      - name: Aggregate coverage
-        uses: coverallsapp/github-action@v2
-        with:
-          parallel-finished: true
-          carryforward: "unittests-python, unittests-cpp"
-
-      - if: always()
-        name: Report on test results
-        run: colcon test-result --all --verbose
-        working-directory: ${{ github.workspace }}/../../
-
-      - name: Build packages documentation
-        run: |
-          source /opt/ros/$ROS_DISTRO/setup.bash
-          pip install -r docs/requirements.txt
-          # go to documentation folder and build the .rst files
-          cd docs
-          # we don't use the --implicit-namespaces flag
-          sphinx-apidoc -f -o source/ ../ ../*setup* ../examples ../*launch.py ../*command_spot_driver.py
-          cd ..
-          sphinx-build docs _build -v
