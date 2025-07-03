@@ -152,9 +152,15 @@ class LaunchHelpersTest(unittest.TestCase):
         self.assertTrue(
             isinstance(name, Substitution) and isinstance(prefix, Substitution), "Substitution: prefix from name."
         )
+        print(f"{self.name_value=}")
+        print(f"{name.perform(self.context)=}")
+        print(f"{prefix.perform(self.context)=}")
         self.assertTrue(
             name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.name_value + "/",
-            "Substitution: prefix from name.",
+            (
+                "Substitution: prefix from name."
+                f" {self.name_value=} {name.perform(self.context)=} {prefix.perform(self.context)=}"
+            ),
         )
 
         name, prefix = get_name_and_prefix(
