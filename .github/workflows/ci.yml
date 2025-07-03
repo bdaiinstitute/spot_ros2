@@ -114,6 +114,12 @@ jobs:
           source install/setup.bash
           colcon test --event-handlers console_direct+ --packages-select spot_description spot_examples spot_msgs spot_common
         working-directory: ${{ github.workspace }}/../../
+
+      - name: TEST SPOT COMMON
+        run: |
+          source install/setup.bash
+          pytest -n auto -v -s $GITHUB_WORKSPACE/spot_common/test/pytests/
+        working-directory: ${{ github.workspace }}/../../
       
       # Per https://github.com/colcon/colcon-ros/issues/151, `pytest-args` cannot be used in an ament_cmake package, so in order to pass arguments to pytest we have to run pytest directly
       - name: Test python part of spot-driver package
