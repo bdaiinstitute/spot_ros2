@@ -163,7 +163,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                         "imu_sensor_broadcaster",
                         "foot_state_broadcaster",
                         "spot_pose_broadcaster",
-                        *robot_controllers.split(","),
+                        *robot_controllers.split(" "),
                     ],
                     namespace=spot_name,
                 )
@@ -265,7 +265,7 @@ def generate_launch_description():
                 "robot_controllers",
                 default_value="forward_position_controller",
                 description=(
-                    "Comma-separated list of robot controller(s) to start. Each controller match an entry in"
+                    "List of robot controller(s) to start (space-separated). Each controller match an entry in"
                     " controllers_config. For the default configuration file, options are forward_position_controller,"
                     " forward_state_controller, or spot_joint_controller."
                 ),
