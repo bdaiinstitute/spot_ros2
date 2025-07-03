@@ -41,12 +41,12 @@ This will forward position commands directly to the joint control API through th
 The controller expects the command array to contain the list of positions to forward for each joint on the robot (12 elements for robots without an arm, and 19 for robots with an arm).
 
 An alternative feed-forward controller provided by the [`spot_controllers`](../spot_controllers/) package can be used to specify the position, velocity, and effort of all joints at the same time.
-To bring up this controller, add the launch argument `robot_controller:=forward_state_controller`.
+To bring up this controller, add the launch argument `robot_controllers:=forward_state_controller`.
 Commands can then be sent on the topic `/<Robot Name>/forward_state_controller/commands`.
 This controller expects the ordering of the command array to be `[<positions for each joint>, <velocities for each joint>, <efforts for each joint>]` (36 elements for robots without an arm, and 57 for robots with an arm).
 
 Finally, the custom controller `spot_joint_controller` is also provided for the ability to stream position, velocity, effort, k_q_p, and k_qd_p for any subset of joints.
-To enable this controller, add the launch argument `robot_controller:=spot_joint_controller`.
+To enable this controller, add the launch argument `robot_controllers:=spot_joint_controller`.
 This controller accepts commands on the topic `/<Robot Name>/spot_joint_controller/joint_commands`.
 Unlike the previous controllers, you do not need to set a value for every single joint, but instead can select the joints by name you wish to control in the `joint_commands` message -- all other joints that are not specified will be left unchanged.
 More details on this controller can be found on the [`spot_controllers` README](../spot_controllers/README.md).
@@ -104,7 +104,7 @@ ros2 launch spot_ros2_control wiggle_arm.launch.py
 Add the launch argument `spot_name:=<namespace>` if the ros2 control stack was launched in a namespace.
 
 An alternate example using the `spot_joint_controller` is provided to demonstrate how to stream position and gains at the same time.
-First launch `spot_ros2_control.launch.py` with the launch argument `robot_controller:=spot_joint_controller`.
+First launch `spot_ros2_control.launch.py` with the launch argument `robot_controllers:=spot_joint_controller`.
 Next, run
 ```bash
 ros2 run spot_ros2_control set_grippper_gains
@@ -114,7 +114,7 @@ This demo will repeatedly open and close the gripper, and after each motion, wil
 
 ## Additional Arguments
 * `controllers_config`: If this argument is unset, a general purpose controller configuration will be loaded containing a forward position controller and a joint state publisher, that is filled appropriately based on whether or not the robot used (mock or real) has an arm. The forward state controller and spot joint controller are also specified here. If you wish to load different controllers, this can be set here.
-* `robot_controller`: This is the name of the robot controller that will be started when the launchfile is called. The default is the simple forward position controller. The name must match a controller in the `controllers_config` file.
+* `robot_controllers`: These are the names of the robot controllers that will be started when the launchfile is called. The default is the simple forward position controller. Each name must match a controller in the `controllers_config` file.
 * `launch_rviz`: If you do not want rviz to be launched, add the argument `launch_rviz:=False`.
 * `auto_start`: If you do not want hardware interfaces and controllers to be activated on launch, add the argument `auto_start:=False`.
 
