@@ -297,6 +297,21 @@ ros.py_binary(
     package_collisions = "ignore",
 )
 
+cc_binary(
+    name = "test_node",
+    #package = ":pkg",
+    srcs = [
+        "src/test_node.cpp"
+    ],
+    includes = ["include"],
+    copts = [
+        "-std=c++20",
+    ],
+    deps = [
+        "@humble//:spot-cpp-sdk"
+    ]
+)
+
 filegroup(
     name = "spot_driver_bins",
     srcs = [
@@ -409,11 +424,13 @@ cc_library(
             "@humble//:ros-humble-ament-pep257",
             "@humble//xacro:lib",
             "@spot_wrapper//:pkg_py",
-            "@pip//pydocstyle"
+            "@pip//pydocstyle",
+            "@humble//ros2:lib",
         ],
         data = [
             ":spot_driver_launch",
-            "test/profile.xml"
+            "test/profile.xml",
+            "@spot_wrapper//:pkg_data",
         ],
         args = [
             "-s"
@@ -433,7 +450,6 @@ cc_library(
         include=["test/pytests/**/*.py"],
         exclude=[
             # Known flaky test
-            "test/pytests/test_robot_state.py",
             "test/pytests/conftest.py",
             "test/pytests/__init__.py"
         ]

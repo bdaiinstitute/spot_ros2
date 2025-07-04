@@ -28,6 +28,7 @@ StatePublisherNode::StatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_b
                                        std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                                        std::unique_ptr<TimerInterfaceBase> timer_interface)
     : node_base_interface_{std::move(node_base_interface)} {
+
   initialize(std::move(spot_api), std::move(middleware_handle), std::move(parameter_interface),
              std::move(logger_interface), std::move(tf_broadcaster_interface), std::move(timer_interface));
 }
@@ -56,6 +57,10 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
                                     std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                     std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
                                     std::unique_ptr<TimerInterfaceBase> timer_interface) {
+
+
+  logger_interface->logError("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ StatePublisherNode::initialize");
+
   spot_api_ = std::move(spot_api);
 
   const auto hostname = parameter_interface->getHostname();
@@ -71,16 +76,20 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
     throw std::runtime_error(error_msg);
   }
 
+  logger_interface->logError("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ StatePublisherNode::after create robot");
   if (const auto authentication_result = spot_api_->authenticate(username, password); !authentication_result) {
     const auto error_msg{std::string{"Failed to authenticate robot: "}.append(authentication_result.error())};
     logger_interface->logError(error_msg);
     throw std::runtime_error(error_msg);
   }
 
+  logger_interface->logError("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ StatePublisherNode::after authenticate");
   internal_ = std::make_unique<StatePublisher>(spot_api_->stateClientInterface(), spot_api_->timeSyncInterface(),
                                                std::move(middleware_handle), std::move(parameter_interface),
                                                std::move(logger_interface), std::move(tf_broadcaster_interface),
                                                std::move(timer_interface));
+  
+  logger_interface->logError("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ StatePublisherNode::after StatePublisher instantiate");
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> StatePublisherNode::get_node_base_interface() {
