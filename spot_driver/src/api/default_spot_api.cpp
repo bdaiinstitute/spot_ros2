@@ -45,17 +45,8 @@ tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& i
                                                             const std::string& frame_prefix) {
   frame_prefix_ = frame_prefix;
 
-  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::createRobot: entry" << std::endl;
-                                                              
-  // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::createRobot: ip address: " << ip_address << std::endl;
-  // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::createRobot: port: " << *port << std::endl;
-  // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::createRobot: frame_prefix: " << frame_prefix << std::endl;
-  // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::createRobot: frame_prefix: " << frame_prefix << std::endl;
-  
-
   auto create_robot_result = client_sdk_->CreateRobot(ip_address, ::bosdyn::client::USE_PROXY);
-  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::createRobot: after client_sdk_->CreateRobot" << std::endl;
-                                                         
+                                                   
 
   if (!create_robot_result.status) {
     return tl::make_unexpected("Received error result when creating SDK robot interface: " +

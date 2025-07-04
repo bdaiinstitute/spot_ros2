@@ -89,7 +89,6 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
                                                std::move(logger_interface), std::move(tf_broadcaster_interface),
                                                std::move(timer_interface));
   
-  logger_interface->logError("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ StatePublisherNode::after StatePublisher instantiate");
 }
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> StatePublisherNode::get_node_base_interface() {

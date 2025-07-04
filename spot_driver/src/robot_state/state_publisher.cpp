@@ -31,8 +31,6 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
       tf_broadcaster_interface_{std::move(tf_broadcaster_interface)},
       timer_interface_{std::move(timer_interface)} {
 
-  logger_interface->logError("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ StatePublisher: constructor");
-
   frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
   is_using_vision_ = parameter_interface_->getPreferredOdomFrame() == "vision";
   full_tf_root_id_ = frame_prefix_ + parameter_interface_->getTFRoot();
