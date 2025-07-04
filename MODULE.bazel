@@ -104,7 +104,8 @@ ros.additional_deb(
     sha256_by_arch = {"amd64": "6e23f7385c1b66618be0e68836c5b614a6edc67a381e2c6d9a213a6ecc044583"},
     dependencies = [
         "libcli11-dev",
-        "libgrpc++-dev"    
+        "libgrpc++-dev",
+        "libprotobuf-dev"
     ],
     cc_includes = ["opt/spot-cpp-sdk/include"],
 )
