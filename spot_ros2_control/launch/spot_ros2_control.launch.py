@@ -65,6 +65,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     mock_arm: bool = IfCondition(LaunchConfiguration("mock_arm")).evaluate(context)
     spot_name: str = LaunchConfiguration("spot_name").perform(context)
     config_file: str = LaunchConfiguration("config_file").perform(context)
+    robot_controllers: str = LaunchConfiguration("robot_controllers").perform(context)
 
     # Default parameters used in the URDF if not connected to a robot
     arm = mock_arm
@@ -162,7 +163,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                         "imu_sensor_broadcaster",
                         "foot_state_broadcaster",
                         "spot_pose_broadcaster",
-                        LaunchConfiguration("robot_controller"),
+                        *robot_controllers.split(" "),
                     ],
                     namespace=spot_name,
                 )
@@ -261,12 +262,12 @@ def generate_launch_description():
                 ),
             ),
             DeclareLaunchArgument(
-                "robot_controller",
+                "robot_controllers",
                 default_value="forward_position_controller",
                 description=(
-                    "Robot controller to start. Must match an entry in controllers_config. For the default"
-                    " configuration file, options are forward_position_controller, forward_state_controller, or"
-                    " spot_joint_controller."
+                    "List of robot controller(s) to start (space-separated). Each controller match an entry in"
+                    " controllers_config. For the default configuration file, options are forward_position_controller,"
+                    " forward_state_controller, or spot_joint_controller."
                 ),
             ),
             DeclareBooleanLaunchArgument(
