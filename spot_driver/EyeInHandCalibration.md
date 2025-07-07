@@ -24,7 +24,7 @@ For all possible command line arguments, run ```ros2 run spot_driver calibated_r
   
 #### Run the Calibrated Re-Publisher
 ```
-ros2 run spot_driver calibrated_reregistered_hand_camera_depth_publisher.py --tag=default --calibration_path <SAVED_CAL> --robot_name <ROBOT_NAMESPACE> --topic_name /depth_registered/hand_custom_cal/image
+ros2 run spot_driver calibrated_reregistered_hand_camera_depth_publisher.py --tag=default --calibration_path <SAVED_CAL> --robot_name <ROBOT_NAMESPACE> --topic depth_registered/hand_custom_cal/image
 ```
 
 You can treat the reregistered topic, (in the above example, ```<ROBOT_NAME>/depth_registered/hand_custom_cal/image```)
