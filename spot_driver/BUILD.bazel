@@ -411,6 +411,7 @@ cc_library(
             "@spot_wrapper//:pkg_py",
             "@pip//pydocstyle",
             "@humble//ros2:lib",
+            "@humble//:spot-cpp-sdk"
         ],
         data = [
             ":spot_driver_launch",
