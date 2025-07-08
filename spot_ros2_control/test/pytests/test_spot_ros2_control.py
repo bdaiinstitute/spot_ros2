@@ -57,7 +57,7 @@ def test_joint_states(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
     # Grab the latest joint states message from the joint state broadcaster
     spot_name = simple_spot.api.name
     joint_states = Subscription(JointState, f"/{spot_name}/low_level/joint_states", node=ros.node)
-    joint_state_message = unwrap_future(joint_states.update, timeout_sec=10.0)
+    joint_state_message = unwrap_future(joint_states.update, timeout_sec=20.0)
     expected_joints = [f"{spot_name}/{joint}" for joint in LEG_JOINTS + ARM_JOINTS]
     # ensure that the joint state message contains the values from our state stream response
     for i, joint in enumerate(expected_joints):

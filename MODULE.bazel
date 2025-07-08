@@ -17,7 +17,7 @@ bazel_dep(name = "rules_uv", version = "0.71.0")
 bazel_dep(name = "rules_rai_ros")
 git_override(
     module_name = "rules_rai_ros",
-    commit = "f1d96038a9e28297c40b7a48d16d7199dae16589",
+    commit = "a879007874b16d67438376a9466385a27f083a87",
     remote = "https://github.com/bdaiinstitute/rules_rai_ros.git",
 )
 
@@ -99,10 +99,14 @@ ros.parse(
 ros.additional_deb(
     hub_name = "humble",
     name = "spot-cpp-sdk",
-    # TODO(astout) add arm64
+    # TODO(astout) add arm64   
     urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v5.0.0/spot-cpp-sdk_5.0.0_amd64.deb"]},
     sha256_by_arch = {"amd64": "6e23f7385c1b66618be0e68836c5b614a6edc67a381e2c6d9a213a6ecc044583"},
-    dependencies = ["libgrpc++1", "libgrpc++-dev", "libgrpc-dev", "libcli11-dev", "libprotobuf-dev"],
+    dependencies = [
+        "libcli11-dev",
+        "libgrpc++-dev",
+        "libprotobuf-dev"
+    ],
     cc_includes = ["opt/spot-cpp-sdk/include"],
 )
 ros.additional_deb(

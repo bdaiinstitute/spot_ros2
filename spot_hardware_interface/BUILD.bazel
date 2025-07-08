@@ -25,6 +25,7 @@ ros.plugin(
         "@humble//:bosdyn-api-msgs",
         "@humble//:ros-humble-bondcpp",
         "@humble//:ros-humble-tl-expected",
+        "@humble//:libgrpc++-dev",
         "@humble//:proto2ros",
         "//spot_msgs:pkg_cc"
     ]
