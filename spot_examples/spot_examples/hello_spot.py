@@ -210,7 +210,7 @@ class HelloSpot:
 
 def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--robot", required=True, type=str, default=None)
+    parser.add_argument("--robot", type=str, default=None)
     return parser
 
 
