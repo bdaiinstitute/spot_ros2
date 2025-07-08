@@ -667,7 +667,7 @@ def cli() -> argparse.ArgumentParser:
         The robot name e.g. Opal.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--robot", type=str, required=True, help="The robot name.")
+    parser.add_argument("--robot", type=str, help="The robot name.")
     return parser
 
 

@@ -316,7 +316,7 @@ def cli() -> argparse.ArgumentParser:
         Number of desired tool poses to query.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--robot", type=str, required=True, help="The robot name.")
+    parser.add_argument("--robot", type=str, help="The robot name.")
     parser.add_argument("-n", "--poses", type=int, default=50, help="Number of desired tool poses to query.")
     return parser
 

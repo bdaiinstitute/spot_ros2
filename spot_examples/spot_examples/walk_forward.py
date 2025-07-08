@@ -32,7 +32,9 @@ class WalkForward:
         self._body_frame_name = namespace_with(self._robot_name, BODY_FRAME_NAME)
         self._vision_frame_name = namespace_with(self._robot_name, VISION_FRAME_NAME)
         self._tf_listener = TFListenerWrapper(node)
+        self._logger.info("Waiting for TF listener...")
         self._tf_listener.wait_for_a_tform_b(self._body_frame_name, self._vision_frame_name)
+        self._logger.info("Got transform, continuing init")
         self._robot = SimpleSpotCommander(self._robot_name, node)
         self._robot_command_client = ActionClientWrapper(
             RobotCommand, namespace_with(self._robot_name, "robot_command"), node
