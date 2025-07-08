@@ -409,11 +409,14 @@ cc_library(
             "@humble//:ros-humble-ament-pep257",
             "@humble//xacro:lib",
             "@spot_wrapper//:pkg_py",
-            "@pip//pydocstyle"
+            "@pip//pydocstyle",
+            "@humble//ros2:lib",
+            "@humble//:spot-cpp-sdk"
         ],
         data = [
             ":spot_driver_launch",
-            "test/profile.xml"
+            "test/profile.xml",
+            "@spot_wrapper//:pkg_data",
         ],
         args = [
             "-s"
@@ -433,7 +436,6 @@ cc_library(
         include=["test/pytests/**/*.py"],
         exclude=[
             # Known flaky test
-            "test/pytests/test_robot_state.py",
             "test/pytests/conftest.py",
             "test/pytests/__init__.py"
         ]

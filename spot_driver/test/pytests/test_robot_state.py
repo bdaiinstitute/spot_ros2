@@ -22,7 +22,7 @@ def test_joint_states(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
         joint_state.position.value = position
 
     joint_states = Subscription(JointState, "joint_states", node=ros.node)
-    assert wait_for_future(joint_states.update, timeout_sec=10.0)
+    assert wait_for_future(joint_states.update, timeout_sec=20.0)
     message = typing.cast(JointState, joint_states.latest)
 
     expected_joint_positions = {
