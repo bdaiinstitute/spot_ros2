@@ -12,30 +12,20 @@
 #include <tl_expected/expected.hpp>
 #include "spot_driver/api/default_world_object_client.hpp"
 #include "spot_driver/api/state_client_interface.hpp"
-#include <iostream>
 
 namespace spot_ros2 {
 
 DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::chrono::seconds timesync_timeout,
                                const std::optional<std::string>& certificate)
     : timesync_timeout_(timesync_timeout) {
-  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::Constructor: entry" << std::endl;
-          
   if (certificate.has_value()) {
-  
-    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::Constructor: hsa_value" << std::endl;
-  
     client_sdk_ = std::make_unique<::bosdyn::client::ClientSdk>();
     client_sdk_->SetClientName(sdk_client_name);
     if (const auto status = client_sdk_->LoadRobotCertFromFile(certificate.value()); !status) {
-      std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::Constructor: load cert failed" << std::endl;
-  
       throw std::runtime_error(status.message());
     }
     client_sdk_->Init();
   } else {
-
-    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@ DefaultSpotApi::Constructor: no cert" << std::endl;
     client_sdk_ = ::bosdyn::client::CreateStandardSDK(sdk_client_name);
   }
 }
@@ -46,8 +36,6 @@ tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& i
   frame_prefix_ = frame_prefix;
 
   auto create_robot_result = client_sdk_->CreateRobot(ip_address, ::bosdyn::client::USE_PROXY);
-                                                   
-
   if (!create_robot_result.status) {
     return tl::make_unexpected("Received error result when creating SDK robot interface: " +
                                create_robot_result.status.DebugString());

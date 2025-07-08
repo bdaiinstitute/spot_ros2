@@ -297,21 +297,6 @@ ros.py_binary(
     package_collisions = "ignore",
 )
 
-cc_binary(
-    name = "test_node",
-    #package = ":pkg",
-    srcs = [
-        "src/test_node.cpp"
-    ],
-    includes = ["include"],
-    copts = [
-        "-std=c++20",
-    ],
-    deps = [
-        "@humble//:spot-cpp-sdk"
-    ]
-)
-
 filegroup(
     name = "spot_driver_bins",
     srcs = [
