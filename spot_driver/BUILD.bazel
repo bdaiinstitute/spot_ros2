@@ -444,13 +444,10 @@ cc_library(
 
 ros.cmd(
     name = "launch_spot_driver",
-    cmd = "ros2 launch spot_driver spot_driver.launch.py config_file:=spot_driver/config/spot_ros_config_DO_NOT_COMMIT.yaml",
-    # cmd = "ros2 launch spot_driver spot_driver.launch.py config_file:=spot_driver/config/spot_ros_example.yaml",
+    cmd = "ros2 launch spot_driver spot_driver.launch.py,
     data = [
         ":spot_driver_launch",
         "test/profile.xml",
-        "config/spot_ros_config_DO_NOT_COMMIT.yaml",
-        # "config/spot_ros_config_example.yaml",
     ],
     deps = [
         "//spot_common:pkg_py",
