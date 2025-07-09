@@ -487,6 +487,19 @@ ros.cc_library(
     visibility = ["//visibility:public"]
 )
 
+ros.py_library(
+    name = "pkg_py",
+    package = "pkg",
+    data = [
+        ":pkg",
+        ":share"
+    ],
+    deps = [
+        ":spot_driver_py"
+    ],
+    visibility = ["//visibility:public"]
+)
+
 filegroup(
     name = "pkg_data",
     srcs = [
