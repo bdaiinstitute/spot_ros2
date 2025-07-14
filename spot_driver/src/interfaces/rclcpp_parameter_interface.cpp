@@ -155,7 +155,8 @@ std::string getEnvironmentVariableParameterFallback(const std::shared_ptr<rclcpp
  * parameter is not a valid option, std::nullopt is returned instead.
  */
 template <typename OptionsT>
-static constexpr std::optional<std::string> validateFrameParameter(const std::string& frame, const OptionsT& base_names) {
+static constexpr std::optional<std::string> validateFrameParameter(const std::string& frame,
+                                                                   const OptionsT& base_names) {
   static_assert(type_traits::is_iterable<OptionsT>,
                 "Trait bound not satisfied for argument 'base_names', type not iterable.");
   static_assert(std::is_convertible_v<typename OptionsT::value_type, std::string>,
