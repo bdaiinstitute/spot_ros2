@@ -2601,52 +2601,17 @@ class SpotROS(Node):
         if not self.spot_wrapper:
             self.get_logger().info(f"Mock mode, received arm velocity command")
             return
-        cylindrical_velocity = arm_command_pb2.ArmVelocityCommand.CylindricalVelocity()
-        cylindrical_velocity.linear_velocity.r = arm_velocity_command.command.cylindrical_velocity.linear_velocity.r
-        cylindrical_velocity.linear_velocity.theta = arm_velocity_command.command.cylindrical_velocity.linear_velocity.theta
-        cylindrical_velocity.linear_velocity.z = arm_velocity_command.command.cylindrical_velocity.linear_velocity.z
-
-        # Create angular velocity vector
-        angular_velocity = geometry_pb2.Vec3(
-            x=arm_velocity_command.angular_velocity_of_hand_rt_odom_in_hand.x,
-            y=arm_velocity_command.angular_velocity_of_hand_rt_odom_in_hand.y,
-            z=arm_velocity_command.angular_velocity_of_hand_rt_odom_in_hand.z,
-        )
-
-        # Create cartesian velocity command
-        cartesian_velocity = arm_command_pb2.ArmVelocityCommand.CartesianVelocity()
-        cartesian_velocity.velocity_in_frame_name.x = arm_velocity_command.command.cartesian_velocity.velocity_in_frame_name.x
-        cartesian_velocity.velocity_in_frame_name.y = arm_velocity_command.command.cartesian_velocity.velocity_in_frame_name.y
-        cartesian_velocity.velocity_in_frame_name.z = arm_velocity_command.command.cartesian_velocity.velocity_in_frame_name.z
-        cartesian_velocity.frame_name = arm_velocity_command.command.cartesian_velocity.frame_name
-
-        # self.get_logger().info(
-        #     f"Received arm velocity command:" 
-        #     f"Cylindrical_velocity={cylindrical_velocity},"
-        #     f"Angular_velocity={angular_velocity}," 
-        #     f"Cartesian_velocity={cartesian_velocity}"
-        # )
-
-        self.get_logger().info("HERERE")
 
         try:
             proto_command = arm_command_pb2.ArmVelocityCommand.Request()
             convert(arm_velocity_command, proto_command)
-            self.get_logger().info(f"Arm velocity command: {proto_command}")
+            result, message = self.spot_wrapper.spot_arm.handle_arm_velocity(arm_velocity_command=proto_command,
+                                                                            cmd_duration=self.cmd_duration)
+            if not result:
+                self.get_logger().error(f"Failed to execute arm velocity command: {message}")   
+            return result
         except Exception as e:
             self.get_logger().error(f"Failed to convert arm velocity command: {e}")
-
-        result, message = self.spot_wrapper.spot_arm.handle_arm_velocity(cylindrical_velocity_command=cylindrical_velocity, 
-                                                                         angular_velocity_of_hand_rt_odom_in_hand=angular_velocity, 
-                                                                         seconds=arm_velocity_command.end_time.sec,
-                                                                         nanoseconds=arm_velocity_command.end_time.nanosec,
-                                                                         cmd_duration=self.cmd_duration)
-        if not result:
-            self.get_logger().warning(f"Failed to execute arm velocity command: {message}")
-        else:
-            self.get_logger().info("Successfully executed arm velocity command")
-            self.get_logger().info(f"Command ID: {message}")   
-        return result
 
     def handle_graph_nav_get_localization_pose(
         self,
