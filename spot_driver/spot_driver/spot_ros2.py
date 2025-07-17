@@ -44,8 +44,8 @@ from bosdyn.client.lease import Lease, LeaseWallet
 from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg, bosdyn_pose_to_tf
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
-    ArmVelocityCommandRequest,
     ArmCommandFeedback,
+    ArmVelocityCommandRequest,
     Camera,
     FullBodyCommand,
     FullBodyCommandFeedback,
@@ -599,9 +599,9 @@ class SpotROS(Node):
                 PoseStamped, "arm_pose_commands", self.arm_pose_cmd_callback, 100, callback_group=self.group
             )
             self.create_subscription(
-                ArmVelocityCommandRequest, "arm_velocity_commands", self.arm_velocity_cmd_callback, 100, callback_group=self.group
+                ArmVelocityCommandRequest, "arm_velocity_commands", self.arm_velocity_cmd_callback, 100, callback_group=self.group,
             )
-            
+
             if not self.gripperless:
                 self.create_service(
                     SetGripperAngle,
@@ -2596,20 +2596,20 @@ class SpotROS(Node):
             self.get_logger().warning(f"Failed to go to arm pose: {result[1]}")
         else:
             self.get_logger().info("Successfully went to arm pose")
-    
+
     def arm_velocity_cmd_callback(self, arm_velocity_command: ArmVelocityCommandRequest) -> None:
         if not self.spot_wrapper:
-            self.get_logger().info(f"Mock mode, received arm velocity command")
+            self.get_logger().info("Mock mode, received arm velocity command")
             return
 
         try:
             proto_command = arm_command_pb2.ArmVelocityCommand.Request()
             convert(arm_velocity_command, proto_command)
-            result, message = self.spot_wrapper.spot_arm.handle_arm_velocity(arm_velocity_command=proto_command,
-                                                                            cmd_duration=self.cmd_duration)
+            result, message = self.spot_wrapper.spot_arm.handle_arm_velocity(
+                arm_velocity_command=proto_command, cmd_duration=self.cmd_duration
+            )
             if not result:
-                self.get_logger().error(f"Failed to execute arm velocity command: {message}")   
-            return result
+                self.get_logger().error(f"Failed to execute arm velocity command: {message}")
         except Exception as e:
             self.get_logger().error(f"Failed to convert arm velocity command: {e}")
 
