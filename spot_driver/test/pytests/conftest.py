@@ -52,7 +52,7 @@ os.environ.update(
 
 
 # pylint: disable=invalid-name,unused-argument
-@spot_wrapper.testing.fixture
+@spot_wrapper.testing.fixture(ids=["with_arm", "without_arm"], params=[True, False])
 class simple_spot(MockSpot):
     """
     This is a factory that returns an instance of the class MockSpot,
@@ -61,6 +61,16 @@ class simple_spot(MockSpot):
     The MockSpot and the GRPC server are used to handle calls to a simulated
     Spot robot.
     """
+
+    def __init__(self, request: pytest.FixtureRequest) -> None:
+        # Fixture initialization can request other fixtures.
+        super().__init__()
+        if request.param:
+            print("Running test with a mock spot with an arm")
+            # By setting something in the manipulator state we make the spot wrapper think it has an arm
+            self.robot_state.manipulator_state.is_gripper_holding_item = False
+        else:
+            print("Running test with a mock spot without an arm")
 
     def PowerCommand(self, request: PowerCommandRequest, context: grpc.ServicerContext) -> PowerCommandResponse:
         """

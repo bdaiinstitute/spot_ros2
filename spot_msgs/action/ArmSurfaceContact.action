@@ -1,0 +1,5 @@
+bosdyn_api_msgs/ArmSurfaceContactRequest command
+---
+bool success
+string message
+---

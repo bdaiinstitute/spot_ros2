@@ -12,6 +12,7 @@ from synchros2.utilities import namespace_with
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.launch(fixture=pytest.spot_graph_description)
 def test_joint_states(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
     """Asserts that robot joint states are exposed over the joint_states topic."""

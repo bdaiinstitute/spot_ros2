@@ -23,6 +23,7 @@ import synchros2.process as ros_process
 import tf2_ros
 from bondpy.bondpy import Bond
 from bosdyn.api import (
+    arm_surface_contact_pb2,
     geometry_pb2,
     gripper_camera_param_pb2,
     lease_pb2,
@@ -78,6 +79,7 @@ import spot_driver.robot_command_util as robot_command_util
 # Release
 from spot_driver.ros_helpers import TriggerServiceWrapper, get_from_env_and_fall_back_to_param
 from spot_msgs.action import (  # type: ignore
+    ArmSurfaceContact,
     ExecuteDance,
     Manipulation,
     NavigateTo,
@@ -961,6 +963,12 @@ class SpotROS(Node):
         )
 
         if self.has_arm:
+            self.arm_surface_contact_server = ActionServer(
+                self,
+                ArmSurfaceContact,
+                "arm_surface_contact",
+                self.handle_arm_surface_contact_command,
+            )
             # Allows both the "robot command" and the "manipulation" action goal to preempt each other
             self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
                 self,
@@ -2395,6 +2403,52 @@ class SpotROS(Node):
         self._wait_for_goal = None
         if not self.spot_wrapper:
             self.get_logger().info("Returning action result " + str(result))
+        return result
+
+    def handle_arm_surface_contact_command(self, goal_handle: ServerGoalHandle) -> ArmSurfaceContact.Result:
+        """Handles action goal for arm surface contact"""
+        assert self.spot_wrapper is not None  # For type checking
+
+        self.get_logger().debug("I'm a function that handles requests to the arm surface contact api!")
+
+        ros_command = goal_handle.request.command
+        proto_command = arm_surface_contact_pb2.ArmSurfaceContact.Request()
+        convert(ros_command, proto_command)
+        result = ArmSurfaceContact.Result()
+        success, err_msg = self.spot_wrapper.arm_surface_contact_command(proto_command)
+        if not success:
+            result.success = False
+            result.message = err_msg
+            goal_handle.abort()
+            return result
+
+        # Spot doesn't provide feedback for this command so for now we just sleep for its expected duration
+        start_time = time.time()
+        expected_time = 0.0
+        if ros_command.pose_trajectory_in_task.points:
+            time_since_ref = ros_command.pose_trajectory_in_task.points[-1].time_since_reference
+            expected_time = float(time_since_ref.sec) + float(time_since_ref.nanosec) / 1e9
+        while (
+            rclpy.ok()
+            and not goal_handle.is_cancel_requested
+            and goal_handle.is_active
+            and time.time() - start_time < expected_time
+        ):
+            time.sleep(0.1)
+        if goal_handle.is_cancel_requested:
+            result.success = False
+            result.message = "Cancelled"
+            goal_handle.canceled()
+            self.get_logger.info("Stopping due to cancellation")
+            self.spot_wrapper.stop()
+        elif not goal_handle.is_active:
+            result.success = False
+            result.message = "Cancelled"
+            # No need to abort - that's already happened
+        else:
+            result.success = True
+            result.message = "Waited until trajectory should be complete"
+            goal_handle.succeed()
         return result
 
     def handle_trajectory(self, goal_handle: ServerGoalHandle) -> Optional[Trajectory.Result]:
