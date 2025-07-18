@@ -2611,10 +2611,8 @@ class SpotROS(Node):
         try:
             proto_command = arm_command_pb2.ArmVelocityCommand.Request()
             convert(arm_velocity_command, proto_command)
-            self.get_logger().info(f"Arm command duration: {self.arm_cmd_duration}")
             result, message = self.spot_wrapper.spot_arm.handle_arm_velocity(
                 arm_velocity_command=proto_command, cmd_duration=self.arm_cmd_duration
-            )
             if not result:
                 self.get_logger().error(f"Failed to execute arm velocity command: {message}")
         except Exception as e:
