@@ -599,7 +599,11 @@ class SpotROS(Node):
                 PoseStamped, "arm_pose_commands", self.arm_pose_cmd_callback, 100, callback_group=self.group
             )
             self.create_subscription(
-                ArmVelocityCommandRequest, "arm_velocity_commands", self.arm_velocity_cmd_callback, 100, callback_group=self.group,
+                ArmVelocityCommandRequest,
+                "arm_velocity_commands",
+                self.arm_velocity_cmd_callback,
+                100,
+                callback_group=self.group,
             )
 
             if not self.gripperless:
