@@ -357,6 +357,7 @@ class SpotROS(Node):
 
         self.declare_parameter("estop_timeout", 9.0)
         self.declare_parameter("cmd_duration", 0.125)
+        self.declare_parameter("arm_cmd_duration", 1.0)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("rgb_cameras", True)
 
@@ -459,6 +460,7 @@ class SpotROS(Node):
             )
 
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
+        self.arm_cmd_duration: float = self.get_parameter("arm_cmd_duration").value
 
         self.username: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", self, "username", "user")
         self.password: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", self, "password", "password")
@@ -2609,8 +2611,9 @@ class SpotROS(Node):
         try:
             proto_command = arm_command_pb2.ArmVelocityCommand.Request()
             convert(arm_velocity_command, proto_command)
+            self.get_logger().info(f"Arm command duration: {self.arm_cmd_duration}")
             result, message = self.spot_wrapper.spot_arm.handle_arm_velocity(
-                arm_velocity_command=proto_command, cmd_duration=self.cmd_duration
+                arm_velocity_command=proto_command, cmd_duration=self.arm_cmd_duration
             )
             if not result:
                 self.get_logger().error(f"Failed to execute arm velocity command: {message}")
