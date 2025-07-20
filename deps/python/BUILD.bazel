@@ -6,6 +6,10 @@ load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@rules_multirun//:defs.bzl", "multirun")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["requirements_main.in"])
+
 # This dictionary specifies which Python dependency "contexts" exist and what
 # platform specific lock files should be created.
 #
