@@ -2,7 +2,11 @@ load("@humble//ros:defs.bzl", "ros")
 load("@pip//:requirements.bzl", "all_whl_requirements_by_package", "requirement")
 load("@aspect_rules_py//py:defs.bzl", "py_library", "resolutions")
 
-exports_files(["requirements.in"])
+exports_files([
+    "requirements.in"
+])
+
+package(default_visibility = ["//visibility:public"])
 
 ros.package_manifest(
     name = "pkg",
@@ -430,6 +434,7 @@ cc_library(
             all_whl_requirements_by_package,
             requirement
         ),
+        visibility = ["//visibility:public"],
         package_collisions = "ignore"
     )
     for test_file in glob(
@@ -467,6 +472,19 @@ ros.cc_library(
     ],
     deps = [
         ":spot_driver_components"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+ros.py_library(
+    name = "pkg_py",
+    package = "pkg",
+    data = [
+        ":pkg",
+        ":share"
+    ],
+    deps = [
+        ":spot_driver_py"
     ],
     visibility = ["//visibility:public"]
 )
