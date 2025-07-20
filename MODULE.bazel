@@ -254,16 +254,16 @@ git_repository(
 
 git_repository(
     name = "spot_wrapper",
-    build_file = "//:deps/spot_wrapper/spot_wrapper.BUILD.bazel",
+    build_file = "//:deps/spot_wrapper:spot_wrapper.BUILD.bazel",
     commit = "041e5a33913367aaf2c6aaca1888dd58ee655560",
     remote = "https://github.com/bdaiinstitute/spot_wrapper.git",
-    patches = ["deps/spot_wrapper_requirements.patch"],
+    patches = ["deps/spot_description/requirements.patch"],
     patch_args = ["-p1"],
 )
 
 git_repository(
     name = "spot_description",
-    build_file = "//:deps/spot_description/spot_description.BUILD.bazel",
+    build_file = "//:deps/spot_description:spot_description.BUILD.bazel",
     commit = "a38f992450a903ddb960d64d13d4c505b173a4b6",
     remote = "https://github.com/bdaiinstitute/spot_description.git",
 )

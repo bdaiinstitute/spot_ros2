@@ -444,7 +444,7 @@ cc_library(
 
 ros.cmd(
     name = "launch_spot_driver",
-    cmd = "ros2 launch spot_driver spot_driver.launch.py,
+    cmd = "ros2 launch spot_driver spot_driver.launch.py",
     data = [
         ":spot_driver_launch",
         "test/profile.xml",
