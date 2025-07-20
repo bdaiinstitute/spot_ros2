@@ -1,6 +1,5 @@
 package(default_visibility = ["//visibility:public"])
-
 exports_files([
-    "requirements.in",
-    "spot_description.BUILD.bazel"
+    "spot_wrapper.BUILD.bazel",
+    "requirements.patch"
 ])
