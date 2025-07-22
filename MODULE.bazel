@@ -100,9 +100,14 @@ ros.parse(
 ros.additional_deb(
     hub_name = "humble",
     name = "spot-cpp-sdk",
-    # TODO(astout) add arm64   
-    urls_by_arch = {"amd64": ["https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v5.0.0/spot-cpp-sdk_5.0.0_amd64.deb"]},
-    sha256_by_arch = {"amd64": "6e23f7385c1b66618be0e68836c5b614a6edc67a381e2c6d9a213a6ecc044583"},
+    urls_by_arch = {
+        "amd64": ["https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v5.0.0/spot-cpp-sdk_5.0.0_amd64.deb"],
+        "arm64": ["https://github.com/bdaiinstitute/spot-cpp-sdk/releases/download/v5.0.0/spot-cpp-sdk_5.0.0_arm64.deb"],
+    },
+    sha256_by_arch = {
+        "amd64": "6e23f7385c1b66618be0e68836c5b614a6edc67a381e2c6d9a213a6ecc044583",
+        "arm64": "5d7ec43b16f14786c7c38a59a1b4bd89743a0b67ed7ccad7b84465ff34da46ac",
+    },
     dependencies = [
         "libcli11-dev",
         "libgrpc++-dev",
