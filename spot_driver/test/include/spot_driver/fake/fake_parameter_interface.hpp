@@ -51,6 +51,8 @@ class FakeParameterInterface : public ParameterInterfaceBase {
 
   std::optional<double> getLeaseRate() const override { return 1.0; }
 
+  double getRobotStateRate() const override { return kDefaultRobotStateRate; }
+
   std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm, const bool gripperless) const override {
     const auto kDefaultCamerasUsed = (has_arm && !gripperless) ? kCamerasWithHand : kCamerasWithoutHand;
     std::set<spot_ros2::SpotCamera> spot_cameras_used;

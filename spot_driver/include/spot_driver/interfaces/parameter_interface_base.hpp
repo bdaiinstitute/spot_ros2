@@ -51,6 +51,7 @@ class ParameterInterfaceBase {
                                                                                     bool gripperless) const = 0;
   virtual std::chrono::seconds getTimeSyncTimeout() const = 0;
   virtual std::optional<double> getLeaseRate() const = 0;
+  virtual double getRobotStateRate() const = 0;
 
  protected:
   // These are the definitions of the default values for optional parameters.
@@ -73,5 +74,6 @@ class ParameterInterfaceBase {
   static constexpr auto kCamerasWithHand = {"frontleft", "frontright", "left", "right", "back", "hand"};
   static constexpr std::chrono::seconds kDefaultTimeSyncTimeout{5};
   static constexpr double kDefaultLeaseRate{0.0};
+  static constexpr double kDefaultRobotStateRate{50.0};
 };
 }  // namespace spot_ros2

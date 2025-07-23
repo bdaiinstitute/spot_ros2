@@ -47,6 +47,7 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
       const bool has_arm, const bool gripperless) const override;
   [[nodiscard]] std::chrono::seconds getTimeSyncTimeout() const override;
   [[nodiscard]] std::optional<double> getLeaseRate() const override;
+  [[nodiscard]] double getRobotStateRate() const override;
 
  private:
   std::shared_ptr<rclcpp::Node> node_;
