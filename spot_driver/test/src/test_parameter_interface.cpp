@@ -225,6 +225,8 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   node_->declare_parameter("frame_prefix", kFramePrefix);
   constexpr auto timesync_timeout_parameter = 42;
   node_->declare_parameter("timesync_timeout", timesync_timeout_parameter);
+  constexpr auto robot_state_rate_parameter = 15.0;
+  node_->declare_parameter("robot_state_rate", robot_state_rate_parameter);
 
   // GIVEN we create a RclcppParameterInterface using the node
   RclcppParameterInterface parameter_interface{node_};
@@ -247,6 +249,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigFromParameters) {
   EXPECT_THAT(parameter_interface.getPreferredOdomFrame(), StrEq(preferred_odom_frame_parameter));
   EXPECT_THAT(parameter_interface.getFramePrefix(), Optional(kFramePrefix));
   EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(std::chrono::seconds(timesync_timeout_parameter)));
+  EXPECT_THAT(parameter_interface.getRobotStateRate(), Eq(robot_state_rate_parameter));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetSpotConfigEnvVarsOverruleParameters) {
@@ -310,6 +313,7 @@ TEST_F(RclcppParameterInterfaceEnvVarTest, GetConfigDefaults) {
   EXPECT_THAT(parameter_interface.getPreferredOdomFrame(), StrEq("odom"));
   EXPECT_THAT(parameter_interface.getFramePrefix(), Eq(std::nullopt));
   EXPECT_THAT(parameter_interface.getTimeSyncTimeout(), Eq(std::chrono::seconds(5)));
+  EXPECT_THAT(parameter_interface.getRobotStateRate(), Eq(50.0));
 }
 
 TEST_F(RclcppParameterInterfaceEnvVarTest, GetCamerasUsedDefaultWithArm) {
