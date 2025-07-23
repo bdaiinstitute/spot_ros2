@@ -35,6 +35,7 @@ constexpr auto kParameterNameGripperless = "gripperless";
 constexpr auto kParameterTimeSyncTimeout = "timesync_timeout";
 constexpr auto kParameterNameLeaseRate = "lease_rate";
 constexpr auto kParameterNameRobotStateRate = "robot_state_rate";
+constexpr auto kParameterNameImageRate = "image_rate";
 
 namespace type_traits {
 template <typename, typename = void>
@@ -322,6 +323,11 @@ std::optional<double> RclcppParameterInterface::getLeaseRate() const {
 double RclcppParameterInterface::getRobotStateRate() const {
   const double state_rate = declareAndGetParameter<double>(node_, kParameterNameRobotStateRate, kDefaultRobotStateRate);
   return state_rate > 0.0 ? state_rate : kDefaultRobotStateRate;
+}
+
+double RclcppParameterInterface::getImageRate() const {
+  const double image_rate = declareAndGetParameter<double>(node_, kParameterNameImageRate, kDefaultImageRate);
+  return image_rate > 0.0 ? image_rate : kDefaultImageRate;
 }
 
 }  // namespace spot_ros2

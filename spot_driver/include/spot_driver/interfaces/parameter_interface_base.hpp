@@ -52,6 +52,7 @@ class ParameterInterfaceBase {
   virtual std::chrono::seconds getTimeSyncTimeout() const = 0;
   virtual std::optional<double> getLeaseRate() const = 0;
   virtual double getRobotStateRate() const = 0;
+  virtual double getImageRate() const = 0;
 
  protected:
   // These are the definitions of the default values for optional parameters.
@@ -75,5 +76,6 @@ class ParameterInterfaceBase {
   static constexpr std::chrono::seconds kDefaultTimeSyncTimeout{5};
   static constexpr double kDefaultLeaseRate{0.0};
   static constexpr double kDefaultRobotStateRate{50.0};
+  static constexpr double kDefaultImageRate{15.0};
 };
 }  // namespace spot_ros2

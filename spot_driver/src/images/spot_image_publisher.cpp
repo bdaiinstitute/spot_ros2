@@ -90,6 +90,7 @@ bool SpotImagePublisher::initialize() {
   const auto uncompress_images = parameters_->getUncompressImages();
   const auto publish_compressed_images = parameters_->getPublishCompressedImages();
   const auto gripperless = parameters_->getGripperless();
+  const auto image_rate = parameters_->getImageRate();
 
   std::set<spot_ros2::SpotCamera> cameras_used;
   const auto cameras_used_parameter = parameters_->getCamerasUsed(has_arm_, gripperless);
@@ -111,8 +112,10 @@ bool SpotImagePublisher::initialize() {
   // Create a publisher for each image source
   middleware_handle_->createPublishers(sources, uncompress_images, publish_compressed_images);
 
+  const auto image_callback_period = std::chrono::duration<double>{1.0 / image_rate};
+
   // Create a timer to request and publish images at a fixed rate
-  timer_->setTimer(kImageCallbackPeriod, [this, uncompress_images, publish_compressed_images]() {
+  timer_->setTimer(image_callback_period, [this, uncompress_images, publish_compressed_images]() {
     timerCallback(uncompress_images, publish_compressed_images);
   });
 
