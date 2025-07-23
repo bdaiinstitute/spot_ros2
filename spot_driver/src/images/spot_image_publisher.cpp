@@ -19,7 +19,6 @@
 #include <optional>
 
 namespace {
-constexpr auto kImageCallbackPeriod = std::chrono::duration<double>{1.0 / 15.0};  // 15 Hz
 constexpr auto kDefaultDepthImageQuality = 100.0;
 }  // namespace
 
