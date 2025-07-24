@@ -23,7 +23,7 @@ from spot_wrapper.testing.mocks import MockSpot
 # this mocks a spot with an arm
 @spot_wrapper.testing.fixture
 class simple_spot(MockSpot):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # force an entry in manipulator state to indicate robot has arm
         manipulator_state = self.robot_state.manipulator_state
