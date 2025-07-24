@@ -204,7 +204,7 @@ class WasdInterface:
         """Draw the interface screen at each update."""
         stdscr.clear()  # clear screen
         stdscr.resize(26, 140)
-        stdscr.addstr(0, 0, f"robot name: {self.robot_name:20s}")
+        stdscr.addstr(0, 0, f"robot name: {self.robot_name}")
         stdscr.addstr(2, 0, self._battery_str())
         stdscr.addstr(3, 0, self._power_state_str())
         for i in range(3):
