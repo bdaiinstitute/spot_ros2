@@ -159,6 +159,7 @@ def test_robot_command_starts(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
     assert response.robot_command_id == 5
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_robot_command_fails_to_start(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
