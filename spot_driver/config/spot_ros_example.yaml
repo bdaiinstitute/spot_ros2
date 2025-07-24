@@ -11,6 +11,8 @@
     metrics_rate: 0.04
     lease_rate: 1.0
     async_tasks_rate: 10.0
+    robot_state_rate: 50.0  # Rate in Hz at which you receive joint state, TF, status updates, etc from state publisher node
+    image_rate: 15.0  # Rate in Hz at which you receive images from the image publisher node. Hard to get faster than 15 Hz from Spot.
 
     # Some boolean parameters
     auto_claim: False
@@ -29,6 +31,7 @@
     # frame_prefix: "" # Set an explicit prefix for all frames in your TF tree (an empty string is a valid prefix option).
 
     cmd_duration: 0.25 # The duration of cmd_vel commands. Increase this if spot stutters when publishing cmd_vel.
+    arm_cmd_duration: 1.0 # The duration of arm_vel commands. Decrease this if the arm has a delay. Publish it at more than 4 Hz
     rgb_cameras: True  # Set to False if your robot has greyscale cameras -- otherwise you won't receive data.
     initialize_spot_cam: False # Set to True if you are connecting to a SpotCam payload module.
 

@@ -23,6 +23,7 @@ import synchros2.process as ros_process
 import tf2_ros
 from bondpy.bondpy import Bond
 from bosdyn.api import (
+    arm_command_pb2,
     geometry_pb2,
     gripper_camera_param_pb2,
     lease_pb2,
@@ -44,6 +45,7 @@ from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg, bosdyn
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
+    ArmVelocityCommandRequest,
     Camera,
     FullBodyCommand,
     FullBodyCommandFeedback,
@@ -355,6 +357,7 @@ class SpotROS(Node):
 
         self.declare_parameter("estop_timeout", 9.0)
         self.declare_parameter("cmd_duration", 0.125)
+        self.declare_parameter("arm_cmd_duration", 1.0)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("rgb_cameras", True)
 
@@ -457,6 +460,7 @@ class SpotROS(Node):
             )
 
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
+        self.arm_cmd_duration: float = self.get_parameter("arm_cmd_duration").value
 
         self.username: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", self, "username", "user")
         self.password: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", self, "password", "password")
@@ -595,6 +599,13 @@ class SpotROS(Node):
             )
             self.create_subscription(
                 PoseStamped, "arm_pose_commands", self.arm_pose_cmd_callback, 100, callback_group=self.group
+            )
+            self.create_subscription(
+                ArmVelocityCommandRequest,
+                "arm_velocity_commands",
+                self.arm_velocity_cmd_callback,
+                100,
+                callback_group=self.group,
             )
 
             if not self.gripperless:
@@ -2591,6 +2602,22 @@ class SpotROS(Node):
             self.get_logger().warning(f"Failed to go to arm pose: {result[1]}")
         else:
             self.get_logger().info("Successfully went to arm pose")
+
+    def arm_velocity_cmd_callback(self, arm_velocity_command: ArmVelocityCommandRequest) -> None:
+        if not self.spot_wrapper:
+            self.get_logger().info("Mock mode, received arm velocity command")
+            return
+
+        try:
+            proto_command = arm_command_pb2.ArmVelocityCommand.Request()
+            convert(arm_velocity_command, proto_command)
+            result, message = self.spot_wrapper.spot_arm.handle_arm_velocity(
+                arm_velocity_command=proto_command, cmd_duration=self.arm_cmd_duration
+            )
+            if not result:
+                self.get_logger().error(f"Failed to execute arm velocity command: {message}")
+        except Exception as e:
+            self.get_logger().error(f"Failed to convert arm velocity command: {e}")
 
     def handle_graph_nav_get_localization_pose(
         self,
