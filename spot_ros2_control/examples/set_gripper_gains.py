@@ -11,7 +11,7 @@ from synchros2.node import Node
 from synchros2.subscription import Subscription
 from synchros2.utilities import namespace_with
 
-from spot_msgs.msg import JointCommand
+from spot_msgs.msg import JointCommand  # type: ignore
 
 # maximum and minimum joint angles in radians.
 GRIPPER_OPEN_ANGLE = -1.57
