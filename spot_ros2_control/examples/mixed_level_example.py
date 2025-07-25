@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # Copyright (c) 2025 Boston Dynamics AI Institute LLC. All rights reserved.
 import argparse
+import time
 
 import rclpy
+import rclpy.client
 from controller_manager_msgs.srv import (
     ConfigureController,
     LoadController,
@@ -12,6 +14,7 @@ from controller_manager_msgs.srv import (
 )
 from lifecycle_msgs.msg import State
 from rclpy.node import Node
+from std_srvs.srv import Trigger
 
 from spot_msgs.msg import JointCommand  # type: ignore
 
@@ -26,21 +29,34 @@ SPOT_HARDWARE_INTERFACE = "SpotSystem"
 class SwitchState(Node):
     def __init__(self, robot_name: str | None) -> None:
         super().__init__("switch_state")
-        self._robot_name = robot_name
-        prefix = robot_name + "/" if robot_name is not None else ""
-        self.get_logger().info(f"Robot name: {robot_name} {prefix=}")
+        self.prefix = robot_name + "/" if robot_name is not None else ""
+        self.get_logger().info(f"Robot name: {robot_name} {self.prefix=}")
 
-        self._load_controller = self.create_client(LoadController, f"{prefix}controller_manager/load_controller")
-        self._unload_controller = self.create_client(UnloadController, f"{prefix}controller_manager/unload_controller")
+        self._load_controller = self.create_client(LoadController, f"{self.prefix}controller_manager/load_controller")
+        self._unload_controller = self.create_client(
+            UnloadController, f"{self.prefix}controller_manager/unload_controller"
+        )
         self._configure_controller = self.create_client(
-            ConfigureController, f"{prefix}controller_manager/configure_controller"
+            ConfigureController, f"{self.prefix}controller_manager/configure_controller"
         )
-        self._switch_controllers = self.create_client(SwitchController, f"{prefix}controller_manager/switch_controller")
+        self._switch_controllers = self.create_client(
+            SwitchController, f"{self.prefix}controller_manager/switch_controller"
+        )
         self._set_hardware_interface_state = self.create_client(
-            SetHardwareComponentState, f"{prefix}controller_manager/set_hardware_component_state"
+            SetHardwareComponentState, f"{self.prefix}controller_manager/set_hardware_component_state"
         )
 
-        self._command_pub = self.create_publisher(JointCommand, f"{prefix}spot_joint_controller/joint_commands", 10)
+        self._command_pub = self.create_publisher(
+            JointCommand, f"{self.prefix}spot_joint_controller/joint_commands", 10
+        )
+
+        self._joint_command = JointCommand()
+        self._joint_command.name = [self.prefix + GRIPPER_JOINT_NAME]
+
+        self._claim = self.create_client(Trigger, f"{self.prefix}claim")
+        self._stand = self.create_client(Trigger, f"{self.prefix}stand")
+        self._sit = self.create_client(Trigger, f"{self.prefix}sit")
+        self._power_on = self.create_client(Trigger, f"{self.prefix}power_on")
 
     def connect(self, controller_name: str) -> None:
         print(f"Connecting to {controller_name}...")
@@ -96,6 +112,50 @@ class SwitchState(Node):
         rclpy.spin_until_future_complete(self, future)
         print(f"Unconfigure hardware interface: {future.result()}")
 
+    def _trigger_wrapper(self, client: rclpy.client.Client, name: str) -> None:
+        self.get_logger().info(f"{name}")
+        future = client.call_async(Trigger.Request())
+        rclpy.spin_until_future_complete(self, future)
+        self.get_logger().info(f"Result: {future.result()}")
+
+    def power_on(self) -> None:
+        self._trigger_wrapper(self._power_on, "Powering on")
+
+    def claim(self) -> None:
+        self._trigger_wrapper(self._claim, "Claiming")
+
+    def stand(self) -> None:
+        self._trigger_wrapper(self._stand, "Standing")
+
+    def sit(self) -> None:
+        self._trigger_wrapper(self._sit, "Sitting")
+
+    def move_gripper(self, goal_joint_angle: float) -> None:
+        """Command the gripper to a given joint angle by streaming a command."""
+        self._joint_command.position = [goal_joint_angle]
+        self._command_pub.publish(self._joint_command)
+
+    def open_and_close(self, duration_sec: float = 1.0, frequency_hz: float = 50.0) -> None:
+        """Open and close the gripper by streaming position commands.
+
+        Args:
+            duration_sec (float): Duration in seconds of each open and close movement
+            frequency_hz (int): Frequency in Hz of the command publish rate.
+        """
+        current_gripper_angle = 0.0
+        npoints = int(duration_sec * frequency_hz)
+        dt = 1.0 / frequency_hz
+        step_size_open = (GRIPPER_OPEN_ANGLE - current_gripper_angle) / npoints
+        self._logger.info("Opening...")
+        for i in range(npoints):
+            self.move_gripper(goal_joint_angle=(current_gripper_angle + i * step_size_open))
+            time.sleep(dt)
+        self._logger.info("Closing...")
+        step_size_close = (GRIPPER_OPEN_ANGLE - GRIPPER_CLOSE_ANGLE) / npoints
+        for i in range(npoints):
+            self.move_gripper(goal_joint_angle=(GRIPPER_OPEN_ANGLE - i * step_size_close))
+            time.sleep(dt)
+
 
 def main(args: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser()
@@ -106,9 +166,27 @@ def main(args: list[str] | None = None) -> None:
 
     switch_state = SwitchState(parser_args.robot)
 
-    switch_state.connect("forward_position_controller")
+    switch_state.claim()
+    switch_state.power_on()
+    switch_state.stand()
 
-    switch_state.disconnect("forward_position_controller")
+    input("press to sit")
+    switch_state.sit()
+
+    input("press to connect to joint controller")
+    switch_state.connect("spot_joint_controller")
+
+    input("press to open and close")
+    switch_state.open_and_close()
+
+    input("press to disconnect")
+    switch_state.disconnect("spot_joint_controller")
+
+    input("press to stand")
+    switch_state.stand()
+
+    input("press to sit")
+    switch_state.sit()
 
     switch_state.destroy_node()
     rclpy.shutdown()
