@@ -1,0 +1,8 @@
+<library path="spot_rviz_plugins">
+  <class type="spot_rviz_plugins::SpotPanel"
+         base_class_type="rviz_common::Panel">
+    <description>
+      Panel for Spot interaction
+    </description>
+  </class>
+</library>
