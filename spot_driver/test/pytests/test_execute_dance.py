@@ -25,6 +25,7 @@ from spot_msgs.action import ExecuteDance  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_execute_dance_with_upload(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
@@ -107,6 +108,7 @@ def test_execute_dance_with_upload(ros: ROSAwareScope, simple_spot: SpotFixture)
     assert final_result.result.success
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_execute_dance_by_name(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """

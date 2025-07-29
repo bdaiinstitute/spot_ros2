@@ -104,6 +104,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/OverrideGraspOrCarry.srv"
   "srv/PosedStand.srv"
   "srv/SetStandHeight.srv"
+  "action/ArmSurfaceContact.action"
   "action/ExecuteDance.action"
   "action/NavigateTo.action"
   "action/RobotCommand.action"

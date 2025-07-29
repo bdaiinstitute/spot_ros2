@@ -23,6 +23,8 @@ import synchros2.process as ros_process
 import tf2_ros
 from bondpy.bondpy import Bond
 from bosdyn.api import (
+    arm_command_pb2,
+    arm_surface_contact_pb2,
     geometry_pb2,
     gripper_camera_param_pb2,
     lease_pb2,
@@ -44,6 +46,7 @@ from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg, bosdyn
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
+    ArmVelocityCommandRequest,
     Camera,
     FullBodyCommand,
     FullBodyCommandFeedback,
@@ -78,6 +81,7 @@ import spot_driver.robot_command_util as robot_command_util
 # Release
 from spot_driver.ros_helpers import TriggerServiceWrapper, get_from_env_and_fall_back_to_param
 from spot_msgs.action import (  # type: ignore
+    ArmSurfaceContact,
     ExecuteDance,
     Manipulation,
     NavigateTo,
@@ -356,6 +360,7 @@ class SpotROS(Node):
 
         self.declare_parameter("estop_timeout", 9.0)
         self.declare_parameter("cmd_duration", 0.125)
+        self.declare_parameter("arm_cmd_duration", 1.0)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("rgb_cameras", True)
 
@@ -458,6 +463,7 @@ class SpotROS(Node):
             )
 
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
+        self.arm_cmd_duration: float = self.get_parameter("arm_cmd_duration").value
 
         self.username: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", self, "username", "user")
         self.password: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", self, "password", "password")
@@ -596,6 +602,13 @@ class SpotROS(Node):
             )
             self.create_subscription(
                 PoseStamped, "arm_pose_commands", self.arm_pose_cmd_callback, 100, callback_group=self.group
+            )
+            self.create_subscription(
+                ArmVelocityCommandRequest,
+                "arm_velocity_commands",
+                self.arm_velocity_cmd_callback,
+                100,
+                callback_group=self.group,
             )
 
             if not self.gripperless:
@@ -968,6 +981,12 @@ class SpotROS(Node):
         )
 
         if self.has_arm:
+            self.arm_surface_contact_server = ActionServer(
+                self,
+                ArmSurfaceContact,
+                "arm_surface_contact",
+                self.handle_arm_surface_contact_command,
+            )
             # Allows both the "robot command" and the "manipulation" action goal to preempt each other
             self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
                 self,
@@ -1180,7 +1199,7 @@ class SpotROS(Node):
         data = self.spot_wrapper.point_clouds
         if data:
             point_cloud_proto = data[0]
-            local_time = self.spot_wrapper.robotToLocalTime(data.point_cloud.source.acquisition_time)
+            local_time = self.spot_wrapper.robotToLocalTime(point_cloud_proto.point_cloud.source.acquisition_time)
             local_time_msg = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
             # convert proto into PointCloud2
             point_cloud_msg = self._get_point_cloud_msg(point_cloud_proto, local_time_msg)
@@ -2418,6 +2437,52 @@ class SpotROS(Node):
             self.get_logger().info("Returning action result " + str(result))
         return result
 
+    def handle_arm_surface_contact_command(self, goal_handle: ServerGoalHandle) -> ArmSurfaceContact.Result:
+        """Handles action goal for arm surface contact"""
+        assert self.spot_wrapper is not None  # For type checking
+
+        self.get_logger().debug("I'm a function that handles requests to the arm surface contact api!")
+
+        ros_command = goal_handle.request.command
+        proto_command = arm_surface_contact_pb2.ArmSurfaceContact.Request()
+        convert(ros_command, proto_command)
+        result = ArmSurfaceContact.Result()
+        success, err_msg = self.spot_wrapper.arm_surface_contact_command(proto_command)
+        if not success:
+            result.success = False
+            result.message = err_msg
+            goal_handle.abort()
+            return result
+
+        # Spot doesn't provide feedback for this command so for now we just sleep for its expected duration
+        start_time = time.time()
+        expected_time = 0.0
+        if ros_command.pose_trajectory_in_task.points:
+            time_since_ref = ros_command.pose_trajectory_in_task.points[-1].time_since_reference
+            expected_time = float(time_since_ref.sec) + float(time_since_ref.nanosec) / 1e9
+        while (
+            rclpy.ok()
+            and not goal_handle.is_cancel_requested
+            and goal_handle.is_active
+            and time.time() - start_time < expected_time
+        ):
+            time.sleep(0.1)
+        if goal_handle.is_cancel_requested:
+            result.success = False
+            result.message = "Cancelled"
+            goal_handle.canceled()
+            self.get_logger.info("Stopping due to cancellation")
+            self.spot_wrapper.stop()
+        elif not goal_handle.is_active:
+            result.success = False
+            result.message = "Cancelled"
+            # No need to abort - that's already happened
+        else:
+            result.success = True
+            result.message = "Waited until trajectory should be complete"
+            goal_handle.succeed()
+        return result
+
     def handle_trajectory(self, goal_handle: ServerGoalHandle) -> Optional[Trajectory.Result]:
         """ROS actionserver execution handler to handle receiving a request to move to a location"""
         result: Optional[Trajectory.Result] = None
@@ -2612,6 +2677,22 @@ class SpotROS(Node):
             self.get_logger().warning(f"Failed to go to arm pose: {result[1]}")
         else:
             self.get_logger().info("Successfully went to arm pose")
+
+    def arm_velocity_cmd_callback(self, arm_velocity_command: ArmVelocityCommandRequest) -> None:
+        if not self.spot_wrapper:
+            self.get_logger().info("Mock mode, received arm velocity command")
+            return
+
+        try:
+            proto_command = arm_command_pb2.ArmVelocityCommand.Request()
+            convert(arm_velocity_command, proto_command)
+            result, message = self.spot_wrapper.spot_arm.handle_arm_velocity(
+                arm_velocity_command=proto_command, cmd_duration=self.arm_cmd_duration
+            )
+            if not result:
+                self.get_logger().error(f"Failed to execute arm velocity command: {message}")
+        except Exception as e:
+            self.get_logger().error(f"Failed to convert arm velocity command: {e}")
 
     def handle_graph_nav_get_localization_pose(
         self,

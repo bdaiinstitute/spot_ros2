@@ -145,7 +145,7 @@ class LaunchHelpersTest(unittest.TestCase):
             "Launch argument: explicit prefix.",
         )
 
-        name_path_join_substitution = PathJoinSubstitution(self.name_value)
+        name_path_join_substitution = PathJoinSubstitution([self.name_value])
         prefix_path_join_substitution = PathJoinSubstitution([self.prefix_value, ""])
 
         name, prefix = get_name_and_prefix({self.name_key: name_path_join_substitution})
