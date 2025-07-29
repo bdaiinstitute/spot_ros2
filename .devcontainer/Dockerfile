@@ -10,7 +10,7 @@ ARG INSTALL_PACKAGE=base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
-    apt-get update -q && \
+    apt-get dist-upgrade -y --no-install-recommends && \
     apt-get install -yq --no-install-recommends \
     lcov \
     curl \
@@ -29,7 +29,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
 
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash"
 
-ARG SPOT_SDK_VERSION="4.1.1"
+ARG SPOT_SDK_VERSION="5.0.0"
 ARG SPOT_MSG_VERSION="${SPOT_SDK_VERSION}"
 
 # Install bosdyn_msgs package

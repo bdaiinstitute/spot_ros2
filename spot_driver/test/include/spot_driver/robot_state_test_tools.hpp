@@ -49,7 +49,7 @@ inline ::bosdyn::api::WiFiState createWifiState(::bosdyn::api::WiFiState_Mode mo
 inline void appendSystemFault(::bosdyn::api::SystemFaultState* mutable_fault_state,
                               const google::protobuf::Timestamp& onset_timestamp,
                               const google::protobuf::Duration& duration, const std::string& name, const int32_t code,
-                              const uint64_t uid, const std::string& error_message,
+                              const std::string& uuid, const std::string& error_message,
                               const std::vector<std::string>& attributes,
                               const ::bosdyn::api::SystemFault_Severity& severity) {
   auto* fault = mutable_fault_state->add_faults();
@@ -57,7 +57,7 @@ inline void appendSystemFault(::bosdyn::api::SystemFaultState* mutable_fault_sta
   fault->mutable_duration()->CopyFrom(duration);
   fault->set_name(name);
   fault->set_code(code);
-  fault->set_uid(uid);
+  fault->set_uuid(uuid);
   fault->set_error_message(error_message);
   *fault->mutable_attributes() = {attributes.cbegin(), attributes.cend()};
   fault->set_severity(severity);

@@ -17,6 +17,7 @@ from spot_msgs.srv import ChoreographyStartRecordingState  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_start_recording_state(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """

@@ -15,6 +15,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import builtin_interfaces.msg
+import numpy as np
 import rclpy
 import rclpy.duration
 import rclpy.time
@@ -22,10 +23,13 @@ import synchros2.process as ros_process
 import tf2_ros
 from bondpy.bondpy import Bond
 from bosdyn.api import (
+    arm_command_pb2,
+    arm_surface_contact_pb2,
     geometry_pb2,
     gripper_camera_param_pb2,
     lease_pb2,
     manipulation_api_pb2,
+    point_cloud_pb2,
     robot_command_pb2,
     trajectory_pb2,
     world_object_pb2,
@@ -38,10 +42,11 @@ from bosdyn.client import math_helpers
 from bosdyn.client.async_tasks import AsyncPeriodicQuery
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn.client.lease import Lease, LeaseWallet
-from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg
+from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg, bosdyn_pose_to_tf
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
     ArmCommandFeedback,
+    ArmVelocityCommandRequest,
     Camera,
     FullBodyCommand,
     FullBodyCommandFeedback,
@@ -54,11 +59,7 @@ from bosdyn_msgs.msg import (
     RobotCommandFeedback,
     RobotCommandFeedbackStatusStatus,
 )
-from geometry_msgs.msg import (
-    Pose,
-    PoseStamped,
-    Twist,
-)
+from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -67,7 +68,7 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from rclpy.timer import Rate
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, PointCloud2, PointField
 from std_srvs.srv import SetBool, Trigger
 from synchros2.node import Node
 from synchros2.service import Serviced
@@ -80,6 +81,7 @@ import spot_driver.robot_command_util as robot_command_util
 # Release
 from spot_driver.ros_helpers import TriggerServiceWrapper, get_from_env_and_fall_back_to_param
 from spot_msgs.action import (  # type: ignore
+    ArmSurfaceContact,
     ExecuteDance,
     Manipulation,
     NavigateTo,
@@ -95,7 +97,7 @@ from spot_msgs.msg import (  # type: ignore
     Metrics,
     MobilityParams,
 )
-from spot_msgs.srv import (  # type: ignore  # type: ignore
+from spot_msgs.srv import (  # type: ignore
     AcquireLease,
     ChoreographyRecordedStateToAnimation,
     ChoreographyStartRecordingState,
@@ -133,6 +135,7 @@ from spot_msgs.srv import (  # type: ignore  # type: ignore
     SetLEDBrightness,
     SetLocomotion,
     SetPtzPosition,
+    SetStandHeight,
     SetVelocity,
     SetVolume,
     StoreLogpoint,
@@ -356,6 +359,7 @@ class SpotROS(Node):
 
         self.declare_parameter("estop_timeout", 9.0)
         self.declare_parameter("cmd_duration", 0.125)
+        self.declare_parameter("arm_cmd_duration", 1.0)
         self.declare_parameter("start_estop", False)
         self.declare_parameter("rgb_cameras", True)
 
@@ -373,6 +377,9 @@ class SpotROS(Node):
         self.declare_parameter("mock_enable", False)
 
         self.declare_parameter("gripperless", False)
+
+        self.declare_parameter("use_velodyne", False)
+        self.declare_parameter("velodyne_rate", 10.0)
 
         # When we send very long trajectories to Spot, we create batches of
         # given size. If we do not batch a long trajectory, Spot will reject it.
@@ -423,6 +430,14 @@ class SpotROS(Node):
             "world_objects": self.get_parameter("world_objects_rate").value,
             "graph_nav_pose": self.get_parameter("graph_nav_pose_rate").value,
         }
+
+        self.use_velodyne = self.get_parameter("use_velodyne").value
+        if self.use_velodyne:
+            self.callbacks["lidar_points"] = self.velodyne_callback
+            self.velodyne_pub: Publisher = self.create_publisher(PointCloud2, "velodyne/points", 10)
+            self.velodyne_static_tf_broadcaster = tf2_ros.StaticTransformBroadcaster(self)
+            self.rates["point_cloud"] = self.get_parameter("velodyne_rate").value
+
         max_task_rate = float(max(self.rates.values()))
 
         self.declare_parameter("async_tasks_rate", max_task_rate)
@@ -447,6 +462,7 @@ class SpotROS(Node):
             )
 
         self.cmd_duration: float = self.get_parameter("cmd_duration").value
+        self.arm_cmd_duration: float = self.get_parameter("arm_cmd_duration").value
 
         self.username: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_USERNAME", self, "username", "user")
         self.password: str = get_from_env_and_fall_back_to_param("BOSDYN_CLIENT_PASSWORD", self, "password", "password")
@@ -586,6 +602,13 @@ class SpotROS(Node):
             self.create_subscription(
                 PoseStamped, "arm_pose_commands", self.arm_pose_cmd_callback, 100, callback_group=self.group
             )
+            self.create_subscription(
+                ArmVelocityCommandRequest,
+                "arm_velocity_commands",
+                self.arm_velocity_cmd_callback,
+                100,
+                callback_group=self.group,
+            )
 
             if not self.gripperless:
                 self.create_service(
@@ -596,6 +619,15 @@ class SpotROS(Node):
                     ),
                     callback_group=self.group,
                 )
+
+        self.create_service(
+            SetStandHeight,
+            "set_stand_height",
+            lambda request, response: self.service_wrapper(
+                "set_stand_height", self.handle_stand_height, request, response
+            ),
+            callback_group=self.group,
+        )
 
         self.create_service(
             SetBool,
@@ -942,6 +974,12 @@ class SpotROS(Node):
         )
 
         if self.has_arm:
+            self.arm_surface_contact_server = ActionServer(
+                self,
+                ArmSurfaceContact,
+                "arm_surface_contact",
+                self.handle_arm_surface_contact_command,
+            )
             # Allows both the "robot command" and the "manipulation" action goal to preempt each other
             self.robot_command_and_manipulation_servers = SingleGoalMultipleActionServers(
                 self,
@@ -1081,6 +1119,88 @@ class SpotROS(Node):
 
             self.lease_pub.publish(lease_array_msg)
 
+    def _get_point_cloud_msg(
+        self, data: point_cloud_pb2.PointCloudResponse, local_time_msg: builtin_interfaces.msg.Time
+    ) -> PointCloud2:
+        """Takes the point cloud data and populates the point cloud ROS message
+
+        Args:
+            data: PointCloud proto (PointCloudResponse)
+            local_time_msg: Timestamp of the point cloud data as a ROS message
+        Returns:
+            PointCloud: ROS PointCloud2 message of the data
+        """
+        point_cloud_msg = PointCloud2()
+        point_cloud_msg.header.stamp = local_time_msg
+        point_cloud_msg.header.frame_id = self.frame_prefix + data.point_cloud.source.frame_name_sensor
+        if data.point_cloud.encoding == point_cloud_pb2.PointCloud.ENCODING_XYZ_32F:
+            point_cloud_msg.height = 1
+            point_cloud_msg.width = data.point_cloud.num_points
+            point_cloud_msg.fields = []
+            for i, ax in enumerate(("x", "y", "z")):
+                field = PointField()
+                field.name = ax
+                field.offset = i * 4
+                field.datatype = PointField.FLOAT32
+                field.count = 1
+                point_cloud_msg.fields.append(field)
+            point_cloud_msg.is_bigendian = False
+            point_cloud_np = np.frombuffer(data.point_cloud.data, dtype=np.uint8)
+            point_cloud_msg.point_step = 12  # float32 XYZ
+            point_cloud_msg.row_step = point_cloud_msg.width * point_cloud_msg.point_step
+            point_cloud_msg.data = point_cloud_np.tobytes()
+            point_cloud_msg.is_dense = True
+        else:
+            self.get_logger().warn("Not supported point cloud data type.")
+        return point_cloud_msg
+
+    def _get_velodyne_tf(
+        self, data: point_cloud_pb2.PointCloudResponse, local_time_msg: builtin_interfaces.msg.Time
+    ) -> TransformStamped:
+        """Takes the point cloud data and populates the point cloud sensor frame transform
+
+        Args:
+            data: PointCloud proto (PointCloudResponse)
+            local_time_msg: Timestamp of the point cloud data as a ROS message
+        Returns:
+            PointCloud: ROS TransformStamped message containing only the transform of the point cloud sensor frame
+        """
+        snapshot = data.point_cloud.source.transforms_snapshot.child_to_parent_edge_map
+        # The goal here is to only publish the TF of the sensor frame name, otherwise we will have duplicate static TFs
+        # from the C++ state publishers
+        sensor_frame = data.point_cloud.source.frame_name_sensor
+        transform = snapshot.get(sensor_frame)
+        parent_frame = transform.parent_frame_name
+        parent_t_sensor = transform.parent_tform_child
+        tf = bosdyn_pose_to_tf(
+            frame_t_pose=parent_t_sensor,
+            frame=self.frame_prefix + parent_frame,
+            child_frame=self.frame_prefix + sensor_frame,
+            local_stamp=local_time_msg,
+        )
+        return tf
+
+    def velodyne_callback(self, results: Any) -> None:
+        """Callback for when Spot Wrapper gets new velodyne point cloud data
+
+        Args:
+            results (Any): FutureWrapper object of AsyncPeriodicQuery callback
+        """
+        if self.spot_wrapper is None:
+            return
+
+        data = self.spot_wrapper.point_clouds
+        if data:
+            point_cloud_proto = data[0]
+            local_time = self.spot_wrapper.robotToLocalTime(point_cloud_proto.point_cloud.source.acquisition_time)
+            local_time_msg = builtin_interfaces.msg.Time(sec=local_time.seconds, nanosec=local_time.nanos)
+            # convert proto into PointCloud2
+            point_cloud_msg = self._get_point_cloud_msg(point_cloud_proto, local_time_msg)
+            self.velodyne_pub.publish(point_cloud_msg)
+            # get the static transform
+            tf = self._get_velodyne_tf(point_cloud_proto, local_time_msg)
+            self.velodyne_static_tf_broadcaster.sendTransform(tf)
+
     def publish_graph_nav_pose_callback(self) -> None:
         if self.spot_wrapper is None:
             return
@@ -1129,7 +1249,6 @@ class SpotROS(Node):
             self.handle_self_right,
             self.handle_sit,
             self.handle_stand,
-            self.handle_crouch,
             self.handle_rollover,
             self.handle_power_on,
             self.handle_safe_power_off,
@@ -1159,9 +1278,6 @@ class SpotROS(Node):
     handle_self_right = TriggerServiceWrapper(SpotWrapper.self_right, "self_right")
     handle_sit = TriggerServiceWrapper(SpotWrapper.sit, "sit")
     handle_stand = TriggerServiceWrapper(SpotWrapper.stand, "stand")
-    handle_crouch = TriggerServiceWrapper(
-        SpotWrapper.stand, "crouch", body_height=-0.15
-    )  # "crouch" is just stand with height = -0.15
     handle_rollover = TriggerServiceWrapper(SpotWrapper.battery_change_pose, "rollover")
     handle_power_on = TriggerServiceWrapper(SpotWrapper.power_on, "power_on")
     handle_safe_power_off = TriggerServiceWrapper(SpotWrapper.safe_power_off, "power_off")
@@ -1199,6 +1315,20 @@ class SpotROS(Node):
         response.success, response.message = self.spot_wrapper.spot_arm.gripper_angle_open(
             gripper_ang=request.gripper_angle, ensure_power_on_and_stand=False
         )
+        return response
+
+    def handle_stand_height(
+        self, request: SetStandHeight.Request, response: SetStandHeight.Response
+    ) -> SetStandHeight.Response:
+        """
+        ROS service to stand the robot at a specific height (relative to default height)
+        Crouching is about -0.15m and tiptoes is about 0.15m
+        """
+        if self.spot_wrapper is None:
+            response.success = False
+            response.message = "Spot wrapper is undefined"
+            return response
+        response.success, response.message = self.spot_wrapper.stand(body_height=request.height)
         return response
 
     def handle_clear_behavior_fault(
@@ -2286,6 +2416,52 @@ class SpotROS(Node):
             self.get_logger().info("Returning action result " + str(result))
         return result
 
+    def handle_arm_surface_contact_command(self, goal_handle: ServerGoalHandle) -> ArmSurfaceContact.Result:
+        """Handles action goal for arm surface contact"""
+        assert self.spot_wrapper is not None  # For type checking
+
+        self.get_logger().debug("I'm a function that handles requests to the arm surface contact api!")
+
+        ros_command = goal_handle.request.command
+        proto_command = arm_surface_contact_pb2.ArmSurfaceContact.Request()
+        convert(ros_command, proto_command)
+        result = ArmSurfaceContact.Result()
+        success, err_msg = self.spot_wrapper.arm_surface_contact_command(proto_command)
+        if not success:
+            result.success = False
+            result.message = err_msg
+            goal_handle.abort()
+            return result
+
+        # Spot doesn't provide feedback for this command so for now we just sleep for its expected duration
+        start_time = time.time()
+        expected_time = 0.0
+        if ros_command.pose_trajectory_in_task.points:
+            time_since_ref = ros_command.pose_trajectory_in_task.points[-1].time_since_reference
+            expected_time = float(time_since_ref.sec) + float(time_since_ref.nanosec) / 1e9
+        while (
+            rclpy.ok()
+            and not goal_handle.is_cancel_requested
+            and goal_handle.is_active
+            and time.time() - start_time < expected_time
+        ):
+            time.sleep(0.1)
+        if goal_handle.is_cancel_requested:
+            result.success = False
+            result.message = "Cancelled"
+            goal_handle.canceled()
+            self.get_logger.info("Stopping due to cancellation")
+            self.spot_wrapper.stop()
+        elif not goal_handle.is_active:
+            result.success = False
+            result.message = "Cancelled"
+            # No need to abort - that's already happened
+        else:
+            result.success = True
+            result.message = "Waited until trajectory should be complete"
+            goal_handle.succeed()
+        return result
+
     def handle_trajectory(self, goal_handle: ServerGoalHandle) -> Optional[Trajectory.Result]:
         """ROS actionserver execution handler to handle receiving a request to move to a location"""
         result: Optional[Trajectory.Result] = None
@@ -2324,6 +2500,7 @@ class SpotROS(Node):
             ).to_yaw(),
             cmd_duration=cmd_duration_secs,
             precise_position=goal_handle.request.precise_positioning,
+            disable_vision_body_obstacle_avoidance=goal_handle.request.disable_obstacle_avoidance,
         )
 
         command_start_time = self.get_clock().now()
@@ -2479,6 +2656,22 @@ class SpotROS(Node):
             self.get_logger().warning(f"Failed to go to arm pose: {result[1]}")
         else:
             self.get_logger().info("Successfully went to arm pose")
+
+    def arm_velocity_cmd_callback(self, arm_velocity_command: ArmVelocityCommandRequest) -> None:
+        if not self.spot_wrapper:
+            self.get_logger().info("Mock mode, received arm velocity command")
+            return
+
+        try:
+            proto_command = arm_command_pb2.ArmVelocityCommand.Request()
+            convert(arm_velocity_command, proto_command)
+            result, message = self.spot_wrapper.spot_arm.handle_arm_velocity(
+                arm_velocity_command=proto_command, cmd_duration=self.arm_cmd_duration
+            )
+            if not result:
+                self.get_logger().error(f"Failed to execute arm velocity command: {message}")
+        except Exception as e:
+            self.get_logger().error(f"Failed to convert arm velocity command: {e}")
 
     def handle_graph_nav_get_localization_pose(
         self,

@@ -9,10 +9,6 @@
 #include <spot_driver/types.hpp>
 #include <utility>
 
-namespace {
-constexpr auto kRobotStateCallbackPeriod = std::chrono::duration<double>{1.0 / 50.0};  // 50 Hz
-}
-
 namespace spot_ros2 {
 
 StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& state_client_interface,
@@ -34,8 +30,11 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
   is_using_vision_ = parameter_interface_->getPreferredOdomFrame() == "vision";
   full_tf_root_id_ = frame_prefix_ + parameter_interface_->getTFRoot();
 
+  const auto robot_state_rate = parameter_interface_->getRobotStateRate();
+  const auto robot_state_callback_period = std::chrono::duration<double>{1.0 / robot_state_rate};
+
   // Create a timer to request and publish robot state at a fixed rate
-  timer_interface_->setTimer(kRobotStateCallbackPeriod, [this] {
+  timer_interface_->setTimer(robot_state_callback_period, [this] {
     timerCallback();
   });
 }

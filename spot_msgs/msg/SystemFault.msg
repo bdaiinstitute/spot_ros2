@@ -8,7 +8,7 @@ std_msgs/Header header
 string name
 builtin_interfaces/Duration duration
 int32 code
-uint64 uid
+string uuid
 string error_message
 string[] attributes
 uint8 severity

@@ -24,14 +24,6 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
-
 # Add the hardware interface
 add_library(
   spot_ros2_control
@@ -87,5 +79,9 @@ install(TARGETS spot_ros2_control
 )
 
 ament_export_targets(export_spot_ros2_control HAS_LIBRARY_TARGET)
+
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
 
 ament_package()

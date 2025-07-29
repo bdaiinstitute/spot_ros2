@@ -1,0 +1,6 @@
+foot_state_broadcaster:
+  use_namespace_as_prefix: {
+    type: bool,
+    default_value: True,
+    description: "Flag to determine if the prefix of the sensor name should be picked up from the namespace of the controller."
+  }
