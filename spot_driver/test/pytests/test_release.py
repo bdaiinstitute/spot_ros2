@@ -14,6 +14,7 @@ from synchros2.futures import wait_for_future
 from synchros2.scope import ROSAwareScope
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node", "simple_spot")
 def test_release(ros: ROSAwareScope) -> None:
     """

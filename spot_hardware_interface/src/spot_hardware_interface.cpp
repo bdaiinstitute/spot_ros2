@@ -67,6 +67,11 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& odom_tform_body_rot_msg = robot_state.kinematic_state().odom_tform_body().rotation();
   const auto& vision_tform_body_pos_msg = robot_state.kinematic_state().vision_tform_body().position();
   const auto& vision_tform_body_rot_msg = robot_state.kinematic_state().vision_tform_body().rotation();
+
+  // Get body velocity data from the robot:
+  const auto& lin_vel_body_odom_msg = robot_state.kinematic_state().velocity_of_body_in_odom().linear();
+  const auto& ang_vel_body_odom_msg = robot_state.kinematic_state().velocity_of_body_in_odom().angular();
+
   // Save poses
   odom_tform_body_pos_ = {odom_tform_body_pos_msg.x(), odom_tform_body_pos_msg.y(), odom_tform_body_pos_msg.z()};
   odom_tform_body_rot_ = {odom_tform_body_rot_msg.x(), odom_tform_body_rot_msg.y(), odom_tform_body_rot_msg.z(),
@@ -75,11 +80,15 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
                             vision_tform_body_pos_msg.z()};
   vision_tform_body_rot_ = {vision_tform_body_rot_msg.x(), vision_tform_body_rot_msg.y(), vision_tform_body_rot_msg.z(),
                             vision_tform_body_rot_msg.w()};
+
+  lin_vel_body_odom_ = {lin_vel_body_odom_msg.x(), lin_vel_body_odom_msg.y(), lin_vel_body_odom_msg.z()};
+  ang_vel_body_odom_ = {ang_vel_body_odom_msg.x(), ang_vel_body_odom_msg.y(), ang_vel_body_odom_msg.z()};
 }
 
 void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu_states, std::vector<int>& foot_states,
                                        std::vector<double>& odom_pos, std::vector<double>& odom_rot,
-                                       std::vector<double>& vision_pos, std::vector<double>& vision_rot) {
+                                       std::vector<double>& vision_pos, std::vector<double>& vision_rot,
+                                       std::vector<double>& odom_lin_vel, std::vector<double>& odom_ang_vel) {
   // lock so that read/write doesn't happen at the same time
   const std::lock_guard<std::mutex> lock(mutex_);
   // Fill in members of the joint states stuct passed in by reference.
@@ -102,6 +111,8 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   odom_rot.assign(odom_tform_body_rot_.begin(), odom_tform_body_rot_.end());
   vision_pos.assign(vision_tform_body_pos_.begin(), vision_tform_body_pos_.end());
   vision_rot.assign(vision_tform_body_rot_.begin(), vision_tform_body_rot_.end());
+  odom_lin_vel.assign(lin_vel_body_odom_.begin(), lin_vel_body_odom_.end());
+  odom_ang_vel.assign(ang_vel_body_odom_.begin(), ang_vel_body_odom_.end());
 }
 
 void StateStreamingHandler::reset() {
@@ -238,6 +249,13 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
                  info_.sensors[odom_to_body_sensor_index_].state_interfaces.size(), n_odom_body_sensor_interfaces_);
     return hardware_interface::CallbackReturn::ERROR;
   }
+  if (info_.sensors[odom_to_body_twist_sensor_index_].state_interfaces.size() != n_odom_body_twist_sensor_interfaces_) {
+    RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"),
+                 "Odom to body frame twist sensor state interface has %ld state interfaces found. '%ld' expected.",
+                 info_.sensors[odom_to_body_twist_sensor_index_].state_interfaces.size(),
+                 n_odom_body_twist_sensor_interfaces_);
+    return hardware_interface::CallbackReturn::ERROR;
+  }
   if (info_.sensors[vision_to_body_sensor_index_].state_interfaces.size() != n_vision_body_sensor_interfaces_) {
     RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"),
                  "Vision to body frame state interface has %ld state interfaces found. '%ld' expected.",
@@ -252,6 +270,8 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
   hw_imu_sensor_states_.resize((n_imu_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
   hw_foot_sensor_states_.resize((n_foot_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
   hw_odom_body_sensor_states_.resize((n_odom_body_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
+  hw_odom_body_twist_sensor_states_.resize((n_odom_body_twist_sensor_interfaces_),
+                                           std::numeric_limits<double>::quiet_NaN());
   hw_vision_body_sensor_states_.resize((n_vision_body_sensor_interfaces_), std::numeric_limits<double>::quiet_NaN());
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -355,6 +375,14 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
         odom_to_body_sensor.name, odom_to_body_sensor.state_interfaces[i].name, &hw_odom_body_sensor_states_[i]));
   }
 
+  // export odom to body twist sensor states
+  const auto& odom_to_body_twist_sensor = info_.sensors[odom_to_body_twist_sensor_index_];
+  for (size_t i = 0; i < n_odom_body_sensor_interfaces_; i++) {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(odom_to_body_twist_sensor.name,
+                                                                     odom_to_body_twist_sensor.state_interfaces[i].name,
+                                                                     &hw_odom_body_twist_sensor_states_[i]));
+  }
+
   // export vision to body transform sensor states
   const auto& vision_to_body_sensor = info_.sensors[vision_to_body_sensor_index_];
   for (size_t i = 0; i < n_vision_body_sensor_interfaces_; i++) {
@@ -416,7 +444,7 @@ hardware_interface::CallbackReturn SpotHardware::on_cleanup(const rclcpp_lifecyc
 
 hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
   state_streaming_handler_.get_states(joint_states_, imu_states_, foot_states_, odom_pos_, odom_rot_, vision_pos_,
-                                      vision_rot_);
+                                      vision_rot_, odom_lin_vel_, odom_ang_vel_);
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;
@@ -474,7 +502,7 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   // Load foot contact states
   hw_foot_sensor_states_.assign(foot_states_.begin(), foot_states_.end());
 
-  // Load odom to body transform
+  // Load odom to body pose
   hw_odom_body_sensor_states_.at(0) = odom_pos_.at(0);
   hw_odom_body_sensor_states_.at(1) = odom_pos_.at(1);
   hw_odom_body_sensor_states_.at(2) = odom_pos_.at(2);
@@ -482,6 +510,14 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   hw_odom_body_sensor_states_.at(4) = odom_rot_.at(1);
   hw_odom_body_sensor_states_.at(5) = odom_rot_.at(2);
   hw_odom_body_sensor_states_.at(6) = odom_rot_.at(3);
+
+  // Load odom to body twist
+  hw_odom_body_twist_sensor_states_.at(0) = odom_lin_vel_.at(0);
+  hw_odom_body_twist_sensor_states_.at(1) = odom_lin_vel_.at(1);
+  hw_odom_body_twist_sensor_states_.at(2) = odom_lin_vel_.at(2);
+  hw_odom_body_twist_sensor_states_.at(3) = odom_ang_vel_.at(0);
+  hw_odom_body_twist_sensor_states_.at(4) = odom_ang_vel_.at(1);
+  hw_odom_body_twist_sensor_states_.at(5) = odom_ang_vel_.at(2);
 
   // Load vision to body transform
   hw_vision_body_sensor_states_.at(0) = vision_pos_.at(0);
