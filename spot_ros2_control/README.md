@@ -141,4 +141,4 @@ We have provided simple forwarding controllers as examples in [`spot_controllers
 It is important to note that once these controllers have been activated, you will not be able to interact with the `spot_driver` provided interfaces anymore, as the hardware interface owns the Spot's lease.
 
 To switch back to "high level" mode, use the same controller manager services to deactivate and unload the controllers and set the hardware interface back to `unconfigured` (specifically by calling `switch_controllers`, `unload_controller`, and `set_hardware_component_state`).
-After this, you can use the standard ROS interfaces to communicate with `spot_driver` nodes as it once again has control of the Spot lease`.
+After this, you can go back to using the standard ROS interfaces to communicate with `spot_driver` nodes as it once again has control of the Spot lease.

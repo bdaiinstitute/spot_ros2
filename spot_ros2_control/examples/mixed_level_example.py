@@ -188,8 +188,14 @@ class SwitchState(Node):
 
 
 def main(args: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--robot", type=str, help="Namespace the driver is in", default=None)
+    parser = argparse.ArgumentParser(
+        description=(
+            "This example shows how to switch back and forth between high level commands to spot driver and low level"
+            " commands to the spot_ros2_control_stack. Make sure you run the driver with the controllable flag enabled"
+            " before running this example: ros2 launch spot_driver spot_driver.launch.py controllable:=True ..."
+        )
+    )
+    parser.add_argument("--robot", type=str, help="Optional namespace the driver is in", default=None)
     parser_args = parser.parse_args()
 
     rclpy.init(args=args)
@@ -200,7 +206,7 @@ def main(args: list[str] | None = None) -> None:
 
     switch_state = SwitchState(parser_args.robot)
 
-    # we first start by interacting with the spot driver provided interface --
+    # we first start by interacting with the spot driver provided interfaces --
     # claiming the lease, powering the robot on, and sending a high level "stand" command.
     switch_state.claim()
     switch_state.power_on()
