@@ -120,55 +120,25 @@ This demo will repeatedly open and close the gripper, and after each motion, wil
 
 ## Mixed Level API
 
-It is possible to use both the joint level control and traditional high level control (as used by `spot_driver`). To do this in your script, you can still use the `spot_driver` services as usual such as the `claim`, `power_on`, `stand`, etc. services. To activate the joint level control activate the hardware interface, load and configure the controller(s), and activate the controller(s) using the corresponding services from `controller_manager_msgs`. We have provided forward joint and forward state controllers as examples in [`spot_controllers`](https://github.com/bdaiinstitute/spot_ros2/tree/main/spot_controllers) but other controllers can also be used. For safe and clean shutdown, remember to also deactivate and unload the controller(s) and deactivate the hardware interface at the end.
+It is possible to use both the joint level control and traditional high level control (as used by `spot_driver`).
+To do this, launch the spot driver with the `controllable` flag:
 
-```python
-from controller_manager_msgs.srv import (
-    ConfigureController,
-    LoadController,
-    SetHardwareComponentState,
-    SwitchController,
-    UnloadController,
-    ListParameters,
-    GetParameters,
-)
+```bash
+ros2 launch spot_driver spot_driver.launch.py controllable:=True <other launch args>
 ```
 
-More documentation can be found about these services [here](https://docs.ros.org/en/ros2_packages/humble/api/controller_manager_msgs/__service_definitions.html).
+> [!TIP]
+> A simple Python example demonstrating how to switch between these two modes (assuming the driver is run with the `controllable` flag) can be found in [examples/mixed_level_example.py](examples/mixed_level_example.py).
 
-A subscriber can fetch the joint states and any other sensor/state broadcasted information, and you can use a publisher to update the commanded setpoints to send to the robot.
+This command will launch the nodes in `spot_driver` as usual, but also bring up ROS 2 control stack for Spot side by side in the `unconfigured` state.
 
-```python
-from sensor_msgs.msg import JointState
+At this point, you can use the `spot_driver` interfaces as usual, such as the `claim`, `power_on`, `stand`, services, or the `robot_command` action for more complicated commands, but you cannot interact with any of the joint level commands from ROS 2 control yet as none of the controllers are active.
 
-self._joint_states_subscription = self.node.create_subscription(JointState, self.robot_name + "/low_level/joint_states", 1)
-self._joint_position_command_publisher = self.node.create_publisher(Float64MultiArray, self.robot_name + "/forward_position_controller/commands", 1)
-self._joint_configuration = [ """Ordered list of joints"""] # Can be accessed through controller_manager_msgs services ListParameters and GetParameters
+To enable joint level control, activate the hardware interface, load and configure the controller(s), and activate the controller(s) using service calls to the `controller manager` (specifically to `set_hardware_component_state`, `load_controller`, and `switch_controller`).
 
-tf_prefix = self.robot_name 
-# Get initial joint positions
-current_joint_states = unwrap_future(self._joint_states_subscription.latest_update, timeout_sec=5.0)
-initial_joint_positions = dict(
-    zip(
-        map(lambda name: name.removeprefix(tf_prefix), current_joint_states.name),
-        current_joint_states.position,
-        strict=True,
-    )
-)
+Once the hardware interface and the chosen controllers are activated, you can interact with them as normal -- for example, a subscriber can fetch the joint states from the `joint_state_broadcaster`, and you can use a publisher to forward joint commands to the robot.
+We have provided simple forwarding controllers as examples in [`spot_controllers`](../spot_controllers/) but other custom controllers can also be used provided the config file .
+It is important to note that once these controllers have been activated, you will not be able to interact with the `spot_driver` provided interfaces anymore, as the hardware interface owns the Spot's lease.
 
-# Update joint setpoints
-joint_setpoints = {
-    name: ( """values""" )
-    for name in initial_joint_positions
-}
-# Convert into a Float64MultiArray compatible message
-data = list(joint_setpoints)
-for i, joint in enumerate(joints):
-  if joint in joint_setpoints:
-      data[i] = joint_setpoints[joint]
-# Send joint commands to command stream publisher
-self._joint_position_command_publisher.publish(Float64MultiArray(data=data))
-```
-
-> [!IMPORTANT]
-> Before running your script, be sure to launch the driver with an additional `controllable` argument to start the driver in full controllable mode. 
+To switch back to "high level" mode, use the same controller manager services to deactivate and unload the controllers and set the hardware interface back to `unconfigured` (specifically by calling `switch_controllers`, `unload_controller`, and `set_hardware_component_state`).
+After this, you can use the standard ROS interfaces to communicate with `spot_driver` nodes as it once again has control of the Spot lease`.
