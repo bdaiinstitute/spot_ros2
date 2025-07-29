@@ -150,6 +150,18 @@ class SwitchState(Node):
         gripper_index = msg.name.index(self.prefix + GRIPPER_JOINT_NAME)
         self.current_gripper_angle = msg.position[gripper_index]
 
+    def _get_gripper_angle(self) -> float:
+        self.current_gripper_angle = None
+        # This grabs the gripper joint angle from the ROS 2 control joint state broadcaster
+        gripper_sub = self.create_subscription(
+            JointState, self.prefix + "low_level/joint_states", self._joint_state_callback, 10
+        )
+        while self.current_gripper_angle is None:
+            rclpy.spin_once(self)
+        self.get_logger().info(f"Gripper joint angle: {self.current_gripper_angle}")  # type: ignore
+        self.destroy_subscription(gripper_sub)
+        return self.current_gripper_angle
+
     def open_and_close(self, duration_sec: float = 1.0, frequency_hz: float = 50.0) -> None:
         """Open and close the gripper by streaming position commands.
 
@@ -157,22 +169,16 @@ class SwitchState(Node):
             duration_sec (float): Duration in seconds of each open and close movement
             frequency_hz (int): Frequency in Hz of the command publish rate.
         """
-        # get current gripper angle from low level joint states
-        gripper_sub = self.create_subscription(
-            JointState, self.prefix + "low_level/joint_states", self._joint_state_callback, 10
-        )
-        while self.current_gripper_angle is None:
-            rclpy.spin_once(self)
-            self.get_logger().info(f"current gripper angle {self.current_gripper_angle}")
-        self.destroy_subscription(gripper_sub)
+        # get current gripper angle from low level joint states topic
+        starting_gripper_angle = self._get_gripper_angle()
 
         # most of this logic is taken from set_gripper_gains.py
         npoints = int(duration_sec * frequency_hz)
         dt = 1.0 / frequency_hz
-        step_size_open = (GRIPPER_OPEN_ANGLE - self.current_gripper_angle) / npoints
+        step_size_open = (GRIPPER_OPEN_ANGLE - starting_gripper_angle) / npoints
         self._logger.info("Opening...")
         for i in range(npoints):
-            self.move_gripper(goal_joint_angle=(self.current_gripper_angle + i * step_size_open))
+            self.move_gripper(goal_joint_angle=(starting_gripper_angle + i * step_size_open))
             time.sleep(dt)
         self._logger.info("Closing...")
         step_size_close = (GRIPPER_OPEN_ANGLE - GRIPPER_CLOSE_ANGLE) / npoints
