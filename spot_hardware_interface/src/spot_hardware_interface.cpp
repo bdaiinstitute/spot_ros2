@@ -40,9 +40,13 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& position_msg = robot_state.joint_states().position();
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
+  const auto& k_q_p_msg = robot_state.joint_states().k_q_p();
+  const auto& k_qd_p_msg = robot_state.joint_states().k_qd_p();
   current_position_.assign(position_msg.begin(), position_msg.end());
   current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
   current_load_.assign(load_msg.begin(), load_msg.end());
+  current_k_q_p_.assign(k_q_p_msg.begin(), k_q_p_msg.end());
+  current_k_qd_p_.assign(k_qd_p_msg.begin(), k_qd_p_msg.end());
 
   // Save current foot contact states
   const auto& contact_states = robot_state.contact_states();
@@ -95,6 +99,8 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   joint_states.position.assign(current_position_.begin(), current_position_.end());
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
   joint_states.load.assign(current_load_.begin(), current_load_.end());
+  joint_states.k_q_p.assign(current_k_q_p_.begin(), current_k_q_p_.end());
+  joint_states.k_qd_p.assign(current_k_qd_p_.begin(), current_k_qd_p_.end());
 
   // Fill in members of the imu states struct
   imu_states.identifier = imu_identifier_;
@@ -121,6 +127,8 @@ void StateStreamingHandler::reset() {
   current_position_.clear();
   current_velocity_.clear();
   current_load_.clear();
+  current_k_q_p_.clear();
+  current_k_qd_p_.clear();
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -285,6 +293,8 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   joint_states_.position.assign(njoints_, 0);
   joint_states_.velocity.assign(njoints_, 0);
   joint_states_.load.assign(njoints_, 0);
+  joint_states_.k_q_p.assign(njoints_, 0);
+  joint_states_.k_qd_p.assign(njoints_, 0);
   foot_states_.assign(nfeet_, 0);
 
   // Set up the robot using the BD SDK and start command streaming.
@@ -351,6 +361,10 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 1]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_EFFORT,
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 2]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        joint.name, HW_IF_K_Q_P, &hw_states_[state_interfaces_per_joint_ * i + 3]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        joint.name, HW_IF_K_QD_P, &hw_states_[state_interfaces_per_joint_ * i + 4]));
   }
   // export sensor state interface
 
@@ -448,15 +462,20 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;
+  const auto& joint_k_q_p = joint_states_.k_q_p;
+  const auto& joint_k_qd_p = joint_states_.k_qd_p;
   // wait for them to be initialized
-  if (joint_pos.empty() || joint_vel.empty() || joint_load.empty()) {
+  if (joint_pos.empty() || joint_vel.empty() || joint_load.empty() || 
+      joint_k_q_p.empty() || joint_k_qd_p.empty()) {
     return hardware_interface::return_type::OK;
   }
   // Ensure that the states received from the Spot SDK will fit into the hw_states_ vector
   const auto states_size = hw_states_.size();
   if (state_interfaces_per_joint_ * joint_pos.size() != states_size ||
       state_interfaces_per_joint_ * joint_vel.size() != states_size ||
-      state_interfaces_per_joint_ * joint_load.size() != states_size) {
+      state_interfaces_per_joint_ * joint_load.size() != states_size ||
+      state_interfaces_per_joint_ * joint_k_q_p.size() != states_size ||
+      state_interfaces_per_joint_ * joint_k_qd_p.size() != states_size) {
     RCLCPP_FATAL(
         rclcpp::get_logger("SpotHardware"),
         "The number of joints and interfaces does not match with the outputted joint states from the Spot SDK!");
@@ -467,6 +486,8 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     hw_states_.at(i * state_interfaces_per_joint_) = joint_pos.at(i);
     hw_states_.at(i * state_interfaces_per_joint_ + 1) = joint_vel.at(i);
     hw_states_.at(i * state_interfaces_per_joint_ + 2) = joint_load.at(i);
+    hw_states_.at(i * state_interfaces_per_joint_ + 3) = joint_k_q_p.at(i);
+    hw_states_.at(i * state_interfaces_per_joint_ + 4) = joint_k_qd_p.at(i);
   }
 
   // Fill in the initial command values
@@ -476,10 +497,12 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
       hw_commands_[command_interfaces_per_joint_ * i] = hw_states_[state_interfaces_per_joint_ * i];
       hw_commands_[command_interfaces_per_joint_ * i + 1] = hw_states_[state_interfaces_per_joint_ * i + 1];
       hw_commands_[command_interfaces_per_joint_ * i + 2] = hw_states_[state_interfaces_per_joint_ * i + 2];
-      // Fill in k_q_p and k_qd_p gains from the initial_value field from the URDF
-      const auto& joint = info_.joints.at(i);
-      hw_commands_[command_interfaces_per_joint_ * i + 3] = std::stof(joint.command_interfaces.at(3).initial_value);
-      hw_commands_[command_interfaces_per_joint_ * i + 4] = std::stof(joint.command_interfaces.at(4).initial_value);
+      hw_commands_[command_interfaces_per_joint_ * i + 3] = hw_states_[state_interfaces_per_joint_ * i + 3];
+      hw_commands_[command_interfaces_per_joint_ * i + 4] = hw_states_[state_interfaces_per_joint_ * i + 4];
+      // // Fill in k_q_p and k_qd_p gains from the initial_value field from the URDF
+      // const auto& joint = info_.joints.at(i);
+      // hw_commands_[command_interfaces_per_joint_ * i + 3] = std::stof(joint.command_interfaces.at(3).initial_value);
+      // hw_commands_[command_interfaces_per_joint_ * i + 4] = std::stof(joint.command_interfaces.at(4).initial_value);
     }
     init_state_ = true;
   }
