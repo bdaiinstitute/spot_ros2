@@ -63,6 +63,8 @@ struct JointStates {
   std::vector<float> position;  // in rad
   std::vector<float> velocity;  // in rad/s
   std::vector<float> load;      // in Nm
+  std::vector<float> k_q_p;
+  std::vector<float> k_qd_p;
 };
 
 struct JointCommands {
@@ -118,10 +120,12 @@ class StateStreamingHandler {
   void reset();
 
  private:
-  // Stores the current position, velocity, and load of the robot's joints.
+  // Stores the current position, velocity, load, k_q_p gain, and k_qd_p gain of the robot's joints.
   std::vector<float> current_position_;
   std::vector<float> current_velocity_;
   std::vector<float> current_load_;
+  std::vector<float> current_k_q_p_;
+  std::vector<float> current_k_qd_p_;
   // Stores current IMU data
   std::string imu_identifier_;
   std::vector<double> imu_position_;
@@ -185,7 +189,8 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // The 3 command interfaces are position, velocity, effort, k_q_p, and k_qd_p.
   static constexpr size_t command_interfaces_per_joint_ = 5;
   // The 3 state interfaces are position, velocity, and effort.
-  static constexpr size_t state_interfaces_per_joint_ = 3;
+  // static constexpr size_t state_interfaces_per_joint_ = 3;
+  static constexpr size_t state_interfaces_per_joint_ = 5;
   size_t njoints_;
   static constexpr size_t nfeet_ = 4;
   // Sensor configuration
