@@ -133,6 +133,7 @@ ros2 launch spot_driver spot_driver.launch.py controllable:=True <other launch a
 > [!TIP]
 > A simple Python example demonstrating how to switch between these two modes (assuming the driver is run with the `controllable` flag) can be found in [examples/mixed_level_example.py](examples/mixed_level_example.py).
 > You can run it with `ros2 run spot_ros2_control mixed_level_example` with the optional `--robot <namespace>` argument if the driver was launched in a namespace.
+> Note that you will have to release control of the robot on the tablet before running in order for this example to work.
 
 Launching the driver in this way will bring up the nodes in `spot_driver` as usual, but also bring up ROS 2 control stack for Spot side by side in the `unconfigured` state.
 
