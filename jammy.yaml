@@ -51,6 +51,7 @@ packages:
   - "ros-humble-rclpy"
   - "ros-humble-rmw"
   - "ros-humble-rmw-fastrtps-cpp"
+  - "ros-humble-ros2action"
   - "ros-humble-ros2bag"
   - "ros-humble-ros2cli"
   - "ros-humble-ros2component"

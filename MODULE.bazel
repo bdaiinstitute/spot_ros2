@@ -18,7 +18,7 @@ bazel_dep(name = "rules_uv", version = "0.71.0")
 bazel_dep(name = "rules_rai_ros")
 git_override(
     module_name = "rules_rai_ros",
-    commit = "a879007874b16d67438376a9466385a27f083a87",
+    commit = "d1948e1674827ec5096ff8a6fd1605b325e8ddb3",
     remote = "https://github.com/bdaiinstitute/rules_rai_ros.git",
 )
 
@@ -108,10 +108,10 @@ ros.additional_deb(
         "amd64": "6e23f7385c1b66618be0e68836c5b614a6edc67a381e2c6d9a213a6ecc044583",
         "arm64": "5d7ec43b16f14786c7c38a59a1b4bd89743a0b67ed7ccad7b84465ff34da46ac",
     },
-    dependencies = [
-        "libcli11-dev",
-        "libgrpc++-dev",
-        "libprotobuf-dev"
+    deps = [
+        "@humble//:libcli11-dev_bypass_transitive_deps_check",
+        "@humble//:libgrpc++-dev",
+        "@humble//:libprotobuf-dev",
     ],
     cc_includes = ["opt/spot-cpp-sdk/include"],
 )
@@ -121,7 +121,7 @@ ros.additional_deb(
     name = 'bosdyn-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': '97a7d5300083a9a510fd462146cdb31df20dbd2412b6dba2a381dd5f9d8fefa7', 'arm64': '826740307d118476efcb51e334ce3f6a18d79b6f7835ef2e451339a80e41f561'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -130,7 +130,7 @@ ros.additional_deb(
     name = 'bosdyn-auto-return-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-auto-return-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-auto-return-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': '866cecf22464ac622cd822d99f0aa1daef3dacc0b01ffd68c350b94d3a309fe0', 'arm64': '75254f1cb86f95a934fdaea430ffbbd4a09c37cf70b12501fc872fad37eb35b7'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -139,7 +139,7 @@ ros.additional_deb(
     name = 'bosdyn-autowalk-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-autowalk-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-autowalk-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': '43eee1ca83ed825cdc9fb648d209faffb12558a87c1c643108497ef1207e2818', 'arm64': 'c873c002af02b4b22135cb028f023adf281b5f9da102f0803618aad83d3fa54d'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -148,7 +148,7 @@ ros.additional_deb(
     name = 'bosdyn-cmake-module',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-cmake-module_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-cmake-module_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': '94fe18b0dc1e452c54821d5dd03f983c1f3e10d2854e3aaf2d5f3fadf1eb4c7a', 'arm64': '629dcecb64d2ddc8e1850dd3ddf3e66b292b826545970c5e91a0416f326262fe'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -157,7 +157,7 @@ ros.additional_deb(
     name = 'bosdyn-graph-nav-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-graph-nav-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-graph-nav-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': '24f3fcbc5eda2521a3e2f00b94ea51521a956c1f3b9a36ba348e367f907315f9', 'arm64': 'c67b315dcd9618bc3e02dde9e7ec30a34df5e71e9d89b2c276b923779a33e0a3'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -166,7 +166,7 @@ ros.additional_deb(
     name = 'bosdyn-keepalive-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-keepalive-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-keepalive-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': 'a72e2861d973716f894c2753048177c2050492f2262a226ebe5d31795c8c1d1f', 'arm64': '4c1cd167ec011b67fb500ee471fedcafea8f5aa6c6f4eefb8cc2623586603ba5'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -175,7 +175,7 @@ ros.additional_deb(
     name = 'bosdyn-log-status-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-log-status-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-log-status-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': '69a69076432b49a4eb763219da5a007193bdac5bc127aab84cc59a7c7e20f2c3', 'arm64': '58a08bf6778176342f14c278a5abbf4465804f935c2a772c2cd100f960522708'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -184,7 +184,7 @@ ros.additional_deb(
     name = 'bosdyn-metrics-logging-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-metrics-logging-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-metrics-logging-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': '70e200e4b3bac00d3dc58c1c152efe2e9a446505e16cef5a30325cef0d59e473', 'arm64': 'b255964bf68859637a124ff2e4ff3e92f5f88032f02d0f24657fd2a9232c77ce'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -193,7 +193,7 @@ ros.additional_deb(
     name = 'bosdyn-mission-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-mission-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-mission-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': '585239d37b64d746a625336a04a6cd7bb35a7a861279fc1d59a98e1bbf0990ef', 'arm64': 'b4b1a06c1bc4d82870be63506dec15f97d27233a44b1986bea89a6f385090d40'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -202,7 +202,7 @@ ros.additional_deb(
     name = 'bosdyn-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': 'd7b53a8d19eabd680f4b35fba7846b32f278f03fd6560b226abcebddb8c0bee2', 'arm64': 'dc2f125b05f766a8491f522437af812b92ed5cda9b5560ce08cc70dd865c68d1'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -211,7 +211,7 @@ ros.additional_deb(
     name = 'bosdyn-spot-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-spot-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-spot-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': 'd1ef79c663a671230d8faa3fbf3ce6c4f77cffa2d0cfa970a12efcf6490a9610', 'arm64': 'a05a0effc5db9737fd9525cb6eb6f12bc8551d2b263ef38bb114d2b069dd881d'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -220,7 +220,7 @@ ros.additional_deb(
     name = 'bosdyn-spot-cam-api-msgs',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-spot-cam-api-msgs_5.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-bosdyn-spot-cam-api-msgs_5.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': 'fad965383ccbae634daaeb12fcf982de6dbabe39773bd48be22f55164ee9be7f', 'arm64': '9ce568198b129e61945b9a27d0cfcf7df6116cfce2a682d634510d6e0f55b7fc'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
@@ -229,7 +229,7 @@ ros.additional_deb(
     name = 'proto2ros',
     urls_by_arch = {'amd64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-proto2ros_1.0.0-0jammy_amd64.deb'], 'arm64': ['https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/5.0.0/ros-humble-proto2ros_1.0.0-0jammy_arm64.deb']},
     sha256_by_arch = {'amd64': '6d2858d4e2014fa4ac1b207a2d95a62956afb2b51944ccfa3128ee7ec8c57456', 'arm64': '716068ab1065804b1f5ec19b5106e8b1ab9d334613c27bb0de71506f69184509'},
-    dependencies = [],
+    deps = [],
     cc_includes = [],
 )
 
