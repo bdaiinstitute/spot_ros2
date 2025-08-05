@@ -64,14 +64,14 @@ class SwitchState(Node):
         self._power_on = self.create_client(Trigger, self.prefix + "power_on")
 
     def connect(self, controller_names: list[str]) -> None:
-        print(f"Connecting to {controller_names}...")
+        self.get_logger().info(f"Connecting to {controller_names}...")
         # activate hardware interface
         req = SetHardwareComponentState.Request()
         req.name = SPOT_HARDWARE_INTERFACE
         req.target_state.id = State.PRIMARY_STATE_ACTIVE
         future = self._set_hardware_interface_state.call_async(req)
         rclpy.spin_until_future_complete(self, future)
-        print(f"Set hardware interface to active: {future.result()}")
+        self.get_logger().info(f"Set hardware interface to active: {future.result()}")
 
         for controller in controller_names:
             # load controller
@@ -79,14 +79,14 @@ class SwitchState(Node):
             req.name = controller
             future = self._load_controller.call_async(req)
             rclpy.spin_until_future_complete(self, future)
-            print(f"Load {controller}: {future.result()}")
+            self.get_logger().info(f"Load {controller}: {future.result()}")
 
             # configure controller
             req = ConfigureController.Request()
             req.name = controller
             future = self._configure_controller.call_async(req)
             rclpy.spin_until_future_complete(self, future)
-            print(f"Configure {controller}: {future.result()}")
+            self.get_logger().info(f"Configure {controller}: {future.result()}")
 
         # activate controller
         req = SwitchController.Request()
@@ -94,17 +94,17 @@ class SwitchState(Node):
         req.strictness = SwitchController.Request.STRICT
         future = self._switch_controllers.call_async(req)
         rclpy.spin_until_future_complete(self, future)
-        print(f"Activate controller: {future.result()}")
+        self.get_logger().info(f"Activate controller: {future.result()}")
 
     def disconnect(self, controller_names: list[str]) -> None:
-        print(f"Disconnecting from {controller_names}...")
+        self.get_logger().info(f"Disconnecting from {controller_names}...")
         # Deactivate the controllers
         req = SwitchController.Request()
         req.deactivate_controllers = controller_names
         req.strictness = SwitchController.Request.STRICT
         future = self._switch_controllers.call_async(req)
         rclpy.spin_until_future_complete(self, future)
-        print(f"Deactivate controller: {future.result()}")
+        self.get_logger().info(f"Deactivate controller: {future.result()}")
 
         for controller in controller_names:
             # unload each controller
@@ -112,7 +112,7 @@ class SwitchState(Node):
             req.name = controller
             future = self._unload_controller.call_async(req)
             rclpy.spin_until_future_complete(self, future)
-            print(f"Unload {controller}: {future.result()}")
+            self.get_logger().info(f"Unload {controller}: {future.result()}")
 
         # unconfigure the hardware interface
         req = SetHardwareComponentState.Request()
@@ -120,7 +120,7 @@ class SwitchState(Node):
         req.target_state.id = State.PRIMARY_STATE_UNCONFIGURED
         future = self._set_hardware_interface_state.call_async(req)
         rclpy.spin_until_future_complete(self, future)
-        print(f"Unconfigure hardware interface: {future.result()}")
+        self.get_logger().info(f"Unconfigure hardware interface: {future.result()}")
 
     def _trigger_wrapper(self, client: rclpy.client.Client, name: str) -> None:
         # This is a simple wrapper around the high level spot driver services

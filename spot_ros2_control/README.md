@@ -88,6 +88,13 @@ ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=mo
 
 By default, this will load a robot with no arm. If you want your mock robot to have an arm, add the launch argument `mock_arm:=True`. 
 
+
+## Additional Arguments
+* `controllers_config`: If this argument is unset, a general purpose controller configuration will be loaded containing a forward position controller and a joint state publisher, that is filled appropriately based on whether or not the robot used (mock or real) has an arm. The forward state controller and spot joint controller are also specified here. If you wish to load different controllers, this can be set here.
+* `robot_controllers`: These are the names of the robot controllers that will be started when the launchfile is called. The default is the simple forward position controller. Each name must match a controller in the `controllers_config` file.
+* `launch_rviz`: If you do not want rviz to be launched, add the argument `launch_rviz:=False`.
+* `auto_start`: If you do not want hardware interfaces and controllers to be activated on launch, add the argument `auto_start:=False`.
+
 ## Examples
 
 Examples are provided to replicate [these joint control examples](https://github.com/boston-dynamics/spot-cpp-sdk/tree/master/cpp/examples/joint_control) from Boston Dynamics.
@@ -112,11 +119,7 @@ ros2 run spot_ros2_control set_grippper_gains
 Include the argument `--robot <namespace>` if the ros2 control stack was launched in a namespace.
 This demo will repeatedly open and close the gripper, and after each motion, will take user input on new k_q_p and k_qd_p values to use next.
 
-## Additional Arguments
-* `controllers_config`: If this argument is unset, a general purpose controller configuration will be loaded containing a forward position controller and a joint state publisher, that is filled appropriately based on whether or not the robot used (mock or real) has an arm. The forward state controller and spot joint controller are also specified here. If you wish to load different controllers, this can be set here.
-* `robot_controllers`: These are the names of the robot controllers that will be started when the launchfile is called. The default is the simple forward position controller. Each name must match a controller in the `controllers_config` file.
-* `launch_rviz`: If you do not want rviz to be launched, add the argument `launch_rviz:=False`.
-* `auto_start`: If you do not want hardware interfaces and controllers to be activated on launch, add the argument `auto_start:=False`.
+An example demonstrating how to switch between low level and high level control is also provided -- more details about the unique setup this requires can be found in the following section.
 
 ## Mixed Level API
 
@@ -129,8 +132,9 @@ ros2 launch spot_driver spot_driver.launch.py controllable:=True <other launch a
 
 > [!TIP]
 > A simple Python example demonstrating how to switch between these two modes (assuming the driver is run with the `controllable` flag) can be found in [examples/mixed_level_example.py](examples/mixed_level_example.py).
+> You can run it with `ros2 run spot_ros2_control mixed_level_example` with the optional `--robot <namespace>` argument if the driver was launched in a namespace.
 
-This command will launch the nodes in `spot_driver` as usual, but also bring up ROS 2 control stack for Spot side by side in the `unconfigured` state.
+Launching the driver in this way will bring up the nodes in `spot_driver` as usual, but also bring up ROS 2 control stack for Spot side by side in the `unconfigured` state.
 
 At this point, you can use the `spot_driver` interfaces as usual, such as the `claim`, `power_on`, `stand`, services, or the `robot_command` action for more complicated commands, but you cannot interact with any of the joint level commands from ROS 2 control yet as none of the controllers are active.
 
