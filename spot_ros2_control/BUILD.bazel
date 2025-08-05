@@ -11,21 +11,13 @@ ros.package_manifest(
 
 ros.filegroup(
     name = "share",
+    package = ":pkg",
     srcs = glob([
         "launch/**/*",
         "config/**/*",
         "rviz/**/*",
     ]),
-    ignore_parent_directories = False,
-    prefix = "share/spot_ros2_control",
-    strip_prefix = "spot_ros2_control",
-    env_paths = {
-        "AMENT_PREFIX_PATH": [
-            "share/spot_ros2_control/launch/",
-            "share/spot_ros2_control/config/",
-            "share/spot_ros2_control/rviz/",
-        ],
-    },
+    prefix = "share/{ros_package_name}",
 )
 
 cc_library(
@@ -78,10 +70,10 @@ py_library(
 
 
 [
-    ros.launch(
+    ros.launch_binary(
         name = name,
-        package_name = "spot_ros2_control",
-        launch_file_name = launch_file,
+        package = ":pkg",
+        srcs = [launch_file],
         data = [
             ":joint_command_passthrough",
             ":noarm_squat",
@@ -108,9 +100,9 @@ py_library(
         visibility = ["//visibility:public"]
     )
     for name, launch_file in [
-        ("noarm_squat_launch", "noarm_squat.launch.py"),
-        ("spot_ros2_control_launch", "spot_ros2_control.launch.py"),
-        ("wiggle_arm_launch", "wiggle_arm.launch.py"),
+        ("noarm_squat_launch", "launch/noarm_squat.launch.py"),
+        ("spot_ros2_control_launch", "launch/spot_ros2_control.launch.py"),
+        ("wiggle_arm_launch", "launch/wiggle_arm.launch.py"),
     ]
 ]
 
@@ -203,7 +195,7 @@ filegroup(
         ":set_gripper_gains",
         ":noarm_squat_launch",
         ":spot_ros2_control_launch",
-        ":wiggle_arm_launch"
+        ":wiggle_arm_launch",
     ],
     visibility = ["//visibility:public"]
 )

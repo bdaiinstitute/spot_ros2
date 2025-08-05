@@ -315,10 +315,10 @@ filegroup(
 )
 
 [
-    ros.launch(
+    ros.launch_binary(
         name = name,
-        package_name = "spot_driver",
-        launch_file_name = launch_file,
+        package = ":pkg",
+        srcs = [launch_file],
         data = [
             "test/profile.xml",
             ":share",
@@ -340,9 +340,9 @@ filegroup(
         visibility = ["//visibility:public"]
     )
     for name, launch_file in [
-        ("rviz_launch", "rviz.launch.py"),
-        ("spot_driver_launch", "spot_driver.launch.py"),
-        ("spot_image_publisher_launch", "spot_image_publishers.launch.py"),
+        ("rviz_launch", "launch/rviz.launch.py"),
+        ("spot_driver_launch", "launch/spot_driver.launch.py"),
+        ("spot_image_publisher_launch", "launch/spot_image_publishers.launch.py"),
     ]
 ]
 

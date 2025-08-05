@@ -641,8 +641,8 @@
           "@@rules_python+//tools/publish/requirements_darwin.txt": "095d4a4f3d639dce831cd493367631cd51b53665292ab20194bac2c0c6458fa8",
           "@@rules_python+//tools/publish/requirements_linux.txt": "d576e0d8542df61396a9b38deeaa183c24135ed5e8e73bb9622f298f2671811e",
           "@@rules_python+//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
-          "@@rules_rai_ros+//deps/python/locks/requirements_aarch64.lock": "90f1f00a82764c27d210c75a2a062c09eb7d166df58b90361cc7af3d341b261d",
-          "@@rules_rai_ros+//deps/python/locks/requirements_x86_64.lock": "8e6d6e2d97b756bd0339d2ed6d8f3a758f16b352899c29cf05906dcfe5770c2e"
+          "@@rules_rai_ros+//deps/python/locks/requirements_aarch64.lock": "03caf53cc846231bf4d2ee18cf955b06d5a310be405d55bc1455144bcc428bae",
+          "@@rules_rai_ros+//deps/python/locks/requirements_x86_64.lock": "8ed9bb31dc344a40e56c8d7e24f20e28f4fdb0679d808b1357b4de93c99958de"
         },
         "recordedDirentsInputs": {},
         "envVariables": {
@@ -5154,6 +5154,20 @@
               ]
             }
           },
+          "rules_rai_ros_pip_310_argcomplete": {
+            "repoRuleId": "@@rules_python+//python/private/pypi:whl_library.bzl%whl_library",
+            "attributes": {
+              "dep_template": "@rules_rai_ros_pip//{name}:{target}",
+              "enable_implicit_namespace_pkgs": true,
+              "extra_pip_args": [
+                "--index-url",
+                "https://pypi.org/simple"
+              ],
+              "python_interpreter_target": "@@rules_python++python+python_3_10_host//:python",
+              "repo": "rules_rai_ros_pip_310",
+              "requirement": "argcomplete==3.6.2 --hash=sha256:65b3133a29ad53fb42c48cf5114752c7ab66c1c38544fdf6460f450c09b42591 --hash=sha256:d0519b1bc867f5f4f4713c41ad0aba73a4a5f007449716b16f385f2166dc6adf"
+            }
+          },
           "rules_rai_ros_pip_310_catkin_pkg": {
             "repoRuleId": "@@rules_python+//python/private/pypi:whl_library.bzl%whl_library",
             "attributes": {
@@ -5749,6 +5763,7 @@
               "repo_name": "rules_rai_ros_pip",
               "extra_hub_aliases": {},
               "whl_map": {
+                "argcomplete": "{\"rules_rai_ros_pip_310_argcomplete\":[{\"version\":\"3.10\"}]}",
                 "catkin_pkg": "{\"rules_rai_ros_pip_310_catkin_pkg\":[{\"version\":\"3.10\"}]}",
                 "docutils": "{\"rules_rai_ros_pip_310_docutils\":[{\"version\":\"3.10\"}]}",
                 "empy": "{\"rules_rai_ros_pip_310_empy\":[{\"version\":\"3.10\"}]}",
@@ -5767,6 +5782,7 @@
                 "typing_extensions": "{\"rules_rai_ros_pip_310_typing_extensions\":[{\"version\":\"3.10\"}]}"
               },
               "packages": [
+                "argcomplete",
                 "catkin_pkg",
                 "docutils",
                 "empy",
