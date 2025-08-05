@@ -24,7 +24,11 @@ GRIPPER_OPEN_ANGLE = -1.57
 GRIPPER_CLOSE_ANGLE = 0.0
 GRIPPER_JOINT_NAME = "arm_f1x"
 
+# Name of the hardware interface used for controller manager service calls
 SPOT_HARDWARE_INTERFACE = "SpotSystem"
+
+# Timeout for service calls to avoid hanging forever
+TIMEOUT_SEC = 10.0
 
 
 class SwitchState(Node):
@@ -63,30 +67,39 @@ class SwitchState(Node):
         self._sit = self.create_client(Trigger, self.prefix + "sit")
         self._power_on = self.create_client(Trigger, self.prefix + "power_on")
 
-    def connect(self, controller_names: list[str]) -> None:
+    def connect(self, controller_names: list[str]) -> bool:
         self.get_logger().info(f"Connecting to {controller_names}...")
         # activate hardware interface
         req = SetHardwareComponentState.Request()
         req.name = SPOT_HARDWARE_INTERFACE
         req.target_state.id = State.PRIMARY_STATE_ACTIVE
         future = self._set_hardware_interface_state.call_async(req)
-        rclpy.spin_until_future_complete(self, future)
-        self.get_logger().info(f"Set hardware interface to active: {future.result()}")
+        rclpy.spin_until_future_complete(self, future, timeout_sec=TIMEOUT_SEC)
+        if future.result() is None or not future.result().ok:
+            self.get_logger().error("Failed to activate hardware interface")
+            return False
+        self.get_logger().info("Activated hardware interface")
 
         for controller in controller_names:
             # load controller
             req = LoadController.Request()
             req.name = controller
             future = self._load_controller.call_async(req)
-            rclpy.spin_until_future_complete(self, future)
-            self.get_logger().info(f"Load {controller}: {future.result()}")
+            rclpy.spin_until_future_complete(self, future, timeout_sec=TIMEOUT_SEC)
+            if future.result() is None or not future.result().ok:
+                self.get_logger().error(f"Failed to load {controller}")
+                return False
+            self.get_logger().info(f"Loaded {controller}")
 
             # configure controller
             req = ConfigureController.Request()
             req.name = controller
             future = self._configure_controller.call_async(req)
-            rclpy.spin_until_future_complete(self, future)
-            self.get_logger().info(f"Configure {controller}: {future.result()}")
+            rclpy.spin_until_future_complete(self, future, timeout_sec=TIMEOUT_SEC)
+            if future.result() is None or not future.result().ok:
+                self.get_logger().error(f"Failed to configure {controller}")
+                return False
+            self.get_logger().info(f"Configured {controller}")
 
         # activate controller
         req = SwitchController.Request()
@@ -94,52 +107,75 @@ class SwitchState(Node):
         req.strictness = SwitchController.Request.STRICT
         future = self._switch_controllers.call_async(req)
         rclpy.spin_until_future_complete(self, future)
-        self.get_logger().info(f"Activate controller: {future.result()}")
+        if future.result() is None or not future.result().ok:
+            self.get_logger().error("Failed to activate controllers")
+            return False
+        self.get_logger().info("Activated controllers")
+        return True
 
-    def disconnect(self, controller_names: list[str]) -> None:
+    def disconnect(self, controller_names: list[str]) -> bool:
         self.get_logger().info(f"Disconnecting from {controller_names}...")
         # Deactivate the controllers
         req = SwitchController.Request()
         req.deactivate_controllers = controller_names
         req.strictness = SwitchController.Request.STRICT
         future = self._switch_controllers.call_async(req)
-        rclpy.spin_until_future_complete(self, future)
-        self.get_logger().info(f"Deactivate controller: {future.result()}")
+        rclpy.spin_until_future_complete(self, future, timeout_sec=TIMEOUT_SEC)
+        if future.result() is None or not future.result().ok:
+            self.get_logger().error("Failed to deactivate controllers")
+            return False
+        self.get_logger().info("Deactivated controllers")
 
         for controller in controller_names:
             # unload each controller
             req = UnloadController.Request()
             req.name = controller
             future = self._unload_controller.call_async(req)
-            rclpy.spin_until_future_complete(self, future)
-            self.get_logger().info(f"Unload {controller}: {future.result()}")
+            rclpy.spin_until_future_complete(self, future, timeout_sec=TIMEOUT_SEC)
+            if future.result() is None or not future.result().ok:
+                self.get_logger().error(f"Failed to unload {controller}")
+                return False
+            self.get_logger().info(f"Unloaded {controller}")
 
         # unconfigure the hardware interface
         req = SetHardwareComponentState.Request()
         req.name = SPOT_HARDWARE_INTERFACE
         req.target_state.id = State.PRIMARY_STATE_UNCONFIGURED
         future = self._set_hardware_interface_state.call_async(req)
-        rclpy.spin_until_future_complete(self, future)
-        self.get_logger().info(f"Unconfigure hardware interface: {future.result()}")
+        rclpy.spin_until_future_complete(self, future, timeout_sec=TIMEOUT_SEC)
+        if future.result() is None or not future.result().ok:
+            self.get_logger().error("Failed to unconfigure hardware interface")
+            return False
+        self.get_logger().info("Unconfigured hardware interface")
+        return True
 
-    def _trigger_wrapper(self, client: rclpy.client.Client, name: str) -> None:
+    def _trigger_wrapper(self, client: rclpy.client.Client, name: str) -> bool:
         # This is a simple wrapper around the high level spot driver services
-        self.get_logger().info(f"{name}")
+        self.get_logger().info(f"{name}...")
         future = client.call_async(Trigger.Request())
-        rclpy.spin_until_future_complete(self, future)
-        self.get_logger().info(f"Result: {future.result()}")
+        rclpy.spin_until_future_complete(self, future, timeout_sec=TIMEOUT_SEC)
+        result = future.result()
+        if result is None:
+            self.get_logger().error("Service timed out")
+            return False
+        elif not result.success:
+            self.get_logger().error(f"Failed: '{result.message}'")
+            return False
+        else:
+            self.get_logger().info("...success!")
+            return True
 
-    def power_on(self) -> None:
-        self._trigger_wrapper(self._power_on, "Powering on")
+    def power_on(self) -> bool:
+        return self._trigger_wrapper(self._power_on, "Powering on")
 
-    def claim(self) -> None:
-        self._trigger_wrapper(self._claim, "Claiming")
+    def claim(self) -> bool:
+        return self._trigger_wrapper(self._claim, "Claiming")
 
-    def stand(self) -> None:
-        self._trigger_wrapper(self._stand, "Standing")
+    def stand(self) -> bool:
+        return self._trigger_wrapper(self._stand, "Standing")
 
-    def sit(self) -> None:
-        self._trigger_wrapper(self._sit, "Sitting")
+    def sit(self) -> bool:
+        return self._trigger_wrapper(self._sit, "Sitting")
 
     def move_gripper(self, goal_joint_angle: float) -> None:
         """Command the gripper to a given joint angle by streaming a command."""
@@ -186,6 +222,40 @@ class SwitchState(Node):
             self.move_gripper(goal_joint_angle=(GRIPPER_OPEN_ANGLE - i * step_size_close))
             time.sleep(dt)
 
+    def run(self) -> None:
+        # in this example, we will activate and deactivate the spot joint controller for streaming joint commands
+        # and the joint state broadcaster for getting the robot's joint states.
+        controllers = ["spot_joint_controller", "joint_state_broadcaster"]
+
+        # we first start by interacting with the spot driver provided interfaces --
+        # claiming the lease, powering the robot on, and sending a high level "stand" command.
+        if not self.claim():
+            return
+        if not self.power_on():
+            return
+        if not self.stand():
+            return
+
+        # next we bring up the hardware interface and relevant controllers in the Spot ROS 2 control stack
+        input("press [enter] to connect to ROS 2 controllers:")
+        if not self.connect(controllers):
+            return
+
+        # here we interact with the spot joint controller and joint state broadcaster we activated to send commands
+        input("press [enter] to open and close the gripper:")
+        self.open_and_close()
+
+        # next, bring down the hardware interface and controllers to prepare for "high level" commands again
+        input("press [enter] to disconnect from ROS 2 controllers:")
+        if not self.disconnect(controllers):
+            return
+
+        # finally, we are back to where we started, sending high level commands to the spot driver!
+        input("press [enter] to sit:")
+        self.sit()
+
+        self.get_logger().info("Done!")
+
 
 def main(args: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
@@ -200,33 +270,8 @@ def main(args: list[str] | None = None) -> None:
 
     rclpy.init(args=args)
 
-    # in this example, we will activate and deactivate the spot joint controller for streaming joint commands
-    # and the joint state broadcaster for getting the robot's joint states.
-    controllers = ["spot_joint_controller", "joint_state_broadcaster"]
-
     switch_state = SwitchState(parser_args.robot)
-
-    # we first start by interacting with the spot driver provided interfaces --
-    # claiming the lease, powering the robot on, and sending a high level "stand" command.
-    switch_state.claim()
-    switch_state.power_on()
-    switch_state.stand()
-
-    # next we bring up the hardware interface and relevant controllers in the Spot ROS 2 control stack
-    input("press to connect to joint controller")
-    switch_state.connect(controllers)
-
-    # here we interact with the spot joint controller and joint state broadcaster we activated to send commands
-    input("press to open and close")
-    switch_state.open_and_close()
-
-    # next, bring down the hardware interface and controllers to prepare for "high level" commands again
-    input("press to disconnect")
-    switch_state.disconnect(controllers)
-
-    # finally, we are back to where we started, sending high level commands to the spot driver!
-    input("press to sit")
-    switch_state.sit()
+    switch_state.run()
 
     switch_state.destroy_node()
     rclpy.shutdown()
