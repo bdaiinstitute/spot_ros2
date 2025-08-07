@@ -189,7 +189,6 @@ class SpotHardware : public hardware_interface::SystemInterface {
   // The 3 command interfaces are position, velocity, effort, k_q_p, and k_qd_p.
   static constexpr size_t command_interfaces_per_joint_ = 5;
   // The 3 state interfaces are position, velocity, and effort.
-  // static constexpr size_t state_interfaces_per_joint_ = 3;
   static constexpr size_t state_interfaces_per_joint_ = 5;
   size_t njoints_;
   static constexpr size_t nfeet_ = 4;

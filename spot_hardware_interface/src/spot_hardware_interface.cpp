@@ -40,13 +40,9 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& position_msg = robot_state.joint_states().position();
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
-  // const auto& k_q_p_msg = robot_state.joint_states().k_q_p();
-  // const auto& k_qd_p_msg = robot_state.joint_states().k_qd_p();
   current_position_.assign(position_msg.begin(), position_msg.end());
   current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
   current_load_.assign(load_msg.begin(), load_msg.end());
-  // current_k_q_p_.assign(k_q_p_msg.begin(), k_q_p_msg.end());
-  // current_k_qd_p_.assign(k_qd_p_msg.begin(), k_qd_p_msg.end());
 
   // Save current foot contact states
   const auto& contact_states = robot_state.contact_states();
@@ -99,9 +95,6 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   joint_states.position.assign(current_position_.begin(), current_position_.end());
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
   joint_states.load.assign(current_load_.begin(), current_load_.end());
-  // joint_states.k_q_p.assign(current_k_q_p_.begin(), current_k_q_p_.end());
-  // joint_states.k_qd_p.assign(current_k_qd_p_.begin(), current_k_qd_p_.end());
-  // Fill this in from the last command
   
 
   // Fill in members of the imu states struct
