@@ -62,6 +62,13 @@ install(
 )
 
 install(
+  PROGRAMS
+  examples/mixed_level_example.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME mixed_level_example
+)
+
+install(
   DIRECTORY include/
   DESTINATION include
 )

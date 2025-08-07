@@ -227,7 +227,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     return
 
 
-def generate_launch_description():
+def generate_launch_description() -> LaunchDescription:
     # Populate launch description with launch arguments
     ld = LaunchDescription(
         [
