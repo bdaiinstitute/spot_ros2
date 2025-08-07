@@ -40,13 +40,13 @@ void StateStreamingHandler::handle_state_streaming(::bosdyn::api::RobotStateStre
   const auto& position_msg = robot_state.joint_states().position();
   const auto& velocity_msg = robot_state.joint_states().velocity();
   const auto& load_msg = robot_state.joint_states().load();
-  const auto& k_q_p_msg = robot_state.joint_states().k_q_p();
-  const auto& k_qd_p_msg = robot_state.joint_states().k_qd_p();
+  // const auto& k_q_p_msg = robot_state.joint_states().k_q_p();
+  // const auto& k_qd_p_msg = robot_state.joint_states().k_qd_p();
   current_position_.assign(position_msg.begin(), position_msg.end());
   current_velocity_.assign(velocity_msg.begin(), velocity_msg.end());
   current_load_.assign(load_msg.begin(), load_msg.end());
-  current_k_q_p_.assign(k_q_p_msg.begin(), k_q_p_msg.end());
-  current_k_qd_p_.assign(k_qd_p_msg.begin(), k_qd_p_msg.end());
+  // current_k_q_p_.assign(k_q_p_msg.begin(), k_q_p_msg.end());
+  // current_k_qd_p_.assign(k_qd_p_msg.begin(), k_qd_p_msg.end());
 
   // Save current foot contact states
   const auto& contact_states = robot_state.contact_states();
@@ -99,8 +99,10 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   joint_states.position.assign(current_position_.begin(), current_position_.end());
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
   joint_states.load.assign(current_load_.begin(), current_load_.end());
-  joint_states.k_q_p.assign(current_k_q_p_.begin(), current_k_q_p_.end());
-  joint_states.k_qd_p.assign(current_k_qd_p_.begin(), current_k_qd_p_.end());
+  // joint_states.k_q_p.assign(current_k_q_p_.begin(), current_k_q_p_.end());
+  // joint_states.k_qd_p.assign(current_k_qd_p_.begin(), current_k_qd_p_.end());
+  // Fill this in from the last command
+  
 
   // Fill in members of the imu states struct
   imu_states.identifier = imu_identifier_;
@@ -486,8 +488,6 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
     hw_states_.at(i * state_interfaces_per_joint_) = joint_pos.at(i);
     hw_states_.at(i * state_interfaces_per_joint_ + 1) = joint_vel.at(i);
     hw_states_.at(i * state_interfaces_per_joint_ + 2) = joint_load.at(i);
-    hw_states_.at(i * state_interfaces_per_joint_ + 3) = joint_k_q_p.at(i);
-    hw_states_.at(i * state_interfaces_per_joint_ + 4) = joint_k_qd_p.at(i);
   }
 
   // Fill in the initial command values
@@ -497,14 +497,20 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
       hw_commands_[command_interfaces_per_joint_ * i] = hw_states_[state_interfaces_per_joint_ * i];
       hw_commands_[command_interfaces_per_joint_ * i + 1] = hw_states_[state_interfaces_per_joint_ * i + 1];
       hw_commands_[command_interfaces_per_joint_ * i + 2] = hw_states_[state_interfaces_per_joint_ * i + 2];
-      hw_commands_[command_interfaces_per_joint_ * i + 3] = hw_states_[state_interfaces_per_joint_ * i + 3];
-      hw_commands_[command_interfaces_per_joint_ * i + 4] = hw_states_[state_interfaces_per_joint_ * i + 4];
-      // // Fill in k_q_p and k_qd_p gains from the initial_value field from the URDF
-      // const auto& joint = info_.joints.at(i);
-      // hw_commands_[command_interfaces_per_joint_ * i + 3] = std::stof(joint.command_interfaces.at(3).initial_value);
-      // hw_commands_[command_interfaces_per_joint_ * i + 4] = std::stof(joint.command_interfaces.at(4).initial_value);
+      // Fill in k_q_p and k_qd_p gains from the initial_value field from the URDF
+      const auto& joint = info_.joints.at(i);
+      hw_commands_[command_interfaces_per_joint_ * i + 3] = std::stof(joint.command_interfaces.at(3).initial_value);
+      hw_commands_[command_interfaces_per_joint_ * i + 4] = std::stof(joint.command_interfaces.at(4).initial_value);
     }
     init_state_ = true;
+  }
+
+  // Fill in gain states from the last command values (BD Joint Control API does not let you read gains)
+  for (size_t i = 0; i < njoints_; i++) {
+    hw_commands_[command_interfaces_per_joint_ * i + 3] =
+      hw_states_[state_interfaces_per_joint_ * i + 3];  // k_q_p
+    hw_commands_[command_interfaces_per_joint_ * i + 4] =
+      hw_states_[state_interfaces_per_joint_ * i + 4];  // k_qd_p
   }
 
   // Read IMU sensor values into sensor states
