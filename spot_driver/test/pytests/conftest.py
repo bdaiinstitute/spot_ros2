@@ -172,7 +172,7 @@ def spot_graph_description(simple_spot: SpotFixture, domain_id: int) -> typing.I
                             ]
                         )
                     ),
-                    launch_arguments=[("config_file", temp.file.name), ("spot_name", simple_spot.api.name)],
+                    launch_arguments=[("config_file", temp.file.name), ("spot_name", simple_spot.api.name), ("launch_image_publishers", "False")],
                 ),
                 launch_pytest.actions.ReadyToTest(),
             ],
