@@ -42,9 +42,9 @@ def state_stream_response(position: list[float], velocity: list[float], load: li
 @pytest.mark.launch(fixture=pytest.robot_spot_ros2_control)
 def test_joint_states(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
     # Create a state stream response containing unique joint state values for each joint
-    position = list(range(0, NUM_JOINTS_ARM))
-    velocity = list(range(NUM_JOINTS_ARM, 2 * NUM_JOINTS_ARM))
-    load = list(range(2 * NUM_JOINTS_ARM, 3 * NUM_JOINTS_ARM))
+    position = [float(x) for x in range(0, NUM_JOINTS_ARM)]
+    velocity = [float(x) for x in range(NUM_JOINTS_ARM, 2 * NUM_JOINTS_ARM)]
+    load = [float(x) for x in range(2 * NUM_JOINTS_ARM, 3 * NUM_JOINTS_ARM)]
     stream_response = state_stream_response(position=position, velocity=velocity, load=load)
     # send this response to the mock robot
     simple_spot.api.GetRobotStateStream.future.returns(itertools.repeat(stream_response))
