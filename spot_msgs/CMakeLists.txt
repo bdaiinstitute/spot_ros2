@@ -103,6 +103,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetGripperCameraParameters.srv"
   "srv/OverrideGraspOrCarry.srv"
   "srv/SetStandHeight.srv"
+  "srv/SetStairsMode.srv"
   "action/ArmSurfaceContact.action"
   "action/ExecuteDance.action"
   "action/NavigateTo.action"
