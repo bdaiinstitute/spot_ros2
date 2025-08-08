@@ -297,7 +297,11 @@ void SpotPanel::leaseCallback(const spot_msgs::msg::LeaseArray::ConstSharedPtr& 
   for (int i = leases->resources.size() - 1; i >= 0; i--) {
     const spot_msgs::msg::LeaseResource& resource = leases->resources[i];
     bool right_resource = resource.resource.compare("body") == 0;
-    bool owned_by_ros = resource.lease_owner.client_name.compare(0, 8, "ros_spot") == 0;
+    bool owned_by_ros = false;
+    auto name_pos = resource.lease_owner.client_name.find("ros_spot");
+    if (name_pos != std::string::npos) {
+      owned_by_ros = true;
+    }
 
     if (right_resource && owned_by_ros) {
       msg_has_lease = true;
@@ -407,6 +411,7 @@ void SpotPanel::batteryCallback(const spot_msgs::msg::BatteryStateArray::ConstSh
     stream.clear();
     stream << std::fixed << std::setprecision(1) << battState.voltage;
     std::string volt = stream.str() + "V";
+    stream.str("");
     stream.clear();
     stream << battState.current;
     std::string amp = stream.str() + "A";
