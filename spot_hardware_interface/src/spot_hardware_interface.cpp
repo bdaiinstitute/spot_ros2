@@ -181,25 +181,25 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     // 2. check velocity
     if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
+                   joint.name.c_str(), joint.command_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 3. check effort
     if (joint.command_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_EFFORT);
+                   joint.name.c_str(), joint.command_interfaces[2].name.c_str(), hardware_interface::HW_IF_EFFORT);
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 4. check k_q_p
     if (joint.command_interfaces[3].name != HW_IF_K_Q_P) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), HW_IF_K_Q_P.c_str());
+                   joint.name.c_str(), joint.command_interfaces[3].name.c_str(), HW_IF_K_Q_P.c_str());
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 5. check k_qd_p
     if (joint.command_interfaces[4].name != HW_IF_K_QD_P) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), HW_IF_K_QD_P.c_str());
+                   joint.name.c_str(), joint.command_interfaces[4].name.c_str(), HW_IF_K_QD_P.c_str());
       return hardware_interface::CallbackReturn::ERROR;
     }
     // Second, check state interfaces
@@ -217,25 +217,25 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     // 2. check velocity
     if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
+                   joint.name.c_str(), joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 3. check effort
     if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_EFFORT);
+                   joint.name.c_str(), joint.state_interfaces[2].name.c_str(), hardware_interface::HW_IF_EFFORT);
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 4. check k_q_p
     if (joint.state_interfaces[3].name != HW_IF_K_Q_P) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.state_interfaces[0].name.c_str(), HW_IF_K_Q_P.c_str());
+                   joint.name.c_str(), joint.state_interfaces[3].name.c_str(), HW_IF_K_Q_P.c_str());
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 5. check k_qd_p
     if (joint.state_interfaces[4].name != HW_IF_K_QD_P) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.state_interfaces[0].name.c_str(), HW_IF_K_QD_P.c_str());
+                   joint.name.c_str(), joint.state_interfaces[4].name.c_str(), HW_IF_K_QD_P.c_str());
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
