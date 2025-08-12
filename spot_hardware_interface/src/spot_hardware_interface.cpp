@@ -500,10 +500,8 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
 
   // Fill in gain states from the last command values (BD Joint Control API does not let you read gains)
   for (size_t i = 0; i < njoints_; i++) {
-    hw_commands_[command_interfaces_per_joint_ * i + 3] =
-      hw_states_[state_interfaces_per_joint_ * i + 3];  // k_q_p
-    hw_commands_[command_interfaces_per_joint_ * i + 4] =
-      hw_states_[state_interfaces_per_joint_ * i + 4];  // k_qd_p
+    hw_states_.at(i * state_interfaces_per_joint_ + 3) = hw_commands_.at(i * command_interfaces_per_joint_ + 3);
+    hw_states_.at(i * state_interfaces_per_joint_ + 4) = hw_commands_.at(i * command_interfaces_per_joint_ + 4);
   }
 
   // Read IMU sensor values into sensor states
