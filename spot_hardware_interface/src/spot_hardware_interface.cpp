@@ -95,7 +95,6 @@ void StateStreamingHandler::get_states(JointStates& joint_states, ImuStates& imu
   joint_states.position.assign(current_position_.begin(), current_position_.end());
   joint_states.velocity.assign(current_velocity_.begin(), current_velocity_.end());
   joint_states.load.assign(current_load_.begin(), current_load_.end());
-  
 
   // Fill in members of the imu states struct
   imu_states.identifier = imu_identifier_;
@@ -368,10 +367,10 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 1]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_EFFORT,
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 2]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        joint.name, HW_IF_K_Q_P, &hw_states_[state_interfaces_per_joint_ * i + 3]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        joint.name, HW_IF_K_QD_P, &hw_states_[state_interfaces_per_joint_ * i + 4]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(joint.name, HW_IF_K_Q_P, &hw_states_[state_interfaces_per_joint_ * i + 3]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(joint.name, HW_IF_K_QD_P, &hw_states_[state_interfaces_per_joint_ * i + 4]));
   }
   // export sensor state interface
 
@@ -472,8 +471,7 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   const auto& joint_k_q_p = joint_states_.k_q_p;
   const auto& joint_k_qd_p = joint_states_.k_qd_p;
   // wait for them to be initialized
-  if (joint_pos.empty() || joint_vel.empty() || joint_load.empty() || 
-      joint_k_q_p.empty() || joint_k_qd_p.empty()) {
+  if (joint_pos.empty() || joint_vel.empty() || joint_load.empty() || joint_k_q_p.empty() || joint_k_qd_p.empty()) {
     return hardware_interface::return_type::OK;
   }
   // Ensure that the states received from the Spot SDK will fit into the hw_states_ vector
