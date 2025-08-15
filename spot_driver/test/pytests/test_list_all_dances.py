@@ -9,14 +9,15 @@ Test for the List All Dances command.
 # pylint: disable=no-member
 
 import pytest
-from bdai_ros2_wrappers.futures import wait_for_future
-from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.spot.choreography_sequence_pb2 import ListAllSequencesResponse
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import ListAllDances  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_list_all_dances(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """

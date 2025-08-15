@@ -343,21 +343,15 @@ TEST(RobotStateConversions, TestGetOdomTwist) {
   timestamp.set_nanos(0);
   addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
 
-  auto* velocity_linear = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_linear();
-  velocity_linear->set_x(1.0);
-  velocity_linear->set_y(2.0);
-  velocity_linear->set_z(3.0);
-  auto* velocity_angular = robot_state.mutable_kinematic_state()->mutable_velocity_of_body_in_odom()->mutable_angular();
-  velocity_angular->set_x(1.0);
-  velocity_angular->set_y(2.0);
-  velocity_angular->set_z(3.0);
+  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 1.0, 2.0, 3.0);
 
   // GIVEN some nominal clock skew
   google::protobuf::Duration clock_skew;
   clock_skew.set_seconds(1);
 
   // WHEN we create a TwistWithCovarianceStamped ROS message
-  const auto out = getOdomTwist(robot_state, clock_skew);
+  const auto is_using_vision = false;
+  const auto out = getOdomTwist(robot_state, clock_skew, is_using_vision);
 
   // THEN this succeeds
   ASSERT_THAT(out.has_value(), IsTrue());
@@ -377,7 +371,8 @@ TEST(RobotStateConversions, TestGetOdomTwistNoBodyVelocityInRobotState) {
   clock_skew.set_seconds(1);
 
   // WHEN we attempt to create a TwistWithCovarianceStamped ROS message
-  const auto out = getOdomTwist(robot_state, clock_skew);
+  const auto is_using_vision = false;
+  const auto out = getOdomTwist(robot_state, clock_skew, is_using_vision);
 
   // THEN no message is output
   ASSERT_THAT(out.has_value(), IsFalse());
@@ -435,7 +430,7 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   timestamp.set_seconds(99);
   timestamp.set_nanos(0);
   addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
-  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+  addBodyVelocityVision(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "vision");
   addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
                1.0, 0.0, 0.0, 0.0);
@@ -613,15 +608,16 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
   google::protobuf::Duration duration1;
   duration1.set_seconds(15);
   duration1.set_nanos(0);
-  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp1, duration1, "fault1", 19, 3, "battery is low",
-                    {"robot", "battery"}, ::bosdyn::api::SystemFault_Severity::SystemFault_Severity_SEVERITY_WARN);
+  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp1, duration1, "fault1", 19, "3",
+                    "battery is low", {"robot", "battery"},
+                    ::bosdyn::api::SystemFault_Severity::SystemFault_Severity_SEVERITY_WARN);
 
   google::protobuf::Timestamp timestamp2;
   timestamp2.set_seconds(75);
   google::protobuf::Duration duration2;
   duration2.set_seconds(0);
   duration2.set_nanos(0);
-  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp2, duration2, "fault2", 55, 9,
+  appendSystemFault(robot_state.mutable_system_fault_state(), timestamp2, duration2, "fault2", 55, "9",
                     "robot has departed from this plane of reality", {"robot"},
                     ::bosdyn::api::SystemFault_Severity::SystemFault_Severity_SEVERITY_CRITICAL);
 
@@ -636,9 +632,9 @@ TEST(RobotStateConversions, TestGetSystemFaultState) {
   // THEN the clock skew is correctly applied
   EXPECT_THAT(out->faults,
               UnorderedElementsAre(
-                  SystemFaultEq(timestamp1, clock_skew, duration1, "fault1", 3UL, 19, "battery is low",
+                  SystemFaultEq(timestamp1, clock_skew, duration1, "fault1", "3", 19, "battery is low",
                                 std::vector<std::string>{"robot", "battery"}),
-                  SystemFaultEq(timestamp2, clock_skew, duration2, "fault2", 9UL, 55,
+                  SystemFaultEq(timestamp2, clock_skew, duration2, "fault2", "9", 55,
                                 "robot has departed from this plane of reality", std::vector<std::string>{"robot"})));
 }
 
@@ -845,5 +841,32 @@ TEST(RobotStateConversions, TestGetBehaviorFaultStateNoFaults) {
 
   // THEN the optional which wraps the output ROS message is set to nullopt
   EXPECT_THAT(out.has_value(), IsFalse());
+}
+
+TEST(RobotStateConversions, TestFramePrefixParsing) {
+  // GIVEN we have some frame name and prefix
+  const std::string frame = "some_frame";
+  static constexpr auto prefix = "some_frame_prefix/";
+
+  // WHEN we try to modify an input frame, which does not contain the prefix at the beginning
+  // THEN we don't strip anything and the output is the same as input
+  ASSERT_THAT(stripPrefix(frame, prefix), StrEq(frame));
+  ASSERT_THAT(stripPrefix(frame + prefix, prefix), StrEq(frame + prefix));
+  // THEN we prepend the prefix to the input
+  ASSERT_THAT(prependPrefix(frame, prefix), StrEq(prefix + frame));
+  ASSERT_THAT(prependPrefix(frame + prefix, prefix), StrEq(prefix + frame + prefix));
+
+  // WHEN we try to modify an input frame, which does contain the prefix at the beginning
+  // THEN we strip the prefix from the beginning
+  ASSERT_THAT(stripPrefix(prefix + frame, prefix), StrEq(frame));
+  ASSERT_THAT(stripPrefix(prefix + frame + prefix, prefix), StrEq(frame + prefix));
+  // THEN we don't prepend anything and the output is the same as input
+  ASSERT_THAT(prependPrefix(prefix + frame, prefix), StrEq(prefix + frame));
+  ASSERT_THAT(prependPrefix(prefix + frame + prefix, prefix), StrEq(prefix + frame + prefix));
+
+  // WHEN we try to modify an input frame with an empty prefix
+  // THEN the output is always the same as input
+  ASSERT_THAT(stripPrefix(frame, ""), StrEq(frame));
+  ASSERT_THAT(prependPrefix(frame, ""), StrEq(frame));
 }
 }  // namespace spot_ros2::test

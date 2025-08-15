@@ -9,12 +9,13 @@ Test for the Max Velocity command.
 # pylint: disable=no-member
 
 import pytest
-from bdai_ros2_wrappers.futures import wait_for_future
-from bdai_ros2_wrappers.scope import ROSAwareScope
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import SetVelocity  # type: ignore
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_max_velocity(ros: ROSAwareScope) -> None:
     """

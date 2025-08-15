@@ -5,6 +5,7 @@
 #include <memory>
 #include <spot_driver/api/default_image_client.hpp>
 #include <spot_driver/api/default_kinematic_api.hpp>
+#include <spot_driver/api/default_lease_client.hpp>
 #include <spot_driver/api/default_spot_api.hpp>
 #include <spot_driver/api/default_state_client.hpp>
 #include <spot_driver/api/default_time_sync_api.hpp>
@@ -14,7 +15,9 @@
 
 namespace spot_ros2 {
 
-DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::optional<std::string>& certificate) {
+DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::chrono::seconds timesync_timeout,
+                               const std::optional<std::string>& certificate)
+    : timesync_timeout_(timesync_timeout) {
   if (certificate.has_value()) {
     client_sdk_ = std::make_unique<::bosdyn::client::ClientSdk>();
     client_sdk_->SetClientName(sdk_client_name);
@@ -27,10 +30,10 @@ DefaultSpotApi::DefaultSpotApi(const std::string& sdk_client_name, const std::op
   }
 }
 
-tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& robot_name,
-                                                            const std::string& ip_address,
-                                                            const std::optional<int>& port) {
-  robot_name_ = robot_name;
+tl::expected<void, std::string> DefaultSpotApi::createRobot(const std::string& ip_address,
+                                                            const std::optional<int>& port,
+                                                            const std::string& frame_prefix) {
+  frame_prefix_ = frame_prefix;
 
   auto create_robot_result = client_sdk_->CreateRobot(ip_address, ::bosdyn::client::USE_PROXY);
   if (!create_robot_result.status) {
@@ -64,7 +67,7 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   if (!get_time_sync_thread_response) {
     return tl::make_unexpected("Failed to get the time synchronization thread.");
   }
-  time_sync_api_ = std::make_shared<DefaultTimeSyncApi>(get_time_sync_thread_response.response);
+  time_sync_api_ = std::make_shared<DefaultTimeSyncApi>(get_time_sync_thread_response.response, timesync_timeout_);
 
   // Image API.
   const auto image_client_result = robot_->EnsureServiceClient<::bosdyn::client::ImageClient>(
@@ -74,7 +77,7 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
   }
   // TODO(jschornak-bdai): apply clock skew in the image publisher instead of in DefaultImageClient
   image_client_interface_ =
-      std::make_shared<DefaultImageClient>(image_client_result.response, time_sync_api_, robot_name_);
+      std::make_shared<DefaultImageClient>(image_client_result.response, time_sync_api_, frame_prefix_);
 
   const auto robot_state_result = robot_->EnsureServiceClient<::bosdyn::client::RobotStateClient>(
       ::bosdyn::client::RobotStateClient::GetDefaultServiceName());
@@ -82,6 +85,14 @@ tl::expected<void, std::string> DefaultSpotApi::authenticate(const std::string& 
     return tl::make_unexpected("Failed to get robot state service client.");
   }
   state_client_interface_ = std::make_shared<DefaultStateClient>(robot_state_result.response);
+
+  // Lease API.
+  const auto lease_client_result = robot_->EnsureServiceClient<::bosdyn::client::LeaseClient>(
+      ::bosdyn::client::LeaseClient::GetDefaultServiceName());
+  if (!lease_client_result.status) {
+    return tl::make_unexpected("Failed to create Lease client.");
+  }
+  lease_client_interface_ = std::make_shared<DefaultLeaseClient>(lease_client_result.response);
 
   // Kinematic API.
   const auto kinematic_api_result = robot_->EnsureServiceClient<::bosdyn::client::InverseKinematicsClient>(
@@ -131,6 +142,10 @@ std::shared_ptr<ImageClientInterface> DefaultSpotApi::image_client_interface() c
 
 std::shared_ptr<StateClientInterface> DefaultSpotApi::stateClientInterface() const {
   return state_client_interface_;
+}
+
+std::shared_ptr<LeaseClientInterface> DefaultSpotApi::leaseClientInterface() const {
+  return lease_client_interface_;
 }
 
 std::shared_ptr<KinematicApi> DefaultSpotApi::kinematicInterface() const {

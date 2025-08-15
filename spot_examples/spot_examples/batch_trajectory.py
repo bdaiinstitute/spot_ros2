@@ -46,11 +46,8 @@ import math
 import time
 from typing import Callable, Optional, Tuple
 
-import bdai_ros2_wrappers.process as ros_process
-import bdai_ros2_wrappers.scope as ros_scope
-from bdai_ros2_wrappers.action_client import ActionClientWrapper
-from bdai_ros2_wrappers.tf_listener_wrapper import TFListenerWrapper
-from bdai_ros2_wrappers.utilities import namespace_with
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
 from bosdyn.api import (
     arm_command_pb2,
     basic_command_pb2,
@@ -73,6 +70,9 @@ from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 from bosdyn_msgs.conversions import convert
 from google.protobuf.wrappers_pb2 import DoubleValue
 from rclpy.node import Node
+from synchros2.action_client import ActionClientWrapper
+from synchros2.tf_listener_wrapper import TFListenerWrapper
+from synchros2.utilities import namespace_with
 from tf2_ros import TransformStamped
 
 from spot_examples.simple_spot_commander import SimpleSpotCommander
@@ -679,7 +679,7 @@ def main(args: argparse.Namespace) -> None:
     # Set up basic ROS2 utilities for communicating with the driver.
     node = ros_scope.node()
     if node is None:
-        raise ValueError("No ROS 2 node available (did you use bdai_ros2_wrapper.process.main?)")
+        raise ValueError("No ROS 2 node available (did you use synchros2.process.main?)")
 
     spot_runner = SpotRunner(node, args)
     spot_runner.test_run()

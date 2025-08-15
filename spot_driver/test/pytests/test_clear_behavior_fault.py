@@ -9,15 +9,16 @@ Test for the Clear Behavior Fault command.
 # pylint: disable=no-member
 
 import pytest
-from bdai_ros2_wrappers.futures import wait_for_future
-from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.robot_command_pb2 import ClearBehaviorFaultResponse
 from std_srvs.srv import Trigger
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import ClearBehaviorFault  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_clear_behavior_fault(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """

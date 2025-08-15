@@ -9,14 +9,12 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
-
   <depend>controller_interface</depend>
   <depend>forward_command_controller</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
+  <depend>spot_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -9,10 +9,6 @@
 #include <spot_driver/types.hpp>
 #include <utility>
 
-namespace {
-constexpr auto kRobotStateCallbackPeriod = std::chrono::duration<double>{1.0 / 50.0};  // 50 Hz
-}
-
 namespace spot_ros2 {
 
 StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& state_client_interface,
@@ -30,16 +26,15 @@ StatePublisher::StatePublisher(const std::shared_ptr<StateClientInterface>& stat
       logger_interface_{std::move(logger_interface)},
       tf_broadcaster_interface_{std::move(tf_broadcaster_interface)},
       timer_interface_{std::move(timer_interface)} {
-  const auto spot_name = parameter_interface_->getSpotName();
-  frame_prefix_ = spot_name.empty() ? "" : spot_name + "/";
+  frame_prefix_ = parameter_interface_->getFramePrefixWithDefaultFallback();
+  is_using_vision_ = parameter_interface_->getPreferredOdomFrame() == "vision";
+  full_tf_root_id_ = frame_prefix_ + parameter_interface_->getTFRoot();
 
-  const auto preferred_odom_frame = parameter_interface_->getPreferredOdomFrame();
-  is_using_vision_ = preferred_odom_frame == "vision";
-  full_odom_frame_id_ =
-      preferred_odom_frame.find('/') == std::string::npos ? frame_prefix_ + preferred_odom_frame : preferred_odom_frame;
+  const auto robot_state_rate = parameter_interface_->getRobotStateRate();
+  const auto robot_state_callback_period = std::chrono::duration<double>{1.0 / robot_state_rate};
 
   // Create a timer to request and publish robot state at a fixed rate
-  timer_interface_->setTimer(kRobotStateCallbackPeriod, [this] {
+  timer_interface_->setTimer(robot_state_callback_period, [this] {
     timerCallback();
   });
 }
@@ -67,8 +62,8 @@ void StatePublisher::timerCallback() {
                          getFootState(robot_state),
                          getEstopStates(robot_state, clock_skew),
                          getJointStates(robot_state, clock_skew, frame_prefix_),
-                         getTf(robot_state, clock_skew, frame_prefix_, full_odom_frame_id_),
-                         getOdomTwist(robot_state, clock_skew),
+                         getTf(robot_state, clock_skew, frame_prefix_, full_tf_root_id_),
+                         getOdomTwist(robot_state, clock_skew, is_using_vision_),
                          getOdom(robot_state, clock_skew, frame_prefix_, is_using_vision_),
                          getPowerState(robot_state, clock_skew),
                          getSystemFaultState(robot_state, clock_skew),

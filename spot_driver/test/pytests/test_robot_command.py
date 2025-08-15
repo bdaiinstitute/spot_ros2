@@ -9,14 +9,14 @@ Test for the Robot command.
 # pylint: disable=no-member
 
 import pytest
-from bdai_ros2_wrappers.futures import wait_for_future
-from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.basic_command_pb2 import RobotCommandFeedbackStatus, StopCommand
 from bosdyn.api.full_body_command_pb2 import FullBodyCommand
 from bosdyn.api.robot_command_pb2 import RobotCommandFeedback, RobotCommandFeedbackResponse, RobotCommandResponse
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from rclpy.action import ActionClient
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 from spot_msgs.action import RobotCommand as RobotCommandAction  # type: ignore
 from spot_msgs.srv import RobotCommand as RobotCommandService  # type: ignore
@@ -159,6 +159,7 @@ def test_robot_command_starts(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
     assert response.robot_command_id == 5
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_robot_command_fails_to_start(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """

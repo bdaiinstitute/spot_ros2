@@ -19,7 +19,6 @@ import pathlib
 import tempfile
 import typing
 
-import bdai_ros2_wrappers.scope as ros_scope
 import domain_coordinator
 import grpc
 import launch
@@ -31,11 +30,12 @@ import launch_ros
 import launch_ros.substitutions
 import pytest
 import rclpy
+import synchros2.scope as ros_scope
 import yaml
-from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.power_pb2 import PowerCommandRequest, PowerCommandResponse, PowerCommandStatus
 from bosdyn.api.robot_command_pb2 import RobotCommandResponse
 from bosdyn.api.robot_state_pb2 import PowerState
+from synchros2.scope import ROSAwareScope
 
 import spot_wrapper.testing
 from spot_driver.spot_ros2 import SpotROS
@@ -52,7 +52,7 @@ os.environ.update(
 
 
 # pylint: disable=invalid-name,unused-argument
-@spot_wrapper.testing.fixture
+@spot_wrapper.testing.fixture(ids=["with_arm", "without_arm"], params=[True, False])
 class simple_spot(MockSpot):
     """
     This is a factory that returns an instance of the class MockSpot,
@@ -61,6 +61,16 @@ class simple_spot(MockSpot):
     The MockSpot and the GRPC server are used to handle calls to a simulated
     Spot robot.
     """
+
+    def __init__(self, request: pytest.FixtureRequest) -> None:
+        # Fixture initialization can request other fixtures.
+        super().__init__()
+        if request.param:
+            print("Running test with a mock spot with an arm")
+            # By setting something in the manipulator state we make the spot wrapper think it has an arm
+            self.robot_state.manipulator_state.is_gripper_holding_item = False
+        else:
+            print("Running test with a mock spot without an arm")
 
     def PowerCommand(self, request: PowerCommandRequest, context: grpc.ServicerContext) -> PowerCommandResponse:
         """
@@ -162,7 +172,11 @@ def spot_graph_description(simple_spot: SpotFixture, domain_id: int) -> typing.I
                             ]
                         )
                     ),
-                    launch_arguments=[("config_file", temp.file.name), ("spot_name", simple_spot.api.name)],
+                    launch_arguments=[
+                        ("config_file", temp.file.name),
+                        ("spot_name", simple_spot.api.name),
+                        ("launch_image_publishers", "False"),
+                    ],
                 ),
                 launch_pytest.actions.ReadyToTest(),
             ],

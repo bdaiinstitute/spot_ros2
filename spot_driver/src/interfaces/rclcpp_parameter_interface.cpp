@@ -2,7 +2,9 @@
 
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
 
+#include <chrono>
 #include <cstdlib>
+#include <type_traits>
 #include <vector>
 
 namespace {
@@ -26,6 +28,24 @@ constexpr auto kParameterNamePublishCompressedImages = "publish_compressed_image
 constexpr auto kParameterNamePublishDepthImages = "publish_depth";
 constexpr auto kParameterNamePublishDepthRegisteredImages = "publish_depth_registered";
 constexpr auto kParameterPreferredOdomFrame = "preferred_odom_frame";
+constexpr auto kParameterTFRoot = "tf_root";
+constexpr auto kParameterSpotName = "spot_name";
+constexpr auto kParameterFramePrefix = "frame_prefix";
+constexpr auto kParameterNameGripperless = "gripperless";
+constexpr auto kParameterTimeSyncTimeout = "timesync_timeout";
+constexpr auto kParameterNameLeaseRate = "lease_rate";
+constexpr auto kParameterNameRobotStateRate = "robot_state_rate";
+constexpr auto kParameterNameImageRate = "image_rate";
+
+namespace type_traits {
+template <typename, typename = void>
+static constexpr bool is_iterable{};
+template <class T>
+inline static constexpr bool
+    is_iterable<T, std::void_t<decltype(std::declval<T>().begin()), decltype(std::declval<T>().end())>> =
+        std::is_same_v<decltype(std::declval<T>().begin()), typename T::iterator>&&
+            std::is_same_v<decltype(std::declval<T>().end()), typename T::iterator>;
+}  // namespace type_traits
 
 /**
  * @brief Get a rclcpp parameter. If the parameter has not been declared, declare it with the provided default value and
@@ -127,6 +147,28 @@ std::string getEnvironmentVariableParameterFallback(const std::shared_ptr<rclcpp
   return declareAndGetParameter<std::string>(node, parameter_name, default_value);
 }
 
+/**
+ * @brief Given an input frame string parameter and a set of valid base names, return a new optional string
+ * which is guaranteed to be a valid frame option. If the input parameter is not a valid option, std::nullopt is
+ * returned instead.
+ * @param frame
+ * @param base_names
+ * @return A new optional string which is guaranteed to be a valid frame option w.r.t. base_names. If the input
+ * parameter is not a valid option, std::nullopt is returned instead.
+ */
+template <typename OptionsT>
+static std::optional<std::string> validateFrameParameter(const std::string& frame, const OptionsT& base_names) {
+  static_assert(type_traits::is_iterable<OptionsT>,
+                "Trait bound not satisfied for argument 'base_names', type not iterable.");
+  static_assert(std::is_convertible_v<typename OptionsT::value_type, std::string>,
+                "Trait bound not satisfied for argument 'base_names', iterator values not convertible to string.");
+
+  // Compare the given frame with all valid options and set false if no match is found.
+  const bool is_valid = std::find(base_names.begin(), base_names.end(), frame) != base_names.end();
+
+  return is_valid ? std::make_optional(frame) : std::nullopt;
+}
+
 }  // namespace
 
 namespace spot_ros2 {
@@ -183,11 +225,44 @@ bool RclcppParameterInterface::getPublishDepthRegisteredImages() const {
 }
 
 std::string RclcppParameterInterface::getPreferredOdomFrame() const {
-  return declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
+  const std::string preferred_odom_frame =
+      declareAndGetParameter<std::string>(node_, kParameterPreferredOdomFrame, kDefaultPreferredOdomFrame);
+  const std::optional<std::string> valid_preferred_odom_frame =
+      validateFrameParameter(preferred_odom_frame, kValidOdomFrameNames);
+  if (!valid_preferred_odom_frame.has_value())
+    RCLCPP_WARN(node_->get_logger(), "Given preferred odom frame '%s' is not a valid option, defaulting to '%s'.",
+                preferred_odom_frame.c_str(), kDefaultPreferredOdomFrame);
+  return valid_preferred_odom_frame.value_or(kDefaultPreferredOdomFrame);
 }
 
-std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm) const {
-  const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+std::string RclcppParameterInterface::getTFRoot() const {
+  const std::string tf_root = declareAndGetParameter<std::string>(node_, kParameterTFRoot, kDefaultTFRoot);
+  const std::optional<std::string> valid_tf_root = validateFrameParameter(tf_root, kValidTFRootFrameNames);
+  if (!valid_tf_root.has_value())
+    RCLCPP_WARN(node_->get_logger(), "Given TF root frame '%s' is not a valid option, defaulting to '%s'.",
+                tf_root.c_str(), kDefaultTFRoot);
+  return valid_tf_root.value_or(kDefaultTFRoot);
+}
+
+std::optional<std::string> RclcppParameterInterface::getFramePrefix() const {
+  return declareAndGetParameter<std::string>(node_, kParameterFramePrefix);
+}
+
+bool RclcppParameterInterface::getGripperless() const {
+  return declareAndGetParameter<bool>(node_, kParameterNameGripperless, kDefaultGripperless);
+}
+
+std::chrono::seconds RclcppParameterInterface::getTimeSyncTimeout() const {
+  int timeout_seconds =
+      declareAndGetParameter<int>(node_, kParameterTimeSyncTimeout,
+                                  std::chrono::duration_cast<std::chrono::seconds>(kDefaultTimeSyncTimeout).count());
+  return std::chrono::seconds(timeout_seconds);
+}
+
+std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(const bool has_arm,
+                                                                                const bool gripperless) const {
+  const bool has_hand_camera = has_arm && (!gripperless);
+  const auto kDefaultCamerasUsed = (has_hand_camera) ? kCamerasWithHand : kCamerasWithoutHand;
   std::set<spot_ros2::SpotCamera> spot_cameras_used;
   for (const auto& camera : kDefaultCamerasUsed) {
     spot_cameras_used.insert(kRosStringToSpotCamera.at(std::string(camera)));
@@ -196,8 +271,9 @@ std::set<spot_ros2::SpotCamera> RclcppParameterInterface::getDefaultCamerasUsed(
 }
 
 tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterface::getCamerasUsed(
-    const bool has_arm) const {
-  const auto kDefaultCamerasUsed = has_arm ? kDefaultCamerasUsedWithArm : kDefaultCamerasUsedWithoutArm;
+    const bool has_arm, const bool gripperless) const {
+  const bool has_hand_camera = has_arm && (!gripperless);
+  const auto kDefaultCamerasUsed = (has_hand_camera) ? kCamerasWithHand : kCamerasWithoutHand;
   const std::vector<std::string> kDefaultCamerasUsedVector(std::begin(kDefaultCamerasUsed),
                                                            std::end(kDefaultCamerasUsed));
   const auto cameras_used_param =
@@ -208,6 +284,8 @@ tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterf
       const auto spot_camera = kRosStringToSpotCamera.at(camera);
       if ((spot_camera == SpotCamera::HAND) && (!has_arm)) {
         return tl::make_unexpected("Cannot add SpotCamera 'hand', the robot does not have an arm!");
+      } else if ((spot_camera == SpotCamera::HAND) && gripperless) {
+        return tl::make_unexpected("Cannot add SpotCamera 'hand', the robot is gripperless!");
       }
       spot_cameras_used.insert(spot_camera);
     } catch (const std::out_of_range& e) {
@@ -217,14 +295,39 @@ tl::expected<std::set<spot_ros2::SpotCamera>, std::string> RclcppParameterInterf
   return spot_cameras_used;
 }
 
-std::string RclcppParameterInterface::getSpotName() const {
-  // The spot_name parameter always matches the namespace of this node, minus the leading `/` character.
+std::string RclcppParameterInterface::getSpotNameWithFallbackToNamespace() const {
+  // We use the explicit robot_name parameter value if provided.
+  // If the spot_name parameter is not found explicitly, then we expect it to always match the namespace of this node,
+  // minus the leading `/` character.
   try {
-    return std::string{node_->get_namespace()}.substr(1);
+    const std::optional<std::string> spot_name = declareAndGetParameter<std::string>(node_, kParameterSpotName);
+    return spot_name.value_or(std::string{node_->get_namespace()}.substr(1));
   } catch (const std::out_of_range& e) {
     // get_namespace() should not return an empty string, but we handle this situation just in case.
     // Note that if no namespace was set when creating the node, get_namespace() will return `/`.
     return "";
   }
 }
+
+std::string RclcppParameterInterface::getFramePrefixWithDefaultFallback() const {
+  const std::string robot_name = getSpotNameWithFallbackToNamespace();
+  const std::optional<std::string> frame_prefix = getFramePrefix();
+  return frame_prefix.value_or(!robot_name.empty() ? robot_name + "/" : "");
+}
+
+std::optional<double> RclcppParameterInterface::getLeaseRate() const {
+  const double lease_rate = declareAndGetParameter<double>(node_, kParameterNameLeaseRate, kDefaultLeaseRate);
+  return lease_rate > 0.0 ? std::make_optional(lease_rate) : std::nullopt;
+}
+
+double RclcppParameterInterface::getRobotStateRate() const {
+  const double state_rate = declareAndGetParameter<double>(node_, kParameterNameRobotStateRate, kDefaultRobotStateRate);
+  return state_rate > 0.0 ? state_rate : kDefaultRobotStateRate;
+}
+
+double RclcppParameterInterface::getImageRate() const {
+  const double image_rate = declareAndGetParameter<double>(node_, kParameterNameImageRate, kDefaultImageRate);
+  return image_rate > 0.0 ? image_rate : kDefaultImageRate;
+}
+
 }  // namespace spot_ros2

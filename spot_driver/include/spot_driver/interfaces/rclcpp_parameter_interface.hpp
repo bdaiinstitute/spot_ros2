@@ -5,6 +5,7 @@
 #include <rclcpp/node.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <set>
@@ -35,10 +36,19 @@ class RclcppParameterInterface : public ParameterInterfaceBase {
   [[nodiscard]] bool getPublishDepthImages() const override;
   [[nodiscard]] bool getPublishDepthRegisteredImages() const override;
   [[nodiscard]] std::string getPreferredOdomFrame() const override;
-  [[nodiscard]] std::string getSpotName() const override;
-  [[nodiscard]] std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm) const override;
+  [[nodiscard]] std::string getTFRoot() const override;
+  [[nodiscard]] std::optional<std::string> getFramePrefix() const override;
+  [[nodiscard]] std::string getSpotNameWithFallbackToNamespace() const override;
+  [[nodiscard]] std::string getFramePrefixWithDefaultFallback() const override;
+  [[nodiscard]] bool getGripperless() const override;
+  [[nodiscard]] std::set<spot_ros2::SpotCamera> getDefaultCamerasUsed(const bool has_arm,
+                                                                      const bool gripperless) const override;
   [[nodiscard]] tl::expected<std::set<spot_ros2::SpotCamera>, std::string> getCamerasUsed(
-      const bool has_arm) const override;
+      const bool has_arm, const bool gripperless) const override;
+  [[nodiscard]] std::chrono::seconds getTimeSyncTimeout() const override;
+  [[nodiscard]] std::optional<double> getLeaseRate() const override;
+  [[nodiscard]] double getRobotStateRate() const override;
+  [[nodiscard]] double getImageRate() const override;
 
  private:
   std::shared_ptr<rclcpp::Node> node_;

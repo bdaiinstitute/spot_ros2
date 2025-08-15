@@ -1,53 +1,74 @@
-# Some built in controllers, taken from
-# https://github.com/ros-controls/roscon2022_workshop/blob/master/controlko_bringup/config/rrbot_controllers.yaml
+# Copyright (c) 2024-2025 Boston Dynamics AI Institute LLC. All rights reserved.
 
-controller_manager:
-  ros__parameters:
-    update_rate: 333  # Hz
-
-    joint_state_broadcaster:
-      type: joint_state_broadcaster/JointStateBroadcaster
-
-    forward_position_controller:
-      type: forward_command_controller/ForwardCommandController
-
-    forward_state_controller:
-      type: spot_controllers/ForwardStateController
-
-
-forward_position_controller:
-  ros__parameters:
-    joints:
-      - front_left_hip_x
-      - front_left_hip_y
-      - front_left_knee
-      - front_right_hip_x
-      - front_right_hip_y
-      - front_right_knee
-      - rear_left_hip_x
-      - rear_left_hip_y
-      - rear_left_knee
-      - rear_right_hip_x
-      - rear_right_hip_y
-      - rear_right_knee
-    interface_name: position
-
-forward_state_controller:
-  ros__parameters:
-    joints:
-      - front_left_hip_x
-      - front_left_hip_y
-      - front_left_knee
-      - front_right_hip_x
-      - front_right_hip_y
-      - front_right_knee
-      - rear_left_hip_x
-      - rear_left_hip_y
-      - rear_left_knee
-      - rear_right_hip_x
-      - rear_right_hip_y
-      - rear_right_knee
-    interface_names: 
-      - position
-      - velocity
-      - effort
+/**:
+  controller_manager:
+    ros__parameters:
+      update_rate: 333
+      foot_state_broadcaster:
+        type: spot_controllers/FootStateBroadcaster
+      forward_position_controller:
+        type: spot_controllers/ForwardStateController
+      forward_state_controller:
+        type: spot_controllers/ForwardStateController
+      imu_sensor_broadcaster:
+        type: spot_controllers/SpotIMUBroadcaster
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+      spot_joint_controller:
+        type: spot_controllers/SpotJointController
+      spot_pose_broadcaster:
+        type: spot_controllers/SpotPoseBroadcaster
+      hardware_components_initial_state:
+        unconfigured:
+        - SpotSystem
+  forward_position_controller:
+    ros__parameters:
+      joints:
+        - front_left_hip_x
+        - front_left_hip_y
+        - front_left_knee
+        - front_right_hip_x
+        - front_right_hip_y
+        - front_right_knee
+        - rear_left_hip_x
+        - rear_left_hip_y
+        - rear_left_knee
+        - rear_right_hip_x
+        - rear_right_hip_y
+        - rear_right_knee
+      interface_names:
+        - position
+  forward_state_controller:
+    ros__parameters:
+      joints:
+        - front_left_hip_x
+        - front_left_hip_y
+        - front_left_knee
+        - front_right_hip_x
+        - front_right_hip_y
+        - front_right_knee
+        - rear_left_hip_x
+        - rear_left_hip_y
+        - rear_left_knee
+        - rear_right_hip_x
+        - rear_right_hip_y
+        - rear_right_knee
+      interface_names:
+        - position
+        - velocity
+        - effort
+  spot_joint_controller:
+    ros__parameters:
+      joints:
+        - front_left_hip_x
+        - front_left_hip_y
+        - front_left_knee
+        - front_right_hip_x
+        - front_right_hip_y
+        - front_right_knee
+        - rear_left_hip_x
+        - rear_left_hip_y
+        - rear_left_knee
+        - rear_right_hip_x
+        - rear_right_hip_y
+        - rear_right_knee

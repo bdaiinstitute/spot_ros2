@@ -9,8 +9,6 @@ Test for the Execute Dance command.
 # pylint: disable=no-member
 
 import pytest
-from bdai_ros2_wrappers.futures import wait_for_future
-from bdai_ros2_wrappers.scope import ROSAwareScope
 from bosdyn.api.spot.choreography_sequence_pb2 import (
     ChoreographySequence,
     ChoreographyStatusResponse,
@@ -20,11 +18,14 @@ from bosdyn.api.spot.choreography_sequence_pb2 import (
 from google.protobuf import text_format
 from rclpy.action import ActionClient
 from std_srvs.srv import Trigger
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 from spot_msgs.action import ExecuteDance  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_execute_dance_with_upload(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """
@@ -107,6 +108,7 @@ def test_execute_dance_with_upload(ros: ROSAwareScope, simple_spot: SpotFixture)
     assert final_result.result.success
 
 
+@pytest.mark.parametrize("simple_spot", [False], indirect=True)
 @pytest.mark.usefixtures("spot_node")
 def test_execute_dance_by_name(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     """

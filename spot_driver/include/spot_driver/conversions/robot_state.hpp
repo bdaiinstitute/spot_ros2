@@ -42,6 +42,26 @@ inline const std::map<const std::string, const std::string> kFriendlyJointNames 
 };
 
 /**
+ * @brief Given an input string and a prefix string which is a substring starting at the beginning of the input string,
+ * return a new string which is the difference between the input string and the prefix string.
+ * @param input
+ * @param prefix
+ * @return A new string which is the difference between the input string and the prefix string.
+ */
+std::string stripPrefix(const std::string& input, const std::string& prefix);
+
+/**
+ * @brief Given an input string and a prefix string, return a new string which is the addition of the prefix string and
+ * the input string. If the input string already contains the prefix substring at the beginning, the output will be the
+ * same as input.
+ * @param input
+ * @param prefix
+ * @return A new string which is the addition of the prefix string and the input string. If the input string already
+ * contains the prefix substring at the beginning, the output will be the same as input.
+ */
+std::string prependPrefix(const std::string& input, const std::string& prefix);
+
+/**
  * @brief Create a BatteryStateArray ROS message by parsing a RobotState message and applying a clock skew to it.
  *
  * @param robot_state Robot state message from Spot.
@@ -134,8 +154,9 @@ std::optional<tf2_msgs::msg::TFMessage> getTf(const ::bosdyn::api::FrameTreeSnap
  * @return If the robot state message contains the velocity of the Spot's body relative to the odometry frame in its
  * kinematic state, return a TwistWithCovarianceStamped containing this data. Otherwise, return nullopt.
  */
-std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
-    const ::bosdyn::api::RobotState& robot_state, const google::protobuf::Duration& clock_skew);
+std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(const ::bosdyn::api::RobotState& robot_state,
+                                                                           const google::protobuf::Duration& clock_skew,
+                                                                           const bool is_using_vision);
 
 /**
  * @brief Create an Odometry ROS message representing Spot's pose and velocity relative to a fixed world frame by
@@ -152,7 +173,7 @@ std::optional<geometry_msgs::msg::TwistWithCovarianceStamped> getOdomTwist(
  */
 std::optional<nav_msgs::msg::Odometry> getOdom(const ::bosdyn::api::RobotState& robot_state,
                                                const google::protobuf::Duration& clock_skew, const std::string& prefix,
-                                               bool is_using_vision);
+                                               const bool is_using_vision);
 
 /**
  * @brief Create a PowerState ROS message by parsing a RobotState message.
