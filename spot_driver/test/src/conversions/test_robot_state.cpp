@@ -499,10 +499,10 @@ TEST(RobotStateConversions, TestGetOdomInOdomFrame) {
   // GIVEN the odom frame is the root of the frame tree
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "odom");
   // GIVEN the body frame is at a nonzero pose relative to the odom frame
-  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 3.0, 1.0,
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "odom", 1.0, 2.0, 0.0, 1.0,
                0.0, 0.0, 0.0);
   // GIVEN the body is moving at a nonzero velocity relative to the odom frame
-  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+  addBodyVelocityOdom(robot_state.mutable_kinematic_state(), 0.0, 0.0, 0.0, 0.0, 0.0, 3.0);
   // GIVEN the frame tree snapshot is valid
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
               Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
@@ -519,12 +519,12 @@ TEST(RobotStateConversions, TestGetOdomInOdomFrame) {
   EXPECT_THAT(out->child_frame_id, StrEq("prefix/body"));
   EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
 
-  // THEN the Odometry ROS message contains the same pose and twist data as the RobotState
-  EXPECT_THAT(out->pose.pose, GeometryMsgsPoseEq(1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0));
-  EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
+  // THEN the Odometry ROS message contains the same pose data as the robot state
+  EXPECT_THAT(out->pose.pose, GeometryMsgsPoseEq(1.0, 2.0, 0.0, 1.0, 0.0, 0.0, 0.0));
+  // THEN the Odometry ROS message contains the appropriate transformed twist data
+  EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(-6.0, 3.0, 0.0, 0.0, 0.0, 3.0));
 }
 
-// TODO(khughes): Fix this test
 TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   // GIVEN some nominal clock skew
   google::protobuf::Duration clock_skew;
@@ -537,9 +537,9 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   timestamp.set_seconds(99);
   timestamp.set_nanos(0);
   addAcquisitionTimestamp(robot_state.mutable_kinematic_state(), timestamp);
-  addBodyVelocityVision(robot_state.mutable_kinematic_state(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+  addBodyVelocityVision(robot_state.mutable_kinematic_state(), 0.0, 0.0, 0.0, 0.0, 0.0, 3.0);
   addRootFrame(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "vision");
-  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 3.0,
+  addTransform(robot_state.mutable_kinematic_state()->mutable_transforms_snapshot(), "body", "vision", 1.0, 2.0, 0.0,
                1.0, 0.0, 0.0, 0.0);
   ASSERT_THAT(bosdyn::api::ValidateFrameTreeSnapshot(robot_state.kinematic_state().transforms_snapshot()),
               Eq(::bosdyn::api::ValidateFrameTreeSnapshotStatus::VALID));
@@ -556,9 +556,10 @@ TEST(RobotStateConversions, TestGetOdomInVisionFrame) {
   EXPECT_THAT(out->child_frame_id, StrEq("prefix/body"));
   EXPECT_THAT(out->header, ClockSkewIsAppliedToHeader(timestamp, clock_skew));
 
-  // THEN the Odometry ROS message contains the same pose and twist data as the RobotState
-  EXPECT_THAT(out->pose.pose, GeometryMsgsPoseEq(1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0));
-  EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
+  // THEN the Odometry ROS message contains the same pose data as the robot state
+  EXPECT_THAT(out->pose.pose, GeometryMsgsPoseEq(1.0, 2.0, 0.0, 1.0, 0.0, 0.0, 0.0));
+  // THEN the Odometry ROS message contains the appropriate transformed twist data
+  EXPECT_THAT(out->twist.twist, GeometryMsgsTwistEq(-6.0, 3.0, 0.0, 0.0, 0.0, 3.0));
 }
 
 TEST(RobotStateConversions, TestGetOdomMissingAcquisitionTimestamp) {
