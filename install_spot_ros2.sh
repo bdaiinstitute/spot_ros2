@@ -30,6 +30,9 @@ if ! [[ $(ls /etc/ros/rosdep/sources.list.d/*default.list 2> /dev/null) ]]; then
 fi
 source /opt/ros/humble/setup.bash && rosdep update && rosdep install --from-paths ./ --ignore-src -y -r --rosdistro=humble
 
+# Install Qt5UiTools
+sudo apt-get install -y qttools5-dev
+
 # Install the dist-utils
 sudo apt-get install -y python3-distutils
 sudo apt-get install -y python3-apt
