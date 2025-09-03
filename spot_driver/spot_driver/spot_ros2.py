@@ -61,7 +61,7 @@ from bosdyn_msgs.msg import (
     RobotCommandFeedback,
     RobotCommandFeedbackStatusStatus,
 )
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist
+from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, TwistStamped
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -612,7 +612,7 @@ class SpotROS(Node):
             durability=DurabilityPolicy.VOLATILE
         )
 
-        self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, JOY_TELEOP_QOS, callback_group=self.group)
+        self.create_subscription(TwistStamped, "cmd_vel", self.cmd_velocity_callback, JOY_TELEOP_QOS, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
 
         self.create_trigger_services()
@@ -2626,12 +2626,13 @@ class SpotROS(Node):
         # self.get_logger().error(f"RETURN FROM HANDLE: {result}")
         return result
 
-    def cmd_velocity_callback(self, data: Twist) -> None:
+    def cmd_velocity_callback(self, data: TwistStamped) -> None:
         """Callback for cmd_vel command"""
         if not self.spot_wrapper:
             self.get_logger().info(f"Mock mode, received command vel {data}")
             return
-        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z, self.cmd_duration)
+        timestamp = data.header.stamp.sec + data.header.stamp.nanosec / 1e9
+        self.spot_wrapper.velocity_cmd(data.twist.linear.x, data.twist.linear.y, data.twist.angular.z, timestamp, self.cmd_duration)
 
     def body_pose_callback(self, data: Pose) -> None:
         """Callback for cmd_vel command"""
