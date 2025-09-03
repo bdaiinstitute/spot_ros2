@@ -37,21 +37,21 @@ def test_undock(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve undock command.
-    undock_call = simple_spot.api.DockingCommand.serve(timeout=2.0)
+    undock_call = simple_spot.api.DockingCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert undock_call is not None
     undock_response = DockingCommandResponse()
     undock_response.status = DockingCommandResponse.Status.STATUS_OK
     undock_call.returns(undock_response)
 
     # Serve undock command feedback.
-    undock_feedback_call = simple_spot.api.DockingCommandFeedback.serve(timeout=2.0)
+    undock_feedback_call = simple_spot.api.DockingCommandFeedback.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert undock_feedback_call is not None
     undock_feedback_response = DockingCommandFeedbackResponse()
     undock_feedback_response.status = DockingCommandFeedbackResponse.STATUS_AT_PREP_POSE
     undock_feedback_call.returns(undock_feedback_response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success
 
@@ -75,13 +75,13 @@ def test_undock_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve undock command.
-    undock_call = simple_spot.api.DockingCommand.serve(timeout=2.0)
+    undock_call = simple_spot.api.DockingCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert undock_call is not None
     undock_response = DockingCommandResponse()
     undock_response.status = DockingCommandResponse.Status.STATUS_UNKNOWN
     undock_call.returns(undock_response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert not response.success

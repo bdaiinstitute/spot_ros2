@@ -32,15 +32,15 @@ def test_clear_behavior_fault(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
     """
     # Satisfy driver prerequisites.
     client = ros.node.create_client(Trigger, "claim")
-    assert client.wait_for_service(timeout_sec=2.0)
+    assert client.wait_for_service(timeout_sec=pytest.DEFAULT_TIMEOUT)
     future = client.call_async(Trigger.Request())
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     result = future.result()
     assert result.success, result.message
 
     # Send ROS request.
     client = ros.node.create_client(ClearBehaviorFault, "clear_behavior_fault")
-    assert client.wait_for_service(timeout_sec=2.0)
+    assert client.wait_for_service(timeout_sec=pytest.DEFAULT_TIMEOUT)
     future = client.call_async(ClearBehaviorFault.Request(id=127))
 
     # Serve fault clear service.
@@ -52,6 +52,6 @@ def test_clear_behavior_fault(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     result = future.result()
     assert result.success, result.message

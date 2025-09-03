@@ -38,13 +38,13 @@ def test_stop_recording_state(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
     # Mock GRPC sever.
 
     # Serve "stop_recording_state" command.
-    call = simple_spot.api.StopRecordingState.serve(timeout=2.0)
+    call = simple_spot.api.StopRecordingState.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = StopRecordingStateResponse()
     # response.status = StopRecordingStateResponse.Status.STATUS_OK
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success
