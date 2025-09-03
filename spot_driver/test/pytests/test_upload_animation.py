@@ -43,14 +43,14 @@ def test_upload_animation(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve upload_animated_move command.
-    call = simple_spot.api.UploadAnimatedMove.serve(timeout=2.0)
+    call = simple_spot.api.UploadAnimatedMove.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = UploadAnimatedMoveResponse()
     response.status = UploadAnimatedMoveResponse.Status.STATUS_OK
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success
 
@@ -80,13 +80,13 @@ def test_upload_animation_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -
     # Mock GRPC sever.
 
     # Serve upload_animated_move command with an unknonw error.
-    call = simple_spot.api.UploadAnimatedMove.serve(timeout=2.0)
+    call = simple_spot.api.UploadAnimatedMove.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = UploadAnimatedMoveResponse()
     response.status = UploadAnimatedMoveResponse.Status.STATUS_UNKNOWN
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert not response.success

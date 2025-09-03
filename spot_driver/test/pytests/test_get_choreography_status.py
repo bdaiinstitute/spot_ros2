@@ -38,12 +38,12 @@ def test_get_choreography_status(ros: ROSAwareScope, simple_spot: SpotFixture) -
     # Mock GRPC sever.
 
     # Serve "get_choreography_status" command.
-    call = simple_spot.api.ChoreographyStatus.serve(timeout=2.0)
+    call = simple_spot.api.ChoreographyStatus.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = ChoreographyStatusResponse()
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success

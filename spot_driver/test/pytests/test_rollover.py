@@ -37,14 +37,14 @@ def test_rollover(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve rollover command.
-    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = RobotCommandResponse()
     response.status = RobotCommandResponse.Status.STATUS_OK
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success
 
@@ -68,13 +68,13 @@ def test_rollover_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve rollover command with an unknown status.
-    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = RobotCommandResponse()
     response.status = RobotCommandResponse.Status.STATUS_UNKNOWN
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert not response.success

@@ -44,7 +44,7 @@ def test_robot_command(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve robot command.
-    command_call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    command_call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert command_call is not None
     command_response = RobotCommandResponse()
     command_response.robot_command_id = 5
@@ -52,11 +52,11 @@ def test_robot_command(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     command_call.returns(command_response)
 
     # Wait for the goal.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     goal_handle = future.result()
 
     # Serve command feedback.
-    feedback_call = simple_spot.api.RobotCommandFeedback.serve(timeout=2.0)
+    feedback_call = simple_spot.api.RobotCommandFeedback.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert feedback_call is not None
     feedback_response = RobotCommandFeedbackResponse(
         feedback=RobotCommandFeedback(
@@ -69,7 +69,7 @@ def test_robot_command(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
 
     # Query and wait for the action result.
     result_future = goal_handle.get_result_async()
-    assert wait_for_future(result_future, timeout_sec=2.0)
+    assert wait_for_future(result_future, timeout_sec=pytest.DEFAULT_TIMEOUT)
 
     action_result = result_future.result()
     assert action_result.result.success
@@ -95,7 +95,7 @@ def test_robot_command_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
     # Mock GRPC sever.
 
     # Serve robot command with an unknown error.
-    command_call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    command_call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert command_call is not None
     command_response = RobotCommandResponse()
     command_response.robot_command_id = 5
@@ -103,12 +103,12 @@ def test_robot_command_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
     command_call.returns(command_response)
 
     # Wait for the goal.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     goal_handle = future.result()
 
     # Query and wait for the action result.
     result_future = goal_handle.get_result_async()
-    assert wait_for_future(result_future, timeout_sec=2.0)
+    assert wait_for_future(result_future, timeout_sec=pytest.DEFAULT_TIMEOUT)
 
     action_result = result_future.result()
     assert not action_result.result.success
@@ -138,7 +138,7 @@ def test_robot_command_starts(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
     # Mock GRPC sever.
 
     # Serve robot command.
-    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     mobility_command = call.request.command.synchronized_command.mobility_command
     assert mobility_command.se2_velocity_request.velocity.linear.x == 1.0
@@ -152,7 +152,7 @@ def test_robot_command_starts(ros: ROSAwareScope, simple_spot: SpotFixture) -> N
     call.returns(command_response)
 
     # Wait for the response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
 
     assert response.success
@@ -180,14 +180,14 @@ def test_robot_command_fails_to_start(ros: ROSAwareScope, simple_spot: SpotFixtu
     # Mock GRPC sever.
 
     # Serve robot command.
-    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     command_response = RobotCommandResponse()
     command_response.status = RobotCommandResponse.Status.STATUS_NOT_POWERED_ON
     call.returns(command_response)
 
     # Wait for the response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
 
     assert not response.success

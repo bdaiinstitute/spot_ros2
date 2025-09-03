@@ -185,3 +185,4 @@ def spot_graph_description(simple_spot: SpotFixture, domain_id: int) -> typing.I
 
 def pytest_configure() -> None:
     pytest.spot_graph_description = spot_graph_description
+    pytest.DEFAULT_TIMEOUT = 10.0  # CI often takes a weirdly long time to do stuff

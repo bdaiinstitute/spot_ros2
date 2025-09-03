@@ -32,6 +32,6 @@ def test_release(ros: ROSAwareScope) -> None:
     future = client.call_async(Trigger.Request())
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success

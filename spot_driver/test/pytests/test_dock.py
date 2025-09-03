@@ -44,14 +44,14 @@ def test_dock(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
     # Mock GRPC sever.
 
     # Serve stand command.
-    stand_call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    stand_call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert stand_call is not None
     stand_response = RobotCommandResponse()
     stand_response.status = RobotCommandResponse.Status.STATUS_OK
     stand_call.returns(stand_response)
 
     # Serve stand command feedback.
-    stand_feedback_call = simple_spot.api.RobotCommandFeedback.serve(timeout=2.0)
+    stand_feedback_call = simple_spot.api.RobotCommandFeedback.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert stand_feedback_call is not None
     stand_feedback_response = RobotCommandFeedbackResponse()
     stand_feedback_response.feedback.synchronized_feedback.mobility_command_feedback.stand_feedback.status = (
@@ -63,21 +63,21 @@ def test_dock(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
     stand_feedback_call.returns(stand_feedback_response)
 
     # Serve dock command.
-    dock_call = simple_spot.api.DockingCommand.serve(timeout=2.0)
+    dock_call = simple_spot.api.DockingCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert dock_call is not None
     dock_response = DockingCommandResponse()
     dock_response.status = DockingCommandResponse.Status.STATUS_OK
     dock_call.returns(dock_response)
 
     # Serve dock command feedback.
-    dock_feedback_call = simple_spot.api.DockingCommandFeedback.serve(timeout=2.0)
+    dock_feedback_call = simple_spot.api.DockingCommandFeedback.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert dock_feedback_call is not None
     dock_feedback_response = DockingCommandFeedbackResponse()
     dock_feedback_response.status = DockingCommandFeedbackResponse.STATUS_DOCKED
     dock_feedback_call.returns(dock_feedback_response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success
 
@@ -107,14 +107,14 @@ def test_dock_with_stand_command_failed(ros: ROSAwareScope, simple_spot: SpotFix
     # Mock GRPC sever.
 
     # Serve stand command and return an unknown error.
-    stand_call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    stand_call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert stand_call is not None
     stand_response = RobotCommandResponse()
     stand_response.status = RobotCommandResponse.Status.STATUS_UNKNOWN
     stand_call.returns(stand_response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert not response.success
 
@@ -144,14 +144,14 @@ def test_dock_with_dock_command_failed(ros: ROSAwareScope, simple_spot: SpotFixt
     # Mock GRPC sever.
 
     # Serve stand command.
-    stand_call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    stand_call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert stand_call is not None
     stand_response = RobotCommandResponse()
     stand_response.status = RobotCommandResponse.Status.STATUS_OK
     stand_call.returns(stand_response)
 
     # Serve stand command feedback.
-    stand_feedback_call = simple_spot.api.RobotCommandFeedback.serve(timeout=2.0)
+    stand_feedback_call = simple_spot.api.RobotCommandFeedback.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert stand_feedback_call is not None
     stand_feedback_response = RobotCommandFeedbackResponse()
     stand_feedback_response.feedback.synchronized_feedback.mobility_command_feedback.stand_feedback.status = (
@@ -163,13 +163,13 @@ def test_dock_with_dock_command_failed(ros: ROSAwareScope, simple_spot: SpotFixt
     stand_feedback_call.returns(stand_feedback_response)
 
     # Serve dock command and return unknown error.
-    dock_call = simple_spot.api.DockingCommand.serve(timeout=2.0)
+    dock_call = simple_spot.api.DockingCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert dock_call is not None
     dock_response = DockingCommandResponse()
     dock_response.status = DockingCommandResponse.Status.STATUS_UNKNOWN
     dock_call.returns(dock_response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert not response.success

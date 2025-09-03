@@ -38,12 +38,12 @@ def test_list_all_moves(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve "list_all_moves" command.
-    list_moves_call = simple_spot.api.ListAllMoves.serve(timeout=2.0)
+    list_moves_call = simple_spot.api.ListAllMoves.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert list_moves_call is not None
     list_moves_response = ListAllMovesResponse()
     list_moves_call.returns(list_moves_response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success

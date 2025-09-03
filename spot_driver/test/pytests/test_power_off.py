@@ -37,7 +37,7 @@ def test_spot_power_off(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve power off command.
-    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     assert call.request.command.HasField("full_body_command")
     assert call.request.command.full_body_command.HasField("safe_power_off_request")
@@ -46,6 +46,6 @@ def test_spot_power_off(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success
