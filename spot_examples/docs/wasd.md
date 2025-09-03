@@ -91,20 +91,26 @@ which, in turn, calls the helper function `_velocity_cmd_helper()` with details 
         self._velocity_cmd_helper("move_forward", v_x=VELOCITY_BASE_SPEED)
 ```
 
-The `_velocity_cmd_helper()` function takes 2D holonomic velocity requests (x, y translation and z rotation), crafts a ROS 2 `geometry_msgs/msg/Twist` message, and publishes to the robot's `/cmd_vel` topic.
+The `_velocity_cmd_helper()` function takes 2D holonomic velocity requests (x, y translation and z rotation), crafts a ROS 2 `geometry_msgs/msg/TwistStamped` message, and publishes to the robot's `/cmd_vel` topic.
 ```python
     def _velocity_cmd_helper(self, desc: str = "", v_x: float = 0.0, v_y: float = 0.0, v_rot: float = 0.0) -> None:
+        msg = TwistStamped()
         twist = Twist()
         twist.linear.x = v_x
         twist.linear.y = v_y
         twist.angular.z = v_rot
         start_time = time.time()
+        msg.header.stamp = self.node.get_clock().now().to_msg()
+        msg.twist = twist
         while time.time() - start_time < VELOCITY_CMD_DURATION:
             self.pub_cmd_vel.publish(twist)
             time.sleep(0.01)
-        self.pub_cmd_vel.publish(Twist())
+        msg = TwistStamped()
+        msg.header.stamp = self.node.get_clock().now().to_msg()
+        msg.twist = Twist()
+        self.pub_cmd_vel.publish(msg)
 ```
-As shown above, we don't send this cmd_vel topic once; rather, we continuously send it unti VELOCITY_CMD_DURATION, at which point we send a default `Twist` message, where all velocity fields default to 0, stopping the robot.
+As shown above, we don't send this cmd_vel topic once; rather, we continuously send it unti VELOCITY_CMD_DURATION, at which point we send a default `TwistStamped` message, where all velocity fields default to 0, stopping the robot.
 
 Lasty, we use ROS 2 subscribers to obtain and display information about the robot's state. The current battery state, for example, which includes battery state-of-charge percentage and charge/discharge state, is stored in `WasdInterface`'s `latest_battery_status` member, 
 ```python
