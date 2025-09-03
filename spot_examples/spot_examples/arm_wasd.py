@@ -13,10 +13,12 @@ import rclpy
 import synchros2.process as ros_process
 import synchros2.scope as ros_scope
 from bosdyn.client import ResponseError, RpcError
+from bosdyn.api import geometry_pb2, robot_command_pb2
 from geometry_msgs.msg import Twist
 from std_srvs.srv import Trigger
 
 from bosdyn_msgs.msg import ArmVelocityCommandRequest
+from bosdyn_msgs.conversions import convert
 from synchros2.action_client import ActionClientWrapper
 from synchros2.utilities import namespace_with
 
@@ -24,6 +26,26 @@ from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.msg import BatteryState, BatteryStateArray, PowerState  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
+
+# Recommended QoS for Joy/Teleop commands
+JOY_TELEOP_QOS = QoSProfile(
+    # Best Effort - prioritizes low latency over guaranteed delivery
+    # Perfect for real-time control where latest command matters most
+    reliability=ReliabilityPolicy.BEST_EFFORT,
+    
+    # Keep Last with small depth - only care about most recent commands
+    # History of 1-5 is typical, 1 is often sufficient for teleop
+    history=HistoryPolicy.KEEP_LAST,
+    depth=1,  # Only keep the latest command
+    
+    # Volatile - don't persist commands after node restart
+    # Teleop commands shouldn't be replayed from before restart
+    durability=DurabilityPolicy.VOLATILE,
+
+    # Short lifespan - commands expire quickly to avoid stale commands
+    lifespan=rclpy.duration.Duration(seconds=1.0),  # Commands expire quickly
+)
 
 # -----------------------
 # Constants
@@ -33,15 +55,13 @@ VELOCITY_BASE_ANGULAR = 0.5     # rad/sec
 VELOCITY_CMD_DURATION = 1.0     # seconds
 COMMAND_INPUT_RATE = 0.1
 
-ARM_MAXIMUM_ACCELERATION = 0.5  # m/s^2
-ARM_MAX_LINEAR_VELOCITY = 0.2   # m/s
-ARM_VELOCITY_CMD_DURATION = 1.0 # seconds
+ARM_MAXIMUM_ACCELERATION = 0.3  # m/s^2
+ARM_MAX_LINEAR_VELOCITY = 0.5   # m/s
+ARM_VELOCITY_CMD_DURATION = 0.25 # seconds
 
 # Arm velocity increments
-ARM_STEP_R = 0.05        # radial step (forward/backward)
-ARM_STEP_THETA = 0.05    # angular step (left/right)
-ARM_STEP_Z = 0.05        # vertical step (up/down)
-ARM_ROTATE_STEP = 0.1    # end effector rotation speed
+ARM_VELOCITY_NORMALIZED = 0.4 # m/s
+ARM_VELOCITY_ANGULAR_NORMALIZED = 0.3  # rad/s
 
 
 class ExitCheck(object):
@@ -151,8 +171,8 @@ class WasdInterface:
         # Stuff that is set in start()
         self._robot_id = None
 
-        self.pub_cmd_vel = self.node.create_publisher(Twist, namespace_with(robot_name, "cmd_vel"), 1)
-        self.pub_arm_vel = self.node.create_publisher(ArmVelocityCommandRequest, namespace_with(robot_name, "arm_vel"), 1)
+        self.pub_cmd_vel = self.node.create_publisher(Twist, namespace_with(robot_name, "cmd_vel"), JOY_TELEOP_QOS)
+        self.pub_arm_vel = self.node.create_publisher(ArmVelocityCommandRequest, namespace_with(robot_name, "arm_velocity_commands"), JOY_TELEOP_QOS)
 
         self.latest_power_state_status: Optional[PowerState] = None
         self.latest_battery_status: Optional[BatteryStateArray] = None
@@ -177,12 +197,13 @@ class WasdInterface:
         self.cli_rollover = self.node.create_client(Trigger, namespace_with(robot_name, "rollover"))
 
         self.robot = SimpleSpotCommander(robot_name, self.node)
-        # self.robot_command_client = ActionClientWrapper(
-        #     RobotCommand, namespace_with(robot_name, "robot_command"), self.node
-        # )
+        self.robot_command_client = ActionClientWrapper(
+            RobotCommand, namespace_with(robot_name, "robot_command"), self.node
+        )
 
         self.is_arm_unstowed = False
         self.is_arm_locked_in_position = False
+        self.service_call_in_progress = False
 
     def start(self) -> bool:
         # """Begin communication with the robot."""
@@ -202,12 +223,12 @@ class WasdInterface:
             self.logger.error("Unable to power on robot message was " + result.message)
             return False
 
-        self.logger.info("Standing robot up")
-        result = self.robot.command("stand")
-        if not result.success:
-            self.logger.error("Robot did not stand message was " + result.message)
-            return False
-        self.logger.info("Successfully stood up.")
+        # self.logger.info("Standing robot up")
+        # result = self.robot.command("stand")
+        # if not result.success:
+        #     self.logger.error("Robot did not stand message was " + result.message)
+        #     return False
+        self.logger.info("Successfully powered on the robot.")
         time.sleep(3)
 
         return True
@@ -423,10 +444,20 @@ class WasdInterface:
         self.cli_stop.call_async(Trigger.Request())
 
     def _velocity_cmd_helper(self, desc: str = "", v_x: float = 0.0, v_y: float = 0.0, v_rot: float = 0.0) -> None:
+        if(self.service_call_in_progress):
+            self.add_message("Service call in progress, cannot send velocity command")
+            return
         if(self.is_arm_unstowed):
             if(not self.is_arm_locked_in_position):
-                self.lock_arm_in_position()
-                self.is_arm_locked_in_position = True
+                self.service_call_in_progress = True
+                result = self.lock_arm_in_position()
+                self.service_call_in_progress = False
+                if not result.success:
+                    self.add_message("Failed to lock arm in position, cannot send velocity command")
+                    self.is_arm_locked_in_position = False
+                    return
+                else:
+                    self.is_arm_locked_in_position = True
         else:
             self.is_arm_locked_in_position = False
         twist = Twist()
@@ -443,51 +474,51 @@ class WasdInterface:
     # Arm movement functions (6 DOF)
     # -----------------------
     def _arm_move_out(self) -> None:
-        self.arm_velocity_cmd_helper("arm_move_out", r=ARM_STEP_R)
+        self.arm_velocity_cmd_helper("arm_move_out", r=ARM_VELOCITY_NORMALIZED)
         self.add_message("Arm: move out")
 
     def _arm_move_in(self) -> None:
-        self.arm_velocity_cmd_helper("arm_move_in", r=-ARM_STEP_R)
+        self.arm_velocity_cmd_helper("arm_move_in", r=-ARM_VELOCITY_NORMALIZED)
         self.add_message("Arm: move in")
 
     def _arm_rotate_ccw(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_ccw", theta=ARM_STEP_THETA)
+        self.arm_velocity_cmd_helper("arm_rotate_ccw", theta=ARM_VELOCITY_NORMALIZED)
         self.add_message("Arm: rotate CCW")
 
     def _arm_rotate_cw(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_cw", theta=-ARM_STEP_THETA)
+        self.arm_velocity_cmd_helper("arm_rotate_cw", theta=-ARM_VELOCITY_NORMALIZED)
         self.add_message("Arm: rotate CW")
 
     def _arm_move_up(self) -> None:
-        self.arm_velocity_cmd_helper("arm_move_up", z=ARM_STEP_Z)
+        self.arm_velocity_cmd_helper("arm_move_up", z=ARM_VELOCITY_NORMALIZED)
         self.add_message("Arm: move up")
 
     def _arm_move_down(self) -> None:
-        self.arm_velocity_cmd_helper("arm_move_down", z=-ARM_STEP_Z)
+        self.arm_velocity_cmd_helper("arm_move_down", z=-ARM_VELOCITY_NORMALIZED)
         self.add_message("Arm: move down")
 
     def _arm_rotate_plus_ry(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_plus_ry", end_effector_y=ARM_ROTATE_STEP)
+        self.arm_velocity_cmd_helper("arm_rotate_plus_ry", end_effector_y=ARM_VELOCITY_ANGULAR_NORMALIZED)
         self.add_message("End effector: +Y rotation")
 
     def _arm_rotate_minus_ry(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_minus_ry", end_effector_y=-ARM_ROTATE_STEP)
+        self.arm_velocity_cmd_helper("arm_rotate_minus_ry", end_effector_y=-ARM_VELOCITY_ANGULAR_NORMALIZED)
         self.add_message("End effector: -Y rotation")
 
     def _arm_rotate_plus_rx(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_plus_rx", end_effector_x=ARM_ROTATE_STEP)
+        self.arm_velocity_cmd_helper("arm_rotate_plus_rx", end_effector_x=ARM_VELOCITY_ANGULAR_NORMALIZED)
         self.add_message("End effector: +X rotation")
 
     def _arm_rotate_minus_rx(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_minus_rx", end_effector_x=-ARM_ROTATE_STEP)
+        self.arm_velocity_cmd_helper("arm_rotate_minus_rx", end_effector_x=-ARM_VELOCITY_ANGULAR_NORMALIZED)
         self.add_message("End effector: -X rotation")
 
     def _arm_rotate_plus_rz(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_plus_rz", end_effector_z=ARM_ROTATE_STEP)
+        self.arm_velocity_cmd_helper("arm_rotate_plus_rz", end_effector_z=ARM_VELOCITY_ANGULAR_NORMALIZED)
         self.add_message("End effector: +Z rotation")
 
     def _arm_rotate_minus_rz(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_minus_rz", end_effector_z=-ARM_ROTATE_STEP)
+        self.arm_velocity_cmd_helper("arm_rotate_minus_rz", end_effector_z=-ARM_VELOCITY_ANGULAR_NORMALIZED)
         self.add_message("End effector: -Z rotation")
 
     def arm_velocity_cmd_helper(self, desc: str = "", 
@@ -504,47 +535,28 @@ class WasdInterface:
         arm_cmd.angular_velocity_of_hand_rt_odom_in_hand.y = end_effector_y
         arm_cmd.angular_velocity_of_hand_rt_odom_in_hand.z = end_effector_z
 
-        arm_cmd.maximum_acceleration = ARM_MAXIMUM_ACCELERATION
+        arm_cmd.maximum_acceleration.data = ARM_MAXIMUM_ACCELERATION
         arm_cmd.command.command_choice = arm_cmd.command.COMMAND_CYLINDRICAL_VELOCITY_SET
         arm_cmd.command.cylindrical_velocity.linear_velocity.r = r
         arm_cmd.command.cylindrical_velocity.linear_velocity.theta = theta
         arm_cmd.command.cylindrical_velocity.linear_velocity.z = z
-        arm_cmd.command.cylindrical_velocity.max_linear_velocity = ARM_MAX_LINEAR_VELOCITY
+        arm_cmd.command.cylindrical_velocity.max_linear_velocity.data = ARM_MAX_LINEAR_VELOCITY
         start_time = time.time()
         while time.time() - start_time < ARM_VELOCITY_CMD_DURATION:
             self.pub_arm_vel.publish(arm_cmd)
             time.sleep(0.01)
         self.pub_arm_vel.publish(ArmVelocityCommandRequest())
 
-    # Note: You had these functions defined but not used - keeping them for compatibility
-    def _arm_up(self) -> None:
-        self.arm_velocity_cmd_helper("arm_up", z=ARM_STEP_Z)
-
-    def _arm_down(self) -> None:
-        self.arm_velocity_cmd_helper("arm_down", z=-ARM_STEP_Z)
-
-    def _arm_left(self) -> None:
-        self.arm_velocity_cmd_helper("arm_left", theta=ARM_STEP_THETA)
-
-    def _arm_right(self) -> None:
-        self.arm_velocity_cmd_helper("arm_right", theta=-ARM_STEP_THETA)
-
-    def _arm_forward(self) -> None:
-        self.arm_velocity_cmd_helper("arm_forward", r=ARM_STEP_R)
-
-    def _arm_backward(self) -> None:
-        self.arm_velocity_cmd_helper("arm_backward", r=-ARM_STEP_R)
-
-    def _arm_rotate_cw(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_cw", end_effector_z=-ARM_ROTATE_STEP)
-
-    def _arm_rotate_ccw(self) -> None:
-        self.arm_velocity_cmd_helper("arm_rotate_ccw", end_effector_z=ARM_ROTATE_STEP)
-
     def lock_arm_in_position(self) -> None:
         """Lock arm in current position - placeholder for actual implementation"""
         # This would need to be implemented based on your robot's API
-        pass
+        self.add_message("Locking arm in current position")
+        robot_command = robot_command_pb2.RobotCommand()
+        arm_command = robot_command.synchronized_command.arm_command
+        arm_command.arm_joint_move_command.trajectory.points.add()
+        action_goal = RobotCommand.Goal()
+        convert(robot_command, action_goal.command)
+        return self.robot_command_client.send_goal_and_wait("lock_arm_in_place", action_goal)
 
 
 def cli() -> argparse.ArgumentParser:

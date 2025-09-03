@@ -19,6 +19,7 @@ import numpy as np
 import rclpy
 import rclpy.duration
 import rclpy.time
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 import synchros2.process as ros_process
 import tf2_ros
 from bondpy.bondpy import Bond
@@ -595,14 +596,30 @@ class SpotROS(Node):
         self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
         self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
 
-        self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
+        # Recommended QoS for Joy/Teleop commands
+        JOY_TELEOP_QOS = QoSProfile(
+            # Best Effort - prioritizes low latency over guaranteed delivery
+            # Perfect for real-time control where latest command matters most
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            
+            # Keep Last with small depth - only care about most recent commands
+            # History of 1-5 is typical, 1 is often sufficient for teleop
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1,  # Only keep the latest command
+            
+            # Volatile - don't persist commands after node restart
+            # Teleop commands shouldn't be replayed from before restart
+            durability=DurabilityPolicy.VOLATILE
+        )
+
+        self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, JOY_TELEOP_QOS, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
 
         self.create_trigger_services()
 
         if self.has_arm:
             self.create_subscription(
-                JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
+                JointState, "arm_joint_commands", self.arm_joint_cmd_callback, JOY_TELEOP_QOS, callback_group=self.group
             )
             self.create_subscription(
                 PoseStamped, "arm_pose_commands", self.arm_pose_cmd_callback, 100, callback_group=self.group
@@ -611,7 +628,7 @@ class SpotROS(Node):
                 ArmVelocityCommandRequest,
                 "arm_velocity_commands",
                 self.arm_velocity_cmd_callback,
-                100,
+                JOY_TELEOP_QOS,
                 callback_group=self.group,
             )
 
