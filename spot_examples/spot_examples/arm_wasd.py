@@ -177,9 +177,9 @@ class WasdInterface:
         self.cli_rollover = self.node.create_client(Trigger, namespace_with(robot_name, "rollover"))
 
         self.robot = SimpleSpotCommander(robot_name, self.node)
-        self.robot_command_client = ActionClientWrapper(
-            RobotCommand, namespace_with(robot_name, "robot_command"), self.node
-        )
+        # self.robot_command_client = ActionClientWrapper(
+        #     RobotCommand, namespace_with(robot_name, "robot_command"), self.node
+        # )
 
         self.is_arm_unstowed = False
         self.is_arm_locked_in_position = False
@@ -252,6 +252,8 @@ class WasdInterface:
 
             # for debug
             curses.echo()
+
+            self.logger.info("Starting WASD interface")
 
             # try:
             while not self._exit_check.kill_now:
@@ -336,7 +338,7 @@ class WasdInterface:
         
         battery_states = []
         for battery in self.latest_battery_status.battery_states:
-            battery_states.append(f"{battery.identifier}: {battery.charge_percentage.value:.1f}%")
+            battery_states.append(f"{battery.identifier}: {battery.charge_percentage:.1f}%")
         
         return "Battery: " + ", ".join(battery_states)
 
@@ -564,11 +566,11 @@ def main(args: argparse.Namespace) -> bool:
         )
         return False
 
-    try:
-        os.environ.setdefault("ESCDELAY", "0")
-        curses.wrapper(wasd_interface.drive)
-    except Exception as e:
-        wasd_interface.logger.error("WASD has thrown an error:" + str(e))
+    # try:
+    os.environ.setdefault("ESCDELAY", "0")
+    curses.wrapper(wasd_interface.drive)
+    # except Exception as e:
+    #     wasd_interface.logger.error("WASD has thrown an error:" + str(e))
 
     return True
 
