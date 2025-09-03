@@ -52,7 +52,7 @@ def test_joint_states(simple_spot: SpotFixture, ros: ROSAwareScope) -> None:
     response.status = RobotCommandResponse.Status.STATUS_OK
     simple_spot.api.RobotCommand.future.returns(response)
     # start the mock joint control stream
-    call = simple_spot.api.JointControlStream.serve(timeout=2.0)
+    call = simple_spot.api.JointControlStream.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
 
     # Grab the latest joint states message from the joint state broadcaster
