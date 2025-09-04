@@ -14,7 +14,7 @@ while true; do
 done
 
 if test -f "$REQUIREMENTS_FILE"; then
-    sudo pip3 install -r $REQUIREMENTS_FILE
+    sudo pip3 install --no-cache-dir -r $REQUIREMENTS_FILE
 else
     echo "ERROR: $REQUIREMENTS_FILE not found. Please initialize spot_wrapper with: git submodule init --update"
     exit 1
@@ -36,7 +36,7 @@ sudo apt-get install -y qttools5-dev
 # Install the dist-utils
 sudo apt-get install -y python3-distutils
 sudo apt-get install -y python3-apt
-sudo pip3 install --force-reinstall -v "setuptools==59.6.0"
+sudo pip3 install --no-cache-dir --force-reinstall -v "setuptools==59.6.0"
 
 # Install bosdyn_msgs - automatic conversions of BD protobufs to ROS messages
 wget -q -O /tmp/ros-humble-bosdyn_msgs_${MSG_VERSION}-jammy_${ARCH}.run https://github.com/bdaiinstitute/bosdyn_msgs/releases/download/${MSG_VERSION}/ros-humble-bosdyn_msgs_${MSG_VERSION}-jammy_${ARCH}.run
