@@ -79,30 +79,30 @@ def test_execute_dance_with_upload(ros: ROSAwareScope, simple_spot: SpotFixture)
     # Mock GRPC sever.
 
     # Serve upload_choreography command.
-    upload_call = simple_spot.api.UploadChoreography.serve(timeout=2.0)
+    upload_call = simple_spot.api.UploadChoreography.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert upload_call is not None
     upload_response = UploadChoreographyResponse()
     upload_call.returns(upload_response)
 
     # Serve execute_dance command.
-    execute_call = simple_spot.api.ExecuteChoreography.serve(timeout=2.0)
+    execute_call = simple_spot.api.ExecuteChoreography.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert execute_call is not None
     execute_response = ExecuteChoreographyResponse()
     execute_response.status = ExecuteChoreographyResponse.Status.STATUS_OK
     execute_call.returns(execute_response)
 
     # Now send Choreo status so that the feedback knows the dance is done
-    call = simple_spot.api.ChoreographyStatus.serve(timeout=2.0)
+    call = simple_spot.api.ChoreographyStatus.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = ChoreographyStatusResponse()
     response.status = ChoreographyStatusResponse.Status.STATUS_DANCING
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     goal_handle = future.result()
     result_future = goal_handle.get_result_async()
-    assert wait_for_future(result_future, timeout_sec=2.0)
+    assert wait_for_future(result_future, timeout_sec=pytest.DEFAULT_TIMEOUT)
 
     final_result = result_future.result()
     assert final_result.result.success
@@ -142,24 +142,24 @@ def test_execute_dance_by_name(ros: ROSAwareScope, simple_spot: SpotFixture) -> 
     # Mock GRPC sever.
 
     # Serve execute_dance command.
-    execute_call = simple_spot.api.ExecuteChoreography.serve(timeout=2.0)
+    execute_call = simple_spot.api.ExecuteChoreography.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert execute_call is not None
     execute_response = ExecuteChoreographyResponse()
     execute_response.status = ExecuteChoreographyResponse.Status.STATUS_OK
     execute_call.returns(execute_response)
 
     # Now send Choreo status so that the feedback knows the dance is done
-    call = simple_spot.api.ChoreographyStatus.serve(timeout=2.0)
+    call = simple_spot.api.ChoreographyStatus.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = ChoreographyStatusResponse()
     response.status = ChoreographyStatusResponse.Status.STATUS_DANCING
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     goal_handle = future.result()
     result_future = goal_handle.get_result_async()
-    assert wait_for_future(result_future, timeout_sec=2.0)
+    assert wait_for_future(result_future, timeout_sec=pytest.DEFAULT_TIMEOUT)
 
     final_result = result_future.result()
     assert final_result.result.success
