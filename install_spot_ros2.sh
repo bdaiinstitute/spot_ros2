@@ -13,6 +13,8 @@ while true; do
   esac
 done
 
+sudo apt-get update && apt-get install -y python3-rosdep python3-pip wget
+
 if test -f "$REQUIREMENTS_FILE"; then
     sudo pip3 install --no-cache-dir -r $REQUIREMENTS_FILE
 else
@@ -20,10 +22,7 @@ else
     exit 1
 fi
 
-sudo apt-get update
-
 # Install ROS dependencies
-sudo apt-get install -y python3-rosdep
 #NOTE: Initialize only if a sources list definition doesn't exist yet - avoids the rosdep error message
 if ! [[ $(ls /etc/ros/rosdep/sources.list.d/*default.list 2> /dev/null) ]]; then
   sudo rosdep init
