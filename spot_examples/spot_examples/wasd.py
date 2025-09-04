@@ -17,10 +17,9 @@ from std_srvs.srv import Trigger
 from synchros2.action_client import ActionClientWrapper
 from synchros2.utilities import namespace_with
 
+from spot_examples.simple_spot_commander import SimpleSpotCommander
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.msg import BatteryState, BatteryStateArray, PowerState  # type: ignore
-
-from .simple_spot_commander import SimpleSpotCommander
 
 VELOCITY_BASE_SPEED = 0.3  # m/s
 VELOCITY_BASE_ANGULAR = 0.5  # rad/sec
