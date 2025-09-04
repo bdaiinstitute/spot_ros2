@@ -2632,7 +2632,7 @@ class SpotROS(Node):
         if not self.spot_wrapper:
             self.get_logger().info(f"Mock mode, received command vel {data}")
             return
-        self.spot_wrapper.velocity_cmd(data.twist.linear.x, data.twist.linear.y, data.twist.angular.z, self.cmd_duration)
+        self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z, self.cmd_duration)
     
     def cmd_velocity_stamped_callback(self, data: TwistStamped) -> None:
         """Callback for cmd_vel command"""
