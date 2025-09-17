@@ -79,4 +79,9 @@ void LeaseManagerNode::initialize(std::shared_ptr<rclcpp::Node> node, std::uniqu
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> LeaseManagerNode::get_node_base_interface() {
   return node_->get_node_base_interface();
 }
+
+std::shared_ptr<rclcpp::Clock> LeaseManagerNode::get_clock() {
+  return node_->get_clock();
+}
+
 }  // namespace spot_ros2::lease

@@ -7,6 +7,7 @@
 
 #include <spot_driver/api/default_spot_api.hpp>
 
+#include <spot_driver/interfaces/rclcpp_clock_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_node_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
@@ -26,8 +27,9 @@ StatePublisherNode::StatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_b
                                        std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                                        std::unique_ptr<LoggerInterfaceBase> logger_interface,
                                        std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
-                                       std::unique_ptr<TimerInterfaceBase> timer_interface)
-    : node_base_interface_{std::move(node_base_interface)} {
+                                       std::unique_ptr<TimerInterfaceBase> timer_interface,
+                                       std::unique_ptr<ClockInterfaceBase> clock_interface)
+    : node_base_interface_{std::move(node_base_interface)}, clock_interface_{std::move(clock_interface)} {
   initialize(std::move(spot_api), std::move(middleware_handle), std::move(parameter_interface),
              std::move(logger_interface), std::move(tf_broadcaster_interface), std::move(timer_interface));
 }
@@ -35,7 +37,7 @@ StatePublisherNode::StatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_b
 StatePublisherNode::StatePublisherNode(const rclcpp::NodeOptions& node_options) {
   const auto node = std::make_shared<rclcpp::Node>("state_publisher", node_options);
   node_base_interface_ = std::make_unique<RclcppNodeInterface>(node->get_node_base_interface());
-
+  clock_interface_ = std::make_unique<RclcppClockInterface>(node->get_node_clock_interface());
   auto mw_handle = std::make_unique<StateMiddlewareHandle>(node);
   auto parameter_interface = std::make_unique<RclcppParameterInterface>(node);
   auto logger_interface = std::make_unique<RclcppLoggerInterface>(node->get_logger());
@@ -85,6 +87,10 @@ void StatePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> StatePublisherNode::get_node_base_interface() {
   return node_base_interface_->getNodeBaseInterface();
+}
+
+std::shared_ptr<rclcpp::Clock> StatePublisherNode::get_clock() {
+  return clock_interface_->getClock();
 }
 
 }  // namespace spot_ros2

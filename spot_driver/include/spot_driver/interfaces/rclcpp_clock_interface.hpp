@@ -21,6 +21,8 @@ class RclcppClockInterface : public ClockInterfaceBase {
   explicit RclcppClockInterface(
       const std::shared_ptr<rclcpp::node_interfaces::NodeClockInterface>& node_clock_interface);
 
+  std::shared_ptr<rclcpp::Clock> getClock() override;
+
   rclcpp::Time now() override;
 
  private:

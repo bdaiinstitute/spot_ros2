@@ -6,6 +6,7 @@
 #include <spot_driver/api/default_spot_api.hpp>
 #include <spot_driver/images/images_middleware_handle.hpp>
 #include <spot_driver/images/spot_image_publisher.hpp>
+#include <spot_driver/interfaces/rclcpp_clock_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_logger_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_node_interface.hpp>
 #include <spot_driver/interfaces/rclcpp_parameter_interface.hpp>
@@ -17,14 +18,12 @@ constexpr auto kSDKClientName = "spot_image_publisher";
 }
 
 namespace spot_ros2::images {
-SpotImagePublisherNode::SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api,
-                                               std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle,
-                                               std::unique_ptr<ParameterInterfaceBase> parameters,
-                                               std::unique_ptr<LoggerInterfaceBase> logger,
-                                               std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster,
-                                               std::unique_ptr<TimerInterfaceBase> timer,
-                                               std::unique_ptr<NodeInterfaceBase> node_base_interface)
-    : node_base_interface_{std::move(node_base_interface)} {
+SpotImagePublisherNode::SpotImagePublisherNode(
+    std::unique_ptr<SpotApi> spot_api, std::unique_ptr<SpotImagePublisher::MiddlewareHandle> mw_handle,
+    std::unique_ptr<ParameterInterfaceBase> parameters, std::unique_ptr<LoggerInterfaceBase> logger,
+    std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster, std::unique_ptr<TimerInterfaceBase> timer,
+    std::unique_ptr<NodeInterfaceBase> node_base_interface, std::unique_ptr<ClockInterfaceBase> clock_interface)
+    : node_base_interface_{std::move(node_base_interface)}, clock_interface_{std::move(clock_interface)} {
   initialize(std::move(spot_api), std::move(mw_handle), std::move(parameters), std::move(logger),
              std::move(tf_broadcaster), std::move(timer));
 }
@@ -32,6 +31,7 @@ SpotImagePublisherNode::SpotImagePublisherNode(std::unique_ptr<SpotApi> spot_api
 SpotImagePublisherNode::SpotImagePublisherNode(const rclcpp::NodeOptions& node_options) {
   const auto node = std::make_shared<rclcpp::Node>("image_publisher", node_options);
   node_base_interface_ = std::make_unique<RclcppNodeInterface>(node->get_node_base_interface());
+  clock_interface_ = std::make_unique<RclcppClockInterface>(node->get_node_clock_interface());
 
   auto mw_handle = std::make_unique<ImagesMiddlewareHandle>(node);
   auto parameters = std::make_unique<RclcppParameterInterface>(node);
@@ -94,6 +94,10 @@ void SpotImagePublisherNode::initialize(std::unique_ptr<SpotApi> spot_api,
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> SpotImagePublisherNode::get_node_base_interface() {
   return node_base_interface_->getNodeBaseInterface();
+}
+
+std::shared_ptr<rclcpp::Clock> SpotImagePublisherNode::get_clock() {
+  return clock_interface_->getClock();
 }
 
 }  // namespace spot_ros2::images
