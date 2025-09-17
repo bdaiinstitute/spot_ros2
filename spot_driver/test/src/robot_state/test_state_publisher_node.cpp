@@ -7,6 +7,7 @@
 #include <rclcpp/node_options.hpp>
 #include <spot_driver/api/spot_api.hpp>
 #include <spot_driver/fake/fake_parameter_interface.hpp>
+#include <spot_driver/mock/mock_clock_interface.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
 #include <spot_driver/mock/mock_spot_api.hpp>
@@ -35,6 +36,7 @@ class StatePublisherNodeTest : public ::testing::Test {
     mock_logger_interface = std::make_unique<MockLoggerInterface>();
     mock_tf_broadcaster_interface = std::make_unique<MockTfBroadcasterInterface>();
     mock_timer_interface = std::make_unique<MockTimerInterface>();
+    mock_clock_interface = std::make_unique<MockClockInterface>();
 
     mock_spot_api = std::make_unique<MockSpotApi>();
     mock_time_sync_api = std::make_unique<MockTimeSyncApi>();
@@ -46,6 +48,7 @@ class StatePublisherNodeTest : public ::testing::Test {
   std::unique_ptr<MockLoggerInterface> mock_logger_interface;
   std::unique_ptr<MockTfBroadcasterInterface> mock_tf_broadcaster_interface;
   std::unique_ptr<MockTimerInterface> mock_timer_interface;
+  std::unique_ptr<MockClockInterface> mock_clock_interface;
 
   std::unique_ptr<MockSpotApi> mock_spot_api;
   std::unique_ptr<MockTimeSyncApi> mock_time_sync_api;
@@ -74,7 +77,7 @@ TEST_F(StatePublisherNodeTest, ConstructionSuccessful) {
   EXPECT_NO_THROW(StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
                                      std::move(mock_middleware_handle), std::move(fake_parameter_interface),
                                      std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
-                                     std::move(mock_timer_interface)));
+                                     std::move(mock_timer_interface), std::move(mock_clock_interface)));
 }
 
 TEST_F(StatePublisherNodeTest, ConstructionFailedCreateRobotFailure) {
@@ -96,11 +99,11 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedCreateRobotFailure) {
 
   // WHEN constructing a StatePublisherNodeTest
   // THEN the constructor throws
-  EXPECT_THROW(
-      StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api), std::move(mock_middleware_handle),
-                         std::move(fake_parameter_interface), std::move(mock_logger_interface),
-                         std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface)),
-      std::exception);
+  EXPECT_THROW(StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
+                                  std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+                                  std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
+                                  std::move(mock_timer_interface), std::move(mock_clock_interface)),
+               std::exception);
 }
 
 TEST_F(StatePublisherNodeTest, ConstructionFailedAuthenticateFailure) {
@@ -122,11 +125,11 @@ TEST_F(StatePublisherNodeTest, ConstructionFailedAuthenticateFailure) {
 
   // WHEN constructing a StatePublisherNodeTest
   // THEN the constructor throws
-  EXPECT_THROW(
-      StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api), std::move(mock_middleware_handle),
-                         std::move(fake_parameter_interface), std::move(mock_logger_interface),
-                         std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface)),
-      std::exception);
+  EXPECT_THROW(StatePublisherNode(std::move(mock_node_interface), std::move(mock_spot_api),
+                                  std::move(mock_middleware_handle), std::move(fake_parameter_interface),
+                                  std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
+                                  std::move(mock_timer_interface), std::move(mock_clock_interface)),
+               std::exception);
 }
 
 }  // namespace spot_ros2::test

@@ -1,12 +1,16 @@
 // Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
 
 #include <rclcpp/executors.hpp>
+#include <spot_driver/api/spot_clock_sources.hpp>
 #include <spot_driver/robot_state/state_publisher_node.hpp>
 
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
 
   spot_ros2::StatePublisherNode node;
+
+  // Set the Spot SDK clock source to use the ROS clock.
+  spot_ros2::SetSpotSDKClockSource(node.get_clock());
 
   // Spins the node with the default single-threaded executor.
   rclcpp::spin(node.get_node_base_interface());

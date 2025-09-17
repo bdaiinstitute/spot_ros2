@@ -5,6 +5,7 @@
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_options.hpp>
 #include <spot_driver/api/spot_api.hpp>
+#include <spot_driver/interfaces/clock_interface_base.hpp>
 #include <spot_driver/interfaces/logger_interface_base.hpp>
 #include <spot_driver/interfaces/parameter_interface_base.hpp>
 #include <spot_driver/interfaces/tf_broadcaster_interface_base.hpp>
@@ -34,14 +35,15 @@ class StatePublisherNode {
    * succeed.
    * @param tf_broadcaster_interface Publishes the dynamic transforms in Spot's robot state to TF.
    * @param timer_interface Repeatedly triggers timerCallback() using the middleware's clock.
-   *
+   * @param clock_interface Gets the current timestamp.
    */
   StatePublisherNode(std::unique_ptr<NodeInterfaceBase> node_base_interface, std::unique_ptr<SpotApi> spot_api,
                      std::unique_ptr<StatePublisher::MiddlewareHandle> middleware_handle,
                      std::unique_ptr<ParameterInterfaceBase> parameter_interface,
                      std::unique_ptr<LoggerInterfaceBase> logger_interface,
                      std::unique_ptr<TfBroadcasterInterfaceBase> tf_broadcaster_interface,
-                     std::unique_ptr<TimerInterfaceBase> timer_interface);
+                     std::unique_ptr<TimerInterfaceBase> timer_interface,
+                     std::unique_ptr<ClockInterfaceBase> clock_interface);
 
   /**
    * @brief Constructor for StatePublisherNode.
@@ -60,6 +62,14 @@ class StatePublisherNode {
    * @return A shared_ptr to the NodeBaseInterface of the node stored as a private member of this class.
    */
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> get_node_base_interface();
+
+  /**
+   * @brief Returns the Clock of this class's node.
+   * @details This function exists to allow for the Spot SDK clock source to be derived from a node's clock.
+   *
+   * @return A shared_ptr to the Clock of the node.
+   */
+  std::shared_ptr<rclcpp::Clock> get_clock();
 
  private:
   /**
@@ -85,6 +95,7 @@ class StatePublisherNode {
                   std::unique_ptr<TimerInterfaceBase> timer_interface);
 
   std::unique_ptr<NodeInterfaceBase> node_base_interface_;
+  std::unique_ptr<ClockInterfaceBase> clock_interface_;
   std::unique_ptr<SpotApi> spot_api_;
   std::unique_ptr<StatePublisher> internal_;
 };

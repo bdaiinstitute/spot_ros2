@@ -21,6 +21,16 @@ target_include_directories(test_clock_skew
 )
 target_link_libraries(test_clock_skew spot_api)
 
+ament_add_gmock(test_clock_source
+  src/test_clock_source.cpp
+)
+target_include_directories(test_clock_source
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(test_clock_source spot_api)
+
 # test_spot_image_publisher
 
 ament_add_gmock(test_spot_image_publisher
