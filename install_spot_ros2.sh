@@ -13,7 +13,7 @@ while true; do
   esac
 done
 
-sudo apt-get update && apt-get install -y python3-rosdep python3-pip wget
+sudo apt-get update && sudo apt-get install -y python3-rosdep python3-pip wget
 
 if test -f "$REQUIREMENTS_FILE"; then
     sudo pip3 install --no-cache-dir -r $REQUIREMENTS_FILE
