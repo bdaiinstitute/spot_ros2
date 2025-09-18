@@ -32,4 +32,8 @@ std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> ImageStitcherNode::g
   return node_->get_node_base_interface();
 }
 
+std::shared_ptr<rclcpp::Clock> ImageStitcherNode::get_clock() {
+  return node_->get_clock();
+}
+
 }  // namespace spot_ros2

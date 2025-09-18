@@ -63,6 +63,14 @@ class ObjectSynchronizerNode {
    */
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> get_node_base_interface();
 
+  /**
+   * @brief Returns the Clock of this class's node.
+   * @details This function exists to allow for the Spot SDK clock source to be derived from a node's clock.
+   *
+   * @return A shared_ptr to the Clock of the node.
+   */
+  std::shared_ptr<rclcpp::Clock> get_clock();
+
  private:
   /**
    * @brief Connect to and authenticate with Spot, and then create the ObjectSynchronizer class member.
@@ -86,6 +94,7 @@ class ObjectSynchronizerNode {
 
   std::unique_ptr<NodeInterfaceBase> node_base_interface_;
   std::unique_ptr<SpotApi> spot_api_;
+  std::shared_ptr<rclcpp::Clock> clock_;
   std::unique_ptr<ObjectSynchronizer> internal_;
 };
 }  // namespace spot_ros2
