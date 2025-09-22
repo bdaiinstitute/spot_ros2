@@ -43,6 +43,7 @@ from bosdyn.client import math_helpers
 from bosdyn.client.async_tasks import AsyncPeriodicQuery
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn.client.lease import Lease, LeaseWallet
+from bosdyn.util import set_clock_source
 from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg, bosdyn_pose_to_tf
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
@@ -328,27 +329,20 @@ class SpotProxyLeash(SpotLeashProtocol):
 def set_spot_sdk_clock_source(clock: Clock) -> None:
     """Set the given ROS clock as Spot SDK clock source.
 
-    The standard approach to setting a custom clock source would be to use
-    bosdyn.util.set_clock_source(). Unfortunately, the Python SDK for Spot
-    (unlike its C++ counterpart) is rather inconsistent in its use of clock
-    sources. It will often just call time.time() directly instead of using
-    bosdyn.util.now_sec() or similar. Thus we are forced to monkey-patch time.time().
-
-    Be mindful of the implications.
-
-    Do NOT use this function outside the Spot ROS 2 driver process.
+    Note that the Python SDK for Spot (unlike its C++ counterpart) is rather inconsistent
+    in its use of clock sources. It will often just call time.time() directly instead of
+    using bosdyn.util.now_sec() or derivatives. Simulation must handle time synchronization
+    services and even then you may still run into timing issues. Use at your own risk.
     """
     clock_ref = weakref.ref(clock)
-
-    original_time = time.time
 
     def _clock_time() -> float:
         clock = clock_ref()
         if clock is None:
-            return original_time()
+            return time.time()
         return clock.now().nanoseconds / 1e9
 
-    time.time = _clock_time
+    set_clock_source(_clock_time)
 
 
 class SpotROS(Node):
@@ -515,7 +509,6 @@ class SpotROS(Node):
 
         logging.basicConfig(format="[%(filename)s:%(lineno)d] %(message)s", level=logging.ERROR)
         self.wrapper_logger = logging.getLogger(f"{name_with_dot}spot_wrapper")
-
         self.leash_interface: Optional[SpotLeashProtocol] = None
 
         self.leasing_mode = self.declare_parameter("leasing_mode", "direct").value
@@ -1056,7 +1049,7 @@ class SpotROS(Node):
                         + COLOR_END,
                     )
                     printed = True
-                time.sleep(poll_period_sec)  # cannot use rate from constructor!
+                time.sleep(poll_period_sec)
             self.get_logger().info("Found estop!")
 
         self.create_timer(1 / self.async_tasks_rate, self.step)
