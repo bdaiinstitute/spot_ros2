@@ -176,7 +176,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "launch", "spot_image_publishers.launch.py"])
         ),
         launch_arguments={
-            key: LaunchConfiguration(key) for key in ["config_file", "tf_prefix", "spot_name", "use_sim_time"] + IMAGE_PUBLISHER_ARGS
+            key: LaunchConfiguration(key)
+            for key in ["config_file", "tf_prefix", "spot_name", "use_sim_time"] + IMAGE_PUBLISHER_ARGS
         }.items(),
         condition=IfCondition(LaunchConfiguration("launch_image_publishers")),
     )
