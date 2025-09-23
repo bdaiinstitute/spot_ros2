@@ -9,6 +9,8 @@ from launch import LaunchContext, LaunchDescription, Substitution
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import SetParameter
+from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 from spot_common.launch.spot_launch_helpers import (
     DepthRegisteredMode,
@@ -142,6 +144,12 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     if depth_registered_mode is not DepthRegisteredMode.FROM_SPOT:
         spot_image_publisher_params.update({"publish_depth_registered": False})
 
+    set_use_sim_time = SetParameter(
+        name="use_sim_time",
+        value=LaunchConfiguration("use_sim_time"),
+    )
+    ld.add_action(set_use_sim_time)
+
     spot_image_publisher_node = launch_ros.actions.Node(
         package="spot_driver",
         executable="spot_image_publisher_node",
@@ -210,6 +218,13 @@ def generate_launch_description() -> launch.LaunchDescription:
             "tf_prefix",
             default_value="",
             description="apply namespace prefix to robot links and joints",
+        )
+    )
+    launch_args.append(
+        DeclareBooleanLaunchArgument(
+            "use_sim_time",
+            default_value=False,
+            description="If true, use simulation time instead of real time",
         )
     )
     launch_args.append(DeclareLaunchArgument("spot_name", default_value="", description="Name of Spot"))
