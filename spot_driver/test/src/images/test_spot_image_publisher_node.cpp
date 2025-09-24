@@ -7,6 +7,7 @@
 #include <spot_driver/images/spot_image_publisher_node.hpp>
 
 #include <spot_driver/fake/fake_parameter_interface.hpp>
+#include <spot_driver/mock/mock_clock_interface.hpp>
 #include <spot_driver/mock/mock_image_client.hpp>
 #include <spot_driver/mock/mock_logger_interface.hpp>
 #include <spot_driver/mock/mock_node_interface.hpp>
@@ -38,13 +39,14 @@ class MockMiddlewareHandle : public images::SpotImagePublisher::MiddlewareHandle
 class SpotImagePubNodeTestFixture : public ::testing::Test {
  public:
   void SetUp() override {
-    mock_spot_api = std::make_unique<spot_ros2::test::MockSpotApi>();
+    mock_spot_api = std::make_unique<MockSpotApi>();
     mock_middleware_handle = std::make_unique<MockMiddlewareHandle>();
 
     fake_parameter_interface = std::make_unique<FakeParameterInterface>();
-    mock_logger_interface = std::make_unique<spot_ros2::test::MockLoggerInterface>();
+    mock_logger_interface = std::make_unique<MockLoggerInterface>();
     mock_tf_broadcaster_interface = std::make_unique<MockTfBroadcasterInterface>();
     mock_timer_interface = std::make_unique<MockTimerInterface>();
+    mock_clock_interface = std::make_unique<MockClockInterface>();
     mock_node_interface = std::make_unique<MockNodeInterface>();
   }
 
@@ -53,8 +55,9 @@ class SpotImagePubNodeTestFixture : public ::testing::Test {
 
   std::unique_ptr<FakeParameterInterface> fake_parameter_interface;
   std::unique_ptr<MockLoggerInterface> mock_logger_interface;
-  std::unique_ptr<spot_ros2::test::MockTfBroadcasterInterface> mock_tf_broadcaster_interface;
-  std::unique_ptr<spot_ros2::test::MockTimerInterface> mock_timer_interface;
+  std::unique_ptr<MockTfBroadcasterInterface> mock_tf_broadcaster_interface;
+  std::unique_ptr<MockTimerInterface> mock_timer_interface;
+  std::unique_ptr<MockClockInterface> mock_clock_interface;
   std::unique_ptr<MockNodeInterface> mock_node_interface;
 };
 
@@ -78,7 +81,8 @@ TEST_F(SpotImagePubNodeTestFixture, ConstructionSuccess) {
   ASSERT_NO_THROW(node = std::make_unique<images::SpotImagePublisherNode>(
                       std::move(mock_spot_api), std::move(mock_middleware_handle), std::move(fake_parameter_interface),
                       std::move(mock_logger_interface), std::move(mock_tf_broadcaster_interface),
-                      std::move(mock_timer_interface), std::move(mock_node_interface)));
+                      std::move(mock_timer_interface), std::move(mock_node_interface),
+                      std::move(mock_clock_interface)));
 
   // WHEN we get the underlying node base interface
   // THEN no exception is thrown
@@ -99,7 +103,7 @@ TEST_F(SpotImagePubNodeTestFixture, ConstructionCreateRobotFailure) {
   EXPECT_THROW(images::SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle),
                                               std::move(fake_parameter_interface), std::move(mock_logger_interface),
                                               std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface),
-                                              std::move(mock_node_interface)),
+                                              std::move(mock_node_interface), std::move(mock_clock_interface)),
                std::runtime_error);
 }
 
@@ -119,7 +123,7 @@ TEST_F(SpotImagePubNodeTestFixture, ConstructionAuthenticationFailure) {
   EXPECT_THROW(images::SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle),
                                               std::move(fake_parameter_interface), std::move(mock_logger_interface),
                                               std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface),
-                                              std::move(mock_node_interface)),
+                                              std::move(mock_node_interface), std::move(mock_clock_interface)),
                std::runtime_error);
 }
 
@@ -137,7 +141,7 @@ TEST_F(SpotImagePubNodeTestFixture, ConstructionHasArmFailure) {
   EXPECT_THROW(images::SpotImagePublisherNode(std::move(mock_spot_api), std::move(mock_middleware_handle),
                                               std::move(fake_parameter_interface), std::move(mock_logger_interface),
                                               std::move(mock_tf_broadcaster_interface), std::move(mock_timer_interface),
-                                              std::move(mock_node_interface)),
+                                              std::move(mock_node_interface), std::move(mock_clock_interface)),
                std::runtime_error);
 }
 

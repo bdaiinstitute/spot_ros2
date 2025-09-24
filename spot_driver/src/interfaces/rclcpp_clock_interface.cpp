@@ -7,6 +7,10 @@ RclcppClockInterface::RclcppClockInterface(
     const std::shared_ptr<rclcpp::node_interfaces::NodeClockInterface>& node_clock_interface)
     : node_clock_interface_{node_clock_interface} {}
 
+rclcpp::Clock::SharedPtr RclcppClockInterface::getClock() {
+  return node_clock_interface_->get_clock();
+}
+
 rclcpp::Time RclcppClockInterface::now() {
   return node_clock_interface_->get_clock()->now();
 }

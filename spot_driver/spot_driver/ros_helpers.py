@@ -7,6 +7,7 @@ import builtin_interfaces.msg
 import cv2
 import numpy as np
 import rclpy
+import rclpy.clock
 import rclpy.time
 import tf2_py as tf2
 import tf2_ros
@@ -317,7 +318,8 @@ def lookup_a_tform_b(
         timeout_py = rclpy.time.Duration()
     else:
         timeout_py = rclpy.time.Duration(seconds=timeout)
-    start_time = time.time()
+    clock = rclpy.clock.Clock()
+    start_time = clock.now()
     while rclpy.ok():
         try:
             return ros_transform_to_se3_pose(
@@ -326,8 +328,8 @@ def lookup_a_tform_b(
         except tf2.ExtrapolationException as e:
             if "future" not in str(e):
                 raise e  # Waiting won't help with this
-            now = time.time()
-            if timeout is None or now - start_time > timeout:
+            now = clock.now()
+            if timeout is None or now - start_time > timeout_py:
                 raise e
             time.sleep(0.01)
     return None

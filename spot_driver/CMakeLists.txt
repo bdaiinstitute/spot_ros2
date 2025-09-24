@@ -57,6 +57,7 @@ add_library(spot_api
   src/api/default_state_client.cpp
   src/api/default_time_sync_api.cpp
   src/api/default_world_object_client.cpp
+  src/api/spot_clock_sources.cpp
   src/api/spot_image_sources.cpp
   src/conversions/common_conversions.cpp
   src/conversions/decompress_images.cpp
