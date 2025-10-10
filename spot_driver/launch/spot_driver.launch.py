@@ -7,7 +7,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Opaq
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 from synchros2.launch.actions import DeclareBooleanLaunchArgument, convert_to_bool
 
@@ -69,6 +69,12 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                 "get_lease_on_action": True,
             }
         )
+
+    set_use_sim_time = SetParameter(
+        name="use_sim_time",
+        value=LaunchConfiguration("use_sim_time"),
+    )
+    ld.add_action(set_use_sim_time)
 
     spot_driver_node = Node(
         package="spot_driver",
@@ -170,7 +176,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             PathJoinSubstitution([FindPackageShare(THIS_PACKAGE), "launch", "spot_image_publishers.launch.py"])
         ),
         launch_arguments={
-            key: LaunchConfiguration(key) for key in ["config_file", "tf_prefix", "spot_name"] + IMAGE_PUBLISHER_ARGS
+            key: LaunchConfiguration(key)
+            for key in ["config_file", "tf_prefix", "spot_name", "use_sim_time"] + IMAGE_PUBLISHER_ARGS
         }.items(),
         condition=IfCondition(LaunchConfiguration("launch_image_publishers")),
     )
@@ -229,6 +236,13 @@ def generate_launch_description() -> LaunchDescription:
             "tf_prefix",
             default_value="",
             description="apply namespace prefix to robot links and joints",
+        )
+    )
+    launch_args.append(
+        DeclareBooleanLaunchArgument(
+            "use_sim_time",
+            default_value=False,
+            description="If true, use simulation time instead of real time",
         )
     )
     launch_args.append(

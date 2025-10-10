@@ -9,6 +9,7 @@ import threading
 import time
 import traceback
 import typing
+import weakref
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
@@ -43,6 +44,7 @@ from bosdyn.client import math_helpers
 from bosdyn.client.async_tasks import AsyncPeriodicQuery
 from bosdyn.client.exceptions import InternalServerError
 from bosdyn.client.lease import Lease, LeaseWallet
+from bosdyn.util import set_clock_source
 from bosdyn_api_msgs.math_helpers import bosdyn_localization_to_pose_msg, bosdyn_pose_to_tf
 from bosdyn_msgs.conversions import convert
 from bosdyn_msgs.msg import (
@@ -69,7 +71,6 @@ from rclpy.callback_groups import CallbackGroup, MutuallyExclusiveCallbackGroup
 from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
-from rclpy.timer import Rate
 from sensor_msgs.msg import JointState, PointCloud2, PointField
 from std_srvs.srv import Trigger
 from synchros2.node import Node
@@ -179,14 +180,16 @@ class WaitForGoal(object):
     def __init__(
         self,
         clock: Clock,
-        _time: Union[float, rclpy.time.Time],
+        duration: Union[float, rclpy.time.Duration],
         callback: Optional[Callable] = None,
     ) -> None:
-        self._at_goal: bool = False
-        self._callback: Optional[Callable] = callback
-        self._clock: Clock = clock
-        self._time: rclpy.time.Duration = rclpy.time.Duration(seconds=_time)
-        self._thread: threading.Thread = threading.Thread(target=self._run)
+        self._at_goal = False
+        self._callback = callback
+        self._clock = clock
+        if not isinstance(duration, rclpy.duration.Duration):
+            duration = rclpy.duration.Duration(seconds=duration)
+        self._duration: rclpy.duration.Duration = duration
+        self._thread = threading.Thread(target=self._run)
         self._thread.start()
 
     @property
@@ -194,9 +197,7 @@ class WaitForGoal(object):
         return self._at_goal
 
     def _run(self) -> None:
-        start_time = self._clock.now()
-        while self._clock.now() - start_time < self._time:
-            time.sleep(0.05)
+        self._clock.sleep_for(self._duration)
         self._at_goal = True
 
 
@@ -326,6 +327,25 @@ class SpotProxyLeash(SpotLeashProtocol):
         return []
 
 
+def set_spot_sdk_clock_source(clock: Clock) -> None:
+    """Set the given ROS clock as Spot SDK clock source.
+
+    Note that the Python SDK for Spot (unlike its C++ counterpart) is rather inconsistent
+    in its use of clock sources. It will often just call time.time() directly instead of
+    using bosdyn.util.now_sec() or derivatives. Simulation must handle time synchronization
+    services and even then you may still run into timing issues. Use at your own risk.
+    """
+    clock_ref = weakref.ref(clock)
+
+    def _clock_time() -> float:
+        clock = clock_ref()
+        if clock is None:
+            return time.time()
+        return clock.now().nanoseconds / 1e9
+
+    set_clock_source(_clock_time)
+
+
 class SpotROS(Node):
     """Parent class for using the wrapper.  Defines all callbacks and keeps the wrapper alive"""
 
@@ -349,8 +369,6 @@ class SpotROS(Node):
 
         self.group: CallbackGroup = MutuallyExclusiveCallbackGroup()
         self.graph_nav_callback_group: CallbackGroup = MutuallyExclusiveCallbackGroup()
-        rate = self.create_rate(100)
-        self.node_rate: Rate = rate
 
         self.declare_parameter("auto_claim", False)
         self.declare_parameter("auto_power_on", False)
@@ -492,7 +510,6 @@ class SpotROS(Node):
 
         logging.basicConfig(format="[%(filename)s:%(lineno)d] %(message)s", level=logging.ERROR)
         self.wrapper_logger = logging.getLogger(f"{name_with_dot}spot_wrapper")
-
         self.leash_interface: Optional[SpotLeashProtocol] = None
 
         self.leasing_mode = self.declare_parameter("leasing_mode", "direct").value
@@ -525,6 +542,9 @@ class SpotROS(Node):
             self.spot_wrapper: Optional[SpotWrapper] = None
             self.cam_wrapper: Optional[SpotCamWrapper] = None
         else:
+            # Set the Spot SDK clock
+            set_spot_sdk_clock_source(self.get_clock())
+
             # create SpotWrapper if not mocking
             self.spot_wrapper = SpotWrapper(
                 username=self.username,
@@ -2272,11 +2292,12 @@ class SpotROS(Node):
         feedback: Optional[RobotCommandFeedback] = None
         feedback_msg: Optional[RobotCommandAction.Feedback] = None
 
-        start_time = time.time()
-        time_to_send_command = 0.0
+        clock = self.get_clock()
+        start_time = clock.now()
+        time_to_send_command: Optional[rclpy.duration.Duration] = rclpy.duration.Duration(seconds=0.0)
 
         index = 0
-        poll_period_sec = 1.0 / self.get_parameter("poll_rate").value
+        rate = self.create_rate(self.get_parameter("poll_rate").value)
         while (
             rclpy.ok()
             and goal_handle.is_active
@@ -2288,22 +2309,24 @@ class SpotROS(Node):
             # previous one succeeds, so the only batch that can actuallly
             # succeed is the last one.
 
-            time_since_start = time.time() - start_time
-            if time_since_start >= time_to_send_command:
+            time_since_start = clock.now() - start_time
+            if time_to_send_command is not None and time_since_start >= time_to_send_command:
                 success, err_msg, goal_id = self.spot_wrapper.robot_command(commands[index])
                 if not success:
                     raise Exception(err_msg)
                 index += 1
                 if index < num_of_commands:
-                    time_to_send_command = robot_command_util.min_time_since_reference(commands[index])
+                    time_to_send_command = rclpy.duration.Duration(
+                        seconds=robot_command_util.min_time_since_reference(commands[index])
+                    )
                 else:
-                    time_to_send_command = float("inf")
+                    time_to_send_command = None
                 self.get_logger().info("Robot now executing goal " + str(goal_id))
 
             feedback = self._get_robot_command_feedback(goal_id)
             feedback_msg = RobotCommandAction.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
-            time.sleep(poll_period_sec)  # don't use rate here because we're already in a single thread
+            rate.sleep()
 
         result = RobotCommandAction.Result()
         if feedback is not None:
@@ -2409,7 +2432,7 @@ class SpotROS(Node):
                 raise Exception(err_msg)
 
         self.get_logger().info("Robot now executing goal " + str(goal_id))
-        poll_period_sec = 1.0 / self.get_parameter("poll_rate").value
+        rate = self.create_rate(self.get_parameter("poll_rate").value)
         # The command is non-blocking, but we need to keep this function up in order to interrupt if a
         # preempt is requested and to return success if/when the robot reaches the goal. Also check the is_active to
         # monitor whether the timeout_cb has already aborted the command
@@ -2430,7 +2453,7 @@ class SpotROS(Node):
             feedback_msg = Manipulation.Feedback(feedback=feedback)
             goal_handle.publish_feedback(feedback_msg)
 
-            time.sleep(poll_period_sec)  # don't use rate here because we're already in a single thread
+            rate.sleep()
 
         # publish a final feedback
         result = Manipulation.Result()
@@ -2478,18 +2501,21 @@ class SpotROS(Node):
             return result
 
         # Spot doesn't provide feedback for this command so for now we just sleep for its expected duration
-        start_time = time.time()
-        expected_time = 0.0
+        clock = self.get_clock()
+        start_time = clock.now()
+        expected_time_seconds = 0.0
         if ros_command.pose_trajectory_in_task.points:
             time_since_ref = ros_command.pose_trajectory_in_task.points[-1].time_since_reference
-            expected_time = float(time_since_ref.sec) + float(time_since_ref.nanosec) / 1e9
+            expected_time_seconds = float(time_since_ref.sec) + float(time_since_ref.nanosec) / 1e9
+        expected_time = rclpy.duration.Duration(seconds=expected_time_seconds)
+        rate = self.create_rate(self.get_parameter("poll_rate").value)
         while (
             rclpy.ok()
             and not goal_handle.is_cancel_requested
             and goal_handle.is_active
-            and time.time() - start_time < expected_time
+            and clock.now() - start_time < expected_time
         ):
-            time.sleep(0.1)
+            rate.sleep()
         if goal_handle.is_cancel_requested:
             result.success = False
             result.message = "Cancelled"
@@ -2560,9 +2586,7 @@ class SpotROS(Node):
         # Pre-emp missing in port to ROS2 (ros1: self.trajectory_server.is_preempt_requested())
         #
 
-        # rate = rclpy.Rate(10)
-
-        poll_period_sec = 1.0 / self.get_parameter("poll_rate").value
+        rate = self.create_rate(self.get_parameter("poll_rate").value)
         try:
             while rclpy.ok() and not self.spot_wrapper.trajectory_complete and goal_handle.is_active:
                 feedback = Trajectory.Feedback()
@@ -2574,9 +2598,8 @@ class SpotROS(Node):
                     else:
                         feedback.feedback = "Moving to goal"
 
-                # rate.sleep()
                 goal_handle.publish_feedback(feedback)
-                time.sleep(poll_period_sec)
+                rate.sleep()
 
                 # check for timeout
                 com_dur = self.get_clock().now() - command_start_time
@@ -2897,7 +2920,7 @@ class SpotROS(Node):
         if self.spot_wrapper is None:
             return
 
-        poll_period_sec = 1.0 / self.get_parameter("poll_rate").value
+        rate = self.create_rate(self.get_parameter("poll_rate").value)
         while rclpy.ok() and self.run_dance_feedback:
             res, msg, status = self.spot_wrapper.get_choreography_status()
             if res:
@@ -2908,8 +2931,7 @@ class SpotROS(Node):
 
                 if status == ChoreographyStatusResponse.Status.STATUS_COMPLETED_SEQUENCE:
                     break
-
-            time.sleep(poll_period_sec)
+            rate.sleep()
 
     def handle_execute_dance(self, execute_dance_handle: ServerGoalHandle) -> ExecuteDance.Result:
         """ROS service handler for uploading and executing dance."""
@@ -2969,7 +2991,7 @@ class SpotROS(Node):
         if self.spot_wrapper is None:
             return
 
-        poll_period_sec = 1.0 / self.get_parameter("poll_rate").value
+        rate = self.create_rate(self.get_parameter("poll_rate").value)
         while rclpy.ok() and self.run_navigate_to:
             localization_state = self.spot_wrapper._graph_nav_client.get_localization_state()
             if localization_state.localization.waypoint_id:
@@ -2977,8 +2999,7 @@ class SpotROS(Node):
                 feedback.waypoint_id = localization_state.localization.waypoint_id
                 if self.goal_handle is not None:
                     self.goal_handle.publish_feedback(feedback)
-            time.sleep(poll_period_sec)
-            # rclpy.Rate(10).sleep()
+            rate.sleep()
 
     def handle_navigate_to(self, goal_handle: ServerGoalHandle) -> NavigateTo.Result:
         """ROS service handler to run mission of the robot.  The robot will replay a mission"""

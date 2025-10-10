@@ -66,6 +66,7 @@ void ObjectSynchronizerNode::initialize(std::unique_ptr<SpotApi> spot_api,
                                         std::unique_ptr<TimerInterfaceBase> tf_broadcaster_timer,
                                         std::unique_ptr<ClockInterfaceBase> clock_interface) {
   spot_api_ = std::move(spot_api);
+  clock_ = clock_interface->getClock();
 
   const auto address = parameter_interface->getHostname();
   const auto port = parameter_interface->getPort();
@@ -94,6 +95,10 @@ void ObjectSynchronizerNode::initialize(std::unique_ptr<SpotApi> spot_api,
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> ObjectSynchronizerNode::get_node_base_interface() {
   return node_base_interface_->getNodeBaseInterface();
+}
+
+std::shared_ptr<rclcpp::Clock> ObjectSynchronizerNode::get_clock() {
+  return clock_;
 }
 
 }  // namespace spot_ros2
