@@ -12,7 +12,7 @@ from typing import Literal, Optional, Type
 import synchros2.process as ros_process
 import synchros2.scope as ros_scope
 from bosdyn.client import ResponseError, RpcError
-from geometry_msgs.msg import TwistStamped, Twist
+from geometry_msgs.msg import Twist
 from std_srvs.srv import Trigger
 from synchros2.action_client import ActionClientWrapper
 from synchros2.utilities import namespace_with
@@ -286,7 +286,7 @@ class WasdInterface:
         while time.time() - start_time < VELOCITY_CMD_DURATION:
             self.pub_cmd_vel.publish(twist)
             time.sleep(0.01)
-        self.pub_cmd_vel.publish(Twist())  # stop
+        self.pub_cmd_vel.publish(Twist()) 
 
     def _stow(self) -> None:
         self.cli_stow.call_async(Trigger.Request())
