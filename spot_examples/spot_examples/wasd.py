@@ -95,7 +95,7 @@ class WasdInterface:
         # Stuff that is set in start()
         self._robot_id = None
 
-        self.pub_cmd_vel = self.node.create_publisher(TwistStamped, namespace_with(robot_name, "cmd_vel"), 1)
+        self.pub_cmd_vel = self.node.create_publisher(Twist, namespace_with(robot_name, "cmd_vel"), 1)
 
         self.latest_power_state_status: Optional[PowerState] = None
         self.latest_battery_status: Optional[BatteryStateArray] = None
@@ -278,21 +278,15 @@ class WasdInterface:
         self.cli_stop.call_async(Trigger.Request())
 
     def _velocity_cmd_helper(self, desc: str = "", v_x: float = 0.0, v_y: float = 0.0, v_rot: float = 0.0) -> None:
-        msg = TwistStamped()
         twist = Twist()
         twist.linear.x = v_x
         twist.linear.y = v_y
         twist.angular.z = v_rot
         start_time = time.time()
-        msg.header.stamp = self.node.get_clock().now().to_msg()
-        msg.twist = twist
         while time.time() - start_time < VELOCITY_CMD_DURATION:
             self.pub_cmd_vel.publish(twist)
             time.sleep(0.01)
-        msg = TwistStamped()
-        msg.header.stamp = self.node.get_clock().now().to_msg()
-        msg.twist = Twist()
-        self.pub_cmd_vel.publish(msg)
+        self.pub_cmd_vel.publish(Twist())  # stop
 
     def _stow(self) -> None:
         self.cli_stow.call_async(Trigger.Request())
