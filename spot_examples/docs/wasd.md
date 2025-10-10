@@ -98,6 +98,7 @@ The `_velocity_cmd_helper()` function takes 2D holonomic velocity requests (x, y
         twist.linear.x = v_x
         twist.linear.y = v_y
         twist.angular.z = v_rot
+        start_time = time.time()
         while time.time() - start_time < VELOCITY_CMD_DURATION:
             self.pub_cmd_vel.publish(twist)
             time.sleep(0.01)
