@@ -11,7 +11,8 @@ See the readme at [```/spot_wrapper/spot_wrapper/calibration/README.md```](https
 
 The following command can be used to spin up a node to publish your newly calculated calibration. This was necessary before the release of Boston Dynamic's SDK 5.0.0 in order to use this calibration instead of the one saved on the robot hardware. While no longer necessary (SDK 5.0.0 allowed users to overwrite the robot's internal calibration), it is helpful for visualizing your new calibration for a quick sanity check.
 
->***NOTE:*** The default ```tag``` is ```default```.
+> [!NOTE]
+> The default ```tag``` is ```default```.
 
 ```bash
 ros2 run spot_driver calibrated_reregistered_hand_camera_depth_publisher.py --tag=<TAG> --calibration_path\
