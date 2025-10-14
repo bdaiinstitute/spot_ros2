@@ -26,7 +26,7 @@ to a shared frame.
 
 #### Comparing Calibration Results Quick Sanity Check
 
-You can compare the new calibration to the old calibration through by visualizing the colored point cloud from a rosbag in RViz.
+You can validate calibration results by visualizing colored point clouds (i.e. RGBD registration results) in RViz.
 
 First, collect a bag where there is a an object of a clearly different color in the foreground then
 that of the background.
