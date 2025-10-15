@@ -28,6 +28,8 @@ setup(
             "wasd = spot_examples.wasd:main",
             "simple_sub = spot_examples.simple_sub:main",
             "spot_in_circle = spot_examples.spot_in_circle:main",
+            "arm_wasd = spot_examples.arm_wasd:main",
+            "mock_server = spot_examples.mock_server:main",
         ],
     },
 )

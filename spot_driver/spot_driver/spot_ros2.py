@@ -20,6 +20,7 @@ import numpy as np
 import rclpy
 import rclpy.duration
 import rclpy.time
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 import synchros2.process as ros_process
 import tf2_ros
 from bondpy.bondpy import Bond
@@ -62,7 +63,7 @@ from bosdyn_msgs.msg import (
     RobotCommandFeedback,
     RobotCommandFeedbackStatusStatus,
 )
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist
+from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, TwistStamped, Twist
 from rclpy import Parameter
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
@@ -615,14 +616,31 @@ class SpotROS(Node):
         self.feedback_pub: Publisher = self.create_publisher(Feedback, "status/feedback", 1)
         self.mobility_params_pub: Publisher = self.create_publisher(MobilityParams, "status/mobility_params", 1)
 
-        self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, 1, callback_group=self.group)
+        # Recommended QoS for Joy/Teleop commands
+        JOY_TELEOP_QOS = QoSProfile(
+            # Best Effort - prioritizes low latency over guaranteed delivery
+            # Perfect for real-time control where latest command matters most
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            
+            # Keep Last with small depth - only care about most recent commands
+            # History of 1-5 is typical, 1 is often sufficient for teleop
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1,  # Only keep the latest command
+            
+            # Volatile - don't persist commands after node restart
+            # Teleop commands shouldn't be replayed from before restart
+            durability=DurabilityPolicy.VOLATILE
+        )
+
+        self.create_subscription(Twist, "cmd_vel", self.cmd_velocity_callback, JOY_TELEOP_QOS, callback_group=self.group)
+        self.create_subscription(TwistStamped, "cmd_vel_stamped", self.cmd_velocity_stamped_callback, JOY_TELEOP_QOS, callback_group=self.group)
         self.create_subscription(Pose, "body_pose", self.body_pose_callback, 1, callback_group=self.group)
 
         self.create_trigger_services()
 
         if self.has_arm:
             self.create_subscription(
-                JointState, "arm_joint_commands", self.arm_joint_cmd_callback, 100, callback_group=self.group
+                JointState, "arm_joint_commands", self.arm_joint_cmd_callback, JOY_TELEOP_QOS, callback_group=self.group
             )
             self.create_subscription(
                 PoseStamped, "arm_pose_commands", self.arm_pose_cmd_callback, 100, callback_group=self.group
@@ -631,7 +649,7 @@ class SpotROS(Node):
                 ArmVelocityCommandRequest,
                 "arm_velocity_commands",
                 self.arm_velocity_cmd_callback,
-                100,
+                JOY_TELEOP_QOS,
                 callback_group=self.group,
             )
 
@@ -2638,6 +2656,16 @@ class SpotROS(Node):
             self.get_logger().info(f"Mock mode, received command vel {data}")
             return
         self.spot_wrapper.velocity_cmd(data.linear.x, data.linear.y, data.angular.z, self.cmd_duration)
+    
+    def cmd_velocity_stamped_callback(self, data: TwistStamped) -> None:
+        """Callback for cmd_vel command"""
+        if not self.spot_wrapper:
+            self.get_logger().info(f"Mock mode, received command vel {data}")
+            return
+        timestamp = data.header.stamp.sec + data.header.stamp.nanosec * 1e-9
+        self.spot_wrapper.velocity_cmd(data.twist.linear.x, data.twist.linear.y, data.twist.angular.z, timestamp, self.cmd_duration)
+    
+    
 
     def body_pose_callback(self, data: Pose) -> None:
         """Callback for cmd_vel command"""
