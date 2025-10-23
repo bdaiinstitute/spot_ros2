@@ -1,6 +1,4 @@
-# Announcement
-
-**We are gauging interest for a new wrapper! Please check out our [poll](https://github.com/bdaiinstitute/spot_ros2/discussions/757) in the Discussions tab!**
+# Announcement: We are gauging interest for a new wrapper! Please check out our [poll](https://github.com/bdaiinstitute/spot_ros2/discussions/757) in the Discussions tab!
 
 
 
