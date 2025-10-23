@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> We are gauging interest for a new wrapper! Please check out our [poll](https://github.com/bdaiinstitute/spot_ros2/discussions/757) in the Discussions tab!
+
 <p align="center">
   <img src="spot.png" width="350">
   <h1 align="center">Spot ROS 2</h1>
