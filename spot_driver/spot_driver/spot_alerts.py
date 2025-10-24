@@ -19,7 +19,10 @@ class SpotAlerts(Node):
         super().__init__("spot_alerts", **kwargs)
         # Subscribers #
         self.battery_states = self.create_subscription(
-            BatteryStateArray, "status/battery_states", self.battery_callback, QoSPresetProfiles.SENSOR_DATA.value
+            BatteryStateArray,
+            "status/battery_states",
+            self.battery_callback,
+            QoSPresetProfiles.SENSOR_DATA.value,
         )
 
         # Parameters #

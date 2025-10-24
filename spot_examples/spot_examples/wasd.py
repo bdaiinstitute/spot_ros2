@@ -13,6 +13,7 @@ import synchros2.process as ros_process
 import synchros2.scope as ros_scope
 from bosdyn.client import ResponseError, RpcError
 from geometry_msgs.msg import Twist
+from rclpy.qos import QoSPresetProfiles
 from std_srvs.srv import Trigger
 from synchros2.action_client import ActionClientWrapper
 from synchros2.utilities import namespace_with
@@ -104,7 +105,10 @@ class WasdInterface:
             PowerState, namespace_with(robot_name, "status/power_states"), self._status_power_state_callback, 1
         )
         self.sub_battery_state = self.node.create_subscription(
-            BatteryStateArray, namespace_with(robot_name, "status/battery_states"), self._status_battery_callback, 1
+            BatteryStateArray,
+            namespace_with(robot_name, "status/battery_states"),
+            self._status_battery_callback,
+            QoSPresetProfiles.SENSOR_DATA.value,
         )
 
         self.cli_self_right = self.node.create_client(Trigger, namespace_with(robot_name, "self_right"))
