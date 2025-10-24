@@ -30,6 +30,7 @@ In this example, we will create a ROS 2 subscriber to listen to the images Spot 
             Image, namespace_with(robot_name, "camera/frontleft/image"), self.image_callback, 10
         )
 ```
+Note that here, we set the buffer size to 10, but it's best to use a QoS profile specifically optimized for sensor data: `QoSPresetProfiles.SENSOR_DATA.value`.
 
 
 We then instantiate both SimpleSpotCommander() and ActionClientWrapper() as ways to send both simple and more complex commands to Spot, respectively.

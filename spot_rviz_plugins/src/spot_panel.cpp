@@ -112,7 +112,8 @@ void SpotPanel::initialiseRosComponents() {
       prefix + "/status/mobility_params", 1,
       std::bind(&SpotPanel::mobilityParamsCallback, this, std::placeholders::_1));
   batterySub_ = client_node_->create_subscription<spot_msgs::msg::BatteryStateArray>(
-      prefix + "/status/battery_states", 1, std::bind(&SpotPanel::batteryCallback, this, std::placeholders::_1));
+      prefix + "/status/battery_states", rclcpp::SensorDataQoS(),
+      std::bind(&SpotPanel::batteryCallback, this, std::placeholders::_1));
   powerSub_ = client_node_->create_subscription<spot_msgs::msg::PowerState>(
       prefix + "/status/power_states", 1, std::bind(&SpotPanel::powerCallback, this, std::placeholders::_1));
 }

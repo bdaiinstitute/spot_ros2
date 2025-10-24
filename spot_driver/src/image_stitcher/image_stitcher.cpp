@@ -190,10 +190,10 @@ namespace spot_ros2 {
 
 RclcppCameraSynchronizer::RclcppCameraSynchronizer(const std::shared_ptr<rclcpp::Node>& node) {
   // These topics are remapped onto the actual Spot camera topics in the launch file
-  subscriber_image1_.subscribe(node.get(), "left/image", "raw");
-  subscriber_info1_.subscribe(node, "left/camera_info");
-  subscriber_image2_.subscribe(node.get(), "right/image", "raw");
-  subscriber_info2_.subscribe(node, "right/camera_info");
+  subscriber_image1_.subscribe(node.get(), "left/image", "raw", rclcpp::SensorDataQoS().get_rmw_qos_profile());
+  subscriber_info1_.subscribe(node, "left/camera_info", rclcpp::SensorDataQoS().get_rmw_qos_profile());
+  subscriber_image2_.subscribe(node.get(), "right/image", "raw", rclcpp::SensorDataQoS().get_rmw_qos_profile());
+  subscriber_info2_.subscribe(node, "right/camera_info", rclcpp::SensorDataQoS().get_rmw_qos_profile());
 
   sync_ = std::make_unique<Synchronizer>(ApproximateTimePolicy(kHistoryDepth), subscriber_image1_, subscriber_info1_,
                                          subscriber_image2_, subscriber_info2_);

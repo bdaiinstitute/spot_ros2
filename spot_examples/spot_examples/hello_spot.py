@@ -16,6 +16,7 @@ from bosdyn.util import seconds_to_duration
 from bosdyn_msgs.conversions import convert
 from cv_bridge import CvBridge
 from rclpy.node import Node
+from rclpy.qos import QoSPresetProfiles
 from sensor_msgs.msg import Image
 from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
@@ -34,7 +35,10 @@ class HelloSpot:
         self.logger = self.node.get_logger()
 
         self.image_sub = self.node.create_subscription(
-            Image, namespace_with(robot_name, "camera/frontleft/image"), self.image_callback, 10
+            Image,
+            namespace_with(robot_name, "camera/frontleft/image"),
+            self.image_callback,
+            QoSPresetProfiles.SENSOR_DATA.value,
         )
         self.image_sub  # prevent unused variable warning
         self.pause_image_update = False

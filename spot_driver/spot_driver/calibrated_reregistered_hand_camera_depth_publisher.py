@@ -25,6 +25,7 @@ import synchros2.process as ros_process
 import synchros2.scope as ros_scope
 import yaml
 from cv_bridge import CvBridge
+from rclpy.qos import QoSPresetProfiles
 from sensor_msgs.msg import Image
 from synchros2.context import wait_for_shutdown
 
@@ -88,7 +89,7 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
 
         self.node.get_logger().info(f"Creating subscriber to raw depth at {raw_depth_topic}")
         self.raw_depth_img_sub = self.node.create_subscription(
-            Image, raw_depth_topic, self.republish_registered_depth_callback, 10
+            Image, raw_depth_topic, self.republish_registered_depth_callback, QoSPresetProfiles.SENSOR_DATA.value
         )
 
     def republish_registered_depth_callback(self, msg: Image) -> None:
