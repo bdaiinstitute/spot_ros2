@@ -19,4 +19,5 @@ class MiddlewareHandleBase {
     return rclcpp::QoS(publisherHistoryDepth).transient_local().reliable();
   }
 };
+
 }  // namespace spot_ros2

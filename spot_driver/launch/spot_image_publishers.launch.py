@@ -33,6 +33,26 @@ def create_depth_registration_nodelets(
     composable_node_descriptions = []
 
     for camera in camera_sources:
+        depth_registration_params = {}
+        depth_registration_params[
+            PathJoinSubstitution(["qos_overrides.", spot_name, "depth", camera, "image.subscription.reliability"])
+        ] = "best_effort"
+        depth_registration_params[
+            PathJoinSubstitution(["qos_overrides.", spot_name, "depth", camera, "camera_info.subscription.reliability"])
+        ] = "best_effort"
+        depth_registration_params[
+            PathJoinSubstitution(["qos_overrides.", spot_name, "camera", camera, "camera_info.subscription.reliability"])
+        ] = "best_effort"
+        depth_registration_params[
+            PathJoinSubstitution(
+                ["qos_overrides.", spot_name, "depth_registered", camera, "image.subscription.reliability"]
+            )
+        ] = "best_effort"
+        depth_registration_params[
+            PathJoinSubstitution(
+                ["qos_overrides.", spot_name, "depth_registered", camera, "camera_info.subscription.reliability"]
+            )
+        ] = "best_effort"
         composable_node_descriptions.append(
             launch_ros.descriptions.ComposableNode(
                 package="depth_image_proc",
@@ -55,10 +75,7 @@ def create_depth_registration_nodelets(
                         PathJoinSubstitution(["depth_registered", camera, "camera_info"]).perform(context),
                     ),
                 ],
-                parameters=[{
-                    "qos_overrides./depth/image_rect.profile": "SENSOR_DATA",
-                    "qos_overrides./depth_registered/image_rect.profile": "SENSOR_DATA",
-                }],
+                parameters=[depth_registration_params],
             )
         )
     return composable_node_descriptions
@@ -75,6 +92,28 @@ def create_point_cloud_nodelets(
     composable_node_descriptions = []
 
     for camera in camera_sources:
+        point_cloud_params = {}
+        point_cloud_params[
+            PathJoinSubstitution(["qos_overrides.", spot_name, "camera", camera, "camera_info.subscription.reliability"])
+        ] = "best_effort"
+        point_cloud_params[
+            PathJoinSubstitution(["qos_overrides.", spot_name, "camera", camera, "image.subscription.reliability"])
+        ] = "best_effort"
+        point_cloud_params[
+            PathJoinSubstitution(
+                ["qos_overrides.", spot_name, "depth_registered", camera, "camera_info.subscription.reliability"]
+            )
+        ] = "best_effort"
+        point_cloud_params[
+            PathJoinSubstitution(
+                ["qos_overrides.", spot_name, "depth_registered", camera, "image.subscription.reliability"]
+            )
+        ] = "best_effort"
+        point_cloud_params[
+            PathJoinSubstitution(
+                ["qos_overrides.", spot_name, "depth_registered", camera, "points.subscription.reliability"]
+            )
+        ] = "best_effort"
         composable_node_descriptions.append(
             launch_ros.descriptions.ComposableNode(
                 package="depth_image_proc",
@@ -93,6 +132,7 @@ def create_point_cloud_nodelets(
                     ),
                     ("points", PathJoinSubstitution(["depth_registered", camera, "points"]).perform(context)),
                 ],
+                parameters=[point_cloud_params],
             ),
         )
     return composable_node_descriptions
