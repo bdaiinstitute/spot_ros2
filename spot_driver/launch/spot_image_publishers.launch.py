@@ -97,8 +97,8 @@ def create_point_cloud_nodelets(
             PathJoinSubstitution(["qos_overrides.", spot_name, "camera", camera, "camera_info.profile"])
         ] = "SENSOR_DATA"
         point_cloud_params[
-            PathJoinSubstitution(["qos_overrides.", spot_name, "camera", camera, "image.profile"])
-        ] = "SENSOR_DATA"
+            PathJoinSubstitution(["qos_overrides.", spot_name, "camera", camera, "image.subscription.reliability"])
+        ] = "best_effort"
         point_cloud_params[
             PathJoinSubstitution(
                 ["qos_overrides.", spot_name, "depth_registered", camera, "camera_info.profile"]
@@ -106,9 +106,9 @@ def create_point_cloud_nodelets(
         ] = "SENSOR_DATA"
         point_cloud_params[
             PathJoinSubstitution(
-                ["qos_overrides.", spot_name, "depth_registered", camera, "image.profile"]
+                ["qos_overrides.", spot_name, "depth_registered", camera, "image.subscription.reliability"]
             )
-        ] = "SENSOR_DATA"
+        ] = "best_effort"
         point_cloud_params[
             PathJoinSubstitution(
                 ["qos_overrides.", spot_name, "depth_registered", camera, "points.profile"]
