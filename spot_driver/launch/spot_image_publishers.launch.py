@@ -55,6 +55,10 @@ def create_depth_registration_nodelets(
                         PathJoinSubstitution(["depth_registered", camera, "camera_info"]).perform(context),
                     ),
                 ],
+                parameters=[{
+                    "qos_overrides./depth/image_rect.profile": "SENSOR_DATA",
+                    "qos_overrides./depth_registered/image_rect.profile": "SENSOR_DATA",
+                }],
             )
         )
     return composable_node_descriptions
