@@ -85,7 +85,7 @@ class CalibratedReRegisteredHandCameraDepthPublisher:
         raw_depth_topic = f"{self.calibration['robot_name']}{raw_depth_topic_suffix}"
 
         self.node.get_logger().info(f"Creating reregistered depth publisher to {reregistered_depth_topic}")
-        self.reregistered_depth_img_pub = self.node.create_publisher(Image, reregistered_depth_topic, 10)
+        self.reregistered_depth_img_pub = self.node.create_publisher(Image, reregistered_depth_topic, QoSPresetProfiles.SENSOR_DATA.value)
 
         self.node.get_logger().info(f"Creating subscriber to raw depth at {raw_depth_topic}")
         self.raw_depth_img_sub = self.node.create_subscription(
