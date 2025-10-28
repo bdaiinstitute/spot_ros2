@@ -140,7 +140,7 @@
        <item>
         <widget class="QLineEdit" name="robotNameLineEdit">
          <property name="text">
-          <string>spot</string>
+          <string></string>
          </property>
         </widget>
        </item>
