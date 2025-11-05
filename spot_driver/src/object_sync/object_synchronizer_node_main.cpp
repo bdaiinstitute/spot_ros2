@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <spot_driver/api/spot_clock_sources.hpp>

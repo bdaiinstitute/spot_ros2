@@ -1,4 +1,4 @@
-// File modified. Modifications Copyright (c) 2025 Boston Dynamics AI Institute LLC.
+// File modified. Modifications Copyright (c) 2025 Robotics and AI Institute LLC dba RAI Institute.
 // All rights reserved.
 
 // --------------------------------------------------------------
