@@ -28,6 +28,8 @@ from spot_msgs.msg import BatteryState, BatteryStateArray, PowerState  # type: i
 from .simple_spot_commander import SimpleSpotCommander
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 
+from bosdyn.api import arm_command_pb2
+
 # Recommended QoS for Joy/Teleop commands
 JOY_TELEOP_QOS = QoSProfile(
     # Best Effort - prioritizes low latency over guaranteed delivery
@@ -223,11 +225,6 @@ class WasdInterface:
             self.logger.error("Unable to power on robot message was " + result.message)
             return False
 
-        # self.logger.info("Standing robot up")
-        # result = self.robot.command("stand")
-        # if not result.success:
-        #     self.logger.error("Robot did not stand message was " + result.message)
-        #     return False
         self.logger.info("Successfully powered on the robot.")
         time.sleep(3)
 
@@ -531,17 +528,20 @@ class WasdInterface:
                                 end_effector_z: float = 0.0,
                                 ) -> None:
         
-        arm_cmd = ArmVelocityCommandRequest()
-        arm_cmd.angular_velocity_of_hand_rt_odom_in_hand.x = end_effector_x
-        arm_cmd.angular_velocity_of_hand_rt_odom_in_hand.y = end_effector_y
-        arm_cmd.angular_velocity_of_hand_rt_odom_in_hand.z = end_effector_z
+        arm_cmd_request = arm_command_pb2.ArmVelocityCommand.Request()
+        arm_cmd_request.angular_velocity_of_hand_rt_odom_in_hand.x = end_effector_x
+        arm_cmd_request.angular_velocity_of_hand_rt_odom_in_hand.y = end_effector_y
+        arm_cmd_request.angular_velocity_of_hand_rt_odom_in_hand.z = end_effector_z
 
-        arm_cmd.maximum_acceleration.data = ARM_MAXIMUM_ACCELERATION
-        arm_cmd.command.command_choice = arm_cmd.command.COMMAND_CYLINDRICAL_VELOCITY_SET
-        arm_cmd.command.cylindrical_velocity.linear_velocity.r = r
-        arm_cmd.command.cylindrical_velocity.linear_velocity.theta = theta
-        arm_cmd.command.cylindrical_velocity.linear_velocity.z = z
-        arm_cmd.command.cylindrical_velocity.max_linear_velocity.data = ARM_MAX_LINEAR_VELOCITY
+        arm_cmd_request.maximum_acceleration.data = ARM_MAXIMUM_ACCELERATION
+        arm_cmd_request.command.command_choice = arm_cmd_request.command.COMMAND_CYLINDRICAL_VELOCITY_SET
+        arm_cmd_request.command.cylindrical_velocity.linear_velocity.r = r
+        arm_cmd_request.command.cylindrical_velocity.linear_velocity.theta = theta
+        arm_cmd_request.command.cylindrical_velocity.linear_velocity.z = z
+        arm_cmd_request.command.cylindrical_velocity.max_linear_velocity.data = ARM_MAX_LINEAR_VELOCITY
+
+        arm_cmd_request_ros = ArmVelocityCommandRequest()
+        convert(arm_cmd_request, arm_cmd_request_ros)
         start_time = time.time()
         while time.time() - start_time < ARM_VELOCITY_CMD_DURATION:
             self.pub_arm_vel.publish(arm_cmd)
@@ -579,11 +579,8 @@ def main(args: argparse.Namespace) -> bool:
         )
         return False
 
-    # try:
     os.environ.setdefault("ESCDELAY", "0")
     curses.wrapper(wasd_interface.drive)
-    # except Exception as e:
-    #     wasd_interface.logger.error("WASD has thrown an error:" + str(e))
 
     return True
 
