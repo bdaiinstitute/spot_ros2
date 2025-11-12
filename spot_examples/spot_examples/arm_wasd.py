@@ -12,13 +12,13 @@ from typing import Literal, Optional, Type
 import rclpy
 import synchros2.process as ros_process
 import synchros2.scope as ros_scope
+from bosdyn.api import arm_command_pb2, robot_command_pb2
 from bosdyn.client import ResponseError, RpcError
-from bosdyn.api import geometry_pb2, robot_command_pb2
-from geometry_msgs.msg import Twist
-from std_srvs.srv import Trigger
-
-from bosdyn_msgs.msg import ArmVelocityCommandRequest
 from bosdyn_msgs.conversions import convert
+from bosdyn_msgs.msg import ArmVelocityCommandRequest
+from geometry_msgs.msg import Twist
+from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
+from std_srvs.srv import Trigger
 from synchros2.action_client import ActionClientWrapper
 from synchros2.utilities import namespace_with
 
@@ -26,25 +26,19 @@ from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.msg import BatteryState, BatteryStateArray, PowerState  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
-from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
-
-from bosdyn.api import arm_command_pb2
 
 # Recommended QoS for Joy/Teleop commands
 JOY_TELEOP_QOS = QoSProfile(
     # Best Effort - prioritizes low latency over guaranteed delivery
     # Perfect for real-time control where latest command matters most
     reliability=ReliabilityPolicy.BEST_EFFORT,
-    
     # Keep Last with small depth - only care about most recent commands
     # History of 1-5 is typical, 1 is often sufficient for teleop
     history=HistoryPolicy.KEEP_LAST,
     depth=1,  # Only keep the latest command
-    
     # Volatile - don't persist commands after node restart
     # Teleop commands shouldn't be replayed from before restart
     durability=DurabilityPolicy.VOLATILE,
-
     # Short lifespan - commands expire quickly to avoid stale commands
     lifespan=rclpy.duration.Duration(seconds=1.0),  # Commands expire quickly
 )
@@ -52,17 +46,17 @@ JOY_TELEOP_QOS = QoSProfile(
 # -----------------------
 # Constants
 # -----------------------
-VELOCITY_BASE_SPEED = 0.3       # m/s
-VELOCITY_BASE_ANGULAR = 0.5     # rad/sec
-VELOCITY_CMD_DURATION = 1.0     # seconds
+VELOCITY_BASE_SPEED = 0.3  # m/s
+VELOCITY_BASE_ANGULAR = 0.5  # rad/sec
+VELOCITY_CMD_DURATION = 1.0  # seconds
 COMMAND_INPUT_RATE = 0.1
 
 ARM_MAXIMUM_ACCELERATION = 0.3  # m/s^2
-ARM_MAX_LINEAR_VELOCITY = 0.5   # m/s
-ARM_VELOCITY_CMD_DURATION = 0.25 # seconds
+ARM_MAX_LINEAR_VELOCITY = 0.5  # m/s
+ARM_VELOCITY_CMD_DURATION = 0.25  # seconds
 
 # Arm velocity increments
-ARM_VELOCITY_NORMALIZED = 0.4 # m/s
+ARM_VELOCITY_NORMALIZED = 0.4  # m/s
 ARM_VELOCITY_ANGULAR_NORMALIZED = 0.3  # rad/s
 
 
@@ -111,10 +105,10 @@ class WasdInterface:
         self.logger = self.node.get_logger()
 
         self._lock = threading.Lock()
-        
+
         # Control mode: "base" or "arm"
         self.control_mode = "base"
-        
+
         # Base movement commands
         self._base_command_dictionary = {
             27: self._stop,  # ESC key
@@ -137,7 +131,7 @@ class WasdInterface:
             ord("t"): self._toggle_control_mode,
             ord("T"): self._toggle_control_mode,
         }
-        
+
         # Arm control commands (6 DOF)
         self._arm_command_dictionary = {
             27: self._stop,  # ESC key
@@ -147,12 +141,12 @@ class WasdInterface:
             ord("v"): self._sit,
             ord("b"): self._battery_change_pose,
             ord("f"): self._stand,  # Keep same as base mode
-            ord("w"): self._arm_move_out,      # Move arm forward/out
-            ord("s"): self._arm_move_in,       # Move arm backward/in
-            ord("a"): self._arm_rotate_ccw,    # Rotate arm counter-clockwise
-            ord("d"): self._arm_rotate_cw,     # Rotate arm clockwise
-            ord("q"): self._arm_move_up,       # Move arm up (changed from r)
-            ord("e"): self._arm_move_down,     # Move arm down (changed from f)
+            ord("w"): self._arm_move_out,  # Move arm forward/out
+            ord("s"): self._arm_move_in,  # Move arm backward/in
+            ord("a"): self._arm_rotate_ccw,  # Rotate arm counter-clockwise
+            ord("d"): self._arm_rotate_cw,  # Rotate arm clockwise
+            ord("q"): self._arm_move_up,  # Move arm up (changed from r)
+            ord("e"): self._arm_move_down,  # Move arm down (changed from f)
             ord("i"): self._arm_rotate_plus_ry,  # End effector rotation
             ord("k"): self._arm_rotate_minus_ry,
             ord("u"): self._arm_rotate_plus_rx,
@@ -166,7 +160,7 @@ class WasdInterface:
             ord("t"): self._toggle_control_mode,
             ord("T"): self._toggle_control_mode,
         }
-        
+
         self._locked_messages = ["", "", ""]  # string: displayed message for user
         self._exit_check: Optional[ExitCheck] = None
 
@@ -174,7 +168,9 @@ class WasdInterface:
         self._robot_id = None
 
         self.pub_cmd_vel = self.node.create_publisher(Twist, namespace_with(robot_name, "cmd_vel"), JOY_TELEOP_QOS)
-        self.pub_arm_vel = self.node.create_publisher(ArmVelocityCommandRequest, namespace_with(robot_name, "arm_velocity_commands"), JOY_TELEOP_QOS)
+        self.pub_arm_vel = self.node.create_publisher(
+            ArmVelocityCommandRequest, namespace_with(robot_name, "arm_velocity_commands"), JOY_TELEOP_QOS
+        )
 
         self.latest_power_state_status: Optional[PowerState] = None
         self.latest_battery_status: Optional[BatteryStateArray] = None
@@ -298,17 +294,17 @@ class WasdInterface:
     def _drive_draw(self, stdscr: curses.window) -> None:
         stdscr.clear()  # clear screen
         stdscr.resize(30, 140)
-        
+
         # Basic info
         stdscr.addstr(0, 0, f"robot name: {self.robot_name}")
         stdscr.addstr(1, 0, f"CONTROL MODE: {self.control_mode.upper()}")
         stdscr.addstr(2, 0, self._battery_str())
         stdscr.addstr(3, 0, self._power_state_str())
-        
+
         # Messages
         for i in range(3):
             stdscr.addstr(5 + i, 2, self.message(i))
-        
+
         # Commands - show different help based on mode
         if self.control_mode == "base":
             stdscr.addstr(9, 0, "=== BASE MOVEMENT MODE ===")
@@ -332,7 +328,7 @@ class WasdInterface:
             stdscr.addstr(18, 0, "          [jl]: end effector Z-rot +/-            ")
             stdscr.addstr(19, 0, "          [y]: unstow arm, [h]: stow arm          ")
             stdscr.addstr(20, 0, "          [n/m]: open/close gripper, [ESC]: stop ")
-        
+
         stdscr.refresh()
 
     def _drive_cmd(self, key: int) -> None:
@@ -353,24 +349,20 @@ class WasdInterface:
         """Return the battery as a string."""
         if self.latest_battery_status is None:
             return "Battery: (unknown)"
-        
+
         battery_states = []
         for battery in self.latest_battery_status.battery_states:
             battery_states.append(f"{battery.identifier}: {battery.charge_percentage:.1f}%")
-        
+
         return "Battery: " + ", ".join(battery_states)
 
     def _power_state_str(self) -> str:
         """Return the power state as a string."""
         if self.latest_power_state_status is None:
             return "Power: (unknown)"
-        
-        state_map = {
-            PowerState.STATE_UNKNOWN: "UNKNOWN",
-            PowerState.STATE_OFF: "OFF", 
-            PowerState.STATE_ON: "ON"
-        }
-        
+
+        state_map = {PowerState.STATE_UNKNOWN: "UNKNOWN", PowerState.STATE_OFF: "OFF", PowerState.STATE_ON: "ON"}
+
         motor_power = state_map.get(self.latest_power_state_status.motor_power_state, "UNKNOWN")
         return f"Power: Motor={motor_power}"
 
@@ -402,18 +394,18 @@ class WasdInterface:
 
     def _stand(self) -> None:
         self.cli_stand.call_async(Trigger.Request())
-    
+
     def _arm_stow(self) -> None:
         self.cli_stow.call_async(Trigger.Request())
         self.is_arm_unstowed = False
-    
+
     def _arm_unstow(self) -> None:
         self.cli_unstow.call_async(Trigger.Request())
         self.is_arm_unstowed = True
-    
+
     def _open_gripper(self) -> None:
         self.cli_open_gripper.call_async(Trigger.Request())
-    
+
     def _close_gripper(self) -> None:
         self.cli_close_gripper.call_async(Trigger.Request())
 
@@ -442,15 +434,15 @@ class WasdInterface:
         self.cli_stop.call_async(Trigger.Request())
 
     def _velocity_cmd_helper(self, desc: str = "", v_x: float = 0.0, v_y: float = 0.0, v_rot: float = 0.0) -> None:
-        if(self.service_call_in_progress):
+        if self.service_call_in_progress:
             self.add_message("Service call in progress, cannot send velocity command")
             return
-        if(self.is_arm_unstowed):
-            if(not self.is_arm_locked_in_position):
+        if self.is_arm_unstowed:
+            if not self.is_arm_locked_in_position:
                 self.service_call_in_progress = True
                 result = self.lock_arm_in_position()
                 self.service_call_in_progress = False
-                if not result.success:
+                if not result:
                     self.add_message("Failed to lock arm in position, cannot send velocity command")
                     self.is_arm_locked_in_position = False
                     return
@@ -519,15 +511,16 @@ class WasdInterface:
         self.arm_velocity_cmd_helper("arm_rotate_minus_rz", end_effector_z=-ARM_VELOCITY_ANGULAR_NORMALIZED)
         self.add_message("End effector: -Z rotation")
 
-    def arm_velocity_cmd_helper(self, desc: str = "", 
-                                r: float = 0.0, 
-                                theta: float = 0.0, 
-                                z: float = 0.0,
-                                end_effector_x: float = 0.0,
-                                end_effector_y: float = 0.0,
-                                end_effector_z: float = 0.0,
-                                ) -> None:
-        
+    def arm_velocity_cmd_helper(
+        self,
+        desc: str = "",
+        r: float = 0.0,
+        theta: float = 0.0,
+        z: float = 0.0,
+        end_effector_x: float = 0.0,
+        end_effector_y: float = 0.0,
+        end_effector_z: float = 0.0,
+    ) -> None:
         arm_cmd_request = arm_command_pb2.ArmVelocityCommand.Request()
         arm_cmd_request.angular_velocity_of_hand_rt_odom_in_hand.x = end_effector_x
         arm_cmd_request.angular_velocity_of_hand_rt_odom_in_hand.y = end_effector_y
@@ -544,11 +537,15 @@ class WasdInterface:
         convert(arm_cmd_request, arm_cmd_request_ros)
         start_time = time.time()
         while time.time() - start_time < ARM_VELOCITY_CMD_DURATION:
-            self.pub_arm_vel.publish(arm_cmd)
+            self.pub_arm_vel.publish(arm_cmd_request_ros)
             time.sleep(0.01)
-        self.pub_arm_vel.publish(ArmVelocityCommandRequest())
+        zero_arm_cmd_request = arm_command_pb2.ArmVelocityCommand.Request()
+        zero_arm_cmd_request_ros = ArmVelocityCommandRequest()
+        convert(zero_arm_cmd_request, zero_arm_cmd_request_ros)
 
-    def lock_arm_in_position(self) -> None:
+        self.pub_arm_vel.publish(zero_arm_cmd_request_ros)
+
+    def lock_arm_in_position(self) -> bool:
         """Lock arm in current position - placeholder for actual implementation"""
         # This would need to be implemented based on your robot's API
         self.add_message("Locking arm in current position")
@@ -557,7 +554,8 @@ class WasdInterface:
         arm_command.arm_joint_move_command.trajectory.points.add()
         action_goal = RobotCommand.Goal()
         convert(robot_command, action_goal.command)
-        return self.robot_command_client.send_goal_and_wait("lock_arm_in_place", action_goal)
+        result = self.robot_command_client.send_goal_and_wait("lock_arm_in_place", action_goal)
+        return result.success
 
 
 def cli() -> argparse.ArgumentParser:

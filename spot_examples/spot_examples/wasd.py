@@ -286,7 +286,7 @@ class WasdInterface:
         while time.time() - start_time < VELOCITY_CMD_DURATION:
             self.pub_cmd_vel.publish(twist)
             time.sleep(0.01)
-        self.pub_cmd_vel.publish(Twist()) 
+        self.pub_cmd_vel.publish(Twist())
 
     def _stow(self) -> None:
         self.cli_stow.call_async(Trigger.Request())
