@@ -378,6 +378,7 @@ class WasdInterface:
         return f"Power: Motor={motor_power}"
 
     def _quit_program(self) -> None:
+        self._arm_stow()
         self._sit()
         if self._exit_check is not None:
             self._exit_check.request_exit()
