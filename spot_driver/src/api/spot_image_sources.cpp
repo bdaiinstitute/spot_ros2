@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #include <bosdyn/client/image/image_source_names.h>
 #include <spot_driver/api/spot_image_sources.hpp>

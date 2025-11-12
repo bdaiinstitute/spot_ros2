@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2025 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
+
+
 # Copyreference (c) 2024 Boston Dynamics AI Institute LLC. All references reserved.
 
 """
