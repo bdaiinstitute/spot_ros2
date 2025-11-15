@@ -102,6 +102,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetGripperCameraParameters.srv"
   "srv/SetGripperCameraParameters.srv"
   "srv/OverrideGraspOrCarry.srv"
+  "srv/PosedStand.srv"
   "srv/SetStandHeight.srv"
   "srv/SetStairsMode.srv"
   "srv/MutateWorldObject.srv"
