@@ -2904,8 +2904,11 @@ class SpotROS(Node):
         convert(request.request, proto_request)
         self.get_logger().info("Requesting world object mutation")
         if self.spot_wrapper:
-            proto_response = self.spot_wrapper.mutate_world_objects(proto_request)
-            convert(proto_response, response.response)
+            try:
+                proto_response = self.spot_wrapper.mutate_world_objects(proto_request)
+                convert(proto_response, response.response)
+            except Exception:
+                self.get_logger().error(f"Exception while handling world object mutation: {traceback.format_exc()}")
         return response
 
     def handle_execute_dance_feedback(self) -> None:
