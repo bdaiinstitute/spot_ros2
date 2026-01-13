@@ -18,12 +18,19 @@ jobs:
   lint:
     name: Lint spot_ros2 packages
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        config:
+        - { python: "3.10" }
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+        uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.config.python }}
       - name: Lint sources
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
   prepare_container:
     name: Prepare spot_ros2 container
     runs-on: ubuntu-22.04
