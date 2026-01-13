@@ -81,6 +81,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Download Docker image artifact
         uses: actions/download-artifact@v5  # https://github.com/actions/download-artifact
