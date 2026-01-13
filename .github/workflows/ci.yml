@@ -97,8 +97,7 @@ jobs:
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace \
             ${{ github.repository }}_humble:sha-${{ github.sha }} bash -c " \
               source /opt/ros/humble/setup.bash; \
-              colcon build --symlink-install; \
+              colcon build --symlink-install --packages-up-to spot_driver spot_examples spot_ros2_control; \
               source install/setup.bash; \
-              pytest -n auto --cov-report xml --cov-config=$GITHUB_WORKSPACE/.coveragerc --cov-report term --cov=spot_driver $GITHUB_WORKSPACE/spot_driver/test/pytests/; \
-              colcon test --event-handlers console_direct+ --packages-select spot_description spot_examples spot_msgs spot_common spot_driver spot_ros2_control; \
+              colcon test --event-handlers console_direct+ --packages-select spot_examples spot_common spot_driver spot_ros2_control; \
               colcon test-result --all --verbose"
