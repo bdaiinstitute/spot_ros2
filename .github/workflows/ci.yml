@@ -95,7 +95,7 @@ jobs:
       - name: Build and run tests
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace \
-            ${{ github.repository }}_on_humble:sha-${{ github.sha }} bash -c " \
+            ${{ github.repository }}_humble:sha-${{ github.sha }} bash -c " \
               source /opt/ros/humble/setup.bash; \
               colcon build --symlink-install; \
               source install/setup.bash; \
