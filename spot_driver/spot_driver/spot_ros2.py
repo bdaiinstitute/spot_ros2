@@ -611,9 +611,9 @@ class SpotROS(Node):
 
         self.declare_parameter("has_arm", self.has_arm)
         self.has_arm_pub = self.create_publisher(
-            Bool, "status/has_arm", qos_profile=rclpy.qos.QoSProfile(
-                durability=rclpy.qos.DurabilityPolicy.TRANSIENT_LOCAL, depth=1
-            )
+            Bool,
+            "status/has_arm",
+            qos_profile=rclpy.qos.QoSProfile(durability=rclpy.qos.DurabilityPolicy.TRANSIENT_LOCAL, depth=1),
         )
         self.has_arm_pub.publish(Bool(data=self.has_arm))
 
