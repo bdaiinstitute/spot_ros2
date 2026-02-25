@@ -39,6 +39,7 @@ RUN apt-get update -q && \
     python3-rosdep \
     libpython3-dev \
     python3-tk \
+    qttools5-dev \
     ros-humble-ros-base \
     ros-dev-tools \
     #check if Zenoh should be installed

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+# Copyright (c) 2023 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 # We disable Pylint warnings for all Protobuf files which contain objects with
 # dynamically added member attributes.

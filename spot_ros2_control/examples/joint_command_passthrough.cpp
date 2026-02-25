@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 // Note(llee): I think I would like to move this to `action_stack_spot` because so far it's pretty specific to Spot
 

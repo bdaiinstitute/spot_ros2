@@ -92,3 +92,4 @@ def robot_spot_ros2_control(simple_spot: SpotFixture, domain_id: int) -> Iterato
 
 def pytest_configure() -> None:
     pytest.robot_spot_ros2_control = robot_spot_ros2_control
+    pytest.DEFAULT_TIMEOUT = 10.0  # CI often takes a weirdly long time to do stuff

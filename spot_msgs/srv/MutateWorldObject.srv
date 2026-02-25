@@ -1,0 +1,3 @@
+bosdyn_api_msgs/MutateWorldObjectRequest request
+---
+bosdyn_api_msgs/MutateWorldObjectResponse response

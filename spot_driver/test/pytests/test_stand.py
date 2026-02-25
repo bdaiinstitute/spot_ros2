@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
+# Copyright (c) 2023-2024 Robotics and AI Institute LLC dba RAI Institute. See LICENSE file for more info.
 
 """
 Test for the Stand command.
@@ -37,14 +37,14 @@ def test_stand(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve stand command.
-    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = RobotCommandResponse()
     response.status = RobotCommandResponse.Status.STATUS_OK
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success
 
@@ -68,13 +68,13 @@ def test_stand_failed(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve stand command with an unknown error.
-    call = simple_spot.api.RobotCommand.serve(timeout=2.0)
+    call = simple_spot.api.RobotCommand.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     response = RobotCommandResponse()
     response.status = RobotCommandResponse.Status.STATUS_UNKNOWN
     call.returns(response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert not response.success

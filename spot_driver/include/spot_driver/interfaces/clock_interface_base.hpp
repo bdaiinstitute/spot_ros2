@@ -1,9 +1,11 @@
-// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #pragma once
 
 #include <chrono>
 #include <functional>
+#include <memory>
+#include <rclcpp/clock.hpp>
 #include <rclcpp/time.hpp>
 
 namespace spot_ros2 {
@@ -13,6 +15,8 @@ namespace spot_ros2 {
 class ClockInterfaceBase {
  public:
   virtual ~ClockInterfaceBase() = default;
+
+  virtual std::shared_ptr<rclcpp::Clock> getClock() = 0;
 
   virtual rclcpp::Time now() = 0;
 };

@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
+# Copyright (c) 2023-2024 Robotics and AI Institute LLC dba RAI Institute. See LICENSE file for more info.
 
 """
 Test for the arm surface contact.
@@ -25,12 +25,12 @@ def _send_goal_and_get_result(
     goal: ArmSurfaceContactAction.Goal, action_client: ActionClient
 ) -> ArmSurfaceContactAction.Result:
     future = action_client.send_goal_async(goal)
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     goal_handle = future.result()
 
     # Query and wait for the action result.
     result_future = goal_handle.get_result_async()
-    assert wait_for_future(result_future, timeout_sec=2.0)
+    assert wait_for_future(result_future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     return result_future.result()
 
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2025 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #include <spot_driver/lease/lease_manager_node.hpp>
 #include <spot_driver/lease/lease_middleware_handle.hpp>
@@ -79,4 +79,9 @@ void LeaseManagerNode::initialize(std::shared_ptr<rclcpp::Node> node, std::uniqu
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> LeaseManagerNode::get_node_base_interface() {
   return node_->get_node_base_interface();
 }
+
+std::shared_ptr<rclcpp::Clock> LeaseManagerNode::get_clock() {
+  return node_->get_clock();
+}
+
 }  // namespace spot_ros2::lease

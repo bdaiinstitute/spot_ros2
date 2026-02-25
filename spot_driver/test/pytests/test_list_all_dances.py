@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
+# Copyright (c) 2023-2024 Robotics and AI Institute LLC dba RAI Institute. See LICENSE file for more info.
 
 """
 Test for the List All Dances command.
@@ -38,12 +38,12 @@ def test_list_all_dances(ros: ROSAwareScope, simple_spot: SpotFixture) -> None:
     # Mock GRPC sever.
 
     # Serve "list_all_sequences" command.
-    list_sequences_call = simple_spot.api.ListAllSequences.serve(timeout=2.0)
+    list_sequences_call = simple_spot.api.ListAllSequences.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert list_sequences_call is not None
     list_sequences_response = ListAllSequencesResponse()
     list_sequences_call.returns(list_sequences_response)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success

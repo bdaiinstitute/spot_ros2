@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #include <bosdyn/client/gripper_camera_param/gripper_camera_param_client.h>
 #include <bosdyn/client/world_objects/world_object_client.h>

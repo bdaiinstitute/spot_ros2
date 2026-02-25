@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2025 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #include <spot_driver/lease/lease_middleware_handle.hpp>
 

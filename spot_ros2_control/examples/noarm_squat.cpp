@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 // Based off: https://github.com/boston-dynamics/spot-cpp-sdk/blob/master/cpp/examples/joint_control/noarm_squat.cpp
 

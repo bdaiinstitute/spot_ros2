@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #pragma once
 
@@ -32,6 +32,14 @@ class KinematicNode {
    * @return A shared_ptr to the NodeBaseInterface of the node stored as a private member of this class.
    */
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> get_node_base_interface();
+
+  /**
+   * @brief Returns the Clock of this class's node.
+   * @details This function exists to allow for the Spot SDK clock source to be derived from a node's clock.
+   *
+   * @return A shared_ptr to the Clock of the node.
+   */
+  std::shared_ptr<rclcpp::Clock> get_clock();
 
  private:
   std::shared_ptr<rclcpp::Node> node_;

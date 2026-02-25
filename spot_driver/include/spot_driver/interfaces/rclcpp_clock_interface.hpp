@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #pragma once
 
@@ -20,6 +20,8 @@ class RclcppClockInterface : public ClockInterfaceBase {
    */
   explicit RclcppClockInterface(
       const std::shared_ptr<rclcpp::node_interfaces::NodeClockInterface>& node_clock_interface);
+
+  std::shared_ptr<rclcpp::Clock> getClock() override;
 
   rclcpp::Time now() override;
 

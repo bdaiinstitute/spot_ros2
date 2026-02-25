@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 #include <cv_bridge/cv_bridge.h>
 #include <builtin_interfaces/msg/detail/time__struct.hpp>
 #include <geometry_msgs/msg/detail/transform_stamped__struct.hpp>

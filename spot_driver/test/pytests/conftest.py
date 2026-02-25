@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
+# Copyright (c) 2023-2024 Robotics and AI Institute LLC dba RAI Institute. See LICENSE file for more info.
 
 """
 Module containing test fixtures.
@@ -185,3 +185,4 @@ def spot_graph_description(simple_spot: SpotFixture, domain_id: int) -> typing.I
 
 def pytest_configure() -> None:
     pytest.spot_graph_description = spot_graph_description
+    pytest.DEFAULT_TIMEOUT = 10.0  # CI often takes a weirdly long time to do stuff

@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
+# Copyright (c) 2023-2024 Robotics and AI Institute LLC dba RAI Institute. See LICENSE file for more info.
 
 """
 Test for the Recorded State to Animation command.
@@ -95,11 +95,11 @@ def test_recorded_state_to_animation(ros: ROSAwareScope, simple_spot: SpotFixtur
     ]
 
     # Serve "download_state_log" command.
-    call = simple_spot.api.DownloadRobotStateLog.serve(timeout=2.0)
+    call = simple_spot.api.DownloadRobotStateLog.serve(timeout=pytest.DEFAULT_TIMEOUT)
     assert call is not None
     call.returns(responses)
 
     # Wait for ROS response.
-    assert wait_for_future(future, timeout_sec=2.0)
+    assert wait_for_future(future, timeout_sec=pytest.DEFAULT_TIMEOUT)
     response = future.result()
     assert response.success

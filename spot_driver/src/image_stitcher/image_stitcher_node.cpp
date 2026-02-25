@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2024 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #include <spot_driver/image_stitcher/image_stitcher_node.hpp>
 
@@ -30,6 +30,10 @@ void ImageStitcherNode::initialize(std::unique_ptr<CameraSynchronizerBase> synch
 
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> ImageStitcherNode::get_node_base_interface() {
   return node_->get_node_base_interface();
+}
+
+std::shared_ptr<rclcpp::Clock> ImageStitcherNode::get_clock() {
+  return node_->get_clock();
 }
 
 }  // namespace spot_ros2

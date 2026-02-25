@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+// Copyright (c) 2023 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 #include <spot_driver/kinematic/kinematic_middleware_handle.hpp>
 #include <spot_driver/kinematic/kinematic_node.hpp>
@@ -72,4 +72,9 @@ void KinematicNode::initialize(std::shared_ptr<rclcpp::Node> node, std::unique_p
 std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> KinematicNode::get_node_base_interface() {
   return node_->get_node_base_interface();
 }
+
+std::shared_ptr<rclcpp::Clock> KinematicNode::get_clock() {
+  return node_->get_clock();
+}
+
 }  // namespace spot_ros2::kinematic

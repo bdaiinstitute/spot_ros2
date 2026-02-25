@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (c) 2023 Boston Dynamics AI Institute LLC. All rights reserved.
+# Copyright (c) 2023 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
 
 """
 This example illustrates the methodology for dispatching extended-duration
