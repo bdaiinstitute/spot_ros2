@@ -71,6 +71,7 @@ from rclpy.clock import Clock
 from rclpy.impl import rcutils_logger
 from rclpy.publisher import Publisher
 from sensor_msgs.msg import JointState, PointCloud2, PointField
+from std_msgs.msg import Bool
 from std_srvs.srv import Trigger
 from synchros2.node import Node
 from synchros2.service import Serviced
@@ -609,6 +610,12 @@ class SpotROS(Node):
             )
 
         self.declare_parameter("has_arm", self.has_arm)
+        self.has_arm_pub = self.create_publisher(
+            Bool,
+            "status/has_arm",
+            qos_profile=rclpy.qos.QoSProfile(durability=rclpy.qos.DurabilityPolicy.TRANSIENT_LOCAL, depth=1),
+        )
+        self.has_arm_pub.publish(Bool(data=self.has_arm))
 
         # Status Publishers #
         self.dynamic_broadcaster: tf2_ros.TransformBroadcaster = tf2_ros.TransformBroadcaster(self)
@@ -2904,8 +2911,11 @@ class SpotROS(Node):
         convert(request.request, proto_request)
         self.get_logger().info("Requesting world object mutation")
         if self.spot_wrapper:
-            proto_response = self.spot_wrapper.mutate_world_objects(proto_request)
-            convert(proto_response, response.response)
+            try:
+                proto_response = self.spot_wrapper.mutate_world_objects(proto_request)
+                convert(proto_response, response.response)
+            except Exception:
+                self.get_logger().error(f"Exception while handling world object mutation: {traceback.format_exc()}")
         return response
 
     def handle_execute_dance_feedback(self) -> None:
