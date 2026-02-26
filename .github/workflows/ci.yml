@@ -162,6 +162,7 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           parallel-finished: true
+          fail-on-error: false
           carryforward: "unittests-python, unittests-cpp"
 
       - if: always()
