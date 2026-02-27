@@ -83,7 +83,7 @@ class LaunchHelpersTest(unittest.TestCase):
             self.assertIsInstance(params[self.prefix_key], Substitution, "Substitution set, should override.")
             self.assertEqual(
                 params[self.prefix_key].perform(self.context),
-                "prefix_overridden/",
+                "prefix_overridden",
                 "Substitution set, should override.",
             )
             self.assertEqual(params[self.user_key], self.user_value, "Substitution empty, should not change.")
@@ -112,7 +112,7 @@ class LaunchHelpersTest(unittest.TestCase):
         self.assertTrue(name == "" and prefix == "", "Empty parameters.")
 
         name, prefix = get_name_and_prefix({self.name_key: self.name_value})
-        self.assertTrue(name == self.name_value and prefix == self.name_value + "/", "Prefix from name.")
+        self.assertTrue(name == self.name_value and prefix == self.name_value, "Prefix from name.")
 
         name, prefix = get_name_and_prefix({self.name_key: self.name_value, self.prefix_key: ""})
         self.assertTrue(name == self.name_value and prefix == "", "Explicit prefix.")
@@ -132,7 +132,7 @@ class LaunchHelpersTest(unittest.TestCase):
             isinstance(name, Substitution) and isinstance(prefix, Substitution), "Launch argument: prefix from name."
         )
         self.assertTrue(
-            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.name_value + "/",
+            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.name_value,
             "Launch argument: prefix from name.",
         )
 
@@ -153,7 +153,7 @@ class LaunchHelpersTest(unittest.TestCase):
             isinstance(name, Substitution) and isinstance(prefix, Substitution), "Substitution: prefix from name."
         )
         self.assertTrue(
-            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.name_value + "/",
+            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.name_value,
             "Substitution: prefix from name.",
         )
 
@@ -164,7 +164,7 @@ class LaunchHelpersTest(unittest.TestCase):
             isinstance(name, Substitution) and isinstance(prefix, Substitution), "Substitution: explicit prefix."
         )
         self.assertTrue(
-            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.prefix_value + "/",
+            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.prefix_value,
             "Substitution: explicit prefix.",
         )
 
