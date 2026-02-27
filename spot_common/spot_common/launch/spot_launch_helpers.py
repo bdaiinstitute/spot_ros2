@@ -317,11 +317,4 @@ def get_name_and_prefix(ros_params: Dict[str, Any]) -> Tuple[Union[str, Substitu
             tf_prefix = spot_name + "/"
         else:
             tf_prefix = ""
-    else:
-        # Ensure explicit prefix ends with '/' if not empty and not already ending with '/'
-        if isinstance(tf_prefix, Substitution):
-            # Wrap in PathJoinSubstitution if not already
-            tf_prefix = PathJoinSubstitution([tf_prefix, ""]) if not str(tf_prefix).endswith("/") else tf_prefix
-        elif isinstance(tf_prefix, str) and tf_prefix and not tf_prefix.endswith("/"):
-            tf_prefix = tf_prefix + "/"
     return spot_name, tf_prefix
