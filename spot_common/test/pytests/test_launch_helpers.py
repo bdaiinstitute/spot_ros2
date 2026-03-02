@@ -12,9 +12,7 @@ from launch import LaunchContext, Substitution
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 from spot_common.launch.spot_launch_helpers import get_name_and_prefix, substitute_launch_parameters
-import logging
 
-logger = logging.getLogger(__name__)
 
 class LaunchHelpersTest(unittest.TestCase):
     def setUp(self) -> None:
