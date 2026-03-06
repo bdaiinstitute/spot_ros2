@@ -132,7 +132,7 @@ class LaunchHelpersTest(unittest.TestCase):
         )
 
         name_path_join_substitution = PathJoinSubstitution([self.name_value])
-        prefix_path_join_substitution = PathJoinSubstitution([self.prefix_value, ""])
+        prefix_path_join_substitution = PathJoinSubstitution([self.prefix_value, "test"])
 
         name, prefix = get_name_and_prefix({self.name_key: name_path_join_substitution})
         self.assertTrue(
