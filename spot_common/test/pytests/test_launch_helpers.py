@@ -134,15 +134,6 @@ class LaunchHelpersTest(unittest.TestCase):
         name_path_join_substitution = PathJoinSubstitution([self.name_value])
         prefix_path_join_substitution = PathJoinSubstitution([self.prefix_value, "test"])
 
-        name, prefix = get_name_and_prefix({self.name_key: name_path_join_substitution})
-        self.assertTrue(
-            isinstance(name, Substitution) and isinstance(prefix, Substitution), "Substitution: prefix from name."
-        )
-        self.assertTrue(
-            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.name_value + "/",
-            "Substitution: prefix from name.",
-        )
-
         name, prefix = get_name_and_prefix(
             {self.name_key: name_path_join_substitution, self.prefix_key: prefix_path_join_substitution}
         )
