@@ -142,7 +142,7 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          fail-on-error: true
+          fail-on-error: false
           flag-name: unittests-python
           parallel: true
           debug: true
@@ -152,7 +152,7 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          fail-on-error: true
+          fail-on-error: false
           flag-name: unittests-cpp
           debug: true
           files: ../../coverage_spot_driver.info
@@ -162,6 +162,7 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           parallel-finished: true
+          fail-on-error: false
           carryforward: "unittests-python, unittests-cpp"
 
       - if: always()
