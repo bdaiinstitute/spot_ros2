@@ -121,6 +121,8 @@ void StateStreamingHandler::reset() {
   current_position_.clear();
   current_velocity_.clear();
   current_load_.clear();
+  current_k_q_p_.clear();
+  current_k_qd_p_.clear();
 }
 
 hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interface::HardwareInfo& info) {
@@ -178,25 +180,25 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     // 2. check velocity
     if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
+                   joint.name.c_str(), joint.command_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 3. check effort
     if (joint.command_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_EFFORT);
+                   joint.name.c_str(), joint.command_interfaces[2].name.c_str(), hardware_interface::HW_IF_EFFORT);
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 4. check k_q_p
     if (joint.command_interfaces[3].name != HW_IF_K_Q_P) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), HW_IF_K_Q_P.c_str());
+                   joint.name.c_str(), joint.command_interfaces[3].name.c_str(), HW_IF_K_Q_P.c_str());
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 5. check k_qd_p
     if (joint.command_interfaces[4].name != HW_IF_K_QD_P) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), HW_IF_K_QD_P.c_str());
+                   joint.name.c_str(), joint.command_interfaces[4].name.c_str(), HW_IF_K_QD_P.c_str());
       return hardware_interface::CallbackReturn::ERROR;
     }
     // Second, check state interfaces
@@ -214,13 +216,25 @@ hardware_interface::CallbackReturn SpotHardware::on_init(const hardware_interfac
     // 2. check velocity
     if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
+                   joint.name.c_str(), joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return hardware_interface::CallbackReturn::ERROR;
     }
     // 3. check effort
     if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
-                   joint.name.c_str(), joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_EFFORT);
+                   joint.name.c_str(), joint.state_interfaces[2].name.c_str(), hardware_interface::HW_IF_EFFORT);
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+    // 4. check k_q_p
+    if (joint.state_interfaces[3].name != HW_IF_K_Q_P) {
+      RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
+                   joint.name.c_str(), joint.state_interfaces[3].name.c_str(), HW_IF_K_Q_P.c_str());
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+    // 5. check k_qd_p
+    if (joint.state_interfaces[4].name != HW_IF_K_QD_P) {
+      RCLCPP_FATAL(rclcpp::get_logger("SpotHardware"), "Joint '%s' have %s command interfaces found. '%s' expected.",
+                   joint.name.c_str(), joint.state_interfaces[4].name.c_str(), HW_IF_K_QD_P.c_str());
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
@@ -285,6 +299,8 @@ hardware_interface::CallbackReturn SpotHardware::on_configure(const rclcpp_lifec
   joint_states_.position.assign(njoints_, 0);
   joint_states_.velocity.assign(njoints_, 0);
   joint_states_.load.assign(njoints_, 0);
+  joint_states_.k_q_p.assign(njoints_, 0);
+  joint_states_.k_qd_p.assign(njoints_, 0);
   foot_states_.assign(nfeet_, 0);
 
   // Set up the robot using the BD SDK and start command streaming.
@@ -351,6 +367,10 @@ std::vector<hardware_interface::StateInterface> SpotHardware::export_state_inter
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 1]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_EFFORT,
                                                                      &hw_states_[state_interfaces_per_joint_ * i + 2]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(joint.name, HW_IF_K_Q_P, &hw_states_[state_interfaces_per_joint_ * i + 3]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(joint.name, HW_IF_K_QD_P, &hw_states_[state_interfaces_per_joint_ * i + 4]));
   }
   // export sensor state interface
 
@@ -448,15 +468,19 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
   const auto& joint_pos = joint_states_.position;
   const auto& joint_vel = joint_states_.velocity;
   const auto& joint_load = joint_states_.load;
+  const auto& joint_k_q_p = joint_states_.k_q_p;
+  const auto& joint_k_qd_p = joint_states_.k_qd_p;
   // wait for them to be initialized
-  if (joint_pos.empty() || joint_vel.empty() || joint_load.empty()) {
+  if (joint_pos.empty() || joint_vel.empty() || joint_load.empty() || joint_k_q_p.empty() || joint_k_qd_p.empty()) {
     return hardware_interface::return_type::OK;
   }
   // Ensure that the states received from the Spot SDK will fit into the hw_states_ vector
   const auto states_size = hw_states_.size();
   if (state_interfaces_per_joint_ * joint_pos.size() != states_size ||
       state_interfaces_per_joint_ * joint_vel.size() != states_size ||
-      state_interfaces_per_joint_ * joint_load.size() != states_size) {
+      state_interfaces_per_joint_ * joint_load.size() != states_size ||
+      state_interfaces_per_joint_ * joint_k_q_p.size() != states_size ||
+      state_interfaces_per_joint_ * joint_k_qd_p.size() != states_size) {
     RCLCPP_FATAL(
         rclcpp::get_logger("SpotHardware"),
         "The number of joints and interfaces does not match with the outputted joint states from the Spot SDK!");
@@ -482,6 +506,12 @@ hardware_interface::return_type SpotHardware::read(const rclcpp::Time& /*time*/,
       hw_commands_[command_interfaces_per_joint_ * i + 4] = std::stof(joint.command_interfaces.at(4).initial_value);
     }
     init_state_ = true;
+  }
+
+  // Fill in gain states from the last command values (BD Joint Control API does not let you read gains)
+  for (size_t i = 0; i < njoints_; i++) {
+    hw_states_.at(i * state_interfaces_per_joint_ + 3) = hw_commands_.at(i * command_interfaces_per_joint_ + 3);
+    hw_states_.at(i * state_interfaces_per_joint_ + 4) = hw_commands_.at(i * command_interfaces_per_joint_ + 4);
   }
 
   // Read IMU sensor values into sensor states
