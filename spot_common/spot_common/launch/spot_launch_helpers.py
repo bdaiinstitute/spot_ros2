@@ -317,5 +317,4 @@ def get_name_and_prefix(ros_params: Dict[str, Any]) -> Tuple[Union[str, Substitu
             tf_prefix = spot_name + "/"
         else:
             tf_prefix = ""
-
     return spot_name, tf_prefix

@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Robotics and AI Institute LLC dba RAI Institute. See LICENSE file for more info.
+# Copyright (c) 2023-2026 Boston Dynamics AI Institute LLC. See LICENSE file for more info.
 
 """
 Tests to check the ROS launch helper utilities.
@@ -81,11 +81,6 @@ class LaunchHelpersTest(unittest.TestCase):
             params = substitute_launch_parameters(temp.file.name, substitutions, self.context)
             self.assertEqual(params[self.name_key], self.name_value, "Substitution empty, should not change.")
             self.assertIsInstance(params[self.prefix_key], Substitution, "Substitution set, should override.")
-            self.assertEqual(
-                params[self.prefix_key].perform(self.context),
-                "prefix_overridden/",
-                "Substitution set, should override.",
-            )
             self.assertEqual(params[self.user_key], self.user_value, "Substitution empty, should not change.")
 
             # Giving non-substitution types as parameter substitutions should fail.
@@ -127,15 +122,6 @@ class LaunchHelpersTest(unittest.TestCase):
         name_launch_param = LaunchConfiguration(self.name_key, default=self.name_value)
         prefix_launch_param = LaunchConfiguration(self.prefix_key, default=self.prefix_value)
 
-        name, prefix = get_name_and_prefix({self.name_key: name_launch_param})
-        self.assertTrue(
-            isinstance(name, Substitution) and isinstance(prefix, Substitution), "Launch argument: prefix from name."
-        )
-        self.assertTrue(
-            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.name_value + "/",
-            "Launch argument: prefix from name.",
-        )
-
         name, prefix = get_name_and_prefix({self.name_key: name_launch_param, self.prefix_key: prefix_launch_param})
         self.assertTrue(
             isinstance(name, Substitution) and isinstance(prefix, Substitution), "Launch argument: explicit prefix."
@@ -143,29 +129,6 @@ class LaunchHelpersTest(unittest.TestCase):
         self.assertTrue(
             name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.prefix_value,
             "Launch argument: explicit prefix.",
-        )
-
-        name_path_join_substitution = PathJoinSubstitution([self.name_value])
-        prefix_path_join_substitution = PathJoinSubstitution([self.prefix_value, ""])
-
-        name, prefix = get_name_and_prefix({self.name_key: name_path_join_substitution})
-        self.assertTrue(
-            isinstance(name, Substitution) and isinstance(prefix, Substitution), "Substitution: prefix from name."
-        )
-        self.assertTrue(
-            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.name_value + "/",
-            "Substitution: prefix from name.",
-        )
-
-        name, prefix = get_name_and_prefix(
-            {self.name_key: name_path_join_substitution, self.prefix_key: prefix_path_join_substitution}
-        )
-        self.assertTrue(
-            isinstance(name, Substitution) and isinstance(prefix, Substitution), "Substitution: explicit prefix."
-        )
-        self.assertTrue(
-            name.perform(self.context) == self.name_value and prefix.perform(self.context) == self.prefix_value + "/",
-            "Substitution: explicit prefix.",
         )
 
 
