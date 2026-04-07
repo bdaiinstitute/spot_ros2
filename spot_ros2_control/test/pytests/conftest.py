@@ -4,7 +4,6 @@ from typing import Iterator
 import domain_coordinator
 import launch_pytest
 import pytest
-import synchros2.scope as ros_scope
 import yaml
 from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description import LaunchDescription
@@ -12,12 +11,13 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from synchros2.launch.actions import update_sigterm_sigkill_timeout
-from synchros2.scope import ROSAwareScope
 
 import spot_wrapper.testing
+import synchros2.scope as ros_scope
 from spot_wrapper.testing.fixtures import SpotFixture
 from spot_wrapper.testing.mocks import MockSpot
+from synchros2.launch.actions import update_sigterm_sigkill_timeout
+from synchros2.scope import ROSAwareScope
 
 
 # this mocks a spot with an arm

@@ -21,8 +21,6 @@ from typing import List
 
 import geometry_msgs.msg
 import numpy as np
-import synchros2.process as ros_process
-import synchros2.scope as ros_scope
 from bosdyn.api.spot import inverse_kinematics_pb2, robot_command_pb2
 from bosdyn.client.frame_helpers import (
     BODY_FRAME_NAME,
@@ -35,13 +33,15 @@ from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from rclpy.node import Node
+from tf2_ros import TransformBroadcaster, TransformStamped
+
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
+from spot_msgs.action import RobotCommand  # type: ignore
+from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
 from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import namespace_with
-from tf2_ros import TransformBroadcaster, TransformStamped
-
-from spot_msgs.action import RobotCommand  # type: ignore
-from spot_msgs.srv import GetInverseKinematicSolutions  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
 

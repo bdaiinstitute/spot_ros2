@@ -24,11 +24,12 @@ from typing import Optional
 import cv2
 import numpy as np
 import open3d as o3d
-import synchros2.process as ros_process
-import synchros2.scope as ros_scope
 import yaml
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
+
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
 from synchros2.context import wait_for_shutdown
 
 

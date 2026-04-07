@@ -4,11 +4,11 @@ import pytest
 from bosdyn.api.robot_command_pb2 import RobotCommandResponse
 from bosdyn.api.robot_state_pb2 import RobotStateStreamResponse
 from sensor_msgs.msg import JointState
+
+from spot_wrapper.testing.fixtures import SpotFixture
 from synchros2.futures import unwrap_future
 from synchros2.scope import ROSAwareScope
 from synchros2.subscription import Subscription
-
-from spot_wrapper.testing.fixtures import SpotFixture
 
 LEG_JOINTS = [
     "front_left_hip_x",

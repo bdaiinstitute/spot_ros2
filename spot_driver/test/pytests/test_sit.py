@@ -11,10 +11,10 @@ Test for the Sit command.
 import pytest
 from bosdyn.api.robot_command_pb2 import RobotCommandResponse
 from std_srvs.srv import Trigger
-from synchros2.futures import wait_for_future
-from synchros2.scope import ROSAwareScope
 
 from spot_wrapper.testing.fixtures import SpotFixture
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 
 @pytest.mark.parametrize("simple_spot", [False], indirect=True)

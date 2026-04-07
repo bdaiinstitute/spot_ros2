@@ -23,11 +23,11 @@ from bosdyn.api.spot.choreography_sequence_pb2 import (
 )
 from google.protobuf.timestamp_pb2 import Timestamp
 from google.protobuf.wrappers_pb2 import DoubleValue
-from synchros2.futures import wait_for_future
-from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import ChoreographyRecordedStateToAnimation  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 
 @pytest.mark.parametrize("simple_spot", [False], indirect=True)

@@ -10,7 +10,6 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import SetParameter
-from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 from spot_common.launch.spot_launch_helpers import (
     DepthRegisteredMode,
@@ -20,6 +19,7 @@ from spot_common.launch.spot_launch_helpers import (
     spot_has_arm,
     substitute_launch_parameters,
 )
+from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 
 def create_depth_registration_nodelets(

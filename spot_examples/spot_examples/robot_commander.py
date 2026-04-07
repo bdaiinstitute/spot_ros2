@@ -1,18 +1,18 @@
 import logging
 from typing import Optional
 
-import synchros2.scope as ros_scope
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE3Pose
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from geometry_msgs.msg import Pose
 from rclpy.node import Node
+
+import synchros2.scope as ros_scope
+from spot_msgs.action import RobotCommand  # type: ignore
 from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import fqn, namespace_with
-
-from spot_msgs.action import RobotCommand  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
 

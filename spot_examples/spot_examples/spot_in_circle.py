@@ -3,8 +3,6 @@ import logging
 import math
 from typing import List, Optional
 
-import synchros2.process as ros_process
-import synchros2.scope as ros_scope
 from bosdyn.api import geometry_pb2
 from bosdyn.client import math_helpers
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, ODOM_FRAME_NAME, VISION_FRAME_NAME
@@ -13,12 +11,14 @@ from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from rcl_interfaces.srv import GetParameters
 from rclpy.node import Node
+
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
+from spot_msgs.action import RobotCommand  # type: ignore
 from synchros2.action_client import ActionClientWrapper
 from synchros2.service import Serviced
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import fqn, namespace_with
-
-from spot_msgs.action import RobotCommand  # type: ignore
 
 from .simple_spot_commander import SimpleSpotCommander
 

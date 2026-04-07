@@ -14,11 +14,11 @@ from bosdyn.api.header_pb2 import CommonError
 from bosdyn_msgs.msg import SE3TrajectoryPoint
 from rclpy.action import ActionClient
 from rclpy.duration import Duration
-from synchros2.futures import wait_for_future
-from synchros2.scope import ROSAwareScope
 
 from spot_msgs.action import ArmSurfaceContact as ArmSurfaceContactAction  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 
 def _send_goal_and_get_result(

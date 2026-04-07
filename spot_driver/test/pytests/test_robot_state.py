@@ -4,12 +4,12 @@ import typing
 
 import pytest
 from sensor_msgs.msg import JointState
+
+from spot_wrapper.testing.fixtures import SpotFixture
 from synchros2.futures import wait_for_future
 from synchros2.scope import ROSAwareScope
 from synchros2.subscription import Subscription
 from synchros2.utilities import namespace_with
-
-from spot_wrapper.testing.fixtures import SpotFixture
 
 
 @pytest.mark.parametrize("simple_spot", [False], indirect=True)

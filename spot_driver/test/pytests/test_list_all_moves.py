@@ -10,11 +10,11 @@ Test for the List All Moves command.
 
 import pytest
 from bosdyn.api.spot.choreography_sequence_pb2 import ListAllMovesResponse
-from synchros2.futures import wait_for_future
-from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import ListAllMoves  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 
 @pytest.mark.parametrize("simple_spot", [False], indirect=True)

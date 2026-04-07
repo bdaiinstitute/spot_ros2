@@ -5,12 +5,13 @@ import logging
 from typing import Any, Dict, Optional
 
 import rclpy
-import synchros2.process as ros_process
-import synchros2.scope as ros_scope
 from rcl_interfaces.srv import GetParameters
 from rclpy.client import Client
 from rclpy.node import Node
 from std_srvs.srv import Trigger
+
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
 from synchros2.service import Serviced
 from synchros2.utilities import fqn, namespace_with
 

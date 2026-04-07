@@ -9,10 +9,10 @@ Test for the Max Velocity command.
 # pylint: disable=no-member
 
 import pytest
-from synchros2.futures import wait_for_future
-from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import SetVelocity  # type: ignore
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 
 @pytest.mark.parametrize("simple_spot", [False], indirect=True)
