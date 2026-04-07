@@ -16,7 +16,6 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 from spot_common.launch.spot_launch_helpers import (
     IMAGE_PUBLISHER_ARGS,
@@ -25,6 +24,7 @@ from spot_common.launch.spot_launch_helpers import (
     get_ros_param_dict,
     spot_has_arm,
 )
+from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 THIS_PACKAGE = "spot_ros2_control"
 

@@ -1,8 +1,6 @@
 import argparse
 from typing import Optional
 
-import synchros2.process as ros_process
-import synchros2.scope as ros_scope
 from bosdyn.api.world_object_pb2 import ListWorldObjectRequest, MutateWorldObjectRequest, WorldObjectType
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, VISION_FRAME_NAME
 from bosdyn.client.math_helpers import Quat, SE2Pose, SE3Pose
@@ -10,13 +8,15 @@ from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_api_msgs.msg import ListWorldObjectRequest as ListRequestRos
 from bosdyn_api_msgs.msg import MutateWorldObjectRequest as MutateRequestRos
 from bosdyn_msgs.conversions import convert
-from synchros2.action import Actionable
-from synchros2.service import Serviced
-from synchros2.utilities import namespace_with
 
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
 from spot_examples.simple_spot_commander import SimpleSpotCommander
 from spot_msgs.action import RobotCommand  # type: ignore
 from spot_msgs.srv import ListWorldObjects, MutateWorldObject  # type: ignore
+from synchros2.action import Actionable
+from synchros2.service import Serviced
+from synchros2.utilities import namespace_with
 
 # relevant example from the spot SDK:
 # https://github.com/boston-dynamics/spot-sdk/blob/master/python/examples/user_nogo_regions/user_nogo_regions.py

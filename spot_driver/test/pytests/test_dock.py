@@ -12,11 +12,11 @@ import pytest
 from bosdyn.api.basic_command_pb2 import RobotCommandFeedbackStatus, StandCommand
 from bosdyn.api.docking.docking_pb2 import DockingCommandFeedbackResponse, DockingCommandResponse
 from bosdyn.api.robot_command_pb2 import RobotCommandFeedbackResponse, RobotCommandResponse
-from synchros2.futures import wait_for_future
-from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import Dock  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 
 @pytest.mark.parametrize("simple_spot", [False], indirect=True)

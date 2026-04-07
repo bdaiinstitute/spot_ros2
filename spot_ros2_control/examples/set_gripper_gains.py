@@ -4,14 +4,14 @@ import argparse
 import time
 from typing import Optional
 
-import synchros2.process as ros_process
 from sensor_msgs.msg import JointState
+
+import synchros2.process as ros_process
+from spot_msgs.msg import JointCommand  # type: ignore
 from synchros2.futures import unwrap_future
 from synchros2.node import Node
 from synchros2.subscription import Subscription
 from synchros2.utilities import namespace_with
-
-from spot_msgs.msg import JointCommand  # type: ignore
 
 # maximum and minimum joint angles in radians.
 GRIPPER_OPEN_ANGLE = -1.57

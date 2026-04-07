@@ -20,7 +20,6 @@ import numpy as np
 import rclpy
 import rclpy.duration
 import rclpy.time
-import synchros2.process as ros_process
 import tf2_ros
 from bondpy.bondpy import Bond
 from bosdyn.api import (
@@ -73,12 +72,9 @@ from rclpy.publisher import Publisher
 from sensor_msgs.msg import JointState, PointCloud2, PointField
 from std_msgs.msg import Bool
 from std_srvs.srv import Trigger
-from synchros2.node import Node
-from synchros2.service import Serviced
-from synchros2.single_goal_action_server import SingleGoalActionServer
-from synchros2.single_goal_multiple_action_servers import SingleGoalMultipleActionServers
 
 import spot_driver.robot_command_util as robot_command_util
+import synchros2.process as ros_process
 
 # DEBUG/RELEASE: RELATIVE PATH NOT WORKING IN DEBUG
 # Release
@@ -152,6 +148,10 @@ from spot_msgs.srv import RobotCommand as RobotCommandService  # type: ignore
 from spot_wrapper.cam_wrapper import SpotCamCamera, SpotCamWrapper
 from spot_wrapper.spot_leash import SpotLeashContextProtocol, SpotLeashProtocol
 from spot_wrapper.wrapper import SpotWrapper
+from synchros2.node import Node
+from synchros2.service import Serviced
+from synchros2.single_goal_action_server import SingleGoalActionServer
+from synchros2.single_goal_multiple_action_servers import SingleGoalMultipleActionServers
 
 MAX_DURATION = 1e6
 COLOR_END = "\33[0m"

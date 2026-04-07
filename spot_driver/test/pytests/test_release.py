@@ -10,6 +10,7 @@ Test for the Release command.
 
 import pytest
 from std_srvs.srv import Trigger
+
 from synchros2.futures import wait_for_future
 from synchros2.scope import ROSAwareScope
 

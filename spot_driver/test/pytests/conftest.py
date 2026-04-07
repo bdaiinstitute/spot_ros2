@@ -30,17 +30,17 @@ import launch_ros
 import launch_ros.substitutions
 import pytest
 import rclpy
-import synchros2.scope as ros_scope
 import yaml
 from bosdyn.api.power_pb2 import PowerCommandRequest, PowerCommandResponse, PowerCommandStatus
 from bosdyn.api.robot_command_pb2 import RobotCommandResponse
 from bosdyn.api.robot_state_pb2 import PowerState
-from synchros2.scope import ROSAwareScope
 
 import spot_wrapper.testing
+import synchros2.scope as ros_scope
 from spot_driver.spot_ros2 import SpotROS
 from spot_wrapper.testing.fixtures import SpotFixture
 from spot_wrapper.testing.mocks import MockSpot
+from synchros2.scope import ROSAwareScope
 
 TEST_PATH = pathlib.Path(__file__).parent
 os.environ.update(

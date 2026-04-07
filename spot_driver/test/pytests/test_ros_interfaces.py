@@ -4,11 +4,11 @@ import contextlib
 import unittest
 
 import rclpy
-import synchros2.scope as ros_scope
 from bosdyn_msgs.msg import RobotCommand, RobotCommandFeedback
 from std_srvs.srv import Trigger
 
 import spot_driver.spot_ros2
+import synchros2.scope as ros_scope
 from spot_driver.spot_ros2 import GoalResponse
 from spot_msgs.srv import (  # type: ignore
     Dock,

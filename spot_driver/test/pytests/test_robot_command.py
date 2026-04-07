@@ -15,12 +15,12 @@ from bosdyn.api.robot_command_pb2 import RobotCommandFeedback, RobotCommandFeedb
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn_msgs.conversions import convert
 from rclpy.action import ActionClient
-from synchros2.futures import wait_for_future
-from synchros2.scope import ROSAwareScope
 
 from spot_msgs.action import RobotCommand as RobotCommandAction  # type: ignore
 from spot_msgs.srv import RobotCommand as RobotCommandService  # type: ignore
 from spot_wrapper.testing.fixtures import SpotFixture
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 
 @pytest.mark.usefixtures("spot_node")

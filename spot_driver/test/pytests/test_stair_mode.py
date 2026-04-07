@@ -10,10 +10,10 @@ Test for the Stair Mode command.
 
 import pytest
 from bosdyn_spot_api_msgs.msg import MobilityParamsStairsMode
-from synchros2.futures import wait_for_future
-from synchros2.scope import ROSAwareScope
 
 from spot_msgs.srv import SetStairsMode  # type: ignore
+from synchros2.futures import wait_for_future
+from synchros2.scope import ROSAwareScope
 
 
 @pytest.mark.parametrize("simple_spot", [False], indirect=True)

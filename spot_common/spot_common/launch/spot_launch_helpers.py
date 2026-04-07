@@ -9,9 +9,9 @@ import yaml
 from launch import LaunchContext, Substitution
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import PathJoinSubstitution
-from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 from spot_wrapper.wrapper import SpotWrapper
+from synchros2.launch.actions import DeclareBooleanLaunchArgument
 
 COLOR_END = "\33[0m"
 COLOR_YELLOW = "\33[33m"

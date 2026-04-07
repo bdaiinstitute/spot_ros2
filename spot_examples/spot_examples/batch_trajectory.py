@@ -46,8 +46,6 @@ import math
 import time
 from typing import Callable, Optional, Tuple
 
-import synchros2.process as ros_process
-import synchros2.scope as ros_scope
 from bosdyn.api import (
     arm_command_pb2,
     basic_command_pb2,
@@ -70,13 +68,15 @@ from bosdyn.util import seconds_to_duration, seconds_to_timestamp
 from bosdyn_msgs.conversions import convert
 from google.protobuf.wrappers_pb2 import DoubleValue
 from rclpy.node import Node
+from tf2_ros import TransformStamped
+
+import synchros2.process as ros_process
+import synchros2.scope as ros_scope
+from spot_examples.simple_spot_commander import SimpleSpotCommander
+from spot_msgs.action import RobotCommand as RobotCommandAction  # type: ignore
 from synchros2.action_client import ActionClientWrapper
 from synchros2.tf_listener_wrapper import TFListenerWrapper
 from synchros2.utilities import namespace_with
-from tf2_ros import TransformStamped
-
-from spot_examples.simple_spot_commander import SimpleSpotCommander
-from spot_msgs.action import RobotCommand as RobotCommandAction  # type: ignore
 
 ContinuousTrajectory1D = Callable[[float], float]
 ContinuousTrajectory2D = Callable[[float], SE2Pose]

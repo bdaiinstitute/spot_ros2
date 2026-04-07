@@ -2,8 +2,9 @@ import argparse
 from contextlib import closing
 from typing import Optional
 
-import synchros2.process as ros_process
 from geometry_msgs.msg import Pose
+
+import synchros2.process as ros_process
 from synchros2.subscription import Subscription
 
 from .robot_commander import RobotCommander

@@ -2,14 +2,14 @@
 from tkinter import messagebox
 from typing import Any, List, Optional
 
-import synchros2.process as ros_process
 from rclpy.parameter import Parameter
 from rclpy.qos import QoSPresetProfiles
-from synchros2.node import Node
 
+import synchros2.process as ros_process
 from spot_msgs.msg import (  # type: ignore
     BatteryStateArray,
 )
+from synchros2.node import Node
 
 
 class SpotAlerts(Node):

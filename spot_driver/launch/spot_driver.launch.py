@@ -9,7 +9,6 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
-from synchros2.launch.actions import DeclareBooleanLaunchArgument, convert_to_bool
 
 from spot_common.launch.spot_launch_helpers import (
     IMAGE_PUBLISHER_ARGS,
@@ -18,6 +17,7 @@ from spot_common.launch.spot_launch_helpers import (
     spot_has_arm,
     substitute_launch_parameters,
 )
+from synchros2.launch.actions import DeclareBooleanLaunchArgument, convert_to_bool
 
 THIS_PACKAGE = "spot_driver"
 
