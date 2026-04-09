@@ -1,4 +1,18 @@
-# Announcement: We are gauging interest for a new wrapper! Please check out our [poll](https://github.com/bdaiinstitute/spot_ros2/discussions/757) in the Discussions tab!
+# Repository Migration Notice
+
+> [!IMPORTANT]
+> This repository is moving to the **RAI-Opensource** GitHub organization in **about 2 weeks from April 9, 2026 (UTC)**.
+>
+> Current status: **pre-migration**.
+> Migration target org: https://github.com/RAI-Opensource
+>
+> What to do now:
+> - Watch this repository for the final cutover update and destination repository link.
+> - Plan to update your git remote after the move:
+>   ```bash
+>   git remote set-url origin <new-repository-url>
+>   ```
+> - If you maintain downstream docs/scripts, prepare to update links from this repository to the new org.
 
 
 
