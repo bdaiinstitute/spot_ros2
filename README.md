@@ -1,5 +1,8 @@
 # Announcement: We are gauging interest for a new wrapper! Please check out our [poll](https://github.com/bdaiinstitute/spot_ros2/discussions/757) in the Discussions tab!
 
+> [!IMPORTANT]
+> This repository has moved from [`bdaiinstitute/spot_ros2`](https://github.com/bdaiinstitute/spot_ros2) to [`rai-opensource/spot_ros2`](https://github.com/rai-opensource/spot_ros2).
+
 
 
 <p align="center">
