@@ -77,6 +77,7 @@ target_link_libraries(
   spot_joint_controller_parameters
   foot_state_broadcaster_parameters
   spot_pose_broadcaster_parameters
+  spot_imu_broadcaster_parameters
   forward_command_controller::forward_command_controller
   imu_sensor_broadcaster::imu_sensor_broadcaster
 )
@@ -97,7 +98,7 @@ install(
   DESTINATION include/${PROJECT_NAME}
 )
 
-install(TARGETS spot_controllers forward_state_controller_parameters spot_joint_controller_parameters foot_state_broadcaster_parameters spot_pose_broadcaster_parameters
+install(TARGETS spot_controllers forward_state_controller_parameters spot_joint_controller_parameters foot_state_broadcaster_parameters spot_pose_broadcaster_parameters spot_imu_broadcaster_parameters
   EXPORT export_spot_controllers
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
