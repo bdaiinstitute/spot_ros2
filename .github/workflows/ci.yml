@@ -106,7 +106,7 @@ jobs:
       - name: Build packages
         run: |
           source /opt/ros/$ROS_DISTRO/setup.bash
-          colcon build --symlink-install --packages-up-to spot_driver spot_description spot_msgs spot_examples spot_ros2_control spot_common --cmake-args -DCMAKE_CXX_FLAGS="--coverage"
+          colcon build --symlink-install --packages-up-to spot_driver spot_description spot_msgs spot_examples spot_ros2_control spot_common spot_controllers --cmake-args -DCMAKE_CXX_FLAGS="--coverage"
         working-directory: ${{ github.workspace }}/../../
 
       - name: Test non-spot-driver packages
