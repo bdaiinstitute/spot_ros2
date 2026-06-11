@@ -256,6 +256,7 @@ class WasdInterface:
         else:
             self.control_mode = "base"
             self.add_message("Switched to BASE MOVEMENT mode")
+            self.lock_arm_in_position()
 
     def drive(self, stdscr: curses.window) -> None:
         """User interface to control the robot via the passed-in curses screen interface object."""
