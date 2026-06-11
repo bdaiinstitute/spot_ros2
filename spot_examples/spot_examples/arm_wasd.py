@@ -526,12 +526,11 @@ class WasdInterface:
         arm_cmd_request.angular_velocity_of_hand_rt_odom_in_hand.y = end_effector_y
         arm_cmd_request.angular_velocity_of_hand_rt_odom_in_hand.z = end_effector_z
 
-        arm_cmd_request.maximum_acceleration.data = ARM_MAXIMUM_ACCELERATION
-        arm_cmd_request.command.command_choice = arm_cmd_request.command.COMMAND_CYLINDRICAL_VELOCITY_SET
-        arm_cmd_request.command.cylindrical_velocity.linear_velocity.r = r
-        arm_cmd_request.command.cylindrical_velocity.linear_velocity.theta = theta
-        arm_cmd_request.command.cylindrical_velocity.linear_velocity.z = z
-        arm_cmd_request.command.cylindrical_velocity.max_linear_velocity.data = ARM_MAX_LINEAR_VELOCITY
+        arm_cmd_request.maximum_acceleration.value = ARM_MAXIMUM_ACCELERATION
+        arm_cmd_request.cylindrical_velocity.linear_velocity.r = r
+        arm_cmd_request.cylindrical_velocity.linear_velocity.theta = theta
+        arm_cmd_request.cylindrical_velocity.linear_velocity.z = z
+        arm_cmd_request.cylindrical_velocity.max_linear_velocity.value = ARM_MAX_LINEAR_VELOCITY
 
         arm_cmd_request_ros = ArmVelocityCommandRequest()
         convert(arm_cmd_request, arm_cmd_request_ros)
