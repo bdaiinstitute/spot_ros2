@@ -539,11 +539,7 @@ class WasdInterface:
         while time.time() - start_time < ARM_VELOCITY_CMD_DURATION:
             self.pub_arm_vel.publish(arm_cmd_request_ros)
             time.sleep(0.01)
-        zero_arm_cmd_request = arm_command_pb2.ArmVelocityCommand.Request()
-        zero_arm_cmd_request_ros = ArmVelocityCommandRequest()
-        convert(zero_arm_cmd_request, zero_arm_cmd_request_ros)
-
-        self.pub_arm_vel.publish(zero_arm_cmd_request_ros)
+        self.is_arm_unstowed = True
 
     def lock_arm_in_position(self) -> bool:
         """Lock arm in current position - placeholder for actual implementation"""
