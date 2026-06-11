@@ -435,22 +435,6 @@ class WasdInterface:
         self.cli_stop.call_async(Trigger.Request())
 
     def _velocity_cmd_helper(self, desc: str = "", v_x: float = 0.0, v_y: float = 0.0, v_rot: float = 0.0) -> None:
-        if self.service_call_in_progress:
-            self.add_message("Service call in progress, cannot send velocity command")
-            return
-        if self.is_arm_unstowed:
-            if not self.is_arm_locked_in_position:
-                self.service_call_in_progress = True
-                result = self.lock_arm_in_position()
-                self.service_call_in_progress = False
-                if not result:
-                    self.add_message("Failed to lock arm in position, cannot send velocity command")
-                    self.is_arm_locked_in_position = False
-                    return
-                else:
-                    self.is_arm_locked_in_position = True
-        else:
-            self.is_arm_locked_in_position = False
         twist = Twist()
         twist.linear.x = v_x
         twist.linear.y = v_y
