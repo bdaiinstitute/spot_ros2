@@ -1,0 +1,48 @@
+# Copyright (c) 2023-2026 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
+# Request
+#
+# reference frame (currently VISION, BODY, HAND, ODOM supported):
+string ref_frame
+#
+# A flag that enables moving to the retract pose if set to true.
+bool retract
+#
+# Pregrasp, grasp, and retract poses:
+# Spot will first move to the pregrasp pose, open its gripper, move to the
+# grasp pose, close its gripper, and then optionally move to a retract pose
+# if `retract` is set to True.
+geometry_msgs/Pose ref_frame_t_pregrasp
+geometry_msgs/Pose ref_frame_t_grasp
+# Note that this is in the hand frame at grasp time!  Since we don't know where the grasp will actually be we usually
+# want to retract relative to where it ended up.
+geometry_msgs/Pose hand_t_retract
+#
+# Timeouts and durations for movements:
+float64 pregrasp_trans_speed_ms 1.0  # Translational speed during move to pregrasp in m/s
+float64 pregrasp_rot_speed_rads 2.0  # Rotational speed during move to pregrasp in rot/s
+float64 grasp_trajectory_speed 1.0  # Translational speed during move pregrasp to grasp in m/s (shouldn't be rotation here)
+float64 additional_grasp_timeout_sec  # Additional timeout for pregrasp to grasp
+float64 retract_duration_sec
+float64 retract_timeout_sec
+float64 gripper_open_timeout_sec
+float64 gripper_close_timeout_sec
+
+bool disallow_body_follow  # Don't allow body follow during move to pregrasp
+
+#
+# Grasp force max and response:
+# If `grasp_max_force` is 0 or negative it will be ignored.
+# If Spot senses a EE force larger than `grasp_max_force`, it will respond according to `response_max_force`:
+#   - if `response_max_force` is set to STOP_GRASP, cancel the command.
+#   - if `response_max_force` is set to CONTINUE_GRASP, continue execution.
+float64 grasp_max_force
+int32 CONTINUE_GRASP = 0
+int32 STOP_GRASP    = 1
+int32 response_max_force
+---
+# Result
+GraspResult grasp_pipeline_result
+---
+# Feedback
+ManipulationPhase manipulation_phase
+geometry_msgs/Pose vision_t_hand

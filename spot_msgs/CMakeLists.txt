@@ -33,6 +33,7 @@ find_package(common_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(action_msgs REQUIRED)
 
 find_package(rosidl_default_generators REQUIRED)
 
@@ -57,6 +58,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LeaseResource.msg"
   "msg/PowerState.msg"
   "msg/SystemFaultState.msg"
+  "msg/GraspResult.msg"
+  "msg/ManipulationPhase.msg"
   "srv/AcquireLease.srv"
   "srv/ChoreographyRecordedStateToAnimation.srv"
   "srv/ChoreographyStartRecordingState.srv"
@@ -111,6 +114,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/RobotCommand.action"
   "action/Trajectory.action"
   "action/Manipulation.action"
+  "action/SpotGraspingPipeline.action"
   DEPENDENCIES
     bosdyn_api_msgs
     bosdyn_spot_api_msgs
