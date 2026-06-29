@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 import yaml
 from launch import LaunchContext, Substitution
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import PythonExpression
 
 from spot_wrapper.wrapper import SpotWrapper
 from synchros2.launch.actions import DeclareBooleanLaunchArgument
@@ -312,7 +312,7 @@ def get_name_and_prefix(ros_params: Dict[str, Any]) -> Tuple[Union[str, Substitu
     tf_prefix: Optional[Union[str, Substitution]] = ros_params[_FRAME_PREFIX] if _FRAME_PREFIX in ros_params else None
     if tf_prefix is None:
         if isinstance(spot_name, Substitution):
-            tf_prefix = PathJoinSubstitution([spot_name, ""])
+            tf_prefix = PythonExpression(['"', spot_name, '" + "/"'])
         elif isinstance(spot_name, str) and spot_name:
             tf_prefix = spot_name + "/"
         else:
