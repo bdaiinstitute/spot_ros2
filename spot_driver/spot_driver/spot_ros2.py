@@ -2177,6 +2177,67 @@ class SpotROS(Node):
             return GoalResponse.IN_PROGRESS
         return GoalResponse.SUCCESS
 
+    def _arm_cartesian_force_command_duration(self, command: robot_command_pb2.RobotCommand) -> Optional[float]:
+        """Return the trajectory duration (in seconds) for an arm Cartesian command that
+        drives one or more axes in force mode, or ``None`` if the command is not one.
+
+        Force-mode Cartesian axes have no position goal to converge to, so Spot never
+        reports ``STATUS_TRAJECTORY_COMPLETE`` for them and the action would otherwise
+        never terminate. For such commands, completion is instead inferred from the
+        elapsed trajectory time (see ``handle_robot_command_action``).
+        """
+        if command.WhichOneof("command") != "synchronized_command":
+            return None
+        synchronized_command = command.synchronized_command
+        if not synchronized_command.HasField("arm_command"):
+            return None
+        arm_command = synchronized_command.arm_command
+        if arm_command.WhichOneof("command") != "arm_cartesian_command":
+            return None
+        cartesian_command = arm_command.arm_cartesian_command
+        force_mode = arm_command_pb2.ArmCartesianCommand.Request.AxisMode.AXIS_MODE_FORCE
+        axis_modes = (
+            cartesian_command.x_axis,
+            cartesian_command.y_axis,
+            cartesian_command.z_axis,
+            cartesian_command.rx_axis,
+            cartesian_command.ry_axis,
+            cartesian_command.rz_axis,
+        )
+        if force_mode not in axis_modes:
+            return None
+        duration = 0.0
+        for trajectory in (
+            cartesian_command.pose_trajectory_in_task,
+            cartesian_command.wrench_trajectory_in_task,
+        ):
+            for point in trajectory.points:
+                point_time = point.time_since_reference.seconds + point.time_since_reference.nanos / 1e9
+                duration = max(duration, point_time)
+        return duration
+
+    def _force_command_complete(
+        self,
+        status: GoalResponse,
+        force_command_duration: Optional[float],
+        elapsed_seconds: float,
+    ) -> GoalResponse:
+        """Upgrade an in-progress status to SUCCESS once a force-mode Cartesian command's
+        trajectory time has elapsed.
+
+        Force-mode Cartesian axes never report ``STATUS_TRAJECTORY_COMPLETE`` (see
+        ``_arm_cartesian_force_command_duration``), so completion is inferred from elapsed
+        time. Any other status (e.g. CANCELLED/STALLED) is passed through unchanged, and
+        non-force commands (``force_command_duration is None``) are unaffected.
+        """
+        if (
+            status == GoalResponse.IN_PROGRESS
+            and force_command_duration is not None
+            and elapsed_seconds >= force_command_duration
+        ):
+            return GoalResponse.SUCCESS
+        return status
+
     def _robot_command_goal_complete(self, command: RobotCommand, feedback: RobotCommandFeedback) -> GoalResponse:
         if feedback is None:
             # NOTE: it takes an iteration for the feedback to get set.
@@ -2293,13 +2354,22 @@ class SpotROS(Node):
         start_time = clock.now()
         time_to_send_command: Optional[rclpy.duration.Duration] = rclpy.duration.Duration(seconds=0.0)
 
+        # Force-mode Cartesian axes never report STATUS_TRAJECTORY_COMPLETE, so such
+        # commands are considered complete once their trajectory time has elapsed.
+        force_command_duration = self._arm_cartesian_force_command_duration(proto_command)
+
+        def robot_command_status() -> GoalResponse:
+            status = self._robot_command_goal_complete(ros_command, feedback)
+            elapsed_seconds = (clock.now() - start_time).nanoseconds / 1e9
+            return self._force_command_complete(status, force_command_duration, elapsed_seconds)
+
         index = 0
         rate = self.create_rate(self.get_parameter("poll_rate").value)
         while (
             rclpy.ok()
             and goal_handle.is_active
             and not goal_handle.is_cancel_requested
-            and self._robot_command_goal_complete(ros_command, feedback) == GoalResponse.IN_PROGRESS
+            and robot_command_status() == GoalResponse.IN_PROGRESS
         ):
             # We keep looping and send batches at the expected times until the
             # last batch succeeds. We always send the next batch before the
@@ -2330,7 +2400,7 @@ class SpotROS(Node):
             goal_handle.publish_feedback(feedback_msg)
             result.result = feedback
 
-        result.success = self._robot_command_goal_complete(ros_command, feedback) == GoalResponse.SUCCESS
+        result.success = robot_command_status() == GoalResponse.SUCCESS
 
         if goal_handle.is_cancel_requested:
             result.success = False
