@@ -30,7 +30,7 @@ concurrency:
 jobs:
   lint:
     name: Lint spot_ros2 packages
-    runs-on: ubuntu-22.04
+    runs-on: k8s-n1-standard-16
     strategy:
       matrix:
         config:
