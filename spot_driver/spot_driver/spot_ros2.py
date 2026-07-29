@@ -2177,6 +2177,7 @@ class SpotROS(Node):
             return GoalResponse.IN_PROGRESS
         return GoalResponse.SUCCESS
 
+    # Kick CI
     def _arm_cartesian_force_command_duration(self, command: robot_command_pb2.RobotCommand) -> Optional[float]:
         """Return the trajectory duration (in seconds) for an arm Cartesian command that
         drives one or more axes in force mode, or ``None`` if the command is not one.
