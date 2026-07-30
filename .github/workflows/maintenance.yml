@@ -3,24 +3,126 @@ name: spot_ros2 CI maintenance
 on:
   schedule:
     - cron: "0 0 * * 0"  # once a week
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Run the prune in dry-run mode (log deletions without performing them)"
+        type: boolean
+        default: true
 
 env:
   ORG_NAME: rai-opensource
   # github.repository as <account>/<repo>
   IMAGE_NAME: spot_ros2_jammy_humble
+  # OCI tags matching this glob are ephemeral per-PR images and are safe to
+  # prune once older than the cut-off. Everything else (main, release/version
+  # tags, and any other maintainer-pushed durable tag) is protected.
+  EPHEMERAL_TAG_GLOB: "pr-*"
 
 jobs:
   clean-ghcr:
     name: Prune old images from Github Container Registry
     runs-on: ubuntu-22.04
+    permissions:
+      packages: write
     steps:
+      # Resolve every manifest digest reachable from the durable OCI tags (the
+      # image index plus its per-architecture child manifests and any
+      # attestation manifests). These are passed to the retention policy via
+      # `skip-shas` so the pruner can never delete a layer that a durable tag
+      # depends on -- regardless of how old the underlying (untagged) child
+      # versions are.
+      #
+      # This protects durable tags even during quiet periods when they are not
+      # rebuilt for longer than the cut-off window. The previous configuration
+      # only skipped the `main` tag itself, so GHCR pruning deleted the untagged
+      # child manifests and left `main` pointing at a missing manifest
+      # ("manifest unknown" on pull).
+      #
+      # We resolve digests ourselves (rather than using the action's `!pr-*`
+      # tag operators) because those operators require a PAT or GitHub App
+      # token; `skip-shas` accepts exact digests and works with GITHUB_TOKEN.
+      - name: Resolve digests reachable from durable tags
+        id: protect
+        env:
+          REPO_PATH: ${{ env.ORG_NAME }}/${{ env.IMAGE_NAME }}
+          EPHEMERAL_TAG_GLOB: ${{ env.EPHEMERAL_TAG_GLOB }}
+        run: |
+          set -euo pipefail
+
+          token="$(curl -fsSL \
+            "https://ghcr.io/token?scope=repository:${REPO_PATH}:pull" \
+            | jq -r '.token')"
+
+          auth=(-H "Authorization: Bearer ${token}")
+
+          # Accept both OCI and Docker index/manifest media types so we get the
+          # raw index (and thus its child digests) rather than a flattened image.
+          accept=(
+            -H "Accept: application/vnd.oci.image.index.v1+json"
+            -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json"
+            -H "Accept: application/vnd.oci.image.manifest.v1+json"
+            -H "Accept: application/vnd.docker.distribution.manifest.v2+json"
+          )
+
+          # Enumerate all OCI tags currently published for the image.
+          tags="$(curl -fsSL "${auth[@]}" \
+            "https://ghcr.io/v2/${REPO_PATH}/tags/list" \
+            | jq -r '.tags[]? // empty')"
+
+          protected_shas=""
+
+          for tag in ${tags}; do
+            # Skip ephemeral per-PR tags -- these are the images we want to prune.
+            # shellcheck disable=SC2254
+            case "${tag}" in
+              ${EPHEMERAL_TAG_GLOB}) continue ;;
+            esac
+
+            echo "Resolving digests for durable tag: ${tag}"
+
+            index_digest="$(curl -fsSL -D - -o /tmp/manifest.json "${auth[@]}" "${accept[@]}" \
+              "https://ghcr.io/v2/${REPO_PATH}/manifests/${tag}" \
+              | tr -d '\r' \
+              | awk -F': ' 'tolower($1) == "docker-content-digest" { print $2 }')"
+
+            if [ -z "${index_digest}" ]; then
+              echo "::error::Could not resolve a digest for durable tag '${tag}'" >&2
+              exit 1
+            fi
+
+            # Child manifest digests (empty for a single-arch image).
+            child_digests="$(jq -r '.manifests[]?.digest // empty' /tmp/manifest.json)"
+
+            protected_shas="$(printf '%s\n%s\n%s\n' \
+              "${protected_shas}" "${index_digest}" "${child_digests}")"
+
+            printf '  %s\n' "${index_digest}" ${child_digests}
+          done
+
+          shas="$(printf '%s\n' "${protected_shas}" \
+            | sed '/^$/d' \
+            | sort -u \
+            | paste -sd, -)"
+
+          if [ -z "${shas}" ]; then
+            echo "::error::Resolved no durable digests to protect; refusing to prune" >&2
+            exit 1
+          fi
+
+          echo "skip-shas=${shas}" >> "${GITHUB_OUTPUT}"
+
       - name: Delete old pull request images
-        uses: snok/container-retention-policy@v2
+        uses: snok/container-retention-policy@v3.1.0
         with:
-          image-names: ${{ env.IMAGE_NAME }}
-          skip-tags: main
-          cut-off: One week ago UTC
-          org-name: ${{ env.ORG_NAME }}
-          account-type: org
+          account: ${{ env.ORG_NAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          token-type: github-token
+          image-names: ${{ env.IMAGE_NAME }}
+          # Consider both tagged (e.g. pr-123) and untagged versions. v3.1.0
+          # automatically protects the multi-arch children of any tagged
+          # version it keeps, and `skip-shas` additionally pins every digest
+          # reachable from a durable tag (main, releases, etc.).
+          tag-selection: both
+          cut-off: 1w
+          skip-shas: ${{ steps.protect.outputs.skip-shas }}
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || false }}
