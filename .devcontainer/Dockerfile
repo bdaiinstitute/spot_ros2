@@ -32,7 +32,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
 #
 # The bug has actually been fixed, but the fix has not yet been released. So
 # this block of code can be removed when the new Fast RTPS package is published,
-# which I would expcet to be a minor bump, that is, version 2.6.12.
+# which I would expect to be a minor bump, that is, version 2.6.12.
 ARG FASTRTPS_URL="http://snapshots.ros.org/humble/2025-08-15/ubuntu/pool/main/r/ros-humble-fastrtps/ros-humble-fastrtps_2.6.10-1jammy.20250718.233605_amd64.deb"
 ARG FASTRTPS_CHECKSUM="31c3f9fee5fe90f3dc81b101d81a43ff8086df38db032ff8ed65915b56025a46"
 RUN FASTRTPS_TMP_DIR=$(mktemp -d) \
