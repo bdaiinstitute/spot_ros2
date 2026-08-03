@@ -40,7 +40,7 @@ RUN FASTRTPS_TMP_DIR=$(mktemp -d) \
     && (echo "$FASTRTPS_CHECKSUM  $FASTRTPS_TMP_DIR/fastrtps.deb" | sha256sum --quiet -c -) \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         --allow-downgrades $FASTRTPS_TMP_DIR/fastrtps.deb \
-    && apt-mark hold "ros-*-fastrtps" \
+    && apt-mark hold ros-${ROS_DISTRO}-fastrtps \
     && rm -rf $FASTRTPS_TMP_DIR
 
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash"
