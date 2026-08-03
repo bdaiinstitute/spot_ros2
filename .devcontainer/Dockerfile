@@ -27,6 +27,17 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -q && \
     ros-${ROS_DISTRO}-tl-expected && \
     rm -rf /var/lib/apt/lists/*
 
+# Install an older Fast RTPS which does not generate segfaults
+ARG FASTRTPS_URL="http://snapshots.ros.org/humble/2025-08-15/ubuntu/pool/main/r/ros-humble-fastrtps/ros-humble-fastrtps_2.6.10-1jammy.20250718.233605_amd64.deb"
+ARG FASTRTPS_CHECKSUM="31c3f9fee5fe90f3dc81b101d81a43ff8086df38db032ff8ed65915b56025a46"
+RUN FASTRTPS_TMP_DIR=$(mktemp -d) \
+    && curl -fsSL "$FASTRTPS_URL" -o $FASTRTPS_TMP_DIR/fastrtps.deb \
+    && (echo "$FASTRTPS_CHECKSUM  $FASTRTPS_TMP_DIR/fastrtps.deb" | sha256sum --quiet -c -) \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        --allow-downgrades $FASTRTPS_TMP_DIR/fastrtps.deb \
+    && apt-mark hold "ros-*-fastrtps" \
+    && rm -rf $FASTRTPS_TMP_DIR
+
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash"
 
 ARG SPOT_SDK_VERSION="5.0.1"
