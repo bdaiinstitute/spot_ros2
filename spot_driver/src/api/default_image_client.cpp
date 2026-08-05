@@ -4,9 +4,9 @@
 
 #include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>
-#include <cv_bridge/cv_bridge.h>
 #include <google/protobuf/duration.pb.h>
 #include <builtin_interfaces/msg/time.hpp>
+#include <cv_bridge/cv_bridge.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/vector3.hpp>

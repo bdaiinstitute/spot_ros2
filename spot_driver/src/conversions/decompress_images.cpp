@@ -2,8 +2,8 @@
 
 #include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>
-#include <cv_bridge/cv_bridge.h>
 #include <google/protobuf/duration.pb.h>
+#include <cv_bridge/cv_bridge.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <spot_driver/api/default_time_sync_api.hpp>
