@@ -106,6 +106,7 @@ from spot_msgs.srv import (  # type: ignore
     DeleteSound,
     Dock,
     GetChoreographyStatus,
+    GetDockState,
     GetGripperCameraParameters,
     GetLEDBrightness,
     GetLogpointStatus,
@@ -902,6 +903,12 @@ class SpotROS(Node):
             Dock,
             "dock",
             lambda request, response: self.service_wrapper("dock", self.handle_dock, request, response),
+            callback_group=self.group,
+        )
+        self.create_service(
+            GetDockState,
+            "get_docking_state",
+            self.handle_get_docking_state,
             callback_group=self.group,
         )
 
@@ -1932,6 +1939,21 @@ class SpotROS(Node):
             response.message = "Spot wrapper is undefined"
             return response
         response.success, response.message = self.spot_wrapper.spot_docking.dock(request.dock_id)
+        return response
+
+    def handle_get_docking_state(
+        self, request: GetDockState.Request, response: GetDockState.Response
+    ) -> GetDockState.Response:
+        """ROS service handler to get the robot's docking state."""
+        del request
+        if self.spot_wrapper is None:
+            return response
+
+        state = self.spot_wrapper.spot_docking.get_docking_state()
+        response.dock_state.status = state.status
+        response.dock_state.dock_type = state.dock_type
+        response.dock_state.dock_id = state.dock_id
+        response.dock_state.power_status = state.power_status
         return response
 
     def handle_max_vel(self, request: SetVelocity.Request, response: SetVelocity.Response) -> SetVelocity.Response:
