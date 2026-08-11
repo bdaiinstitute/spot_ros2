@@ -63,7 +63,7 @@ from bosdyn_msgs.msg import (
 )
 from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, Twist
 from rclpy import Parameter
-from rclpy.action import ActionServer
+from rclpy.action import ActionServer, CancelResponse
 from rclpy.action.server import ServerGoalHandle
 from rclpy.callback_groups import CallbackGroup, MutuallyExclusiveCallbackGroup
 from rclpy.clock import Clock
@@ -998,6 +998,7 @@ class SpotROS(Node):
             Trajectory,
             "trajectory",
             self.handle_trajectory,
+            cancel_callback=lambda _cancel_request: CancelResponse.ACCEPT,
         )
         # spot_ros.trajectory_server.start()
 
@@ -2626,7 +2627,7 @@ class SpotROS(Node):
 
         cmd_duration_secs = goal_handle.request.duration.sec * 1.0
 
-        self.spot_wrapper.trajectory_cmd(
+        command_success, command_message = self.spot_wrapper.trajectory_cmd(
             goal_x=goal_handle.request.target_pose.pose.position.x,
             goal_y=goal_handle.request.target_pose.pose.position.y,
             goal_heading=math_helpers.Quat(
@@ -2639,7 +2640,12 @@ class SpotROS(Node):
             precise_position=goal_handle.request.precise_positioning,
             disable_vision_body_obstacle_avoidance=goal_handle.request.disable_obstacle_avoidance,
         )
-
+        if not command_success:
+            result = Trajectory.Result()
+            result.success = False
+            result.message = command_message
+            goal_handle.abort()
+            return result
         command_start_time = self.get_clock().now()
 
         # Abort the action server if cmd_duration is exceeded - the driver stops but does not provide
@@ -2655,7 +2661,12 @@ class SpotROS(Node):
 
         rate = self.create_rate(self.get_parameter("poll_rate").value)
         try:
-            while rclpy.ok() and not self.spot_wrapper.trajectory_complete and goal_handle.is_active:
+            while (
+                rclpy.ok()
+                and not self.spot_wrapper.trajectory_complete
+                and goal_handle.is_active
+                and not goal_handle.is_cancel_requested
+            ):
                 feedback = Trajectory.Feedback()
                 if self.spot_wrapper.stopped:
                     feedback.feedback = "Stopped, possibly blocked."
@@ -2673,7 +2684,7 @@ class SpotROS(Node):
 
                 if com_dur.nanoseconds / 1e9 > cmd_duration_secs:
                     # timeout, quit with failure
-                    self.get_logger().error("TIMEOUT")
+                    self.get_logger().error("Trajectory TIMEOUT")
                     feedback = Trajectory.Feedback()
                     feedback.feedback = "Failed to reach goal, timed out"
                     goal_handle.publish_feedback(feedback)
@@ -2682,6 +2693,46 @@ class SpotROS(Node):
             result = Trajectory.Result()
             result.success = False
             result.message = "timeout"
+
+            if goal_handle.is_cancel_requested:
+                feedback = Trajectory.Feedback()
+                feedback.feedback = "Cancelling trajectory"
+                goal_handle.publish_feedback(feedback)
+                command_start_time = self.get_clock().now()
+                stop_duration_secs = 0.1
+                success, stop_message = self.spot_wrapper.trajectory_cmd(
+                    goal_x=0.0,
+                    goal_y=0.0,
+                    goal_heading=0.0,
+                    cmd_duration=stop_duration_secs,
+                )
+                # trajectory_cmd interprets this as a body-relative goal before converting it to odom;
+                # (0, 0, 0) therefore stops at the robot's current pose without affecting the arm.
+                if not success:
+                    error_message = f"Unable to stop trajectory on cancellation: {stop_message}"
+                    self.get_logger().error(error_message)
+                    feedback.feedback = error_message
+                    goal_handle.publish_feedback(feedback)
+                    result.message = error_message
+                    goal_handle.abort()
+                    return result
+
+                while (
+                    rclpy.ok()
+                    and goal_handle.is_active
+                    and not self.spot_wrapper.trajectory_complete
+                ):
+                    rate.sleep()
+                    # check for timeout
+                    com_dur = self.get_clock().now() - command_start_time
+                    if com_dur.nanoseconds / 1e9 > stop_duration_secs:
+                        break
+
+                feedback.feedback = "Trajectory complete: goal cancelled"
+                goal_handle.publish_feedback(feedback)
+                result.message = "Cancelled"
+                goal_handle.canceled()
+                return result
 
             # If still active after exiting the loop, the command did not time out
             if goal_handle.is_active:
