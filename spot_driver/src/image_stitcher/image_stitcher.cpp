@@ -1,5 +1,9 @@
 // Copyright (c) 2024 Robotics and AI Institute LLC dba RAI Institute. All rights reserved.
+#if __has_include(<cv_bridge/cv_bridge.hpp>)
+#include <cv_bridge/cv_bridge.hpp>
+#else
 #include <cv_bridge/cv_bridge.h>
+#endif
 #include <builtin_interfaces/msg/detail/time__struct.hpp>
 #include <geometry_msgs/msg/detail/transform_stamped__struct.hpp>
 #include <image_transport/subscriber_filter.hpp>

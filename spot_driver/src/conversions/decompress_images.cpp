@@ -2,7 +2,11 @@
 
 #include <bosdyn/api/directory.pb.h>
 #include <bosdyn/api/image.pb.h>
+#if __has_include(<cv_bridge/cv_bridge.hpp>)
+#include <cv_bridge/cv_bridge.hpp>
+#else
 #include <cv_bridge/cv_bridge.h>
+#endif
 #include <google/protobuf/duration.pb.h>
 #include <opencv2/imgcodecs.hpp>
 #include <sensor_msgs/msg/image.hpp>
