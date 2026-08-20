@@ -51,7 +51,7 @@ controller_interface::CallbackReturn SpotIMUBroadcaster::on_configure(
   RCLCPP_ERROR(get_node()->get_logger(), "Prefix: %s \n", prefix.c_str());
 
   imu_sensor_ =
-      std::make_unique<semantic_components::IMUSensor>(semantic_components::IMUSensor(prefix + params_.sensor_name));
+      std::make_unique<semantic_components::IMUSensor>(prefix + params_.sensor_name);
   try {
     // register ft sensor data publisher
     sensor_state_publisher_ = get_node()->create_publisher<sensor_msgs::msg::Imu>("~/imu", rclcpp::SystemDefaultsQoS());
@@ -79,4 +79,4 @@ controller_interface::CallbackReturn SpotIMUBroadcaster::on_configure(
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(spot_controllers::SpotIMUBroadcaster, controller_interface::ControllerInterface)
+PLUGINLIB_EXPORT_CLASS(spot_controllers::SpotIMUBroadcaster, controller_interface::ControllerInterfaceBase)
