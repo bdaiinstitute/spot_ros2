@@ -12,6 +12,7 @@ import synchros2.scope as ros_scope
 from spot_driver.spot_ros2 import GoalResponse
 from spot_msgs.srv import (  # type: ignore
     Dock,
+    GetDockState,
 )
 
 
@@ -41,6 +42,7 @@ class SpotDriverTest(unittest.TestCase):
         self.estop_release: rclpy.node.Client = self.ros.node.create_client(Trigger, "estop/release")
         self.undock_client: rclpy.node.Client = self.ros.node.create_client(Trigger, "undock")
         self.dock_client: rclpy.node.Client = self.ros.node.create_client(Dock, "dock")
+        self.docking_state_client: rclpy.node.Client = self.ros.node.create_client(GetDockState, "docking_state")
 
     def tearDown(self) -> None:
         self.fixture.close()
@@ -74,6 +76,8 @@ class SpotDriverTest(unittest.TestCase):
         self.assertEqual(resp.success, True)
         resp = self.dock_client.call(Dock.Request())
         self.assertEqual(resp.success, True)
+        resp = self.docking_state_client.call(GetDockState.Request())
+        self.assertEqual(resp.dock_state.status, resp.dock_state.DOCK_STATUS_UNKNOWN)
 
     # Ignore Line too long errors
     # ruff: noqa: E501
