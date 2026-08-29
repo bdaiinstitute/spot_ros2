@@ -248,6 +248,12 @@ install(
   )
 install(
   PROGRAMS
+  spot_driver/corrected_odom.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME corrected_odom
+  )
+install(
+  PROGRAMS
   spot_driver/calibrated_reregistered_hand_camera_depth_publisher.py
   DESTINATION lib/${PROJECT_NAME}
   )

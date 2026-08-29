@@ -86,6 +86,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(spot_driver_node)
 
+    corrected_odom_node = Node(
+        package="spot_driver",
+        executable="corrected_odom",
+        name="corrected_odom",
+        output="screen",
+        parameters=[configured_params, spot_driver_params],
+        namespace=spot_name,
+    )
+    ld.add_action(corrected_odom_node)
+
     spot_lease_manager_node = Node(
         package="spot_driver",
         executable="lease_manager_node",
