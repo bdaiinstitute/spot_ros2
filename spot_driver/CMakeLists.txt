@@ -230,7 +230,7 @@ target_include_directories(image_stitcher
 target_link_libraries(image_stitcher PUBLIC spot_api)
 set_property(TARGET image_stitcher PROPERTY POSITION_INDEPENDENT_CODE ON)
 ament_target_dependencies(image_stitcher PUBLIC ${THIS_PACKAGE_INCLUDE_ROS_DEPENDS})
-  
+
 add_executable(image_stitcher_node src/image_stitcher/image_stitcher_node_main.cpp)
 target_include_directories(image_stitcher_node
   PUBLIC
@@ -240,23 +240,42 @@ target_include_directories(image_stitcher_node
 target_link_libraries(image_stitcher_node PUBLIC image_stitcher)
 
 ament_python_install_package(${PROJECT_NAME})
-install(
-  PROGRAMS
-  spot_driver/spot_ros2.py
-  DESTINATION lib/${PROJECT_NAME}
-  RENAME spot_ros2
+
+if(${AMENT_CMAKE_SYMLINK_INSTALL})
+  install(CODE "
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${CMAKE_CURRENT_SOURCE_DIR}/spot_driver/spot_ros2.py
+      ${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/spot_ros2
+    )
+  ")
+  install(CODE "
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${CMAKE_CURRENT_SOURCE_DIR}/spot_driver/spot_alerts.py
+      ${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/spot_alerts
+    )
+  ")
+else()
+  # Fallback to install a renamed copy if not using symlink install
+  install(PROGRAMS
+    spot_driver/spot_ros2.py
+    DESTINATION lib/${PROJECT_NAME}
+    RENAME spot_ros2
   )
+  install(PROGRAMS
+    spot_driver/spot_alerts.py
+    DESTINATION lib/${PROJECT_NAME}
+    RENAME spot_alerts
+  )
+endif()
+
 install(
   PROGRAMS
   spot_driver/calibrated_reregistered_hand_camera_depth_publisher.py
   DESTINATION lib/${PROJECT_NAME}
   )
-install(
-  PROGRAMS
-  spot_driver/spot_alerts.py
-  DESTINATION lib/${PROJECT_NAME}
-  RENAME spot_alerts
-  )
+
 # Install Libraries
 install(
   TARGETS
@@ -275,7 +294,7 @@ install(
 
 # Install Executables
 install(
-  TARGETS 
+  TARGETS
     image_stitcher_node
     lease_manager_node
     lease_manager_node_component
